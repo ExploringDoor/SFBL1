@@ -313,6 +313,147 @@ is a single-target operation per project. Without a separate staging
 project, every rules change is tested in prod with real tenant data —
 unacceptable. Cost of staging: ~$0/month while idle (free tier covers it).
 
+### 10. Phase 3 Kickoff Brief — Stat Math Extraction
+
+> Captured 2026-05-02 from a read-only scouting pass over DVSL
+> (`~/Desktop/softball-site/`) and Long Beach
+> (`~/Desktop/Long-Beach-Men-s-Baseball/src/App.jsx`). Extract the
+> patterns, not the code — rebuild as TypeScript modules in this repo.
+
+**Module structure:**
+
+```
+/lib/stats/
+  index.ts          → dispatch by sport; exports recalcLeague(leagueId)
+  shared.ts         → standings (W/L/T, PCT, GB, streaks, tiebreakers)
+                      that work for both sports
+  softball.ts       → softball batting (no pitching aggregation)
+  baseball.ts       → baseball batting + pitching (ERA, WHIP, IP)
+  ip.ts             → IP parse/format helpers (decimal "6.2" ↔ outs)
+```
+
+**Public API (one entry point):**
+
+```ts
+// lib/stats/index.ts
+export async function recalcLeague(leagueId: string): Promise<{
+  players_updated: number;
+  standings_updated: number;
+  durationMs: number;
+}>
+```
+
+Internally reads `/leagues/{id}` config doc, dispatches to softball
+or baseball based on `config.sport`. Both branches share `shared.ts`
+for standings.
+
+**Key formulas (lifted from reference impls — verify with tests):**
+
+| Stat | Formula | Notes |
+|---|---|---|
+| AVG | `h / ab` | Round to .000 |
+| OBP | `(h + bb) / (ab + bb)` | Add HBP later when DVSL has it |
+| SLG | `(s + 2*d + 3*t + 4*hr) / ab` | `s` = singles = `h - d - t - hr` |
+| OPS | `obp + slg` | |
+| ERA | `(er / ip) * 9` | IP stored as decimal: `6.2 = 6 + 2/3` |
+| WHIP | `(h + bb) / ip` | |
+| PCT | `(w*2 + t) / (gp*2)` | ties count as 0.5 win |
+| GB | `(maxWinDiff - (w-l)) / 2` | maxWinDiff = best team's W-L |
+
+**IP storage gotcha:** DVSL/LB store IP as `6.2` meaning 6 innings, 2 outs.
+Math needs decimal `6.667`. Always parse → math → format. Get this wrong
+and ERA is silently off by ~0.4 per pitcher. Put it in `ip.ts` with tests.
+
+**Standings tiebreakers (PLAN order):**
+1. PCT desc
+2. Run differential desc *(LB pattern; DVSL doesn't have this — add it)*
+3. Head-to-head record *(neither ref has it; flag as v1, not MVP)*
+
+**Recalc trigger points (the "stale stats" trap):**
+
+DVSL's discipline:
+- Captain submits box score → recalc standings inline
+- Scorer submits final → recalc standings + player_stats inline
+- Admin loads dashboard → recalc both (auto-sync safety net)
+- Manual buttons exist for emergencies
+
+Apply the same pattern. **Never rely on a single recalc point.** Three
+overlapping triggers means stats are never stale for more than one
+captain submit. The cost is idempotent recompute; the savings is
+tenants never showing 3-day-old standings.
+
+**Patterns worth lifting:**
+
+1. **Dirty-check writes** — DVSL only writes player_stats docs when computed
+   values differ. Skips ~280 no-op writes per admin page load. Implement.
+2. **3-lane scoring** — admin/home/away each write to a private lane;
+   canonical box_score is computed from captain submissions, admin can
+   override. Out of scope for Phase 3 (it's a write-path concern, not stat
+   math), but the canonical box_score shape needs to support it. Don't
+   close off the option.
+3. **Long Beach's POTG calc** — `h*3 + hr*4 + rbi*2 + r*1 + bb*0.5 - k*0.3`
+   for batters, `k*1 + ip*0.5 + (W?3:0) - er*1.5` for pitchers. Pure
+   function; trivially testable.
+4. **Streak calc** — walk results array backwards counting consecutive
+   same-result. Pure utility for `shared.ts`.
+
+**Box score doc shape (target for both sports):**
+
+```ts
+// /leagues/{id}/box_scores/{gameId}
+{
+  game_id: string;
+  away_team_id: string;
+  home_team_id: string;
+  away_score: number;
+  home_score: number;
+  status: 'draft' | 'final' | 'approved';
+  away_lineup: BattingLine[];
+  home_lineup: BattingLine[];
+  away_pitchers?: PitchingLine[];   // baseball only
+  home_pitchers?: PitchingLine[];
+  // ... linescore, hr_log, etc.
+}
+
+interface BattingLine { name: string; ab: number; r: number; h: number;
+  d: number; t: number; hr: number; rbi: number; bb: number; so: number;
+  sb?: number; pb?: number; }   // pb is softball-specific (passed balls)
+interface PitchingLine { name: string; ip_outs: number; // store as
+  total outs (e.g. 6.2 IP = 20 outs) — math is integer, format on read
+  h: number; r: number; er: number; bb: number; so: number; hr: number;
+  decision?: 'W' | 'L' | 'S'; }
+```
+
+**Recommendation: store IP as `ip_outs` (integer count of outs), not as
+the `6.2`-format string.** All math is integer; only the display layer
+formats. Eliminates the parse/format bug class entirely. LB stores it
+ambiguously; this repo can do better.
+
+**Contract test outline** (`tests/stats/`):
+
+```
+batting-softball.test.ts    AVG/SLG/OBP/OPS for known box scores
+batting-baseball.test.ts    same; verify PB column NOT used
+pitching-baseball.test.ts   ERA/WHIP across IP edge cases (0 IP, fractional)
+                            including the 6.2 → 6⅔ format trap
+ip-format.test.ts           parse/format round-trip; integer-outs invariant
+standings-shared.test.ts    PCT, GB, run-diff tiebreaker, streaks
+recalc-dispatch.test.ts     softball league dispatches to softball.ts;
+                            baseball to baseball.ts
+recalc-idempotent.test.ts   running recalc twice doesn't change docs
+                            (dirty-check optimization works)
+```
+
+**Tomorrow's order of operations:**
+
+1. Write `ip.ts` + its test first (smallest, isolated, hardest to get right)
+2. Pure stat functions in `softball.ts` / `baseball.ts` (one box score → one stats line)
+3. Aggregation: many box scores → player_stats doc
+4. `shared.ts` standings
+5. `index.ts` dispatcher + the recalcLeague entry point
+6. Wire into the admin smoke-test page (replace the placeholder team-write
+   button with a "recalc league" button). Real verification in the browser.
+
 ---
 
 ## Feature Cut Checklist
