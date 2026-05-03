@@ -68,6 +68,7 @@ export default function AdminPage() {
     <Shell heading={config?.name ?? "Admin"}>
       <SignedInHeader email={user.email} uid={user.uid} role={role} />
       <AdminSmokeTest tenantId={tenantId} />
+      <RecalcStatsButton tenantId={tenantId} />
     </Shell>
   );
 }
@@ -169,6 +170,85 @@ function AdminSmokeTest({ tenantId }: { tenantId: string }) {
         <p className="text-sm text-emerald-700">
           ✅ Wrote <span className="font-mono">{status.teamId}</span>.
         </p>
+      )}
+      {status.kind === "err" && (
+        <p className="text-sm text-red-700">❌ {status.message}</p>
+      )}
+    </section>
+  );
+}
+
+function RecalcStatsButton({ tenantId }: { tenantId: string }) {
+  const [status, setStatus] = useState<
+    | { kind: "idle" }
+    | { kind: "running" }
+    | {
+        kind: "ok";
+        result: {
+          box_scores_read: number;
+          players_aggregated: number;
+          players_written: number;
+          pitchers_written: number;
+          duration_ms: number;
+        };
+      }
+    | { kind: "err"; message: string }
+  >({ kind: "idle" });
+
+  async function run() {
+    setStatus({ kind: "running" });
+    try {
+      // Get a fresh ID token; the API route verifies it server-side.
+      const auth = (await import("firebase/auth")).getAuth(
+        (await import("@/lib/firebase")).getFirebaseApp(),
+      );
+      const user = auth.currentUser;
+      if (!user) throw new Error("Not signed in.");
+      const token = await user.getIdToken();
+
+      const res = await fetch("/api/recalc", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ leagueId: tenantId }),
+      });
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error ?? `HTTP ${res.status}`);
+      }
+      const result = await res.json();
+      setStatus({ kind: "ok", result });
+    } catch (err) {
+      setStatus({
+        kind: "err",
+        message: err instanceof Error ? err.message : "Unknown error.",
+      });
+    }
+  }
+
+  return (
+    <section className="space-y-3 rounded-md border border-slate-200 bg-white p-4">
+      <p className="font-semibold text-slate-900">Recalc league stats</p>
+      <p className="text-sm text-slate-600">
+        Reads every final/approved box score under{" "}
+        <code>/leagues/{tenantId}/box_scores</code>, aggregates per-player
+        batting (and pitching for baseball), writes results to{" "}
+        <code>/leagues/{tenantId}/players/&#123;pid&#125;.stats</code>. Skips
+        players whose totals haven't changed (dirty-check).
+      </p>
+      <button
+        onClick={run}
+        disabled={status.kind === "running"}
+        className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+      >
+        {status.kind === "running" ? "Recalculating…" : "Recalc league stats"}
+      </button>
+      {status.kind === "ok" && (
+        <pre className="overflow-x-auto rounded-md bg-slate-900 p-3 text-xs text-slate-100">
+          {JSON.stringify(status.result, null, 2)}
+        </pre>
       )}
       {status.kind === "err" && (
         <p className="text-sm text-red-700">❌ {status.message}</p>

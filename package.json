@@ -11,6 +11,7 @@
     "emulators": "firebase emulators:start",
     "seed": "tsx scripts/seed.ts",
     "seed:emulator": "firebase emulators:exec --project demo-seed-smoke --only firestore 'tsx scripts/seed.ts'",
+    "seed:running": "FIRESTORE_EMULATOR_HOST=localhost:8080 GCLOUD_PROJECT=league-platform-5f3c8 tsx scripts/seed.ts",
     "grant-claim": "tsx scripts/grant-claim.ts",
     "grant-claim:emulator": "FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 FIRESTORE_EMULATOR_HOST=localhost:8080 tsx scripts/grant-claim.ts",
     "magic-link": "tsx scripts/magic-link.ts",
