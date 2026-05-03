@@ -214,7 +214,7 @@ describe("sortByPoints", () => {
     expect(sorted.map((r) => r.team_id)).toEqual(["c", "b", "a"]);
   });
 
-  it("breaks ties by run differential desc", () => {
+  it("breaks ties by run differential desc by default", () => {
     const rows = [
       row("a", 2, 1, 0, +5), // 7 pts, +5 RD
       row("b", 2, 1, 0, +10), // 7 pts, +10 RD
@@ -222,6 +222,39 @@ describe("sortByPoints", () => {
     ];
     const sorted = sortByPoints(rows, { win: 3, tie: 2, loss: 1 });
     expect(sorted.map((r) => r.team_id)).toEqual(["b", "a", "c"]);
+  });
+
+  it("breaks ties by PCT when tiebreaker='pct' (SFBL convention)", () => {
+    // SFBL real example: Margate 4-2-0 (.667) vs Orioles 4-3-0 (.571)
+    // both 8 points (W=2 scheme); Margate ranks higher due to PCT.
+    const margate: StandingsRow = {
+      team_id: "margate", gp: 6, w: 4, l: 2, t: 0,
+      rs: 0, ra: 0, rd: -10, pct: 4 / 6, gb: 0,
+    };
+    const orioles: StandingsRow = {
+      team_id: "orioles", gp: 7, w: 4, l: 3, t: 0,
+      rs: 0, ra: 0, rd: +50, pct: 4 / 7, gb: 0,
+    };
+    // Notice: by RD tiebreaker Orioles would win (+50 vs -10), so this
+    // test specifically catches the difference between rd and pct modes.
+    const sorted = sortByPoints([orioles, margate], { win: 2, tie: 1, loss: 0 }, "pct");
+    expect(sorted.map((r) => r.team_id)).toEqual(["margate", "orioles"]);
+  });
+
+  it("PCT tiebreaker handles equal PCT consistently", () => {
+    // If two teams have identical points AND identical PCT, fall through
+    // to whatever the stable sort decides — that's acceptable for now.
+    const a: StandingsRow = {
+      team_id: "a", gp: 4, w: 2, l: 2, t: 0,
+      rs: 0, ra: 0, rd: 5, pct: 0.5, gb: 0,
+    };
+    const b: StandingsRow = {
+      team_id: "b", gp: 4, w: 2, l: 2, t: 0,
+      rs: 0, ra: 0, rd: -5, pct: 0.5, gb: 0,
+    };
+    expect(() =>
+      sortByPoints([a, b], { win: 1, tie: 0, loss: 0 }, "pct"),
+    ).not.toThrow();
   });
 
   it("does not mutate input", () => {

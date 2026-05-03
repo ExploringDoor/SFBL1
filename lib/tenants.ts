@@ -183,10 +183,17 @@ async function fetchDoc(
   docPath: string,
   apiKey: string,
 ): Promise<Record<string, unknown> | null> {
-  const url =
-    `https://firestore.googleapis.com/v1/projects/${projectId}` +
-    `/databases/(default)/documents/${docPath}` +
-    `?key=${apiKey}`;
+  // In emulator mode (dev), hit the local Firestore emulator's REST API
+  // instead of googleapis.com. Edge runtime only sees NEXT_PUBLIC_* env
+  // vars, so we use that flag as the toggle. Emulator REST doesn't need
+  // an api key.
+  const useEmulator =
+    process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === "true";
+  const base = useEmulator
+    ? "http://127.0.0.1:8080"
+    : "https://firestore.googleapis.com";
+  const query = useEmulator ? "" : `?key=${apiKey}`;
+  const url = `${base}/v1/projects/${projectId}/databases/(default)/documents/${docPath}${query}`;
 
   const res = await fetch(url, { cache: "no-store" });
   if (res.status === 404) return null;
