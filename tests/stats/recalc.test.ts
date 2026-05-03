@@ -165,6 +165,53 @@ describe("recalcLeague — baseball", () => {
     expect(p1?.pitching.era).toBeCloseTo(2.0, 6); // (2 * 27) / 27 = 2.00
   });
 
+  it("dirty-check skips BOTH batter AND pitcher writes on second run (regression)", async () => {
+    // Earlier the existing-doc map stored only .stats, so .pitching was
+    // always undefined and pitchers got rewritten every recalc.
+    await seedBoxScore("g1", {
+      away_lineup: [{ player_id: "p1", ab: 4, h: 2 }],
+      home_lineup: [{ player_id: "p2", ab: 3, h: 1 }],
+      away_pitchers: [
+        { player_id: "p1", ip_outs: 27, h: 6, r: 2, er: 2, bb: 1, so: 7, hr: 0, decision: "W" },
+      ],
+      home_pitchers: [
+        { player_id: "p2", ip_outs: 27, h: 8, r: 3, er: 3, bb: 2, so: 5, hr: 1, decision: "L" },
+      ],
+    });
+
+    const first = await recalcLeague(db, "sfbl");
+    expect(first.players_written).toBe(2);
+    expect(first.pitchers_written).toBe(2);
+
+    const second = await recalcLeague(db, "sfbl");
+    expect(second.players_written).toBe(0);
+    expect(second.pitchers_written).toBe(0);
+  });
+
+  it("rewrites pitcher stats when underlying line changes", async () => {
+    await seedBoxScore("g1", {
+      away_lineup: [{ player_id: "p1", ab: 1, h: 0 }],
+      home_lineup: [],
+      away_pitchers: [
+        { player_id: "p1", ip_outs: 27, h: 5, r: 1, er: 1, bb: 0, so: 9, hr: 0, decision: "W" },
+      ],
+      home_pitchers: [],
+    });
+    await recalcLeague(db, "sfbl");
+
+    // Change ER on the pitching line.
+    await seedBoxScore("g1", {
+      away_lineup: [{ player_id: "p1", ab: 1, h: 0 }],
+      home_lineup: [],
+      away_pitchers: [
+        { player_id: "p1", ip_outs: 27, h: 5, r: 4, er: 4, bb: 0, so: 9, hr: 0, decision: "W" },
+      ],
+      home_pitchers: [],
+    });
+    const result = await recalcLeague(db, "sfbl");
+    expect(result.pitchers_written).toBe(1);
+  });
+
   it("does NOT process pitchers for softball league (sport gate)", async () => {
     // Reset to softball mid-test
     await db.doc("leagues/sfbl").set({ sport: "softball" }, { merge: true });
