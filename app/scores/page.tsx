@@ -1,21 +1,32 @@
-import Link from "next/link";
+// DVSL-style scores page: heading + Scores|Schedule tabs + week
+// selector + game cards grouped by day.
+
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { GameCard, type GameCardTeam } from "@/components/GameCard";
+import { computeWeeks, pickActiveWeek } from "@/lib/season-weeks";
+import { computeStandings, type GameResult } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
+import { ScoresScheduleTabs, WeekRow } from "./tabs-and-weeks";
 
 export const dynamic = "force-dynamic";
 
-interface FinalGame {
+interface ScoreGame {
   id: string;
-  home_team_id: string;
-  away_team_id: string;
-  home_score: number;
-  away_score: number;
-  date: string | null;
+  date: string;
+  status: string;
   field: string | null;
+  away_team_id: string;
+  home_team_id: string;
+  away_score: number;
+  home_score: number;
 }
 
-export default async function ScoresPage() {
+export default async function ScoresPage({
+  searchParams,
+}: {
+  searchParams?: { week?: string };
+}) {
   const h = headers();
   const tenantId = h.get("x-tenant-id");
   const config = (() => {
@@ -30,175 +41,168 @@ export default async function ScoresPage() {
 
   if (!tenantId) {
     return (
-      <Shell heading="Scores">
-        <p className="text-slate-700">Scores are tenant-scoped.</p>
-      </Shell>
+      <main className="container py-12">
+        <p>Visit a tenant subdomain.</p>
+      </main>
     );
   }
 
-  const { games, teamNames } = await loadScores(tenantId);
+  const { games, teams } = await loadScores(tenantId);
+  const finalGames = games.filter(
+    (g) => g.status === "final" || g.status === "approved",
+  );
+
+  const weeks = computeWeeks(finalGames);
+  const activeStart = searchParams?.week ?? pickActiveWeek(weeks);
+  const activeWeek = weeks.find((w) => w.startIso === activeStart) ?? null;
+  const activeGames = activeWeek
+    ? finalGames.filter((g) => activeWeek.dates.includes(g.date.slice(0, 10)))
+    : [];
+
+  const byDate = new Map<string, ScoreGame[]>();
+  for (const g of activeGames) {
+    const key = g.date.slice(0, 10);
+    if (!byDate.has(key)) byDate.set(key, []);
+    byDate.get(key)!.push(g);
+  }
+  const dayGroups = [...byDate.entries()].sort(([a], [b]) => a.localeCompare(b));
 
   return (
-    <Shell heading={config?.name ? `${config.name} — Scores` : "Scores"}>
-      {games.length === 0 ? (
-        <p className="text-slate-600">No final scores yet.</p>
+    <main className="container py-10">
+      <header className="mb-6">
+        <h1 className="font-display" style={{ fontSize: "clamp(40px, 6vw, 64px)" }}>
+          <span style={{ color: "var(--text-strong)" }}>Season</span>{" "}
+          <span style={{ color: "var(--brand-primary)" }}>Scores</span>
+        </h1>
+        {config?.name && <p className="sec-eyebrow mt-1">{config.name}</p>}
+      </header>
+
+      <ScoresScheduleTabs active="scores" />
+      <WeekRow
+        weeks={weeks.map((w) => ({ ...w, active: w.startIso === activeStart }))}
+        basePath="/scores"
+      />
+
+      {dayGroups.length === 0 ? (
+        <p className="mt-6" style={{ color: "var(--muted)" }}>
+          No final games this week.
+        </p>
       ) : (
-        <ScoresList games={games} teamNames={teamNames} />
+        <div className="space-y-8 mt-6">
+          {dayGroups.map(([date, list]) => (
+            <section key={date}>
+              <header className="mb-3 flex items-baseline gap-3">
+                <h3 className="font-display" style={{ fontSize: 24 }}>
+                  {formatDayHeading(date)}
+                </h3>
+                <span className="text-xs" style={{ color: "var(--muted)" }}>
+                  {list.length} game{list.length === 1 ? "" : "s"}
+                </span>
+              </header>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {list.map((g) => (
+                  <GameCard
+                    key={g.id}
+                    id={g.id}
+                    date={g.date}
+                    field={g.field}
+                    status={g.status}
+                    away={teamCardData(g.away_team_id, teams)}
+                    home={teamCardData(g.home_team_id, teams)}
+                    awayScore={g.away_score}
+                    homeScore={g.home_score}
+                  />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
       )}
-    </Shell>
+    </main>
   );
 }
 
-async function loadScores(tenantId: string) {
+interface TeamMeta {
+  name: string;
+  abbrev?: string;
+  color?: string;
+  logoUrl?: string | null;
+  record?: string;
+}
+
+async function loadScores(tenantId: string): Promise<{
+  games: ScoreGame[];
+  teams: Record<string, TeamMeta>;
+}> {
   const db = getAdminDb();
   const [gamesSnap, teamsSnap] = await Promise.all([
     db.collection(`leagues/${tenantId}/games`).get(),
     db.collection(`leagues/${tenantId}/teams`).get(),
   ]);
-  const games: FinalGame[] = gamesSnap.docs
-    .map((d) => {
-      const data = d.data();
-      return {
-        id: d.id,
-        home_team_id: String(data.home_team_id ?? ""),
-        away_team_id: String(data.away_team_id ?? ""),
-        home_score: Number(data.home_score ?? 0),
-        away_score: Number(data.away_score ?? 0),
-        status: String(data.status ?? ""),
-        date: data.date ? String(data.date) : null,
-        field: data.field ? String(data.field) : null,
-      };
-    })
-    .filter((g) => g.status === "final" || g.status === "approved")
-    .sort((a, b) => {
-      // Newest first.
-      if (!a.date && !b.date) return 0;
-      if (!a.date) return 1;
-      if (!b.date) return -1;
-      return b.date.localeCompare(a.date);
-    });
 
-  const teamNames: Record<string, string> = {};
+  const games: ScoreGame[] = gamesSnap.docs.map((d) => {
+    const data = d.data();
+    return {
+      id: d.id,
+      date: data.date ? String(data.date) : "",
+      status: String(data.status ?? "draft"),
+      field: data.field ? String(data.field) : null,
+      away_team_id: String(data.away_team_id ?? ""),
+      home_team_id: String(data.home_team_id ?? ""),
+      away_score: Number(data.away_score ?? 0),
+      home_score: Number(data.home_score ?? 0),
+    };
+  });
+
+  const standingsGames: GameResult[] = games.map((g) => ({
+    home_team_id: g.home_team_id,
+    away_team_id: g.away_team_id,
+    home_score: g.home_score,
+    away_score: g.away_score,
+    status: g.status as GameResult["status"],
+    date: g.date,
+  }));
+  const standings = computeStandings(standingsGames);
+  const recordByTeam = new Map(
+    standings.map((r) => [r.team_id, formatRecord(r.w, r.l, r.t)]),
+  );
+
+  const teams: Record<string, TeamMeta> = {};
   for (const d of teamsSnap.docs) {
-    teamNames[d.id] = String(d.data().name ?? d.id);
+    const data = d.data();
+    teams[d.id] = {
+      name: String(data.name ?? d.id),
+      abbrev: data.abbrev ? String(data.abbrev) : undefined,
+      color: data.color ? String(data.color) : undefined,
+      logoUrl: data.logo_url ? String(data.logo_url) : null,
+      record: recordByTeam.get(d.id),
+    };
   }
-  return { games, teamNames };
+  return { games, teams };
 }
 
-function Shell({ heading, children }: { heading: string; children: React.ReactNode }) {
-  return (
-    <main className="mx-auto max-w-3xl px-6 py-12">
-      <header className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">{heading}</h1>
-      </header>
-      {children}
-    </main>
-  );
+function teamCardData(id: string, teams: Record<string, TeamMeta>): GameCardTeam {
+  const t = teams[id];
+  return {
+    team_id: id,
+    name: t?.name ?? id,
+    abbrev: t?.abbrev,
+    color: t?.color,
+    logoUrl: t?.logoUrl,
+    record: t?.record,
+  };
 }
 
-function ScoresList({
-  games,
-  teamNames,
-}: {
-  games: FinalGame[];
-  teamNames: Record<string, string>;
-}) {
-  // Group by date so the eye can scan results week-by-week.
-  const byDate = new Map<string, FinalGame[]>();
-  for (const g of games) {
-    const key = g.date ? g.date.slice(0, 10) : "Undated";
-    if (!byDate.has(key)) byDate.set(key, []);
-    byDate.get(key)!.push(g);
-  }
-  return (
-    <div className="space-y-6">
-      {[...byDate.entries()].map(([date, group]) => (
-        <section key={date}>
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
-            {formatDateHeading(date)}
-          </h2>
-          <ul className="grid gap-2 sm:grid-cols-2">
-            {group.map((g) => (
-              <ScoreCard key={g.id} g={g} teamNames={teamNames} />
-            ))}
-          </ul>
-        </section>
-      ))}
-    </div>
-  );
-}
-
-function ScoreCard({
-  g,
-  teamNames,
-}: {
-  g: FinalGame;
-  teamNames: Record<string, string>;
-}) {
-  const home = teamNames[g.home_team_id] ?? g.home_team_id;
-  const away = teamNames[g.away_team_id] ?? g.away_team_id;
-  const isHomeWin = g.home_score > g.away_score;
-  const isAwayWin = g.away_score > g.home_score;
-  const isTie = g.home_score === g.away_score;
-
-  return (
-    <li>
-      <Link
-        href={`/games/${g.id}`}
-        className="block rounded-md border border-slate-200 bg-white p-3 text-sm hover:border-slate-400 hover:shadow-sm"
-      >
-        <Row name={away} score={g.away_score} winner={isAwayWin} tie={isTie} />
-        <Row name={home} score={g.home_score} winner={isHomeWin} tie={isTie} />
-        {g.field && <p className="mt-1 text-xs text-slate-500">{g.field}</p>}
-      </Link>
-    </li>
-  );
-}
-
-function Row({
-  name,
-  score,
-  winner,
-  tie,
-}: {
-  name: string;
-  score: number;
-  winner: boolean;
-  tie: boolean;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-2">
-      <span
-        className={
-          tie
-            ? "text-slate-700"
-            : winner
-              ? "font-semibold text-slate-900"
-              : "text-slate-500"
-        }
-      >
-        {name}
-      </span>
-      <span
-        className={
-          "tabular-nums " +
-          (tie ? "text-slate-700" : winner ? "font-semibold text-slate-900" : "text-slate-500")
-        }
-      >
-        {score}
-      </span>
-    </div>
-  );
-}
-
-function formatDateHeading(yyyyMmDd: string): string {
-  if (yyyyMmDd === "Undated") return yyyyMmDd;
+function formatDayHeading(yyyyMmDd: string): string {
   const d = new Date(yyyyMmDd + "T12:00:00Z");
   return d.toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
-    year: "numeric",
     timeZone: "UTC",
   });
+}
+
+function formatRecord(w: number, l: number, t: number): string {
+  return t > 0 ? `(${w}-${l}-${t})` : `(${w}-${l})`;
 }

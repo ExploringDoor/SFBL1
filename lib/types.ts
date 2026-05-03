@@ -55,6 +55,7 @@ export interface LeagueConfig {
   // Identity
   slug: string;
   name: string;
+  abbrev?: string; // short league abbreviation, e.g. "SFBL", "DVSL"
 
   // Sport variant
   sport: Sport;

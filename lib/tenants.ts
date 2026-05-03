@@ -7,6 +7,7 @@ import type { DomainMapping, LeagueConfig, ResolvedTenant } from "./types";
 export interface PublicLeagueConfig {
   slug: string;
   name: string;
+  abbrev?: string;
   sport: LeagueConfig["sport"];
   innings: number;
   ruleset: LeagueConfig["ruleset"];
@@ -24,6 +25,7 @@ export function toPublicConfig(c: LeagueConfig): PublicLeagueConfig {
   return {
     slug: c.slug,
     name: c.name,
+    abbrev: c.abbrev,
     sport: c.sport,
     innings: c.innings,
     ruleset: c.ruleset,

@@ -29,6 +29,7 @@ const LEAGUE_ID = "sfbl";
 const LEAGUE_CONFIG = {
   slug: LEAGUE_ID,
   name: "South Florida Baseball",
+  abbrev: "SFBL",
   sport: "baseball",
   innings: 9,
   ruleset: "hardball",
@@ -39,7 +40,7 @@ const LEAGUE_CONFIG = {
     columns: ["IP", "H", "R", "ER", "BB", "SO", "HR"],
   },
   rules_flags: { dropped_third_strike: true, balks: true, infield_fly: true },
-  theme: { primary: "#0c4a6e", accent: "#f59e0b" },
+  theme: { primary: "#0c1730", accent: "#f7c948", logo_url: "/logos/sfbl/sfbl-logo.png" },
   billing: {
     status: "active",
     paid_through: null,
@@ -56,46 +57,52 @@ const LEAGUE_CONFIG = {
   },
 };
 
+// Real SFBL teams + 3 age-based divisions (matches SFBL's actual division
+// structure). Logos copied to /public/logos/sfbl/.
 const TEAMS = [
-  { id: "team_foxes", name: "Miami Foxes", division: "East" },
-  { id: "team_sluggers", name: "Tampa Sluggers", division: "East" },
-  { id: "team_bears", name: "Orlando Bears", division: "West" },
-  { id: "team_eagles", name: "Jacksonville Eagles", division: "West" },
+  // 18+ Division
+  { id: "wpb_cardinals",    name: "West Palm Beach Cardinals", abbrev: "WPBC", division: "18+ Division", color: "#a91e2c", logo: "wpb-cardinals.png" },
+  { id: "miami_orioles",    name: "Miami Orioles",             abbrev: "ORI",  division: "18+ Division", color: "#df4601", logo: "miami-orioles.png" },
+  { id: "margate_marlins",  name: "Margate Marlins",           abbrev: "MAR",  division: "18+ Division", color: "#0a8aaa", logo: "margate-marlins.png" },
+  { id: "miami_buccaneers", name: "Miami Buccaneers",          abbrev: "BUCS", division: "18+ Division", color: "#a71930", logo: "miami-buccaneers.png" },
+  // 28+ Division
+  { id: "pb_pirates",       name: "Palm Beach Pirates",        abbrev: "PIR",  division: "28+ Division", color: "#000000", logo: "palm-beach-pirates.png" },
+  { id: "sf_rays",          name: "South Florida Rays",        abbrev: "RAYS", division: "28+ Division", color: "#092c5c", logo: "sf-rays.png" },
+  { id: "broward_yankees",  name: "Broward Yankees",           abbrev: "YANK", division: "28+ Division", color: "#0c2340", logo: "broward-yankees.png" },
+  // 35+ American
+  { id: "sf_astros",        name: "South Florida Astros",      abbrev: "ASTR", division: "35+ American", color: "#002d62", logo: "sf-astros.png" },
+  { id: "miami_redsox",     name: "Miami Red Sox",             abbrev: "SOX",  division: "35+ American", color: "#bd3039", logo: "miami-red-sox.png" },
 ];
 
-// Games: a small round-robin so standings show interesting variance.
-// Status varies so we exercise the "ignore drafts" rule. Dates are
-// stored as ISO 8601 strings — Firestore Timestamp would be cleaner
-// long-term but strings are easier to seed/inspect.
-//
-// Upcoming games (status: scheduled) drive the /schedule page; final
-// games drive both /standings and /scores.
+// Real-world-ish fixture: a few games among the 7 SFBL teams.
 const GAMES = [
-  // Past games — final
-  { id: "g1", home: "team_foxes", away: "team_sluggers", hs: 9, as: 3, status: "final",
+  // April — finals
+  { id: "g1", home: "miami_orioles",    away: "miami_buccaneers", hs: 9, as: 3, status: "final",
     date: "2026-04-12T13:00:00-04:00", field: "Tropical Park 1" },
-  { id: "g2", home: "team_sluggers", away: "team_foxes", hs: 4, as: 2, status: "final",
-    date: "2026-04-19T13:00:00-04:00", field: "Tropical Park 1" },
-  { id: "g3", home: "team_foxes", away: "team_sluggers", hs: 5, as: 5, status: "final",
-    date: "2026-04-26T13:00:00-04:00", field: "Tropical Park 2" }, // tie
-  { id: "g4", home: "team_bears", away: "team_eagles", hs: 7, as: 1, status: "final",
-    date: "2026-04-12T16:00:00-04:00", field: "Lake Eola" },
-  { id: "g5", home: "team_eagles", away: "team_bears", hs: 2, as: 8, status: "final",
-    date: "2026-04-19T16:00:00-04:00", field: "Lake Eola" },
-  { id: "g6", home: "team_foxes", away: "team_bears", hs: 3, as: 6, status: "final",
-    date: "2026-04-26T16:00:00-04:00", field: "Tropical Park 1" },
-  { id: "g7", home: "team_sluggers", away: "team_eagles", hs: 10, as: 0, status: "final",
-    date: "2026-05-03T13:00:00-04:00", field: "Tropical Park 1" },
-  // Future scheduled games
-  { id: "g9", home: "team_eagles", away: "team_foxes", hs: 0, as: 0, status: "scheduled",
-    date: "2026-05-10T13:00:00-04:00", field: "Tropical Park 2" },
-  { id: "g10", home: "team_bears", away: "team_sluggers", hs: 0, as: 0, status: "scheduled",
-    date: "2026-05-10T16:00:00-04:00", field: "Lake Eola" },
-  { id: "g11", home: "team_eagles", away: "team_bears", hs: 0, as: 0, status: "scheduled",
-    date: "2026-05-17T13:00:00-04:00", field: "Lake Eola" },
-  // Should be ignored by standings (and shown as "TBD" on schedule)
-  { id: "g8_draft", home: "team_foxes", away: "team_eagles", hs: 99, as: 0, status: "draft",
-    date: "2026-05-24T13:00:00-04:00", field: "Tropical Park 2" },
+  { id: "g2", home: "wpb_cardinals",    away: "sf_rays",          hs: 7, as: 1, status: "final",
+    date: "2026-04-12T16:00:00-04:00", field: "WPB Field 2" },
+  { id: "g3", home: "margate_marlins",  away: "miami_orioles",    hs: 4, as: 2, status: "final",
+    date: "2026-04-19T13:00:00-04:00", field: "Margate Park" },
+  { id: "g4", home: "wpb_cardinals",    away: "broward_yankees",  hs: 8, as: 2, status: "final",
+    date: "2026-04-19T16:00:00-04:00", field: "WPB Field 2" },
+  { id: "g5", home: "margate_marlins",  away: "miami_orioles",    hs: 5, as: 5, status: "final",
+    date: "2026-04-26T13:00:00-04:00", field: "Margate Park" }, // tie
+  { id: "g6", home: "wpb_cardinals",    away: "miami_redsox",     hs: 6, as: 3, status: "final",
+    date: "2026-04-26T16:00:00-04:00", field: "WPB Field 2" },
+  { id: "g7", home: "margate_marlins",  away: "miami_redsox",     hs: 10, as: 0, status: "final",
+    date: "2026-05-03T13:00:00-04:00", field: "Margate Park" },
+  // May — scheduled
+  { id: "g8",  home: "miami_orioles",   away: "sf_rays",          hs: 0, as: 0, status: "scheduled",
+    date: "2026-05-10T13:00:00-04:00", field: "Tropical Park 1" },
+  { id: "g9",  home: "margate_marlins", away: "wpb_cardinals",    hs: 0, as: 0, status: "scheduled",
+    date: "2026-05-10T16:00:00-04:00", field: "Margate Park" },
+  { id: "g10", home: "sf_rays",         away: "miami_redsox",     hs: 0, as: 0, status: "scheduled",
+    date: "2026-05-17T13:00:00-04:00", field: "Plantation Field" },
+  { id: "g11", home: "broward_yankees", away: "miami_buccaneers", hs: 0, as: 0, status: "scheduled",
+    date: "2026-05-17T16:00:00-04:00", field: "Coral Springs" },
+  // Draft (should not appear in standings)
+  { id: "g_draft", home: "miami_orioles", away: "broward_yankees", hs: 99, as: 0, status: "draft",
+    date: "2026-05-24T13:00:00-04:00", field: "Tropical Park 1" },
 ];
 
 // Players. Each carries a team_id (primary team), jersey, position.
@@ -103,19 +110,19 @@ const GAMES = [
 // these docs. Players who never appear in a box score still show up on
 // their team's roster but have no stats line yet.
 const PLAYERS = [
-  // Tampa Sluggers
-  { id: "p1_alice", team_id: "team_sluggers", name: "Alice Carter", jersey: 7, position: "P/SS" },
-  { id: "p2_bob",   team_id: "team_sluggers", name: "Bob Diaz",     jersey: 12, position: "C" },
-  { id: "p3_carol", team_id: "team_sluggers", name: "Carol Esposito", jersey: 24, position: "OF" },
-  // Miami Foxes
-  { id: "p4_dan",   team_id: "team_foxes",    name: "Dan Forsyth",  jersey: 3,  position: "P/3B" },
-  { id: "p5_emma",  team_id: "team_foxes",    name: "Emma Greene",  jersey: 18, position: "OF" },
-  // Orlando Bears (roster only, haven't played in our seeded box scores)
-  { id: "p6_frank", team_id: "team_bears",    name: "Frank Hayes",  jersey: 10, position: "1B" },
-  { id: "p7_grace", team_id: "team_bears",    name: "Grace Iglesias", jersey: 5,  position: "2B" },
-  // Jacksonville Eagles
-  { id: "p8_henry", team_id: "team_eagles",   name: "Henry Jameson", jersey: 22, position: "SS" },
-  { id: "p9_iris",  team_id: "team_eagles",   name: "Iris Khan",    jersey: 11, position: "OF" },
+  // Margate Marlins
+  { id: "p1_alice",  team_id: "margate_marlins",  name: "Alice Carter",     jersey: 7,  position: "P/SS" },
+  { id: "p2_bob",    team_id: "margate_marlins",  name: "Bob Diaz",         jersey: 12, position: "C" },
+  { id: "p3_carol",  team_id: "margate_marlins",  name: "Carol Esposito",   jersey: 24, position: "OF" },
+  // Miami Orioles
+  { id: "p4_dan",    team_id: "miami_orioles",    name: "Dan Forsyth",      jersey: 3,  position: "P/3B" },
+  { id: "p5_emma",   team_id: "miami_orioles",    name: "Emma Greene",      jersey: 18, position: "OF" },
+  // WPB Cardinals
+  { id: "p6_frank",  team_id: "wpb_cardinals",    name: "Frank Hayes",      jersey: 10, position: "1B" },
+  { id: "p7_grace",  team_id: "wpb_cardinals",    name: "Grace Iglesias",   jersey: 5,  position: "2B" },
+  // SF Rays
+  { id: "p8_henry",  team_id: "sf_rays",          name: "Henry Jameson",    jersey: 22, position: "SS" },
+  { id: "p9_iris",   team_id: "sf_rays",          name: "Iris Khan",        jersey: 11, position: "OF" },
 ];
 
 // Box scores for a couple of games. Drives the recalc smoke test.
@@ -124,10 +131,17 @@ const BOX_SCORES: Array<[string, Record<string, unknown>]> = [
     "g1",
     {
       status: "final",
-      home_team_id: "team_foxes",
-      away_team_id: "team_sluggers",
+      home_team_id: "miami_orioles",
+      away_team_id: "miami_buccaneers",
       home_score: 9,
       away_score: 3,
+      // linescore: inning-by-inning runs. Length matches league.linescore_innings (9 for SFBL).
+      linescore: {
+        away: [0, 1, 0, 0, 0, 2, 0, 0, 0],
+        home: [3, 0, 2, 1, 0, 1, 0, 2, 0],
+      },
+      hits: { away: 6, home: 11 },
+      errors: { away: 2, home: 1 },
       away_lineup: [
         { player_id: "p1_alice", ab: 4, h: 3, doubles: 1, triples: 0, hr: 1, rbi: 3, bb: 0, so: 1, r: 2 },
         { player_id: "p2_bob", ab: 4, h: 1, doubles: 0, triples: 0, hr: 0, rbi: 0, bb: 0, so: 2, r: 0 },
@@ -149,10 +163,16 @@ const BOX_SCORES: Array<[string, Record<string, unknown>]> = [
     "g2",
     {
       status: "final",
-      home_team_id: "team_sluggers",
-      away_team_id: "team_foxes",
+      home_team_id: "margate_marlins",
+      away_team_id: "miami_orioles",
       home_score: 4,
       away_score: 2,
+      linescore: {
+        away: [0, 0, 1, 0, 0, 1, 0, 0, 0],
+        home: [1, 0, 2, 0, 1, 0, 0, 0, 0],
+      },
+      hits: { away: 5, home: 7 },
+      errors: { away: 1, home: 1 },
       away_lineup: [
         { player_id: "p4_dan", ab: 4, h: 1, doubles: 0, triples: 0, hr: 0, rbi: 1, bb: 0, so: 1, r: 0 },
         { player_id: "p5_emma", ab: 3, h: 0, doubles: 0, triples: 0, hr: 0, rbi: 0, bb: 1, so: 0, r: 0 },
@@ -174,6 +194,16 @@ const BOX_SCORES: Array<[string, Record<string, unknown>]> = [
 async function run() {
   console.log(`[seed-fixture] writing to ${process.env.FIRESTORE_EMULATOR_HOST} (${projectId})`);
 
+  // Wipe stale docs from previous fixture iterations so old team_ids
+  // (e.g. team_foxes) don't linger as 0-0 mystery teams.
+  for (const sub of ["teams", "games", "players", "box_scores"]) {
+    const stale = await db.collection(`leagues/${LEAGUE_ID}/${sub}`).get();
+    if (stale.empty) continue;
+    const batch = db.batch();
+    for (const d of stale.docs) batch.delete(d.ref);
+    await batch.commit();
+  }
+
   // League config
   await db.doc(`leagues/${LEAGUE_ID}`).set(LEAGUE_CONFIG);
 
@@ -181,7 +211,10 @@ async function run() {
   for (const t of TEAMS) {
     await db.doc(`leagues/${LEAGUE_ID}/teams/${t.id}`).set({
       name: t.name,
+      abbrev: t.abbrev,
       division: t.division,
+      color: t.color,
+      logo_url: t.logo ? `/logos/sfbl/${t.logo}` : null,
     });
   }
 

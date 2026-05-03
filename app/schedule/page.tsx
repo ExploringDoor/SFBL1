@@ -1,22 +1,30 @@
-import Link from "next/link";
+// DVSL-style schedule page: same heading + tab pattern as /scores, but
+// shows upcoming games only. No Recap/Box Score buttons, just Preview.
+
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { GameCard, type GameCardTeam } from "@/components/GameCard";
+import { computeWeeks, pickActiveWeek } from "@/lib/season-weeks";
+import { computeStandings, type GameResult } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
+import { ScoresScheduleTabs, WeekRow } from "../scores/tabs-and-weeks";
 
 export const dynamic = "force-dynamic";
 
-interface GameRow {
+interface ScheduleGame {
   id: string;
-  home_team_id: string;
-  away_team_id: string;
-  home_score: number;
-  away_score: number;
+  date: string;
   status: string;
-  date: string | null;
   field: string | null;
+  away_team_id: string;
+  home_team_id: string;
 }
 
-export default async function SchedulePage() {
+export default async function SchedulePage({
+  searchParams,
+}: {
+  searchParams?: { week?: string };
+}) {
   const h = headers();
   const tenantId = h.get("x-tenant-id");
   const config = (() => {
@@ -31,202 +39,166 @@ export default async function SchedulePage() {
 
   if (!tenantId) {
     return (
-      <Shell heading="Schedule">
-        <p className="text-slate-700">
-          Schedules are tenant-scoped. Visit a tenant subdomain.
-        </p>
-      </Shell>
+      <main className="container py-12">
+        <p>Visit a tenant subdomain.</p>
+      </main>
     );
   }
 
-  const { games, teamNames } = await loadSchedule(tenantId);
-  const upcoming = games.filter(
-    (g) => (g.status === "scheduled" || g.status === "draft") && g.date,
-  );
-  const recent = games.filter((g) => g.status === "final" || g.status === "approved");
+  const { games, teams } = await loadSchedule(tenantId);
+  const upcoming = games.filter((g) => g.status === "scheduled");
+
+  const weeks = computeWeeks(upcoming);
+  const activeStart = searchParams?.week ?? pickActiveWeek(weeks);
+  const activeWeek = weeks.find((w) => w.startIso === activeStart) ?? null;
+  const activeGames = activeWeek
+    ? upcoming.filter((g) => activeWeek.dates.includes(g.date.slice(0, 10)))
+    : [];
+
+  const byDate = new Map<string, ScheduleGame[]>();
+  for (const g of activeGames) {
+    const key = g.date.slice(0, 10);
+    if (!byDate.has(key)) byDate.set(key, []);
+    byDate.get(key)!.push(g);
+  }
+  const dayGroups = [...byDate.entries()].sort(([a], [b]) => a.localeCompare(b));
 
   return (
-    <Shell heading={config?.name ? `${config.name} — Schedule` : "Schedule"}>
-      <section className="space-y-8">
-        <div>
-          <h2 className="mb-3 text-lg font-semibold text-slate-800">Upcoming</h2>
-          {upcoming.length === 0 ? (
-            <p className="text-sm text-slate-500">Nothing scheduled.</p>
-          ) : (
-            <GameList games={upcoming} teamNames={teamNames} mode="upcoming" />
-          )}
+    <main className="container py-10">
+      <header className="mb-6">
+        <h1 className="font-display" style={{ fontSize: "clamp(40px, 6vw, 64px)" }}>
+          <span style={{ color: "var(--text-strong)" }}>Season</span>{" "}
+          <span style={{ color: "var(--brand-primary)" }}>Schedule</span>
+        </h1>
+        {config?.name && <p className="sec-eyebrow mt-1">{config.name}</p>}
+      </header>
+
+      <ScoresScheduleTabs active="schedule" />
+      <WeekRow
+        weeks={weeks.map((w) => ({ ...w, active: w.startIso === activeStart }))}
+        basePath="/schedule"
+      />
+
+      {dayGroups.length === 0 ? (
+        <p className="mt-6" style={{ color: "var(--muted)" }}>
+          No games this week.
+        </p>
+      ) : (
+        <div className="space-y-8 mt-6">
+          {dayGroups.map(([date, list]) => (
+            <section key={date}>
+              <header className="mb-3 flex items-baseline gap-3">
+                <h3 className="font-display" style={{ fontSize: 24 }}>
+                  {formatDayHeading(date)}
+                </h3>
+                <span className="text-xs" style={{ color: "var(--muted)" }}>
+                  {list.length} game{list.length === 1 ? "" : "s"}
+                </span>
+              </header>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {list.map((g) => (
+                  <GameCard
+                    key={g.id}
+                    id={g.id}
+                    date={g.date}
+                    field={g.field}
+                    status={g.status}
+                    away={teamCardData(g.away_team_id, teams)}
+                    home={teamCardData(g.home_team_id, teams)}
+                  />
+                ))}
+              </div>
+            </section>
+          ))}
         </div>
-        <div>
-          <h2 className="mb-3 text-lg font-semibold text-slate-800">Recent results</h2>
-          {recent.length === 0 ? (
-            <p className="text-sm text-slate-500">No results yet.</p>
-          ) : (
-            <GameList games={recent} teamNames={teamNames} mode="results" />
-          )}
-        </div>
-      </section>
-    </Shell>
+      )}
+    </main>
   );
 }
 
-async function loadSchedule(tenantId: string) {
+interface TeamMeta {
+  name: string;
+  abbrev?: string;
+  color?: string;
+  logoUrl?: string | null;
+  record?: string;
+}
+
+async function loadSchedule(tenantId: string): Promise<{
+  games: ScheduleGame[];
+  teams: Record<string, TeamMeta>;
+}> {
   const db = getAdminDb();
   const [gamesSnap, teamsSnap] = await Promise.all([
     db.collection(`leagues/${tenantId}/games`).get(),
     db.collection(`leagues/${tenantId}/teams`).get(),
   ]);
-  const games: GameRow[] = gamesSnap.docs
-    .map((d) => {
-      const data = d.data();
-      return {
-        id: d.id,
-        home_team_id: String(data.home_team_id ?? ""),
-        away_team_id: String(data.away_team_id ?? ""),
-        home_score: Number(data.home_score ?? 0),
-        away_score: Number(data.away_score ?? 0),
-        status: String(data.status ?? "draft"),
-        date: data.date ? String(data.date) : null,
-        field: data.field ? String(data.field) : null,
-      };
-    })
-    .sort((a, b) => {
-      if (!a.date && !b.date) return 0;
-      if (!a.date) return 1;
-      if (!b.date) return -1;
-      return a.date.localeCompare(b.date);
-    });
-  const teamNames: Record<string, string> = {};
+
+  const games: ScheduleGame[] = gamesSnap.docs.map((d) => {
+    const data = d.data();
+    return {
+      id: d.id,
+      date: data.date ? String(data.date) : "",
+      status: String(data.status ?? "draft"),
+      field: data.field ? String(data.field) : null,
+      away_team_id: String(data.away_team_id ?? ""),
+      home_team_id: String(data.home_team_id ?? ""),
+    };
+  });
+
+  // Records for the team-row subtitles on cards.
+  const standingsGames: GameResult[] = gamesSnap.docs.map((d) => {
+    const data = d.data();
+    return {
+      home_team_id: String(data.home_team_id ?? ""),
+      away_team_id: String(data.away_team_id ?? ""),
+      home_score: Number(data.home_score ?? 0),
+      away_score: Number(data.away_score ?? 0),
+      status: (data.status ?? "draft") as GameResult["status"],
+      date: data.date ? String(data.date) : undefined,
+    };
+  });
+  const standings = computeStandings(standingsGames);
+  const recordByTeam = new Map(
+    standings.map((r) => [r.team_id, formatRecord(r.w, r.l, r.t)]),
+  );
+
+  const teams: Record<string, TeamMeta> = {};
   for (const d of teamsSnap.docs) {
-    teamNames[d.id] = String(d.data().name ?? d.id);
+    const data = d.data();
+    teams[d.id] = {
+      name: String(data.name ?? d.id),
+      abbrev: data.abbrev ? String(data.abbrev) : undefined,
+      color: data.color ? String(data.color) : undefined,
+      logoUrl: data.logo_url ? String(data.logo_url) : null,
+      record: recordByTeam.get(d.id),
+    };
   }
-  return { games, teamNames };
+  return { games, teams };
 }
 
-function Shell({
-  heading,
-  children,
-}: {
-  heading: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <main className="mx-auto max-w-3xl px-6 py-12">
-      <header className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">{heading}</h1>
-      </header>
-      {children}
-    </main>
-  );
+function teamCardData(id: string, teams: Record<string, TeamMeta>): GameCardTeam {
+  const t = teams[id];
+  return {
+    team_id: id,
+    name: t?.name ?? id,
+    abbrev: t?.abbrev,
+    color: t?.color,
+    logoUrl: t?.logoUrl,
+    record: t?.record,
+  };
 }
 
-function GameList({
-  games,
-  teamNames,
-  mode,
-}: {
-  games: GameRow[];
-  teamNames: Record<string, string>;
-  mode: "upcoming" | "results";
-}) {
-  // Group by date (YYYY-MM-DD) for visual chunking.
-  const byDate = new Map<string, GameRow[]>();
-  for (const g of games) {
-    const key = g.date ? g.date.slice(0, 10) : "TBD";
-    if (!byDate.has(key)) byDate.set(key, []);
-    byDate.get(key)!.push(g);
-  }
-  return (
-    <div className="space-y-4">
-      {[...byDate.entries()].map(([date, group]) => (
-        <div key={date}>
-          <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            {formatDateHeading(date)}
-          </h3>
-          <ul className="divide-y divide-slate-100 rounded-md border border-slate-200 bg-white">
-            {group.map((g) => (
-              <GameRow key={g.id} g={g} teamNames={teamNames} mode={mode} />
-            ))}
-          </ul>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function GameRow({
-  g,
-  teamNames,
-  mode,
-}: {
-  g: GameRow;
-  teamNames: Record<string, string>;
-  mode: "upcoming" | "results";
-}) {
-  const home = teamNames[g.home_team_id] ?? g.home_team_id;
-  const away = teamNames[g.away_team_id] ?? g.away_team_id;
-  const time = g.date ? formatTime(g.date) : "TBD";
-  const homeWon = g.home_score > g.away_score;
-  const awayWon = g.away_score > g.home_score;
-  const inner = (
-    <>
-      <div className="flex flex-col gap-0.5">
-        <div className="flex items-center gap-2">
-          <span className={awayWon ? "font-semibold text-slate-900" : "text-slate-700"}>
-            {away}
-          </span>
-          <span className="text-slate-400">@</span>
-          <span className={homeWon ? "font-semibold text-slate-900" : "text-slate-700"}>
-            {home}
-          </span>
-        </div>
-        {g.field && <span className="text-xs text-slate-500">{g.field}</span>}
-      </div>
-      <div className="text-right text-xs">
-        {mode === "results" ? (
-          <span className="font-mono text-slate-900">
-            {g.away_score}–{g.home_score}
-          </span>
-        ) : (
-          <span className="text-slate-600">{time}</span>
-        )}
-      </div>
-    </>
-  );
-  return (
-    <li>
-      {mode === "results" ? (
-        <Link
-          href={`/games/${g.id}`}
-          className="flex items-center justify-between gap-3 px-4 py-3 text-sm hover:bg-slate-50"
-        >
-          {inner}
-        </Link>
-      ) : (
-        <div className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-          {inner}
-        </div>
-      )}
-    </li>
-  );
-}
-
-function formatDateHeading(yyyyMmDd: string): string {
-  if (yyyyMmDd === "TBD") return "TBD";
+function formatDayHeading(yyyyMmDd: string): string {
   const d = new Date(yyyyMmDd + "T12:00:00Z");
   return d.toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
-    year: "numeric",
     timeZone: "UTC",
   });
 }
 
-function formatTime(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
+function formatRecord(w: number, l: number, t: number): string {
+  return t > 0 ? `(${w}-${l}-${t})` : `(${w}-${l})`;
 }
