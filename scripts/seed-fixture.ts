@@ -64,20 +64,38 @@ const TEAMS = [
 ];
 
 // Games: a small round-robin so standings show interesting variance.
-// Status varies so we exercise the "ignore drafts" rule too.
+// Status varies so we exercise the "ignore drafts" rule. Dates are
+// stored as ISO 8601 strings — Firestore Timestamp would be cleaner
+// long-term but strings are easier to seed/inspect.
+//
+// Upcoming games (status: scheduled) drive the /schedule page; final
+// games drive both /standings and /scores.
 const GAMES = [
-  // East division
-  { id: "g1", home: "team_foxes", away: "team_sluggers", hs: 9, as: 3, status: "final" },
-  { id: "g2", home: "team_sluggers", away: "team_foxes", hs: 4, as: 2, status: "final" },
-  { id: "g3", home: "team_foxes", away: "team_sluggers", hs: 5, as: 5, status: "final" }, // tie
-  // West division
-  { id: "g4", home: "team_bears", away: "team_eagles", hs: 7, as: 1, status: "final" },
-  { id: "g5", home: "team_eagles", away: "team_bears", hs: 2, as: 8, status: "final" },
-  // Cross-division
-  { id: "g6", home: "team_foxes", away: "team_bears", hs: 3, as: 6, status: "final" },
-  { id: "g7", home: "team_sluggers", away: "team_eagles", hs: 10, as: 0, status: "final" },
-  // Should be ignored by standings
-  { id: "g8_draft", home: "team_foxes", away: "team_eagles", hs: 99, as: 0, status: "draft" },
+  // Past games — final
+  { id: "g1", home: "team_foxes", away: "team_sluggers", hs: 9, as: 3, status: "final",
+    date: "2026-04-12T13:00:00-04:00", field: "Tropical Park 1" },
+  { id: "g2", home: "team_sluggers", away: "team_foxes", hs: 4, as: 2, status: "final",
+    date: "2026-04-19T13:00:00-04:00", field: "Tropical Park 1" },
+  { id: "g3", home: "team_foxes", away: "team_sluggers", hs: 5, as: 5, status: "final",
+    date: "2026-04-26T13:00:00-04:00", field: "Tropical Park 2" }, // tie
+  { id: "g4", home: "team_bears", away: "team_eagles", hs: 7, as: 1, status: "final",
+    date: "2026-04-12T16:00:00-04:00", field: "Lake Eola" },
+  { id: "g5", home: "team_eagles", away: "team_bears", hs: 2, as: 8, status: "final",
+    date: "2026-04-19T16:00:00-04:00", field: "Lake Eola" },
+  { id: "g6", home: "team_foxes", away: "team_bears", hs: 3, as: 6, status: "final",
+    date: "2026-04-26T16:00:00-04:00", field: "Tropical Park 1" },
+  { id: "g7", home: "team_sluggers", away: "team_eagles", hs: 10, as: 0, status: "final",
+    date: "2026-05-03T13:00:00-04:00", field: "Tropical Park 1" },
+  // Future scheduled games
+  { id: "g9", home: "team_eagles", away: "team_foxes", hs: 0, as: 0, status: "scheduled",
+    date: "2026-05-10T13:00:00-04:00", field: "Tropical Park 2" },
+  { id: "g10", home: "team_bears", away: "team_sluggers", hs: 0, as: 0, status: "scheduled",
+    date: "2026-05-10T16:00:00-04:00", field: "Lake Eola" },
+  { id: "g11", home: "team_eagles", away: "team_bears", hs: 0, as: 0, status: "scheduled",
+    date: "2026-05-17T13:00:00-04:00", field: "Lake Eola" },
+  // Should be ignored by standings (and shown as "TBD" on schedule)
+  { id: "g8_draft", home: "team_foxes", away: "team_eagles", hs: 99, as: 0, status: "draft",
+    date: "2026-05-24T13:00:00-04:00", field: "Tropical Park 2" },
 ];
 
 // Box scores for a couple of games. Drives the recalc smoke test.
@@ -155,6 +173,8 @@ async function run() {
       home_score: g.hs,
       away_score: g.as,
       status: g.status,
+      date: g.date,
+      field: g.field,
     });
   }
 
