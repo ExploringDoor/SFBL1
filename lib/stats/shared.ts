@@ -89,17 +89,22 @@ export function computePoints(row: StandingsRow, scheme: PointsScheme): number {
   return row.w * scheme.win + row.t * scheme.tie + row.l * scheme.loss;
 }
 
-// Sort an existing standings list by points desc with run-diff tiebreak.
-// Use this when the league config has `scoring: 'points'`. Returns a new
-// array — does not mutate. Doesn't recompute GB (which is W-L-based and
-// stays meaningful even in points mode for "games behind first place").
+export type Tiebreaker = "pct" | "rd";
+
+// Sort an existing standings list by points desc with the given
+// tiebreaker. Use this when the league config has `scoring: 'points'`.
+// Returns a new array — does not mutate. Doesn't recompute GB (which is
+// W-L-based and stays meaningful even in points mode for "games behind
+// first place").
 export function sortByPoints(
   rows: StandingsRow[],
   scheme: PointsScheme,
+  tiebreaker: Tiebreaker = "rd",
 ): StandingsRow[] {
   const annotated = rows.map((r) => ({ row: r, points: computePoints(r, scheme) }));
   annotated.sort((a, b) => {
     if (b.points !== a.points) return b.points - a.points;
+    if (tiebreaker === "pct") return b.row.pct - a.row.pct;
     return b.row.rd - a.row.rd;
   });
   return annotated.map((a) => a.row);

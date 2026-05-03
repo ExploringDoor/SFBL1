@@ -47,6 +47,13 @@ const LEAGUE_CONFIG = {
     notes: "fixture seed",
   },
   flags: {},
+  // SFBL uses points-based standings. Confirmed from a screenshot of
+  // their actual standings table: W=2, T=1, L=0; ties broken by PCT.
+  standings: {
+    scoring: "points",
+    points_per: { win: 2, tie: 1, loss: 0 },
+    tiebreaker: "pct",
+  },
 };
 
 const TEAMS = [

@@ -37,14 +37,18 @@ export interface LeagueFeatureFlags {
 // Optional standings configuration. When absent, sort by PCT desc with
 // run-differential as tiebreaker (the "default baseball" model).
 //
-// When `scoring` is "points", sort by points desc instead. Points are
-// computed via `points_per` — DVSL's softball league uses {win:3, tie:2,
-// loss:1}; UEFA-style soccer uses {win:3, tie:1, loss:0}. Always store
-// the full multiplier triple even when one is zero, so the rule is
-// inspectable.
+// When `scoring` is "points", sort by points desc with the configured
+// tiebreaker. Real-world schemes encountered:
+//   • SFBL baseball:  {win:2, tie:1, loss:0}, tiebreaker:'pct'
+//   • DVSL softball:  {win:3, tie:2, loss:1}, tiebreaker:'pct'
+//   • UEFA-style:     {win:3, tie:1, loss:0}
+//
+// Always store the full triple even when one multiplier is zero, so the
+// rule is inspectable from the doc.
 export interface LeagueStandingsConfig {
   scoring?: "pct" | "points";
   points_per?: { win: number; tie: number; loss: number };
+  tiebreaker?: "pct" | "rd";
 }
 
 export interface LeagueConfig {

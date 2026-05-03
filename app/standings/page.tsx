@@ -41,7 +41,9 @@ export default async function StandingsPage() {
   // Apply points-based sorting if the league configures it.
   const scheme = config?.standings?.points_per;
   const usePoints = config?.standings?.scoring === "points" && !!scheme;
-  const finalRows = usePoints && scheme ? sortByPoints(rows, scheme) : rows;
+  const tiebreaker = config?.standings?.tiebreaker ?? "rd";
+  const finalRows =
+    usePoints && scheme ? sortByPoints(rows, scheme, tiebreaker) : rows;
 
   // Group by division if at least one team has one.
   const grouped = groupByDivision(finalRows, teamMeta);
