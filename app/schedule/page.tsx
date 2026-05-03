@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import type { PublicLeagueConfig } from "@/lib/tenants";
@@ -166,8 +167,8 @@ function GameRow({
   const time = g.date ? formatTime(g.date) : "TBD";
   const homeWon = g.home_score > g.away_score;
   const awayWon = g.away_score > g.home_score;
-  return (
-    <li className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+  const inner = (
+    <>
       <div className="flex flex-col gap-0.5">
         <div className="flex items-center gap-2">
           <span className={awayWon ? "font-semibold text-slate-900" : "text-slate-700"}>
@@ -178,9 +179,7 @@ function GameRow({
             {home}
           </span>
         </div>
-        {g.field && (
-          <span className="text-xs text-slate-500">{g.field}</span>
-        )}
+        {g.field && <span className="text-xs text-slate-500">{g.field}</span>}
       </div>
       <div className="text-right text-xs">
         {mode === "results" ? (
@@ -191,6 +190,22 @@ function GameRow({
           <span className="text-slate-600">{time}</span>
         )}
       </div>
+    </>
+  );
+  return (
+    <li>
+      {mode === "results" ? (
+        <Link
+          href={`/games/${g.id}`}
+          className="flex items-center justify-between gap-3 px-4 py-3 text-sm hover:bg-slate-50"
+        >
+          {inner}
+        </Link>
+      ) : (
+        <div className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+          {inner}
+        </div>
+      )}
     </li>
   );
 }
