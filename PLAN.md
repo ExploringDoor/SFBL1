@@ -67,21 +67,53 @@ Custom domains via Vercel Domains API. Tenant adds `sfbl.com` in admin UI → co
 
 ### 2. Data Isolation
 
+> **`firestore.rules` is the canonical source of truth for what's allowed
+> where. This section is reconciled to match it.** When rules and PLAN
+> drift, update rules first, then update this section. Last reconciled:
+> 2026-05-02.
+
 **Single Firebase project. `leagues` map in custom claims. Security rules enforce.**
 
-Schema:
-```
-/leagues/{leagueId}                          (config doc)
-/leagues/{leagueId}/teams/{teamId}
-/leagues/{leagueId}/games/{gameId}
-/leagues/{leagueId}/box_scores/{gameId}
-/leagues/{leagueId}/players/{playerId}
-/leagues/{leagueId}/recaps/{gameId}
-/leagues/{leagueId}/standings/{divisionId}   (denormalized)
+Schema (R = read, W = write; "self" means the user holding the matching
+`player:` or `captain:` claim):
 
-/users/{uid}                                 (cross-tenant user record)
-/domains/{hostname}                          (hostname → leagueId, mirror of Edge Config)
 ```
+/leagues/{leagueId}                                   R: public        W: admin
+/leagues/{leagueId}/teams/{teamId}                    R: public        W: admin
+/leagues/{leagueId}/teams/{teamId}/_private/{doc}     R: admin+captain W: admin+captain
+/leagues/{leagueId}/games/{gameId}                    R: public        W: admin
+/leagues/{leagueId}/games/{gameId}/_private/{doc}     R: admin         W: admin
+/leagues/{leagueId}/box_scores/{gameId}               R: public        W: admin OR captain-of-game
+/leagues/{leagueId}/lineups/{gameId_teamId}           R: public        W: admin OR captain-of-team
+/leagues/{leagueId}/players/{playerId}                R: public        W: admin
+/leagues/{leagueId}/players/{pid}/_private/{doc}      R: admin+self    W: admin+self
+/leagues/{leagueId}/recaps/{gameId}                   R: public        W: admin
+/leagues/{leagueId}/standings/{divisionId}            R: public        W: admin    (denormalized)
+/leagues/{leagueId}/page_content/{pageId}             R: public        W: admin
+/leagues/{leagueId}/audit/{logId}                     R: admin         W: server-only (Cloud Function)
+/leagues/{leagueId}/billing_history/{entryId}         R: admin         W: server-only
+
+/users/{uid}                                          R/W: own profile only
+/domains/{hostname}                                   R: public        W: server-only
+/errors/{errorId}                                     R: server-only   create: authenticated; no update/delete
+```
+
+**Public-read pattern.** Public-facing collections are world-readable
+because the league site is a public website (DVSL is the model). PII —
+phone numbers, emails, DOB, internal notes — never lives on these docs.
+It lives in a sibling `_private/{doc}` subcollection gated by claims.
+**This is a convention enforced by the rules tests, not the type system.**
+CSV imports and admin UIs must split fields accordingly.
+
+**Public-read on `/leagues/{id}` and `/domains/{hostname}` is intentional**
+— the Edge middleware (which runs pre-auth) needs to resolve tenants from
+hostname. A slimmed `PublicLeagueConfig` (no `billing.notes`, no payment
+dates) gets injected into request headers; full billing detail re-fetches
+server-side.
+
+**Default deny.** Any path not explicitly matched is denied for both read
+and write. Adding a new collection requires adding a `match` block AND
+extending `tests/rules/deny-default.test.ts`.
 
 Custom claims, set by Cloud Function on user creation and role changes:
 ```js
@@ -94,15 +126,19 @@ Custom claims, set by Cloud Function on user creation and role changes:
 }
 ```
 
-Security rules:
-```
-match /leagues/{leagueId}/{document=**} {
-  allow read: if request.auth.token.leagues[leagueId] != null;
-}
+Helpers in `firestore.rules`:
+- `leagueRole(leagueId)` → role string for that league or null
+- `isAdmin(leagueId)` → role == 'admin'
+- `captainTeamId(leagueId)` → team id if role matches `^captain:[^:]+$`, else null
+- `isCaptainOfGameTeam(leagueId, gameId)` → fetches game, checks captain owns home or away team
+- `isSelfPlayer(leagueId, playerId)` → role == 'player:' + playerId
 
+Example rule for the captain-of-game box-score write:
+```
 match /leagues/{leagueId}/box_scores/{gameId} {
-  allow write: if request.auth.token.leagues[leagueId] == 'admin'
-            || isCaptainOfGameTeam(leagueId, gameId, request.auth.token);
+  allow read: if true;
+  allow write: if isAdmin(leagueId)
+              || isCaptainOfGameTeam(leagueId, gameId);
 }
 ```
 
@@ -239,6 +275,43 @@ Code reads `config.flags.X ?? false`. New features ship behind a flag, default o
 8. **Vercel/Firebase costs at 10 tenants** — non-issue. ~$10–20/month.
 9. **100-team tenant** — denormalized standings via Cloud Function, debounced, triggered on box_score writes. Don't build now. Note it.
 10. **"We want our own theme" tenant** — `{ primary, secondary, accent, logo_url }` on config doc, applied via CSS variables. Custom font/layout = $500 custom job.
+
+### 9. Deployment Lifecycle
+
+**Two Firebase projects, never one.**
+
+| Project ID                | Role     | What's allowed                              |
+|---------------------------|----------|---------------------------------------------|
+| `leagueengine-staging`    | staging  | Schema/rules changes land here first.       |
+| `league-platform-5f3c8`   | prod     | Real tenants. Rules promoted from staging.  |
+
+`.firebaserc` aliases both as `staging` and `prod` so the CLI flags read
+naturally:
+```
+npm run rules:deploy:staging   # firebase deploy --only firestore:rules --project staging
+npm run rules:deploy:prod      # ...                                   --project prod
+```
+
+**Rules promotion checklist** (run for any change to `firestore.rules`):
+
+1. Modify `firestore.rules` + extend `tests/rules/*` with regression cases.
+2. `npm run test:rules` — local emulator suite must be green.
+3. CI runs the same suite on every PR (`.github/workflows/ci.yml`).
+4. Merge to `main`.
+5. `npm run rules:deploy:staging` — push to staging.
+6. Smoke test against staging Firestore (manual: hit the page, hit the
+   captain portal once Phase 2b lands, run an integration test if one exists).
+7. `npm run rules:deploy:prod` — promote to prod. Watch the platform admin
+   dashboard for elevated permission-denied rates over the next hour.
+
+**Rollback:** keep the previous `firestore.rules` in git. `git checkout
+HEAD~1 firestore.rules && npm run rules:deploy:prod`. Cloud Functions
+deploys are similar (`functions:deploy --project ...`).
+
+**Why not single-project + branch-based deploy:** Firebase rules deploy
+is a single-target operation per project. Without a separate staging
+project, every rules change is tested in prod with real tenant data —
+unacceptable. Cost of staging: ~$0/month while idle (free tier covers it).
 
 ---
 

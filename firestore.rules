@@ -1,0 +1,188 @@
+rules_version = '2';
+
+// Per-tenant security rules. Custom claims live at
+// `request.auth.token.leagues[leagueId]`, where the value is one of:
+//   - "admin"               → full league control
+//   - "captain:<team_id>"   → write own team's box scores + lineups
+//   - "player:<player_id>"  → read-only auxiliary identity (no extra perms)
+//
+// Public-facing collections (teams/games/standings/etc.) are public-read
+// because the league site is a public website. Writes are claims-gated.
+// Sensitive collections (audit, billing_history) are member-read or denied.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------------------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------------------
+
+    function leagueRole(leagueId) {
+      return request.auth == null
+        ? null
+        : request.auth.token.get('leagues', {}).get(leagueId, null);
+    }
+
+    function isAdmin(leagueId) {
+      return leagueRole(leagueId) == 'admin';
+    }
+
+    // Anchored, single-segment team id: "captain:team_a" — yes;
+    // "captain:foo:bar" or "captain:" — no.
+    function captainTeamId(leagueId) {
+      let role = leagueRole(leagueId);
+      return role != null && role is string && role.matches('^captain:[^:]+$')
+        ? role.split(':')[1]
+        : null;
+    }
+
+    function isCaptainOfGameTeam(leagueId, gameId) {
+      let teamId = captainTeamId(leagueId);
+      let game = get(/databases/$(database)/documents/leagues/$(leagueId)/games/$(gameId)).data;
+      return teamId != null
+        && (teamId == game.home_team_id || teamId == game.away_team_id);
+    }
+
+    // Player-self check. String equality, not regex — the comparison
+    // string is constructed from the trusted playerId path segment, so
+    // even if a malformed claim like "player:foo:bar" sneaks in, it
+    // won't equal "player:foo".
+    function isSelfPlayer(leagueId, playerId) {
+      return leagueRole(leagueId) == 'player:' + playerId;
+    }
+
+    // ---------------------------------------------------------------------
+    // /leagues/{leagueId} — config doc
+    //
+    // Public-read so middleware (running on Edge with no auth) can resolve
+    // tenant config. Admin-write only.
+    // ---------------------------------------------------------------------
+
+    match /leagues/{leagueId} {
+      allow read: if true;
+      allow write: if isAdmin(leagueId);
+
+      // -------------------------------------------------------------------
+      // Public-facing collections + their `_private/{doc}` siblings.
+      //
+      // Convention: anything visible on the public website lives on the
+      // parent doc; PII (phone, email, DOB, internal notes) lives in
+      // `_private/{doc}`. Never put sensitive fields on parent docs.
+      // -------------------------------------------------------------------
+
+      match /teams/{teamId} {
+        allow read: if true;
+        allow write: if isAdmin(leagueId);
+
+        match /_private/{doc} {
+          allow read, write: if isAdmin(leagueId)
+                            || captainTeamId(leagueId) == teamId;
+        }
+      }
+
+      match /games/{gameId} {
+        allow read: if true;
+        allow write: if isAdmin(leagueId);
+
+        match /_private/{doc} {
+          allow read, write: if isAdmin(leagueId);
+        }
+      }
+
+      match /players/{playerId} {
+        allow read: if true;
+        allow write: if isAdmin(leagueId);
+
+        match /_private/{doc} {
+          allow read, write: if isAdmin(leagueId)
+                            || isSelfPlayer(leagueId, playerId);
+        }
+      }
+
+      match /standings/{divisionId} {
+        allow read: if true;
+        allow write: if isAdmin(leagueId);
+      }
+
+      match /recaps/{gameId} {
+        allow read: if true;
+        allow write: if isAdmin(leagueId);
+      }
+
+      match /page_content/{pageId} {
+        allow read: if true;
+        allow write: if isAdmin(leagueId);
+      }
+
+      // Box scores: admin OR captain of one of the teams in the game.
+      match /box_scores/{gameId} {
+        allow read: if true;
+        allow write: if isAdmin(leagueId)
+                    || isCaptainOfGameTeam(leagueId, gameId);
+      }
+
+      // Lineups: same rule as box scores (captain may set their own team's
+      // lineup; admin may set any). Stored under
+      // /leagues/{leagueId}/lineups/{gameId}_{teamId}.
+      // Regex is anchored so a captain of team_a can't write to
+      // `foo_team_a_evil`. Team ids must match [a-z0-9-]+ at provisioning
+      // time so regex metachars in the dynamic suffix can't escape.
+      match /lineups/{lineupId} {
+        allow read: if true;
+        allow write: if isAdmin(leagueId)
+                    || (captainTeamId(leagueId) != null
+                        && lineupId.matches('^.+_' + captainTeamId(leagueId) + '$'));
+      }
+
+      // Sensitive: members-only read, admin-only write.
+      match /audit/{logId} {
+        allow read: if isAdmin(leagueId);
+        allow write: if false;
+      }
+
+      match /billing_history/{entryId} {
+        allow read: if isAdmin(leagueId);
+        allow write: if false;
+      }
+    }
+
+    // ---------------------------------------------------------------------
+    // /users/{uid} — own profile only
+    // ---------------------------------------------------------------------
+
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ---------------------------------------------------------------------
+    // /domains/{hostname} — custom domain → leagueId mapping
+    //
+    // Public-read (middleware needs it pre-auth). Writes go through the
+    // provisioning script using server-side credentials, never client SDK.
+    // ---------------------------------------------------------------------
+
+    match /domains/{hostname} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ---------------------------------------------------------------------
+    // /errors — append-only platform error log
+    //
+    // Authenticated-only create so an anonymous attacker can't fill the
+    // collection. Phase 2c: replace with a Cloud Function ingest that
+    // applies size + rate limits.
+    // ---------------------------------------------------------------------
+
+    match /errors/{errorId} {
+      allow read: if false;
+      allow create: if request.auth != null;
+      allow update, delete: if false;
+    }
+
+    // Default deny everything else.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

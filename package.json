@@ -1,0 +1,46 @@
+{
+  "name": "league-platform",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "emulators": "firebase emulators:start",
+    "seed": "tsx scripts/seed.ts",
+    "seed:emulator": "firebase emulators:exec --project demo-seed-smoke --only firestore 'tsx scripts/seed.ts'",
+    "grant-claim": "tsx scripts/grant-claim.ts",
+    "grant-claim:emulator": "FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 FIRESTORE_EMULATOR_HOST=localhost:8080 tsx scripts/grant-claim.ts",
+    "magic-link": "tsx scripts/magic-link.ts",
+    "dev:emulators": "firebase emulators:exec --only auth,firestore,ui 'NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true next dev'",
+    "test": "firebase emulators:exec --project demo-test --only auth,firestore 'vitest run'",
+    "test:rules": "firebase emulators:exec --project demo-rules-test --only firestore 'vitest run tests/rules'",
+    "test:auth": "firebase emulators:exec --project demo-auth-claim-test --only auth,firestore 'vitest run tests/auth'",
+    "rules:deploy:staging": "firebase deploy --only firestore:rules --project staging",
+    "rules:deploy:prod": "firebase deploy --only firestore:rules --project prod"
+  },
+  "dependencies": {
+    "firebase": "^10.13.0",
+    "firebase-admin": "^12.5.0",
+    "next": "14.2.35",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^3.0.4",
+    "@types/node": "^20.14.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.19",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "14.2.35",
+    "firebase-tools": "^13.20.0",
+    "postcss": "^8.4.39",
+    "tailwindcss": "^3.4.7",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.3",
+    "vitest": "^2.1.0"
+  }
+}

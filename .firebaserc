@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "league-platform-5f3c8",
+    "prod": "league-platform-5f3c8",
+    "staging": "leagueengine-staging"
+  }
+}

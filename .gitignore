@@ -12,17 +12,28 @@ dist/
 # Production
 *.local
 
-# Environment variables
+# Environment variables — only the *.example files are committed
 .env
 .env.local
+.env.staging
+.env.production
 .env.development.local
 .env.test.local
 .env.production.local
 
 # Firebase
 firebase-debug.log
+firestore-debug.log
+ui-debug.log
 .firebase/
 firebase-emulator-data/
+
+# Service account / admin credentials — NEVER commit
+secrets/
+*service-account*.json
+*-credentials.json
+firebase-adminsdk-*.json
+google-application-credentials*.json
 
 # Vercel
 .vercel
