@@ -68,6 +68,7 @@ export interface GameResult {
   home_score: number;
   away_score: number;
   status: GameStatus;
+  date?: string; // ISO; required for streak calculation
 }
 
 export interface StandingsRow {
@@ -81,6 +82,7 @@ export interface StandingsRow {
   rd: number; // run differential
   pct: number;
   gb: number;
+  streak?: string; // "W3", "L2", "T1" — undefined if no games played
 }
 
 export interface PointsScheme {
@@ -117,10 +119,17 @@ export function sortByPoints(
 }
 
 // Compute standings from a list of game results. Filters to finished games
-// (final or approved). Postponed/rained-out games never count.
+// (final or approved). Postponed/rained-out games never count. Also computes
+// each team's current streak ("W3"/"L1"/"T1") if dates are available on
+// the games — otherwise leaves streak undefined.
 export function computeStandings(games: GameResult[]): StandingsRow[] {
   const finished = games.filter(
     (g) => g.status === "final" || g.status === "approved",
+  );
+
+  // Sort by date for streak calc; preserves stable order otherwise.
+  const sortedFinished = [...finished].sort((a, b) =>
+    String(a.date ?? "").localeCompare(String(b.date ?? "")),
   );
 
   const rows = new Map<string, StandingsRow>();
@@ -173,6 +182,29 @@ export function computeStandings(games: GameResult[]): StandingsRow[] {
   const bestWinDiff = winDiffs.length ? Math.max(...winDiffs) : 0;
   for (const r of rows.values()) {
     r.gb = (bestWinDiff - (r.w - r.l)) / 2;
+  }
+
+  // Streaks: walk games in date order, append outcome to per-team list,
+  // then collapse the trailing run. Date order isn't guaranteed if games
+  // lack dates, but we tried.
+  const outcomes = new Map<string, string[]>();
+  for (const g of sortedFinished) {
+    const homeOutcome =
+      g.home_score > g.away_score ? "W" : g.away_score > g.home_score ? "L" : "T";
+    const awayOutcome =
+      g.away_score > g.home_score ? "W" : g.home_score > g.away_score ? "L" : "T";
+    if (!outcomes.has(g.home_team_id)) outcomes.set(g.home_team_id, []);
+    if (!outcomes.has(g.away_team_id)) outcomes.set(g.away_team_id, []);
+    outcomes.get(g.home_team_id)!.push(homeOutcome);
+    outcomes.get(g.away_team_id)!.push(awayOutcome);
+  }
+  for (const [teamId, list] of outcomes) {
+    if (list.length === 0) continue;
+    const last = list[list.length - 1]!;
+    let count = 0;
+    for (let i = list.length - 1; i >= 0 && list[i] === last; i--) count++;
+    const r = rows.get(teamId);
+    if (r) r.streak = `${last}${count}`;
   }
 
   // Sort: PCT desc, then run-differential desc.
