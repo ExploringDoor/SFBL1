@@ -158,16 +158,54 @@ function StandingsTable({
   teamMeta: Record<string, TeamMeta>;
   pointsScheme: PointsScheme | null;
 }) {
+  // Two layouts. Points mode mirrors SFBL's published format
+  // (Team | W | L | T | G | PCT | PTS). PCT mode shows the richer
+  // baseball view with GB and run stats.
+  if (pointsScheme) {
+    return (
+      <div className="overflow-x-auto rounded-md border border-slate-200">
+        <table className="min-w-full divide-y divide-slate-200">
+          <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-600">
+            <tr>
+              <Th className="text-left">Team</Th>
+              <Th>W</Th>
+              <Th>L</Th>
+              <Th>T</Th>
+              <Th>G</Th>
+              <Th>PCT</Th>
+              <Th>PTS</Th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100 bg-white">
+            {rows.map((r) => (
+              <tr key={r.team_id} className="text-sm">
+                <Td className="text-left font-medium">
+                  {teamMeta[r.team_id]?.name ?? r.team_id}
+                </Td>
+                <Td>{r.w}</Td>
+                <Td>{r.l}</Td>
+                <Td>{r.t}</Td>
+                <Td>{r.gp}</Td>
+                <Td>{formatPct(r.pct)}</Td>
+                <Td className="font-semibold">{computePoints(r, pointsScheme)}</Td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
   return (
     <div className="overflow-x-auto rounded-md border border-slate-200">
       <table className="min-w-full divide-y divide-slate-200">
         <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-600">
           <tr>
             <Th className="text-left">Team</Th>
-            {pointsScheme && <Th>PTS</Th>}
             <Th>W</Th>
             <Th>L</Th>
             <Th>T</Th>
+            <Th>GP</Th>
             <Th>PCT</Th>
             <Th>GB</Th>
             <Th>RS</Th>
@@ -181,12 +219,10 @@ function StandingsTable({
               <Td className="text-left font-medium">
                 {teamMeta[r.team_id]?.name ?? r.team_id}
               </Td>
-              {pointsScheme && (
-                <Td className="font-semibold">{computePoints(r, pointsScheme)}</Td>
-              )}
               <Td>{r.w}</Td>
               <Td>{r.l}</Td>
               <Td>{r.t}</Td>
+              <Td>{r.gp}</Td>
               <Td>{formatPct(r.pct)}</Td>
               <Td>{r.gb === 0 ? "—" : r.gb.toFixed(1)}</Td>
               <Td>{r.rs}</Td>
