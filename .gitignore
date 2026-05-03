@@ -54,6 +54,9 @@ Thumbs.db
 *.swp
 *.swo
 
+# Claude Code working directory (worktrees, session state, transcripts)
+.claude/
+
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
