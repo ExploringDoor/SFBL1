@@ -26,7 +26,7 @@
   --border2: rgba(0, 0, 0, 0.18);
 
   --header-height: 62px;
-  --ticker-height: 48px;
+  --ticker-height: 76px;
 }
 
 html,
@@ -105,49 +105,78 @@ body {
  * Top sticky ticker — game scores scrolling left.
  * ============================================================================= */
 
+/* DVSL-style ticker: dark navy strip of compact game tiles, each
+ * showing date+status on top and two team rows below with score. */
 .ticker {
-  position: relative;
-  background: #0d0d11;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--brand-primary);
   color: #fff;
-  height: var(--ticker-height);
   overflow-x: auto;
   overflow-y: hidden;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.3);
   scrollbar-width: none;
+  flex-shrink: 0;
 }
 .ticker::-webkit-scrollbar { display: none; }
-/* Static strip; user can scroll horizontally if it overflows. */
 .ticker-track {
   display: flex;
   flex-wrap: nowrap;
-  align-items: center;
-  height: 100%;
+  align-items: stretch;
   width: max-content;
 }
 .ticker-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 14px;
-  height: 100%;
-  font-family: var(--font-barlow), sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  white-space: nowrap;
-  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 200px;
+  padding: 8px 14px;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
   text-decoration: none;
+  color: #fff;
+  font-family: var(--font-barlow), sans-serif;
   transition: background 0.15s;
 }
-.ticker-item:hover {
-  background: rgba(255, 255, 255, 0.08);
+.ticker-item:hover { background: rgba(255, 255, 255, 0.06); }
+.ti-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 2px;
 }
-.ticker-sep {
-  color: var(--brand-accent);
-  opacity: 0.5;
-  font-weight: 400;
+.ti-status { color: rgba(255, 255, 255, 0.85); }
+.ti-sep { color: rgba(255, 255, 255, 0.4); }
+.ti-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.1;
 }
+.ti-row-win { color: #fff; }
+.ti-team { font-weight: 800; min-width: 38px; }
+.ti-record {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.5);
+}
+.ti-val {
+  margin-left: auto;
+  font-size: 16px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+.ti-row-win .ti-val { color: var(--brand-accent); }
 
 /* =============================================================================
  * Header / nav
@@ -162,8 +191,9 @@ body {
   display: flex;
   align-items: center;
   position: sticky;
-  top: 0;
+  top: var(--ticker-height); /* sit below the ticker, not over it */
   z-index: 30;
+  flex-shrink: 0;
 }
 
 /* =============================================================================
@@ -614,7 +644,7 @@ body {
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  z-index: 50;
+  z-index: 100; /* above sticky ticker (40) and header (30) */
   display: flex;
   align-items: flex-start;
   justify-content: center;

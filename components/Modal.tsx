@@ -17,10 +17,17 @@ export function Modal({ children, title }: { children: React.ReactNode; title?: 
       if (e.key === "Escape") router.back();
     }
     document.addEventListener("keydown", onKey);
+    // Lock background scroll. Compensate for the missing scrollbar
+    // width so the page doesn't visibly shift when the modal opens.
+    const sw = window.innerWidth - document.documentElement.clientWidth;
+    const prevOverflow = document.body.style.overflow;
+    const prevPaddingRight = document.body.style.paddingRight;
     document.body.style.overflow = "hidden";
+    if (sw > 0) document.body.style.paddingRight = `${sw}px`;
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
+      document.body.style.overflow = prevOverflow;
+      document.body.style.paddingRight = prevPaddingRight;
     };
   }, [router]);
 
