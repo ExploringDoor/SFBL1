@@ -1,5 +1,7 @@
-// DVSL-style top ticker. Plain text strip with team/score for each game,
-// scrolling left infinitely. Doubles its content for a seamless loop.
+// DVSL-style top ticker. Each tile is a clickable link to the game's
+// box score / preview.
+
+import Link from "next/link";
 
 export interface TickerGame {
   id: string;
@@ -36,7 +38,7 @@ function TickerItem({ g }: { g: TickerGame }) {
   const awayValue = isFinal ? g.away_score : g.away_record ?? "";
   const homeValue = isFinal ? g.home_score : g.home_record ?? "";
   return (
-    <div className="ticker-item">
+    <Link href={`/games/${g.id}`} className="ticker-item">
       <span style={{ opacity: 0.7 }}>{date}</span>
       <span className="ticker-sep">·</span>
       <span>
@@ -47,7 +49,7 @@ function TickerItem({ g }: { g: TickerGame }) {
         {homeLabel} {homeValue}
       </span>
       <span className="ticker-sep">|</span>
-    </div>
+    </Link>
   );
 }
 

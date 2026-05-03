@@ -77,6 +77,67 @@ export function BoxScoreContent(props: BoxScoreContentProps) {
       })
     : null;
 
+  // Preview view (scheduled game): no box score / linescore / recap.
+  // Show date · field · two team cards with records.
+  if (!isFinal) {
+    return (
+      <div>
+        <header style={{ borderBottom: "1px solid var(--border)", paddingBottom: 16, marginBottom: 18 }}>
+          <p
+            className="font-barlow"
+            style={{
+              fontSize: 11,
+              fontWeight: 800,
+              textTransform: "uppercase",
+              letterSpacing: "0.12em",
+              color: "var(--brand-primary)",
+            }}
+          >
+            Game Preview
+          </p>
+          <p
+            className="font-barlow"
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.1em",
+              color: "var(--muted)",
+              marginTop: 4,
+            }}
+          >
+            {[
+              date
+                ? new Date(date).toLocaleDateString("en-US", {
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })
+                : "TBD",
+              date
+                ? new Date(date).toLocaleTimeString("en-US", {
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })
+                : null,
+              field,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+        </header>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, alignItems: "center" }}>
+          <PreviewSide team={away} side="Away" />
+          <PreviewSide team={home} side="Home" />
+        </div>
+        <p style={{ marginTop: 16, fontSize: 13, color: "var(--muted)", textAlign: "center" }}>
+          Box score available after game.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div>
       <Header date={date} field={field} status={status} away={away} home={home} />
@@ -117,6 +178,55 @@ export function BoxScoreContent(props: BoxScoreContentProps) {
         <PitchingTable teamLabel={`${home.name} Pitching`} rows={home.pitchers} playerNames={playerNames} />
       )}
     </div>
+  );
+}
+
+function PreviewSide({ team, side }: { team: BoxTeam; side: string }) {
+  return (
+    <Link
+      href={`/teams/${team.team_id}`}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 8,
+        padding: 16,
+        border: "1px solid var(--border)",
+        borderRadius: 12,
+      }}
+    >
+      <span
+        className="font-barlow"
+        style={{
+          fontSize: 10,
+          fontWeight: 700,
+          letterSpacing: "0.15em",
+          color: "var(--muted)",
+          textTransform: "uppercase",
+        }}
+      >
+        {side}
+      </span>
+      <TeamBadge
+        teamId={team.team_id}
+        name={team.name}
+        initials={team.abbrev}
+        color={team.color}
+        logoUrl={team.logoUrl}
+        size="lg"
+      />
+      <span
+        className="font-oswald"
+        style={{
+          fontSize: 22,
+          fontWeight: 700,
+          textTransform: "uppercase",
+          textAlign: "center",
+        }}
+      >
+        {team.name}
+      </span>
+    </Link>
   );
 }
 

@@ -1,10 +1,14 @@
+// DVSL-style team detail page: hero strip with team logo + name +
+// record, two-column layout (roster left, recent games right).
+
 import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { TeamBadge } from "@/components/TeamBadge";
 import {
-  computeStandings,
   computePoints,
+  computeStandings,
   sortByPoints,
   type GameResult,
 } from "@/lib/stats/shared";
@@ -12,11 +16,11 @@ import type { PublicLeagueConfig } from "@/lib/tenants";
 
 export const dynamic = "force-dynamic";
 
-interface TeamPageProps {
+export default async function TeamDetailPage({
+  params,
+}: {
   params: { teamId: string };
-}
-
-export default async function TeamDetailPage({ params }: TeamPageProps) {
+}) {
   const h = headers();
   const tenantId = h.get("x-tenant-id");
   const config = (() => {
@@ -31,9 +35,9 @@ export default async function TeamDetailPage({ params }: TeamPageProps) {
 
   if (!tenantId) {
     return (
-      <Shell heading="Team">
-        <p className="text-slate-700">Visit a tenant subdomain.</p>
-      </Shell>
+      <main className="container py-12">
+        <p>Visit a tenant subdomain.</p>
+      </main>
     );
   }
 
@@ -47,18 +51,26 @@ export default async function TeamDetailPage({ params }: TeamPageProps) {
     db.collection(`leagues/${tenantId}/games`).get(),
     db.collection(`leagues/${tenantId}/teams`).get(),
   ]);
-
   if (!teamSnap.exists) notFound();
-  const teamData = teamSnap.data() ?? {};
-  const teamName = String(teamData.name ?? params.teamId);
-  const division = teamData.division ? String(teamData.division) : null;
 
-  const teamNames: Record<string, string> = {};
+  const t = teamSnap.data() ?? {};
+  const teamName = String(t.name ?? params.teamId);
+  const division = t.division ? String(t.division) : null;
+  const abbrev = t.abbrev ? String(t.abbrev) : undefined;
+  const color = t.color ? String(t.color) : undefined;
+  const logoUrl = t.logo_url ? String(t.logo_url) : null;
+
+  const teamNames: Record<string, { name: string; abbrev?: string; color?: string; logoUrl?: string | null }> = {};
   for (const d of teamsSnap.docs) {
-    teamNames[d.id] = String(d.data().name ?? d.id);
+    const data = d.data();
+    teamNames[d.id] = {
+      name: String(data.name ?? d.id),
+      abbrev: data.abbrev ? String(data.abbrev) : undefined,
+      color: data.color ? String(data.color) : undefined,
+      logoUrl: data.logo_url ? String(data.logo_url) : null,
+    };
   }
 
-  // Compute this team's record + points.
   const games: GameResult[] = gamesSnap.docs.map((d) => {
     const data = d.data();
     return {
@@ -67,28 +79,22 @@ export default async function TeamDetailPage({ params }: TeamPageProps) {
       home_score: Number(data.home_score ?? 0),
       away_score: Number(data.away_score ?? 0),
       status: (data.status ?? "draft") as GameResult["status"],
+      date: data.date ? String(data.date) : undefined,
     };
   });
   let standings = computeStandings(games);
-  const scheme = config?.standings?.points_per;
+  const scheme = config?.standings?.points_per ?? null;
   const usePoints = config?.standings?.scoring === "points" && !!scheme;
   if (usePoints && scheme) {
     standings = sortByPoints(standings, scheme, config?.standings?.tiebreaker ?? "rd");
   }
   const myRow = standings.find((r) => r.team_id === params.teamId) ?? null;
 
-  // Recent finalized games involving this team.
-  const myGames = gamesSnap.docs
-    .map((d) => ({ id: d.id, ...d.data() }) as Record<string, unknown> & { id: string })
-    .filter(
-      (g) =>
-        (g.home_team_id === params.teamId || g.away_team_id === params.teamId) &&
-        (g.status === "final" || g.status === "approved" || g.status === "scheduled"),
-    )
-    .sort((a, b) => String(b.date ?? "").localeCompare(String(a.date ?? "")))
-    .slice(0, 8);
+  // Team batting/pitching aggregates from rosterSnap player.stats.
+  const aggBatting = aggregateRoster(rosterSnap.docs.map((d) => d.data().stats));
+  const aggPitching = aggregateRosterPitching(rosterSnap.docs.map((d) => d.data().pitching));
 
-  // Roster: players where team_id == this team.
+  // Roster sorted by jersey #.
   const roster = rosterSnap.docs
     .map((d) => {
       const data = d.data();
@@ -104,145 +110,290 @@ export default async function TeamDetailPage({ params }: TeamPageProps) {
     })
     .sort((a, b) => (a.jersey ?? 999) - (b.jersey ?? 999) || a.name.localeCompare(b.name));
 
-  return (
-    <Shell heading={teamName}>
-      <p className="mb-4 text-sm text-slate-500">
-        {division && <span>{division} Division · </span>}
-        {myRow ? formatRecord(myRow.w, myRow.l, myRow.t) : "0-0"}
-        {myRow && usePoints && scheme && (
-          <span> · {computePoints(myRow, scheme)} pts</span>
-        )}
-        {myRow && (
-          <span>
-            {" "}· run diff {myRow.rd > 0 ? `+${myRow.rd}` : myRow.rd}
-          </span>
-        )}
-      </p>
+  // Recent + upcoming games for this team.
+  const myGames = gamesSnap.docs
+    .map((d) => ({ id: d.id, ...d.data() }) as Record<string, unknown> & { id: string })
+    .filter((g) => g.home_team_id === params.teamId || g.away_team_id === params.teamId);
+  const recentFinals = myGames
+    .filter((g) => g.status === "final" || g.status === "approved")
+    .sort((a, b) => String(b.date ?? "").localeCompare(String(a.date ?? "")))
+    .slice(0, 6);
+  const upcoming = myGames
+    .filter((g) => g.status === "scheduled")
+    .sort((a, b) => String(a.date ?? "").localeCompare(String(b.date ?? "")))
+    .slice(0, 4);
 
-      <section className="mb-8">
-        <h2 className="mb-3 text-lg font-semibold text-slate-800">Roster</h2>
-        {roster.length === 0 ? (
-          <p className="text-sm text-slate-500">No players on roster yet.</p>
-        ) : (
-          <ul className="divide-y divide-slate-100 rounded-md border border-slate-200 bg-white">
-            {roster.map((p) => (
-              <li key={p.id}>
-                <Link
-                  href={`/players/${p.id}`}
-                  className="flex items-center justify-between px-4 py-2 text-sm hover:bg-slate-50"
+  return (
+    <main>
+      {/* Hero band */}
+      <section
+        className="text-white"
+        style={{
+          background: `linear-gradient(135deg, ${color ?? "var(--brand-primary)"} 0%, #0a0e1c 80%)`,
+        }}
+      >
+        <div className="container" style={{ padding: "48px 24px" }}>
+          <Link
+            href="/teams"
+            className="font-barlow"
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color: "rgba(255,255,255,0.7)",
+              display: "inline-block",
+              marginBottom: 18,
+            }}
+          >
+            ← All Teams
+          </Link>
+          <div className="flex items-center gap-6">
+            <div style={{ background: "white", borderRadius: 12, padding: 8 }}>
+              <TeamBadge
+                teamId={params.teamId}
+                name={teamName}
+                initials={abbrev}
+                color={color}
+                logoUrl={logoUrl}
+                size="lg"
+              />
+            </div>
+            <div>
+              {division && (
+                <p className="sec-eyebrow" style={{ color: "rgba(255,255,255,0.7)" }}>
+                  {division}
+                </p>
+              )}
+              <h1
+                className="font-display"
+                style={{ fontSize: "clamp(40px, 6vw, 72px)", color: "#fff", marginTop: 4 }}
+              >
+                {teamName}
+              </h1>
+              {myRow && (
+                <p
+                  className="font-barlow mt-2"
+                  style={{
+                    fontSize: 16,
+                    fontWeight: 700,
+                    letterSpacing: "0.05em",
+                    color: "rgba(255,255,255,0.85)",
+                  }}
                 >
-                  <div className="flex items-center gap-3">
-                    {p.jersey != null && (
-                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 font-mono text-xs">
-                        {p.jersey}
-                      </span>
-                    )}
-                    <span className="font-medium text-slate-900">{p.name}</span>
-                    {p.position && (
-                      <span className="text-xs text-slate-500">{p.position}</span>
-                    )}
-                  </div>
-                  {p.avg != null && (
-                    <span className="font-mono text-xs text-slate-600">
-                      {formatAvg(p.avg)} · {p.hr ?? 0} HR · {p.rbi ?? 0} RBI
+                  {formatRecord(myRow.w, myRow.l, myRow.t)}
+                  {usePoints && scheme && (
+                    <span style={{ marginLeft: 12 }}>
+                      {computePoints(myRow, scheme)} PTS
                     </span>
                   )}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+                  <span style={{ marginLeft: 12 }}>
+                    Run Diff {myRow.rd > 0 ? `+${myRow.rd}` : myRow.rd}
+                  </span>
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
       </section>
 
-      <section>
-        <h2 className="mb-3 text-lg font-semibold text-slate-800">Recent games</h2>
-        {myGames.length === 0 ? (
-          <p className="text-sm text-slate-500">No games yet.</p>
-        ) : (
-          <ul className="divide-y divide-slate-100 rounded-md border border-slate-200 bg-white">
-            {myGames.map((g) => (
-              <GameLine
-                key={g.id}
-                myTeamId={params.teamId}
-                game={g}
-                teamNames={teamNames}
-              />
-            ))}
-          </ul>
+      <section className="container py-10">
+        {(aggBatting.gp > 0 || aggPitching.app > 0) && (
+          <div className="mb-8 grid gap-4 sm:grid-cols-2 md:grid-cols-4">
+            {aggBatting.gp > 0 && (
+              <>
+                <StatTile label="Team AVG" value={formatAvg(aggBatting.avg)} />
+                <StatTile label="Runs Scored" value={aggBatting.r} />
+                <StatTile label="Home Runs" value={aggBatting.hr} />
+              </>
+            )}
+            {aggPitching.app > 0 && (
+              <StatTile label="Team ERA" value={aggPitching.era.toFixed(2)} />
+            )}
+          </div>
         )}
+
+        <div className="grid gap-10 lg:grid-cols-[1fr_360px]">
+          <div>
+            <h2 className="font-display mb-4" style={{ fontSize: 28 }}>
+              Roster
+            </h2>
+            {roster.length === 0 ? (
+              <p style={{ color: "var(--muted)" }}>No players on roster yet.</p>
+            ) : (
+              <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
+                <table className="s-tbl">
+                  <thead>
+                    <tr>
+                      <th className="text-left">#</th>
+                      <th className="text-left">Player</th>
+                      <th className="text-left">Pos</th>
+                      <th>AVG</th>
+                      <th>HR</th>
+                      <th>RBI</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {roster.map((p) => (
+                      <tr key={p.id}>
+                        <td className="text-left">
+                          <span className="rank">{p.jersey ?? "—"}</span>
+                        </td>
+                        <td className="text-left">
+                          <Link href={`/players/${p.id}`} style={{ fontWeight: 600 }}>
+                            {p.name}
+                          </Link>
+                        </td>
+                        <td className="text-left">
+                          <span style={{ color: "var(--muted)", fontSize: 12 }}>
+                            {p.position ?? "—"}
+                          </span>
+                        </td>
+                        <td>{p.avg != null ? formatAvg(p.avg) : "—"}</td>
+                        <td>{p.hr ?? "—"}</td>
+                        <td>{p.rbi ?? "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          <aside>
+            <h2 className="font-display mb-4" style={{ fontSize: 22 }}>
+              Recent Results
+            </h2>
+            <ul style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {recentFinals.length === 0 && (
+                <li style={{ color: "var(--muted)", fontSize: 13 }}>
+                  No games played yet.
+                </li>
+              )}
+              {recentFinals.map((g) => (
+                <GameLine
+                  key={g.id}
+                  myTeamId={params.teamId}
+                  game={g}
+                  teams={teamNames}
+                />
+              ))}
+            </ul>
+            {upcoming.length > 0 && (
+              <>
+                <h2 className="font-display mb-3 mt-6" style={{ fontSize: 22 }}>
+                  Upcoming
+                </h2>
+                <ul style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {upcoming.map((g) => (
+                    <GameLine
+                      key={g.id}
+                      myTeamId={params.teamId}
+                      game={g}
+                      teams={teamNames}
+                    />
+                  ))}
+                </ul>
+              </>
+            )}
+          </aside>
+        </div>
       </section>
-    </Shell>
+    </main>
+  );
+}
+
+function StatTile({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div
+      style={{
+        background: "var(--card)",
+        border: "1px solid var(--border)",
+        borderRadius: 12,
+        padding: 16,
+        textAlign: "center",
+      }}
+    >
+      <div className="sec-eyebrow">{label}</div>
+      <div
+        className="font-barlow"
+        style={{ fontSize: 36, fontWeight: 900, color: "var(--brand-primary)", lineHeight: 1, marginTop: 4 }}
+      >
+        {value}
+      </div>
+    </div>
   );
 }
 
 function GameLine({
   myTeamId,
   game,
-  teamNames,
+  teams,
 }: {
   myTeamId: string;
   game: Record<string, unknown> & { id: string };
-  teamNames: Record<string, string>;
+  teams: Record<string, { name: string; abbrev?: string; color?: string; logoUrl?: string | null }>;
 }) {
   const isHome = game.home_team_id === myTeamId;
   const opponentId = String(isHome ? game.away_team_id : game.home_team_id);
-  const opponent = teamNames[opponentId] ?? opponentId;
+  const opp = teams[opponentId];
   const myScore = Number(isHome ? game.home_score : game.away_score);
   const oppScore = Number(isHome ? game.away_score : game.home_score);
   const status = String(game.status ?? "");
   const isFinal = status === "final" || status === "approved";
   const won = isFinal && myScore > oppScore;
   const lost = isFinal && myScore < oppScore;
-  const dateStr = game.date ? new Date(String(game.date)).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "";
+  const dateStr = game.date
+    ? new Date(String(game.date)).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      })
+    : "";
 
   return (
-    <li className="flex items-center justify-between px-4 py-2 text-sm">
-      <div className="flex items-center gap-2">
+    <li>
+      <Link
+        href={`/games/${game.id}`}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          padding: "10px 12px",
+          border: "1px solid var(--border)",
+          borderRadius: 10,
+          background: "var(--card)",
+          fontSize: 13,
+        }}
+      >
         <span
-          className={
-            "inline-flex h-5 w-5 items-center justify-center rounded text-xs font-bold " +
-            (won
-              ? "bg-emerald-100 text-emerald-700"
-              : lost
-                ? "bg-red-100 text-red-700"
-                : "bg-slate-100 text-slate-500")
-          }
+          className="font-barlow"
+          style={{
+            fontSize: 11,
+            fontWeight: 800,
+            width: 22,
+            textAlign: "center",
+            color: won ? "var(--green)" : lost ? "var(--red)" : "var(--muted)",
+          }}
         >
           {won ? "W" : lost ? "L" : "·"}
         </span>
-        <span className="text-slate-600">{isHome ? "vs" : "@"}</span>
-        <span className="font-medium text-slate-900">{opponent}</span>
-      </div>
-      <div className="text-right">
-        {isFinal ? (
-          <span className="font-mono text-xs">
-            {myScore}–{oppScore}
-          </span>
-        ) : (
-          <span className="text-xs text-slate-500">{dateStr || status}</span>
+        <span style={{ color: "var(--muted)" }}>{isHome ? "vs" : "@"}</span>
+        {opp?.logoUrl && (
+          <TeamBadge
+            teamId={opponentId}
+            name={opp.name}
+            initials={opp.abbrev}
+            color={opp.color}
+            logoUrl={opp.logoUrl}
+            size="sm"
+          />
         )}
-      </div>
+        <span style={{ flex: 1, fontWeight: 600 }}>{opp?.name ?? opponentId}</span>
+        <span style={{ fontFamily: "var(--font-barlow)", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+          {isFinal ? `${myScore}–${oppScore}` : dateStr || status}
+        </span>
+      </Link>
     </li>
-  );
-}
-
-function Shell({
-  heading,
-  children,
-}: {
-  heading: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <main className="mx-auto max-w-3xl px-6 py-12">
-      <header className="mb-2">
-        <Link href="/teams" className="text-xs text-slate-500 hover:underline">
-          ← All teams
-        </Link>
-        <h1 className="text-3xl font-bold tracking-tight">{heading}</h1>
-      </header>
-      {children}
-    </main>
   );
 }
 
@@ -252,4 +403,51 @@ function formatRecord(w: number, l: number, t: number): string {
 function formatAvg(n: number): string {
   if (n === 1) return "1.000";
   return n.toFixed(3).replace(/^0/, "");
+}
+
+interface BattingAgg {
+  gp: number;
+  ab: number;
+  h: number;
+  r: number;
+  hr: number;
+  rbi: number;
+  avg: number;
+}
+function aggregateRoster(statsList: Array<unknown>): BattingAgg {
+  let gp = 0,
+    ab = 0,
+    h = 0,
+    r = 0,
+    hr = 0,
+    rbi = 0;
+  for (const s of statsList) {
+    const v = (s ?? {}) as Record<string, number>;
+    gp += Number(v.gp ?? 0);
+    ab += Number(v.ab ?? 0);
+    h += Number(v.h ?? 0);
+    r += Number(v.r ?? 0);
+    hr += Number(v.hr ?? 0);
+    rbi += Number(v.rbi ?? 0);
+  }
+  return { gp, ab, h, r, hr, rbi, avg: ab > 0 ? h / ab : 0 };
+}
+interface PitchingAgg {
+  app: number;
+  ip_outs: number;
+  er: number;
+  era: number;
+}
+function aggregateRosterPitching(pitchingList: Array<unknown>): PitchingAgg {
+  let app = 0,
+    ip_outs = 0,
+    er = 0;
+  for (const p of pitchingList) {
+    const v = (p ?? {}) as Record<string, number>;
+    app += Number(v.app ?? 0);
+    ip_outs += Number(v.ip_outs ?? 0);
+    er += Number(v.er ?? 0);
+  }
+  const era = ip_outs > 0 ? (er * 27) / ip_outs : 0;
+  return { app, ip_outs, er, era };
 }

@@ -129,12 +129,19 @@ body {
   align-items: center;
   gap: 8px;
   padding: 0 14px;
+  height: 100%;
   font-family: var(--font-barlow), sans-serif;
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   white-space: nowrap;
+  color: #fff;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+.ticker-item:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 .ticker-sep {
   color: var(--brand-accent);

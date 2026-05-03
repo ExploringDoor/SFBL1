@@ -82,7 +82,7 @@ function Row({
 }) {
   return (
     <div className="gc-team-row">
-      <div className="gc-logo-wrap">
+      <Link href={`/teams/${team.team_id}`} className="gc-logo-wrap">
         <TeamBadge
           teamId={team.team_id}
           name={team.name}
@@ -91,11 +91,11 @@ function Row({
           logoUrl={team.logoUrl}
           size="lg"
         />
-      </div>
-      <div className="gc-team-info">
+      </Link>
+      <Link href={`/teams/${team.team_id}`} className="gc-team-info">
         <span className="gc-team-name">{team.name}</span>
         {team.record && <span className="gc-record">{team.record}</span>}
-      </div>
+      </Link>
       {isFinal && score != null ? (
         <div className={"gc-score " + (winner ? "" : "gc-score-lose")}>{score}</div>
       ) : null}
