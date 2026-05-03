@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   battingAverage,
+  computePoints,
   computeStandings,
   onBasePct,
   ops,
   sluggingPct,
+  sortByPoints,
   type GameResult,
+  type StandingsRow,
 } from "@/lib/stats/shared";
 
 describe("battingAverage", () => {
@@ -164,5 +167,67 @@ describe("computeStandings", () => {
     const rows = computeStandings(games);
     const a = rows.find((r) => r.team_id === "a")!;
     expect(a).toMatchObject({ gp: 3, w: 3, l: 0, rs: 30, ra: 0, rd: 30, pct: 1 });
+  });
+});
+
+describe("computePoints", () => {
+  const row = (w: number, l: number, t: number): StandingsRow => ({
+    team_id: "x", gp: w + l + t, w, l, t,
+    rs: 0, ra: 0, rd: 0, pct: 0, gb: 0,
+  });
+
+  it("DVSL softball scheme: 3/2/1", () => {
+    const scheme = { win: 3, tie: 2, loss: 1 };
+    expect(computePoints(row(5, 2, 1), scheme)).toBe(5 * 3 + 1 * 2 + 2 * 1); // 19
+    expect(computePoints(row(0, 0, 0), scheme)).toBe(0);
+  });
+
+  it("soccer scheme: 3/1/0", () => {
+    const scheme = { win: 3, tie: 1, loss: 0 };
+    expect(computePoints(row(10, 5, 3), scheme)).toBe(10 * 3 + 3 * 1 + 5 * 0); // 33
+  });
+
+  it("zero-point ties are valid", () => {
+    expect(computePoints(row(2, 1, 0), { win: 1, tie: 0, loss: 0 })).toBe(2);
+  });
+});
+
+describe("sortByPoints", () => {
+  const row = (
+    team_id: string,
+    w: number,
+    l: number,
+    t: number,
+    rd = 0,
+  ): StandingsRow => ({
+    team_id, gp: w + l + t, w, l, t,
+    rs: 0, ra: 0, rd, pct: 0, gb: 0,
+  });
+
+  it("sorts by points desc using DVSL scheme", () => {
+    const rows = [
+      row("c", 3, 0, 0), // 9 pts
+      row("a", 2, 1, 0), // 8 pts (3*2 + 1 = 7… wait: 3*2 + 2*0 + 1*1 = 7)
+      row("b", 2, 0, 1), // 3*2 + 2*1 + 0 = 8 pts
+    ];
+    const sorted = sortByPoints(rows, { win: 3, tie: 2, loss: 1 });
+    expect(sorted.map((r) => r.team_id)).toEqual(["c", "b", "a"]);
+  });
+
+  it("breaks ties by run differential desc", () => {
+    const rows = [
+      row("a", 2, 1, 0, +5), // 7 pts, +5 RD
+      row("b", 2, 1, 0, +10), // 7 pts, +10 RD
+      row("c", 2, 1, 0, -3), // 7 pts, -3 RD
+    ];
+    const sorted = sortByPoints(rows, { win: 3, tie: 2, loss: 1 });
+    expect(sorted.map((r) => r.team_id)).toEqual(["b", "a", "c"]);
+  });
+
+  it("does not mutate input", () => {
+    const input = [row("a", 1, 0, 0), row("b", 0, 1, 0)];
+    const inputCopy = JSON.parse(JSON.stringify(input));
+    sortByPoints(input, { win: 3, tie: 1, loss: 0 });
+    expect(input).toEqual(inputCopy);
   });
 });
