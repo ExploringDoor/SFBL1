@@ -98,6 +98,26 @@ const GAMES = [
     date: "2026-05-24T13:00:00-04:00", field: "Tropical Park 2" },
 ];
 
+// Players. Each carries a team_id (primary team), jersey, position.
+// recalcLeague will later attach `stats` and `pitching` subfields to
+// these docs. Players who never appear in a box score still show up on
+// their team's roster but have no stats line yet.
+const PLAYERS = [
+  // Tampa Sluggers
+  { id: "p1_alice", team_id: "team_sluggers", name: "Alice Carter", jersey: 7, position: "P/SS" },
+  { id: "p2_bob",   team_id: "team_sluggers", name: "Bob Diaz",     jersey: 12, position: "C" },
+  { id: "p3_carol", team_id: "team_sluggers", name: "Carol Esposito", jersey: 24, position: "OF" },
+  // Miami Foxes
+  { id: "p4_dan",   team_id: "team_foxes",    name: "Dan Forsyth",  jersey: 3,  position: "P/3B" },
+  { id: "p5_emma",  team_id: "team_foxes",    name: "Emma Greene",  jersey: 18, position: "OF" },
+  // Orlando Bears (roster only, haven't played in our seeded box scores)
+  { id: "p6_frank", team_id: "team_bears",    name: "Frank Hayes",  jersey: 10, position: "1B" },
+  { id: "p7_grace", team_id: "team_bears",    name: "Grace Iglesias", jersey: 5,  position: "2B" },
+  // Jacksonville Eagles
+  { id: "p8_henry", team_id: "team_eagles",   name: "Henry Jameson", jersey: 22, position: "SS" },
+  { id: "p9_iris",  team_id: "team_eagles",   name: "Iris Khan",    jersey: 11, position: "OF" },
+];
+
 // Box scores for a couple of games. Drives the recalc smoke test.
 const BOX_SCORES: Array<[string, Record<string, unknown>]> = [
   [
@@ -178,13 +198,26 @@ async function run() {
     });
   }
 
+  // Players (uses .set with merge so recalc-written `stats` survive re-seeds)
+  for (const p of PLAYERS) {
+    await db.doc(`leagues/${LEAGUE_ID}/players/${p.id}`).set(
+      {
+        team_id: p.team_id,
+        name: p.name,
+        jersey: p.jersey,
+        position: p.position,
+      },
+      { merge: true },
+    );
+  }
+
   // Box scores
   for (const [id, body] of BOX_SCORES) {
     await db.doc(`leagues/${LEAGUE_ID}/box_scores/${id}`).set(body);
   }
 
   console.log(
-    `[seed-fixture] done — ${TEAMS.length} teams, ${GAMES.length} games (1 draft), ${BOX_SCORES.length} box scores`,
+    `[seed-fixture] done — ${TEAMS.length} teams, ${PLAYERS.length} players, ${GAMES.length} games (1 draft), ${BOX_SCORES.length} box scores`,
   );
 }
 
