@@ -32,35 +32,74 @@ export function Ticker({ games }: { games: TickerGame[] }) {
 
 function TickerItem({ g }: { g: TickerGame }) {
   const isFinal = g.status === "final" || g.status === "approved";
-  const date = g.date ? formatDate(g.date) : "TBD";
+  const dateLabel = g.date ? formatDateShort(g.date) : "TBD";
+  const statusLabel = isFinal
+    ? "FINAL"
+    : g.date
+      ? formatTime(g.date)
+      : g.status.toUpperCase();
   const awayLabel = g.away_team.abbrev ?? g.away_team_id.slice(0, 3).toUpperCase();
   const homeLabel = g.home_team.abbrev ?? g.home_team_id.slice(0, 3).toUpperCase();
-  const awayValue = isFinal ? g.away_score : g.away_record ?? "";
-  const homeValue = isFinal ? g.home_score : g.home_record ?? "";
+  const awayWon = isFinal && g.away_score > g.home_score;
+  const homeWon = isFinal && g.home_score > g.away_score;
+
   return (
     <Link href={`/games/${g.id}`} className="ticker-item">
-      <span style={{ opacity: 0.7 }}>{date}</span>
-      <span className="ticker-sep">·</span>
-      <span>
-        {awayLabel} {awayValue}
-      </span>
-      <span className="ticker-sep">@</span>
-      <span>
-        {homeLabel} {homeValue}
-      </span>
-      <span className="ticker-sep">|</span>
+      <div className="ti-head">
+        <span className="ti-date">{dateLabel}</span>
+        <span className="ti-sep" aria-hidden>
+          ·
+        </span>
+        <span className="ti-status">{statusLabel}</span>
+      </div>
+      <TickerTeamRow
+        abbrev={awayLabel}
+        record={g.away_record}
+        value={isFinal ? g.away_score : ""}
+        winner={awayWon}
+        showValue={isFinal}
+      />
+      <TickerTeamRow
+        abbrev={homeLabel}
+        record={g.home_record}
+        value={isFinal ? g.home_score : ""}
+        winner={homeWon}
+        showValue={isFinal}
+      />
     </Link>
   );
 }
 
-function formatDate(iso: string): string {
+function TickerTeamRow({
+  abbrev,
+  record,
+  value,
+  winner,
+  showValue,
+}: {
+  abbrev: string;
+  record?: string;
+  value: number | string;
+  winner: boolean;
+  showValue: boolean;
+}) {
+  return (
+    <div className={"ti-row " + (winner ? "ti-row-win" : "")}>
+      <span className="ti-team">{abbrev}</span>
+      {record && <span className="ti-record">({record})</span>}
+      {showValue && <span className="ti-val">{value}</span>}
+    </div>
+  );
+}
+
+function formatDateShort(iso: string): string {
   const d = new Date(iso);
-  const month = d.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
-  const day = d.getDate();
-  const time = d.toLocaleTimeString("en-US", {
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+function formatTime(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
-    hour12: true,
   });
-  return `${month} ${day} · ${time}`;
 }

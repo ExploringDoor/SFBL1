@@ -8,6 +8,7 @@ import { computeWeeks, pickActiveWeek } from "@/lib/season-weeks";
 import { computeStandings, type GameResult } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { ScoresScheduleTabs, WeekRow } from "../scores/tabs-and-weeks";
+import { SubscribeCalendar } from "@/components/SubscribeCalendar";
 
 export const dynamic = "force-dynamic";
 
@@ -65,12 +66,15 @@ export default async function SchedulePage({
 
   return (
     <main className="container py-10">
-      <header className="mb-6">
-        <h1 className="font-display" style={{ fontSize: "clamp(40px, 6vw, 64px)" }}>
-          <span style={{ color: "var(--text-strong)" }}>Season</span>{" "}
-          <span style={{ color: "var(--brand-primary)" }}>Schedule</span>
-        </h1>
-        {config?.name && <p className="sec-eyebrow mt-1">{config.name}</p>}
+      <header className="mb-6 flex items-end justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="font-display" style={{ fontSize: "clamp(40px, 6vw, 64px)" }}>
+            <span style={{ color: "var(--text-strong)" }}>Season</span>{" "}
+            <span style={{ color: "var(--brand-primary)" }}>Schedule</span>
+          </h1>
+          {config?.name && <p className="sec-eyebrow mt-1">{config.name}</p>}
+        </div>
+        <SubscribeCalendar />
       </header>
 
       <ScoresScheduleTabs active="schedule" />

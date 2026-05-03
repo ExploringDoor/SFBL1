@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { TeamBadge } from "@/components/TeamBadge";
+import { SubscribeCalendar } from "@/components/SubscribeCalendar";
 import {
   computePoints,
   computeStandings,
@@ -192,6 +193,9 @@ export default async function TeamDetailPage({
                   </span>
                 </p>
               )}
+              <div style={{ marginTop: 14 }}>
+                <SubscribeCalendar teamId={params.teamId} />
+              </div>
             </div>
           </div>
         </div>
