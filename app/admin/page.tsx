@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { User } from "firebase/auth";
 import { signOut, useLeagueRole, useUser } from "@/lib/auth-client";
 import { getDb } from "@/lib/firebase";
 import { useTenant } from "@/lib/tenant-context";
@@ -68,7 +69,7 @@ export default function AdminPage() {
     <Shell heading={config?.name ?? "Admin"}>
       <SignedInHeader email={user.email} uid={user.uid} role={role} />
       <AdminSmokeTest tenantId={tenantId} />
-      <RecalcStatsButton tenantId={tenantId} />
+      <RecalcStatsButton tenantId={tenantId} user={user} />
     </Shell>
   );
 }
@@ -178,7 +179,7 @@ function AdminSmokeTest({ tenantId }: { tenantId: string }) {
   );
 }
 
-function RecalcStatsButton({ tenantId }: { tenantId: string }) {
+function RecalcStatsButton({ tenantId, user }: { tenantId: string; user: User }) {
   const [status, setStatus] = useState<
     | { kind: "idle" }
     | { kind: "running" }
@@ -198,14 +199,7 @@ function RecalcStatsButton({ tenantId }: { tenantId: string }) {
   async function run() {
     setStatus({ kind: "running" });
     try {
-      // Get a fresh ID token; the API route verifies it server-side.
-      const auth = (await import("firebase/auth")).getAuth(
-        (await import("@/lib/firebase")).getFirebaseApp(),
-      );
-      const user = auth.currentUser;
-      if (!user) throw new Error("Not signed in.");
       const token = await user.getIdToken();
-
       const res = await fetch("/api/recalc", {
         method: "POST",
         headers: {
