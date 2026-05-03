@@ -54,7 +54,13 @@ export function ops(obp: number, slg: number): number {
 // Standings
 // =============================================================================
 
-export type GameStatus = "draft" | "final" | "approved" | "ppd" | "rained_out";
+export type GameStatus =
+  | "draft"
+  | "scheduled"
+  | "final"
+  | "approved"
+  | "ppd"
+  | "rained_out";
 
 export interface GameResult {
   home_team_id: string;
