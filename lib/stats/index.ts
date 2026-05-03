@@ -177,37 +177,42 @@ async function writeStats(
   batters: SoftballPlayerStats[] | BaseballBatterStats[],
   pitchers: BaseballPitcherStats[],
 ): Promise<{ batter_writes: number; pitcher_writes: number }> {
-  // Read existing stats so we can dirty-check.
-  const playerRefs = batters
-    .filter((b) => b.player_id)
-    .map((b) => db.doc(`leagues/${leagueId}/players/${b.player_id}`));
+  // Collect EVERY player id we'll touch — batter or pitcher — so we
+  // fetch their existing doc once and can dirty-check both subfields.
+  const allPlayerIds = new Set<string>();
+  for (const b of batters) if (b.player_id) allPlayerIds.add(b.player_id);
+  for (const p of pitchers) if (p.player_id) allPlayerIds.add(p.player_id);
 
-  const existingDocs = playerRefs.length
-    ? await db.getAll(...playerRefs)
-    : [];
-  const existingByRef = new Map(
-    existingDocs.map((d) => [d.ref.path, d.data()?.stats]),
+  const playerRefs = [...allPlayerIds].map((pid) =>
+    db.doc(`leagues/${leagueId}/players/${pid}`),
   );
 
-  // Collect dirty writes into a batch.
+  const existingDocs = playerRefs.length ? await db.getAll(...playerRefs) : [];
+  // Store the full doc data so we can read both `.stats` (batter) and
+  // `.pitching` (pitcher) subfields. Earlier version stored only `.stats`,
+  // which silently broke pitcher dirty-check (every recalc rewrote
+  // pitchers even when totals were unchanged).
+  const existingByPath = new Map(
+    existingDocs.map((d) => [d.ref.path, d.data() ?? {}]),
+  );
+
   const batch = db.batch();
   let batterWrites = 0;
 
   for (const next of batters) {
     if (!next.player_id) continue;
     const ref = db.doc(`leagues/${leagueId}/players/${next.player_id}`);
-    const prev = existingByRef.get(ref.path);
-    if (prev && areBatterStatsEqual(prev, next, sport)) continue;
+    const prev = existingByPath.get(ref.path);
+    if (prev?.stats && areBatterStatsEqual(prev.stats, next, sport)) continue;
     batch.set(ref, { stats: next }, { merge: true });
     batterWrites += 1;
   }
 
-  // Pitchers — baseball only — get their own subfield.
   let pitcherWrites = 0;
   for (const p of pitchers) {
     if (!p.player_id) continue;
     const ref = db.doc(`leagues/${leagueId}/players/${p.player_id}`);
-    const prev = existingByRef.get(ref.path);
+    const prev = existingByPath.get(ref.path);
     if (prev?.pitching && pitcherStatsAreEqual(prev.pitching, p)) continue;
     batch.set(ref, { pitching: p }, { merge: true });
     pitcherWrites += 1;
