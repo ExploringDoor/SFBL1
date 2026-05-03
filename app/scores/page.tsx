@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import type { PublicLeagueConfig } from "@/lib/tenants";
@@ -141,12 +142,15 @@ function ScoreCard({
   const isTie = g.home_score === g.away_score;
 
   return (
-    <li className="rounded-md border border-slate-200 bg-white p-3 text-sm">
-      <Row name={away} score={g.away_score} winner={isAwayWin} tie={isTie} />
-      <Row name={home} score={g.home_score} winner={isHomeWin} tie={isTie} />
-      {g.field && (
-        <p className="mt-1 text-xs text-slate-500">{g.field}</p>
-      )}
+    <li>
+      <Link
+        href={`/games/${g.id}`}
+        className="block rounded-md border border-slate-200 bg-white p-3 text-sm hover:border-slate-400 hover:shadow-sm"
+      >
+        <Row name={away} score={g.away_score} winner={isAwayWin} tie={isTie} />
+        <Row name={home} score={g.home_score} winner={isHomeWin} tie={isTie} />
+        {g.field && <p className="mt-1 text-xs text-slate-500">{g.field}</p>}
+      </Link>
     </li>
   );
 }
