@@ -77,6 +77,34 @@ export interface StandingsRow {
   gb: number;
 }
 
+export interface PointsScheme {
+  win: number;
+  tie: number;
+  loss: number;
+}
+
+// Pure function. Apply a points scheme to a row's W/L/T.
+// e.g. DVSL softball: {win:3, tie:2, loss:1} → 3W + 2T + L points.
+export function computePoints(row: StandingsRow, scheme: PointsScheme): number {
+  return row.w * scheme.win + row.t * scheme.tie + row.l * scheme.loss;
+}
+
+// Sort an existing standings list by points desc with run-diff tiebreak.
+// Use this when the league config has `scoring: 'points'`. Returns a new
+// array — does not mutate. Doesn't recompute GB (which is W-L-based and
+// stays meaningful even in points mode for "games behind first place").
+export function sortByPoints(
+  rows: StandingsRow[],
+  scheme: PointsScheme,
+): StandingsRow[] {
+  const annotated = rows.map((r) => ({ row: r, points: computePoints(r, scheme) }));
+  annotated.sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    return b.row.rd - a.row.rd;
+  });
+  return annotated.map((a) => a.row);
+}
+
 // Compute standings from a list of game results. Filters to finished games
 // (final or approved). Postponed/rained-out games never count.
 export function computeStandings(games: GameResult[]): StandingsRow[] {

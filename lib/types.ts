@@ -34,6 +34,19 @@ export interface LeagueFeatureFlags {
   [key: string]: boolean;
 }
 
+// Optional standings configuration. When absent, sort by PCT desc with
+// run-differential as tiebreaker (the "default baseball" model).
+//
+// When `scoring` is "points", sort by points desc instead. Points are
+// computed via `points_per` — DVSL's softball league uses {win:3, tie:2,
+// loss:1}; UEFA-style soccer uses {win:3, tie:1, loss:0}. Always store
+// the full multiplier triple even when one is zero, so the rule is
+// inspectable.
+export interface LeagueStandingsConfig {
+  scoring?: "pct" | "points";
+  points_per?: { win: number; tie: number; loss: number };
+}
+
 export interface LeagueConfig {
   // Identity
   slug: string;
@@ -58,6 +71,9 @@ export interface LeagueConfig {
 
   // Boolean per-tenant feature flags
   flags?: LeagueFeatureFlags;
+
+  // Standings scoring config (optional — defaults to PCT-based)
+  standings?: LeagueStandingsConfig;
 }
 
 // Custom-domain mapping doc at /domains/{hostname}.

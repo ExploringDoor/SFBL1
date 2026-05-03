@@ -17,6 +17,7 @@ export interface PublicLeagueConfig {
   theme: LeagueConfig["theme"];
   billing: { status: LeagueConfig["billing"]["status"] };
   flags?: LeagueConfig["flags"];
+  standings?: LeagueConfig["standings"];
 }
 
 export function toPublicConfig(c: LeagueConfig): PublicLeagueConfig {
@@ -33,6 +34,7 @@ export function toPublicConfig(c: LeagueConfig): PublicLeagueConfig {
     theme: c.theme,
     billing: { status: c.billing?.status ?? "active" },
     flags: c.flags,
+    standings: c.standings,
   };
 }
 

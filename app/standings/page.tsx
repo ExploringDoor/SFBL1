@@ -1,20 +1,25 @@
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { computeStandings, type GameResult } from "@/lib/stats/shared";
+import {
+  computePoints,
+  computeStandings,
+  sortByPoints,
+  type GameResult,
+  type PointsScheme,
+  type StandingsRow,
+} from "@/lib/stats/shared";
+import type { PublicLeagueConfig } from "@/lib/tenants";
 
-// Server component — runs on every request, no client-side Firestore.
-// Phase 5 will add per-tenant theme variables to <html>; for now this
-// renders with default Tailwind.
 export const dynamic = "force-dynamic";
 
 export default async function StandingsPage() {
   const h = headers();
   const tenantId = h.get("x-tenant-id");
-  const tenantName = (() => {
-    const cfg = h.get("x-tenant-config-json");
-    if (!cfg) return null;
+  const config = (() => {
+    const raw = h.get("x-tenant-config-json");
+    if (!raw) return null;
     try {
-      return (JSON.parse(cfg) as { name?: string }).name ?? null;
+      return JSON.parse(raw) as PublicLeagueConfig;
     } catch {
       return null;
     }
@@ -31,22 +36,50 @@ export default async function StandingsPage() {
     );
   }
 
-  const { rows, teamNames } = await loadStandings(tenantId);
+  const { rows, teamMeta } = await loadStandings(tenantId);
+
+  // Apply points-based sorting if the league configures it.
+  const scheme = config?.standings?.points_per;
+  const usePoints = config?.standings?.scoring === "points" && !!scheme;
+  const finalRows = usePoints && scheme ? sortByPoints(rows, scheme) : rows;
+
+  // Group by division if at least one team has one.
+  const grouped = groupByDivision(finalRows, teamMeta);
 
   return (
-    <Shell heading={tenantName ? `${tenantName} — Standings` : "Standings"}>
-      {rows.length === 0 ? (
+    <Shell heading={config?.name ? `${config.name} — Standings` : "Standings"}>
+      {finalRows.length === 0 ? (
         <p className="text-slate-600">No final games yet.</p>
       ) : (
-        <StandingsTable rows={rows} teamNames={teamNames} />
+        <div className="space-y-8">
+          {grouped.map(({ division, rows: groupRows }) => (
+            <section key={division ?? "league"}>
+              {division && (
+                <h2 className="mb-2 text-lg font-semibold text-slate-800">
+                  {division}
+                </h2>
+              )}
+              <StandingsTable
+                rows={groupRows}
+                teamMeta={teamMeta}
+                pointsScheme={usePoints ? scheme : null}
+              />
+            </section>
+          ))}
+        </div>
       )}
     </Shell>
   );
 }
 
+interface TeamMeta {
+  name: string;
+  division?: string;
+}
+
 async function loadStandings(tenantId: string): Promise<{
-  rows: ReturnType<typeof computeStandings>;
-  teamNames: Record<string, string>;
+  rows: StandingsRow[];
+  teamMeta: Record<string, TeamMeta>;
 }> {
   const db = getAdminDb();
   const [gamesSnap, teamsSnap] = await Promise.all([
@@ -65,12 +98,36 @@ async function loadStandings(tenantId: string): Promise<{
     };
   });
 
-  const teamNames: Record<string, string> = {};
+  const teamMeta: Record<string, TeamMeta> = {};
   for (const d of teamsSnap.docs) {
-    teamNames[d.id] = String(d.data().name ?? d.id);
+    const data = d.data();
+    teamMeta[d.id] = {
+      name: String(data.name ?? d.id),
+      division: data.division ? String(data.division) : undefined,
+    };
   }
 
-  return { rows: computeStandings(games), teamNames };
+  return { rows: computeStandings(games), teamMeta };
+}
+
+function groupByDivision(
+  rows: StandingsRow[],
+  teamMeta: Record<string, TeamMeta>,
+): Array<{ division: string | null; rows: StandingsRow[] }> {
+  const anyDivision = rows.some((r) => teamMeta[r.team_id]?.division);
+  if (!anyDivision) return [{ division: null, rows }];
+
+  const buckets = new Map<string, StandingsRow[]>();
+  for (const r of rows) {
+    const div = teamMeta[r.team_id]?.division ?? "Other";
+    if (!buckets.has(div)) buckets.set(div, []);
+    buckets.get(div)!.push(r);
+  }
+
+  // Stable order: alphabetical by division name.
+  return [...buckets.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([division, rows]) => ({ division, rows }));
 }
 
 function Shell({
@@ -92,10 +149,12 @@ function Shell({
 
 function StandingsTable({
   rows,
-  teamNames,
+  teamMeta,
+  pointsScheme,
 }: {
-  rows: ReturnType<typeof computeStandings>;
-  teamNames: Record<string, string>;
+  rows: StandingsRow[];
+  teamMeta: Record<string, TeamMeta>;
+  pointsScheme: PointsScheme | null;
 }) {
   return (
     <div className="overflow-x-auto rounded-md border border-slate-200">
@@ -103,6 +162,7 @@ function StandingsTable({
         <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-600">
           <tr>
             <Th className="text-left">Team</Th>
+            {pointsScheme && <Th>PTS</Th>}
             <Th>W</Th>
             <Th>L</Th>
             <Th>T</Th>
@@ -117,8 +177,11 @@ function StandingsTable({
           {rows.map((r) => (
             <tr key={r.team_id} className="text-sm">
               <Td className="text-left font-medium">
-                {teamNames[r.team_id] ?? r.team_id}
+                {teamMeta[r.team_id]?.name ?? r.team_id}
               </Td>
+              {pointsScheme && (
+                <Td className="font-semibold">{computePoints(r, pointsScheme)}</Td>
+              )}
               <Td>{r.w}</Td>
               <Td>{r.l}</Td>
               <Td>{r.t}</Td>
@@ -142,8 +205,6 @@ function Td({ children, className = "" }: { children: React.ReactNode; className
   return <td className={`px-3 py-2 text-right tabular-nums ${className}`}>{children}</td>;
 }
 
-// Baseball convention: drop leading zero, three decimal places.
-// .500 not 0.500.
 function formatPct(p: number): string {
   if (p === 1) return "1.000";
   return p.toFixed(3).replace(/^0/, "");
