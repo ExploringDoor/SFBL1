@@ -13,8 +13,10 @@ export const dynamic = "force-dynamic";
 
 export default async function GameDetailPage({
   params,
+  searchParams,
 }: {
   params: { gameId: string };
+  searchParams?: { tab?: string };
 }) {
   const h = headers();
   const tenantId = h.get("x-tenant-id");
@@ -43,6 +45,8 @@ export default async function GameDetailPage({
   );
   if (!data) notFound();
 
+  const view = searchParams?.tab === "recap" ? "recap" : "box";
+
   return (
     <main className="container py-12">
       <div className="mb-4 flex items-center justify-between no-print">
@@ -61,7 +65,7 @@ export default async function GameDetailPage({
         </Link>
         <PrintButton />
       </div>
-      <BoxScoreContent {...data} />
+      <BoxScoreContent {...data} view={view} />
     </main>
   );
 }

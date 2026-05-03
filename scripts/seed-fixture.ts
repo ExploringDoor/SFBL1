@@ -125,7 +125,147 @@ const PLAYERS = [
   { id: "p9_iris",   team_id: "sf_rays",          name: "Iris Khan",        jersey: 11, position: "OF" },
 ];
 
-// Box scores for a couple of games. Drives the recalc smoke test.
+// Synthetic lineup generator — covers every final game with plausible
+// stats so the box-score modal isn't empty for any game. Players cycle
+// through the league pool.
+function syntheticLineup(opts: {
+  awayTeamId: string;
+  homeTeamId: string;
+  awayScore: number;
+  homeScore: number;
+  innings: number;
+}): Record<string, unknown> {
+  const { awayTeamId, homeTeamId, awayScore, homeScore, innings } = opts;
+
+  // Distribute runs across innings — pick `awayScore` out of innings,
+  // weighted toward middle innings for realism.
+  function distributeRuns(total: number): number[] {
+    const arr = Array(innings).fill(0);
+    let left = total;
+    while (left > 0) {
+      // Bias toward innings 3-7
+      const inn = Math.min(
+        innings - 1,
+        Math.floor(2 + Math.random() * Math.min(5, innings - 2)),
+      );
+      arr[inn] += 1;
+      left -= 1;
+    }
+    return arr;
+  }
+
+  const awayLine = distributeRuns(awayScore);
+  const homeLine = distributeRuns(homeScore);
+  const awayHits = Math.max(awayScore + 2, Math.round(awayScore * 1.6));
+  const homeHits = Math.max(homeScore + 2, Math.round(homeScore * 1.6));
+
+  // Build a 4-player batting lineup. Distribute hits/HR/RBI/runs.
+  function makeLineup(teamId: string, totalRuns: number, totalHits: number) {
+    const playerIds = playersByTeam[teamId] ?? [];
+    const lineup = [];
+    let hitsLeft = totalHits;
+    let runsLeft = totalRuns;
+    let rbisLeft = totalRuns;
+    let hrLeft = totalRuns >= 6 ? Math.min(2, Math.floor(totalRuns / 4)) : 0;
+    let doublesLeft = Math.floor(totalHits / 4);
+    for (let i = 0; i < playerIds.length; i++) {
+      const isLast = i === playerIds.length - 1;
+      const ab = 3 + Math.floor(Math.random() * 2);
+      const h = isLast ? hitsLeft : Math.min(hitsLeft, Math.floor(Math.random() * 3));
+      hitsLeft -= h;
+      const hr = h > 0 && hrLeft > 0 ? 1 : 0;
+      hrLeft -= hr;
+      const doubles = h > hr && doublesLeft > 0 ? 1 : 0;
+      doublesLeft -= doubles;
+      const r = isLast ? runsLeft : Math.min(runsLeft, h);
+      runsLeft -= r;
+      const rbi = isLast ? rbisLeft : Math.min(rbisLeft, h + hr);
+      rbisLeft -= rbi;
+      lineup.push({
+        player_id: playerIds[i],
+        ab,
+        h,
+        doubles,
+        triples: 0,
+        hr,
+        rbi,
+        bb: Math.random() > 0.6 ? 1 : 0,
+        so: Math.random() > 0.5 ? 1 : 0,
+        r,
+      });
+    }
+    return lineup;
+  }
+
+  const awayLineup = makeLineup(awayTeamId, awayScore, awayHits);
+  const homeLineup = makeLineup(homeTeamId, homeScore, homeHits);
+
+  // Pick first player on each team as pitcher of record.
+  const awayPitcherId = playersByTeam[awayTeamId]?.[0];
+  const homePitcherId = playersByTeam[homeTeamId]?.[0];
+  const awayWon = awayScore > homeScore;
+  const homeWon = homeScore > awayScore;
+  const totalOuts = innings * 3;
+
+  const awayPitchers = awayPitcherId
+    ? [
+        {
+          player_id: awayPitcherId,
+          ip_outs: totalOuts,
+          h: homeHits,
+          r: homeScore,
+          er: homeScore,
+          bb: 2,
+          so: 5,
+          hr: 0,
+          decision: homeWon ? "L" : awayWon ? "W" : undefined,
+        },
+      ]
+    : [];
+  const homePitchers = homePitcherId
+    ? [
+        {
+          player_id: homePitcherId,
+          ip_outs: totalOuts,
+          h: awayHits,
+          r: awayScore,
+          er: awayScore,
+          bb: 2,
+          so: 5,
+          hr: 0,
+          decision: awayWon ? "L" : homeWon ? "W" : undefined,
+        },
+      ]
+    : [];
+
+  return {
+    status: "final",
+    away_team_id: awayTeamId,
+    home_team_id: homeTeamId,
+    away_score: awayScore,
+    home_score: homeScore,
+    linescore: { away: awayLine, home: homeLine },
+    hits: { away: awayHits, home: homeHits },
+    errors: { away: 1, home: 1 },
+    away_lineup: awayLineup,
+    home_lineup: homeLineup,
+    away_pitchers: awayPitchers,
+    home_pitchers: homePitchers,
+  };
+}
+
+// Map team_id → player ids for the synthetic generator.
+const playersByTeam: Record<string, string[]> = PLAYERS.reduce(
+  (acc, p) => {
+    if (!acc[p.team_id]) acc[p.team_id] = [];
+    acc[p.team_id]!.push(p.id);
+    return acc;
+  },
+  {} as Record<string, string[]>,
+);
+
+// Box scores: hand-tuned for g1/g2 (recalc test depends on these), then
+// auto-generated for all other final games.
 const BOX_SCORES: Array<[string, Record<string, unknown>]> = [
   [
     "g1",
@@ -244,13 +384,33 @@ async function run() {
     );
   }
 
-  // Box scores
+  // Box scores: explicit hand-tuned ones first.
+  const seededIds = new Set<string>();
   for (const [id, body] of BOX_SCORES) {
     await db.doc(`leagues/${LEAGUE_ID}/box_scores/${id}`).set(body);
+    seededIds.add(id);
+  }
+
+  // Auto-fill any other final game so every final has a viewable box score.
+  let auto = 0;
+  for (const g of GAMES) {
+    if (g.status !== "final") continue;
+    if (seededIds.has(g.id)) continue;
+    const innings = LEAGUE_CONFIG.linescore_innings;
+    const body = syntheticLineup({
+      awayTeamId: g.away,
+      homeTeamId: g.home,
+      awayScore: g.as,
+      homeScore: g.hs,
+      innings,
+    });
+    await db.doc(`leagues/${LEAGUE_ID}/box_scores/${g.id}`).set(body);
+    auto += 1;
   }
 
   console.log(
-    `[seed-fixture] done — ${TEAMS.length} teams, ${PLAYERS.length} players, ${GAMES.length} games (1 draft), ${BOX_SCORES.length} box scores`,
+    `[seed-fixture] done — ${TEAMS.length} teams, ${PLAYERS.length} players, ` +
+      `${GAMES.length} games (1 draft), ${BOX_SCORES.length} hand-tuned + ${auto} auto-generated box scores`,
   );
 }
 

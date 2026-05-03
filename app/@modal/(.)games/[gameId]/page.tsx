@@ -13,8 +13,10 @@ export const dynamic = "force-dynamic";
 
 export default async function GameModalRoute({
   params,
+  searchParams,
 }: {
   params: { gameId: string };
+  searchParams?: { tab?: string };
 }) {
   const h = headers();
   const tenantId = h.get("x-tenant-id");
@@ -36,9 +38,11 @@ export default async function GameModalRoute({
   );
   if (!data) return null;
 
+  const view = searchParams?.tab === "recap" ? "recap" : "box";
+
   return (
-    <Modal title="Box Score">
-      <BoxScoreContent {...data} />
+    <Modal title={view === "recap" ? "Recap" : "Box Score"}>
+      <BoxScoreContent {...data} view={view} />
     </Modal>
   );
 }

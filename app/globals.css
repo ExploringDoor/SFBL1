@@ -26,7 +26,7 @@
   --border2: rgba(0, 0, 0, 0.18);
 
   --header-height: 62px;
-  --ticker-height: 76px;
+  --ticker-height: 58px;
 }
 
 html,
@@ -130,9 +130,9 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 2px;
-  min-width: 200px;
-  padding: 8px 14px;
+  gap: 1px;
+  min-width: 170px;
+  padding: 6px 12px;
   border-right: 1px solid rgba(255, 255, 255, 0.08);
   text-decoration: none;
   color: #fff;
@@ -143,36 +143,36 @@ body {
 .ti-head {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 10px;
+  gap: 5px;
+  font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 2px;
+  margin-bottom: 1px;
 }
 .ti-status { color: rgba(255, 255, 255, 0.85); }
 .ti-sep { color: rgba(255, 255, 255, 0.4); }
 .ti-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 13px;
+  gap: 5px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   color: rgba(255, 255, 255, 0.65);
-  line-height: 1.1;
+  line-height: 1.05;
 }
 .ti-row-win { color: #fff; }
-.ti-team { font-weight: 800; min-width: 38px; }
+.ti-team { font-weight: 800; min-width: 36px; }
 .ti-record {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.5);
 }
 .ti-val {
   margin-left: auto;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
 }

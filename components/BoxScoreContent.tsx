@@ -57,10 +57,11 @@ export interface BoxScoreContentProps {
   away: BoxTeam;
   home: BoxTeam;
   playerNames: Record<string, string>;
+  view?: "box" | "recap"; // recap = short view (header + recap + POTG only)
 }
 
 export function BoxScoreContent(props: BoxScoreContentProps) {
-  const { date, field, status, innings, away, home, playerNames } = props;
+  const { date, field, status, innings, away, home, playerNames, view = "box" } = props;
   const isFinal = status === "final" || status === "approved";
 
   const recap = isFinal
@@ -165,17 +166,37 @@ export function BoxScoreContent(props: BoxScoreContentProps) {
         </div>
       )}
 
-      {away.lineup.length > 0 && (
-        <BattingTable teamLabel={`${away.name} Batting`} rows={away.lineup} playerNames={playerNames} />
-      )}
-      {home.lineup.length > 0 && (
-        <BattingTable teamLabel={`${home.name} Batting`} rows={home.lineup} playerNames={playerNames} />
-      )}
-      {away.pitchers.length > 0 && (
-        <PitchingTable teamLabel={`${away.name} Pitching`} rows={away.pitchers} playerNames={playerNames} />
-      )}
-      {home.pitchers.length > 0 && (
-        <PitchingTable teamLabel={`${home.name} Pitching`} rows={home.pitchers} playerNames={playerNames} />
+      {view === "box" && (
+        <>
+          {away.lineup.length > 0 && (
+            <BattingTable
+              teamLabel={`${away.name} Batting`}
+              rows={away.lineup}
+              playerNames={playerNames}
+            />
+          )}
+          {home.lineup.length > 0 && (
+            <BattingTable
+              teamLabel={`${home.name} Batting`}
+              rows={home.lineup}
+              playerNames={playerNames}
+            />
+          )}
+          {away.pitchers.length > 0 && (
+            <PitchingTable
+              teamLabel={`${away.name} Pitching`}
+              rows={away.pitchers}
+              playerNames={playerNames}
+            />
+          )}
+          {home.pitchers.length > 0 && (
+            <PitchingTable
+              teamLabel={`${home.name} Pitching`}
+              rows={home.pitchers}
+              playerNames={playerNames}
+            />
+          )}
+        </>
       )}
     </div>
   );

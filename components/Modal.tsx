@@ -4,6 +4,10 @@
 // Esc key, click outside, or the close button. Uses router.back() so
 // modal close pops the modal route while keeping the underlying page
 // (e.g. /scores) intact.
+//
+// Also intercepts internal Link clicks: when a user clicks a link
+// inside the modal that navigates AWAY from the current URL, close the
+// modal first so the new page renders cleanly.
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -35,6 +39,24 @@ export function Modal({ children, title }: { children: React.ReactNode; title?: 
     if (e.target === e.currentTarget) router.back();
   }
 
+  // Intercept clicks on internal anchors. A click on a Link that
+  // navigates to a different URL should close the modal first so the
+  // new page renders without the modal stuck on top.
+  function onContentClick(e: React.MouseEvent) {
+    const target = (e.target as HTMLElement | null)?.closest("a") as
+      | HTMLAnchorElement
+      | null;
+    if (!target) return;
+    const href = target.getAttribute("href");
+    if (!href || href.startsWith("http") || href.startsWith("mailto:") || href.startsWith("#")) {
+      return;
+    }
+    // Internal nav — close the modal, then push to the destination.
+    e.preventDefault();
+    router.back();
+    setTimeout(() => router.push(href), 50);
+  }
+
   return (
     <div
       onClick={onBackdropClick}
@@ -46,6 +68,7 @@ export function Modal({ children, title }: { children: React.ReactNode; title?: 
       <div
         ref={dialogRef}
         className="relative my-8 w-full max-w-3xl rounded-lg bg-white shadow-2xl"
+        onClick={onContentClick}
       >
         <button
           type="button"
