@@ -659,6 +659,40 @@ If a commissioner cannot operate the site themselves after 30 min of training, t
 
 ---
 
+## PWA Shell — captain portal expectations
+
+Every tenant site is a PWA (MVP feature, line 474). Specifically for the
+captain portal, that means once the shell lands the captain can:
+
+- **Install to home screen** — tenant-branded icon, splash screen,
+  standalone display mode (no browser chrome). Use `manifest.json`
+  emitted per-tenant via the existing tenant config so logo + theme
+  color vary by league.
+- **Offline read** — last-known roster, schedule, payments cache so a
+  captain walking onto a field with no signal still sees their team.
+  Use a service worker with stale-while-revalidate for Firestore reads.
+- **Push notifications** — wire FCM tokens at `users/{uid}.fcm_tokens.[]`
+  on permission grant. The Notifications tab UI (built in phase 4) is
+  already plumbed for `email` + `push` channels per event category;
+  the push toggles unlock once the SW + token registration land.
+- **Background sync** — queued box-score submissions if a captain hits
+  Save while offline.
+
+Build order: SW + manifest first (unlocks install + offline reads),
+then FCM push token registration (unlocks the Notifications tab push
+toggles), then background sync (nice-to-have, defer if needed).
+
+Already in place pre-PWA-shell:
+- Notifications tab UI with email + push channel toggles
+  (`components/captain/NotificationsTab.tsx`) — push toggles disable
+  themselves when `Notification.permission !== "granted"` so we
+  degrade gracefully on browsers without the SW yet.
+- Per-user notif prefs stored at `/users/{uid}.notif_prefs.{leagueId}`
+  so the SW + Cloud Function fan-out has somewhere to read prefs from
+  on day one.
+
+---
+
 ## First Milestone (target: end of week 2)
 
 SFBL skeleton tenant provisioned at `sfbl.localhost:3000` (or `sfbl.leagueengine.com` if domain bought). Middleware reads hostname, looks up `sfbl` in Firestore, renders hello-world page that says "South Florida Baseball — 9 innings" pulled from tenant config doc.
