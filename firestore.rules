@@ -43,6 +43,41 @@ service cloud.firestore {
         && (teamId == game.home_team_id || teamId == game.away_team_id);
     }
 
+    // Doc id format for lineups + box_score_submissions:
+    //   `${gameId}_${teamId}`
+    // Caller must already have asserted the doc id ENDS with the
+    // captain's `_<teamId>`. We strip that suffix to recover the
+    // gameId, then verify the captain is actually in that game via
+    // isCaptainOfGameTeam (which reads the game doc).
+    //
+    // Why this matters: without this check, the lineup/submission
+    // rules only verified the doc id ended with the captain's team
+    // id — a captain of team_a could then write a lineup for ANY
+    // game in their league as long as the doc id was named
+    // `<otherGameId>_team_a`. The downstream public box-score is
+    // protected separately, but the submission lane itself was
+    // poisonable.
+    function isCaptainOfDocGame(leagueId, docId) {
+      let teamId = captainTeamId(leagueId);
+      // Strategy: match `^.+_<teamId>$` to assert the doc id has the
+      // expected `${gameId}_${teamId}` shape, THEN split by
+      // `_<teamId>` and take the first chunk as the gameId.
+      //
+      // Firestore Rules doesn't have substring/range — only split(),
+      // matches(), replace() (verified empirically: substring + range
+      // both throw "Function not found"). split() returns a list and
+      // we already use it in captainTeamId. Edge case to be aware of:
+      // if a gameId ITSELF contains `_<teamId>` (e.g. team_id="a" and
+      // game_id="x_team_a_y"), split returns multiple chunks and we
+      // pick the wrong gameId; isCaptainOfGameTeam then fails on a
+      // missing game → rule denies, which is safe-but-strict. Real
+      // provision-script game ids are `g_YYYY_MM_DD_NNN` with no team
+      // names so this collision is theoretical for SFBL.
+      return teamId != null
+        && docId.matches('^.+_' + teamId + '$')
+        && isCaptainOfGameTeam(leagueId, docId.split('_' + teamId)[0]);
+    }
+
     // Player-self check. String equality, not regex — the comparison
     // string is constructed from the trusted playerId path segment, so
     // even if a malformed claim like "player:foo:bar" sneaks in, it
@@ -124,14 +159,118 @@ service cloud.firestore {
       // Lineups: same rule as box scores (captain may set their own team's
       // lineup; admin may set any). Stored under
       // /leagues/{leagueId}/lineups/{gameId}_{teamId}.
+      //
       // Regex is anchored so a captain of team_a can't write to
-      // `foo_team_a_evil`. Team ids must match [a-z0-9-]+ at provisioning
-      // time so regex metachars in the dynamic suffix can't escape.
+      // `foo_team_a_evil`. Team ids must match [a-z0-9_-]+ at the
+      // claim/provisioning layer so regex metachars in the dynamic
+      // suffix can't escape.
+      //
+      // ALSO requires the captain be in the game (via
+      // isCaptainOfDocGame → isCaptainOfGameTeam), not just that the
+      // doc id ends with their teamId. Without that read of the game
+      // doc, a captain could write a lineup for any game in the
+      // league as long as the doc id was suffixed with their team id.
       match /lineups/{lineupId} {
         allow read: if true;
         allow write: if isAdmin(leagueId)
-                    || (captainTeamId(leagueId) != null
-                        && lineupId.matches('^.+_' + captainTeamId(leagueId) + '$'));
+                    || isCaptainOfDocGame(leagueId, lineupId);
+      }
+
+      // Box score submissions — one per (game, team) pair representing a
+      // captain's lane in the 3-lane reconciliation model (PLAN.md §4).
+      // Captains write their own team's submission; admin can write/read
+      // any. **Reads are NOT public** — captains must not see the
+      // opposing captain's submission (otherwise the lane is no longer
+      // independent and reconciliation loses its point). The captain
+      // can read their own lane (for the editor's pre-fill).
+      // Doc id format: `<game_id>_<team_id>`.
+      //
+      // Same isCaptainOfDocGame check as /lineups above — captain must
+      // both own the team suffix AND be in the game.
+      match /box_score_submissions/{subId} {
+        allow read: if isAdmin(leagueId)
+                    || isCaptainOfDocGame(leagueId, subId);
+        allow write: if isAdmin(leagueId)
+                    || isCaptainOfDocGame(leagueId, subId);
+      }
+
+      // Payments — captain tracks who paid season fees. Stored at
+      // /leagues/{leagueId}/payments/{playerId}. Writes go through
+      // /api/captain-payment (Admin SDK; bypasses rules) so we
+      // don't need to widen client-write rules.
+      // Reads: admin OR a captain (any captain of this league —
+      // payment status is league-level, not super sensitive).
+      match /payments/{paymentId} {
+        allow read: if isAdmin(leagueId)
+                    || captainTeamId(leagueId) != null;
+        allow write: if isAdmin(leagueId);
+      }
+
+      // -------------------------------------------------------------------
+      // /availability/{docId} — game RSVPs
+      //
+      // Doc id convention: `${team_id}_${game_id}_${player_id}` (matches
+      // DVSL captain.html:5341, scoped per-league via this subcollection
+      // path so the leagueId prefix is implicit).
+      //
+      // Doc shape:
+      //   { game_id, player_id, player_name, team_id, status, updated_at }
+      //
+      // Public-read within the tenant (matches DVSL's default; captains
+      // and players need to see team-wide RSVP summaries). Writes go
+      // through /api/availability-rsvp (Admin SDK) so the server can
+      // verify ownership: captain may write for any player on their team,
+      // player may write for their own linked player record only.
+      // -------------------------------------------------------------------
+
+      match /availability/{docId} {
+        allow read: if true;
+        allow write: if false;
+      }
+
+      // -------------------------------------------------------------------
+      // /team_messages/{msgId} — team chat
+      //
+      // Auth-only read (matches DVSL — chat is team-internal but not
+      // privacy-sensitive; restricting to authenticated users blocks
+      // anonymous scrapers without making the listener flow more complex).
+      // Real-time client SDK reads via onSnapshot() drive the chat tab.
+      //
+      // No direct client writes — every send/delete/reset goes through
+      // /api/chat-message[*] (Admin SDK) so the server can:
+      //   - verify caller is captain-of-team or player-on-team
+      //   - stamp author_email/author_name/team_color from trusted sources
+      //   - fire the team_chat push fan-out as part of the write
+      //   - cascade delete to push history (when inbox lands)
+      // -------------------------------------------------------------------
+
+      match /team_messages/{msgId} {
+        allow read: if request.auth != null;
+        allow write: if false;
+      }
+
+      // -------------------------------------------------------------------
+      // /captain_chat/{msgId} — league-wide captains-only chat
+      //
+      // Same posture as /team_messages but no team filter — every captain
+      // in the league sees these. Naming: `captain_chat` (singular suffix
+      // is DVSL convention for the path), but the category string and
+      // preference key everywhere else are `captains_chat` (plural).
+      // Watch this — DVSL hit a real bug where `category: 'captain_chat'`
+      // (singular) silently dropped pushes (notifications spec §4 #4).
+      //
+      // Reads: authenticated only. The captains-chat reveal in the
+      // captain portal is gated client-side by `is_captain_authed` claim,
+      // but we keep the rule simple here — anyone authenticated can
+      // technically read the messages, and the prefs-UI category opt-in
+      // for captains_chat is hidden from non-captains client-side.
+      // Tightening this further (e.g. to `captain:` claim only) would
+      // mean admins lose read access, which we don't want for moderation.
+      // -------------------------------------------------------------------
+
+      match /captain_chat/{msgId} {
+        allow read: if request.auth != null;
+        allow write: if false;
       }
 
       // Sensitive: members-only read, admin-only write.
@@ -163,6 +302,56 @@ service cloud.firestore {
 
     match /domains/{hostname} {
       allow read: if true;
+      allow write: if false;
+    }
+
+    // ---------------------------------------------------------------------
+    // /notification_tokens/{tokenDocId} — FCM push subscription rows
+    //
+    // Doc id convention: `<fcm_token>_<leagueId>`. Multi-tenant
+    // requirement (NOT in DVSL): every doc carries a `leagueId` field
+    // and the server-side /api/send-notification filters on it before
+    // any other filter runs, so a captain registered for SFBL never
+    // receives a push triggered by a KCSL event.
+    //
+    // Reads are self-only (the user can read their own tokens to
+    // populate the prefs UI). Cross-token reads are blocked at the
+    // rules level — list/query is denied. The send endpoint runs with
+    // Admin SDK and bypasses these rules.
+    //
+    // Writes from the client are denied entirely. All token mutations
+    // (register, prefs change, refresh `authed_teams`/`is_admin`) go
+    // through /api/register-notification-token (Admin SDK) so the
+    // server can stamp `leagueId` and re-derive trusted fields from
+    // the verified ID token + player doc lookup.
+    // ---------------------------------------------------------------------
+
+    match /notification_tokens/{tokenDocId} {
+      allow read: if request.auth != null
+                  && resource.data.auth_uid == request.auth.uid;
+      allow write: if false;
+    }
+
+    // ---------------------------------------------------------------------
+    // /pending_nav/{docId} — in-app notification bell history
+    //
+    // One doc per (push, recipient device). Written by /api/send-notification
+    // after each successful FCM send so the user can see history when they
+    // open the site (vs only catching pushes that fired while the OS tray
+    // was watching). Read by /api/check-pending-nav for the bell UI; also
+    // readable by the doc owner directly so the client can subscribe.
+    //
+    // Multi-tenant: every doc carries `leagueId`. Cross-tenant push
+    // already filtered at the send layer; this is defense-in-depth.
+    //
+    // Dismissed: client (via /api/dismiss-pending-nav) sets dismissed_at
+    // to mark-as-read. Server may delete docs older than ~30 days as
+    // a future cleanup pass.
+    // ---------------------------------------------------------------------
+
+    match /pending_nav/{docId} {
+      allow read: if request.auth != null
+                  && resource.data.auth_uid == request.auth.uid;
       allow write: if false;
     }
 

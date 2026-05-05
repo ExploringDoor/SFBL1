@@ -3,7 +3,7 @@
 
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { GameCard, type GameCardTeam } from "@/components/GameCard";
+import { GameCard, type GameCardTeam } from "@/components/ui/GameCard";
 import { computeWeeks, pickActiveWeek } from "@/lib/season-weeks";
 import { computeStandings, type GameResult } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
@@ -67,6 +67,72 @@ export default async function ScoresPage({
   }
   const dayGroups = [...byDate.entries()].sort(([a], [b]) => a.localeCompare(b));
 
+  // Week summary stats — total games, total runs, biggest blowout,
+  // closest game. Surfaces editorial flavor for the active week
+  // without making the page noisy when nothing notable happened.
+  const weekSummary = (() => {
+    if (activeGames.length === 0) return null;
+    let totalRuns = 0;
+    let biggestMargin = -1;
+    let biggestGameId: string | null = null;
+    let closestMargin = Number.POSITIVE_INFINITY;
+    let closestGameId: string | null = null;
+    let highestCombined = -1;
+    let highestGameId: string | null = null;
+    for (const g of activeGames) {
+      const margin = Math.abs(g.away_score - g.home_score);
+      const total = g.away_score + g.home_score;
+      totalRuns += total;
+      if (margin > biggestMargin) {
+        biggestMargin = margin;
+        biggestGameId = g.id;
+      }
+      if (margin < closestMargin) {
+        closestMargin = margin;
+        closestGameId = g.id;
+      }
+      if (total > highestCombined) {
+        highestCombined = total;
+        highestGameId = g.id;
+      }
+    }
+    return {
+      gamesPlayed: activeGames.length,
+      totalRuns,
+      biggestGameId,
+      biggestMargin,
+      closestGameId,
+      closestMargin,
+      highestGameId,
+      highestCombined,
+    };
+  })();
+
+  // Build a per-game highlight map for the cards (closest / blowout
+  // / shootout badges). Each game gets at most one badge — preferred
+  // ordering: closest > blowout > shootout. Suppress badges when
+  // there are fewer than 2 games in the active week (no comparison).
+  const highlights = new Map<string, "closest" | "blowout" | "shootout">();
+  if (weekSummary && activeGames.length >= 2) {
+    if (weekSummary.closestGameId) {
+      highlights.set(weekSummary.closestGameId, "closest");
+    }
+    if (
+      weekSummary.biggestGameId &&
+      !highlights.has(weekSummary.biggestGameId) &&
+      weekSummary.biggestMargin >= 5
+    ) {
+      highlights.set(weekSummary.biggestGameId, "blowout");
+    }
+    if (
+      weekSummary.highestGameId &&
+      !highlights.has(weekSummary.highestGameId) &&
+      weekSummary.highestCombined >= 15
+    ) {
+      highlights.set(weekSummary.highestGameId, "shootout");
+    }
+  }
+
   return (
     <main className="container py-10">
       <header className="mb-6">
@@ -78,16 +144,89 @@ export default async function ScoresPage({
       </header>
 
       <ScoresScheduleTabs active="scores" />
-      <WeekRow
-        weeks={weeks.map((w) => ({ ...w, active: w.startIso === activeStart }))}
-        basePath="/scores"
-      />
-
-      {dayGroups.length === 0 ? (
-        <p className="mt-6" style={{ color: "var(--muted)" }}>
-          No final games this week.
-        </p>
+      {weeks.length === 0 ? (
+        // No final games anywhere in the season yet — likely launch
+        // day. Skip the week selector + day groups entirely; show a
+        // friendly "season hasn't started" message instead of a blank
+        // page that looks broken.
+        <div
+          className="mt-6"
+          style={{
+            padding: "32px 24px",
+            background: "rgba(0,0,0,0.03)",
+            border: "1px dashed rgba(0,0,0,0.12)",
+            borderRadius: 12,
+            textAlign: "center",
+            color: "var(--muted)",
+            lineHeight: 1.55,
+          }}
+        >
+          <strong style={{ color: "var(--brand-primary)" }}>
+            No game results yet.
+          </strong>
+          <p style={{ margin: "8px 0 0", fontSize: 14 }}>
+            Scores will appear here after the first games are played
+            and captains submit final box scores.
+          </p>
+        </div>
       ) : (
+        <>
+          <WeekRow
+            weeks={weeks.map((w) => ({
+              ...w,
+              active: w.startIso === activeStart,
+            }))}
+            basePath="/scores"
+          />
+
+          {weekSummary && weekSummary.gamesPlayed > 0 && (
+            <div className="scores-week-summary">
+              <div className="scores-week-summary-stat">
+                <span className="scores-week-summary-num">
+                  {weekSummary.gamesPlayed}
+                </span>
+                <span className="scores-week-summary-lbl">
+                  Game{weekSummary.gamesPlayed === 1 ? "" : "s"} this week
+                </span>
+              </div>
+              <div className="scores-week-summary-stat">
+                <span className="scores-week-summary-num">
+                  {weekSummary.totalRuns}
+                </span>
+                <span className="scores-week-summary-lbl">
+                  Total runs scored
+                </span>
+              </div>
+              {weekSummary.gamesPlayed >= 2 && (
+                <>
+                  <div className="scores-week-summary-stat">
+                    <span className="scores-week-summary-num">
+                      {weekSummary.biggestMargin}
+                    </span>
+                    <span className="scores-week-summary-lbl">
+                      Biggest margin
+                    </span>
+                  </div>
+                  <div className="scores-week-summary-stat">
+                    <span className="scores-week-summary-num">
+                      {weekSummary.closestMargin === 0
+                        ? "Tie"
+                        : `${weekSummary.closestMargin}`}
+                    </span>
+                    <span className="scores-week-summary-lbl">
+                      Closest margin
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {dayGroups.length === 0 ? (
+            <p className="mt-6" style={{ color: "var(--muted)" }}>
+              No final games this week — pick a different week above.
+            </p>
+          ) : (
         <div className="space-y-8 mt-6">
           {dayGroups.map(([date, list]) => (
             <section key={date}>
@@ -99,24 +238,23 @@ export default async function ScoresPage({
                   {list.length} game{list.length === 1 ? "" : "s"}
                 </span>
               </header>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="le-gc-cards-grid">
                 {list.map((g) => (
                   <GameCard
                     key={g.id}
-                    id={g.id}
+                    gameId={g.id}
                     date={g.date}
-                    field={g.field}
-                    status={g.status}
-                    away={teamCardData(g.away_team_id, teams)}
-                    home={teamCardData(g.home_team_id, teams)}
-                    awayScore={g.away_score}
-                    homeScore={g.home_score}
+                    away={teamCardData(g.away_team_id, teams, g.away_score)}
+                    home={teamCardData(g.home_team_id, teams, g.home_score)}
+                    badge={badgeFor(highlights.get(g.id))}
                   />
                 ))}
               </div>
             </section>
           ))}
-        </div>
+            </div>
+          )}
+        </>
       )}
     </main>
   );
@@ -181,7 +319,11 @@ async function loadScores(tenantId: string): Promise<{
   return { games, teams };
 }
 
-function teamCardData(id: string, teams: Record<string, TeamMeta>): GameCardTeam {
+function teamCardData(
+  id: string,
+  teams: Record<string, TeamMeta>,
+  score: number,
+): GameCardTeam {
   const t = teams[id];
   return {
     team_id: id,
@@ -190,6 +332,7 @@ function teamCardData(id: string, teams: Record<string, TeamMeta>): GameCardTeam
     color: t?.color,
     logoUrl: t?.logoUrl,
     record: t?.record,
+    score,
   };
 }
 
@@ -204,5 +347,18 @@ function formatDayHeading(yyyyMmDd: string): string {
 }
 
 function formatRecord(w: number, l: number, t: number): string {
-  return t > 0 ? `(${w}-${l}-${t})` : `(${w}-${l})`;
+  return t > 0 ? `${w}-${l}-${t}` : `${w}-${l}`;
+}
+
+// Map highlight type to a badge config the GameCard renders. Keep
+// labels short — they appear in the card header next to the FINAL
+// pill, so anything over 12 chars wraps awkwardly on mobile.
+function badgeFor(
+  highlight: "closest" | "blowout" | "shootout" | undefined,
+): { emoji: string; label: string } | null {
+  if (!highlight) return null;
+  if (highlight === "closest") return { emoji: "🔥", label: "NAIL-BITER" };
+  if (highlight === "blowout") return { emoji: "⚾", label: "BLOWOUT" };
+  if (highlight === "shootout") return { emoji: "🏏", label: "SHOOTOUT" };
+  return null;
 }

@@ -1,0 +1,141 @@
+/* ── DVSL UPCOMING-GAME PREVIEW CARD ────────────────────────────────
+ * Verbatim port of `.preview-card`
+ * (~/Desktop/softball-site/index.html lines 1620–1636 + JS template
+ * at lines 7887–7902).
+ *
+ * Compact card for upcoming games. Three sections stacked vertically:
+ *   1. Time    — "SAT 5/3 · 1:00 PM · MAIN FIELD" (eyebrow)
+ *   2. Teams   — two rows: logo + name + record
+ *   3. Link    — "Preview »"
+ *
+ * `.next` modifier (next-up game) gets a 3px navy left border.
+ */
+
+.le-preview-grid {
+  display: grid;
+  /* Locked at 2 cards per row at desktop sizes (matching the recent
+   * scores grid). One card per row on phones. Consistent with
+   * .le-gc-cards-grid so the homepage and /schedule look uniform. */
+  grid-template-columns: 1fr;
+  gap: 14px;
+  padding: 24px 0;
+}
+
+@media (min-width: 720px) {
+  .le-preview-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.le-preview-card {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 12px 14px;
+  transition: box-shadow 0.15s, transform 0.15s;
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.le-preview-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.le-preview-card.next {
+  border-left: 3px solid var(--brand-primary, #002D72);
+}
+
+.le-preview-time {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(0, 0, 0, 0.55);
+  margin-bottom: 6px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  /* Always keep "DAY M/D · TIME · FIELD" on a single line. If the
+   * content is too long for the card, ellipsize the right side
+   * rather than wrapping onto a second line. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.le-preview-teams {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 6px;
+}
+
+.le-preview-team-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.le-preview-logo {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.le-preview-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.le-preview-name {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: #1a1a1a;
+  cursor: pointer;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+.le-preview-name:hover { text-decoration: underline; }
+
+.le-preview-rec {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.4);
+  font-weight: 500;
+  display: block;
+  margin-top: 1px;
+}
+
+.le-preview-link {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--brand-primary, #002D72);
+  cursor: pointer;
+  text-decoration: none;
+  padding-top: 4px;
+}
+
+.le-preview-link:hover { text-decoration: underline; }
+
+@media (max-width: 700px) {
+  .le-preview-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    padding: 8px 0;
+  }
+  .le-preview-card { padding: 7px 8px; }
+  .le-preview-logo { width: 26px; height: 26px; }
+  .le-preview-time { font-size: 9px; margin-bottom: 3px; padding-bottom: 2px; }
+  .le-preview-rec { display: none; }
+  .le-preview-name { font-size: 13px; }
+  .le-preview-link { font-size: 10px; padding: 3px 0; }
+}

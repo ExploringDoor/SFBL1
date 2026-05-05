@@ -115,3 +115,50 @@ export function useLeagueRole(leagueId: string | null): LeagueRole {
 
   return role;
 }
+
+/**
+ * Reactively read the team_id this user is captain of in a given
+ * league. Returns `null` when the user isn't a captain (or claims
+ * haven't loaded). Pulls the `captain:<team_id>` claim from the
+ * user's ID token (claim shape defined in firestore.rules:30-34).
+ *
+ * Pair with useLeagueRole — role tells you the user IS a captain,
+ * this tells you WHICH team they captain.
+ */
+export function useCaptainTeam(
+  leagueId: string | null,
+): { teamId: string | null; loading: boolean } {
+  const user = useUser();
+  const [state, setState] = useState<{
+    teamId: string | null;
+    loading: boolean;
+  }>({ teamId: null, loading: true });
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!leagueId || user === null) {
+      setState({ teamId: null, loading: false });
+      return;
+    }
+    if (user === undefined) {
+      setState({ teamId: null, loading: true });
+      return;
+    }
+    (async () => {
+      const result = await user.getIdTokenResult(true);
+      if (cancelled) return;
+      const leagues = (result.claims.leagues ?? {}) as Record<string, string>;
+      const raw = leagues[leagueId];
+      if (typeof raw === "string" && raw.startsWith("captain:")) {
+        setState({ teamId: raw.slice("captain:".length), loading: false });
+      } else {
+        setState({ teamId: null, loading: false });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, leagueId]);
+
+  return state;
+}

@@ -34,7 +34,25 @@ const LEAGUE_CONFIG = {
   innings: 9,
   ruleset: "hardball",
   linescore_innings: 9,
-  stat_columns: ["AB", "R", "H", "2B", "3B", "HR", "RBI", "BB", "SO", "SB"],
+  // Standard MLB shorthand. Extras (SAC, SF, ROE, FC) opt-in here so
+  // the captain box-score editor renders columns for them. PB is
+  // softball-only — leave it off for SFBL (baseball).
+  stat_columns: [
+    "AB",
+    "R",
+    "H",
+    "2B",
+    "3B",
+    "HR",
+    "RBI",
+    "BB",
+    "SO",
+    "SB",
+    "SAC",
+    "SF",
+    "ROE",
+    "FC",
+  ],
   pitching: {
     tracked: true,
     columns: ["IP", "H", "R", "ER", "BB", "SO", "HR"],
@@ -170,8 +188,14 @@ function syntheticLineup(opts: {
     let doublesLeft = Math.floor(totalHits / 4);
     for (let i = 0; i < playerIds.length; i++) {
       const isLast = i === playerIds.length - 1;
-      const ab = 3 + Math.floor(Math.random() * 2);
-      const h = isLast ? hitsLeft : Math.min(hitsLeft, Math.floor(Math.random() * 3));
+      // Cap ab at a realistic max (6) so the last player can never
+      // be dumped with "12-for-12" leftovers when the team total is
+      // high. Excess team hits just go uncredited in test data —
+      // synthetic, not a real box.
+      const ab = Math.min(6, 3 + Math.floor(Math.random() * 2));
+      const h = isLast
+        ? Math.min(hitsLeft, ab)
+        : Math.min(hitsLeft, Math.floor(Math.random() * 3), ab);
       hitsLeft -= h;
       const hr = h > 0 && hrLeft > 0 ? 1 : 0;
       hrLeft -= hr;
@@ -207,6 +231,11 @@ function syntheticLineup(opts: {
   const homeWon = homeScore > awayScore;
   const totalOuts = innings * 3;
 
+  // Decision is W/L based on who won; ties leave it null. Firestore
+  // admin SDK refuses `undefined` so use null and have the renderer
+  // treat null as "no decision".
+  const awayDec = homeWon ? "L" : awayWon ? "W" : null;
+  const homeDec = awayWon ? "L" : homeWon ? "W" : null;
   const awayPitchers = awayPitcherId
     ? [
         {
@@ -218,7 +247,7 @@ function syntheticLineup(opts: {
           bb: 2,
           so: 5,
           hr: 0,
-          decision: homeWon ? "L" : awayWon ? "W" : undefined,
+          ...(awayDec ? { decision: awayDec } : {}),
         },
       ]
     : [];
@@ -233,7 +262,7 @@ function syntheticLineup(opts: {
           bb: 2,
           so: 5,
           hr: 0,
-          decision: awayWon ? "L" : homeWon ? "W" : undefined,
+          ...(homeDec ? { decision: homeDec } : {}),
         },
       ]
     : [];

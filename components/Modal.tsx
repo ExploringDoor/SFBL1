@@ -28,10 +28,16 @@ export function Modal({ children, title }: { children: React.ReactNode; title?: 
     const prevPaddingRight = document.body.style.paddingRight;
     document.body.style.overflow = "hidden";
     if (sw > 0) document.body.style.paddingRight = `${sw}px`;
+    // DVSL pattern (~/Desktop/softball-site/index.html line 7382):
+    // when a fullscreen modal opens, push the ticker off-screen and
+    // hide the nav so the modal owns the viewport top — otherwise the
+    // fixed bars cover the modal's logos/title/close button.
+    document.body.classList.add("ticker-force-hide", "dvsl-modal-open");
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prevOverflow;
       document.body.style.paddingRight = prevPaddingRight;
+      document.body.classList.remove("ticker-force-hide", "dvsl-modal-open");
     };
   }, [router]);
 
@@ -60,7 +66,7 @@ export function Modal({ children, title }: { children: React.ReactNode; title?: 
   return (
     <div
       onClick={onBackdropClick}
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 backdrop-blur-sm overflow-y-auto"
+      className="fixed inset-0 z-[800] flex items-start justify-center bg-black/50 p-4 backdrop-blur-sm overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-label={title}

@@ -3,7 +3,7 @@
 // the layout doesn't need bespoke fetches.
 
 import { getAdminDb } from "./firebase-admin";
-import type { TickerGame } from "@/components/Ticker";
+import type { TickerGame } from "@/components/ui/Ticker";
 import { computeStandings, type GameResult } from "./stats/shared";
 
 interface TeamMeta {

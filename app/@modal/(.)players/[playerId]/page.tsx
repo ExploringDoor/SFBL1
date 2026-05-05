@@ -1,14 +1,19 @@
-// Intercepted modal for /players/[id]. Renders player detail (name,
-// team, batting + pitching season stats) inside a modal when navigated
-// to from within the app. Direct URL access falls through to the full
-// page.
+// Intercepted modal for /players/[id]. Renders the DVSL-style player
+// profile (avatar + big name + stat pill + season tables) inside a
+// modal when navigated via Link. Direct URL access falls through to
+// the full page at app/players/[playerId]/page.tsx.
+//
+// All rendering is delegated to <PlayerProfile> in components/ui/ so
+// the full page and the modal stay in sync.
 
-import Link from "next/link";
 import { headers } from "next/headers";
 import { Modal } from "@/components/Modal";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { TeamBadge } from "@/components/TeamBadge";
-import { formatIP } from "@/lib/stats/ip";
+import {
+  PlayerProfile,
+  type PlayerSeasonBatting,
+  type PlayerSeasonPitching,
+} from "@/components/ui/PlayerProfile";
 
 export const dynamic = "force-dynamic";
 
@@ -32,171 +37,88 @@ export default async function PlayerModalRoute({
   const stats = (data.stats ?? null) as Record<string, number> | null;
   const pitching = (data.pitching ?? null) as Record<string, number> | null;
 
-  let teamName: string | null = null;
-  let teamLogo: string | null = null;
-  let teamColor: string | undefined;
-  let teamAbbrev: string | undefined;
+  let team: {
+    team_id: string;
+    name: string;
+    abbrev?: string;
+    color?: string;
+    logoUrl?: string | null;
+  } | null = null;
+  let photoUrl: string | null = null;
   if (teamId) {
     const teamSnap = await db.doc(`leagues/${tenantId}/teams/${teamId}`).get();
     if (teamSnap.exists) {
       const t = teamSnap.data() ?? {};
-      teamName = String(t.name ?? teamId);
-      teamLogo = t.logo_url ? String(t.logo_url) : null;
-      teamColor = t.color ? String(t.color) : undefined;
-      teamAbbrev = t.abbrev ? String(t.abbrev) : undefined;
+      team = {
+        team_id: teamId,
+        name: String(t.name ?? teamId),
+        abbrev: t.abbrev ? String(t.abbrev) : undefined,
+        color: t.color ? String(t.color) : undefined,
+        logoUrl: t.logo_url ? String(t.logo_url) : null,
+      };
     }
   }
+  if (data.photo_url) photoUrl = String(data.photo_url);
+
+  const battingSeason: PlayerSeasonBatting | null =
+    stats && Number(stats.gp ?? 0) > 0
+      ? toBatting(stats)
+      : null;
+  const pitchingSeason: PlayerSeasonPitching | null =
+    pitching && Number(pitching.app ?? 0) > 0
+      ? toPitching(pitching)
+      : null;
 
   return (
     <Modal title={name}>
-      <div className="modal-hero">
-        <div className="modal-av">
-          {teamId && (
-            <TeamBadge
-              teamId={teamId}
-              name={teamName ?? teamId}
-              initials={teamAbbrev}
-              color={teamColor}
-              logoUrl={teamLogo}
-              size="lg"
-            />
-          )}
-        </div>
-        <div>
-          <h2 className="modal-pname">{name}</h2>
-          <p style={{ marginTop: 4, fontSize: 13, color: "var(--muted)" }}>
-            {data.jersey != null && <span>#{String(data.jersey)} · </span>}
-            {data.position && <span>{String(data.position)} · </span>}
-            {teamId && (
-              <Link
-                href={`/teams/${teamId}`}
-                style={{ color: "var(--text-strong)" }}
-              >
-                {teamName ?? teamId}
-              </Link>
-            )}
-          </p>
-          {stats && Number(stats.gp ?? 0) > 0 && (
-            <div className="modal-stat-pill">
-              <div className="msp-item">
-                <div className="msp-val">{stats.ab}</div>
-                <div className="msp-lbl">AB</div>
-              </div>
-              <div className="msp-sep" />
-              <div className="msp-item">
-                <div className="msp-val">{formatAvg(Number(stats.avg ?? 0))}</div>
-                <div className="msp-lbl">AVG</div>
-              </div>
-              <div className="msp-sep" />
-              <div className="msp-item">
-                <div className="msp-val">{stats.hr}</div>
-                <div className="msp-lbl">HR</div>
-              </div>
-              <div className="msp-sep" />
-              <div className="msp-item">
-                <div className="msp-val">{stats.rbi}</div>
-                <div className="msp-lbl">RBI</div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {stats && Number(stats.gp ?? 0) > 0 && (
-        <>
-          <div className="modal-batting-hdr">
-            <div className="modal-batting-title">Batting</div>
-          </div>
-          <div className="bat-tbl-wrap">
-            <table className="bat-tbl">
-              <thead>
-                <tr>
-                  <th>GP</th>
-                  <th>AB</th>
-                  <th>R</th>
-                  <th>H</th>
-                  <th>2B</th>
-                  <th>3B</th>
-                  <th>HR</th>
-                  <th>RBI</th>
-                  <th>BB</th>
-                  <th>K</th>
-                  <th>AVG</th>
-                  <th>OBP</th>
-                  <th>SLG</th>
-                  <th>OPS</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>{stats.gp}</td>
-                  <td>{stats.ab}</td>
-                  <td>{stats.r}</td>
-                  <td>{stats.h}</td>
-                  <td>{stats.doubles}</td>
-                  <td>{stats.triples}</td>
-                  <td>{stats.hr}</td>
-                  <td>{stats.rbi}</td>
-                  <td>{stats.bb}</td>
-                  <td>{stats.so}</td>
-                  <td>{formatAvg(Number(stats.avg ?? 0))}</td>
-                  <td>{formatAvg(Number(stats.obp ?? 0))}</td>
-                  <td>{formatAvg(Number(stats.slg ?? 0))}</td>
-                  <td>{formatAvg(Number(stats.ops ?? 0))}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
-
-      {pitching && Number(pitching.app ?? 0) > 0 && (
-        <>
-          <div className="modal-batting-hdr">
-            <div className="modal-batting-title">Pitching</div>
-          </div>
-          <div className="bat-tbl-wrap">
-            <table className="bat-tbl">
-              <thead>
-                <tr>
-                  <th>APP</th>
-                  <th>W</th>
-                  <th>L</th>
-                  <th>SV</th>
-                  <th>IP</th>
-                  <th>H</th>
-                  <th>R</th>
-                  <th>ER</th>
-                  <th>BB</th>
-                  <th>K</th>
-                  <th>HR</th>
-                  <th>ERA</th>
-                  <th>WHIP</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>{pitching.app}</td>
-                  <td>{pitching.w}</td>
-                  <td>{pitching.l}</td>
-                  <td>{pitching.sv}</td>
-                  <td>{formatIP(Number(pitching.ip_outs ?? 0))}</td>
-                  <td>{pitching.h}</td>
-                  <td>{pitching.r}</td>
-                  <td>{pitching.er}</td>
-                  <td>{pitching.bb}</td>
-                  <td>{pitching.so}</td>
-                  <td>{pitching.hr}</td>
-                  <td>{Number(pitching.era ?? 0).toFixed(2)}</td>
-                  <td>{Number(pitching.whip ?? 0).toFixed(2)}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
+      <PlayerProfile
+        playerId={params.playerId}
+        name={name}
+        number={data.jersey != null ? String(data.jersey) : null}
+        position={data.position ? String(data.position) : null}
+        team={team}
+        photoUrl={photoUrl}
+        batting={battingSeason}
+        pitching={pitchingSeason}
+      />
     </Modal>
   );
+}
+
+function toBatting(s: Record<string, number>): PlayerSeasonBatting {
+  return {
+    ab: Number(s.ab ?? 0),
+    r: Number(s.r ?? 0),
+    h: Number(s.h ?? 0),
+    doubles: Number(s.doubles ?? 0),
+    triples: Number(s.triples ?? 0),
+    hr: Number(s.hr ?? 0),
+    rbi: Number(s.rbi ?? 0),
+    bb: Number(s.bb ?? 0),
+    so: Number(s.so ?? 0),
+    sb: Number(s.sb ?? 0),
+    avg: formatAvg(Number(s.avg ?? 0)),
+    obp: formatAvg(Number(s.obp ?? 0)),
+    slg: formatAvg(Number(s.slg ?? 0)),
+    ops: formatAvg(Number(s.ops ?? 0)),
+  };
+}
+
+function toPitching(p: Record<string, number>): PlayerSeasonPitching {
+  return {
+    ip_outs: Number(p.ip_outs ?? 0),
+    h: Number(p.h ?? 0),
+    r: Number(p.r ?? 0),
+    er: Number(p.er ?? 0),
+    bb: Number(p.bb ?? 0),
+    so: Number(p.so ?? 0),
+    hr: Number(p.hr ?? 0),
+    era: Number(p.era ?? 0).toFixed(2),
+    whip: Number(p.whip ?? 0).toFixed(2),
+    w: Number(p.w ?? 0),
+    l: Number(p.l ?? 0),
+    s: Number(p.sv ?? 0),
+  };
 }
 
 function formatAvg(n: number): string {

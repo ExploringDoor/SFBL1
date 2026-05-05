@@ -6,6 +6,13 @@ import { signOut, useLeagueRole, useUser } from "@/lib/auth-client";
 import { getDb } from "@/lib/firebase";
 import { useTenant } from "@/lib/tenant-context";
 import { doc, setDoc } from "firebase/firestore";
+import { SendPushSection } from "@/components/admin/SendPushSection";
+import { PagesManager } from "@/components/admin/PagesManager";
+import { CaptainClaimsManager } from "@/components/admin/CaptainClaimsManager";
+import { BrandingSection } from "@/components/admin/BrandingSection";
+import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
+import { TeamsManager } from "@/components/admin/TeamsManager";
+import { LeagueHealthDashboard } from "@/components/admin/LeagueHealthDashboard";
 
 export default function AdminPage() {
   const { tenantId, config } = useTenant();
@@ -68,8 +75,15 @@ export default function AdminPage() {
   return (
     <Shell heading={config?.name ?? "Admin"}>
       <SignedInHeader email={user.email} uid={user.uid} role={role} />
-      <AdminSmokeTest tenantId={tenantId} />
+      <LeagueHealthDashboard leagueId={tenantId} user={user} />
+      <BrandingSection leagueId={tenantId} user={user} />
+      <TeamsManager leagueId={tenantId} user={user} />
+      <CaptainClaimsManager leagueId={tenantId} user={user} />
+      <SendPushSection leagueId={tenantId} user={user} />
+      <PagesManager leagueId={tenantId} user={user} />
+      <AuditLogViewer leagueId={tenantId} user={user} />
       <RecalcStatsButton tenantId={tenantId} user={user} />
+      <AdminSmokeTest tenantId={tenantId} />
     </Shell>
   );
 }

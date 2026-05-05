@@ -11,6 +11,7 @@ import * as path from "node:path";
 import { cert, getApps, initializeApp, type App } from "firebase-admin/app";
 import { getAuth, type Auth } from "firebase-admin/auth";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";
+import { getMessaging, type Messaging } from "firebase-admin/messaging";
 
 const APP_NAME = "league-platform-server";
 
@@ -45,20 +46,34 @@ export function getAdminApp(): App {
     return _app;
   }
 
+  // Production: accept credentials as either an inline JSON env var
+  // (FIREBASE_SERVICE_ACCOUNT_JSON — used on Vercel where there's no
+  // local filesystem to point at) OR a path to a JSON file
+  // (FIREBASE_SERVICE_ACCOUNT_PATH — used in local dev where the JSON
+  // is stashed under ./secrets/ and gitignored).
+  const saJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
   const saPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
-  if (!saPath) {
+  let credential;
+  if (saJson) {
+    try {
+      credential = cert(JSON.parse(saJson));
+    } catch (e) {
+      throw new Error(
+        "[firebase-admin] FIREBASE_SERVICE_ACCOUNT_JSON didn't parse as JSON: " +
+          (e instanceof Error ? e.message : String(e)),
+      );
+    }
+  } else if (saPath) {
+    credential = cert(path.resolve(process.cwd(), saPath));
+  } else {
     throw new Error(
-      "[firebase-admin] FIREBASE_SERVICE_ACCOUNT_PATH not set. " +
-        "Required for production. See .env.local.example.",
+      "[firebase-admin] No service account configured. Set either " +
+        "FIREBASE_SERVICE_ACCOUNT_JSON (inline JSON, for Vercel) or " +
+        "FIREBASE_SERVICE_ACCOUNT_PATH (file path, for local dev). " +
+        "See .env.local.example.",
     );
   }
-  _app = initializeApp(
-    {
-      credential: cert(path.resolve(process.cwd(), saPath)),
-      projectId,
-    },
-    APP_NAME,
-  );
+  _app = initializeApp({ credential, projectId }, APP_NAME);
   return _app;
 }
 
@@ -68,4 +83,8 @@ export function getAdminAuth(): Auth {
 
 export function getAdminDb(): Firestore {
   return getFirestore(getAdminApp());
+}
+
+export function getAdminMessaging(): Messaging {
+  return getMessaging(getAdminApp());
 }

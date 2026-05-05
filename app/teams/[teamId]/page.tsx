@@ -91,6 +91,27 @@ export default async function TeamDetailPage({
   }
   const myRow = standings.find((r) => r.team_id === params.teamId) ?? null;
 
+  // Standings position WITHIN this team's division. If the league
+  // has no division structure, fall back to overall position. Only
+  // meaningful when games have actually been played — for fresh
+  // launches we hide the rank entirely.
+  const hasGames = !!myRow && myRow.w + myRow.l + myRow.t > 0;
+  let divisionRank: { rank: number; total: number } | null = null;
+  if (hasGames && division) {
+    const divPeers = standings.filter((r) => {
+      const meta = teamNames[r.team_id];
+      // teamNames map is keyed by id; we need the team's division
+      // from teamsSnap. Fast inline lookup.
+      const peerDoc = teamsSnap.docs.find((d) => d.id === r.team_id);
+      return peerDoc && String(peerDoc.data().division ?? "") === division;
+    });
+    const idx = divPeers.findIndex((r) => r.team_id === params.teamId);
+    if (idx >= 0) divisionRank = { rank: idx + 1, total: divPeers.length };
+  } else if (hasGames) {
+    const idx = standings.findIndex((r) => r.team_id === params.teamId);
+    if (idx >= 0) divisionRank = { rank: idx + 1, total: standings.length };
+  }
+
   // Team batting/pitching aggregates from rosterSnap player.stats.
   const aggBatting = aggregateRoster(rosterSnap.docs.map((d) => d.data().stats));
   const aggPitching = aggregateRosterPitching(rosterSnap.docs.map((d) => d.data().pitching));
@@ -150,14 +171,14 @@ export default async function TeamDetailPage({
             ← All Teams
           </Link>
           <div className="flex items-center gap-6">
-            <div style={{ background: "white", borderRadius: 12, padding: 8 }}>
+            <div style={{ background: "white", borderRadius: 16, padding: 14 }}>
               <TeamBadge
                 teamId={params.teamId}
                 name={teamName}
                 initials={abbrev}
                 color={color}
                 logoUrl={logoUrl}
-                size="lg"
+                size="xl"
               />
             </div>
             <div>
@@ -172,25 +193,64 @@ export default async function TeamDetailPage({
               >
                 {teamName}
               </h1>
-              {myRow && (
-                <p
-                  className="font-barlow mt-2"
+              {/* Stats pill row — only shown when there's been at
+                  least one game played. Pre-launch shows a "Season
+                  starts soon" pill instead so the page doesn't
+                  look broken. */}
+              {hasGames && myRow ? (
+                <div
                   style={{
-                    fontSize: 16,
-                    fontWeight: 700,
-                    letterSpacing: "0.05em",
-                    color: "rgba(255,255,255,0.85)",
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 10,
+                    marginTop: 12,
                   }}
                 >
-                  {formatRecord(myRow.w, myRow.l, myRow.t)}
+                  <HeroPill
+                    primary={formatRecord(myRow.w, myRow.l, myRow.t)}
+                    label="Record"
+                  />
                   {usePoints && scheme && (
-                    <span style={{ marginLeft: 12 }}>
-                      {computePoints(myRow, scheme)} PTS
-                    </span>
+                    <HeroPill
+                      primary={String(computePoints(myRow, scheme))}
+                      label="Points"
+                    />
                   )}
-                  <span style={{ marginLeft: 12 }}>
-                    Run Diff {myRow.rd > 0 ? `+${myRow.rd}` : myRow.rd}
-                  </span>
+                  <HeroPill
+                    primary={
+                      myRow.rd > 0
+                        ? `+${myRow.rd}`
+                        : String(myRow.rd)
+                    }
+                    label="Run diff"
+                  />
+                  {divisionRank && (
+                    <HeroPill
+                      primary={`${ordinal(divisionRank.rank)}`}
+                      label={
+                        division
+                          ? `in ${division}`
+                          : `of ${divisionRank.total}`
+                      }
+                    />
+                  )}
+                </div>
+              ) : (
+                <p
+                  className="font-barlow mt-3"
+                  style={{
+                    display: "inline-block",
+                    fontSize: 11,
+                    fontWeight: 800,
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    color: "#fff",
+                    background: "rgba(255,255,255,0.12)",
+                    padding: "5px 12px",
+                    borderRadius: 999,
+                  }}
+                >
+                  Season starts soon
                 </p>
               )}
               <div style={{ marginTop: 14 }}>
@@ -217,6 +277,73 @@ export default async function TeamDetailPage({
           </div>
         )}
 
+        {/* Top performers — only shown when there's actual stat data
+            on the roster. Surfaces the team's leading batter / power
+            hitter / RBI guy in a small card row above the full
+            roster table. Helps fans + opposing-team scouts spot
+            who's hot. Hidden pre-launch. */}
+        {(() => {
+          const playersWithStats = roster.filter(
+            (p) => p.avg != null || p.hr != null || p.rbi != null,
+          );
+          if (playersWithStats.length === 0) return null;
+          const topAvg = [...playersWithStats]
+            .filter((p) => p.avg != null && p.avg > 0)
+            .sort((a, b) => (b.avg ?? 0) - (a.avg ?? 0))[0];
+          const topHr = [...playersWithStats]
+            .filter((p) => p.hr != null && p.hr > 0)
+            .sort((a, b) => (b.hr ?? 0) - (a.hr ?? 0))[0];
+          const topRbi = [...playersWithStats]
+            .filter((p) => p.rbi != null && p.rbi > 0)
+            .sort((a, b) => (b.rbi ?? 0) - (a.rbi ?? 0))[0];
+          if (!topAvg && !topHr && !topRbi) return null;
+          return (
+            <div className="mb-8">
+              <h2
+                className="font-barlow mb-3"
+                style={{
+                  fontSize: 18,
+                  fontWeight: 900,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                  color: "var(--brand-primary)",
+                }}
+              >
+                Top Performers
+              </h2>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {topAvg && (
+                  <TopPerformerCard
+                    label="Batting AVG"
+                    value={formatAvg(topAvg.avg ?? 0)}
+                    playerId={topAvg.id}
+                    playerName={topAvg.name}
+                    jersey={topAvg.jersey}
+                  />
+                )}
+                {topHr && (
+                  <TopPerformerCard
+                    label="Home Runs"
+                    value={String(topHr.hr ?? 0)}
+                    playerId={topHr.id}
+                    playerName={topHr.name}
+                    jersey={topHr.jersey}
+                  />
+                )}
+                {topRbi && (
+                  <TopPerformerCard
+                    label="RBI"
+                    value={String(topRbi.rbi ?? 0)}
+                    playerId={topRbi.id}
+                    playerName={topRbi.name}
+                    jersey={topRbi.jersey}
+                  />
+                )}
+              </div>
+            </div>
+          );
+        })()}
+
         <div className="grid gap-10 lg:grid-cols-[1fr_360px]">
           <div>
             <h2 className="font-display mb-4" style={{ fontSize: 28 }}>
@@ -225,42 +352,7 @@ export default async function TeamDetailPage({
             {roster.length === 0 ? (
               <p style={{ color: "var(--muted)" }}>No players on roster yet.</p>
             ) : (
-              <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
-                <table className="s-tbl">
-                  <thead>
-                    <tr>
-                      <th className="text-left">#</th>
-                      <th className="text-left">Player</th>
-                      <th className="text-left">Pos</th>
-                      <th>AVG</th>
-                      <th>HR</th>
-                      <th>RBI</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {roster.map((p) => (
-                      <tr key={p.id}>
-                        <td className="text-left">
-                          <span className="rank">{p.jersey ?? "—"}</span>
-                        </td>
-                        <td className="text-left">
-                          <Link href={`/players/${p.id}`} style={{ fontWeight: 600 }}>
-                            {p.name}
-                          </Link>
-                        </td>
-                        <td className="text-left">
-                          <span style={{ color: "var(--muted)", fontSize: 12 }}>
-                            {p.position ?? "—"}
-                          </span>
-                        </td>
-                        <td>{p.avg != null ? formatAvg(p.avg) : "—"}</td>
-                        <td>{p.hr ?? "—"}</td>
-                        <td>{p.rbi ?? "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <RosterTable roster={roster} hasGames={hasGames} />
             )}
           </div>
 
@@ -305,6 +397,221 @@ export default async function TeamDetailPage({
       </section>
     </main>
   );
+}
+
+function TopPerformerCard({
+  label,
+  value,
+  playerId,
+  playerName,
+  jersey,
+}: {
+  label: string;
+  value: string;
+  playerId: string;
+  playerName: string;
+  jersey: number | null;
+}) {
+  return (
+    <Link
+      href={`/players/${playerId}`}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 14,
+        padding: "12px 14px",
+        background: "var(--card)",
+        border: "1px solid var(--border)",
+        borderRadius: 12,
+        textDecoration: "none",
+        color: "inherit",
+        transition: "transform 120ms ease, box-shadow 120ms ease",
+      }}
+    >
+      <div
+        className="font-barlow"
+        style={{
+          fontSize: 28,
+          fontWeight: 900,
+          color: "var(--brand-primary)",
+          letterSpacing: "-0.02em",
+          lineHeight: 1,
+          minWidth: 50,
+          textAlign: "center",
+        }}
+      >
+        {value}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="sec-eyebrow" style={{ marginBottom: 2 }}>
+          {label}
+        </div>
+        <div
+          style={{
+            fontSize: 14,
+            fontWeight: 600,
+            color: "var(--text-strong)",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {jersey != null ? `#${jersey} ` : ""}
+          {playerName}
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+interface RosterPlayer {
+  id: string;
+  name: string;
+  jersey: number | null;
+  position: string | null;
+  avg?: number;
+  hr?: number;
+  rbi?: number;
+}
+
+function RosterTable({
+  roster,
+  hasGames,
+}: {
+  roster: RosterPlayer[];
+  hasGames: boolean;
+}) {
+  // When the season hasn't started, drop the AVG/HR/RBI columns
+  // entirely. The all-dashes table just looks broken; bare jersey/
+  // name/position is cleaner and matches what the data actually
+  // supports.
+  if (!hasGames) {
+    return (
+      <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
+        <table className="s-tbl">
+          <thead>
+            <tr>
+              <th className="text-left">#</th>
+              <th className="text-left">Player</th>
+              <th className="text-left">Pos</th>
+            </tr>
+          </thead>
+          <tbody>
+            {roster.map((p) => (
+              <tr key={p.id}>
+                <td className="text-left">
+                  <span className="rank">{p.jersey ?? "—"}</span>
+                </td>
+                <td className="text-left">
+                  <Link href={`/players/${p.id}`} style={{ fontWeight: 600 }}>
+                    {p.name}
+                  </Link>
+                </td>
+                <td className="text-left">
+                  <span style={{ color: "var(--muted)", fontSize: 12 }}>
+                    {p.position ?? "—"}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+  return (
+    <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
+      <table className="s-tbl">
+        <thead>
+          <tr>
+            <th className="text-left">#</th>
+            <th className="text-left">Player</th>
+            <th className="text-left">Pos</th>
+            <th>AVG</th>
+            <th>HR</th>
+            <th>RBI</th>
+          </tr>
+        </thead>
+        <tbody>
+          {roster.map((p) => (
+            <tr key={p.id}>
+              <td className="text-left">
+                <span className="rank">{p.jersey ?? "—"}</span>
+              </td>
+              <td className="text-left">
+                <Link href={`/players/${p.id}`} style={{ fontWeight: 600 }}>
+                  {p.name}
+                </Link>
+              </td>
+              <td className="text-left">
+                <span style={{ color: "var(--muted)", fontSize: 12 }}>
+                  {p.position ?? "—"}
+                </span>
+              </td>
+              <td>{p.avg != null ? formatAvg(p.avg) : "—"}</td>
+              <td>{p.hr ?? "—"}</td>
+              <td>{p.rbi ?? "—"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function HeroPill({
+  primary,
+  label,
+}: {
+  primary: string;
+  label: string;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        padding: "8px 14px",
+        background: "rgba(255,255,255,0.12)",
+        borderRadius: 10,
+        minWidth: 64,
+      }}
+    >
+      <span
+        className="font-barlow"
+        style={{
+          fontSize: 22,
+          fontWeight: 900,
+          color: "#fff",
+          lineHeight: 1,
+          letterSpacing: "-0.01em",
+        }}
+      >
+        {primary}
+      </span>
+      <span
+        className="font-barlow"
+        style={{
+          fontSize: 10,
+          fontWeight: 700,
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          color: "rgba(255,255,255,0.7)",
+          marginTop: 2,
+        }}
+      >
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function ordinal(n: number): string {
+  // 1 → 1st, 2 → 2nd, 3 → 3rd, 4 → 4th, 11/12/13 → 11th/12th/13th, etc.
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  const suffix = s[(v - 20) % 10] ?? s[v] ?? "th";
+  return n + suffix;
 }
 
 function StatTile({ label, value }: { label: string; value: string | number }) {

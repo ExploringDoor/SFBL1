@@ -3,7 +3,7 @@
 
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { GameCard, type GameCardTeam } from "@/components/GameCard";
+import { PreviewCard, type PreviewCardTeam } from "@/components/ui/PreviewCard";
 import { computeWeeks, pickActiveWeek } from "@/lib/season-weeks";
 import { computeStandings, type GameResult } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
@@ -78,16 +78,46 @@ export default async function SchedulePage({
       </header>
 
       <ScoresScheduleTabs active="schedule" />
-      <WeekRow
-        weeks={weeks.map((w) => ({ ...w, active: w.startIso === activeStart }))}
-        basePath="/schedule"
-      />
-
-      {dayGroups.length === 0 ? (
-        <p className="mt-6" style={{ color: "var(--muted)" }}>
-          No games this week.
-        </p>
+      {weeks.length === 0 ? (
+        // No scheduled games anywhere. Likely launch day before the
+        // schedule has been imported, or post-season. Show a clear
+        // placeholder rather than an empty week selector + blank
+        // body.
+        <div
+          className="mt-6"
+          style={{
+            padding: "32px 24px",
+            background: "rgba(0,0,0,0.03)",
+            border: "1px dashed rgba(0,0,0,0.12)",
+            borderRadius: 12,
+            textAlign: "center",
+            color: "var(--muted)",
+            lineHeight: 1.55,
+          }}
+        >
+          <strong style={{ color: "var(--brand-primary)" }}>
+            Schedule coming soon.
+          </strong>
+          <p style={{ margin: "8px 0 0", fontSize: 14 }}>
+            Games will appear here once the league posts the season
+            schedule.
+          </p>
+        </div>
       ) : (
+        <>
+          <WeekRow
+            weeks={weeks.map((w) => ({
+              ...w,
+              active: w.startIso === activeStart,
+            }))}
+            basePath="/schedule"
+          />
+
+          {dayGroups.length === 0 ? (
+            <p className="mt-6" style={{ color: "var(--muted)" }}>
+              No games this week — pick a different week above.
+            </p>
+          ) : (
         <div className="space-y-8 mt-6">
           {dayGroups.map(([date, list]) => (
             <section key={date}>
@@ -99,22 +129,24 @@ export default async function SchedulePage({
                   {list.length} game{list.length === 1 ? "" : "s"}
                 </span>
               </header>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {list.map((g) => (
-                  <GameCard
+              <div className="le-preview-grid">
+                {list.map((g, idx) => (
+                  <PreviewCard
                     key={g.id}
-                    id={g.id}
+                    gameId={g.id}
                     date={g.date}
                     field={g.field}
-                    status={g.status}
                     away={teamCardData(g.away_team_id, teams)}
                     home={teamCardData(g.home_team_id, teams)}
+                    isNext={idx === 0 && date === dayGroups[0]?.[0]}
                   />
                 ))}
               </div>
             </section>
           ))}
-        </div>
+            </div>
+          )}
+        </>
       )}
     </main>
   );
@@ -181,13 +213,15 @@ async function loadSchedule(tenantId: string): Promise<{
   return { games, teams };
 }
 
-function teamCardData(id: string, teams: Record<string, TeamMeta>): GameCardTeam {
+function teamCardData(
+  id: string,
+  teams: Record<string, TeamMeta>,
+): PreviewCardTeam {
   const t = teams[id];
   return {
     team_id: id,
     name: t?.name ?? id,
     abbrev: t?.abbrev,
-    color: t?.color,
     logoUrl: t?.logoUrl,
     record: t?.record,
   };
@@ -204,5 +238,5 @@ function formatDayHeading(yyyyMmDd: string): string {
 }
 
 function formatRecord(w: number, l: number, t: number): string {
-  return t > 0 ? `(${w}-${l}-${t})` : `(${w}-${l})`;
+  return t > 0 ? `${w}-${l}-${t}` : `${w}-${l}`;
 }

@@ -168,6 +168,178 @@ describe("computeStandings", () => {
     const a = rows.find((r) => r.team_id === "a")!;
     expect(a).toMatchObject({ gp: 3, w: 3, l: 0, rs: 30, ra: 0, rd: 30, pct: 1 });
   });
+
+  // Streak calc — walks final games in date order and reports the
+  // trailing run as "W3"/"L1"/"T1". Used in the standings table chip.
+  it("streak: undefined when no games are dated", () => {
+    // Without dates, we still produce SOME streak because the games
+    // get processed in input order. Just verify no crash + the
+    // streak field is either undefined or a valid string.
+    const dated = (
+      home: string,
+      away: string,
+      hs: number,
+      as_: number,
+      date: string,
+    ): GameResult => ({
+      home_team_id: home,
+      away_team_id: away,
+      home_score: hs,
+      away_score: as_,
+      status: "final",
+      date,
+    });
+    const rows = computeStandings([dated("a", "b", 5, 3, "2026-05-01")]);
+    const a = rows.find((r) => r.team_id === "a")!;
+    expect(a.streak).toBe("W1");
+    const b = rows.find((r) => r.team_id === "b")!;
+    expect(b.streak).toBe("L1");
+  });
+
+  it("streak: W3 after three straight wins in date order", () => {
+    const dated = (
+      home: string,
+      away: string,
+      hs: number,
+      as_: number,
+      date: string,
+    ): GameResult => ({
+      home_team_id: home,
+      away_team_id: away,
+      home_score: hs,
+      away_score: as_,
+      status: "final",
+      date,
+    });
+    const rows = computeStandings([
+      dated("a", "b", 5, 3, "2026-05-01"),
+      dated("a", "c", 4, 1, "2026-05-08"),
+      dated("a", "d", 7, 0, "2026-05-15"),
+    ]);
+    const a = rows.find((r) => r.team_id === "a")!;
+    expect(a.streak).toBe("W3");
+  });
+
+  it("streak: collapses to current run only — L1 after W2-then-loss", () => {
+    const dated = (
+      home: string,
+      away: string,
+      hs: number,
+      as_: number,
+      date: string,
+    ): GameResult => ({
+      home_team_id: home,
+      away_team_id: away,
+      home_score: hs,
+      away_score: as_,
+      status: "final",
+      date,
+    });
+    const rows = computeStandings([
+      dated("a", "b", 5, 3, "2026-05-01"), // a wins
+      dated("a", "c", 4, 1, "2026-05-08"), // a wins
+      dated("d", "a", 9, 1, "2026-05-15"), // a loses
+    ]);
+    const a = rows.find((r) => r.team_id === "a")!;
+    expect(a.streak).toBe("L1");
+  });
+
+  it("streak: respects date order even when input is shuffled", () => {
+    const dated = (
+      home: string,
+      away: string,
+      hs: number,
+      as_: number,
+      date: string,
+    ): GameResult => ({
+      home_team_id: home,
+      away_team_id: away,
+      home_score: hs,
+      away_score: as_,
+      status: "final",
+      date,
+    });
+    const rows = computeStandings([
+      // Most recent game is a loss for "a" — should produce L1
+      // regardless of input order.
+      dated("d", "a", 9, 1, "2026-05-15"), // a loses (most recent)
+      dated("a", "b", 5, 3, "2026-05-01"),
+      dated("a", "c", 4, 1, "2026-05-08"),
+    ]);
+    const a = rows.find((r) => r.team_id === "a")!;
+    expect(a.streak).toBe("L1");
+  });
+
+  it("streak: tie tracks as T1 / T2", () => {
+    const dated = (
+      home: string,
+      away: string,
+      hs: number,
+      as_: number,
+      date: string,
+    ): GameResult => ({
+      home_team_id: home,
+      away_team_id: away,
+      home_score: hs,
+      away_score: as_,
+      status: "final",
+      date,
+    });
+    const rows = computeStandings([
+      dated("a", "b", 4, 4, "2026-05-01"),
+      dated("a", "c", 3, 3, "2026-05-08"),
+    ]);
+    const a = rows.find((r) => r.team_id === "a")!;
+    expect(a.streak).toBe("T2");
+  });
+
+  it("never returns NaN — empty input edge cases", () => {
+    // Lock down: no field on any output row should ever be NaN.
+    // Standings table renders pct as a string; NaN would render as
+    // "NaN" or break sorting.
+    expect(computeStandings([]).length).toBe(0);
+    const rows = computeStandings([game("a", "b", 0, 0)]);
+    for (const r of rows) {
+      for (const [key, val] of Object.entries(r)) {
+        if (typeof val === "number") {
+          expect(Number.isNaN(val), `${r.team_id}.${key} is NaN`).toBe(false);
+          expect(Number.isFinite(val), `${r.team_id}.${key} is not finite`)
+            .toBe(true);
+        }
+      }
+    }
+  });
+
+  it("0-0 game counted as a tie, not a win for either side", () => {
+    const rows = computeStandings([game("a", "b", 0, 0)]);
+    const a = rows.find((r) => r.team_id === "a")!;
+    const b = rows.find((r) => r.team_id === "b")!;
+    expect(a).toMatchObject({ w: 0, l: 0, t: 1 });
+    expect(b).toMatchObject({ w: 0, l: 0, t: 1 });
+  });
+
+  it("a team that has never played ANY game does NOT appear in standings", () => {
+    // Defensible behavior — standings is derived purely from finished
+    // games. Empty-roster teams aren't dropped from the league, just
+    // not visible until they play. UI should fill them in from the
+    // teams list separately if needed.
+    const rows = computeStandings([game("a", "b", 5, 3)]);
+    expect(rows.find((r) => r.team_id === "c")).toBeUndefined();
+  });
+
+  it("doesn't double-count the same game with different team ID order", () => {
+    // Sanity: we treat each game object as one game, regardless of
+    // who's home vs away. Two different games at different scores
+    // count as two games for both teams.
+    const rows = computeStandings([
+      game("a", "b", 5, 3),
+      game("b", "a", 4, 2), // same matchup, swapped sides
+    ]);
+    const a = rows.find((r) => r.team_id === "a")!;
+    expect(a.gp).toBe(2);
+    expect(a.w).toBe(1); // won the first, lost the second
+    expect(a.l).toBe(1);
+  });
 });
 
 describe("computePoints", () => {

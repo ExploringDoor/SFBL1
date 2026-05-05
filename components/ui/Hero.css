@@ -1,0 +1,187 @@
+/* ── DVSL HERO BANNER ──────────────────────────────────────────────
+ * Verbatim port of `.hero`
+ * (~/Desktop/softball-site/index.html lines 820–842).
+ *
+ * Full-bleed dark banner. Height clamped to viewport quarter (280px
+ * min, 380px max). Three stacked elements centered vertically:
+ *   - eyebrow pill ("SEASON 2026"),
+ *   - giant uppercase title (one word in italic accent),
+ *   - subtitle line + CTA buttons.
+ *
+ * Background can be a single image (caller passes bgUrl) or a
+ * solid + gradient fallback.
+ */
+
+.le-hero {
+  height: calc(100vw / 4);
+  max-height: 380px;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+  gap: 0;
+  color: #ededed;
+  background: var(--brand-primary, #002D72);
+}
+
+.le-hero-bg {
+  position: absolute;
+  inset: 0;
+  background-color: #06080f;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
+}
+
+/* Dark gradient overlay for readability */
+.le-hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    to bottom,
+    rgba(5, 8, 20, 0.55) 0%,
+    rgba(5, 8, 20, 0.1) 30%,
+    rgba(5, 8, 20, 0.1) 70%,
+    rgba(5, 8, 20, 0.75) 100%
+  );
+}
+
+.le-hero-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 100px;
+  padding: 8px 22px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #93c5fd;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 3;
+  box-shadow: 0 0 24px rgba(96, 165, 250, 0.12);
+}
+
+.le-hero-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: clamp(60px, 11vw, 132px);
+  line-height: 0.82;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  position: relative;
+  z-index: 3;
+  text-align: center;
+  text-shadow:
+    0 4px 40px rgba(0, 0, 0, 0.8),
+    0 2px 8px rgba(0, 0, 0, 0.9);
+  margin: 0;
+  color: #ffffff;
+}
+
+.le-hero-title em {
+  color: #7dd3fc;
+  font-style: normal;
+  text-shadow:
+    0 0 60px rgba(96, 165, 250, 0.4),
+    0 4px 40px rgba(0, 0, 0, 0.8);
+}
+
+.le-hero-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 17px;
+  font-weight: 300;
+  color: rgba(200, 215, 255, 0.75);
+  margin-top: 20px;
+  max-width: 500px;
+  line-height: 1.7;
+  position: relative;
+  z-index: 3;
+  text-align: center;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
+}
+
+.le-hero-cta {
+  display: flex;
+  gap: 14px;
+  margin-top: 36px;
+  position: relative;
+  z-index: 3;
+  justify-content: center;
+}
+
+.le-hero-btn-primary {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 13px 30px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.35);
+  display: inline-block;
+}
+
+.le-hero-btn-primary:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+}
+
+.le-hero-btn-outline {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: transparent;
+  color: #ededed;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  padding: 13px 30px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.le-hero-btn-outline:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.04);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 700px) {
+  .le-hero {
+    padding: 0 24px;
+    height: calc(100vw / 2.5);
+    min-height: 240px;
+  }
+  .le-hero-cta {
+    flex-direction: column;
+    width: 100%;
+    margin-top: 24px;
+  }
+  .le-hero-btn-primary,
+  .le-hero-btn-outline {
+    text-align: center;
+    width: 100%;
+    display: block;
+  }
+}

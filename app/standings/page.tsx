@@ -16,7 +16,7 @@ import {
   StandingsTable,
   type DivisionGroup,
   type TeamMeta,
-} from "@/components/StandingsTable";
+} from "@/components/ui/StandingsTable";
 
 export const dynamic = "force-dynamic";
 
@@ -41,100 +41,106 @@ export default async function StandingsPage() {
     );
   }
 
-  const { divisionGroups, teams, scheme, leagueName, throughDate, teamCount } =
-    await loadStandings(tenantId, config);
+  const {
+    divisionGroups,
+    teams,
+    scheme,
+    leagueName,
+    throughDate,
+    teamCount,
+    hasFinalGames,
+  } = await loadStandings(tenantId, config);
 
   const year = String(new Date().getFullYear());
 
   return (
     <main className="container py-10">
-      <header className="mb-6">
-        <h1 className="font-display" style={{ fontSize: "clamp(40px, 6vw, 64px)" }}>
-          <span style={{ color: "var(--text-strong)" }}>Season</span>{" "}
-          <span style={{ color: "var(--brand-primary)" }}>Standings</span>
+      <header className="mb-8">
+        <p
+          className="font-barlow"
+          style={{
+            fontSize: 13,
+            fontWeight: 700,
+            letterSpacing: "0.16em",
+            textTransform: "uppercase",
+            color: "var(--brand-primary)",
+            marginBottom: 6,
+          }}
+        >
+          Standings
+        </p>
+        <h1
+          className="font-barlow"
+          style={{
+            fontSize: "clamp(36px, 5vw, 54px)",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            lineHeight: 0.95,
+            letterSpacing: "-0.01em",
+            color: "var(--text-strong)",
+            margin: 0,
+          }}
+        >
+          {seasonLabel(year)}
         </h1>
-        {leagueName && (
-          <p className="sec-eyebrow mt-1">{leagueName}</p>
-        )}
-      </header>
-
-      <div className="year-tabs mb-6">
-        {/* Only the current season for now; historical snapshots come later. */}
-        <button className="yr-tab active">{year}</button>
-      </div>
-
-      <header className="mb-3">
-        <h2 className="font-display" style={{ fontSize: 38 }}>
-          {year}
-        </h2>
-        <p className="text-sm" style={{ color: "var(--muted)" }}>
-          Current Standings · {teamCount} Teams · Through {throughDate}
+        <p
+          style={{
+            marginTop: 8,
+            fontSize: 14,
+            color: "var(--muted)",
+            fontFamily: "var(--font-inter), sans-serif",
+          }}
+        >
+          {hasFinalGames
+            ? `Through ${throughDate} · ${teamCount} teams`
+            : `${teamCount} team${teamCount === 1 ? "" : "s"} · season starts soon`}
         </p>
       </header>
 
-      {scheme && (
-        <div className="mb-4">
-          <div className="pts-rubric">
-            <span className="pr-label">Points</span>
-            <span className="pr-chip">
-              <b>{scheme.win}</b> Win
-            </span>
-            <span className="pr-chip">
-              <b>{scheme.tie}</b> Tie
-            </span>
-            <span className="pr-chip">
-              <b>{scheme.loss}</b> Loss
-            </span>
-            <span style={{ marginLeft: 6 }}>
-              — {leagueName ?? "this league"}'s primary standings determinant
-            </span>
-          </div>
+      {hasFinalGames ? (
+        <StandingsTable
+          groups={divisionGroups}
+          teamMeta={teams}
+          pointsScheme={scheme}
+          variant="full"
+        />
+      ) : (
+        // Pre-launch / launch-day state: every row is 0-0 and looks
+        // like the site is broken. Show a friendly placeholder
+        // instead. As soon as the first game lands as final, the
+        // table renders with real W-L-T and this branch goes away.
+        <div
+          style={{
+            padding: "32px 24px",
+            background: "rgba(0,0,0,0.03)",
+            border: "1px dashed rgba(0,0,0,0.12)",
+            borderRadius: 12,
+            textAlign: "center",
+            color: "var(--muted)",
+            lineHeight: 1.55,
+          }}
+        >
+          <strong style={{ color: "var(--brand-primary)", fontSize: 16 }}>
+            Standings will appear after the first game is final.
+          </strong>
+          <p style={{ margin: "8px 0 0", fontSize: 14 }}>
+            Captains submit final box scores after games; standings
+            recalculate automatically.
+          </p>
         </div>
       )}
-
-      <div className="legend mb-4">
-        {scheme && (
-          <span>
-            <b>PTS</b> Total Points
-          </span>
-        )}
-        <span>
-          <b>W</b> Wins
-        </span>
-        <span>
-          <b>L</b> Losses
-        </span>
-        <span>
-          <b>T</b> Ties
-        </span>
-        <span>
-          <b>PCT</b> Win %
-        </span>
-        <span>
-          <b>GB</b> Games Behind
-        </span>
-        <span>
-          <b>RS</b> Runs Scored
-        </span>
-        <span>
-          <b>RA</b> Runs Allowed
-        </span>
-        <span>
-          <b>DIFF</b> Differential
-        </span>
-        <span>
-          <b>STRK</b> Streak
-        </span>
-      </div>
-
-      <StandingsTable
-        groups={divisionGroups}
-        teamMeta={teams}
-        pointsScheme={scheme}
-        variant="full"
-      />
     </main>
   );
+}
+
+// "Spring 2026" / "Summer 2026" — picked from the current month so
+// the standings header reads like a real season label.
+function seasonLabel(year: string): string {
+  const m = new Date().getMonth();
+  if (m >= 2 && m <= 4) return `Spring ${year}`;
+  if (m >= 5 && m <= 7) return `Summer ${year}`;
+  if (m >= 8 && m <= 10) return `Fall ${year}`;
+  return `Winter ${year}`;
 }
 
 async function loadStandings(tenantId: string, config: PublicLeagueConfig | null) {
@@ -203,6 +209,7 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
     leagueName: config?.name ?? null,
     throughDate,
     teamCount: teamsSnap.size,
+    hasFinalGames: finalDates.length > 0,
   };
 }
 

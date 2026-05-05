@@ -1,0 +1,227 @@
+/* ── DVSL GAMECHANGER-STYLE SCORE CARD ─────────────────────────────
+ * Verbatim port of `.gc-cards-grid` / `.gc-card`
+ * (~/Desktop/softball-site/index.html lines 1572–1597 + the JS
+ * template at lines 7853–7881).
+ *
+ * Three rows stacked vertically:
+ *   1. Header  — FINAL · date · headline
+ *   2. Body    — two team rows (logo + name + record + score)
+ *   3. Footer  — Recap | Box Score buttons
+ *
+ * Whole card is clickable → opens box score modal. Footer buttons
+ * also open it (Recap routes to ?tab=recap).
+ */
+
+.le-gc-cards-grid {
+  display: grid;
+  /* Default: 2-column grid. Single column on phones, two cards per
+   * row on tablet+. Locked at 2 columns max so the layout stays
+   * predictable regardless of card count. */
+  grid-template-columns: 1fr;
+  gap: 14px;
+  max-width: 1060px;
+}
+
+@media (min-width: 720px) {
+  .le-gc-cards-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.le-gc-card {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 0.15s, transform 0.1s;
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+}
+
+.le-gc-card:focus-visible {
+  box-shadow: 0 0 0 3px rgba(0, 45, 114, 0.35);
+}
+
+.le-gc-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.le-gc-card-hdr {
+  background: #f1f3f5;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.le-gc-card-status {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
+}
+
+.le-gc-card-date {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
+}
+
+.le-gc-card-headline {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--brand-primary, #002D72);
+  margin-left: auto;
+  text-align: right;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.le-gc-card-body {
+  padding: 12px 14px 10px;
+}
+
+.le-gc-team-row {
+  /* Grid (logo · info · score) instead of flex so the score column
+   * is a fixed track. This guarantees the score numbers in row 1 and
+   * row 2 of the same card are vertically aligned, AND that scores
+   * across multiple cards land at the same x-offset from the card's
+   * right edge regardless of team-name length. */
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 48px;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+}
+
+.le-gc-logo-wrap {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.le-gc-logo-img {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+}
+
+.le-gc-logo-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.le-gc-team-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.le-gc-team-name {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: #1a1a1a;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-decoration: none;
+}
+
+.le-gc-team-name:hover { text-decoration: underline; }
+
+.le-gc-team-name.le-gc-loser {
+  color: rgba(0, 0, 0, 0.38);
+  font-weight: 500;
+}
+
+.le-gc-record {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.le-gc-score {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 32px;
+  line-height: 1;
+  flex-shrink: 0;
+  text-align: right;
+  min-width: 44px;
+  font-variant-numeric: tabular-nums;
+}
+
+.le-gc-score.le-gc-score-win { color: #1a1a1a; }
+.le-gc-score.le-gc-score-lose { color: rgba(0, 0, 0, 0.28); }
+
+.le-gc-card-footer {
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.le-gc-btn {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  background: #fff;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.le-gc-btn:hover {
+  border-color: #6b7280;
+  background: #f9fafb;
+}
+
+.le-gc-btn-primary {
+  background: var(--brand-primary, #002D72);
+  color: #fff;
+  border-color: var(--brand-primary, #002D72);
+}
+
+.le-gc-btn-primary:hover {
+  filter: brightness(1.15);
+  border-color: var(--brand-primary, #002D72);
+  background: var(--brand-primary, #002D72);
+  color: #fff;
+}
+
+.le-gc-btn-share { margin-left: auto; }
+
+@media (max-width: 700px) {
+  .le-gc-card-hdr { padding: 6px 10px; }
+  .le-gc-card-body { padding: 8px 10px 6px; }
+  .le-gc-card-footer { padding: 8px 10px 10px; }
+  .le-gc-card-headline { font-size: 11px; }
+  .le-gc-score { font-size: 26px; min-width: 34px; }
+  .le-gc-team-name { font-size: 14px; }
+}

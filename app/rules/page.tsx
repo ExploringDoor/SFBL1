@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { markdownToHtml } from "@/lib/markdown";
 import type { PublicLeagueConfig } from "@/lib/tenants";
-import { EditAffordance } from "./EditAffordance";
+import { PageContentEditor } from "@/components/PageContentEditor";
 
 export const dynamic = "force-dynamic";
 
@@ -63,7 +63,12 @@ export default async function RulesPage() {
         className="prose prose-slate max-w-none [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mt-6 [&_h1]:mb-3 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:mt-5 [&_h2]:mb-2 [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-2 [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:my-1 [&_a]:text-blue-600 [&_a]:underline [&_strong]:font-semibold [&_em]:italic [&_code]:rounded [&_code]:bg-slate-100 [&_code]:px-1 [&_blockquote]:border-l-4 [&_blockquote]:border-slate-300 [&_blockquote]:pl-3 [&_blockquote]:text-slate-600"
         dangerouslySetInnerHTML={{ __html: html }}
       />
-      <EditAffordance tenantId={tenantId} initialMarkdown={markdown} />
+      <PageContentEditor
+        tenantId={tenantId}
+        pageId="rules"
+        initialMarkdown={markdown}
+        editHeading="Edit rules (markdown)"
+      />
     </Shell>
   );
 }

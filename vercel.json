@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/pregame-reminder",
+      "schedule": "*/15 * * * *"
+    }
+  ]
+}

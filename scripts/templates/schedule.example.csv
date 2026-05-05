@@ -1,0 +1,5 @@
+id,date,time,field,away_team_id,home_team_id,week,division
+g_2026_05_10_001,2026-05-10,18:00,Field 1,miami_yankees,miami_red_sox,1,
+g_2026_05_10_002,2026-05-10,20:00,Field 2,sf_dodgers,sf_astros,1,
+g_2026_05_17_001,2026-05-17,18:00,Field 1,miami_red_sox,sf_dodgers,2,
+g_2026_05_17_002,2026-05-17,20:00,Field 2,sf_astros,miami_yankees,2,

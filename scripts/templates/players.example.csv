@@ -1,0 +1,7 @@
+team_id,name,jersey,position,email,phone
+miami_yankees,Aaron Judge,99,RF,judge.example@example.com,
+miami_yankees,Gerrit Cole,45,P,cole.example@example.com,555-0001
+miami_red_sox,Rafael Devers,11,3B,devers.example@example.com,
+miami_red_sox,Triston Casas,36,1B,casas.example@example.com,
+sf_dodgers,Mookie Betts,50,SS,betts.example@example.com,
+sf_astros,Jose Altuve,27,2B,altuve.example@example.com,

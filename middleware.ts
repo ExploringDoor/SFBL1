@@ -44,6 +44,16 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|txt|xml)).*)",
+    // Exclude:
+    //   - /api/*  — API routes do their own bearer-token / claim auth.
+    //               Letting middleware run on them is wasteful (extra
+    //               Firestore lookup per call) AND dangerous: when
+    //               server-fanout fetches /api/send-notification with
+    //               an inferred origin that doesn't match any tenant
+    //               (e.g. a *.vercel.app preview URL leaking through),
+    //               middleware would 404 the API call and silently
+    //               break push delivery.
+    //   - /_next/static, /_next/image, favicon, common static files.
+    "/((?!api/|_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|txt|xml)).*)",
   ],
 };

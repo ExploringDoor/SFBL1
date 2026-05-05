@@ -1,20 +1,35 @@
 "use client";
 
+// Lifted from app/rules/EditAffordance.tsx — same component, but
+// accepts any pageId so it works for /rules AND the dynamic
+// /content/[pageId] route AND the admin pages manager.
+//
+// Visibility: the Edit button only renders for users whose claim is
+// `admin` for the current tenant. Non-admins see nothing.
+//
+// Save flow: POST to /api/page-content with leagueId + pageId +
+// markdown. Endpoint sanitizes + caches HTML. On success we
+// `window.location.reload()` so the server-rendered article reflects
+// the new content (the page itself is server-rendered).
+
 import { useState } from "react";
 import { useLeagueRole, useUser } from "@/lib/auth-client";
 import { markdownToHtml } from "@/lib/markdown";
 
-// Renders an "Edit this page" button only when the signed-in user is
-// admin of the current tenant. Click → enter edit mode (textarea +
-// live-rendered preview). Save → POST to /api/page-content. Refresh
-// the page on success so the public article reflects the new content.
-export function EditAffordance({
-  tenantId,
-  initialMarkdown,
-}: {
+interface Props {
   tenantId: string;
+  pageId: string;
   initialMarkdown: string;
-}) {
+  /** Override the editor's heading text. Defaults to "Edit page (markdown)". */
+  editHeading?: string;
+}
+
+export function PageContentEditor({
+  tenantId,
+  pageId,
+  initialMarkdown,
+  editHeading = "Edit page (markdown)",
+}: Props) {
   const user = useUser();
   const role = useLeagueRole(tenantId);
   const [editing, setEditing] = useState(false);
@@ -52,7 +67,7 @@ export function EditAffordance({
         },
         body: JSON.stringify({
           leagueId: tenantId,
-          pageId: "rules",
+          pageId,
           markdown: draft,
         }),
       });
@@ -60,7 +75,6 @@ export function EditAffordance({
         const e = await res.json().catch(() => ({}));
         throw new Error(e.error ?? `HTTP ${res.status}`);
       }
-      // Page is server-rendered — full reload picks up the new content.
       window.location.reload();
     } catch (err) {
       setStatus({
@@ -75,7 +89,7 @@ export function EditAffordance({
   return (
     <div className="mt-8 space-y-3 rounded-md border border-slate-300 bg-slate-50 p-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-slate-900">Edit rules (markdown)</h3>
+        <h3 className="text-sm font-semibold text-slate-900">{editHeading}</h3>
         <div className="flex gap-2">
           <button
             onClick={() => {

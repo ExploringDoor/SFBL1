@@ -7,6 +7,12 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { TeamBadge } from "@/components/TeamBadge";
 import { formatIP } from "@/lib/stats/ip";
 import type { PublicLeagueConfig } from "@/lib/tenants";
+import {
+  SortableStatsTable,
+  type StatsCol,
+  type StatsRow,
+} from "@/components/ui/SortableStatsTable";
+import "@/components/ui/SortableStatsTable.css";
 
 export const dynamic = "force-dynamic";
 
@@ -119,10 +125,55 @@ export default async function PlayersPage() {
     .sort((a, b) => (a.era ?? 99) - (b.era ?? 99))
     .slice(0, 5);
 
-  // All batters table.
-  const allBatters = [...players]
+  // Pre-bake rows for the sortable table. Server Components can't
+  // pass accessor functions to Client Component props, so values +
+  // display are pre-computed here as plain serializable maps.
+  const battingRows: StatsRow[] = players
     .filter((p) => p.hasBatting)
-    .sort((a, b) => b.ops - a.ops);
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      team: <TeamCell row={p} />,
+      values: {
+        ab: p.ab,
+        h: p.h,
+        hr: p.hr,
+        rbi: p.rbi,
+        avg: p.avg,
+        obp: p.obp,
+        slg: p.slg,
+        ops: p.ops,
+      },
+      display: {
+        ab: String(p.ab),
+        h: String(p.h),
+        hr: String(p.hr),
+        rbi: String(p.rbi),
+        avg: formatAvg(p.avg),
+        obp: formatAvg(p.obp),
+        slg: formatAvg(p.slg),
+        ops: formatAvg(p.ops),
+      },
+    }));
+  const pitchingRows: StatsRow[] = players
+    .filter((p) => p.hasPitching)
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      team: <TeamCell row={p} />,
+      values: {
+        ip: p.ip_outs ?? 0,
+        k: p.pitch_so ?? 0,
+        era: p.era ?? 99,
+        whip: p.whip ?? 99,
+      },
+      display: {
+        ip: formatIP(p.ip_outs ?? 0),
+        k: String(p.pitch_so ?? 0),
+        era: (p.era ?? 0).toFixed(2),
+        whip: (p.whip ?? 0).toFixed(2),
+      },
+    }));
 
   return (
     <main className="container py-10">
@@ -134,128 +185,117 @@ export default async function PlayersPage() {
         {config?.name && <p className="sec-eyebrow mt-1">{config.name}</p>}
       </header>
 
-      <div className="mb-10 grid gap-6 md:grid-cols-3">
-        <Leaderboard
-          heading="Batting Average"
-          rows={battingLeaders}
-          accessor={(p) => formatAvg(p.avg)}
-        />
-        <Leaderboard
-          heading="OPS"
-          rows={opsLeaders}
-          accessor={(p) => formatAvg(p.ops)}
-        />
-        <Leaderboard
-          heading="ERA"
-          rows={eraLeaders}
-          accessor={(p) => (p.era != null ? p.era.toFixed(2) : "—")}
-        />
-      </div>
-
-      <h2 className="font-display mb-3" style={{ fontSize: 28 }}>
-        Batting (full)
-      </h2>
-      <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
-        <table className="s-tbl">
-          <thead>
-            <tr>
-              <th className="text-left">Player</th>
-              <th className="text-left">Team</th>
-              <th>AB</th>
-              <th>H</th>
-              <th>HR</th>
-              <th>RBI</th>
-              <th>AVG</th>
-              <th>OBP</th>
-              <th>SLG</th>
-              <th>OPS</th>
-            </tr>
-          </thead>
-          <tbody>
-            {allBatters.map((p) => (
-              <tr key={p.id}>
-                <td className="text-left">
-                  <Link href={`/players/${p.id}`} style={{ fontWeight: 600 }}>
-                    {p.name}
-                  </Link>
-                </td>
-                <td className="text-left">
-                  {p.team_id && (
-                    <Link
-                      href={`/teams/${p.team_id}`}
-                      style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
-                    >
-                      <TeamBadge
-                        teamId={p.team_id}
-                        name={p.team_name}
-                        initials={p.team_abbrev}
-                        color={p.team_color}
-                        logoUrl={p.team_logo}
-                        size="sm"
-                      />
-                      <span style={{ fontSize: 12 }}>{p.team_abbrev ?? p.team_name}</span>
-                    </Link>
-                  )}
-                </td>
-                <td>{p.ab}</td>
-                <td>{p.h}</td>
-                <td>{p.hr}</td>
-                <td>{p.rbi}</td>
-                <td>{formatAvg(p.avg)}</td>
-                <td>{formatAvg(p.obp)}</td>
-                <td>{formatAvg(p.slg)}</td>
-                <td>{formatAvg(p.ops)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {eraLeaders.length > 0 && (
+      {/* Hide leaderboards + tables when there's nothing to show.
+          Day-1 the league has rosters but no recorded stats — three
+          empty card cells looked broken in QA. */}
+      {battingRows.length === 0 && pitchingRows.length === 0 ? (
+        <div
+          style={{
+            padding: "32px 24px",
+            background: "rgba(0,0,0,0.03)",
+            border: "1px dashed rgba(0,0,0,0.12)",
+            borderRadius: 12,
+            textAlign: "center",
+            color: "var(--muted)",
+            lineHeight: 1.55,
+          }}
+        >
+          <strong style={{ color: "var(--brand-primary)", fontSize: 16 }}>
+            Stats will appear once games are played.
+          </strong>
+          <p style={{ margin: "8px 0 0", fontSize: 14 }}>
+            Captains submit box scores after games; player season
+            totals + leaderboards calculate from there.
+          </p>
+        </div>
+      ) : (
         <>
-          <h2 className="font-display mb-3 mt-10" style={{ fontSize: 28 }}>
-            Pitching (full)
-          </h2>
-          <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
-            <table className="s-tbl">
-              <thead>
-                <tr>
-                  <th className="text-left">Pitcher</th>
-                  <th className="text-left">Team</th>
-                  <th>IP</th>
-                  <th>K</th>
-                  <th>ERA</th>
-                  <th>WHIP</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[...players]
-                  .filter((p) => p.hasPitching)
-                  .sort((a, b) => (a.era ?? 99) - (b.era ?? 99))
-                  .map((p) => (
-                    <tr key={p.id}>
-                      <td className="text-left">
-                        <Link href={`/players/${p.id}`} style={{ fontWeight: 600 }}>
-                          {p.name}
-                        </Link>
-                      </td>
-                      <td className="text-left">
-                        {p.team_abbrev ?? p.team_name}
-                      </td>
-                      <td>{formatIP(p.ip_outs ?? 0)}</td>
-                      <td>{p.pitch_so ?? 0}</td>
-                      <td>{(p.era ?? 0).toFixed(2)}</td>
-                      <td>{(p.whip ?? 0).toFixed(2)}</td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
+          <div className="mb-10 grid gap-6 md:grid-cols-3">
+            <Leaderboard
+              heading="Batting Average"
+              rows={battingLeaders}
+              accessor={(p) => formatAvg(p.avg)}
+            />
+            <Leaderboard
+              heading="OPS"
+              rows={opsLeaders}
+              accessor={(p) => formatAvg(p.ops)}
+            />
+            <Leaderboard
+              heading="ERA"
+              rows={eraLeaders}
+              accessor={(p) => (p.era != null ? p.era.toFixed(2) : "—")}
+            />
           </div>
+
+          {battingRows.length > 0 && (
+            <>
+              <h2 className="font-barlow mb-3" style={{ fontSize: 24, fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.01em" }}>
+                Batting
+              </h2>
+              <SortableStatsTable
+                rows={battingRows}
+                defaultSort="ops"
+                columns={BATTING_COLS}
+              />
+            </>
+          )}
+
+          {pitchingRows.length > 0 && (
+            <>
+              <h2 className="font-barlow mb-3 mt-10" style={{ fontSize: 24, fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.01em" }}>
+                Pitching
+              </h2>
+              <SortableStatsTable
+                rows={pitchingRows}
+                defaultSort="era"
+                columns={PITCHING_COLS}
+              />
+            </>
+          )}
         </>
       )}
     </main>
   );
 }
+
+function TeamCell({ row }: { row: PlayerRow }) {
+  if (!row.team_id) return null;
+  return (
+    <Link
+      href={`/teams/${row.team_id}`}
+      style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+    >
+      <TeamBadge
+        teamId={row.team_id}
+        name={row.team_name}
+        initials={row.team_abbrev}
+        color={row.team_color}
+        logoUrl={row.team_logo}
+        size="sm"
+      />
+      <span style={{ fontSize: 12 }}>{row.team_abbrev ?? row.team_name}</span>
+    </Link>
+  );
+}
+
+const BATTING_COLS: StatsCol[] = [
+  { key: "ab", label: "AB" },
+  { key: "h", label: "H" },
+  { key: "hr", label: "HR" },
+  { key: "rbi", label: "RBI" },
+  { key: "avg", label: "AVG" },
+  { key: "obp", label: "OBP" },
+  { key: "slg", label: "SLG" },
+  { key: "ops", label: "OPS" },
+];
+
+const PITCHING_COLS: StatsCol[] = [
+  { key: "ip", label: "IP" },
+  { key: "k", label: "K" },
+  { key: "era", label: "ERA", higherBetter: false },
+  { key: "whip", label: "WHIP", higherBetter: false },
+];
 
 function Leaderboard({
   heading,

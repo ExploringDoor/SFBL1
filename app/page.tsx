@@ -8,12 +8,14 @@ import {
   type StandingsRow,
 } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
-import { GameCard, type GameCardTeam } from "@/components/GameCard";
+import { GameCard, type GameCardTeam } from "@/components/ui/GameCard";
+import { PreviewCard, type PreviewCardTeam } from "@/components/ui/PreviewCard";
+import { Hero as DvslHero } from "@/components/ui/Hero";
 import {
   StandingsTable,
   type DivisionGroup,
   type TeamMeta,
-} from "@/components/StandingsTable";
+} from "@/components/ui/StandingsTable";
 
 export const dynamic = "force-dynamic";
 
@@ -46,107 +48,179 @@ export default async function HomePage() {
   const { upcoming, recent, teams, divisionGroups, scheme, leagueName } =
     await loadHomeData(tenantId, config);
 
+  const season = String(new Date().getFullYear());
+  const big = config?.abbrev ?? deriveAbbrev(leagueName);
+
   return (
     <main>
-      <Hero
-        leagueName={leagueName}
-        leagueAbbrev={config?.abbrev}
-        season={String(new Date().getFullYear())}
+      <DvslHero
+        pill={`⚾ ${season} Regular Season`}
+        title={`${big} ${season}`}
+        accentWord={season}
+        subtitle={leagueName}
       />
 
       <section className="sec">
-        <div className="container">
-          <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
-            {/* MAIN COLUMN: recent scores + upcoming schedule */}
-            <div className="space-y-12">
-              {recent.length > 0 && (
-                <div>
-                  <SectionHead
-                    eyebrow={`${currentSeasonLabel()} Season`}
-                    title="Recent Scores"
-                    rightLink={{ href: "/scores", label: "All scores →" }}
-                  />
-                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                    {recent.map((g) => (
-                      <GameCard
-                        key={g.id}
-                        id={g.id}
-                        date={g.date}
-                        field={g.field}
-                        status={g.status}
-                        away={teamCardData(g.away_team_id, teams)}
-                        home={teamCardData(g.home_team_id, teams)}
-                        awayScore={g.away_score}
-                        homeScore={g.home_score}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
+        <div className="le-home-grid">
+          {/* MAIN COLUMN: recent scores + upcoming schedule */}
+          <div className="le-home-main">
+            {/* Launch-day fallback: when there's nothing to show in the
+                main column (no recent, no upcoming), avoid an empty
+                column. Standings sidebar may still render zeros, but
+                we explain why below. Captains hit Friday morning with
+                the league freshly provisioned and games scheduled but
+                not yet final — this is expected, not broken. */}
+            {recent.length === 0 && upcoming.length === 0 && (
+              <div className="le-home-launch">
+                <p className="le-home-launch-eyebrow">
+                  {currentSeasonLabel()} season
+                </p>
+                <h2 className="le-home-launch-title">
+                  Season starts soon
+                </h2>
+                <p className="le-home-launch-body">
+                  Schedule, scores, and standings will appear here once
+                  games are scheduled and played. If you're a captain,{" "}
+                  <a href="/captain">sign in</a> to manage your roster
+                  and submit scores.
+                </p>
+              </div>
+            )}
+            {recent.length > 0 && (
               <div>
+                <p
+                  className="font-barlow"
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 700,
+                    letterSpacing: "0.16em",
+                    textTransform: "uppercase",
+                    color: "var(--brand-primary)",
+                    marginBottom: 4,
+                  }}
+                >
+                  Latest Scores
+                </p>
+                <h2
+                  className="font-barlow"
+                  style={{
+                    fontSize: "clamp(32px, 4vw, 44px)",
+                    fontWeight: 900,
+                    textTransform: "uppercase",
+                    lineHeight: 0.95,
+                    margin: 0,
+                  }}
+                >
+                  Recent Results
+                </h2>
+                <div className="le-home-scores-grid">
+                  {recent.map((g) => (
+                    <GameCard
+                      key={g.id}
+                      gameId={g.id}
+                      date={g.date}
+                      away={teamCardData(g.away_team_id, teams, g.away_score)}
+                      home={teamCardData(g.home_team_id, teams, g.home_score)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {upcoming.length > 0 && (
+              <div style={{ marginTop: 36 }}>
                 <SectionHead
                   eyebrow={`${currentSeasonLabel()} Season`}
                   title="Upcoming Schedule"
                   rightLink={{ href: "/schedule", label: "Full schedule →" }}
                 />
-                {upcoming.length === 0 ? (
-                  <p className="mt-4 text-sm text-slate-500">No upcoming games.</p>
-                ) : (
-                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                    {upcoming.map((g) => (
-                      <GameCard
-                        key={g.id}
-                        id={g.id}
-                        date={g.date}
-                        field={g.field}
-                        status={g.status}
-                        away={teamCardData(g.away_team_id, teams)}
-                        home={teamCardData(g.home_team_id, teams)}
-                      />
-                    ))}
-                  </div>
-                )}
+                <div className="le-preview-grid">
+                  {upcoming.map((g, i) => (
+                    <PreviewCard
+                      key={g.id}
+                      gameId={g.id}
+                      date={g.date}
+                      field={g.field}
+                      away={previewTeamData(g.away_team_id, teams)}
+                      home={previewTeamData(g.home_team_id, teams)}
+                      isNext={i === 0}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
+          </div>
 
-            {/* SIDEBAR: standings */}
-            <aside>
-              <header className="mb-3 flex items-baseline justify-between">
-                <h3
-                  className="font-barlow"
-                  style={{
-                    fontSize: 20,
-                    fontWeight: 900,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                    color: "var(--text-strong)",
-                  }}
-                >
-                  Standings
-                </h3>
-                <Link
-                  href="/standings"
-                  className="font-barlow"
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.1em",
-                    color: "var(--brand-primary)",
-                  }}
-                >
-                  Full →
-                </Link>
-              </header>
+          {/* SIDEBAR: standings — full table with logos + all columns. */}
+          <aside className="le-home-aside">
+            <p
+              className="font-barlow"
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+                color: "var(--brand-primary)",
+                marginBottom: 4,
+              }}
+            >
+              Standings
+            </p>
+            <h2
+              className="font-barlow"
+              style={{
+                fontSize: "clamp(28px, 3vw, 36px)",
+                fontWeight: 900,
+                textTransform: "uppercase",
+                lineHeight: 0.95,
+                margin: 0,
+              }}
+            >
+              {currentSeasonLabel()}
+            </h2>
+            <p
+              style={{
+                marginTop: 6,
+                marginBottom: 18,
+                fontSize: 13,
+                color: "var(--muted)",
+              }}
+            >
+              Through{" "}
+              {new Date().toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </p>
+            {standingsHasGames(divisionGroups) ? (
               <StandingsTable
                 groups={divisionGroups}
                 teamMeta={teams}
-                pointsScheme={scheme}
-                variant="compact"
+                /* Always render PTS on the homepage. Falls back to the
+                   standard 2-1-0 (W-T-L) scheme for tenants that don't
+                   explicitly configure points. */
+                pointsScheme={scheme ?? { win: 2, tie: 1, loss: 0 }}
+                variant="full"
+                showExtras={false}
               />
-            </aside>
-          </div>
+            ) : (
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "var(--muted)",
+                  padding: "16px 14px",
+                  background: "rgba(0,0,0,0.03)",
+                  borderRadius: 8,
+                  lineHeight: 1.55,
+                  margin: 0,
+                }}
+              >
+                Standings will appear here after the first game is
+                final.
+              </p>
+            )}
+          </aside>
         </div>
       </section>
     </main>
@@ -184,31 +258,6 @@ function SectionHead({
         </Link>
       )}
     </header>
-  );
-}
-
-function Hero({
-  leagueName,
-  leagueAbbrev,
-  season,
-}: {
-  leagueName: string;
-  leagueAbbrev?: string;
-  season: string;
-}) {
-  const big = leagueAbbrev ?? deriveAbbrev(leagueName);
-  return (
-    <section className="hero">
-      <div className="hero-bg" />
-      <div className="hero-overlay" />
-      <div className="hero-content">
-        <span className="hero-pill">⚾ {season} Regular Season</span>
-        <h1 className="hero-title">
-          {big} <em>{season}</em>
-        </h1>
-        <p className="hero-sub">{leagueName}</p>
-      </div>
-    </section>
   );
 }
 
@@ -305,13 +354,32 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
   };
 }
 
-function teamCardData(id: string, teams: Record<string, TeamMeta>): GameCardTeam {
+function teamCardData(
+  id: string,
+  teams: Record<string, TeamMeta>,
+  score: number,
+): GameCardTeam {
   const t = teams[id] as TeamMeta & { record?: string };
   return {
     team_id: id,
     name: t?.name ?? id,
     abbrev: t?.abbrev,
     color: t?.color,
+    logoUrl: t?.logoUrl,
+    record: t?.record,
+    score,
+  };
+}
+
+function previewTeamData(
+  id: string,
+  teams: Record<string, TeamMeta>,
+): PreviewCardTeam {
+  const t = teams[id] as TeamMeta & { record?: string };
+  return {
+    team_id: id,
+    name: t?.name ?? id,
+    abbrev: t?.abbrev,
     logoUrl: t?.logoUrl,
     record: t?.record,
   };
@@ -335,11 +403,26 @@ function groupByDivision(
 }
 
 function formatRecord(w: number, l: number, t: number): string {
-  return t > 0 ? `(${w}-${l}-${t})` : `(${w}-${l})`;
+  // Bare record — UI components add the surrounding parens.
+  return t > 0 ? `${w}-${l}-${t}` : `${w}-${l}`;
 }
 
 function currentSeasonLabel(): string {
   return String(new Date().getFullYear());
+}
+
+// Are any games actually counted in the standings yet? Used to gate
+// the homepage standings table — on launch day every row is 0-0
+// which looks like a broken site rather than a fresh one. We hide
+// the table and show "Standings will appear after the first game
+// is final" instead until the first W/L/T lands.
+function standingsHasGames(groups: DivisionGroup[]): boolean {
+  for (const g of groups) {
+    for (const r of g.rows) {
+      if (r.w > 0 || r.l > 0 || r.t > 0) return true;
+    }
+  }
+  return false;
 }
 
 function BareApex() {

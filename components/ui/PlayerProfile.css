@@ -1,0 +1,170 @@
+/* ── DVSL PLAYER MODAL ─────────────────────────────────────────────
+ * Verbatim port of `.modal-hero` / `.modal-av` / `.modal-pname` /
+ * `.modal-stat-pill` (~/Desktop/softball-site/index.html lines
+ * 1019–1071).
+ *
+ * Hero block: 170×170 circular avatar (3px team-color border) + big
+ * Oswald 52px name + position/team/number meta + horizontal stat
+ * pill (AVG · HR · RBI · OPS).
+ *
+ * Followed by the season batting table (uses .bat-tbl styles already
+ * in globals.css) and an optional pitching table + career history.
+ */
+
+.le-player-root {
+  padding: 8px 4px;
+}
+
+.le-player-hero {
+  display: flex;
+  gap: 22px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.le-player-av {
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  border: 3px solid var(--brand-primary, #002D72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Oswald', sans-serif;
+  font-weight: 700;
+  font-size: 46px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  background: rgba(0, 45, 114, 0.05);
+  color: var(--brand-primary, #002D72);
+}
+
+.le-player-av img {
+  /* `contain` so a team logo (the avatar fallback) shows in full
+   * inside the circle. `cover` was clipping the wings/edges of any
+   * logo that wasn't already a perfect circle. Real player headshots
+   * still look correct because they're already framed for face-up. */
+  width: 84%;
+  height: 84%;
+  object-fit: contain;
+  position: absolute;
+  inset: 8%;
+}
+
+.le-player-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.le-player-name {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 700;
+  font-size: 52px;
+  text-transform: uppercase;
+  line-height: 0.92;
+  letter-spacing: -0.01em;
+  margin: 0 0 10px;
+  color: #1a1a1a;
+}
+
+.le-player-meta {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.le-player-meta strong {
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.le-player-meta a {
+  color: var(--brand-primary, #002D72);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.le-player-meta a:hover { text-decoration: underline; }
+
+/* Stat pill — horizontal capsule with key season stats */
+.le-msp {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(0, 45, 114, 0.06);
+  border: 1px solid rgba(0, 45, 114, 0.12);
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin-top: 12px;
+}
+
+.le-msp-item {
+  text-align: center;
+  padding: 0 14px;
+}
+
+.le-msp-item:first-child { padding-left: 0; }
+.le-msp-item:last-child { padding-right: 0; }
+
+.le-msp-val {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--brand-primary, #002D72);
+  line-height: 1;
+}
+
+.le-msp-lbl {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.5);
+  margin-top: 3px;
+}
+
+.le-msp-sep {
+  width: 1px;
+  height: 32px;
+  background: rgba(0, 45, 114, 0.15);
+}
+
+.le-player-section-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brand-primary, #002D72);
+  margin: 22px 0 10px;
+}
+
+.le-player-empty {
+  padding: 24px;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.5);
+  font-size: 13px;
+  background: #f8f8f8;
+  border: 1px dashed rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  margin-bottom: 18px;
+}
+
+@media (max-width: 700px) {
+  .le-player-hero {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .le-player-av { width: 120px; height: 120px; font-size: 32px; }
+  .le-player-name { font-size: 36px; text-align: center; }
+  .le-player-meta { justify-content: center; }
+  .le-msp-item { padding: 0 8px; }
+  .le-msp-val { font-size: 18px; }
+  .le-msp { padding: 8px 12px; }
+}

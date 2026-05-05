@@ -10,13 +10,15 @@ export interface TeamBadgeProps {
   initials?: string;       // explicit initials (e.g. "TBJ"); falls back to name acronym
   color?: string;          // hex color for the badge background; falls back to neutral
   logoUrl?: string | null; // optional uploaded logo URL
-  size?: "sm" | "md" | "lg";
+  /** "xl" added so the team-page hero can render a 168px logo. */
+  size?: "sm" | "md" | "lg" | "xl";
 }
 
 const SIZE_CLASSES = {
   sm: "h-6 w-6 text-[9px]",
   md: "h-9 w-9 text-xs",
   lg: "h-12 w-12 text-sm",
+  xl: "h-[168px] w-[168px] text-3xl",
 } as const;
 
 export function TeamBadge({
@@ -28,7 +30,8 @@ export function TeamBadge({
   size = "md",
 }: TeamBadgeProps) {
   if (logoUrl) {
-    const px = size === "sm" ? 24 : size === "md" ? 36 : 48;
+    const px =
+      size === "sm" ? 24 : size === "md" ? 36 : size === "lg" ? 48 : 168;
     return (
       <span
         className={`inline-flex flex-shrink-0 items-center justify-center ${SIZE_CLASSES[size]}`}

@@ -1,0 +1,118 @@
+/* ── DVSL SORTABLE STATS TABLE ─────────────────────────────────────
+ * Verbatim port of `.stats-table` (~/Desktop/softball-site/index.html
+ * lines 1085–1117). Header columns are clickable + scale slightly
+ * on hover. Active sort column gets brand-primary text + tinted
+ * background on every body cell underneath.
+ */
+
+.le-stats-tbl-wrap {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+}
+
+.le-stats-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+  min-width: 700px;
+}
+
+.le-stats-tbl thead th {
+  background: #f8f8f8;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 18px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1a1a1a;
+  padding: 12px 12px;
+  text-align: right;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.15s, color 0.15s, background 0.15s;
+  transform-origin: right center;
+  line-height: 1;
+}
+
+.le-stats-tbl thead th.le-stats-th-player,
+.le-stats-tbl thead th.le-stats-th-team {
+  text-align: left;
+  transform-origin: left center;
+}
+
+.le-stats-tbl thead th:hover {
+  color: var(--brand-primary, #002D72);
+  background: rgba(0, 45, 114, 0.08);
+  transform: scale(1.05);
+}
+
+.le-stats-tbl thead th.sorted {
+  color: var(--brand-primary, #002D72);
+  background: rgba(0, 45, 114, 0.1);
+}
+
+.le-stats-arrow {
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+.le-stats-tbl tbody tr {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.le-stats-tbl tbody tr:hover {
+  background: rgba(0, 45, 114, 0.04);
+}
+
+.le-stats-tbl tbody tr:last-child {
+  border-bottom: none;
+}
+
+.le-stats-tbl td {
+  padding: 11px 12px;
+  font-size: 14px;
+  color: #1a1a1a;
+  font-variant-numeric: tabular-nums;
+}
+
+.le-stats-tbl td.le-stats-td-num {
+  text-align: right;
+}
+
+.le-stats-tbl td.le-stats-td-player {
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.le-stats-tbl td.le-stats-td-player a {
+  color: #1a1a1a;
+  text-decoration: none;
+}
+
+.le-stats-tbl td.le-stats-td-player a:hover {
+  color: var(--brand-primary, #002D72);
+}
+
+.le-stats-tbl td.le-stats-td-team {
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.le-stats-tbl td.sorted {
+  font-weight: 800;
+  background: rgba(0, 45, 114, 0.04);
+  color: var(--brand-primary, #002D72);
+}
+
+@media (max-width: 700px) {
+  .le-stats-tbl { font-size: 13px; min-width: 480px; }
+  .le-stats-tbl thead th { font-size: 14px; padding: 10px 8px; }
+  .le-stats-tbl td { padding: 9px 8px; font-size: 12px; }
+}

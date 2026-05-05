@@ -9,6 +9,7 @@ import type {
   BoxBatter,
   BoxPitcher,
 } from "@/components/BoxScoreContent";
+import { computeStandings, type GameResult } from "./stats/shared";
 
 export async function loadBoxScoreData(
   tenantId: string,
@@ -16,12 +17,16 @@ export async function loadBoxScoreData(
   innings: number,
 ): Promise<BoxScoreContentProps | null> {
   const db = getAdminDb();
-  const [gameSnap, boxSnap, teamsSnap, playersSnap] = await Promise.all([
-    db.doc(`leagues/${tenantId}/games/${gameId}`).get(),
-    db.doc(`leagues/${tenantId}/box_scores/${gameId}`).get(),
-    db.collection(`leagues/${tenantId}/teams`).get(),
-    db.collection(`leagues/${tenantId}/players`).get(),
-  ]);
+  const [gameSnap, boxSnap, teamsSnap, playersSnap, allGamesSnap] =
+    await Promise.all([
+      db.doc(`leagues/${tenantId}/games/${gameId}`).get(),
+      db.doc(`leagues/${tenantId}/box_scores/${gameId}`).get(),
+      db.collection(`leagues/${tenantId}/teams`).get(),
+      db.collection(`leagues/${tenantId}/players`).get(),
+      // Pull every game for this tenant so we can compute season
+      // records to label the box-score header (e.g. "WPBC (3-0)").
+      db.collection(`leagues/${tenantId}/games`).get(),
+    ]);
   if (!gameSnap.exists) return null;
 
   const game = gameSnap.data() ?? {};
@@ -38,6 +43,26 @@ export async function loadBoxScoreData(
       logoUrl: data.logo_url ? String(data.logo_url) : null,
     };
   }
+
+  // Records by team — bare "W-L" / "W-L-T", UI components add parens.
+  const standingsGames: GameResult[] = allGamesSnap.docs.map((d) => {
+    const data = d.data();
+    return {
+      home_team_id: String(data.home_team_id ?? ""),
+      away_team_id: String(data.away_team_id ?? ""),
+      home_score: Number(data.home_score ?? 0),
+      away_score: Number(data.away_score ?? 0),
+      status: (data.status ?? "draft") as GameResult["status"],
+      date: data.date ? String(data.date) : undefined,
+    };
+  });
+  const standings = computeStandings(standingsGames);
+  const recordByTeam = new Map(
+    standings.map((r) => [
+      r.team_id,
+      r.t > 0 ? `${r.w}-${r.l}-${r.t}` : `${r.w}-${r.l}`,
+    ]),
+  );
   const playerNames: Record<string, string> = {};
   for (const d of playersSnap.docs) {
     playerNames[d.id] = String(d.data().name ?? d.id);
@@ -50,6 +75,7 @@ export async function loadBoxScoreData(
 
   function buildTeam(side: "away" | "home", teamId: string, score: number): BoxTeam {
     const m = teamMeta[teamId] ?? { name: teamId };
+    const scoreOnly = box?.[`${side}_score_only`] === true;
     return {
       team_id: teamId,
       name: m.name,
@@ -57,6 +83,7 @@ export async function loadBoxScoreData(
       color: m.color,
       logoUrl: m.logoUrl,
       score,
+      record: recordByTeam.get(teamId),
       linescore: linescore[side],
       hits: hits[side],
       errors: errors[side],
@@ -66,6 +93,7 @@ export async function loadBoxScoreData(
       pitchers: ((box?.[`${side}_pitchers`] as BoxPitcher[] | undefined) ?? []).filter(
         (p) => p.player_id,
       ),
+      score_only: scoreOnly,
     };
   }
 

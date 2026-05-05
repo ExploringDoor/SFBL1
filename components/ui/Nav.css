@@ -1,0 +1,221 @@
+/* ── DVSL NAV ─────────────────────────────────────────────────────
+ * Verbatim port of DVSL `.nav` (~/Desktop/softball-site/index.html
+ * lines 745–770). Fixed below the score ticker, full width, 62px tall,
+ * frosted-white backdrop with thin bottom border.
+ *
+ * The hover/active pill colour DVSL uses (`#0057d8` blue) is slightly
+ * different from the navy primary because DVSL wanted a brighter cue.
+ * We map it to brand-primary with alpha so tenants get the same effect
+ * regardless of their primary hue.
+ */
+
+.le-nav {
+  position: fixed;
+  top: calc(48px + env(safe-area-inset-top, 0px));
+  left: 0;
+  right: 0;
+  z-index: 400;
+  height: 62px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 700px) {
+  .le-nav {
+    top: calc(64px + env(safe-area-inset-top, 0px)) !important;
+  }
+  .le-mob-menu {
+    top: calc(126px + env(safe-area-inset-top, 0px)) !important;
+  }
+}
+
+@media (min-width: 901px) {
+  .le-nav {
+    z-index: 600;
+  }
+}
+
+.le-nav-brand {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 19px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--brand-primary, #002D72);
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.le-nav-brand img {
+  height: 28px;
+  opacity: 0.85;
+  vertical-align: middle;
+}
+
+.le-nav-links {
+  display: flex;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.le-nav-links li {
+  list-style: none;
+}
+
+.le-nav-links li a,
+.le-nav-links li span {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.5); /* var(--muted) */
+  text-decoration: none;
+  cursor: pointer;
+  padding: 7px 13px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  display: block;
+}
+
+.le-nav-links li a:hover,
+.le-nav-links li span:hover {
+  color: var(--brand-primary, #002D72);
+  background: rgba(0, 45, 114, 0.08);
+}
+
+.le-nav-links li.active a,
+.le-nav-links li.active span {
+  color: var(--brand-primary, #002D72);
+  background: rgba(0, 45, 114, 0.1);
+}
+
+.le-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.le-nav-signup-btn {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--brand-primary, #002D72);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.le-nav-signup-btn:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
+.le-hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 4px;
+}
+
+.le-hamburger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: #1a1a1a;
+  border-radius: 2px;
+  transition: all 0.3s;
+}
+
+.le-hamburger.open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.le-hamburger.open span:nth-child(2) {
+  opacity: 0;
+}
+.le-hamburger.open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+.le-mob-menu {
+  display: none;
+  position: fixed;
+  top: calc(110px + env(safe-area-inset-top, 0px));
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 299;
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  flex-direction: column;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.le-mob-menu.open {
+  display: flex;
+}
+
+.le-mob-menu a {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 26px;
+  text-transform: uppercase;
+  color: #1a1a1a;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.le-mob-menu a:last-child {
+  border-bottom: none;
+}
+
+@media (max-width: 900px) {
+  .le-nav {
+    padding: 0 18px;
+  }
+  .le-nav-links,
+  .le-nav-signup-btn {
+    display: none;
+  }
+  .le-hamburger {
+    display: flex;
+  }
+}
+
+/* When a fullscreen modal opens, hide the nav entirely so the modal
+ * owns the viewport top. Body class toggled by Modal.tsx (matches the
+ * DVSL pattern at index.html line 7381). The nav also hides when only
+ * the ticker is force-hidden so the page doesn't get a stranded nav
+ * floating on its own. */
+body.dvsl-modal-open .le-nav,
+body.dvsl-modal-open .le-mob-menu {
+  display: none !important;
+}

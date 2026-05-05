@@ -1,0 +1,284 @@
+/* ── DVSL STANDINGS ─────────────────────────────────────────────────
+ * Verbatim port of `.div-card` / `.s-tbl`
+ * (~/Desktop/softball-site/index.html lines 845–863).
+ *
+ * Layout: one `.le-div-card` per division. The card has a thin header
+ * strip with the division label, then the table. Top row in each
+ * division gets `.leader` so its team name renders in brand-primary.
+ *
+ * Hover and `.leader` both colour the team name with brand-primary.
+ */
+
+.le-standings-wrap {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+/* When multiple divisions are present AND we're on the full standings
+ * page (full variant), lay them out in 2 columns on wide viewports.
+ * The compact variant (homepage sidebar) always stays single-column —
+ * earlier this rule forced 420px-wide cards inside a 340px sidebar,
+ * which clipped the W-L and STRK off every row. */
+@media (min-width: 901px) {
+  .le-standings-wrap.le-multi.le-full {
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  }
+}
+
+.le-div-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.le-div-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 22px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.le-div-card-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.le-s-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  /* `fixed` table layout means the column widths are determined by the
+   * <th> headers, not by the longest cell content. Combined with the
+   * compact column padding below, this keeps the table from forcing
+   * its parent to grow when used in a 380px sidebar. */
+  table-layout: auto;
+}
+
+.le-s-tbl th {
+  padding: 9px 5px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b7280;
+  background: rgba(0, 0, 0, 0.02);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  text-align: left;
+  font-family: 'Barlow Condensed', sans-serif;
+}
+
+.le-s-tbl th:first-child {
+  padding-left: 14px;
+  padding-right: 4px;
+}
+
+.le-s-tbl th:nth-child(2) {
+  padding-left: 4px;
+}
+
+.le-s-tbl th:not(:first-child) {
+  text-align: center;
+}
+
+.le-s-tbl td {
+  padding: 9px 5px;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  transition: background 0.15s;
+  color: #1a1a1a;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.le-s-tbl td:first-child {
+  padding-left: 14px;
+  padding-right: 4px;
+}
+
+.le-s-tbl td:nth-child(2) {
+  padding-left: 4px;
+}
+
+.le-s-tbl td:not(:first-child) {
+  text-align: center;
+}
+
+.le-s-tbl tr:last-child td {
+  border-bottom: none;
+}
+
+.le-s-tbl tr:hover td {
+  background: rgba(0, 0, 0, 0.03);
+  cursor: pointer;
+}
+
+.le-s-tbl .le-rank {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.5);
+  margin-right: 8px;
+}
+
+.le-s-tbl .le-tname {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  transition: color 0.2s;
+  letter-spacing: 0;
+  text-decoration: none;
+  color: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.le-s-tbl tr:hover .le-tname,
+.le-s-tbl tr.leader .le-tname {
+  color: var(--brand-primary, #002D72);
+}
+
+.le-s-tbl .le-team-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.le-s-tbl .le-team-logo {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.le-s-tbl .le-team-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Streak / last-5 columns rendered as compact pills */
+/* Streak column gets coloured text (W = green, L = red, T = grey).
+ * The class is on the <td> so it applies inside any cell. */
+.le-s-tbl td.win { color: #16a34a; font-weight: 700; }
+.le-s-tbl td.loss { color: #dc2626; font-weight: 700; }
+.le-s-tbl td.tie { color: rgba(0, 0, 0, 0.5); font-weight: 700; }
+
+/* Belt-and-braces against accidental horizontal overflow on the
+ * homepage: any direct child of .le-standings-wrap never exceeds
+ * the parent's width. */
+.le-standings-wrap > .le-div-card {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Compact variant — homepage sidebar. NOT a table.
+ *
+ * Earlier iterations rendered a 4–5 column table that kept
+ * overflowing the 340px sidebar (the browser couldn't auto-size
+ * widely enough to honor a 13px team font + numeric columns +
+ * STRK pill all on one line for every team). A list layout
+ * sidesteps the whole "table is wider than its container" class
+ * of bug. Each row is a flex line: rank · abbrev · record · streak.
+ */
+.le-compact-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: block;
+  width: 100%;
+}
+
+/* Each row is a grid with FOUR fixed columns: rank | name | record |
+ * streak. Grid makes the columns honor their constraints — `1fr` on
+ * the name column means "take the remaining width" so the record and
+ * streak ALWAYS render, regardless of name length. Flex was letting
+ * the name push siblings off the right edge under some browsers. */
+.le-compact-row {
+  display: grid;
+  grid-template-columns: 18px 1fr auto auto;
+  align-items: center;
+  column-gap: 10px;
+  width: 100%;
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  font-family: 'Inter', sans-serif;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.12s;
+  box-sizing: border-box;
+}
+
+.le-compact-row:last-child {
+  border-bottom: none;
+}
+
+.le-compact-row:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.le-compact-rank {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.4);
+  text-align: center;
+  min-width: 0;
+}
+
+.le-compact-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.le-compact-row.leader .le-compact-name,
+.le-compact-row:hover .le-compact-name {
+  color: var(--brand-primary, #002D72);
+}
+
+.le-compact-rec {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: #1a1a1a;
+  white-space: nowrap;
+}
+
+.le-compact-streak {
+  font-weight: 800;
+  font-size: 11px;
+  text-align: right;
+  white-space: nowrap;
+  min-width: 28px;
+}
+
+.le-compact-streak.win { color: #16a34a; }
+.le-compact-streak.loss { color: #dc2626; }
+.le-compact-streak.tie { color: rgba(0, 0, 0, 0.5); }
+
+@media (max-width: 700px) {
+  .le-s-tbl th,
+  .le-s-tbl td { padding: 8px 4px; font-size: 13px; }
+  .le-s-tbl th:first-child,
+  .le-s-tbl td:first-child { padding-left: 12px; }
+  .le-s-tbl .le-tname { font-size: 14px; }
+}

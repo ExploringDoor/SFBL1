@@ -1,0 +1,156 @@
+/* ── DVSL LEADERBOARD CARD ──────────────────────────────────────────
+ * Verbatim port of `.leaders-grid` / `.ldr-card`
+ * (~/Desktop/softball-site/index.html lines 954–968).
+ *
+ * Each card has:
+ *   - Category label    (e.g. "BATTING AVG"),
+ *   - Ghost number behind the leader (very large faint Barlow),
+ *   - The leader's value (huge brand-primary Barlow),
+ *   - The leader's name (Barlow Condensed ALL CAPS),
+ *   - The leader's team (smaller Barlow Condensed in muted colour),
+ *   - Up to ~3 runners-up rows under a top border.
+ */
+
+.le-leaders-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.le-ldr-card {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.22s;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.le-ldr-card:hover {
+  border-color: rgba(0, 45, 114, 0.5);
+  transform: translateY(-4px);
+  box-shadow:
+    0 0 0 1px rgba(0, 45, 114, 0.15),
+    0 0 24px rgba(0, 45, 114, 0.08),
+    0 16px 48px rgba(0, 0, 0, 0.1);
+}
+
+.le-ldr-card.gold {
+  background: linear-gradient(135deg, rgba(0, 45, 114, 0.06), #fff 55%);
+  border-color: rgba(0, 45, 114, 0.15);
+}
+
+.le-ldr-cat {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.5);
+  margin-bottom: 16px;
+}
+
+.le-ldr-ghost {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 108px;
+  line-height: 1;
+  color: rgba(0, 45, 114, 0.05);
+  pointer-events: none;
+}
+
+.le-ldr-val {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 56px;
+  line-height: 1;
+  color: var(--brand-primary, #002D72);
+}
+
+.le-ldr-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 28px;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: #1a1a1a;
+  margin-top: 14px;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.le-ldr-card:hover .le-ldr-name {
+  color: var(--brand-primary, #002D72);
+}
+
+.le-ldr-team {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #5a6473;
+  margin-top: 4px;
+}
+
+.le-ldr-runners {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  margin-top: 22px;
+  padding-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.le-rrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.le-rpos {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  color: rgba(0, 0, 0, 0.5);
+  width: 28px;
+}
+
+.le-rname {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  flex: 1;
+  cursor: pointer;
+  transition: color 0.15s;
+  color: #1a1a1a;
+  text-decoration: none;
+}
+
+.le-rname:hover { color: var(--brand-primary, #002D72); }
+
+.le-rval {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 18px;
+  color: #1a1a1a;
+}
+
+@media (max-width: 700px) {
+  .le-leaders-grid { grid-template-columns: 1fr 1fr; }
+  .le-ldr-card { padding: 16px; }
+  .le-ldr-val { font-size: 40px; }
+  .le-ldr-name { font-size: 20px; }
+  .le-ldr-ghost { font-size: 70px; }
+  .le-rname { font-size: 14px; }
+}

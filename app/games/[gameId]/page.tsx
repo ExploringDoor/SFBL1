@@ -5,7 +5,9 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { BoxScoreContent } from "@/components/BoxScoreContent";
+import { RecapEditor } from "@/components/RecapEditor";
 import { loadBoxScoreData } from "@/lib/box-score-data";
+import { getAdminDb } from "@/lib/firebase-admin";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { PrintButton } from "./PrintButton";
 
@@ -47,6 +49,19 @@ export default async function GameDetailPage({
 
   const view = searchParams?.tab === "recap" ? "recap" : "box";
 
+  // Recap override — admin / captain custom-written recap that
+  // overrides the auto-generated one. Stored at /recaps/{gameId}.
+  // Public-readable; fall back to auto-build when null.
+  const recapSnap = await getAdminDb()
+    .doc(`leagues/${tenantId}/recaps/${params.gameId}`)
+    .get();
+  const recapMarkdown = recapSnap.exists
+    ? (recapSnap.data()?.markdown as string | undefined) ?? null
+    : null;
+  const recapHtml = recapSnap.exists
+    ? (recapSnap.data()?.html as string | undefined) ?? null
+    : null;
+
   return (
     <main className="container py-12">
       <div className="mb-4 flex items-center justify-between no-print">
@@ -65,7 +80,20 @@ export default async function GameDetailPage({
         </Link>
         <PrintButton />
       </div>
-      <BoxScoreContent {...data} view={view} />
+      <BoxScoreContent
+        {...data}
+        view={view}
+        recapOverrideHtml={recapHtml}
+        recapEditor={
+          <RecapEditor
+            leagueId={tenantId}
+            gameId={params.gameId}
+            homeTeamId={data.home.team_id}
+            awayTeamId={data.away.team_id}
+            initialMarkdown={recapMarkdown}
+          />
+        }
+      />
     </main>
   );
 }
