@@ -150,14 +150,27 @@ export default async function TeamsPage() {
                     textAlign: "center",
                   }}
                 >
-                  <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+                  {/* Fixed-height logo zone so logos line up across
+                      rows even when team names wrap to a different
+                      number of lines. Without this, the grid stretches
+                      cards to the tallest in the row and logos sit at
+                      different vertical positions. */}
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      height: 96,
+                      marginBottom: 12,
+                    }}
+                  >
                     <TeamBadge
                       teamId={t.id}
                       name={t.name}
                       initials={t.abbrev}
                       color={t.color}
                       logoUrl={t.logoUrl}
-                      size="lg"
+                      size="card"
                     />
                   </div>
                   <div

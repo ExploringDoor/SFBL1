@@ -19,12 +19,13 @@ interface ScheduleGame {
   field: string | null;
   away_team_id: string;
   home_team_id: string;
+  division: string | null;
 }
 
 export default async function SchedulePage({
   searchParams,
 }: {
-  searchParams?: { week?: string };
+  searchParams?: { week?: string; div?: string };
 }) {
   const h = headers();
   const tenantId = h.get("x-tenant-id");
@@ -47,7 +48,26 @@ export default async function SchedulePage({
   }
 
   const { games, teams } = await loadSchedule(tenantId);
-  const upcoming = games.filter((g) => g.status === "scheduled");
+  const allUpcoming = games.filter((g) => g.status === "scheduled");
+
+  // ── Division filter ─────────────────────────────────────────────
+  // Multi-division leagues (SFBL has 18+, 28+, 35+) want a quick way
+  // to drill into "just my division." Pulled from the games' own
+  // division field — top-level grouping, not the 35+ Am/Nat sub-
+  // division split (which is a teams-only attribute today). URL is
+  // `?div=18%2B` etc. — empty / missing = all divisions.
+  const allDivisions = Array.from(
+    new Set(
+      allUpcoming
+        .map((g) => g.division)
+        .filter((d): d is string => !!d),
+    ),
+  ).sort();
+  const activeDivision = searchParams?.div ?? null;
+  const upcoming =
+    activeDivision && activeDivision !== "all"
+      ? allUpcoming.filter((g) => g.division === activeDivision)
+      : allUpcoming;
 
   const weeks = computeWeeks(upcoming);
   const activeStart = searchParams?.week ?? pickActiveWeek(weeks);
@@ -78,6 +98,14 @@ export default async function SchedulePage({
       </header>
 
       <ScoresScheduleTabs active="schedule" />
+
+      {allDivisions.length > 1 && (
+        <DivisionFilter
+          divisions={allDivisions}
+          active={activeDivision}
+        />
+      )}
+
       {weeks.length === 0 ? (
         // No scheduled games anywhere. Likely launch day before the
         // schedule has been imported, or post-season. Show a clear
@@ -179,6 +207,7 @@ async function loadSchedule(tenantId: string): Promise<{
       field: data.field ? String(data.field) : null,
       away_team_id: String(data.away_team_id ?? ""),
       home_team_id: String(data.home_team_id ?? ""),
+      division: data.division ? String(data.division) : null,
     };
   });
 
@@ -239,4 +268,87 @@ function formatDayHeading(yyyyMmDd: string): string {
 
 function formatRecord(w: number, l: number, t: number): string {
   return t > 0 ? `${w}-${l}-${t}` : `${w}-${l}`;
+}
+
+// ── Division filter chip strip ──────────────────────────────────
+//
+// Renders a row of chips: "All" + one per league division. Clicking
+// reloads the page with `?div=<value>` so the active week + filter
+// persist via the URL. Defined inline rather than imported because
+// the schedule page is the only consumer today (scores will likely
+// want the same UI; lift then).
+
+function DivisionFilter({
+  divisions,
+  active,
+}: {
+  divisions: string[];
+  active: string | null;
+}) {
+  const activeKey = active ?? "all";
+  return (
+    <div
+      className="flex flex-wrap items-center gap-2 mt-6 mb-2"
+      role="tablist"
+      aria-label="Filter schedule by division"
+    >
+      <span
+        className="font-barlow"
+        style={{
+          fontSize: 12,
+          fontWeight: 700,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          color: "var(--muted)",
+          marginRight: 4,
+        }}
+      >
+        Division:
+      </span>
+      <DivisionChip label="All" value="all" isActive={activeKey === "all"} />
+      {divisions.map((d) => (
+        <DivisionChip
+          key={d}
+          label={d}
+          value={d}
+          isActive={activeKey === d}
+        />
+      ))}
+    </div>
+  );
+}
+
+function DivisionChip({
+  label,
+  value,
+  isActive,
+}: {
+  label: string;
+  value: string;
+  isActive: boolean;
+}) {
+  // "all" maps to no `div` param; everything else URL-encodes the
+  // raw division string ("18+" → "18%2B"). Going to /schedule with
+  // no query is the implicit "all".
+  const href = value === "all" ? "/schedule" : `/schedule?div=${encodeURIComponent(value)}`;
+  return (
+    <a
+      href={href}
+      role="tab"
+      aria-selected={isActive}
+      style={{
+        padding: "6px 14px",
+        borderRadius: 999,
+        fontSize: 13,
+        fontWeight: 700,
+        textDecoration: "none",
+        background: isActive ? "var(--brand-primary)" : "var(--card)",
+        color: isActive ? "white" : "var(--text-strong)",
+        border: `1px solid ${isActive ? "var(--brand-primary)" : "var(--border)"}`,
+        transition: "all 0.15s ease",
+      }}
+    >
+      {label}
+    </a>
+  );
 }
