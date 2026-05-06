@@ -25,6 +25,7 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { cleanName } from "@/lib/text";
 
 export const runtime = "nodejs";
 
@@ -124,8 +125,13 @@ export async function POST(req: Request) {
 
   // ── ADD ──────────────────────────────────────────────────────
   if (action === "add") {
-    const rawName = body.name;
-    if (typeof rawName !== "string" || !rawName.trim()) {
+    // cleanName normalizes Unicode separators (NBSP, narrow NBSP, etc.)
+    // before BOTH the slug computation AND the persisted name, so a
+    // captain pasting from Word or PDF can't seed a different doc id
+    // than what they later type in clean.
+    const rawName =
+      typeof body.name === "string" ? cleanName(body.name) : "";
+    if (!rawName) {
       return NextResponse.json(
         { error: "name required" },
         { status: 400 },
@@ -151,7 +157,7 @@ export async function POST(req: Request) {
         ? null
         : Number(body.num);
     await db.doc(`leagues/${leagueId}/players/${playerId}`).set({
-      name: rawName.trim(),
+      name: rawName,
       team_id: captainTeamId,
       jersey: Number.isFinite(jersey as number) ? jersey : null,
       position:
@@ -199,7 +205,7 @@ export async function POST(req: Request) {
   // ── UPDATE ───────────────────────────────────────────────────
   if (action === "update") {
     const update: Record<string, unknown> = {};
-    if (typeof body.name === "string") update.name = body.name.trim();
+    if (typeof body.name === "string") update.name = cleanName(body.name);
     if (body.num !== undefined) {
       const n = Number(body.num);
       update.jersey = Number.isFinite(n) ? n : null;

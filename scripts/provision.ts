@@ -61,6 +61,7 @@ import { cert, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import type { LeagueConfig } from "../lib/types";
+import { cleanName } from "../lib/text";
 
 // ── CLI args ────────────────────────────────────────────────────────
 function parseArgs() {
@@ -318,7 +319,11 @@ function stageTeams(): StageResult {
     writes.push({
       path: `leagues/${leagueId}/teams/${r.id}`,
       data: {
-        name: r.name,
+        // cleanName normalizes Unicode separators (NBSP, narrow NBSP,
+        // ideographic space, etc.) so a Word-pasted "Miami Yankees"
+        // (with NBSP between words) doesn't end up looking distinct
+        // from a clean "Miami Yankees" anywhere downstream.
+        name: cleanName(r.name),
         ...(r.abbrev ? { abbrev: r.abbrev } : {}),
         ...(r.division ? { division: r.division } : {}),
         ...(r.color ? { color: r.color } : {}),
@@ -348,7 +353,13 @@ function stagePlayers(): StageResult {
     // team_id + slugified name. Idempotency relies on stable IDs, so
     // if the CSV omits id, the same name on the same team always
     // resolves to the same doc.
-    const playerName = String(r.name ?? "");
+    //
+    // cleanName BEFORE slugging is critical: a name like "John[NBSP]Smith"
+    // pasted from Word would otherwise slug to a different id than
+    // "John Smith" once the captain types the cleaner version. DVSL
+    // caught 70+ NBSP-split players in a real audit; we apply the same
+    // normalization on every name-bearing input.
+    const playerName = cleanName(r.name);
     const teamId = String(r.team_id ?? "");
     const id =
       r.id ||
@@ -376,7 +387,11 @@ function stagePlayers(): StageResult {
       path: `leagues/${leagueId}/players/${id}`,
       data: {
         team_id: r.team_id,
-        name: r.name,
+        // Use the SAME cleaned name we used to compute the slug — the
+        // displayed name has to match the id derivation or we'd have
+        // a player whose displayed name differs from what generated
+        // their slug.
+        name: playerName,
         ...(jersey != null ? { jersey } : {}),
         ...(r.position ? { position: r.position } : {}),
         ...(r.email ? { email: r.email.toLowerCase() } : {}),

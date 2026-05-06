@@ -151,7 +151,31 @@ export async function POST(req: Request) {
       const gameSnap = await db
         .doc(`leagues/${leagueId}/games/${gameId}`)
         .get();
-      const game = gameSnap.exists ? gameSnap.data() ?? {} : {};
+      if (!gameSnap.exists) {
+        return NextResponse.json(
+          { error: "Game not found" },
+          { status: 404 },
+        );
+      }
+      const game = gameSnap.data() ?? {};
+
+      // Defense-in-depth: verify the captain's team is actually IN this
+      // game. The Firestore rules also gate this (via isCaptainOfDocGame
+      // on /box_score_submissions), but we re-check server-side. Without
+      // this, if the rules ever regress, a captain could submit a box
+      // score for a game their team isn't in — derived `side` would
+      // fall through to "away" and pollute the public box-score doc.
+      // Found 2026-05-05 by the DVSL Claude peer review.
+      if (
+        game.home_team_id !== captainTeamId &&
+        game.away_team_id !== captainTeamId
+      ) {
+        return NextResponse.json(
+          { error: "Your team isn't in this game" },
+          { status: 403 },
+        );
+      }
+
       const derivedSide =
         side ??
         (game.home_team_id === captainTeamId ? "home" : "away");

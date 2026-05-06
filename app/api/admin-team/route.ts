@@ -17,6 +17,7 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { cleanName } from "@/lib/text";
 
 export const runtime = "nodejs";
 
@@ -126,7 +127,7 @@ export async function POST(req: Request) {
         { status: 400 },
       );
     }
-    update.name = body.name.trim();
+    update.name = cleanName(body.name);
   }
   if (typeof body.abbrev === "string") {
     if (body.abbrev.length > 8) {

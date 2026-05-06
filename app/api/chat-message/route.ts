@@ -24,6 +24,8 @@
 import { NextResponse } from "next/server";
 import { Timestamp } from "firebase-admin/firestore";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { cleanName } from "@/lib/text";
+import { originFromRequest } from "@/lib/notifications/server-fanout";
 
 export const runtime = "nodejs";
 
@@ -185,9 +187,12 @@ export async function POST(req: Request) {
     const teamDoc = await db.doc(`leagues/${leagueId}/teams/${teamId}`).get();
     if (teamDoc.exists) {
       const t = teamDoc.data() ?? {};
-      teamName = String(t.name ?? "");
+      // cleanName as a defense-in-depth read-side normalize. Provision
+      // already cleans on write, but legacy docs from before cleanName
+      // landed could still contain NBSP / narrow-NBSP.
+      teamName = cleanName(t.name);
       teamColor = String(t.color ?? "#0a0e1c");
-      teamShort = String(t.abbrev ?? t.short ?? "");
+      teamShort = cleanName(t.abbrev ?? t.short ?? "");
     }
   }
 
@@ -201,13 +206,17 @@ export async function POST(req: Request) {
       .limit(1)
       .get();
     if (!linkedPlayerSnap.empty) {
-      authorName = String(linkedPlayerSnap.docs[0]!.data().name ?? "");
+      authorName = cleanName(linkedPlayerSnap.docs[0]!.data().name);
     }
   }
   if (!authorName) {
+    // decoded.name is Firebase Auth display name (user-controlled).
+    // decoded.email is also user-controlled at sign-up. Both can have
+    // NBSP from copy-paste — normalize before they get written into
+    // the chat doc.
     authorName =
-      decoded.name ??
-      (decoded.email ? String(decoded.email).split("@")[0]! : "") ??
+      cleanName(decoded.name) ||
+      (decoded.email ? cleanName(String(decoded.email).split("@")[0]) : "") ||
       "Captain";
   }
 
@@ -252,13 +261,15 @@ export async function POST(req: Request) {
       : `/captain#captchat`;
 
   try {
-    // Construct an absolute origin so the route can call its sibling
-    // endpoint regardless of which host invoked us. Vercel sets
-    // VERCEL_URL; locally we use the request's own origin.
-    const origin =
-      process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : new URL(req.url).origin;
+    // Origin for the sibling-API fetch. We use the SHARED helper
+    // (originFromRequest) instead of inline `process.env.VERCEL_URL`
+    // because VERCEL_URL is the *.vercel.app hostname, which is NOT
+    // in LEAGUEENGINE_APEX_DOMAINS — fetching that origin would 404
+    // through the middleware tenant-resolver. The helper prefers
+    // `req.url`'s origin (the user-hit subdomain that DOES resolve)
+    // and falls back to VERCEL_URL only when req.url is unparseable.
+    // See lib/notifications/server-fanout.ts for the full rationale.
+    const origin = originFromRequest(req);
     await fetch(`${origin}/api/send-notification`, {
       method: "POST",
       headers: {

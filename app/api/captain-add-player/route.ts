@@ -15,6 +15,7 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { cleanName } from "@/lib/text";
 
 export const runtime = "nodejs";
 
@@ -54,14 +55,19 @@ export async function POST(req: Request) {
   }
 
   const leagueId = body.leagueId;
-  const rawName = body.name;
+  // Normalize the input name immediately. cleanName collapses Unicode
+  // separators (NBSP, narrow NBSP, etc.) so names pasted from Word or
+  // PDF can't slug to a different player than what the captain types
+  // later. Same protection as the provision script.
+  const rawName =
+    typeof body.name === "string" ? cleanName(body.name) : null;
   if (typeof leagueId !== "string" || !leagueId) {
     return NextResponse.json(
       { error: "Body must include { leagueId }" },
       { status: 400 },
     );
   }
-  if (typeof rawName !== "string" || !rawName.trim()) {
+  if (rawName == null || !rawName) {
     return NextResponse.json(
       { error: "Body must include { name }" },
       { status: 400 },
@@ -114,7 +120,7 @@ export async function POST(req: Request) {
       : Number(body.jersey);
 
   await db.doc(`leagues/${leagueId}/players/${playerId}`).set({
-    name: rawName.trim(),
+    name: rawName,
     team_id: teamId,
     jersey: Number.isFinite(jerseyNum as number) ? jerseyNum : null,
     walk_on: claim !== "admin", // captain-added marker for admin review

@@ -555,3 +555,89 @@ describe("/api/captain-submit — failure modes", () => {
     }
   });
 });
+
+// Defense-in-depth game-membership check (DVSL peer review §2,
+// 2026-05-05). The Firestore rules block this at the submission-write
+// boundary, but the API route should ALSO refuse to promote a
+// submission whose captain isn't in the target game. Without this,
+// a regression in the rules layer (or a future admin-bypass path)
+// would let a captain pollute another game's box score.
+describe("/api/captain-submit — game-membership defense", () => {
+  it("403s when captain's team is in a DIFFERENT game (defense-in-depth)", async () => {
+    // Set up a game where team_a is NOT a participant (team_c vs team_d).
+    setDoc("leagues/sfbl/games/g_other", {
+      home_team_id: "team_c",
+      away_team_id: "team_d",
+      status: "scheduled",
+    });
+    // The captain's submission lane somehow exists for that game (would
+    // require the rules bug to land it there in real life, but test the
+    // server-side defense in isolation).
+    setDoc("leagues/sfbl/box_score_submissions/g_other_team_a", {
+      game_id: "g_other",
+      team_id: "team_a",
+      side: "away",
+      lineup: [{ player_id: "p1", ab: 4 }],
+      score: 7,
+    });
+    mockState.decoded.leagues = { sfbl: "captain:team_a" };
+    const res = await POST(
+      makeReq({ leagueId: "sfbl", gameId: "g_other" }),
+    );
+    expect(res.status).toBe(403);
+    // No public box-score write, no game write, no recalc, no push.
+    expect(mockState.setCalls.filter((c) =>
+      c.path.startsWith("leagues/sfbl/box_scores/"),
+    )).toHaveLength(0);
+    expect(mockState.setCalls.filter((c) =>
+      c.path === "leagues/sfbl/games/g_other",
+    )).toHaveLength(0);
+    expect(mockState.recalcCalls).toHaveLength(0);
+    expect(mockState.fanoutCalls).toHaveLength(0);
+  });
+
+  it("404s when the game doc itself doesn't exist (orphan submission)", async () => {
+    // Submission exists but its game doesn't — return a clear 404
+    // rather than letting the route proceed with a missing game.
+    setDoc("leagues/sfbl/box_score_submissions/g_ghost_team_a", {
+      game_id: "g_ghost",
+      team_id: "team_a",
+      side: "away",
+      score: 5,
+    });
+    const res = await POST(
+      makeReq({ leagueId: "sfbl", gameId: "g_ghost" }),
+    );
+    expect(res.status).toBe(404);
+    expect(mockState.recalcCalls).toHaveLength(0);
+  });
+
+  it("captain of HOME team CAN still submit (regression check on the legitimate path)", async () => {
+    // Team_b is home in g1. Captain of team_b should be allowed.
+    mockState.decoded.leagues = { sfbl: "captain:team_b" };
+    setDoc("leagues/sfbl/box_score_submissions/g1_team_b", {
+      game_id: "g1",
+      team_id: "team_b",
+      side: "home",
+      lineup: [{ player_id: "p3", ab: 4, h: 1 }],
+      score: 5,
+    });
+    const res = await POST(makeReq({ leagueId: "sfbl", gameId: "g1" }));
+    expect(res.status).toBe(200);
+    expect(mockState.recalcCalls).toHaveLength(1);
+  });
+
+  it("captain of AWAY team CAN still submit (regression check on the legitimate path)", async () => {
+    // Team_a is away in g1. Captain of team_a should be allowed.
+    mockState.decoded.leagues = { sfbl: "captain:team_a" };
+    setDoc("leagues/sfbl/box_score_submissions/g1_team_a", {
+      game_id: "g1",
+      team_id: "team_a",
+      side: "away",
+      lineup: [{ player_id: "p1", ab: 4, h: 2 }],
+      score: 7,
+    });
+    const res = await POST(makeReq({ leagueId: "sfbl", gameId: "g1" }));
+    expect(res.status).toBe(200);
+  });
+});
