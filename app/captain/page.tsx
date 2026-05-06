@@ -24,6 +24,7 @@ import {
   query,
   where,
 } from "firebase/firestore";
+import { awaitingScoreGames } from "@/lib/captain-next-up";
 import { RosterTab } from "@/components/captain/RosterTab";
 import { ScheduleTab } from "@/components/captain/ScheduleTab";
 import { PaymentsTab } from "@/components/captain/PaymentsTab";
@@ -299,6 +300,7 @@ export default function CaptainHomePage() {
         teamId={teamId}
         team={team}
         teamNames={teamNames}
+        games={games}
         upcoming={upcoming}
         recent={recent}
         roster={roster}
@@ -378,6 +380,7 @@ function CaptainBody({
   teamId,
   team,
   teamNames,
+  games,
   upcoming,
   recent,
   roster,
@@ -387,6 +390,7 @@ function CaptainBody({
   teamId: string;
   team: TeamSnap;
   teamNames: Record<string, string>;
+  games: GameSnap[];
   upcoming: GameSnap[];
   recent: GameSnap[];
   roster: PlayerSnap[];
@@ -460,6 +464,12 @@ function CaptainBody({
   const stats = computeTeamStats(recent, teamId);
   const nextGame = upcoming[0] ?? null;
 
+  // Past games where my team played but the score isn't final yet.
+  // DVSL §9 — surface the #1 captain support question ("where do I
+  // submit my final score?") with a prominent CTA section above
+  // everything else on the dashboard.
+  const awaitingScore = awaitingScoreGames(games, teamId);
+
   return (
     <>
       <CaptainStatStrip
@@ -469,6 +479,14 @@ function CaptainBody({
         playerCount={roster.length}
         division={team.division}
       />
+
+      {awaitingScore.length > 0 && (
+        <AwaitingScoreCard
+          entries={awaitingScore}
+          teamNames={teamNames}
+          myTeamId={teamId}
+        />
+      )}
 
       {nextGame && (
         <NextGameSpotlight
@@ -678,6 +696,146 @@ function CaptainStatStrip({
       </div>
     </section>
   );
+}
+
+// "Awaiting your score" CTA card. Renders ONLY when the captain has
+// past games that haven't been finaled yet. DVSL §9 — top tap target,
+// answers the "where do I submit my score?" question on first glance.
+function AwaitingScoreCard({
+  entries,
+  teamNames,
+  myTeamId,
+}: {
+  entries: Array<{
+    game: {
+      id: string;
+      date: string | null;
+      away_team_id: string;
+      home_team_id: string;
+    };
+    side: "home" | "away";
+  }>;
+  teamNames: Record<string, string>;
+  myTeamId: string;
+}) {
+  return (
+    <section
+      className="le-cap-awaiting"
+      style={{
+        background: "rgba(245, 158, 11, 0.08)", // accent-warm wash
+        border: "2px solid var(--brand-accent, #f59e0b)",
+        borderRadius: 12,
+        padding: "16px 18px",
+        margin: "16px 0 20px",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          marginBottom: 10,
+          fontSize: 13,
+          fontWeight: 700,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          color: "var(--brand-primary)",
+        }}
+      >
+        <span aria-hidden="true">⚾</span>
+        Submit your score
+        {entries.length > 1 ? (
+          <span
+            style={{
+              background: "var(--brand-accent, #f59e0b)",
+              color: "white",
+              padding: "1px 8px",
+              borderRadius: 999,
+              fontSize: 11,
+              fontWeight: 800,
+            }}
+          >
+            {entries.length}
+          </span>
+        ) : null}
+      </div>
+      <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+        {entries.map(({ game, side }) => {
+          const opponentId =
+            side === "away" ? game.home_team_id : game.away_team_id;
+          const opponentName = teamNames[opponentId] ?? opponentId;
+          const dateLabel = game.date
+            ? formatGameDate(game.date)
+            : "(no date)";
+          return (
+            <li
+              key={game.id}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 12,
+                padding: "10px 0",
+                borderTop: "1px solid rgba(0,0,0,0.06)",
+                flexWrap: "wrap",
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    fontWeight: 700,
+                    color: "var(--text-strong)",
+                    fontSize: 16,
+                  }}
+                >
+                  {side === "away" ? "@ " : "vs "}
+                  {opponentName}
+                </div>
+                <div
+                  style={{
+                    color: "var(--muted)",
+                    fontSize: 13,
+                    marginTop: 2,
+                  }}
+                >
+                  {dateLabel}
+                </div>
+              </div>
+              <Link
+                href={`/captain/box-score?game=${game.id}`}
+                style={{
+                  background: "var(--brand-primary)",
+                  color: "white",
+                  padding: "10px 18px",
+                  borderRadius: 8,
+                  textDecoration: "none",
+                  fontWeight: 700,
+                  fontSize: 14,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Submit Score →
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+function formatGameDate(s: string): string {
+  try {
+    const d = s.includes("T") ? new Date(s) : new Date(`${s}T12:00:00Z`);
+    if (Number.isNaN(d.getTime())) return s;
+    return d.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return s;
+  }
 }
 
 function NextGameSpotlight({
