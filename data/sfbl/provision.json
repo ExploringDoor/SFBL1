@@ -1,0 +1,66 @@
+{
+  "league": {
+    "slug": "sfbl",
+    "name": "South Florida Baseball League",
+    "abbrev": "SFBL",
+    "sport": "baseball",
+    "innings": 9,
+    "ruleset": "hardball",
+    "linescore_innings": 9,
+    "stat_columns": [
+      "AB",
+      "R",
+      "H",
+      "2B",
+      "3B",
+      "HR",
+      "RBI",
+      "BB",
+      "SO",
+      "SB"
+    ],
+    "pitching": {
+      "tracked": true,
+      "columns": [
+        "IP",
+        "H",
+        "R",
+        "ER",
+        "BB",
+        "SO",
+        "HR"
+      ]
+    },
+    "rules_flags": {
+      "dropped_third_strike": true,
+      "balks": true,
+      "infield_fly": true
+    },
+    "theme": {
+      "primary": "#0c2340",
+      "accent": "#c41e3a",
+      "logo_url": "/logos/sfbl/sfbl-logo.png"
+    },
+    "billing": {
+      "status": "active",
+      "paid_through": null,
+      "last_payment": null,
+      "notes": "Phase 1 launch — manual billing"
+    },
+    "standings": {
+      "scoring": "points",
+      "points_per": {
+        "win": 2,
+        "tie": 1,
+        "loss": 0
+      },
+      "tiebreaker": "pct"
+    }
+  },
+  "teams_csv": "./teams.csv",
+  "players_csv": "./players.csv",
+  "schedule_csv": "./schedule.csv",
+  "admins": [
+    "adam.miller.22@gmail.com"
+  ]
+}

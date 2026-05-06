@@ -465,6 +465,66 @@ function stageSchedule(): StageResult {
       errors.push(`[schedule row ${i + 2}] week "${r.week}" not a number`);
       continue;
     }
+
+    // Optional `status` column. Defaults to "scheduled" so legacy
+    // CSVs that omit it keep their old behavior. Importing historical
+    // finals or postponed games is supported by passing one of:
+    //   scheduled | final | approved | postponed | cancelled
+    const ALLOWED_STATUS = new Set([
+      "scheduled",
+      "final",
+      "approved",
+      "postponed",
+      "cancelled",
+    ]);
+    const rawStatus = (r.status ?? "scheduled").toLowerCase();
+    if (!ALLOWED_STATUS.has(rawStatus)) {
+      errors.push(
+        `[schedule row ${i + 2}] invalid status "${r.status}" — must be one of ${[...ALLOWED_STATUS].join(", ")}`,
+      );
+      continue;
+    }
+    const status = rawStatus as
+      | "scheduled"
+      | "final"
+      | "approved"
+      | "postponed"
+      | "cancelled";
+
+    // Optional score columns. Allowed for any status; only carried
+    // through if the value is a finite number. For final + approved
+    // games, we ALSO emit a /box_scores doc with the score-only flag
+    // set so audit-tenant.score_parity is happy and the public box-
+    // score page renders an empty-lineup placeholder instead of 404.
+    const awayScoreNum =
+      r.away_score && r.away_score !== ""
+        ? Number(r.away_score)
+        : null;
+    const homeScoreNum =
+      r.home_score && r.home_score !== ""
+        ? Number(r.home_score)
+        : null;
+    if (
+      r.away_score &&
+      r.away_score !== "" &&
+      !Number.isFinite(awayScoreNum)
+    ) {
+      errors.push(
+        `[schedule row ${i + 2}] away_score "${r.away_score}" not a number`,
+      );
+      continue;
+    }
+    if (
+      r.home_score &&
+      r.home_score !== "" &&
+      !Number.isFinite(homeScoreNum)
+    ) {
+      errors.push(
+        `[schedule row ${i + 2}] home_score "${r.home_score}" not a number`,
+      );
+      continue;
+    }
+
     writes.push({
       path: `leagues/${leagueId}/games/${r.id}`,
       data: {
@@ -474,12 +534,40 @@ function stageSchedule(): StageResult {
         ...(r.field ? { field: r.field } : {}),
         ...(week != null ? { week } : {}),
         ...(r.division ? { division: r.division } : {}),
-        status: "scheduled",
-        away_score: 0,
-        home_score: 0,
+        status,
+        away_score: awayScoreNum ?? 0,
+        home_score: homeScoreNum ?? 0,
         updated_at: new Date().toISOString(),
       },
     });
+
+    // Synthetic /box_scores doc for imported finals/approved games.
+    // Without this, audit-tenant.score_parity flags every imported
+    // final as missing its /box_scores doc, AND the public
+    // /games/[id] page hits the loadBoxScoreData null path. The
+    // score_only flags tell the UI to render an empty-lineup
+    // placeholder instead of pretending lineups exist.
+    if (
+      (status === "final" || status === "approved") &&
+      Number.isFinite(awayScoreNum) &&
+      Number.isFinite(homeScoreNum)
+    ) {
+      writes.push({
+        path: `leagues/${leagueId}/box_scores/${r.id}`,
+        data: {
+          status,
+          away_score: awayScoreNum,
+          home_score: homeScoreNum,
+          away_score_only: true,
+          home_score_only: true,
+          away_lineup: [],
+          home_lineup: [],
+          away_pitchers: [],
+          home_pitchers: [],
+          updated_at: new Date().toISOString(),
+        },
+      });
+    }
   }
   return { errors, writes };
 }

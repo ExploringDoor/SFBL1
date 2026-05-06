@@ -187,6 +187,50 @@ function stageSchedule(
       errors.push(`[schedule row ${i + 2}] week "${r.week}" not a number`);
       continue;
     }
+    const ALLOWED_STATUS = new Set([
+      "scheduled",
+      "final",
+      "approved",
+      "postponed",
+      "cancelled",
+    ]);
+    const rawStatus = (r.status ?? "scheduled").toLowerCase();
+    if (!ALLOWED_STATUS.has(rawStatus)) {
+      errors.push(
+        `[schedule row ${i + 2}] invalid status "${r.status}" — must be one of ${[...ALLOWED_STATUS].join(", ")}`,
+      );
+      continue;
+    }
+    const status = rawStatus as
+      | "scheduled"
+      | "final"
+      | "approved"
+      | "postponed"
+      | "cancelled";
+    const awayScoreNum =
+      r.away_score && r.away_score !== "" ? Number(r.away_score) : null;
+    const homeScoreNum =
+      r.home_score && r.home_score !== "" ? Number(r.home_score) : null;
+    if (
+      r.away_score &&
+      r.away_score !== "" &&
+      !Number.isFinite(awayScoreNum)
+    ) {
+      errors.push(
+        `[schedule row ${i + 2}] away_score "${r.away_score}" not a number`,
+      );
+      continue;
+    }
+    if (
+      r.home_score &&
+      r.home_score !== "" &&
+      !Number.isFinite(homeScoreNum)
+    ) {
+      errors.push(
+        `[schedule row ${i + 2}] home_score "${r.home_score}" not a number`,
+      );
+      continue;
+    }
     writes.push({
       path: `leagues/${leagueId}/games/${r.id}`,
       data: {
@@ -196,12 +240,33 @@ function stageSchedule(
         ...(r.field ? { field: r.field } : {}),
         ...(week != null ? { week } : {}),
         ...(r.division ? { division: r.division } : {}),
-        status: "scheduled",
-        away_score: 0,
-        home_score: 0,
+        status,
+        away_score: awayScoreNum ?? 0,
+        home_score: homeScoreNum ?? 0,
         updated_at: new Date().toISOString(),
       },
     });
+    if (
+      (status === "final" || status === "approved") &&
+      Number.isFinite(awayScoreNum) &&
+      Number.isFinite(homeScoreNum)
+    ) {
+      writes.push({
+        path: `leagues/${leagueId}/box_scores/${r.id}`,
+        data: {
+          status,
+          away_score: awayScoreNum,
+          home_score: homeScoreNum,
+          away_score_only: true,
+          home_score_only: true,
+          away_lineup: [],
+          home_lineup: [],
+          away_pitchers: [],
+          home_pitchers: [],
+          updated_at: new Date().toISOString(),
+        },
+      });
+    }
   }
   return { errors, writes };
 }
@@ -539,6 +604,170 @@ describe("stageSchedule", () => {
       away_team_id: "team_a",
       home_team_id: "team_b",
     });
+  });
+
+  // ── Status + scores (added 2026-05-05 for the SFBL import) ──
+  // The schedule CSV now accepts optional `status`, `away_score`,
+  // `home_score` columns so historical seasons can be imported with
+  // their results (vs. starting fresh). Defaults preserve the old
+  // single-status behavior so legacy CSVs still work.
+
+  it("status defaults to 'scheduled' when column is missing", () => {
+    const r = stageSchedule(
+      [
+        {
+          id: "g1",
+          date: "2026-05-10",
+          time: "18:00",
+          away_team_id: "team_a",
+          home_team_id: "team_b",
+        },
+      ],
+      "sfbl",
+    );
+    expect(r.errors).toEqual([]);
+    expect(r.writes[0]!.data.status).toBe("scheduled");
+    expect(r.writes[0]!.data.away_score).toBe(0);
+    expect(r.writes[0]!.data.home_score).toBe(0);
+  });
+
+  it("imports status='final' with scores AND emits a /box_scores doc", () => {
+    const r = stageSchedule(
+      [
+        {
+          id: "g1",
+          date: "2026-05-10",
+          time: "18:00",
+          away_team_id: "team_a",
+          home_team_id: "team_b",
+          status: "final",
+          away_score: "7",
+          home_score: "5",
+        },
+      ],
+      "sfbl",
+    );
+    expect(r.errors).toEqual([]);
+    expect(r.writes).toHaveLength(2);
+    const gameWrite = r.writes.find((w) =>
+      w.path.startsWith("leagues/sfbl/games/"),
+    );
+    expect(gameWrite!.data.status).toBe("final");
+    expect(gameWrite!.data.away_score).toBe(7);
+    expect(gameWrite!.data.home_score).toBe(5);
+    const boxWrite = r.writes.find((w) =>
+      w.path.startsWith("leagues/sfbl/box_scores/"),
+    );
+    expect(boxWrite).toBeDefined();
+    expect(boxWrite!.data.away_score).toBe(7);
+    expect(boxWrite!.data.home_score).toBe(5);
+    // Score-only flags so the public box-score page renders an empty-
+    // lineup placeholder instead of pretending lineups exist.
+    expect(boxWrite!.data.away_score_only).toBe(true);
+    expect(boxWrite!.data.home_score_only).toBe(true);
+    expect(boxWrite!.data.away_lineup).toEqual([]);
+    expect(boxWrite!.data.home_lineup).toEqual([]);
+  });
+
+  it("'approved' status also gets a /box_scores doc (admin-confirmed final)", () => {
+    const r = stageSchedule(
+      [
+        {
+          id: "g1",
+          date: "2026-05-10",
+          time: "18:00",
+          away_team_id: "team_a",
+          home_team_id: "team_b",
+          status: "approved",
+          away_score: "3",
+          home_score: "3",
+        },
+      ],
+      "sfbl",
+    );
+    expect(
+      r.writes.find((w) =>
+        w.path.startsWith("leagues/sfbl/box_scores/"),
+      ),
+    ).toBeDefined();
+  });
+
+  it("'postponed' does NOT get a /box_scores doc (audit would flag)", () => {
+    const r = stageSchedule(
+      [
+        {
+          id: "g1",
+          date: "2026-05-10",
+          time: "18:00",
+          away_team_id: "team_a",
+          home_team_id: "team_b",
+          status: "postponed",
+        },
+      ],
+      "sfbl",
+    );
+    expect(r.writes).toHaveLength(1);
+    expect(r.writes[0]!.path).toMatch(/\/games\//);
+  });
+
+  it("'final' WITHOUT scores does NOT emit a /box_scores doc (incomplete)", () => {
+    // Edge case: row says final but scores absent. We still write the
+    // game (admin can fill it in) but skip the synthetic box-score
+    // doc — no point writing 0-0 score-only when the user didn't
+    // supply scores.
+    const r = stageSchedule(
+      [
+        {
+          id: "g1",
+          date: "2026-05-10",
+          time: "18:00",
+          away_team_id: "team_a",
+          home_team_id: "team_b",
+          status: "final",
+        },
+      ],
+      "sfbl",
+    );
+    expect(r.writes).toHaveLength(1);
+    expect(r.writes[0]!.path).toMatch(/\/games\//);
+  });
+
+  it("rejects invalid status values", () => {
+    const r = stageSchedule(
+      [
+        {
+          id: "g1",
+          date: "2026-05-10",
+          time: "18:00",
+          away_team_id: "team_a",
+          home_team_id: "team_b",
+          status: "definitely-not-real",
+        },
+      ],
+      "sfbl",
+    );
+    expect(r.errors).toHaveLength(1);
+    expect(r.errors[0]).toMatch(/invalid status/);
+  });
+
+  it("rejects non-numeric away_score or home_score", () => {
+    const r = stageSchedule(
+      [
+        {
+          id: "g1",
+          date: "2026-05-10",
+          time: "18:00",
+          away_team_id: "team_a",
+          home_team_id: "team_b",
+          status: "final",
+          away_score: "seven",
+          home_score: "5",
+        },
+      ],
+      "sfbl",
+    );
+    expect(r.errors).toHaveLength(1);
+    expect(r.errors[0]).toMatch(/away_score "seven" not a number/);
   });
 });
 
