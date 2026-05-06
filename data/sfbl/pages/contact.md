@@ -2,7 +2,7 @@
 
 ## Drop Us A Line
 
-For league inquiries, please reach out via the contact info below or use the form at [sfbl.com/contact](https://sfbl.com/contact/).
+For league inquiries, reach out via phone, email, or one of the social channels below.
 
 ## Contact Information
 
@@ -13,7 +13,6 @@ Miami, Florida 33131
 
 - **Phone:** 312-560-5488 or 786-372-0034
 - **Email:** [playball@sfbl.com](mailto:playball@sfbl.com)
-- **Website:** [www.sfbl.com](http://www.sfbl.com)
 
 ## Social Media
 

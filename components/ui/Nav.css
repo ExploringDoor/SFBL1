@@ -227,9 +227,16 @@ body.dvsl-modal-open .le-mob-menu {
 
 .le-nav-dropdown {
   position: relative;
+  /* Hover-bridge: the menu sits flush below the trigger (top:100%
+     no margin) so there's no gap to lose hover across. The parent
+     stays the hover target while the cursor traverses. */
 }
 
 .le-nav-dropdown-trigger {
+  /* Match exactly the styling of .le-nav-links li a so the More
+     button aligns with the other items. Normalize button defaults
+     (line-height, font-family, etc.) that diverge from <a>. */
+  font-family: inherit;
   font-size: 11.5px;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -241,10 +248,15 @@ body.dvsl-modal-open .le-mob-menu {
   padding: 7px 13px;
   border-radius: 6px;
   transition: all 0.2s;
-  display: flex;
+  /* inline-flex (not flex) keeps the button sized to its content,
+     matching the inline-block default of <a>. */
+  display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-family: inherit;
+  line-height: 1; /* matches the default <a> rendering */
+  /* Reset Safari's button rendering chrome */
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .le-nav-dropdown:hover .le-nav-dropdown-trigger,
@@ -255,23 +267,29 @@ body.dvsl-modal-open .le-mob-menu {
 
 .le-nav-caret {
   font-size: 10px;
-  margin-top: 1px;
+  display: inline-block;
+  transform: translateY(1px);
 }
 
 .le-nav-dropdown-menu {
   position: absolute;
+  /* Flush against the trigger with no margin gap, so hovering from
+     trigger → menu doesn't lose the :hover state crossing whitespace. */
   top: 100%;
   right: 0;
-  min-width: 160px;
+  min-width: 180px;
   background: white;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   padding: 6px 0;
-  margin: 4px 0 0;
+  margin: 0;
   list-style: none;
   display: none;
-  z-index: 100;
+  /* High z-index so the dropdown floats above page content + the
+     score-ticker sticky strip (~z-300) and any inner-page stacking
+     contexts created by transform / opacity / filter on cards. */
+  z-index: 9999;
 }
 
 .le-nav-dropdown:hover .le-nav-dropdown-menu,

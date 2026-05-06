@@ -1,9 +1,5 @@
 # SFBL Rules
 
-> Source: https://sfbl.com/sfbl-rules/ (fetched 2026-05-05).
-> Paste this into /admin Pages manager → Rules after provision so the
-> public /rules page renders the league rulebook.
-
 ## Non-Discrimination Policy
 
 South Florida Baseball League maintains a non-discrimination policy for all participants, suppliers, vendors and related parties regardless of "race, color, national origin, handicaps or sex."
