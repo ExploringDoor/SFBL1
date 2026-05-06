@@ -327,7 +327,11 @@ function stageTeams(): StageResult {
         ...(r.abbrev ? { abbrev: r.abbrev } : {}),
         ...(r.division ? { division: r.division } : {}),
         ...(r.color ? { color: r.color } : {}),
-        ...(r.logo_url ? { logo_url: r.logo_url } : {}),
+        // Explicit null when CSV column is blank — set merge:true
+        // preserves existing values for omitted fields, so we have
+        // to send null to actually CLEAR a previously-set logo_url
+        // (e.g. when re-provisioning after marking a logo broken).
+        logo_url: r.logo_url ? r.logo_url : null,
         active: true,
         updated_at: new Date().toISOString(),
       },
