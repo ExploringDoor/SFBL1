@@ -19,6 +19,11 @@ import "./Nav.css";
 export interface NavLink {
   label: string;
   href: string;
+  /** When set, this nav item renders as a dropdown menu rather than
+   *  a direct link. The `href` is ignored on desktop (the parent
+   *  becomes a hover-toggle); on mobile the parent renders as a
+   *  section header above the children. */
+  children?: NavLink[];
 }
 
 export interface NavProps {
@@ -40,7 +45,18 @@ const DEFAULT_LINKS: NavLink[] = [
   { label: "Standings", href: "/standings" },
   { label: "Stats", href: "/players" },
   { label: "Teams", href: "/teams" },
-  { label: "Rules", href: "/rules" },
+  {
+    label: "More",
+    href: "#",
+    children: [
+      { label: "Rules", href: "/rules" },
+      { label: "News", href: "/content/news" },
+      { label: "Register", href: "/content/register" },
+      { label: "Pay Online", href: "/content/pay-online" },
+      { label: "Store", href: "/content/store" },
+      { label: "Contact", href: "/content/contact" },
+    ],
+  },
 ];
 
 export function Nav({
@@ -61,11 +77,48 @@ export function Nav({
         </Link>
 
         <ul className="le-nav-links">
-          {links.map((link) => (
-            <li key={link.href} className={isActive(pathname, link.href) ? "active" : ""}>
-              <Link href={link.href}>{link.label}</Link>
-            </li>
-          ))}
+          {links.map((link) => {
+            if (link.children && link.children.length > 0) {
+              const childActive = link.children.some((c) =>
+                isActive(pathname, c.href),
+              );
+              return (
+                <li
+                  key={link.label}
+                  className={
+                    "le-nav-dropdown" + (childActive ? " active" : "")
+                  }
+                >
+                  <button type="button" className="le-nav-dropdown-trigger">
+                    {link.label}
+                    <span className="le-nav-caret" aria-hidden="true">
+                      ▾
+                    </span>
+                  </button>
+                  <ul className="le-nav-dropdown-menu">
+                    {link.children.map((child) => (
+                      <li
+                        key={child.href}
+                        className={
+                          isActive(pathname, child.href) ? "active" : ""
+                        }
+                      >
+                        <Link href={child.href}>{child.label}</Link>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              );
+            }
+            return (
+              <li
+                key={link.href}
+                className={isActive(pathname, link.href) ? "active" : ""}
+              >
+                <Link href={link.href}>{link.label}</Link>
+              </li>
+            );
+          })}
         </ul>
 
         <div className="le-nav-right">
@@ -85,15 +138,38 @@ export function Nav({
       </nav>
 
       <div className={"le-mob-menu" + (mobOpen ? " open" : "")}>
-        {links.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            onClick={() => setMobOpen(false)}
-          >
-            {link.label}
-          </Link>
-        ))}
+        {links.flatMap((link) => {
+          if (link.children && link.children.length > 0) {
+            // Render the parent as a dimmed section header followed
+            // by its children indented; users on touch devices don't
+            // get hover, so a flat list with grouping reads cleaner
+            // than a click-to-expand accordion at this scale.
+            return [
+              <div key={link.label + ":h"} className="le-mob-section">
+                {link.label}
+              </div>,
+              ...link.children.map((child) => (
+                <Link
+                  key={child.href}
+                  href={child.href}
+                  className="le-mob-sub"
+                  onClick={() => setMobOpen(false)}
+                >
+                  {child.label}
+                </Link>
+              )),
+            ];
+          }
+          return [
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setMobOpen(false)}
+            >
+              {link.label}
+            </Link>,
+          ];
+        })}
       </div>
     </>
   );

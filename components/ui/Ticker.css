@@ -58,10 +58,39 @@
 
 .st-scroll {
   flex: 1;
-  overflow: hidden;
+  /* Horizontal pan: user drags / swipes / scroll-wheels through the
+     game list. Comment in Ticker.tsx says "user pans manually" but
+     the CSS was overflow:hidden which blocked panning entirely.
+     overflow-x:auto enables it. scrollbar-width:thin keeps the
+     scrollbar visible so users know more games are off-screen. */
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
   position: relative;
-  cursor: pointer;
+  cursor: grab;
+  /* Smooth scroll for arrow-key / scrollIntoView; doesn't affect
+     wheel/touch which use the OS native momentum. */
+  scroll-behavior: smooth;
 }
+
+/* Webkit thin scrollbar (Chrome, Safari) — Firefox uses the
+   scrollbar-width above. */
+.st-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+.st-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.st-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 3px;
+}
+.st-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.st-scroll:active { cursor: grabbing; }
 
 .st-track {
   display: flex;
