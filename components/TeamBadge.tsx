@@ -10,8 +10,7 @@ export interface TeamBadgeProps {
   initials?: string;       // explicit initials (e.g. "TBJ"); falls back to name acronym
   color?: string;          // hex color for the badge background; falls back to neutral
   logoUrl?: string | null; // optional uploaded logo URL
-  /** "xl" for team-page hero (168px). "card" for /teams grid (80px) — middle
-   *  ground that gives logos visible weight without overwhelming the tile. */
+  /** "xl" for team-page hero (168px). "card" for /teams grid (112px). */
   size?: "sm" | "md" | "lg" | "card" | "xl";
 }
 
@@ -19,7 +18,7 @@ const SIZE_CLASSES = {
   sm: "h-6 w-6 text-[9px]",
   md: "h-9 w-9 text-xs",
   lg: "h-12 w-12 text-sm",
-  card: "h-20 w-20 text-base",
+  card: "h-[112px] w-[112px] text-lg",
   xl: "h-[168px] w-[168px] text-3xl",
 } as const;
 
@@ -40,7 +39,7 @@ export function TeamBadge({
           : size === "lg"
             ? 48
             : size === "card"
-              ? 80
+              ? 112
               : 168;
     return (
       <span

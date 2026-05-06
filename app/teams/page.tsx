@@ -141,27 +141,24 @@ export default async function TeamsPage() {
                 <Link
                   key={t.id}
                   href={`/teams/${t.id}`}
-                  className="block"
+                  className="block group"
                   style={{
-                    background: "var(--card)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 14,
-                    padding: 16,
                     textAlign: "center",
+                    padding: "8px 4px",
                   }}
                 >
-                  {/* Fixed-height logo zone so logos line up across
-                      rows even when team names wrap to a different
-                      number of lines. Without this, the grid stretches
-                      cards to the tallest in the row and logos sit at
-                      different vertical positions. */}
+                  {/* No card chrome. Logo lives in a fixed-size square
+                      flex-centered container so it can NEVER overflow
+                      and is ALWAYS centered. The square reserves space
+                      regardless of the logo's aspect ratio. */}
                   <div
                     style={{
+                      width: 112,
+                      height: 112,
+                      margin: "0 auto 14px",
                       display: "flex",
-                      justifyContent: "center",
                       alignItems: "center",
-                      height: 96,
-                      marginBottom: 12,
+                      justifyContent: "center",
                     }}
                   >
                     <TeamBadge
