@@ -139,7 +139,7 @@ function TeamRow({ team, winner }: { team: GameCardTeam; winner: boolean }) {
           className={"le-gc-team-name" + (!winner ? " le-gc-loser" : "")}
           onClick={(e) => e.stopPropagation()}
         >
-          {team.abbrev ?? team.name}
+          {team.name || team.abbrev}
         </Link>
         {team.record && <span className="le-gc-record">({team.record})</span>}
       </div>
@@ -169,7 +169,7 @@ function autoHeadline(
   const winnerScore = Math.max(away.score, home.score);
   const loserScore = Math.min(away.score, home.score);
   const diff = winnerScore - loserScore;
-  const winnerLabel = winner.abbrev ?? winner.name;
+  const winnerLabel = winner.name || winner.abbrev || "";
   if (diff >= 10) {
     return `${winnerLabel} wins big, ${winnerScore}–${loserScore}`;
   }

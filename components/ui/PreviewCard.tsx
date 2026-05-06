@@ -74,7 +74,7 @@ function Side({ team }: { team: PreviewCardTeam }) {
           className="le-preview-name"
           onClick={(e) => e.stopPropagation()}
         >
-          {team.abbrev ?? team.name}
+          {team.name || team.abbrev}
         </Link>
         {team.record && (
           <span className="le-preview-rec">({team.record})</span>

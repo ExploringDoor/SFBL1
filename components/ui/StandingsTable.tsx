@@ -87,7 +87,7 @@ export function StandingsTable({
                   >
                     <span className="le-compact-rank">{i + 1}</span>
                     <span className="le-compact-name">
-                      {meta?.abbrev ?? meta?.name ?? r.team_id}
+                      {meta?.name ?? meta?.abbrev ?? r.team_id}
                     </span>
                     <span className="le-compact-rec">{recordStr}</span>
                     <span

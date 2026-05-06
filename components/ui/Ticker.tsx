@@ -89,10 +89,18 @@ function TickerTile({ g }: { g: TickerGame }) {
   const aWin = done && (g.away_score ?? 0) > (g.home_score ?? 0);
   const hWin = done && (g.home_score ?? 0) > (g.away_score ?? 0);
 
+  // Prefer the full team name everywhere — there's enough horizontal
+  // room in the ticker tile and it reads cleaner than 2–3-letter
+  // abbrevs which feel like league shorthand the user has to decode.
+  // Falls back to abbrev or computed initials only if no name.
   const awayLabel =
-    g.away_team.abbrev ?? fallbackAbbrev(g.away_team_id, g.away_team.name);
+    g.away_team.name ||
+    g.away_team.abbrev ||
+    fallbackAbbrev(g.away_team_id, g.away_team.name);
   const homeLabel =
-    g.home_team.abbrev ?? fallbackAbbrev(g.home_team_id, g.home_team.name);
+    g.home_team.name ||
+    g.home_team.abbrev ||
+    fallbackAbbrev(g.home_team_id, g.home_team.name);
 
   // 3-column grid: abbrev | record | score. Each tile renders the
   // datetime row spanning all 3 columns, then 6 cells (3 per team)
