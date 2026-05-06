@@ -136,9 +136,19 @@ export function matchTokens(
     // STEP 5 — category prefs. Empty array = subscribe-to-all
     // (DVSL backward-compat, send-notification.js:236). Skipped
     // entirely when adminOnly is set.
+    //
+    // Special case (DVSL peer review §10b): captains_chat is opt-in
+    // by default — even though `categories: []` normally means
+    // subscribe-to-everything, captains_chat must NEVER auto-subscribe.
+    // A user whose prefs got cleared (bug, manual reset, edge case)
+    // shouldn't silently start receiving the captains-only thread.
     if (!payload.adminOnly) {
       const cats = tok.categories ?? [];
       if (cats.length > 0 && !cats.includes(payload.category)) {
+        rejected.categoryNotSubscribed++;
+        continue;
+      }
+      if (cats.length === 0 && payload.category === "captains_chat") {
         rejected.categoryNotSubscribed++;
         continue;
       }
@@ -148,7 +158,19 @@ export function matchTokens(
     if (payload.category === "team_chat") {
       // team_chat must intersect authed_teams (where the recipient is
       // rostered/captaining), NOT the user-subscribed teams list.
+      //
+      // FAIL-CLOSED (DVSL peer review §4 / send-notification.js:251):
+      // if EITHER teamWanted is empty OR the recipient's authed_teams
+      // is empty, drop. Without this guard, a coding mistake (forgot
+      // to set `team:` on a team_chat fetch payload) silently
+      // broadcasts the chat to every player in the league. The
+      // category-specific filter intended to scope team_chat must
+      // fail closed, not open.
       const authed = new Set(tok.authed_teams ?? []);
+      if (!teamWanted.size || !authed.size) {
+        rejected.teamChatNotInAuthedTeams++;
+        continue;
+      }
       let overlap = false;
       for (const t of teamWanted) {
         if (authed.has(t)) {
@@ -156,7 +178,7 @@ export function matchTokens(
           break;
         }
       }
-      if (teamWanted.size && !overlap) {
+      if (!overlap) {
         rejected.teamChatNotInAuthedTeams++;
         continue;
       }
@@ -198,11 +220,21 @@ export function matchTokens(
 }
 
 /** FCM error codes that indicate a token is permanently dead and the
- * doc should be pruned. Mirrors send-notification.js:139-147. */
+ * doc should be pruned. Mirrors send-notification.js:139-147 with one
+ * deliberate divergence:
+ *
+ * `messaging/invalid-argument` is NOT included here. FCM uses that
+ * code for both "token is malformed" AND "payload is malformed" AND
+ * various quota/argument errors. Pruning on it risks deleting LIVE
+ * tokens whenever a payload bug ships. Per DVSL peer review §5, DVSL
+ * deliberately uses only the two unambiguous "this token is dead"
+ * signals below.
+ *
+ * If we want to track 400-class errors for ops visibility, log them
+ * separately on /push_log; do NOT prune. */
 export const DEAD_TOKEN_ERROR_CODES = new Set([
   "messaging/registration-token-not-registered",
   "messaging/invalid-registration-token",
-  "messaging/invalid-argument", // FCM 400 on malformed token
 ]);
 
 export function isDeadTokenError(err: unknown): boolean {

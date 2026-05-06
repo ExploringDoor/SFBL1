@@ -235,27 +235,51 @@ describe("matchTokens — STEP 6 team_chat (authed_teams)", () => {
     ).toHaveLength(1);
   });
 
-  it("team_chat with no team specified: no audience filter, all pass step 6", () => {
-    // Defensive — empty audience means no rejection at step 6a.
+  it("team_chat with no team specified: FAIL-CLOSED, all rejected (DVSL §4)", () => {
+    // §4 fix: a team_chat push with no `team:`/`teams:` audience is a
+    // bug — without this guard, that bug silently broadcasts the chat
+    // to every player in the league. Fail closed instead.
     const tokens = [tok({ authed_teams: ["team_a"] })];
     const r = matchTokens(tokens, payload({ category: "team_chat" }));
-    expect(r.matched).toHaveLength(1);
+    expect(r.matched).toHaveLength(0);
+    expect(r.rejected.teamChatNotInAuthedTeams).toBe(1);
+  });
+
+  it("team_chat to a recipient with no authed_teams: FAIL-CLOSED (DVSL §4)", () => {
+    // Symmetric guard: if the recipient has no rostered/captaining
+    // teams (authed_teams empty), they shouldn't receive any
+    // team_chat regardless of which team it's for.
+    const tokens = [tok({ authed_teams: [] })];
+    const r = matchTokens(
+      tokens,
+      payload({ category: "team_chat", team: "team_a" }),
+    );
+    expect(r.matched).toHaveLength(0);
+    expect(r.rejected.teamChatNotInAuthedTeams).toBe(1);
   });
 });
 
 // ── STEP 6b — captains_chat ───────────────────────────────────────
 
 describe("matchTokens — STEP 6 captains_chat", () => {
-  it("only is_captain_authed tokens pass", () => {
+  it("only is_captain_authed tokens with cap chat subscription pass", () => {
     const tokens = [
-      tok({ token: "captain", is_captain_authed: true }),
-      tok({ token: "player", is_captain_authed: false }),
+      tok({
+        token: "captain_subscribed",
+        is_captain_authed: true,
+        categories: ["captains_chat"],
+      }),
+      tok({
+        token: "player_subscribed",
+        is_captain_authed: false,
+        categories: ["captains_chat"],
+      }),
     ];
     const r = matchTokens(
       tokens,
       payload({ category: "captains_chat" }),
     );
-    expect(r.matched.map((t) => t.token)).toEqual(["captain"]);
+    expect(r.matched.map((t) => t.token)).toEqual(["captain_subscribed"]);
     expect(r.rejected.captainsChatNotCaptain).toBe(1);
   });
 
@@ -265,11 +289,13 @@ describe("matchTokens — STEP 6 captains_chat", () => {
         token: "team_a_captain",
         is_captain_authed: true,
         authed_teams: ["team_a"],
+        categories: ["captains_chat"],
       }),
       tok({
         token: "team_b_captain",
         is_captain_authed: true,
         authed_teams: ["team_b"],
+        categories: ["captains_chat"],
       }),
     ];
     const r = matchTokens(
@@ -278,6 +304,48 @@ describe("matchTokens — STEP 6 captains_chat", () => {
     );
     // Both captains receive — team filter is ignored for captains_chat.
     expect(r.matched).toHaveLength(2);
+  });
+
+  it("captains_chat does NOT auto-subscribe via empty categories[] (DVSL §10b)", () => {
+    // Empty categories normally means subscribe-to-all (DVSL backward
+    // compat). For captains_chat that's a trap — a captain whose
+    // prefs got reset shouldn't silently start receiving the
+    // captains-only thread. Empty cats[] must NEVER deliver
+    // captains_chat.
+    const tokens = [
+      tok({
+        token: "captain_no_prefs",
+        is_captain_authed: true,
+        categories: [], // empty — DVSL backward-compat says subscribe-to-all
+      }),
+    ];
+    const r = matchTokens(
+      tokens,
+      payload({ category: "captains_chat" }),
+    );
+    expect(r.matched).toHaveLength(0);
+    expect(r.rejected.categoryNotSubscribed).toBe(1);
+  });
+
+  it("captains_chat empty-categories trap does NOT block other categories", () => {
+    // Sanity: the special-case is captains_chat-only. Empty
+    // categories[] still means subscribe-to-all for everything
+    // except captains_chat — scores/rainouts/schedule etc. should
+    // still deliver to a captain whose prefs got reset.
+    const tokens = [
+      tok({
+        token: "captain_no_prefs",
+        is_captain_authed: true,
+        categories: [],
+        teams: [], // also empty teams = subscribe-to-all teams
+      }),
+    ];
+    const r = matchTokens(
+      tokens,
+      payload({ category: "scores", team: "team_a" }),
+    );
+    expect(r.matched.map((t) => t.token)).toEqual(["captain_no_prefs"]);
+    expect(r.rejected.categoryNotSubscribed).toBe(0);
   });
 });
 
