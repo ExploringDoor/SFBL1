@@ -61,45 +61,108 @@ vi.mock("@/lib/firebase-admin", () => ({
       return mockState.decoded;
     }),
   }),
-  getAdminDb: () => ({
-    doc: (path: string) => ({
-      get: async () => {
-        const ds = mockState.docs.get(path);
-        return {
-          exists: ds != null,
-          data: () => ds?.data ?? {},
-        };
-      },
-      set: async (
-        data: Record<string, unknown>,
-        opts?: { merge?: boolean },
-      ) => {
-        const merge = opts?.merge === true;
-        mockState.setCalls.push({ path, data, merge });
-        const existing = mockState.docs.get(path)?.data ?? {};
-        mockState.docs.set(path, {
-          data: merge ? { ...existing, ...data } : data,
+  getAdminDb: () => {
+    // Helper: deep-merge for the set merge:true path. Firestore's
+    // set(..., {merge: true}) recursively merges nested Map fields,
+    // so the mock has to as well — otherwise the captain-submit
+    // route's `linescore: { [side]: ... }` write would silently
+    // replace the other side.
+    function deepMerge(
+      target: Record<string, unknown>,
+      patch: Record<string, unknown>,
+    ): Record<string, unknown> {
+      const out: Record<string, unknown> = { ...target };
+      for (const [k, v] of Object.entries(patch)) {
+        const existing = out[k];
+        const bothPlainObjects =
+          existing != null &&
+          typeof existing === "object" &&
+          !Array.isArray(existing) &&
+          v != null &&
+          typeof v === "object" &&
+          !Array.isArray(v);
+        if (bothPlainObjects) {
+          out[k] = deepMerge(
+            existing as Record<string, unknown>,
+            v as Record<string, unknown>,
+          );
+        } else {
+          out[k] = v;
+        }
+      }
+      return out;
+    }
+    function makeDocRef(path: string) {
+      return {
+        get: async () => {
+          const ds = mockState.docs.get(path);
+          return {
+            exists: ds != null,
+            data: () => ds?.data ?? {},
+          };
+        },
+        set: async (
+          data: Record<string, unknown>,
+          opts?: { merge?: boolean },
+        ) => {
+          const merge = opts?.merge === true;
+          mockState.setCalls.push({ path, data, merge });
+          const existing = mockState.docs.get(path)?.data ?? {};
+          mockState.docs.set(path, {
+            data: merge ? deepMerge(existing, data) : data,
+          });
+        },
+      };
+    }
+    return {
+      doc: (path: string) => makeDocRef(path),
+      collection: (path: string) => ({
+        get: async () => {
+          // Match all docs whose path is `{path}/{id}`.
+          const docs: Array<{
+            id: string;
+            data: () => Record<string, unknown>;
+          }> = [];
+          for (const [docPath, state] of mockState.docs) {
+            if (
+              docPath.startsWith(path + "/") &&
+              !docPath.slice(path.length + 1).includes("/")
+            ) {
+              const id = docPath.slice(path.length + 1);
+              docs.push({ id, data: () => state.data });
+            }
+          }
+          return { docs };
+        },
+      }),
+      // Mock runTransaction: serial execution that passes a `txn` API
+      // with .get/.set proxying to the same backing store. No retry
+      // logic — tests run one at a time, no concurrency to simulate.
+      runTransaction: async <T>(
+        fn: (txn: {
+          get: (
+            ref: ReturnType<typeof makeDocRef>,
+          ) => ReturnType<ReturnType<typeof makeDocRef>["get"]>;
+          set: (
+            ref: ReturnType<typeof makeDocRef>,
+            data: Record<string, unknown>,
+            opts?: { merge?: boolean },
+          ) => void;
+        }) => Promise<T>,
+      ): Promise<T> => {
+        return fn({
+          get: (ref) => ref.get(),
+          set: (ref, data, opts) => {
+            // Synchronous in tests — fire-and-forget the set; the
+            // mock's set returns immediately after writing into
+            // mockState.docs. Real Firestore txn.set is fire-and-
+            // forget too (the actual write happens at commit).
+            void ref.set(data, opts);
+          },
         });
       },
-    }),
-    collection: (path: string) => ({
-      get: async () => {
-        // Match all docs whose path is `{path}/{id}`.
-        const docs: Array<{ id: string; data: () => Record<string, unknown> }> =
-          [];
-        for (const [docPath, state] of mockState.docs) {
-          if (
-            docPath.startsWith(path + "/") &&
-            !docPath.slice(path.length + 1).includes("/")
-          ) {
-            const id = docPath.slice(path.length + 1);
-            docs.push({ id, data: () => state.data });
-          }
-        }
-        return { docs };
-      },
-    }),
-  }),
+    };
+  },
   getAdminMessaging: () => ({}),
 }));
 
@@ -639,5 +702,121 @@ describe("/api/captain-submit — game-membership defense", () => {
     });
     const res = await POST(makeReq({ leagueId: "sfbl", gameId: "g1" }));
     expect(res.status).toBe(200);
+  });
+});
+
+// Regression for the runTransaction refactor (DVSL §7 / audit #4,
+// fixed 2026-05-05): the race that prompted the refactor was that
+// concurrent captain submits could clobber each other's per-side
+// data on /box_scores (linescore, hits, errors). Firestore's
+// set merge:true does deep-merge of nested Map fields, so writing
+// `{ linescore: { away: [...] } }` against existing
+// `{ linescore: { home: [...] } }` should preserve home AND add away.
+// These tests pin that behavior end-to-end.
+describe("/api/captain-submit — concurrent-submit data preservation", () => {
+  it("captain B's submit preserves captain A's per-side data (linescore + hits + errors)", async () => {
+    // Captain A (home, team_b) submitted first — doc state already
+    // has home_* fields set.
+    setDoc("leagues/sfbl/box_scores/g1", {
+      home_score: 5,
+      home_lineup: [{ player_id: "p3", ab: 4, h: 1 }],
+      home_pitchers: [{ player_id: "p99", ip_outs: 21 }],
+      linescore: { home: [1, 0, 1, 0, 0, 1, 2, 0, 0] },
+      hits: { home: 6 },
+      errors: { home: 2 },
+    });
+    // Now captain B (away, team_a) submits.
+    mockState.decoded.leagues = { sfbl: "captain:team_a" };
+    setDoc("leagues/sfbl/box_score_submissions/g1_team_a", {
+      game_id: "g1",
+      team_id: "team_a",
+      side: "away",
+      lineup: [{ player_id: "p1", ab: 4, h: 2 }],
+      pitchers: [],
+      linescore: [0, 1, 0, 0, 2, 0, 3, 0, 1],
+      hits: 8,
+      errors: 1,
+      score: 7,
+    });
+    const res = await POST(makeReq({ leagueId: "sfbl", gameId: "g1" }));
+    expect(res.status).toBe(200);
+
+    // Read back the merged doc state.
+    const merged = mockState.docs.get("leagues/sfbl/box_scores/g1")!
+      .data as Record<string, unknown>;
+
+    // Captain A's home_* fields must SURVIVE.
+    expect(merged.home_score).toBe(5);
+    expect(Array.isArray(merged.home_lineup)).toBe(true);
+    expect((merged.home_lineup as unknown[]).length).toBe(1);
+    expect(Array.isArray(merged.home_pitchers)).toBe(true);
+
+    // Captain B's away_* fields must be ADDED.
+    expect(merged.away_score).toBe(7);
+    expect((merged.away_lineup as unknown[]).length).toBe(1);
+
+    // Both sides' linescore + hits + errors coexist (the deep-merge
+    // behavior — without it, B's write would clobber A's home: data).
+    const linescore = merged.linescore as Record<string, unknown>;
+    expect(linescore.home).toEqual([1, 0, 1, 0, 0, 1, 2, 0, 0]);
+    expect(linescore.away).toEqual([0, 1, 0, 0, 2, 0, 3, 0, 1]);
+    expect((merged.hits as Record<string, number>).home).toBe(6);
+    expect((merged.hits as Record<string, number>).away).toBe(8);
+    expect((merged.errors as Record<string, number>).home).toBe(2);
+    expect((merged.errors as Record<string, number>).away).toBe(1);
+  });
+
+  it("only ONE box_scores write happens per captain submit (no read-write-read amplification)", async () => {
+    // Pre-refactor, the route did a post-write read of /box_scores
+    // to compute goingFinal. That extra read was both a perf hit AND
+    // the source of the "both captains fire Final" race. The fix
+    // computes goingFinal inside the transaction from the pre-write
+    // existing snapshot. Pin: there should be exactly ONE set call
+    // to /box_scores/g1 per submit.
+    setDoc("leagues/sfbl/box_score_submissions/g1_team_a", {
+      game_id: "g1",
+      team_id: "team_a",
+      side: "away",
+      lineup: [{ player_id: "p1", ab: 4 }],
+      score: 7,
+    });
+    await POST(makeReq({ leagueId: "sfbl", gameId: "g1" }));
+    const boxWrites = mockState.setCalls.filter(
+      (c) => c.path === "leagues/sfbl/box_scores/g1",
+    );
+    expect(boxWrites).toHaveLength(1);
+  });
+
+  it("goingFinal computed from txn snapshot — second captain triggers final atomically", async () => {
+    // Captain A (away) already submitted; doc has away_score=7.
+    setDoc("leagues/sfbl/box_scores/g1", { away_score: 7 });
+    // Captain B (home) submits.
+    mockState.decoded.leagues = { sfbl: "captain:team_b" };
+    setDoc("leagues/sfbl/box_score_submissions/g1_team_b", {
+      game_id: "g1",
+      team_id: "team_b",
+      side: "home",
+      lineup: [{ player_id: "p3", ab: 4, h: 1 }],
+      score: 5,
+    });
+    await POST(makeReq({ leagueId: "sfbl", gameId: "g1" }));
+
+    // Final push fires (not "Score submitted").
+    const finalPush = mockState.fanoutCalls.find((c) =>
+      c.title.startsWith("Final:"),
+    );
+    expect(finalPush).toBeDefined();
+    const submittedPush = mockState.fanoutCalls.find((c) =>
+      c.title.includes("Score submitted"),
+    );
+    expect(submittedPush).toBeUndefined();
+
+    // /games/g1 write includes status: "final" + both scores.
+    const gameWrite = mockState.setCalls.find(
+      (c) => c.path === "leagues/sfbl/games/g1",
+    );
+    expect(gameWrite!.data.status).toBe("final");
+    expect(gameWrite!.data.home_score).toBe(5);
+    expect(gameWrite!.data.away_score).toBe(7);
   });
 });
