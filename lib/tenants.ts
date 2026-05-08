@@ -56,6 +56,22 @@ const APEX_DOMAINS = (
   .map((s) => s.trim().toLowerCase())
   .filter(Boolean);
 
+// Host aliases for preview deploys / one-off hostnames that don't
+// match the {tenant}.{apex} convention. Configure via env, format
+// "host1=slug1,host2=slug2". Example use: Vercel preview URLs like
+// `sfbl-1.vercel.app` (project name auto-suffixed by Vercel) get
+// rerouted to the `sfbl` tenant without needing a Firestore /domains
+// doc. Bypasses the apex-suffix logic entirely.
+const HOST_ALIASES: Record<string, string> = (() => {
+  const raw = process.env.LEAGUEENGINE_HOST_ALIASES ?? "";
+  const out: Record<string, string> = {};
+  for (const pair of raw.split(",")) {
+    const [host, slug] = pair.split("=").map((s) => s?.trim().toLowerCase());
+    if (host && slug) out[host] = slug;
+  }
+  return out;
+})();
+
 export type ParsedHost =
   | { kind: "apex"; hostname: string; slug: null }
   | { kind: "subdomain"; hostname: string; slug: string }
@@ -63,6 +79,13 @@ export type ParsedHost =
 
 export function parseHost(rawHost: string): ParsedHost {
   const hostname = (rawHost.split(":")[0] ?? rawHost).toLowerCase();
+
+  // Host alias wins over apex-suffix matching. Lets us point a
+  // preview URL at a tenant whose slug is structurally different
+  // from what the URL would derive.
+  if (HOST_ALIASES[hostname]) {
+    return { kind: "subdomain", hostname, slug: HOST_ALIASES[hostname]! };
+  }
 
   for (const apex of APEX_DOMAINS) {
     if (hostname === apex) {
