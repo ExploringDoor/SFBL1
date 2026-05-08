@@ -189,25 +189,29 @@ export default async function PlayersPage() {
           Day-1 the league has rosters but no recorded stats — three
           empty card cells looked broken in QA. */}
       {battingRows.length === 0 && pitchingRows.length === 0 ? (
-        <div
-          style={{
-            padding: "32px 24px",
-            background: "rgba(0,0,0,0.03)",
-            border: "1px dashed rgba(0,0,0,0.12)",
-            borderRadius: 12,
-            textAlign: "center",
-            color: "var(--muted)",
-            lineHeight: 1.55,
-          }}
-        >
-          <strong style={{ color: "var(--brand-primary)", fontSize: 16 }}>
-            Stats will appear once games are played.
-          </strong>
-          <p style={{ margin: "8px 0 0", fontSize: 14 }}>
-            Captains submit box scores after games; player season
-            totals + leaderboards calculate from there.
-          </p>
-        </div>
+        <>
+          <div
+            style={{
+              padding: "20px 24px",
+              background: "rgba(0,0,0,0.03)",
+              border: "1px dashed rgba(0,0,0,0.12)",
+              borderRadius: 12,
+              textAlign: "center",
+              color: "var(--muted)",
+              lineHeight: 1.55,
+              marginBottom: 28,
+            }}
+          >
+            <strong style={{ color: "var(--brand-primary)", fontSize: 15 }}>
+              Stats will appear once captains submit box scores.
+            </strong>
+            <p style={{ margin: "6px 0 0", fontSize: 13 }}>
+              Until then, here&rsquo;s every rostered player in the
+              league.
+            </p>
+          </div>
+          <RosterDirectory players={players} teams={teams} />
+        </>
       ) : (
         <>
           <div className="mb-10 grid gap-6 md:grid-cols-3">
@@ -376,4 +380,193 @@ function Leaderboard({
 function formatAvg(n: number): string {
   if (n === 1) return "1.000";
   return n.toFixed(3).replace(/^0/, "");
+}
+
+// Pre-stats roster directory. Renders only when no batting/pitching
+// data exists yet (early season). Groups every player under their
+// team with logo header, sorted by jersey number then alphabetical.
+// Useful for fans who want to confirm a teammate is rostered, and
+// for captains spot-checking their lineup pre-game.
+function RosterDirectory({
+  players,
+  teams,
+}: {
+  players: PlayerRow[];
+  teams: Record<
+    string,
+    { name: string; abbrev?: string; color?: string; logoUrl?: string | null }
+  >;
+}) {
+  // Group players by team_id.
+  const byTeam = new Map<string, PlayerRow[]>();
+  for (const p of players) {
+    if (!p.team_id) continue;
+    const arr = byTeam.get(p.team_id) ?? [];
+    arr.push(p);
+    byTeam.set(p.team_id, arr);
+  }
+
+  // Sort teams by name (or could group by division — keep simple).
+  const teamIds = [...byTeam.keys()].sort((a, b) => {
+    const an = teams[a]?.name ?? a;
+    const bn = teams[b]?.name ?? b;
+    return an.localeCompare(bn);
+  });
+
+  if (teamIds.length === 0) {
+    return (
+      <p style={{ color: "var(--muted)", textAlign: "center", padding: 32 }}>
+        No rosters yet.
+      </p>
+    );
+  }
+
+  return (
+    <section style={{ display: "grid", gap: 18 }}>
+      <h2
+        className="font-display"
+        style={{
+          fontSize: 22,
+          color: "var(--text-strong)",
+          margin: "0 0 4px",
+          fontWeight: 800,
+          letterSpacing: "-0.005em",
+          textTransform: "uppercase",
+        }}
+      >
+        Rosters
+      </h2>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+          gap: 14,
+        }}
+      >
+        {teamIds.map((teamId) => {
+          const team = teams[teamId];
+          if (!team) return null;
+          const teamPlayers = (byTeam.get(teamId) ?? [])
+            .slice()
+            .sort((a, b) => {
+              // Players with jersey numbers first, sorted asc; then no-jersey alphabetical.
+              const aHas = a.jersey != null;
+              const bHas = b.jersey != null;
+              if (aHas && !bHas) return -1;
+              if (!aHas && bHas) return 1;
+              if (aHas && bHas) return (a.jersey ?? 0) - (b.jersey ?? 0);
+              return a.name.localeCompare(b.name);
+            });
+          return (
+            <article
+              key={teamId}
+              style={{
+                background: "white",
+                border: "1px solid rgba(0, 0, 0, 0.08)",
+                borderRadius: 12,
+                padding: "14px 14px 10px",
+              }}
+            >
+              <Link
+                href={`/teams/${teamId}`}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  paddingBottom: 10,
+                  borderBottom: "1px solid rgba(0,0,0,0.06)",
+                  textDecoration: "none",
+                  color: "var(--text-strong)",
+                }}
+              >
+                <TeamBadge
+                  teamId={teamId}
+                  name={team.name}
+                  initials={team.abbrev}
+                  color={team.color}
+                  logoUrl={team.logoUrl}
+                  size="md"
+                />
+                <span
+                  style={{
+                    fontFamily: "var(--font-barlow), sans-serif",
+                    fontWeight: 800,
+                    fontSize: 15,
+                    letterSpacing: "0.01em",
+                    textTransform: "uppercase",
+                    flex: 1,
+                    minWidth: 0,
+                  }}
+                >
+                  {team.name}
+                </span>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "var(--muted)",
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {teamPlayers.length}
+                </span>
+              </Link>
+              <ul
+                style={{
+                  listStyle: "none",
+                  padding: 0,
+                  margin: "8px 0 0",
+                  display: "grid",
+                  gap: 1,
+                }}
+              >
+                {teamPlayers.map((p) => (
+                  <li key={p.id}>
+                    <Link
+                      href={`/players/${p.id}`}
+                      style={{
+                        display: "flex",
+                        alignItems: "baseline",
+                        gap: 8,
+                        padding: "5px 4px",
+                        fontSize: 13,
+                        textDecoration: "none",
+                        color: "var(--text-strong)",
+                        borderRadius: 6,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: "var(--font-barlow), sans-serif",
+                          fontWeight: 800,
+                          color: "var(--muted)",
+                          width: 26,
+                          textAlign: "right",
+                          fontVariantNumeric: "tabular-nums",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {p.jersey != null ? `#${p.jersey}` : ""}
+                      </span>
+                      <span
+                        style={{
+                          flex: 1,
+                          minWidth: 0,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {p.name}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
 }
