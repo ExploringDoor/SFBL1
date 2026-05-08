@@ -1,3 +1,5 @@
+"use client";
+
 // Offline fallback. The service worker (public/firebase-messaging-sw.js)
 // caches this page on first visit and serves it whenever a navigation
 // fetch fails — i.e. the user lost connectivity.
@@ -6,6 +8,11 @@
 // and the page works even when CSS / fonts haven't been cached yet.
 // Inline styles (no Tailwind, no separate CSS file) so the offline
 // experience never breaks because of a missing CSS bundle.
+//
+// Marked "use client" because the Reload button needs window.location.
+// Marked force-static so Next pre-renders the HTML at build (the
+// service worker pulls it during install and caches the static
+// payload).
 
 export const dynamic = "force-static";
 
