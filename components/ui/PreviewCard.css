@@ -139,3 +139,37 @@
   .le-preview-name { font-size: 13px; }
   .le-preview-link { font-size: 10px; padding: 3px 0; }
 }
+
+/* ── Status badge + muted state ────────────────────────────────────
+ * Postponed / cancelled games render a small pill next to the time
+ * eyebrow, and the whole card de-emphasizes (lower opacity, no link
+ * accent). Helps the schedule scan as a real calendar instead of
+ * dropping every cancelled game silently. */
+
+.le-preview-status {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.le-preview-status[data-kind="postponed"] {
+  background: rgba(217, 119, 6, 0.12);
+  color: #92400e;
+  border: 1px solid rgba(217, 119, 6, 0.3);
+}
+.le-preview-status[data-kind="cancelled"] {
+  background: rgba(127, 29, 29, 0.08);
+  color: #991b1b;
+  border: 1px solid rgba(127, 29, 29, 0.25);
+  text-decoration: line-through;
+}
+
+.le-preview-card.muted {
+  opacity: 0.55;
+}
+.le-preview-card.muted .le-preview-link {
+  display: none;
+}

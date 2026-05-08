@@ -275,10 +275,54 @@
 .le-compact-streak.loss { color: #dc2626; }
 .le-compact-streak.tie { color: rgba(0, 0, 0, 0.5); }
 
+/* ── Recent-form sparkline ──────────────────────────────────────
+ * Inline row of 5 dots after the streak label. Green (W), red (L),
+ * gray (T), faded gray (no game yet). Sits next to the streak so
+ * the eye reads "L1" + recent dots together as a "trend" cluster.
+ *
+ * Hidden on the compact (sidebar) standings — sidebar tables are
+ * already cramped at homepage width. */
+.le-form-spark {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.le-form-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.le-form-dot.win {
+  background: #10b981;
+}
+.le-form-dot.loss {
+  background: #ef4444;
+}
+.le-form-dot.tie {
+  background: #94a3b8;
+}
+.le-form-dot.empty {
+  background: rgba(0, 0, 0, 0.06);
+  border: 1px dashed rgba(0, 0, 0, 0.1);
+}
+/* Hide on compact (homepage sidebar) — too tight there. */
+.le-s-compact .le-form-spark {
+  display: none;
+}
+
 @media (max-width: 700px) {
   .le-s-tbl th,
   .le-s-tbl td { padding: 8px 4px; font-size: 13px; }
   .le-s-tbl th:first-child,
   .le-s-tbl td:first-child { padding-left: 12px; }
   .le-s-tbl .le-tname { font-size: 14px; }
+  .le-form-dot {
+    width: 6px;
+    height: 6px;
+  }
+  .le-form-spark {
+    margin-left: 4px;
+  }
 }

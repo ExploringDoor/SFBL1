@@ -1,8 +1,13 @@
 // Per-tenant schedule iCalendar feed. Subscribers (Google Calendar,
 // Apple Calendar, Outlook) hit this URL and pull a fresh copy on
 // their schedule. Filters: ?team=<teamId> for a single team's games.
+//
+// Middleware doesn't run on /api/* (excluded by the matcher in
+// middleware.ts) — so we resolve the tenant ourselves from the
+// Host header, mirroring middleware's logic.
 
 import { getAdminDb } from "@/lib/firebase-admin";
+import { parseHost, resolveTenant } from "@/lib/tenants";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,8 +16,14 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const teamFilter = url.searchParams.get("team");
 
-  // Tenant resolution from middleware-set header.
-  const tenantId = req.headers.get("x-tenant-id");
+  // Tenant resolution from Host header.
+  const host =
+    req.headers.get("x-forwarded-host") ??
+    req.headers.get("host") ??
+    "";
+  const parsed = parseHost(host);
+  const tenant = await resolveTenant(parsed);
+  const tenantId = tenant?.id ?? null;
   if (!tenantId) {
     return new Response("Tenant required", { status: 400 });
   }

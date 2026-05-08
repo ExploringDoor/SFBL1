@@ -78,11 +78,23 @@ export async function POST(req: Request) {
     .where("team_id", "==", teamId)
     .get();
 
+  // Email lives on the /_private/contact subdoc post-PII migration —
+  // batch-fetch contact docs and look for matches.
+  const activeDocs = playersSnap.docs.filter(
+    (d) => d.data().active !== false,
+  );
+  const contactDocs = await Promise.all(
+    activeDocs.map((d) =>
+      db.doc(`leagues/${leagueId}/players/${d.id}/_private/contact`).get(),
+    ),
+  );
+
   const matches: { id: string; authUid?: string }[] = [];
-  for (const d of playersSnap.docs) {
+  for (let i = 0; i < activeDocs.length; i++) {
+    const d = activeDocs[i]!;
     const p = d.data();
-    if (p.active === false) continue;
-    const peml = String(p.email ?? "").toLowerCase();
+    const contact = contactDocs[i]!.exists ? contactDocs[i]!.data()! : {};
+    const peml = String(contact.email ?? "").toLowerCase();
     if (!peml || peml !== email) continue;
     // Skip if linked to a different uid — would clobber someone else.
     if (p.auth_uid && p.auth_uid !== decoded.uid) continue;
@@ -100,9 +112,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ matches: 1, alreadyLinked: true });
   }
 
+  // Public doc gets the auth_uid linkage; email itself stays in the
+  // private contact subdoc.
   await db
     .doc(`leagues/${leagueId}/players/${match.id}`)
-    .set({ auth_uid: decoded.uid, email }, { merge: true });
+    .set({ auth_uid: decoded.uid }, { merge: true });
+  await db
+    .doc(`leagues/${leagueId}/players/${match.id}/_private/contact`)
+    .set({ email }, { merge: true });
 
   return NextResponse.json({ matches: 1, linked: match.id });
 }

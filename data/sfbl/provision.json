@@ -39,8 +39,22 @@
     "theme": {
       "primary": "#0c2340",
       "accent": "#c41e3a",
-      "logo_url": "/logos/sfbl/sfbl-logo.png"
+      "logo_url": "/logos/sfbl/sfbl-header.png"
     },
+    "flags": {
+      "csv_schedule_import": false
+    },
+    "fields": [
+      "Coral Springs Sportsplex",
+      "Flamingo Park",
+      "Floyd Hull Stadium",
+      "Margate Sports Complex #3",
+      "Pompey Park",
+      "Sabal Pines Park",
+      "Sugar Sand Park #6",
+      "Sunset Park",
+      "West Perrine Park"
+    ],
     "billing": {
       "status": "active",
       "paid_through": null,

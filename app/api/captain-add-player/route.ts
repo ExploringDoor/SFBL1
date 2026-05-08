@@ -44,6 +44,9 @@ export async function POST(req: Request) {
     name?: unknown;
     jersey?: unknown;
     teamId?: unknown;
+    position?: unknown;
+    email?: unknown;
+    phone?: unknown;
   };
   try {
     body = await req.json();
@@ -119,15 +122,45 @@ export async function POST(req: Request) {
       ? null
       : Number(body.jersey);
 
+  // Optional contact metadata. Only admins typically have this on
+  // hand at signup; captains can edit it later via the roster
+  // editor. Stored as strings (we don't validate phone format —
+  // commissioners enter what's on the registration sheet).
+  const position =
+    typeof body.position === "string" ? body.position.trim() : "";
+  const email =
+    typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+  const phone =
+    typeof body.phone === "string" ? body.phone.trim() : "";
+
+  // Public doc: name, jersey, position, team, walk_on flag — never
+  // PII. email + phone go in /_private/contact below so they aren't
+  // public-readable.
   await db.doc(`leagues/${leagueId}/players/${playerId}`).set({
     name: rawName,
     team_id: teamId,
     jersey: Number.isFinite(jerseyNum as number) ? jerseyNum : null,
+    ...(position ? { position } : {}),
     walk_on: claim !== "admin", // captain-added marker for admin review
     created_by_uid: decoded.uid,
     created_at: new Date().toISOString(),
     active: true,
   });
+
+  // Private contact subdoc — only readable by admin or the player
+  // themselves once linked (firestore.rules:131).
+  if (email || phone) {
+    await db
+      .doc(`leagues/${leagueId}/players/${playerId}/_private/contact`)
+      .set(
+        {
+          ...(email ? { email } : {}),
+          ...(phone ? { phone } : {}),
+          updated_at: new Date().toISOString(),
+        },
+        { merge: true },
+      );
+  }
 
   return NextResponse.json({ ok: true, player_id: playerId });
 }

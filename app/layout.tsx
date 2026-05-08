@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import { Barlow_Condensed, Inter, Oswald } from "next/font/google";
 import { TenantProvider } from "@/lib/tenant-context";
 import { Nav } from "@/components/ui/Nav";
+import { SiteFooter } from "@/components/ui/SiteFooter";
 import { ProfileButton } from "@/components/ProfileButton";
 import { PwaShell } from "@/components/PwaShell";
 import { SwNavigateListener } from "@/components/SwNavigateListener";
@@ -28,10 +29,88 @@ const oswald = Oswald({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "League Platform",
-  description: "Multi-tenant SaaS for amateur sports leagues.",
+// Per-tenant metadata. Reads the tenant config from middleware-set
+// headers and produces a title / description / openGraph / twitter
+// payload that's specific to the league being viewed. Without this,
+// shares on iMessage / WhatsApp / X show the generic platform copy
+// — a launch-day footgun for a tenant trying to look professional.
+//
+// Viewport — explicit so iOS Safari respects all the bits we want.
+//   - width=device-width: scale to actual device width
+//   - initial-scale=1: render 1:1 by default
+//   - maximumScale=5 + userScalable=yes: keep accessibility pinch-
+//     zoom available (HIG requirement)
+//   - viewportFit=cover: enables `env(safe-area-inset-*)` so content
+//     extends behind the iPhone notch and home indicator without
+//     rendering under them (CSS in globals.css claims the bottom inset)
+//   - themeColor: tints iOS Safari's status bar / address bar.
+//     Static fallback here; we override per-tenant in the <head>
+//     below using the league's primary color.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: "cover",
+  themeColor: "#0c2340",
 };
+
+// Per-page generateMetadata (in app/teams/[slug]/page.tsx, etc.) can
+// override these for richer previews on specific pages.
+export async function generateMetadata(): Promise<Metadata> {
+  const h = headers();
+  const configJson = h.get("x-tenant-config-json");
+  if (!configJson) {
+    return {
+      title: "LeagueEngine",
+      description:
+        "Multi-tenant platform for amateur sports leagues — schedules, standings, stats, and captain tools.",
+    };
+  }
+  try {
+    const cfg = JSON.parse(configJson) as {
+      name?: string;
+      abbrev?: string;
+      sport?: string;
+      theme?: { logo_url?: string };
+    };
+    const name = cfg.name ?? "League";
+    const abbrev = cfg.abbrev;
+    const sport = cfg.sport === "softball" ? "softball" : "baseball";
+    const description = `Schedule, scores, standings, and stats for ${name}${
+      abbrev && abbrev !== name ? ` (${abbrev})` : ""
+    }. Live ${sport} updates, team rosters, and captain tools.`;
+    const logo = cfg.theme?.logo_url;
+    // Build absolute URL for OG image. We don't know the host here
+    // (middleware redacts), so use protocol-relative when possible
+    // OR fall back to the data URL or a relative path as-is. iMessage
+    // and most chat apps resolve relative paths against the page URL.
+    const ogImage = logo ? [{ url: logo, alt: `${name} logo` }] : undefined;
+
+    return {
+      title: { default: name, template: `%s · ${abbrev ?? name}` },
+      description,
+      openGraph: {
+        title: name,
+        description,
+        siteName: name,
+        type: "website",
+        ...(ogImage ? { images: ogImage } : {}),
+      },
+      twitter: {
+        card: "summary",
+        title: name,
+        description,
+        ...(ogImage ? { images: ogImage } : {}),
+      },
+    };
+  } catch {
+    return {
+      title: "LeagueEngine",
+      description: "Schedule, scores, standings, and stats.",
+    };
+  }
+}
 
 export default async function RootLayout({
   children,
@@ -92,6 +171,21 @@ export default async function RootLayout({
       }
     >
       <head>
+        {/* DNS prefetch + preconnect for Firebase services. The first
+            Firestore read pays a TCP + TLS handshake otherwise; doing
+            it during the browser's idle bytes after HTML parse means
+            the handshake is already warm by the time client-side
+            Firestore SDK fires.
+              - firestore.googleapis.com  — Firestore REST/gRPC
+              - firebaseinstallations.googleapis.com — Auth state
+              - fcm.googleapis.com — Push subscribe path
+            crossOrigin="" is critical: preconnect without it doesn't
+            actually warm the TLS session, just DNS. */}
+        <link rel="preconnect" href="https://firestore.googleapis.com" crossOrigin="" />
+        <link rel="preconnect" href="https://firebaseinstallations.googleapis.com" crossOrigin="" />
+        <link rel="dns-prefetch" href="https://fcm.googleapis.com" />
+        <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com" />
+
         {/* Per-tenant PWA manifest. Served by /app/manifest.webmanifest/route.ts
             which reads the tenant config from headers and customizes name +
             theme + icons. Browsers re-fetch on each page load when scoped
@@ -130,6 +224,7 @@ export default async function RootLayout({
               games={tickerGames}
               tenantShort={leagueAbbrev ?? leagueName ?? "League"}
               seasonYear={new Date().getFullYear()}
+              logoUrl={logoUrl}
             />
           )}
           {tenantId ? (
@@ -141,6 +236,7 @@ export default async function RootLayout({
           ) : null}
           <div className="site-content">{children}</div>
           {modal}
+          {tenantId ? <SiteFooter /> : null}
         </TenantProvider>
       </body>
     </html>

@@ -27,6 +27,10 @@ export interface PreviewCardProps {
   home: PreviewCardTeam;
   /** Renders the navy left-border accent. */
   isNext?: boolean;
+  /** Game status — used to show a non-default badge for postponed /
+   *  cancelled games on the schedule view. Final games render via
+   *  GameCard instead, so we don't expect "final" here. */
+  status?: "scheduled" | "postponed" | "cancelled" | "final" | string;
 }
 
 export function PreviewCard({
@@ -36,12 +40,19 @@ export function PreviewCard({
   away,
   home,
   isNext = false,
+  status,
 }: PreviewCardProps) {
   const timeLabel = formatTimeLabel(date, field);
   const router = useRouter();
+  const badge = statusBadge(status);
+  const muted = status === "cancelled" || status === "postponed";
   return (
     <div
-      className={"le-preview-card" + (isNext ? " next" : "")}
+      className={
+        "le-preview-card" +
+        (isNext ? " next" : "") +
+        (muted ? " muted" : "")
+      }
       role="link"
       tabIndex={0}
       onClick={() => router.push(`/games/${gameId}`)}
@@ -52,7 +63,18 @@ export function PreviewCard({
         }
       }}
     >
-      <div className="le-preview-time">{timeLabel}</div>
+      <div className="le-preview-time">
+        {timeLabel}
+        {badge && (
+          <span
+            className="le-preview-status"
+            data-kind={badge.kind}
+            aria-label={badge.label}
+          >
+            {badge.label}
+          </span>
+        )}
+      </div>
       <div className="le-preview-teams">
         <Side team={away} />
         <Side team={home} />
@@ -62,11 +84,22 @@ export function PreviewCard({
   );
 }
 
+function statusBadge(
+  status: string | undefined,
+): { kind: "postponed" | "cancelled"; label: string } | null {
+  if (status === "postponed") return { kind: "postponed", label: "POSTPONED" };
+  if (status === "cancelled") return { kind: "cancelled", label: "CANCELLED" };
+  return null;
+}
+
 function Side({ team }: { team: PreviewCardTeam }) {
   return (
     <div className="le-preview-team-row">
       <div className="le-preview-logo">
-        {team.logoUrl && <img src={team.logoUrl} alt="" />}
+        {team.logoUrl && (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img src={team.logoUrl} alt="" loading="lazy" decoding="async" />
+        )}
       </div>
       <div>
         <Link

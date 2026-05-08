@@ -1,0 +1,668 @@
+/* ── /history page styling ────────────────────────────────────────
+ * Lots of variables here so theming is one-stop. The color tokens
+ * (gold / champagne) only live on this page since they're trophy-
+ * specific; if other pages need them later, lift to globals.css.
+ */
+
+.le-history-hd {
+  margin-bottom: 18px;
+}
+
+.le-history-eyebrow {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--brand-primary);
+  margin: 0 0 6px;
+}
+
+.le-history-title {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: clamp(36px, 5vw, 54px);
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+  color: var(--text-strong);
+  margin: 0;
+}
+
+.le-history-sub {
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--muted);
+  font-family: var(--font-inter), sans-serif;
+  max-width: 680px;
+  line-height: 1.5;
+}
+
+.le-history-empty {
+  padding: 32px 24px;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px dashed rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  text-align: center;
+  color: var(--muted);
+  line-height: 1.55;
+}
+.le-history-empty strong {
+  color: var(--brand-primary);
+  font-size: 16px;
+  display: block;
+  margin-bottom: 6px;
+}
+
+/* ── Stats strip ──────────────────────────────────────────────── */
+
+.le-hist-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 20px 0 22px;
+}
+@media (max-width: 600px) {
+  .le-hist-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.le-hist-stat {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 45, 114, 0.04),
+    rgba(218, 165, 32, 0.06)
+  );
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  padding: 14px 16px;
+  text-align: center;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.le-hist-stat:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+.le-hist-stat-val {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 30px;
+  font-weight: 900;
+  color: var(--brand-primary);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.le-hist-stat-lbl {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+/* ── Tabs ─────────────────────────────────────────────────────── */
+
+.le-hist-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 18px;
+  padding: 4px;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 12px;
+  /* Allow horizontal scroll on small screens rather than wrapping
+     cramped. The pills always look full on mobile that way. */
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.le-hist-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.le-hist-tab {
+  flex: 1 1 auto;
+  min-width: max-content;
+  background: transparent;
+  border: none;
+  padding: 10px 18px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    transform 0.05s ease;
+  white-space: nowrap;
+}
+.le-hist-tab:hover:not(.active) {
+  color: var(--text-strong);
+  background: rgba(0, 0, 0, 0.03);
+}
+.le-hist-tab:active {
+  transform: scale(0.98);
+}
+.le-hist-tab.active {
+  background: white;
+  color: var(--brand-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.le-hist-tab:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+.le-hist-panel {
+  animation: leHistFadeIn 0.22s ease;
+}
+@keyframes leHistFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Cards ────────────────────────────────────────────────────── */
+
+.le-hist-grid {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 880px) {
+  .le-hist-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.le-hist-card {
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 14px;
+  padding: 18px 20px;
+}
+
+.le-hist-card-wide {
+  /* Champions wall — span full width on mobile already via grid;
+     this is just for breathing room. */
+}
+
+.le-hist-card-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.le-hist-card-hd h2 {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  color: var(--text-strong);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.le-hist-card-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin: -8px 0 12px;
+}
+
+.le-hist-empty {
+  font-size: 14px;
+  color: var(--muted);
+  padding: 24px 8px;
+  text-align: center;
+  font-style: italic;
+}
+
+/* Filter input */
+.le-hist-search {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  min-width: 180px;
+  background: white;
+  color: var(--text-strong);
+}
+.le-hist-search:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+/* ── Champions wall ───────────────────────────────────────────── */
+
+.le-champ-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.le-champ-row {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 14px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+.le-champ-row:last-child {
+  border-bottom: none;
+}
+@media (max-width: 520px) {
+  .le-champ-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
+
+.le-champ-season {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text-strong);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.le-champ-divs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.le-champ-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px 5px 5px;
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: 13px;
+  color: var(--text-strong);
+  transition:
+    transform 0.12s ease,
+    border-color 0.12s ease,
+    box-shadow 0.18s ease;
+}
+.le-champ-badge-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+}
+
+.le-champ-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: contain;
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+.le-champ-logo-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  border: none;
+}
+
+.le-champ-badge-text {
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 1.15;
+  padding-right: 4px;
+}
+.le-champ-div {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.le-champ-team {
+  font-weight: 700;
+}
+
+/* ── Leaderboard ──────────────────────────────────────────────── */
+
+.le-lb {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.le-lb-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  /* The .le-lb-bar sits behind everything, so any content above
+     gets a stacking context with `position: relative + z-index`. */
+  z-index: 0;
+}
+.le-lb-row:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+.le-lb-row > * {
+  position: relative;
+  z-index: 1;
+}
+.le-lb-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 8px;
+  z-index: 0;
+  opacity: 0.35;
+  pointer-events: none;
+  transition: width 0.4s ease;
+}
+
+.le-lb-rank {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.le-lb-link {
+  text-decoration: none;
+  color: inherit;
+  display: contents;
+}
+.le-lb-link:hover .le-lb-name {
+  text-decoration: underline;
+}
+
+.le-lb-team {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.le-lb-name {
+  color: var(--text-strong);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.le-lb-logo {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: white;
+  object-fit: contain;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+}
+.le-lb-logo-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 9px;
+  font-weight: 800;
+  border: none;
+}
+
+.le-lb-count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.le-lb-num {
+  font-family: var(--font-barlow), sans-serif;
+  font-weight: 900;
+  color: var(--brand-primary);
+  font-size: 16px;
+}
+.le-lb-unit {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+/* ── Best-records list (Records tab) ──────────────────────────── */
+
+.le-best-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.le-best-row {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+.le-best-row:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+.le-best-rank {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--muted);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.le-best-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.le-best-team {
+  font-weight: 700;
+  color: var(--text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.le-best-meta {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.le-best-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  font-variant-numeric: tabular-nums;
+}
+.le-best-pct {
+  font-family: var(--font-barlow), sans-serif;
+  font-weight: 900;
+  color: var(--brand-primary);
+  font-size: 16px;
+}
+.le-best-wl {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+/* ── Standings tab pickers ────────────────────────────────────── */
+
+.le-hist-pickers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.le-hist-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.le-hist-picker select {
+  padding: 7px 10px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: white;
+  color: var(--text-strong);
+  font-family: inherit;
+  text-transform: none;
+  letter-spacing: 0;
+  min-width: 170px;
+}
+.le-hist-picker select:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+.le-hist-block-hd {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.005em;
+  color: var(--text-strong);
+  margin: 0 0 12px;
+}
+
+/* ── Standings table ──────────────────────────────────────────── */
+
+.le-hist-tbl-wrap {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: white;
+}
+
+.le-hist-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  min-width: 540px;
+}
+
+.le-hist-tbl thead tr {
+  background: var(--brand-primary);
+  color: white;
+}
+.le-hist-tbl thead th {
+  padding: 10px 6px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.le-hist-tbl thead th.left {
+  text-align: left;
+  padding-left: 14px;
+}
+
+.le-hist-tbl tbody td {
+  padding: 8px 6px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+.le-hist-tbl tbody td.left {
+  text-align: left;
+  padding-left: 14px;
+}
+.le-hist-tbl tbody tr:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+.le-hist-tbl tbody tr.top td {
+  background: linear-gradient(
+    90deg,
+    rgba(218, 165, 32, 0.1),
+    rgba(218, 165, 32, 0.02)
+  );
+  font-weight: 700;
+  color: var(--brand-primary);
+}
+
+.le-tbl-team {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.le-tbl-trophy {
+  font-size: 14px;
+}
+.le-tbl-logo {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: white;
+  object-fit: contain;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+.le-tbl-team a {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 600;
+}
+.le-tbl-team a:hover {
+  text-decoration: underline;
+  color: var(--brand-primary);
+}

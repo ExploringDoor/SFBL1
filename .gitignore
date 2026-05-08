@@ -28,6 +28,9 @@ ui-debug.log
 .firebase/
 firebase-emulator-data/
 
+# Claude Code — local user permissions, not project config
+.claude/settings.local.json
+
 # Service account / admin credentials — NEVER commit
 secrets/
 *service-account*.json

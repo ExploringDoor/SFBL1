@@ -54,22 +54,54 @@ export function GET() {
     name,
     short_name: shortName,
     description: `${name} — captain portal, schedule, scores, standings.`,
-    start_url: "/",
+    start_url: "/?pwa=1",
     scope: "/",
     display: "standalone",
+    display_override: ["window-controls-overlay", "standalone"],
     orientation: "portrait",
-    background_color: "#ffffff",
+    background_color: themeColor,
     theme_color: themeColor,
     icons: [
       // Primary icon — used for the home-screen tile, splash screen,
-      // task-switcher thumb. Browsers will scale this; ideally it's
-      // a 512x512 PNG with the league logo on a brand-color
-      // background.
+      // task-switcher thumb. Browsers scale automatically; ideally
+      // a 512×512 PNG with the league logo on a brand-color square.
+      // Listing it twice (any + maskable) gives Android adaptive
+      // icons a clean shape while non-maskable platforms get the
+      // raw image.
       {
         src: logoUrl,
         sizes: "any",
         type: "image/png",
-        purpose: "any maskable",
+        purpose: "any",
+      },
+      {
+        src: logoUrl,
+        sizes: "any",
+        type: "image/png",
+        purpose: "maskable",
+      },
+    ],
+    // Long-press home-screen icon shortcuts. Power users tap once
+    // to deep-link straight to scores or standings without going
+    // through the homepage.
+    shortcuts: [
+      {
+        name: "Scores",
+        short_name: "Scores",
+        url: "/scores",
+        description: "Recent finals and box scores",
+      },
+      {
+        name: "Standings",
+        short_name: "Standings",
+        url: "/standings",
+        description: "Division standings",
+      },
+      {
+        name: "Schedule",
+        short_name: "Schedule",
+        url: "/schedule",
+        description: "Upcoming games",
       },
     ],
     categories: ["sports", "lifestyle"],

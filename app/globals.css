@@ -4989,3 +4989,119 @@ body {
     display: none;
   }
 }
+
+/* ── iOS form-input zoom prevention ──────────────────────────────
+ * Mobile Safari auto-zooms when a focused text input has font-size
+ * below 16px. The zoom never auto-restores, leaving users on a
+ * permanently magnified page until they pinch out. Force ≥16px on
+ * every text-input-like element on phones. Desktop unaffected. */
+@media (max-width: 640px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="number"],
+  input[type="password"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  input[type="month"],
+  input[type="week"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* ── iOS standalone-PWA polish ───────────────────────────────────
+ * Disable rubber-band overscroll bounce on the body when running as
+ * an installed PWA. Keeps the app feeling like a native app, not
+ * a webview. Inner scrollers (admin tables, score lists) still
+ * scroll normally. */
+@media (display-mode: standalone) {
+  html,
+  body {
+    overscroll-behavior-y: contain;
+  }
+  /* When installed as a PWA, also tighten up the connected feel —
+   * disable text selection on UI chrome (buttons, nav). Content
+   * areas still allow selection by overriding via .selectable. */
+  body {
+    -webkit-touch-callout: none;
+  }
+}
+
+/* Safe-area-inset bottom padding for iPhone home indicator. */
+.site-shell {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* ── Tap-highlight cleanup ───────────────────────────────────────
+ * iOS shows a translucent gray overlay on every tapped link/button
+ * by default. On a polished site that looks janky. Disable the
+ * default highlight; rely on hover/active styles for feedback. */
+a,
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Keyboard focus-visible rings ────────────────────────────────
+ * Mouse/touch users get NO focus ring (clean), keyboard (Tab) users
+ * get a clear 2px ring. `:focus-visible` is the heuristic browsers
+ * already use to distinguish input modality. Brand-colored so it
+ * harmonizes with the rest of the design. */
+:focus {
+  outline: none;
+}
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--brand-primary, #002d72);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+}
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--brand-primary, #002d72);
+  outline-offset: 1px;
+}
+
+/* ── Reduced-motion preference ───────────────────────────────────
+ * Kills the pulsing live dots, shimmer skeletons, and slide
+ * animations for users with the OS "Reduce Motion" toggle on
+ * (vestibular disorder, motion sickness, etc.). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Screen-reader-only utility ──────────────────────────────────
+ * Visually hide content but keep it in the accessibility tree.
+ * Used for live-region announcements + descriptive labels alongside
+ * decorative imagery. The standard WebAIM .sr-only recipe. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

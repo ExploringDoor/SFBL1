@@ -156,6 +156,7 @@ export async function POST(req: Request) {
       body.num === "" || body.num == null
         ? null
         : Number(body.num);
+    // Public doc: never PII. email/phone go to /_private/contact.
     await db.doc(`leagues/${leagueId}/players/${playerId}`).set({
       name: rawName,
       team_id: captainTeamId,
@@ -164,15 +165,27 @@ export async function POST(req: Request) {
         typeof body.pos === "string" && body.pos.trim()
           ? body.pos.trim()
           : null,
-      email:
-        typeof body.email === "string" ? body.email.trim() : "",
-      phone:
-        typeof body.phone === "string" ? body.phone.trim() : "",
       walk_on: !isAdmin, // captain-added → flagged for admin review
       created_by_uid: decoded.uid,
       created_at: new Date().toISOString(),
       active: true,
     });
+    const email =
+      typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+    const phone =
+      typeof body.phone === "string" ? body.phone.trim() : "";
+    if (email || phone) {
+      await db
+        .doc(`leagues/${leagueId}/players/${playerId}/_private/contact`)
+        .set(
+          {
+            ...(email ? { email } : {}),
+            ...(phone ? { phone } : {}),
+            updated_at: new Date().toISOString(),
+          },
+          { merge: true },
+        );
+    }
     return NextResponse.json({ ok: true, player_id: playerId });
   }
 
@@ -204,27 +217,54 @@ export async function POST(req: Request) {
 
   // ── UPDATE ───────────────────────────────────────────────────
   if (action === "update") {
-    const update: Record<string, unknown> = {};
-    if (typeof body.name === "string") update.name = cleanName(body.name);
+    // Split fields: public-doc updates vs PII updates (which go to
+    // the /_private/contact subdoc). Public-readable doc never gets
+    // email or phone.
+    const publicUpdate: Record<string, unknown> = {};
+    if (typeof body.name === "string") publicUpdate.name = cleanName(body.name);
     if (body.num !== undefined) {
       const n = Number(body.num);
-      update.jersey = Number.isFinite(n) ? n : null;
+      publicUpdate.jersey = Number.isFinite(n) ? n : null;
     }
     if (typeof body.pos === "string") {
-      update.position = body.pos.trim() || null;
+      publicUpdate.position = body.pos.trim() || null;
     }
-    if (typeof body.email === "string") update.email = body.email.trim();
-    if (typeof body.phone === "string") update.phone = body.phone.trim();
-    update.updated_at = new Date().toISOString();
-    update.updated_by_uid = decoded.uid;
+    publicUpdate.updated_at = new Date().toISOString();
+    publicUpdate.updated_by_uid = decoded.uid;
     await db
       .doc(`leagues/${leagueId}/players/${playerId}`)
-      .set(update, { merge: true });
+      .set(publicUpdate, { merge: true });
+
+    const contactUpdate: Record<string, unknown> = {};
+    if (typeof body.email === "string") {
+      contactUpdate.email = body.email.trim().toLowerCase();
+    }
+    if (typeof body.phone === "string") {
+      contactUpdate.phone = body.phone.trim();
+    }
+    if (Object.keys(contactUpdate).length > 0) {
+      contactUpdate.updated_at = new Date().toISOString();
+      await db
+        .doc(`leagues/${leagueId}/players/${playerId}/_private/contact`)
+        .set(contactUpdate, { merge: true });
+    }
     return NextResponse.json({ ok: true });
   }
 
   // ── REMOVE ───────────────────────────────────────────────────
   if (action === "remove") {
+    // Firestore subcollections aren't auto-deleted with their parent.
+    // Clean up the /_private/contact doc explicitly so we don't leave
+    // an orphaned PII record behind. Best-effort: if the subdoc
+    // lookup fails (or there's nothing there), still proceed with
+    // the parent delete.
+    try {
+      await db
+        .doc(`leagues/${leagueId}/players/${playerId}/_private/contact`)
+        .delete();
+    } catch (e) {
+      console.warn("[captain-roster] _private/contact cleanup failed:", e);
+    }
     await db.doc(`leagues/${leagueId}/players/${playerId}`).delete();
     return NextResponse.json({ ok: true });
   }

@@ -79,6 +79,27 @@ export interface LeagueConfig {
 
   // Standings scoring config (optional — defaults to PCT-based)
   standings?: LeagueStandingsConfig;
+
+  // Footer sponsor strip — rendered on every public page when set.
+  // Logos link to the sponsor's website. Empty/missing array = no
+  // strip rendered (e.g. tenants in onboarding before they've sold
+  // sponsorships).
+  sponsors?: LeagueSponsor[];
+
+  // Field/venue catalog. Populates the schedule editor's "Field"
+  // dropdown so admins can't typo a venue. Free-text fallback if
+  // empty.
+  fields?: string[];
+}
+
+export interface LeagueSponsor {
+  /** Display name shown on hover / for screen readers. */
+  name: string;
+  /** Logo URL — public path or absolute https URL. PNG with
+   *  transparent background works best on the dark footer strip. */
+  logo_url: string;
+  /** Optional — clicking the logo opens this in a new tab. */
+  url?: string;
 }
 
 // Custom-domain mapping doc at /domains/{hostname}.

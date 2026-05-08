@@ -2,16 +2,76 @@
 // route at @modal/(.)games/[id] wraps the same content in a modal.
 
 import Link from "next/link";
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { BoxScoreContent } from "@/components/BoxScoreContent";
 import { RecapEditor } from "@/components/RecapEditor";
+import { LiveScoreBanner } from "@/components/LiveScoreBanner";
 import { loadBoxScoreData } from "@/lib/box-score-data";
 import { getAdminDb } from "@/lib/firebase-admin";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { PrintButton } from "./PrintButton";
 
 export const dynamic = "force-dynamic";
+
+// Per-game link preview. The most-shared URL pattern: someone wins
+// in a walk-off, drops the link in the team chat. Preview should
+// show the matchup + final score, not generic league copy.
+export async function generateMetadata({
+  params,
+}: {
+  params: { gameId: string };
+}): Promise<Metadata> {
+  const tenantId = headers().get("x-tenant-id");
+  if (!tenantId) return {};
+  const db = getAdminDb();
+  const gameSnap = await db
+    .doc(`leagues/${tenantId}/games/${params.gameId}`)
+    .get();
+  if (!gameSnap.exists) return {};
+  const data = gameSnap.data() ?? {};
+  const [awaySnap, homeSnap] = await Promise.all([
+    db
+      .doc(`leagues/${tenantId}/teams/${data.away_team_id}`)
+      .get(),
+    db
+      .doc(`leagues/${tenantId}/teams/${data.home_team_id}`)
+      .get(),
+  ]);
+  const awayName = String(awaySnap.data()?.name ?? data.away_team_id ?? "Away");
+  const homeName = String(homeSnap.data()?.name ?? data.home_team_id ?? "Home");
+  const status = String(data.status ?? "scheduled");
+  const isFinal = status === "final" || status === "approved";
+  const aScore = Number(data.away_score);
+  const hScore = Number(data.home_score);
+  const dateRaw = String(data.date ?? "");
+  const dateFmt = dateRaw
+    ? new Date(dateRaw).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : "";
+  const title =
+    isFinal && Number.isFinite(aScore) && Number.isFinite(hScore)
+      ? `${awayName} ${aScore} – ${hScore} ${homeName} (Final)`
+      : `${awayName} @ ${homeName}${dateFmt ? ` — ${dateFmt}` : ""}`;
+  const description =
+    isFinal && Number.isFinite(aScore) && Number.isFinite(hScore)
+      ? `Final score and box score for ${awayName} vs ${homeName}${dateFmt ? `, ${dateFmt}` : ""}.`
+      : `${awayName} at ${homeName}${dateFmt ? ` on ${dateFmt}` : ""}${data.field ? `, ${data.field}` : ""}.`;
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "article",
+    },
+    twitter: { card: "summary", title, description },
+  };
+}
 
 export default async function GameDetailPage({
   params,
@@ -80,6 +140,18 @@ export default async function GameDetailPage({
         </Link>
         <PrintButton />
       </div>
+      {/* Live banner — only renders when game.status is "live" or
+          "final" / "approved". Subscribes to the game doc so updates
+          flow live during in-progress games. */}
+      <LiveScoreBanner
+        leagueId={tenantId}
+        gameId={params.gameId}
+        awayName={data.away.name ?? data.away.team_id}
+        homeName={data.home.name ?? data.home.team_id}
+        initialAwayScore={data.away.score}
+        initialHomeScore={data.home.score}
+        initialStatus={data.status}
+      />
       <BoxScoreContent
         {...data}
         view={view}

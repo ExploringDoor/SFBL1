@@ -40,6 +40,12 @@ import {
   useLeagueRole,
   useUser,
 } from "@/lib/auth-client";
+import {
+  ScoresheetUploader,
+  type ParsedBoxScore,
+  type ParsedBatter,
+  type ParsedPitcher,
+} from "@/components/captain/ScoresheetUploader";
 
 // ── Types ──────────────────────────────────────────────────────────
 interface RosterPlayer {
@@ -590,6 +596,132 @@ export default function BoxScoreEditorPage() {
     );
   }
 
+  // Apply Claude-parsed scoresheet data to the editor state. Rough
+  // shape: per-batter rows are name-matched against the roster
+  // (fuzzy: lowercase last-name match, then full-name fallback).
+  // Unmatched names become walk-on entries with player_id=null.
+  // Pitchers get the same treatment. Linescore + final scores +
+  // errors fill directly from parsed values.
+  //
+  // After applying, we jump to the stats step so the captain can
+  // review + edit + submit. Autosave fires on the next state tick
+  // because every setter dirties the form.
+  function applyParsedBoxScore(parsed: ParsedBoxScore) {
+    const matchByLastName = (
+      rows: RosterPlayer[],
+      name: string,
+    ): RosterPlayer | null => {
+      if (!name) return null;
+      const norm = (s: string) =>
+        s.toLowerCase().replace(/[^a-z]/g, "");
+      const last = norm(name.split(" ").slice(-1).join(""));
+      const full = norm(name);
+      // Full-name first, then last-name fallback.
+      return (
+        rows.find((r) => norm(r.name) === full) ||
+        rows.find(
+          (r) => norm(r.name.split(" ").slice(-1).join("")) === last,
+        ) ||
+        null
+      );
+    };
+    const toBatRow = (
+      side: "away" | "home",
+      pb: ParsedBatter,
+    ): BatRow => {
+      const roster = side === "away" ? awayRoster : homeRoster;
+      const match = matchByLastName(roster, pb.name);
+      return {
+        player_id: match?.id ?? null,
+        name: match?.name ?? pb.name,
+        num: pb.num || (match?.jersey != null ? String(match.jersey) : ""),
+        ab: pb.ab || 0,
+        r: pb.r || 0,
+        h: pb.h || 0,
+        doubles: pb.doubles || 0,
+        triples: pb.triples || 0,
+        hr: pb.hr || 0,
+        rbi: pb.rbi || 0,
+        bb: pb.bb || 0,
+        so: pb.so || 0,
+        sb: pb.sb || 0,
+        pb: 0,
+        sac: 0,
+        sf: 0,
+        roe: 0,
+        fc: 0,
+      };
+    };
+    const toPitRow = (
+      side: "away" | "home",
+      pp: ParsedPitcher,
+    ): PitRow => {
+      const roster = side === "away" ? awayRoster : homeRoster;
+      const match = matchByLastName(roster, pp.name);
+      // Convert "6.1" → 19 outs (6 innings × 3 + 1 out).
+      const ipStr = pp.ip ? String(pp.ip) : "";
+      const ipMatch = ipStr.match(/^(\d+)(?:\.(\d))?$/);
+      const ipOuts = ipMatch
+        ? parseInt(ipMatch[1] ?? "0", 10) * 3 +
+          parseInt(ipMatch[2] ?? "0", 10)
+        : 0;
+      return {
+        player_id: match?.id ?? null,
+        name: match?.name ?? pp.name,
+        num: pp.num || (match?.jersey != null ? String(match.jersey) : ""),
+        ip_outs: ipOuts,
+        h: pp.h || 0,
+        r: pp.r || 0,
+        er: pp.er || 0,
+        bb: pp.bb || 0,
+        so: pp.so || 0,
+        hr: pp.hr || 0,
+        decision:
+          pp.decision === "W" ||
+          pp.decision === "L" ||
+          pp.decision === "S"
+            ? pp.decision
+            : "",
+      };
+    };
+
+    if (parsed.awayBatters?.length > 0) {
+      setAwayLineup(parsed.awayBatters.map((b) => toBatRow("away", b)));
+    }
+    if (parsed.homeBatters?.length > 0) {
+      setHomeLineup(parsed.homeBatters.map((b) => toBatRow("home", b)));
+    }
+    if (parsed.awayPitchers?.length > 0) {
+      setAwayPitchers(parsed.awayPitchers.map((p) => toPitRow("away", p)));
+    }
+    if (parsed.homePitchers?.length > 0) {
+      setHomePitchers(parsed.homePitchers.map((p) => toPitRow("home", p)));
+    }
+    if (parsed.linescore) {
+      const innCount = Number(config?.linescore_innings ?? 7);
+      const padTo = (arr: number[] | undefined): number[] => {
+        const src = Array.isArray(arr) ? arr : [];
+        return Array.from({ length: innCount }, (_, i) => src[i] || 0);
+      };
+      setInnings({
+        away: padTo(parsed.linescore.away),
+        home: padTo(parsed.linescore.home),
+      });
+      setErrors({
+        away: parsed.linescore.awayErrors || 0,
+        home: parsed.linescore.homeErrors || 0,
+      });
+    }
+    if (parsed.awayScore != null || parsed.homeScore != null) {
+      setFinalScores({
+        away: parsed.awayScore ?? null,
+        home: parsed.homeScore ?? null,
+      });
+    }
+    // Jump to stats step so the captain reviews + submits there.
+    setStep("stats");
+  }
+
   // Stats-step helpers
   function updateBat(side: "away" | "home", i: number, key: string, val: number) {
     const setter = side === "away" ? setAwayLineup : setHomeLineup;
@@ -1012,6 +1144,21 @@ export default function BoxScoreEditorPage() {
               : "Step 3 of 3 · Enter stats. Submit when done."}
         </p>
       </div>
+
+      {/* Scoresheet uploader — alternative to manual entry. Captain
+          uploads PDF or photo, AI parses it, the rest of the form
+          pre-populates and jumps to the stats step. Always visible
+          so it's not buried after step 1. */}
+      <ScoresheetUploader
+        leagueId={tenantId ?? ""}
+        gameId={gameId ?? ""}
+        awayTeam={game.away_team_name}
+        homeTeam={game.home_team_name}
+        date={game.date ?? ""}
+        field={game.field ?? ""}
+        user={user}
+        onParsed={applyParsedBoxScore}
+      />
 
       {step === "lineupAway" && (
         <LineupStep

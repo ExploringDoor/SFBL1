@@ -64,6 +64,11 @@ export interface PlayerProfileProps {
   } | null;
   /** Player's headshot, if any. Falls back to team logo, then initials. */
   photoUrl?: string | null;
+  /** Optional overlay element rendered on top of the avatar (used
+   *  for the client-side "edit photo" button when the viewer is
+   *  admin / captain / self). Lets PlayerProfile stay server-
+   *  rendered while the auth-aware overlay ships its own JS. */
+  avatarOverlay?: React.ReactNode;
   batting?: PlayerSeasonBatting | null;
   pitching?: PlayerSeasonPitching | null;
 }
@@ -74,6 +79,7 @@ export function PlayerProfile({
   position,
   team,
   photoUrl,
+  avatarOverlay,
   batting,
   pitching,
 }: PlayerProfileProps) {
@@ -92,9 +98,13 @@ export function PlayerProfile({
       <div className="le-player-hero">
         <div
           className="le-player-av"
-          style={team?.color ? { borderColor: team.color } : undefined}
+          style={{
+            position: "relative",
+            ...(team?.color ? { borderColor: team.color } : {}),
+          }}
         >
           {avatarImg ? <img src={avatarImg} alt="" /> : initials}
+          {avatarOverlay}
         </div>
         <div className="le-player-info">
           <h1 className="le-player-name">{name}</h1>

@@ -32,6 +32,24 @@ interface Props {
 
 const KIND_LABELS: Record<string, string> = {
   schedule_edit: "Schedule edit",
+  schedule_create: "Game added",
+  schedule_delete: "Game deleted",
+  rain_out_day: "Rain-out day",
+  alert_publish: "Banner published",
+  alert_clear: "Banner cleared",
+  walkon_approve: "Walk-on approved",
+  walkon_reject: "Walk-on rejected",
+  csv_schedule_import: "CSV schedule import",
+  chat_moderate: "Chat message deleted",
+  chat_clear_all: "Chat cleared",
+  gcal_setup: "GCal sync enabled",
+  gcal_sync_all: "GCal full reconcile",
+  gcal_disable: "GCal sync disabled",
+  score_quick_batch: "Scores batch-entered",
+  score_resolve_conflict: "Score conflict resolved",
+  sponsors_update: "Sponsors updated",
+  bulk_invite: "Bulk captain invite",
+  playoffs_update: "Playoff bracket updated",
   // future kinds (claim_grant, payment_edit, etc.) will fall back to
   // their raw key. Add labels here as needed.
 };
@@ -41,6 +59,8 @@ export function AuditLogViewer({ leagueId, user }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [kindFilter, setKindFilter] = useState<string>("");
+  const [clearing, setClearing] = useState(false);
+  const [clearMsg, setClearMsg] = useState<string | null>(null);
 
   const fetchLog = useCallback(async () => {
     setLoading(true);
@@ -72,6 +92,53 @@ export function AuditLogViewer({ leagueId, user }: Props) {
   useEffect(() => {
     fetchLog();
   }, [fetchLog]);
+
+  async function clearLog(olderThanDays: number | null) {
+    const label =
+      olderThanDays == null
+        ? "EVERY audit entry for this league"
+        : `entries older than ${olderThanDays} days`;
+    if (
+      !window.confirm(
+        `Permanently delete ${label}? This can't be undone.`,
+      )
+    ) {
+      return;
+    }
+    setClearing(true);
+    setClearMsg(null);
+    try {
+      const idToken = await user.getIdToken();
+      const params = new URLSearchParams({ leagueId });
+      if (olderThanDays != null) {
+        params.set("olderThanDays", String(olderThanDays));
+      }
+      const res = await fetch(
+        `/api/admin-audit-log?${params.toString()}`,
+        {
+          method: "DELETE",
+          headers: { authorization: `Bearer ${idToken}` },
+        },
+      );
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        deleted?: number;
+        total_after?: number;
+      };
+      if (!res.ok) {
+        setClearMsg(`Error: ${data.error ?? `HTTP ${res.status}`}`);
+        return;
+      }
+      setClearMsg(
+        `Deleted ${data.deleted ?? 0} entries. ${data.total_after ?? 0} remain.`,
+      );
+      await fetchLog();
+    } catch (e) {
+      setClearMsg(e instanceof Error ? e.message : "Clear failed");
+    } finally {
+      setClearing(false);
+    }
+  }
 
   // Distinct kinds from current entries — drives the filter dropdown.
   // Includes the currently-selected kind even if no entries match
@@ -116,8 +183,32 @@ export function AuditLogViewer({ leagueId, user }: Props) {
           >
             {loading ? "…" : "Refresh"}
           </button>
+          <button
+            type="button"
+            onClick={() => clearLog(30)}
+            disabled={clearing || loading}
+            title="Delete entries older than 30 days. Recent activity stays."
+            className="rounded-md border border-amber-300 bg-white px-3 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-50 disabled:opacity-50"
+          >
+            {clearing ? "…" : "Clear old"}
+          </button>
+          <button
+            type="button"
+            onClick={() => clearLog(null)}
+            disabled={clearing || loading}
+            title="Permanently delete every audit entry for this league."
+            className="rounded-md border border-red-300 bg-white px-3 py-1 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
+          >
+            {clearing ? "…" : "Clear all"}
+          </button>
         </div>
       </div>
+
+      {clearMsg && (
+        <p className="text-sm rounded bg-slate-50 px-2 py-1 border border-slate-200 text-slate-700">
+          {clearMsg}
+        </p>
+      )}
 
       {error && (
         <p className="text-sm text-red-700 rounded bg-red-50 px-2 py-1 border border-red-200">

@@ -41,10 +41,15 @@ export interface TickerProps {
   /** Games to render, ordered however the data layer chose (typically
    *  most-recent finals first then upcoming). */
   games: TickerGame[];
-  /** Tenant short name shown in the left label, e.g. "DVSL" / "SFBL". */
+  /** Tenant short name shown in the left label when no logo is set. */
   tenantShort: string;
-  /** Season year shown next to the short name, dimmed. */
+  /** Season year shown next to the short name (text mode only). */
   seasonYear: number;
+  /** Tenant league banner. When provided, replaces the hex+short+year
+   *  text in the left label. Most leagues set this to their full
+   *  graphical wordmark (e.g. SFBL's "South Florida BASEBALL LEAGUE"
+   *  art) so the ticker double-serves as the site's visual header. */
+  logoUrl?: string | null;
   /** Where the left label and right "Full Schedule" link point. */
   homeHref?: string;
   scoresHref?: string;
@@ -54,6 +59,7 @@ export function Ticker({
   games,
   tenantShort,
   seasonYear,
+  logoUrl,
   homeHref = "/",
   scoresHref = "/scores",
 }: TickerProps) {
@@ -61,12 +67,20 @@ export function Ticker({
     <div id="score-ticker">
       <Link
         href={homeHref}
-        className="st-label"
+        className={"st-label" + (logoUrl ? " has-logo" : "")}
         title="Home"
+        aria-label={tenantShort}
       >
-        <span aria-hidden>⬡</span>
-        <span>{tenantShort}</span>
-        <span className="st-label-year">{seasonYear}</span>
+        {logoUrl ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img src={logoUrl} alt={tenantShort} className="st-label-img" />
+        ) : (
+          <>
+            <span aria-hidden>⬡</span>
+            <span>{tenantShort}</span>
+            <span className="st-label-year">{seasonYear}</span>
+          </>
+        )}
       </Link>
 
       <div className="st-scroll">

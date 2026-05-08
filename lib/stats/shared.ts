@@ -57,6 +57,7 @@ export function ops(obp: number, slg: number): number {
 export type GameStatus =
   | "draft"
   | "scheduled"
+  | "live"
   | "final"
   | "approved"
   | "ppd"
@@ -83,6 +84,10 @@ export interface StandingsRow {
   pct: number;
   gb: number;
   streak?: string; // "W3", "L2", "T1" — undefined if no games played
+  /** Last-5-game outcomes in chronological order, oldest first.
+   *  Used to render a sparkline-style trend chart on the standings
+   *  page. Empty when no games played. */
+  recent?: ("W" | "L" | "T")[];
 }
 
 export interface PointsScheme {
@@ -204,7 +209,12 @@ export function computeStandings(games: GameResult[]): StandingsRow[] {
     let count = 0;
     for (let i = list.length - 1; i >= 0 && list[i] === last; i--) count++;
     const r = rows.get(teamId);
-    if (r) r.streak = `${last}${count}`;
+    if (r) {
+      r.streak = `${last}${count}`;
+      // Last 5 outcomes for the L5 sparkline. Cap at 5 — older
+      // games aren't useful for a "recent form" indicator.
+      r.recent = list.slice(-5) as ("W" | "L" | "T")[];
+    }
   }
 
   // Sort: PCT desc, then run-differential desc.

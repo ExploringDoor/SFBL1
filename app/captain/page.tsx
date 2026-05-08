@@ -32,6 +32,8 @@ import { AttendanceTab } from "@/components/captain/AttendanceTab";
 import { TeamChatTab } from "@/components/captain/TeamChatTab";
 import { CaptainsChatTab } from "@/components/captain/CaptainsChatTab";
 import { HelpTab } from "@/components/captain/HelpTab";
+import { QuickScoreTab } from "@/components/captain/QuickScoreTab";
+import { FirstTimeWelcome } from "@/components/captain/FirstTimeWelcome";
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
 import { getDb } from "@/lib/firebase";
 import { useTenant } from "@/lib/tenant-context";
@@ -327,6 +329,7 @@ const TABS: Tab[] = [
   { key: "roster", label: "Roster" },
   { key: "schedule", label: "Schedule" },
   { key: "scores", label: "Submit Score" },
+  { key: "quickscore", label: "⚡ Quick Score" },
   { key: "payments", label: "Payments" },
   { key: "notifications", label: "🔔 Notifications" },
   { key: "attendance", label: "Attendance" },
@@ -365,6 +368,19 @@ function CaptainTabNav() {
         <button
           key={t.key}
           type="button"
+          ref={(el) => {
+            // Auto-scroll the active tab into view on phone where the
+            // nav is one swipeable row. Without this, deep-linking to
+            // (say) ?tab=captchat lands the user with the active tab
+            // off-screen.
+            if (el && tab === t.key) {
+              el.scrollIntoView({
+                behavior: "smooth",
+                inline: "center",
+                block: "nearest",
+              });
+            }
+          }}
           className={"cap-tab-item" + (tab === t.key ? " active" : "")}
           onClick={() => go(t.key)}
         >
@@ -413,14 +429,30 @@ function CaptainBody({
   if (tab === "notifications")
     return <NotificationsPanel leagueId={leagueId} />;
   if (tab === "help") return <HelpTab />;
+  if (tab === "quickscore") {
+    return (
+      <QuickScoreTab
+        leagueId={leagueId}
+        teamId={teamId}
+        teamNamesById={teamNames}
+      />
+    );
+  }
   if (tab === "scores") {
     return (
       <div className="cap-tab">
         <div className="cap-section-head">
           <h2 className="cap-section-title">Submit Score</h2>
           <p className="cap-section-sub">
-            Click any game below to enter the box score. Both captains
-            can submit; admin reconciles.
+            Click any game below to enter the full box score (lineup +
+            stats). For just the final score, use{" "}
+            <a
+              href="#quickscore"
+              style={{ color: "var(--brand-primary)", fontWeight: 600 }}
+            >
+              ⚡ Quick Score
+            </a>{" "}
+            instead. Both captains can submit; admin reconciles.
           </p>
         </div>
         <ul className="le-cap-game-list">
@@ -432,6 +464,10 @@ function CaptainBody({
               primary={{
                 label: "Box Score",
                 href: `/captain/box-score?game=${g.id}`,
+              }}
+              secondary={{
+                label: "📡 Score Live",
+                href: `/score/${g.id}`,
               }}
             />
           ))}
@@ -472,6 +508,7 @@ function CaptainBody({
 
   return (
     <>
+      <FirstTimeWelcome teamName={team.name} />
       <CaptainStatStrip
         record={stats.record}
         upcomingCount={upcoming.length}
@@ -488,7 +525,17 @@ function CaptainBody({
         />
       )}
 
-      {nextGame && (
+      {nextGame && isGameToday(nextGame) && (
+        <GameDayHero
+          game={nextGame}
+          myTeamId={teamId}
+          teamNames={teamNames}
+          rsvps={nextGameRsvps}
+          rosterCount={roster.length}
+        />
+      )}
+
+      {nextGame && !isGameToday(nextGame) && (
         <NextGameSpotlight
           game={nextGame}
           myTeamId={teamId}
@@ -1070,5 +1117,248 @@ function CaptainGameRow({
         )}
       </div>
     </li>
+  );
+}
+
+// ── Game Day Hero ──────────────────────────────────────────────────
+// Replaces NextGameSpotlight when the next game is today. Big banner
+// with the matchup, three large action buttons (Score Live · Submit
+// Lineup · Submit Box Score), and an RSVP summary.
+//
+// Why a separate component vs styling NextGameSpotlight differently:
+// the day-of UX is opinionated — captain wants one-tap-to-action,
+// not a marketing spotlight. Different component, different
+// affordances.
+
+function isGameToday(game: GameSnap): boolean {
+  if (!game.date) return false;
+  const d = new Date(game.date);
+  if (!Number.isFinite(d.getTime())) return false;
+  const today = new Date();
+  return (
+    d.getFullYear() === today.getFullYear() &&
+    d.getMonth() === today.getMonth() &&
+    d.getDate() === today.getDate()
+  );
+}
+
+function GameDayHero({
+  game,
+  myTeamId,
+  teamNames,
+  rsvps,
+  rosterCount,
+}: {
+  game: GameSnap;
+  myTeamId: string;
+  teamNames: Record<string, string>;
+  rsvps: Record<string, "yes" | "maybe" | "no">;
+  rosterCount: number;
+}) {
+  const isHome = game.home_team_id === myTeamId;
+  const oppId = isHome ? game.away_team_id : game.home_team_id;
+  const oppName = teamNames[oppId] ?? oppId;
+
+  let timeLabel = "TBD";
+  if (game.date) {
+    const d = new Date(game.date);
+    if (Number.isFinite(d.getTime())) {
+      timeLabel = d.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+      });
+    }
+  }
+
+  const yes = Object.values(rsvps).filter((s) => s === "yes").length;
+  const maybe = Object.values(rsvps).filter((s) => s === "maybe").length;
+  const no = Object.values(rsvps).filter((s) => s === "no").length;
+  const waiting = Math.max(0, rosterCount - yes - maybe - no);
+
+  return (
+    <section className="cap-gameday">
+      <header className="cap-gameday-head">
+        <span className="cap-gameday-pulse" aria-hidden />
+        <span className="cap-gameday-eyebrow">Today · Game Day</span>
+        <h2 className="cap-gameday-matchup">
+          {isHome ? "vs" : "@"} {oppName}
+        </h2>
+        <p className="cap-gameday-meta">
+          <strong>{timeLabel}</strong>
+          {game.field ? <> · {game.field}</> : null}
+        </p>
+      </header>
+
+      <div className="cap-gameday-rsvp">
+        <span>
+          <strong>{yes}</strong> in
+        </span>
+        <span>
+          <strong>{maybe}</strong> maybe
+        </span>
+        <span>
+          <strong>{no}</strong> out
+        </span>
+        {waiting > 0 && (
+          <span className="cap-gameday-waiting">
+            <strong>{waiting}</strong> haven't responded
+          </span>
+        )}
+      </div>
+
+      <div className="cap-gameday-actions">
+        <Link
+          href={`/score/${game.id}`}
+          className="cap-gameday-btn cap-gameday-btn-primary"
+        >
+          📡 Score Live
+        </Link>
+        <Link
+          href={`/captain/lineup?game=${game.id}`}
+          className="cap-gameday-btn cap-gameday-btn-secondary"
+        >
+          📋 Submit Lineup
+        </Link>
+        <Link
+          href={`/captain/box-score?game=${game.id}`}
+          className="cap-gameday-btn cap-gameday-btn-secondary"
+        >
+          ✏ Box Score
+        </Link>
+      </div>
+      <style jsx>{`
+        .cap-gameday {
+          margin: 16px 0 24px;
+          padding: 24px;
+          border-radius: 16px;
+          background: linear-gradient(
+            135deg,
+            var(--brand-primary, #002d72) 0%,
+            #0c1322 100%
+          );
+          color: white;
+          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+          position: relative;
+          overflow: hidden;
+        }
+        .cap-gameday::before {
+          content: "";
+          position: absolute;
+          right: -40px;
+          top: -40px;
+          width: 200px;
+          height: 200px;
+          background: radial-gradient(
+            circle,
+            rgba(239, 68, 68, 0.18) 0%,
+            transparent 70%
+          );
+          pointer-events: none;
+        }
+        .cap-gameday-head {
+          position: relative;
+        }
+        .cap-gameday-pulse {
+          display: inline-block;
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: #ef4444;
+          box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.25);
+          margin-right: 8px;
+          vertical-align: middle;
+          animation: capPulse 1.6s ease-in-out infinite;
+        }
+        @keyframes capPulse {
+          0%,
+          100% {
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.25);
+          }
+          50% {
+            box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.05);
+          }
+        }
+        .cap-gameday-eyebrow {
+          font-size: 12px;
+          font-weight: 800;
+          letter-spacing: 0.2em;
+          color: #fca5a5;
+          text-transform: uppercase;
+          vertical-align: middle;
+        }
+        .cap-gameday-matchup {
+          font-family: var(--font-barlow, "Barlow Condensed"), sans-serif;
+          font-size: clamp(36px, 6vw, 56px);
+          font-weight: 900;
+          line-height: 1;
+          margin: 12px 0 6px;
+          letter-spacing: -0.01em;
+        }
+        .cap-gameday-meta {
+          color: rgba(255, 255, 255, 0.85);
+          font-size: 16px;
+          margin: 0 0 18px;
+        }
+        .cap-gameday-meta strong {
+          color: white;
+          font-weight: 700;
+        }
+        .cap-gameday-rsvp {
+          display: flex;
+          gap: 18px;
+          flex-wrap: wrap;
+          padding: 12px 16px;
+          background: rgba(255, 255, 255, 0.08);
+          border-radius: 8px;
+          font-size: 13px;
+          color: rgba(255, 255, 255, 0.85);
+          margin-bottom: 18px;
+        }
+        .cap-gameday-rsvp strong {
+          color: white;
+          font-weight: 700;
+          font-size: 15px;
+        }
+        .cap-gameday-waiting {
+          color: #fde68a;
+          margin-left: auto;
+        }
+        .cap-gameday-actions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+        .cap-gameday-btn {
+          flex: 1;
+          min-width: 160px;
+          padding: 14px 20px;
+          border-radius: 10px;
+          font-weight: 800;
+          font-size: 14px;
+          letter-spacing: 0.04em;
+          text-decoration: none;
+          text-align: center;
+          transition: filter 0.15s, transform 0.05s;
+        }
+        .cap-gameday-btn:active {
+          transform: scale(0.98);
+        }
+        .cap-gameday-btn-primary {
+          background: #ef4444;
+          color: white;
+        }
+        .cap-gameday-btn-primary:hover {
+          filter: brightness(1.1);
+        }
+        .cap-gameday-btn-secondary {
+          background: rgba(255, 255, 255, 0.12);
+          color: white;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .cap-gameday-btn-secondary:hover {
+          background: rgba(255, 255, 255, 0.2);
+        }
+      `}</style>
+    </section>
   );
 }

@@ -7,11 +7,10 @@
 // filter chain.
 //
 // Wired-in DVSL fixes:
-//   - v269: when image is attached and URL is blank, default URL is
-//     `/profile#notif` (the embedded inbox in the player/captain
-//     portal). Today we don't have image-upload UI yet — the field is
-//     stubbed with a TODO so the v269 behaviour lands automatically
-//     when image upload arrives.
+//   - v269: when an image is attached and the URL field is blank,
+//     deep-link auto-overrides to `/profile#notif` so taps land in
+//     the in-app inbox where the image renders inline (Android's
+//     native banner crops images aggressively).
 //   - v272: auto-derive default URL from category. DVSL admin form
 //     left the URL blank by default (which FCM treats as no deep
 //     link, useless). We pre-fill a sensible default per category so
@@ -74,6 +73,11 @@ interface Props {
   user: User;
 }
 
+// Cap on the original file size before we read it. FCM's image
+// payload limit is 2 MB; we allow 1 MB pre-encode (data URL inflates
+// ~33%) so we don't compose a payload that fails to deliver.
+const MAX_IMAGE_BYTES = 1_000_000;
+
 export function SendPushSection({ leagueId, user }: Props) {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -84,6 +88,12 @@ export function SendPushSection({ leagueId, user }: Props) {
   const [teamOptions, setTeamOptions] = useState<TeamOpt[]>([]);
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<SendResult | null>(null);
+  // Image attachment state — data URL when set, null when empty. The
+  // fanout endpoint accepts data URLs directly (lib/notifications/
+  // server-fanout.ts:40), so we don't have to upload to Storage first.
+  const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [imageName, setImageName] = useState<string>("");
 
   // Load teams list once on mount.
   useEffect(() => {
@@ -104,12 +114,44 @@ export function SendPushSection({ leagueId, user }: Props) {
   }, [leagueId]);
 
   // Effective URL — what we'll actually send. Empty input → category
-  // default. (v269 image-attached → /profile#notif override would
-  // happen here when image upload is built.)
+  // default. v269: when an image is attached and URL is blank, we
+  // override the default to /profile#notif so taps land in the in-
+  // app notification inbox where the image renders inline (FCM's
+  // native banner crops images aggressively on Android).
   const effectiveUrl = useMemo(() => {
     if (url.trim()) return url.trim();
+    if (imageDataUrl) return "/profile#notif";
     return CATEGORY_DEFAULT_URL[category];
-  }, [url, category]);
+  }, [url, category, imageDataUrl]);
+
+  function handleImagePick(file: File | null) {
+    setImageError(null);
+    if (!file) {
+      setImageDataUrl(null);
+      setImageName("");
+      return;
+    }
+    if (!file.type.startsWith("image/")) {
+      setImageError("Pick an image file (PNG, JPG, GIF).");
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      setImageError(
+        `Image is ${(file.size / 1024 / 1024).toFixed(1)} MB — max 1 MB.`,
+      );
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const r = reader.result;
+      if (typeof r === "string") {
+        setImageDataUrl(r);
+        setImageName(file.name);
+      }
+    };
+    reader.onerror = () => setImageError("Couldn't read the file.");
+    reader.readAsDataURL(file);
+  }
 
   // adminOnly auto-flag (DVSL admin.html:8682).
   const adminOnly = category === "admin";
@@ -148,6 +190,7 @@ export function SendPushSection({ leagueId, user }: Props) {
           ...(teamId ? { team: teamId } : {}),
           url: effectiveUrl,
           ...(adminOnly ? { adminOnly: true } : {}),
+          ...(imageDataUrl ? { imageDataUrl } : {}),
         }),
       });
       const data = (await res.json().catch(() => ({}))) as SendResult & {
@@ -168,6 +211,8 @@ export function SendPushSection({ leagueId, user }: Props) {
         setTitle("");
         setBody("");
         setUrl("");
+        setImageDataUrl(null);
+        setImageName("");
       }
     } catch (e) {
       setResult({
@@ -277,11 +322,68 @@ export function SendPushSection({ leagueId, user }: Props) {
         </label>
       </div>
 
-      {/*
-       * TODO: image upload field (DVSL `imageDataUrl`). When wired,
-       * v269 behaviour kicks in: empty URL + image attached →
-       * `/profile#notif` instead of category default.
-       */}
+      <div>
+        <span className="block text-xs font-semibold text-slate-700 mb-1">
+          Image (optional)
+        </span>
+        <div className="flex items-start gap-3">
+          {imageDataUrl ? (
+            <div className="relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imageDataUrl}
+                alt={imageName}
+                className="h-20 w-20 rounded border border-slate-200 object-cover bg-slate-50"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setImageDataUrl(null);
+                  setImageName("");
+                }}
+                disabled={sending}
+                title="Remove image"
+                className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-red-600 text-white text-xs font-bold leading-none border-2 border-white"
+              >
+                ×
+              </button>
+            </div>
+          ) : (
+            <label className="flex h-20 w-20 flex-col items-center justify-center rounded border-2 border-dashed border-slate-300 bg-slate-50 cursor-pointer hover:bg-slate-100 text-xs text-slate-500">
+              <span className="text-lg">+</span>
+              <span>Attach</span>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) =>
+                  handleImagePick(e.target.files?.[0] ?? null)
+                }
+                disabled={sending}
+                className="hidden"
+              />
+            </label>
+          )}
+          <div className="flex-1 text-xs text-slate-600 leading-relaxed">
+            {imageName ? (
+              <>
+                <span className="font-mono">{imageName}</span> attached.
+                When recipients tap, they'll land at{" "}
+                <code>/profile#notif</code> where the image renders
+                inline (no Android crop).
+              </>
+            ) : (
+              <>
+                Optional photo for the notification — under 1 MB. PNG /
+                JPG / GIF. Useful for game recaps, championship-day
+                announcements, registration flyers.
+              </>
+            )}
+          </div>
+        </div>
+        {imageError && (
+          <p className="text-xs text-red-700 mt-1">{imageError}</p>
+        )}
+      </div>
 
       <div className="flex items-center justify-between">
         <button

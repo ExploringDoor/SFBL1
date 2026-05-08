@@ -1,0 +1,53 @@
+/* Homepage banner alert. Sits above the Hero, full width, kind-
+ * dependent palette. Designed to grab attention without being
+ * obnoxious — soft fill, sharp left border, plain serif text.
+ */
+
+.le-banner {
+  width: 100%;
+  border-bottom: 1px solid currentColor;
+  border-left: 4px solid currentColor;
+}
+
+.le-banner-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 14px 32px;
+  font-size: 14.5px;
+  line-height: 1.45;
+}
+
+.le-banner-title {
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.le-banner-sep {
+  opacity: 0.7;
+}
+
+.le-banner-info {
+  background: #dbeafe;
+  color: #1e3a8a;
+  border-color: #2563eb;
+}
+
+.le-banner-warning {
+  background: #fef3c7;
+  color: #78350f;
+  border-color: #d97706;
+}
+
+.le-banner-critical {
+  background: #fee2e2;
+  color: #7f1d1d;
+  border-color: #dc2626;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  .le-banner-inner {
+    padding: 12px 18px;
+    font-size: 13.5px;
+  }
+}

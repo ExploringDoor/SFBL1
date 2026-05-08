@@ -8,6 +8,7 @@ import { computeWeeks, pickActiveWeek } from "@/lib/season-weeks";
 import { computeStandings, type GameResult } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { ScoresScheduleTabs, WeekRow } from "./tabs-and-weeks";
+import { DivisionFilter } from "@/components/ui/DivisionFilter";
 
 export const dynamic = "force-dynamic";
 
@@ -20,12 +21,13 @@ interface ScoreGame {
   home_team_id: string;
   away_score: number;
   home_score: number;
+  division: string | null;
 }
 
 export default async function ScoresPage({
   searchParams,
 }: {
-  searchParams?: { week?: string };
+  searchParams?: { week?: string; div?: string };
 }) {
   const h = headers();
   const tenantId = h.get("x-tenant-id");
@@ -48,9 +50,24 @@ export default async function ScoresPage({
   }
 
   const { games, teams } = await loadScores(tenantId);
-  const finalGames = games.filter(
+  const allFinal = games.filter(
     (g) => g.status === "final" || g.status === "approved",
   );
+
+  // Division filter — same UX as /schedule. Pulled from games' own
+  // division field. URL is `?div=18%2B` etc.; missing = all divisions.
+  const allDivisions = Array.from(
+    new Set(
+      allFinal
+        .map((g) => g.division)
+        .filter((d): d is string => !!d),
+    ),
+  ).sort();
+  const activeDivision = searchParams?.div ?? null;
+  const finalGames =
+    activeDivision && activeDivision !== "all"
+      ? allFinal.filter((g) => g.division === activeDivision)
+      : allFinal;
 
   const weeks = computeWeeks(finalGames);
   const activeStart = searchParams?.week ?? pickActiveWeek(weeks);
@@ -144,6 +161,15 @@ export default async function ScoresPage({
       </header>
 
       <ScoresScheduleTabs active="scores" />
+
+      {allDivisions.length > 1 && (
+        <DivisionFilter
+          divisions={allDivisions}
+          active={activeDivision}
+          basePath="/scores"
+        />
+      )}
+
       {weeks.length === 0 ? (
         // No final games anywhere in the season yet — likely launch
         // day. Skip the week selector + day groups entirely; show a
@@ -289,6 +315,7 @@ async function loadScores(tenantId: string): Promise<{
       home_team_id: String(data.home_team_id ?? ""),
       away_score: Number(data.away_score ?? 0),
       home_score: Number(data.home_score ?? 0),
+      division: data.division ? String(data.division) : null,
     };
   });
 

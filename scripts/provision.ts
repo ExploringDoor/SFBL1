@@ -387,6 +387,7 @@ function stagePlayers(): StageResult {
       continue;
     }
     seenIds.add(id);
+    // Public doc — no PII. email/phone go to /_private/contact below.
     writes.push({
       path: `leagues/${leagueId}/players/${id}`,
       data: {
@@ -398,12 +399,21 @@ function stagePlayers(): StageResult {
         name: playerName,
         ...(jersey != null ? { jersey } : {}),
         ...(r.position ? { position: r.position } : {}),
-        ...(r.email ? { email: r.email.toLowerCase() } : {}),
-        ...(r.phone ? { phone: r.phone } : {}),
         active: true,
         updated_at: new Date().toISOString(),
       },
     });
+    // Private contact subdoc — admin + self only (firestore.rules:131).
+    if (r.email || r.phone) {
+      writes.push({
+        path: `leagues/${leagueId}/players/${id}/_private/contact`,
+        data: {
+          ...(r.email ? { email: r.email.toLowerCase() } : {}),
+          ...(r.phone ? { phone: r.phone } : {}),
+          updated_at: new Date().toISOString(),
+        },
+      });
+    }
   }
   return { errors, writes };
 }

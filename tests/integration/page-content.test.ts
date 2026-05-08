@@ -118,8 +118,11 @@ describe("/api/page-content — body validation", () => {
     expect(res.status).toBe(400);
   });
 
-  it("rejects markdown over the 200KB cap", async () => {
-    const huge = "x".repeat(200_001);
+  it("rejects payload over the 500KB cap", async () => {
+    // Cap was bumped from 200K to 500K when html-source path was
+    // added (RichEditor with embedded data-URL images is bigger
+    // than markdown for the same content).
+    const huge = "x".repeat(500_001);
     const res = await POST(
       makeReq({ leagueId: "sfbl", pageId: "rules", markdown: huge }),
     );

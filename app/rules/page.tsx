@@ -41,11 +41,17 @@ export default async function RulesPage() {
   const docSnap = await db
     .doc(`leagues/${tenantId}/page_content/rules`)
     .get();
+  // Prefer the stored html (RichEditor source) over re-rendering
+  // markdown. Existing markdown-only pages still work via fallback.
+  const data = docSnap.exists ? docSnap.data() : null;
+  const cachedHtml =
+    data && typeof data.html === "string" && data.html
+      ? String(data.html)
+      : "";
   const markdown =
-    (docSnap.exists ? (docSnap.data()?.markdown as string | undefined) : null) ??
-    DEFAULT_PLACEHOLDER;
-  const html = markdownToHtml(markdown);
-  const updatedAt = docSnap.data()?.updated_at as string | undefined;
+    (data?.markdown as string | undefined) ?? DEFAULT_PLACEHOLDER;
+  const html = cachedHtml || markdownToHtml(markdown);
+  const updatedAt = data?.updated_at as string | undefined;
 
   return (
     <Shell heading={config?.name ? `${config.name} — Rules` : "Rules"}>

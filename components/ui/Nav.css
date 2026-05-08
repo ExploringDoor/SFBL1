@@ -62,8 +62,26 @@
   vertical-align: middle;
 }
 
+/* Banner-style logo (e.g. SFBL header) — when the tenant has a
+ * full graphical logo, render it bigger and remove the dimming.
+ * The nav row gets a touch more height to fit it cleanly. */
+.le-nav-brand.has-logo {
+  padding: 4px 0;
+}
+.le-nav-brand.has-logo img {
+  height: 52px;
+  opacity: 1;
+  display: block;
+}
+@media (max-width: 640px) {
+  .le-nav-brand.has-logo img {
+    height: 44px;
+  }
+}
+
 .le-nav-links {
   display: flex;
+  align-items: center; /* vertically centers each <li> within the row */
   gap: 4px;
   list-style: none;
   margin: 0;
@@ -79,6 +97,10 @@
   font-size: 11.5px;
   font-weight: 600;
   letter-spacing: 0.06em;
+  /* Pin line-height so all items have a consistent box height
+     regardless of the inherited body line-height. The dropdown
+     trigger <button> sets the same value below so MORE matches. */
+  line-height: 1.2;
   text-transform: uppercase;
   color: rgba(0, 0, 0, 0.5); /* var(--muted) */
   text-decoration: none;
@@ -233,13 +255,26 @@ body.dvsl-modal-open .le-mob-menu {
 }
 
 .le-nav-dropdown-trigger {
-  /* Match exactly the styling of .le-nav-links li a so the More
-     button aligns with the other items. Normalize button defaults
-     (line-height, font-family, etc.) that diverge from <a>. */
+  /* Render the trigger identically to a sibling <a> nav link.
+     Critical gotchas that bit us:
+       - <button> has UA default `line-height: normal`; <a>
+         inherits whatever the page has. We pin both to 1.2 here
+         and on .le-nav-links li a so they match exactly.
+       - <button> has its own font-family — must inherit.
+       - Safari adds chrome on buttons; -webkit-appearance: none
+         strips it.
+       - The focus ring after click looked like a "small dot
+         under MORE" — outline:none kills it for the mouse case
+         while :focus-visible preserves it for keyboard.
+       - inline-flex (with white-space:nowrap) keeps the caret
+         pinned next to the label on one line. Block layout
+         caused the caret to wrap below "MORE" when the flex
+         parent shrunk the trigger to text width. */
   font-family: inherit;
   font-size: 11.5px;
   font-weight: 600;
   letter-spacing: 0.06em;
+  line-height: 1.2;
   text-transform: uppercase;
   color: rgba(0, 0, 0, 0.5);
   background: transparent;
@@ -248,36 +283,47 @@ body.dvsl-modal-open .le-mob-menu {
   padding: 7px 13px;
   border-radius: 6px;
   transition: all 0.2s;
-  /* inline-flex (not flex) keeps the button sized to its content,
-     matching the inline-block default of <a>. */
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  line-height: 1; /* matches the default <a> rendering */
-  /* Reset Safari's button rendering chrome */
+  white-space: nowrap;
+  outline: none;
   -webkit-appearance: none;
   appearance: none;
 }
 
-.le-nav-dropdown:hover .le-nav-dropdown-trigger,
-.le-nav-dropdown.active .le-nav-dropdown-trigger {
+.le-nav-dropdown-trigger:focus {
+  outline: none;
+}
+
+.le-nav-dropdown-trigger:focus-visible {
+  outline: 2px solid var(--brand-primary, #002D72);
+  outline-offset: 2px;
+}
+
+.le-nav-dropdown.active .le-nav-dropdown-trigger,
+.le-nav-dropdown.open .le-nav-dropdown-trigger {
   color: var(--brand-primary, #002D72);
   background: rgba(0, 45, 114, 0.08);
 }
 
 .le-nav-caret {
-  font-size: 10px;
+  font-size: 9px;
   display: inline-block;
-  transform: translateY(1px);
+  /* gap on the inline-flex trigger handles spacing — no margin */
 }
 
 .le-nav-dropdown-menu {
   position: absolute;
   /* Flush against the trigger with no margin gap, so hovering from
-     trigger → menu doesn't lose the :hover state crossing whitespace. */
+     trigger → menu doesn't lose the :hover state crossing whitespace.
+     Anchor the menu's left edge to the trigger's left edge so the
+     items appear directly under "MORE" rather than extending to
+     the left of it. */
   top: 100%;
-  right: 0;
-  min-width: 180px;
+  left: 0;
+  right: auto;
+  min-width: 160px;
   background: white;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 8px;
@@ -292,8 +338,11 @@ body.dvsl-modal-open .le-mob-menu {
   z-index: 9999;
 }
 
-.le-nav-dropdown:hover .le-nav-dropdown-menu,
-.le-nav-dropdown:focus-within .le-nav-dropdown-menu {
+/* Visibility is JS-controlled (.open class set by Nav.tsx) so we can
+   close the menu after a child link click — CSS :hover persists while
+   the cursor sits over the area, which would leave the menu hanging
+   open after navigation. */
+.le-nav-dropdown.open .le-nav-dropdown-menu {
   display: block;
 }
 

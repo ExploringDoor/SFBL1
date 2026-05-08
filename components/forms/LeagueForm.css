@@ -1,0 +1,278 @@
+/* ── Public league forms (registration, waiver, eval) ─────────────
+ * One stylesheet for all four forms. Two-column grid at desktop,
+ * single column on phones.
+ */
+
+.le-form-intro {
+  background: rgba(0, 45, 114, 0.04);
+  border-left: 3px solid var(--brand-primary);
+  padding: 14px 18px;
+  border-radius: 4px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-strong);
+}
+.le-form-intro p {
+  margin: 0 0 10px;
+}
+.le-form-intro p:last-child {
+  margin: 0;
+}
+
+.le-form {
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 14px;
+  padding: 24px;
+}
+
+.le-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 18px;
+}
+@media (max-width: 640px) {
+  .le-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.le-form-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.le-form-cell-full {
+  grid-column: 1 / -1;
+}
+.le-form-cell-half {
+  grid-column: span 1;
+}
+@media (max-width: 640px) {
+  .le-form-cell-half {
+    grid-column: 1 / -1;
+  }
+}
+
+.le-form-cell label,
+.le-form-cell legend {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.le-form-required {
+  color: #b91c1c;
+  font-style: normal;
+  margin-left: 3px;
+}
+
+.le-form-cell input,
+.le-form-cell select,
+.le-form-cell textarea {
+  appearance: none;
+  -webkit-appearance: none;
+  font-family: inherit;
+  font-size: 16px;
+  padding: 10px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  background: white;
+  color: var(--text-strong);
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.le-form-cell input:focus-visible,
+.le-form-cell select:focus-visible,
+.le-form-cell textarea:focus-visible {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(0, 45, 114, 0.12);
+}
+
+.le-form-help {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* Checkbox (single line, with label inline) */
+.le-form-checkbox {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+}
+.le-form-checkbox input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+.le-form-checkbox > span {
+  font-size: 13px;
+  color: var(--text-strong);
+  line-height: 1.5;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+
+/* Radio set */
+.le-form-radioset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+.le-form-radios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 4px;
+}
+.le-form-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--text-strong);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+  cursor: pointer;
+}
+.le-form-radio input {
+  width: 16px;
+  height: 16px;
+}
+
+/* Star rating */
+.le-form-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.le-form-rating-star {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 28px;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.18);
+  padding: 2px 4px;
+  font-family: inherit;
+  transition: color 0.12s ease, transform 0.12s ease;
+}
+.le-form-rating-star.active {
+  color: #facc15;
+}
+.le-form-rating-star:hover {
+  transform: scale(1.1);
+}
+.le-form-rating-clear {
+  background: transparent;
+  border: none;
+  font-size: 11px;
+  color: var(--muted);
+  cursor: pointer;
+  margin-left: 8px;
+  text-decoration: underline;
+}
+
+/* Waiver block */
+.le-form-waiver {
+  margin-top: 24px;
+  padding: 16px 18px;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+.le-form-waiver h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brand-primary);
+}
+.le-form-waiver-body {
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 8px;
+  font-size: 13px;
+  color: var(--text-strong);
+  line-height: 1.55;
+}
+.le-form-waiver-body p {
+  margin: 0 0 10px;
+}
+.le-form-waiver-body p:last-child {
+  margin: 0;
+}
+
+/* Submit */
+.le-form-submit {
+  margin-top: 20px;
+  width: 100%;
+  background: var(--brand-primary);
+  color: white;
+  border: none;
+  padding: 14px 20px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 800;
+  font-family: inherit;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.05s ease;
+}
+.le-form-submit:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+.le-form-submit:active:not(:disabled) {
+  transform: scale(0.99);
+}
+.le-form-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.le-form-error {
+  background: rgba(220, 38, 38, 0.08);
+  color: #991b1b;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin: 16px 0 0;
+  border: 1px solid rgba(220, 38, 38, 0.25);
+}
+
+.le-form-success {
+  background: linear-gradient(
+    135deg,
+    rgba(16, 185, 129, 0.08),
+    rgba(0, 45, 114, 0.06)
+  );
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 14px;
+  padding: 32px;
+  text-align: center;
+}
+.le-form-success h2 {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: #047857;
+  margin: 0 0 8px;
+}
+.le-form-success p {
+  font-size: 15px;
+  color: var(--text-strong);
+  margin: 0;
+  line-height: 1.55;
+}

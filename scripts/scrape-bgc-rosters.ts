@@ -169,7 +169,13 @@ async function main() {
       },
       body: body.toString(),
     });
-    const html = await res.text();
+    // BGC's ASP forms return Windows-1252 (cp1252) — using the
+    // default UTF-8 decode mangles Spanish names like "Muñoz" or
+    // "González" into U+FFFD. Read the buffer manually and decode
+    // with TextDecoder("windows-1252") which falls back to Latin-1
+    // semantics for the bytes we care about.
+    const buf = await res.arrayBuffer();
+    const html = new TextDecoder("windows-1252").decode(buf);
     const players = parseRoster(html, team.slug);
     console.log(`  ${team.slug.padEnd(24)} ${players.length} players`);
     allPlayers.push(...players);

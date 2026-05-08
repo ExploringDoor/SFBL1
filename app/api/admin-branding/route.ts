@@ -124,21 +124,34 @@ export async function POST(req: Request) {
       }
     }
     if (typeof t.logo_url === "string") {
-      // Accept either an absolute URL (Firebase Storage), an absolute
-      // path (/logos/sfbl/...), or empty (clear). Reject anything weird.
+      // Accept absolute URL (Firebase Storage), absolute path
+      // (/logos/sfbl/...), data: URL (uploaded via Branding form),
+      // or empty (clear). Reject anything else.
       const v = t.logo_url.trim();
       if (
         v === "" ||
         v.startsWith("/") ||
         v.startsWith("https://") ||
-        v.startsWith("http://")
+        v.startsWith("http://") ||
+        v.startsWith("data:image/")
       ) {
+        // Cap data URL size to keep the league config doc under
+        // Firestore's 1 MiB limit. ~900 KB is the safe ceiling
+        // accounting for other config fields.
+        if (v.startsWith("data:") && v.length > 900_000) {
+          return NextResponse.json(
+            {
+              error: `Logo data URL is ${Math.round(v.length / 1024)} KB — keep it under 900 KB.`,
+            },
+            { status: 400 },
+          );
+        }
         themePatch.logo_url = v;
       } else {
         return NextResponse.json(
           {
             error:
-              "theme.logo_url must start with /, https://, or http:// (or be empty to clear)",
+              "theme.logo_url must start with /, https://, http://, data:image/ or be empty to clear",
           },
           { status: 400 },
         );

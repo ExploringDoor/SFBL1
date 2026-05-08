@@ -2,6 +2,7 @@
 // record, two-column layout (roster left, recent games right).
 
 import Link from "next/link";
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { getAdminDb } from "@/lib/firebase-admin";
@@ -16,6 +17,43 @@ import {
 import type { PublicLeagueConfig } from "@/lib/tenants";
 
 export const dynamic = "force-dynamic";
+
+// Rich link previews for team pages. Shared in iMessage / WhatsApp /
+// X / Slack — captains pasting "check our roster" links should see
+// the team's name + logo, not the generic league preview.
+export async function generateMetadata({
+  params,
+}: {
+  params: { teamId: string };
+}): Promise<Metadata> {
+  const tenantId = headers().get("x-tenant-id");
+  if (!tenantId) return {};
+  const snap = await getAdminDb()
+    .doc(`leagues/${tenantId}/teams/${params.teamId}`)
+    .get();
+  if (!snap.exists) return {};
+  const data = snap.data() ?? {};
+  const teamName = String(data.name ?? params.teamId);
+  const division = String(data.division ?? "");
+  const logo = String(data.logo_url ?? "");
+  const description = `${teamName}${division ? ` — ${division} division` : ""}. Roster, schedule, recent games, and team stats.`;
+  return {
+    title: teamName,
+    description,
+    openGraph: {
+      title: teamName,
+      description,
+      type: "website",
+      ...(logo ? { images: [{ url: logo, alt: teamName }] } : {}),
+    },
+    twitter: {
+      card: "summary",
+      title: teamName,
+      description,
+      ...(logo ? { images: [logo] } : {}),
+    },
+  };
+}
 
 export default async function TeamDetailPage({
   params,

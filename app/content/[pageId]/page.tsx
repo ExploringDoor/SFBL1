@@ -76,10 +76,15 @@ export default async function ContentPage({
   if (!docSnap.exists) notFound();
 
   const data = docSnap.data() ?? {};
-  const markdown = String(data.markdown ?? "");
   const title = String(data.title ?? humanize(pageId));
   const updatedAt = data.updated_at as string | undefined;
-  const html = markdownToHtml(markdown);
+  // Prefer the stored `html` field (RichEditor source-of-truth or
+  // markdown→html cache). Fall back to re-rendering markdown for
+  // pages that haven't been re-saved since the editor was added.
+  const cachedHtml =
+    typeof data.html === "string" && data.html ? String(data.html) : "";
+  const markdown = String(data.markdown ?? "");
+  const html = cachedHtml || markdownToHtml(markdown);
 
   return (
     <Shell heading={title}>

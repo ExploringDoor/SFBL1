@@ -125,7 +125,14 @@ function TeamRow({ team, winner }: { team: GameCardTeam; winner: boolean }) {
     <div className="le-gc-team-row">
       <div className="le-gc-logo-wrap">
         {team.logoUrl ? (
-          <img src={team.logoUrl} alt="" className="le-gc-logo-img" />
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={team.logoUrl}
+            alt=""
+            className="le-gc-logo-img"
+            loading="lazy"
+            decoding="async"
+          />
         ) : (
           <span
             className="le-gc-logo-dot"

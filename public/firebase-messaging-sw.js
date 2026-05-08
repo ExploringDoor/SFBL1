@@ -30,7 +30,20 @@ const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 // Activate immediately on update. Without these, the SW would wait
 // for every tab to close before the new version takes over.
 self.addEventListener("install", (event) => {
-  event.waitUntil(self.skipWaiting());
+  event.waitUntil(
+    (async () => {
+      // Pre-cache the offline fallback page so it's available even on
+      // the user's very first navigation while offline (e.g. they
+      // installed the PWA, then immediately lost connectivity).
+      try {
+        const cache = await caches.open(RUNTIME_CACHE);
+        await cache.add("/offline");
+      } catch (_) {
+        /* best effort — install shouldn't fail if /offline 404s in dev */
+      }
+      await self.skipWaiting();
+    })(),
+  );
 });
 self.addEventListener("activate", (event) => {
   event.waitUntil(
@@ -87,8 +100,10 @@ self.addEventListener("fetch", (event) => {
           const cache = await caches.open(RUNTIME_CACHE);
           const cached = await cache.match(event.request);
           if (cached) return cached;
-          // Last-resort offline fallback — return the homepage if
-          // we have it. Better than a "no internet" browser screen.
+          // Three-tier fallback: dedicated /offline page first
+          // (best UX, branded), then homepage, then minimal HTML.
+          const offline = await cache.match("/offline");
+          if (offline) return offline;
           const home = await cache.match("/");
           if (home) return home;
           return new Response(

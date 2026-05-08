@@ -1,0 +1,97 @@
+/* Live score banner on the game detail page. */
+
+.lsb {
+  margin: 16px 0 24px;
+  padding: 18px 24px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: white;
+  border: 2px solid transparent;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.lsb-live {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+}
+
+.lsb-final {
+  border-color: #10b981;
+}
+
+.lsb-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  margin-bottom: 12px;
+}
+
+.lsb-live .lsb-status {
+  color: #fca5a5;
+}
+
+.lsb-final .lsb-status {
+  color: #6ee7b7;
+}
+
+.lsb-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.25);
+  animation: lsbPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes lsbPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 0 9px rgba(239, 68, 68, 0.05);
+  }
+}
+
+.lsb-inning {
+  margin-left: auto;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+}
+
+.lsb-score {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.lsb-team {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.lsb-team-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.lsb-team-num {
+  font-size: 36px;
+  font-weight: 900;
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  letter-spacing: -0.02em;
+}
+
+@media (min-width: 700px) {
+  .lsb-score {
+    grid-template-columns: 1fr 1fr;
+  }
+}

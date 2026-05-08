@@ -45,11 +45,18 @@ const ALLOWED_ATTR = [
 
 export function markdownToHtml(md: string): string {
   const rawHtml = marked.parse(md, { async: false }) as string;
+  return sanitizeHtml(rawHtml);
+}
+
+// Sanitize HTML produced by the rich-text editor (or any other
+// admin-edited HTML source). Same allowlist as markdownToHtml so we
+// can store either md or html, mix and match, and never hit a tag
+// the public renderer hasn't seen.
+export function sanitizeHtml(rawHtml: string): string {
   return DOMPurify.sanitize(rawHtml, {
     ALLOWED_TAGS,
     ALLOWED_ATTR,
     ALLOW_DATA_ATTR: false,
-    // Force external links to open in new tab and strip referrer.
     ADD_ATTR: ["target", "rel"],
   });
 }

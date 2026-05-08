@@ -1,0 +1,139 @@
+/* Homepage live-games strip — high-prominence band that only
+ * renders when games are in progress. Designed to grab attention
+ * without competing with the hero — sits between hero and the
+ * recent/upcoming grid.
+ */
+
+.hlg {
+  background: linear-gradient(135deg, #0c1322, #1e293b);
+  color: white;
+  padding: 14px 24px;
+  border-bottom: 3px solid #ef4444;
+}
+
+.hlg-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.hlg-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: #fca5a5;
+  flex-shrink: 0;
+}
+
+.hlg-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.25);
+  animation: hlgPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes hlgPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.05);
+  }
+}
+
+.hlg-rail {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.hlg-rail::-webkit-scrollbar {
+  height: 4px;
+}
+.hlg-rail::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+.hlg-card {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  text-decoration: none;
+  color: white;
+  transition: background 0.15s, transform 0.05s;
+  font-family: inherit;
+}
+
+.hlg-card:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.hlg-card:active {
+  transform: scale(0.98);
+}
+
+.hlg-team {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.hlg-team-name {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.hlg-team-num {
+  font-size: 22px;
+  font-weight: 900;
+  font-family: "SF Mono", Menlo, monospace;
+  color: #fde047;
+  min-width: 24px;
+  text-align: right;
+}
+
+.hlg-inning {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.6);
+  margin-left: auto;
+  font-family: "SF Mono", Menlo, monospace;
+}
+
+@media (max-width: 700px) {
+  .hlg {
+    padding: 10px 16px;
+  }
+  .hlg-inner {
+    gap: 12px;
+  }
+  .hlg-card {
+    padding: 6px 12px;
+    gap: 10px;
+  }
+  .hlg-team-num {
+    font-size: 18px;
+  }
+}

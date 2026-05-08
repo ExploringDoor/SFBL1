@@ -4,11 +4,13 @@
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { PreviewCard, type PreviewCardTeam } from "@/components/ui/PreviewCard";
+import { GameCard, type GameCardTeam } from "@/components/ui/GameCard";
 import { computeWeeks, pickActiveWeek } from "@/lib/season-weeks";
 import { computeStandings, type GameResult } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { ScoresScheduleTabs, WeekRow } from "../scores/tabs-and-weeks";
 import { SubscribeCalendar } from "@/components/SubscribeCalendar";
+import { DivisionFilter } from "@/components/ui/DivisionFilter";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +22,8 @@ interface ScheduleGame {
   away_team_id: string;
   home_team_id: string;
   division: string | null;
+  away_score: number;
+  home_score: number;
 }
 
 export default async function SchedulePage({
@@ -48,7 +52,13 @@ export default async function SchedulePage({
   }
 
   const { games, teams } = await loadSchedule(tenantId);
-  const allUpcoming = games.filter((g) => g.status === "scheduled");
+  // Show every game in the season — scheduled, final, postponed,
+  // cancelled — so the schedule page is a real season-long calendar
+  // instead of just "the 1 game still on the books." Cards render
+  // status badges (FINAL / POSTPONED / etc.) so users always know
+  // which games actually happened. Excluded: status === "draft"
+  // (admin work-in-progress not yet published).
+  const allUpcoming = games.filter((g) => g.status !== "draft");
 
   // ── Division filter ─────────────────────────────────────────────
   // Multi-division leagues (SFBL has 18+, 28+, 35+) want a quick way
@@ -103,6 +113,7 @@ export default async function SchedulePage({
         <DivisionFilter
           divisions={allDivisions}
           active={activeDivision}
+          basePath="/schedule"
         />
       )}
 
@@ -158,17 +169,47 @@ export default async function SchedulePage({
                 </span>
               </header>
               <div className="le-preview-grid">
-                {list.map((g, idx) => (
-                  <PreviewCard
-                    key={g.id}
-                    gameId={g.id}
-                    date={g.date}
-                    field={g.field}
-                    away={teamCardData(g.away_team_id, teams)}
-                    home={teamCardData(g.home_team_id, teams)}
-                    isNext={idx === 0 && date === dayGroups[0]?.[0]}
-                  />
-                ))}
+                {list.map((g, idx) => {
+                  // Past finals render as a GameCard (with score)
+                  // since the schedule now spans the whole season.
+                  // Scheduled / postponed / cancelled get the
+                  // PreviewCard with a status badge.
+                  if (g.status === "final" || g.status === "approved") {
+                    return (
+                      <GameCard
+                        key={g.id}
+                        gameId={g.id}
+                        date={g.date}
+                        away={teamGameCardData(
+                          g.away_team_id,
+                          teams,
+                          g.away_score,
+                        )}
+                        home={teamGameCardData(
+                          g.home_team_id,
+                          teams,
+                          g.home_score,
+                        )}
+                      />
+                    );
+                  }
+                  return (
+                    <PreviewCard
+                      key={g.id}
+                      gameId={g.id}
+                      date={g.date}
+                      field={g.field}
+                      away={teamCardData(g.away_team_id, teams)}
+                      home={teamCardData(g.home_team_id, teams)}
+                      isNext={
+                        idx === 0 &&
+                        date === dayGroups[0]?.[0] &&
+                        g.status === "scheduled"
+                      }
+                      status={g.status}
+                    />
+                  );
+                })}
               </div>
             </section>
           ))}
@@ -208,6 +249,8 @@ async function loadSchedule(tenantId: string): Promise<{
       away_team_id: String(data.away_team_id ?? ""),
       home_team_id: String(data.home_team_id ?? ""),
       division: data.division ? String(data.division) : null,
+      away_score: Number(data.away_score ?? 0),
+      home_score: Number(data.home_score ?? 0),
     };
   });
 
@@ -256,6 +299,23 @@ function teamCardData(
   };
 }
 
+function teamGameCardData(
+  id: string,
+  teams: Record<string, TeamMeta>,
+  score: number,
+): GameCardTeam {
+  const t = teams[id];
+  return {
+    team_id: id,
+    name: t?.name ?? id,
+    abbrev: t?.abbrev,
+    color: t?.color,
+    logoUrl: t?.logoUrl,
+    record: t?.record,
+    score,
+  };
+}
+
 function formatDayHeading(yyyyMmDd: string): string {
   const d = new Date(yyyyMmDd + "T12:00:00Z");
   return d.toLocaleDateString("en-US", {
@@ -270,85 +330,5 @@ function formatRecord(w: number, l: number, t: number): string {
   return t > 0 ? `${w}-${l}-${t}` : `${w}-${l}`;
 }
 
-// ── Division filter chip strip ──────────────────────────────────
-//
-// Renders a row of chips: "All" + one per league division. Clicking
-// reloads the page with `?div=<value>` so the active week + filter
-// persist via the URL. Defined inline rather than imported because
-// the schedule page is the only consumer today (scores will likely
-// want the same UI; lift then).
-
-function DivisionFilter({
-  divisions,
-  active,
-}: {
-  divisions: string[];
-  active: string | null;
-}) {
-  const activeKey = active ?? "all";
-  return (
-    <div
-      className="flex flex-wrap items-center gap-2 mt-6 mb-2"
-      role="tablist"
-      aria-label="Filter schedule by division"
-    >
-      <span
-        className="font-barlow"
-        style={{
-          fontSize: 12,
-          fontWeight: 700,
-          letterSpacing: "0.12em",
-          textTransform: "uppercase",
-          color: "var(--muted)",
-          marginRight: 4,
-        }}
-      >
-        Division:
-      </span>
-      <DivisionChip label="All" value="all" isActive={activeKey === "all"} />
-      {divisions.map((d) => (
-        <DivisionChip
-          key={d}
-          label={d}
-          value={d}
-          isActive={activeKey === d}
-        />
-      ))}
-    </div>
-  );
-}
-
-function DivisionChip({
-  label,
-  value,
-  isActive,
-}: {
-  label: string;
-  value: string;
-  isActive: boolean;
-}) {
-  // "all" maps to no `div` param; everything else URL-encodes the
-  // raw division string ("18+" → "18%2B"). Going to /schedule with
-  // no query is the implicit "all".
-  const href = value === "all" ? "/schedule" : `/schedule?div=${encodeURIComponent(value)}`;
-  return (
-    <a
-      href={href}
-      role="tab"
-      aria-selected={isActive}
-      style={{
-        padding: "6px 14px",
-        borderRadius: 999,
-        fontSize: 13,
-        fontWeight: 700,
-        textDecoration: "none",
-        background: isActive ? "var(--brand-primary)" : "var(--card)",
-        color: isActive ? "white" : "var(--text-strong)",
-        border: `1px solid ${isActive ? "var(--brand-primary)" : "var(--border)"}`,
-        transition: "all 0.15s ease",
-      }}
-    >
-      {label}
-    </a>
-  );
-}
+// (DivisionFilter moved to components/ui/DivisionFilter.tsx — used
+// by both /scores and /schedule. Linked from the imports above.)

@@ -1,29 +1,29 @@
 id,name,abbrev,division,color,logo_url
-miami-cardinals,Miami Cardinals,MC,35+ American,#c41e3a,
-miami-amigos,Miami Amigos,MA,35+ American,#00a3e0,
-sf-astros,South Florida Astros,SFA2,35+ American,#002d62,
-miami-yankees,Miami Yankees,MY,35+ American,#0c2340,
-sf-dodgers,South Florida Dodgers,SFD,35+ American,#005a9c,
-matanzas,Matanzas,MAT,35+ American,#8b0000,
-miami-charros,Miami Charros,MCH,35+ American,#2e4a2e,
-dade-nationals,Dade Nationals,DN,35+ American,#ab0003,
-delray-devil-rays,Delray Devil Rays,DDR,35+ National,#092c5c,
-southern-yankees,Southern Yankees,SY,35+ National,#0c2340,
-sf-travelers,South Florida Travelers,SFT,35+ National,#333333,
-boca-mets,Boca Mets,BM,35+ National,#002d72,
-kooper-city-royals,Kooper City Royals,KCR,35+ National,#004687,
-sf-angels,South Florida Angels,SFA,35+ National,#ba0021,
-aventura-braves,Aventura Braves,AB,28+,#ce1141,
-aventura-dodgers,Aventura Dodgers,AD,28+,#005a9c,
-broward-senators,Broward Senators,BS,28+,#14225a,
-miami-brewers,Miami Brewers,MB,28+,#12284b,
-miami-jc,Miami JC,MJC,28+,#0e3386,
-palm-beach-pirates,Palm Beach Pirates,PBP,28+,#27251f,
-sunrise-giants,Sunrise Giants,SG,28+,#fd5a1e,
-broward-yankees,Broward Yankees,BY,18+,#0c2340,
-margate-marlins,Margate Marlins,MM,18+,#00a3e0,
-miami-buccaneers,Miami Buccaneers,MBU,18+,#d50a0a,
-miami-orioles,Miami Orioles,MO,18+,#df4601,
-miami-red-sox,Miami Red Sox,MRS,18+,#bd3039,
-sf-rays,South Florida Rays,SFR,18+,#092c5c,
-wpb-cardinals,West Palm Beach Cardinals,WPB,18+,#c41e3a,
+miami-cardinals,Miami Cardinals,MC,35+ American,#c41e3a,/logos/sfbl/miami-cardinals.png
+miami-amigos,Miami Amigos,MA,35+ American,#00a3e0,/logos/sfbl/miami-amigos.png
+sf-astros,South Florida Astros,SFA2,35+ American,#002d62,/logos/sfbl/sf-astros.png
+miami-yankees,Miami Yankees,MY,35+ American,#0c2340,/logos/sfbl/miami-yankees.png
+sf-dodgers,South Florida Dodgers,SFD,35+ American,#005a9c,/logos/sfbl/sf-dodgers.png
+matanzas,Matanzas,MAT,35+ American,#8b0000,/logos/sfbl/matanzas.png
+miami-charros,Miami Charros,MCH,35+ American,#2e4a2e,/logos/sfbl/miami-charros.png
+dade-nationals,Dade Nationals,DN,35+ American,#ab0003,/logos/sfbl/dade-nationals.png
+delray-devil-rays,Delray Devil Rays,DDR,35+ National,#092c5c,/logos/sfbl/delray-devil-rays.png
+southern-yankees,Southern Yankees,SY,35+ National,#0c2340,/logos/sfbl/southern-yankees.png
+sf-travelers,South Florida Travelers,SFT,35+ National,#333333,/logos/sfbl/sf-travelers.png
+boca-mets,Boca Mets,BM,35+ National,#002d72,/logos/sfbl/boca-mets.png
+kooper-city-royals,Kooper City Royals,KCR,35+ National,#004687,/logos/sfbl/kooper-city-royals.png
+sf-angels,South Florida Angels,SFA,35+ National,#ba0021,/logos/sfbl/sf-angels.png
+aventura-braves,Aventura Braves,AB,28+,#ce1141,/logos/sfbl/aventura-braves.png
+aventura-dodgers,Aventura Dodgers,AD,28+,#005a9c,/logos/sfbl/aventura-dodgers.png
+broward-senators,Broward Senators,BS,28+,#14225a,/logos/sfbl/broward-senators.png
+miami-brewers,Miami Brewers,MB,28+,#12284b,/logos/sfbl/miami-brewers.png
+miami-jc,Miami JC,MJC,28+,#0e3386,/logos/sfbl/miami-jc.png
+palm-beach-pirates,Palm Beach Pirates,PBP,28+,#27251f,/logos/sfbl/palm-beach-pirates.png
+sunrise-giants,Sunrise Giants,SG,28+,#fd5a1e,/logos/sfbl/sunrise-giants.png
+broward-yankees,Broward Yankees,BY,18+,#0c2340,/logos/sfbl/broward-yankees.png
+margate-marlins,Margate Marlins,MM,18+,#00a3e0,/logos/sfbl/margate-marlins.png
+miami-buccaneers,Miami Buccaneers,MBU,18+,#d50a0a,/logos/sfbl/miami-buccaneers.png
+miami-orioles,Miami Orioles,MO,18+,#df4601,/logos/sfbl/miami-orioles.png
+miami-red-sox,Miami Red Sox,MRS,18+,#bd3039,/logos/sfbl/miami-red-sox.png
+sf-rays,South Florida Rays,SFR,18+,#092c5c,/logos/sfbl/sf-rays.png
+wpb-cardinals,West Palm Beach Cardinals,WPB,18+,#c41e3a,/logos/sfbl/wpb-cardinals.png

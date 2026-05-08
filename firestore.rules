@@ -149,6 +149,25 @@ service cloud.firestore {
         allow write: if isAdmin(leagueId);
       }
 
+      // /leagues/{leagueId}/site_config/{docId}
+      // Holds homepage banner alerts and other admin-controlled UI
+      // bits that need to update faster than the Edge Config cache.
+      // Public-read so the homepage (server-rendered) can pick up the
+      // current banner immediately. Admin-write only.
+      match /site_config/{docId} {
+        allow read: if true;
+        allow write: if isAdmin(leagueId);
+      }
+
+      // /leagues/{leagueId}/photos/{photoId}
+      // Photo gallery items. Public-read so the /photos page can list
+      // them without auth. Admin writes via /api/admin-photo (which
+      // also handles base64 storage size validation).
+      match /photos/{photoId} {
+        allow read: if true;
+        allow write: if isAdmin(leagueId);
+      }
+
       // Box scores: admin OR captain of one of the teams in the game.
       match /box_scores/{gameId} {
         allow read: if true;

@@ -1,7 +1,16 @@
 "use client";
 
+// Admin dashboard. Originally a flat stack of every admin section
+// underneath each other in a narrow 672px column — fine for a dev
+// poking around, awful for the league commissioner who actually
+// uses this thing day-to-day.
+//
+// Now: a tabs layout. Default tab = Health (the most-used thing —
+// "are there pending captain submissions to approve / publish").
+// Developer-only sections (smoke test, recalc) live under "Tools"
+// so they're available but out of the way.
+
 import { useState } from "react";
-import type { User } from "firebase/auth";
 import { signOut, useLeagueRole, useUser } from "@/lib/auth-client";
 import { getDb } from "@/lib/firebase";
 import { useTenant } from "@/lib/tenant-context";
@@ -9,15 +18,67 @@ import { doc, setDoc } from "firebase/firestore";
 import { SendPushSection } from "@/components/admin/SendPushSection";
 import { PagesManager } from "@/components/admin/PagesManager";
 import { CaptainClaimsManager } from "@/components/admin/CaptainClaimsManager";
+import { BulkInviteSection } from "@/components/admin/BulkInviteSection";
 import { BrandingSection } from "@/components/admin/BrandingSection";
 import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
 import { TeamsManager } from "@/components/admin/TeamsManager";
 import { LeagueHealthDashboard } from "@/components/admin/LeagueHealthDashboard";
+import { RecalcStatsButton } from "@/components/admin/RecalcStatsButton";
+import { ScheduleEditor } from "@/components/admin/ScheduleEditor";
+import { AlertsManager } from "@/components/admin/AlertsManager";
+import { SignupsReview } from "@/components/admin/SignupsReview";
+import { CsvImporter } from "@/components/admin/CsvImporter";
+import { CalendarFeeds } from "@/components/admin/CalendarFeeds";
+import { ChatModerator } from "@/components/admin/ChatModerator";
+import { PhotosManager } from "@/components/admin/PhotosManager";
+import { ScoresManager } from "@/components/admin/ScoresManager";
+import { SponsorsManager } from "@/components/admin/SponsorsManager";
+import { PlayoffsManager } from "@/components/admin/PlayoffsManager";
+
+type TabKey =
+  | "health"
+  | "scores"
+  | "schedule"
+  | "playoffs"
+  | "teams"
+  | "signups"
+  | "captains"
+  | "alerts"
+  | "pages"
+  | "photos"
+  | "sponsors"
+  | "branding"
+  | "notifications"
+  | "calendar"
+  | "chat"
+  | "audit"
+  | "tools";
+
+const TABS: { key: TabKey; label: string; description: string }[] = [
+  { key: "health", label: "Health", description: "League snapshot, pending submissions, rule violations." },
+  { key: "scores", label: "Scores", description: "Quick batch score entry + resolve captain submission conflicts." },
+  { key: "schedule", label: "Schedule", description: "Add games, reschedule, mark a date rained out, edit scores." },
+  { key: "playoffs", label: "Playoffs", description: "Build the playoff bracket — divisions, rounds, matchups, results." },
+  { key: "teams", label: "Teams", description: "Roster import, edit team metadata, manage divisions." },
+  { key: "signups", label: "Signups", description: "Approve or reject players added by captains (walk-ons)." },
+  { key: "captains", label: "Captains", description: "Grant or revoke captain access to specific teams." },
+  { key: "alerts", label: "Alerts", description: "Publish a homepage banner — weather, registration, deadlines." },
+  { key: "pages", label: "Pages", description: "Edit Rules, News, Register, Sponsors, and other content pages." },
+  { key: "photos", label: "Photos", description: "Upload photos to the public gallery at /photos." },
+  { key: "sponsors", label: "Sponsors", description: "Manage the sponsor logo strip in the site footer." },
+  { key: "branding", label: "Branding", description: "League logo, colors, and theming." },
+  { key: "notifications", label: "Notifications", description: "Send push announcements to players." },
+  { key: "calendar", label: "Calendar", description: "Subscription URLs (Google / Apple / Outlook) per team or league-wide." },
+  { key: "chat", label: "Chat", description: "Browse and moderate captains-chat or team chats." },
+  { key: "audit", label: "Audit log", description: "Recent admin actions and score changes." },
+  { key: "tools", label: "Tools", description: "Recalculate stats, write-permission smoke test." },
+];
 
 export default function AdminPage() {
   const { tenantId, config } = useTenant();
   const user = useUser();
   const role = useLeagueRole(tenantId);
+  const [activeTab, setActiveTab] = useState<TabKey>("health");
 
   if (user === undefined || role === "loading") {
     return <Shell heading={config?.name ?? "Admin"}>Checking your access…</Shell>;
@@ -51,21 +112,11 @@ export default function AdminPage() {
   if (role !== "admin") {
     return (
       <Shell heading={config?.name ?? "Admin"}>
-        <SignedInHeader email={user.email} uid={user.uid} role={role} />
+        <SignedInHeader email={user.email} role={role} />
         <p className="text-slate-700">
           You're signed in but you don't have admin role for{" "}
-          <span className="font-mono">{tenantId}</span>. Ask the league administrator,
-          or run from your dev machine:
-        </p>
-        <pre className="overflow-x-auto rounded-md bg-slate-900 p-3 text-xs text-slate-100">
-          {(process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === "true"
-            ? "npm run grant-claim:emulator -- "
-            : "npm run grant-claim -- ") +
-            `--email ${user.email ?? "<your-email>"} --league ${tenantId} --role admin`}
-        </pre>
-        <p className="text-xs text-slate-500">
-          The token caches claims for ~1 hour. After granting, click "Refresh access"
-          below to force a token reload.
+          <span className="font-mono">{tenantId}</span>. Ask the league administrator
+          to grant you access.
         </p>
         <RefreshButton />
       </Shell>
@@ -74,24 +125,207 @@ export default function AdminPage() {
 
   return (
     <Shell heading={config?.name ?? "Admin"}>
-      <SignedInHeader email={user.email} uid={user.uid} role={role} />
-      <LeagueHealthDashboard leagueId={tenantId} user={user} />
-      <BrandingSection leagueId={tenantId} user={user} />
-      <TeamsManager leagueId={tenantId} user={user} />
-      <CaptainClaimsManager leagueId={tenantId} user={user} />
-      <SendPushSection leagueId={tenantId} user={user} />
-      <PagesManager leagueId={tenantId} user={user} />
-      <AuditLogViewer leagueId={tenantId} user={user} />
-      <RecalcStatsButton tenantId={tenantId} user={user} />
-      <AdminSmokeTest tenantId={tenantId} />
+      <SignedInHeader email={user.email} role={role} />
+
+      {/* Tab nav — wraps to multiple rows on desktop, horizontally
+          scrolls on phone with the active tab auto-scrolling into
+          view. 16 tabs across 5 rows on a phone is unusable; one
+          swipeable row is much better. */}
+      <nav className="le-admin-tabs">
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            onClick={() => setActiveTab(t.key)}
+            ref={(el) => {
+              if (el && activeTab === t.key) {
+                el.scrollIntoView({
+                  behavior: "smooth",
+                  inline: "center",
+                  block: "nearest",
+                });
+              }
+            }}
+            className={
+              "le-admin-tab " +
+              (activeTab === t.key ? "le-admin-tab-active" : "")
+            }
+          >
+            {t.label}
+          </button>
+        ))}
+      </nav>
+      <style jsx>{`
+        .le-admin-tabs {
+          display: flex;
+          gap: 4px;
+          padding: 4px 0;
+          border-bottom: 1px solid rgb(226, 232, 240);
+          margin: 0 -4px;
+          flex-wrap: wrap;
+        }
+        @media (max-width: 640px) {
+          .le-admin-tabs {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+          }
+          .le-admin-tabs::-webkit-scrollbar {
+            display: none;
+          }
+        }
+        .le-admin-tab {
+          padding: 8px 12px;
+          border-radius: 6px 6px 0 0;
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: rgb(71, 85, 105);
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          white-space: nowrap;
+          flex-shrink: 0;
+          font-family: inherit;
+          transition: background 0.15s, color 0.15s;
+        }
+        .le-admin-tab:hover {
+          background: rgb(241, 245, 249);
+        }
+        .le-admin-tab-active {
+          background: rgb(15, 23, 42);
+          color: white;
+        }
+        .le-admin-tab-active:hover {
+          background: rgb(15, 23, 42);
+        }
+      `}</style>
+
+      <p className="text-sm text-slate-500">
+        {TABS.find((t) => t.key === activeTab)?.description}
+      </p>
+
+      <div>
+        {activeTab === "health" && (
+          <div className="space-y-4">
+            <LeagueHealthDashboard leagueId={tenantId} user={user} />
+            <section className="rounded-md border border-slate-200 bg-white p-4 space-y-2">
+              <p className="font-semibold text-slate-900">PDF exports</p>
+              <p className="text-xs text-slate-600">
+                Open in a new tab and use your browser's print dialog to
+                save as PDF.
+              </p>
+              <div className="flex flex-wrap gap-2 pt-1">
+                <a
+                  href="/print/standings"
+                  target="_blank"
+                  rel="noopener"
+                  className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  📄 Standings
+                </a>
+                <a
+                  href="/print/schedule"
+                  target="_blank"
+                  rel="noopener"
+                  className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  📄 Schedule
+                </a>
+                <a
+                  href="/print/contacts"
+                  target="_blank"
+                  rel="noopener"
+                  className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                  title="Confidential — emails + phones for every active player"
+                >
+                  📄 Contacts (confidential)
+                </a>
+              </div>
+            </section>
+            <section className="rounded-md border border-slate-200 bg-white p-4 space-y-2">
+              <p className="font-semibold text-slate-900">Maintenance</p>
+              <p className="text-xs text-slate-600">
+                Recompute aggregated player stats from box scores. Standings
+                auto-update from game docs, no recalc needed for those.
+              </p>
+              <RecalcStatsButton tenantId={tenantId} user={user} variant="compact" />
+            </section>
+          </div>
+        )}
+        {activeTab === "scores" && (
+          <ScoresManager leagueId={tenantId} user={user} />
+        )}
+        {activeTab === "schedule" && (
+          <ScheduleEditor leagueId={tenantId} user={user} />
+        )}
+        {activeTab === "playoffs" && (
+          <PlayoffsManager leagueId={tenantId} user={user} />
+        )}
+        {activeTab === "teams" && (
+          <TeamsManager leagueId={tenantId} user={user} />
+        )}
+        {activeTab === "signups" && (
+          <SignupsReview leagueId={tenantId} user={user} />
+        )}
+        {activeTab === "captains" && (
+          <div className="space-y-4">
+            <CaptainClaimsManager leagueId={tenantId} user={user} />
+            <BulkInviteSection leagueId={tenantId} user={user} />
+          </div>
+        )}
+        {activeTab === "alerts" && (
+          <AlertsManager leagueId={tenantId} user={user} />
+        )}
+        {activeTab === "pages" && (
+          <PagesManager leagueId={tenantId} user={user} />
+        )}
+        {activeTab === "photos" && (
+          <PhotosManager leagueId={tenantId} user={user} />
+        )}
+        {activeTab === "sponsors" && (
+          <SponsorsManager leagueId={tenantId} user={user} />
+        )}
+        {activeTab === "branding" && (
+          <BrandingSection leagueId={tenantId} user={user} />
+        )}
+        {activeTab === "notifications" && (
+          <SendPushSection leagueId={tenantId} user={user} />
+        )}
+        {activeTab === "calendar" && (
+          <CalendarFeeds leagueId={tenantId} user={user} />
+        )}
+        {activeTab === "chat" && (
+          <ChatModerator leagueId={tenantId} user={user} />
+        )}
+        {activeTab === "audit" && (
+          <AuditLogViewer leagueId={tenantId} user={user} />
+        )}
+        {activeTab === "tools" && (
+          <div className="space-y-4">
+            <RecalcStatsButton tenantId={tenantId} user={user} />
+            {/* CSV importer: gated per-tenant. SFBL set
+                flags.csv_schedule_import=false so it stays hidden
+                here; new tenants in onboarding see it. */}
+            {config?.flags?.csv_schedule_import !== false && (
+              <CsvImporter leagueId={tenantId} user={user} />
+            )}
+            <AdminSmokeTest tenantId={tenantId} />
+          </div>
+        )}
+      </div>
     </Shell>
   );
 }
 
 function Shell({ heading, children }: { heading: string; children: React.ReactNode }) {
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-6 px-6 py-16">
-      <h1 className="text-3xl font-bold tracking-tight">{heading} — Admin</h1>
+    <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-5 px-6 py-12">
+      <header className="flex items-baseline justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">{heading} — Admin</h1>
+      </header>
       <section className="space-y-4">{children}</section>
     </main>
   );
@@ -99,30 +333,22 @@ function Shell({ heading, children }: { heading: string; children: React.ReactNo
 
 function SignedInHeader({
   email,
-  uid,
   role,
 }: {
   email: string | null;
-  uid: string;
   role: string;
 }) {
   return (
-    <header className="rounded-md border border-slate-200 bg-slate-50 p-3 text-xs font-mono">
-      <div>
-        <span className="text-slate-500">email:</span>{" "}
-        <span className="font-semibold">{email ?? "(none)"}</span>
-      </div>
-      <div>
-        <span className="text-slate-500">uid:</span>{" "}
-        <span className="font-semibold">{uid}</span>
-      </div>
-      <div>
-        <span className="text-slate-500">role:</span>{" "}
-        <span className="font-semibold">{role}</span>
+    <header className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
+      <div className="text-slate-700">
+        Signed in as <span className="font-semibold">{email ?? "(none)"}</span>
+        <span className="ml-2 inline-block rounded bg-slate-900 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
+          {role}
+        </span>
       </div>
       <button
         onClick={() => signOut().then(() => (window.location.href = "/login"))}
-        className="mt-2 rounded bg-slate-900 px-2 py-1 text-xs text-white"
+        className="text-xs text-slate-500 underline hover:text-slate-900"
       >
         Sign out
       </button>
@@ -193,74 +419,3 @@ function AdminSmokeTest({ tenantId }: { tenantId: string }) {
   );
 }
 
-function RecalcStatsButton({ tenantId, user }: { tenantId: string; user: User }) {
-  const [status, setStatus] = useState<
-    | { kind: "idle" }
-    | { kind: "running" }
-    | {
-        kind: "ok";
-        result: {
-          box_scores_read: number;
-          players_aggregated: number;
-          players_written: number;
-          pitchers_written: number;
-          duration_ms: number;
-        };
-      }
-    | { kind: "err"; message: string }
-  >({ kind: "idle" });
-
-  async function run() {
-    setStatus({ kind: "running" });
-    try {
-      const token = await user.getIdToken();
-      const res = await fetch("/api/recalc", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ leagueId: tenantId }),
-      });
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => ({}));
-        throw new Error(errBody.error ?? `HTTP ${res.status}`);
-      }
-      const result = await res.json();
-      setStatus({ kind: "ok", result });
-    } catch (err) {
-      setStatus({
-        kind: "err",
-        message: err instanceof Error ? err.message : "Unknown error.",
-      });
-    }
-  }
-
-  return (
-    <section className="space-y-3 rounded-md border border-slate-200 bg-white p-4">
-      <p className="font-semibold text-slate-900">Recalc league stats</p>
-      <p className="text-sm text-slate-600">
-        Reads every final/approved box score under{" "}
-        <code>/leagues/{tenantId}/box_scores</code>, aggregates per-player
-        batting (and pitching for baseball), writes results to{" "}
-        <code>/leagues/{tenantId}/players/&#123;pid&#125;.stats</code>. Skips
-        players whose totals haven't changed (dirty-check).
-      </p>
-      <button
-        onClick={run}
-        disabled={status.kind === "running"}
-        className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
-      >
-        {status.kind === "running" ? "Recalculating…" : "Recalc league stats"}
-      </button>
-      {status.kind === "ok" && (
-        <pre className="overflow-x-auto rounded-md bg-slate-900 p-3 text-xs text-slate-100">
-          {JSON.stringify(status.result, null, 2)}
-        </pre>
-      )}
-      {status.kind === "err" && (
-        <p className="text-sm text-red-700">❌ {status.message}</p>
-      )}
-    </section>
-  );
-}

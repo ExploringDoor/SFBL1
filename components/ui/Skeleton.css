@@ -1,0 +1,60 @@
+/* Skeleton primitives — pulsing gray placeholder boxes used in
+ * loading.tsx files across the app router. The shimmer animation
+ * runs at 1.4s which feels alive without being twitchy.
+ */
+
+.le-skeleton {
+  display: inline-block;
+  background: linear-gradient(
+    90deg,
+    rgba(15, 23, 42, 0.05) 0%,
+    rgba(15, 23, 42, 0.1) 50%,
+    rgba(15, 23, 42, 0.05) 100%
+  );
+  background-size: 200% 100%;
+  animation: leSkelShimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+  /* Default min-height so a Skeleton without an explicit height
+     still occupies space. */
+  min-height: 12px;
+}
+
+@keyframes leSkelShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.le-skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.le-skeleton-card {
+  margin-bottom: 12px;
+}
+
+.le-skeleton-table {
+  background: white;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+  padding: 6px 18px;
+}
+
+/* Slightly darker variant for use on dark backgrounds (e.g. inside
+ * the live scorer or game day hero). */
+.le-skeleton-dark {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  background-size: 200% 100%;
+}

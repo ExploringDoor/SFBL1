@@ -33,9 +33,22 @@ export function PwaShell() {
     useState<BeforeInstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
   const [iosTipVisible, setIosTipVisible] = useState(false);
+  // Track viewport so we can hide the install CTA on desktop.
+  // Chrome/Edge fire `beforeinstallprompt` on desktop too — but for a
+  // sports-league site the install affordance is only useful on phones
+  // (home-screen icon, push notifications). On desktop the floating
+  // button is just noise.
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    // 0. Track viewport width so we can suppress the install CTA on
+    // desktop. 900px matches the breakpoint the Nav uses for "mobile".
+    const mq = window.matchMedia("(max-width: 900px)");
+    const updateViewport = () => setIsMobileViewport(mq.matches);
+    updateViewport();
+    mq.addEventListener("change", updateViewport);
 
     // 1. Register SW (idempotent — Chrome dedupes).
     if ("serviceWorker" in navigator) {
@@ -71,7 +84,18 @@ export function PwaShell() {
         const dismissed = window.localStorage.getItem(
           IOS_TIP_DISMISSED_KEY,
         );
-        if (!dismissed) setIosTipVisible(true);
+        if (!dismissed) {
+          // Show on the 3rd+ visit, not the first. First visit
+          // people are evaluating; install prompts there feel
+          // pushy. By the third visit they're a real returning
+          // user and the prompt converts way better.
+          const VISIT_KEY = "leagueplatform:visitCount";
+          const prev =
+            parseInt(window.localStorage.getItem(VISIT_KEY) ?? "0", 10) || 0;
+          const next = prev + 1;
+          window.localStorage.setItem(VISIT_KEY, String(next));
+          if (next >= 3) setIosTipVisible(true);
+        }
       } catch {
         /* private mode — just don't show */
       }
@@ -80,6 +104,7 @@ export function PwaShell() {
     return () => {
       window.removeEventListener("beforeinstallprompt", onBeforeInstall);
       window.removeEventListener("appinstalled", onInstalled);
+      mq.removeEventListener("change", updateViewport);
     };
   }, []);
 
@@ -103,6 +128,10 @@ export function PwaShell() {
   }
 
   if (installed) return null;
+
+  // Suppress on desktop — the install CTA is only useful for phones.
+  // (iOS Safari tip is already gated by the user-agent check below.)
+  if (installEvent && !isMobileViewport) return null;
 
   if (installEvent) {
     return (

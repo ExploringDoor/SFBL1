@@ -26,6 +26,24 @@ const mockState = {
   setCalls: [] as Array<{ path: string; data: Record<string, unknown> }>,
 };
 
+// Split test-seeded player data into public-doc fields vs PII
+// (which post-PII migration lives at /_private/contact). Tests
+// still seed via a flat object for ergonomics; the mock's doc()
+// handler routes by path.
+function splitPlayerData(d: Record<string, unknown>): {
+  publicData: Record<string, unknown>;
+  contactData: Record<string, unknown>;
+} {
+  const { email, phone, ...rest } = d;
+  return {
+    publicData: rest,
+    contactData: {
+      ...(email !== undefined ? { email } : {}),
+      ...(phone !== undefined ? { phone } : {}),
+    },
+  };
+}
+
 vi.mock("@/lib/firebase-admin", () => ({
   getAdminAuth: () => ({
     verifyIdToken: vi.fn(async () => mockState.decoded),
@@ -34,16 +52,53 @@ vi.mock("@/lib/firebase-admin", () => ({
     collection: () => ({
       where: () => ({
         get: async () => ({
-          docs: [...mockState.players.values()].map((p) => ({
-            id: p.id,
-            data: () => p.data,
-          })),
+          docs: [...mockState.players.values()].map((p) => {
+            const { publicData } = splitPlayerData(p.data);
+            return {
+              id: p.id,
+              data: () => publicData,
+              ref: {
+                collection: (sub: string) => ({
+                  doc: (id: string) => ({
+                    get: async () => {
+                      if (sub === "_private" && id === "contact") {
+                        const { contactData } = splitPlayerData(p.data);
+                        return {
+                          exists: Object.keys(contactData).length > 0,
+                          data: () => contactData,
+                        };
+                      }
+                      return { exists: false, data: () => undefined };
+                    },
+                  }),
+                }),
+              },
+            };
+          }),
         }),
       }),
     }),
     doc: (path: string) => ({
       set: async (data: Record<string, unknown>) => {
         mockState.setCalls.push({ path, data });
+      },
+      get: async () => {
+        // captain-link reads /_private/contact directly via
+        // db.doc(...) (not via d.ref.collection). Route to the
+        // appropriate seed.
+        const m = path.match(
+          /^leagues\/[^/]+\/players\/([^/]+)\/_private\/contact$/,
+        );
+        if (m) {
+          const player = mockState.players.get(m[1]!);
+          if (!player) return { exists: false, data: () => undefined };
+          const { contactData } = splitPlayerData(player.data);
+          return {
+            exists: Object.keys(contactData).length > 0,
+            data: () => contactData,
+          };
+        }
+        return { exists: false, data: () => undefined };
       },
     }),
   }),
@@ -120,11 +175,17 @@ describe("/api/captain-link — matching", () => {
     const data = (await res.json()) as { matches: number; linked: string };
     expect(data.matches).toBe(1);
     expect(data.linked).toBe("p1");
-    expect(mockState.setCalls).toHaveLength(1);
-    expect(mockState.setCalls[0]!.data).toMatchObject({
-      auth_uid: "uid_captain",
-      email: "alice@example.com",
-    });
+    // Two writes post-PII: public doc gets auth_uid, /_private/contact
+    // gets email.
+    expect(mockState.setCalls).toHaveLength(2);
+    const publicCall = mockState.setCalls.find(
+      (c) => !c.path.includes("/_private/"),
+    );
+    const contactCall = mockState.setCalls.find((c) =>
+      c.path.includes("/_private/contact"),
+    );
+    expect(publicCall?.data).toMatchObject({ auth_uid: "uid_captain" });
+    expect(contactCall?.data).toMatchObject({ email: "alice@example.com" });
   });
 
   it("returns alreadyLinked:true and skips write when same uid already linked", async () => {

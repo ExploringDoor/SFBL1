@@ -56,41 +56,87 @@ export function RosterTab({ leagueId, teamId }: RosterTabProps) {
 
   async function load() {
     setLoading(true);
-    const db = getDb();
-    const snap = await getDocs(
-      query(
-        collection(db, `leagues/${leagueId}/players`),
-        where("team_id", "==", teamId),
-      ),
-    );
-    setPlayers(
-      snap.docs
-        .map((d) => {
-          const data = d.data();
-          return {
-            id: d.id,
-            name: String(data.name ?? d.id),
-            jersey: data.jersey != null ? Number(data.jersey) : null,
-            position: data.position ? String(data.position) : null,
-            email: String(data.email ?? ""),
-            phone: String(data.phone ?? ""),
-            auth_uid: data.auth_uid ? String(data.auth_uid) : undefined,
-            pending_approval: data.pending_approval === true,
-            active: data.active !== false,
-          };
-        })
-        .sort(
-          (a, b) =>
-            (a.jersey ?? 999) - (b.jersey ?? 999) ||
-            a.name.localeCompare(b.name),
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+    // Roster + contact info come through the team-roster API now.
+    // Email/phone moved off the public player doc to /_private/contact
+    // (PII fix); the API surface gates by admin/captain claim.
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch(
+        `/api/team-roster?leagueId=${encodeURIComponent(leagueId)}&teamId=${encodeURIComponent(teamId)}`,
+        { headers: { authorization: `Bearer ${idToken}` } },
+      );
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        players?: {
+          id: string;
+          name: string;
+          jersey: string;
+          position: string;
+          email: string;
+          phone: string;
+          auth_uid: string | null;
+          walk_on: boolean;
+        }[];
+        error?: string;
+      };
+      if (!res.ok || !data.ok) {
+        setError(data.error ?? `HTTP ${res.status}`);
+        setLoading(false);
+        return;
+      }
+      // We also need pending_approval which lives on the public player
+      // doc — fetch in parallel, merge.
+      const db = getDb();
+      const pubSnap = await getDocs(
+        query(
+          collection(db, `leagues/${leagueId}/players`),
+          where("team_id", "==", teamId),
         ),
-    );
-    setLoading(false);
+      );
+      const pendingById = new Map<string, boolean>();
+      const activeById = new Map<string, boolean>();
+      for (const d of pubSnap.docs) {
+        const dat = d.data();
+        pendingById.set(d.id, dat.pending_approval === true);
+        activeById.set(d.id, dat.active !== false);
+      }
+      setPlayers(
+        (data.players ?? [])
+          .map((p) => ({
+            id: p.id,
+            name: p.name,
+            jersey: p.jersey ? Number(p.jersey) : null,
+            position: p.position || null,
+            email: p.email,
+            phone: p.phone,
+            auth_uid: p.auth_uid ?? undefined,
+            pending_approval: pendingById.get(p.id) ?? false,
+            active: activeById.get(p.id) ?? true,
+          }))
+          .sort(
+            (a, b) =>
+              (a.jersey ?? 999) - (b.jersey ?? 999) ||
+              a.name.localeCompare(b.name),
+          ),
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Load failed");
+    } finally {
+      setLoading(false);
+    }
   }
   useEffect(() => {
+    // Depend on `user` too — `load()` early-returns when user isn't
+    // resolved yet (component mounts before Firebase auth state),
+    // and without `user` in the dep array it never re-runs once auth
+    // settles. Symptom: empty roster on first paint.
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leagueId, teamId]);
+  }, [leagueId, teamId, user]);
 
   async function call(
     action:

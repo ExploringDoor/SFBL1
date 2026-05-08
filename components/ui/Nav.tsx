@@ -13,7 +13,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./Nav.css";
 
 export interface NavLink {
@@ -51,8 +51,18 @@ const DEFAULT_LINKS: NavLink[] = [
     children: [
       { label: "Rules", href: "/rules" },
       { label: "News", href: "/content/news" },
-      { label: "Register", href: "/content/register" },
+      { label: "Photos", href: "/photos" },
+      { label: "Leaders", href: "/leaders" },
+      { label: "Playoffs", href: "/playoffs" },
+      { label: "History", href: "/history" },
+      { label: "Fields", href: "/fields" },
+      { label: "About SFBL", href: "/sfbl-info" },
+      { label: "Player Registration", href: "/player-registration" },
+      { label: "Team Registration", href: "/team-registration" },
+      { label: "Team Waiver", href: "/team-waiver-form" },
+      { label: "Umpire Evaluation", href: "/umpire-evaluation-form" },
       { label: "Pay Online", href: "/content/pay-online" },
+      { label: "Sponsors", href: "/content/sponsors" },
       { label: "Store", href: "/content/store" },
       { label: "Contact", href: "/content/contact" },
     ],
@@ -67,13 +77,39 @@ export function Nav({
 }: NavProps) {
   const pathname = usePathname();
   const [mobOpen, setMobOpen] = useState(false);
+  // Track which dropdown (by label) is open. JS-controlled rather than
+  // pure CSS :hover so that clicking a child link can close the menu
+  // before/during navigation — :hover persists while the cursor sits
+  // over the area, which used to leave the menu hanging open on the
+  // next page.
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+
+  // Any route change closes whatever dropdown was open. Belt-and-
+  // suspenders alongside the click handler: handles keyboard nav,
+  // middle-click, and any case where focus state isn't where we
+  // expect it.
+  useEffect(() => {
+    setOpenDropdown(null);
+  }, [pathname]);
 
   return (
     <>
       <nav className="le-nav">
-        <Link href="/" className="le-nav-brand" onClick={() => setMobOpen(false)}>
-          {logoUrl && <img src={logoUrl} alt="" />}
-          <span>{tenantShort}</span>
+        {/* When the tenant has a logo, show the logo alone — the
+         *  banner already contains the league wordmark, so doubling
+         *  it with the tenantShort text looks redundant. Falls back
+         *  to text-only branding when no logo is configured. */}
+        <Link
+          href="/"
+          className={"le-nav-brand" + (logoUrl ? " has-logo" : "")}
+          onClick={() => setMobOpen(false)}
+          aria-label={tenantShort}
+        >
+          {logoUrl ? (
+            <img src={logoUrl} alt={tenantShort} />
+          ) : (
+            <span>{tenantShort}</span>
+          )}
         </Link>
 
         <ul className="le-nav-links">
@@ -82,18 +118,38 @@ export function Nav({
               const childActive = link.children.some((c) =>
                 isActive(pathname, c.href),
               );
+              const isOpen = openDropdown === link.label;
               return (
                 <li
                   key={link.label}
                   className={
-                    "le-nav-dropdown" + (childActive ? " active" : "")
+                    "le-nav-dropdown" +
+                    (childActive ? " active" : "") +
+                    (isOpen ? " open" : "")
                   }
+                  onMouseEnter={() => setOpenDropdown(link.label)}
+                  onMouseLeave={() => setOpenDropdown(null)}
+                  onFocus={() => setOpenDropdown(link.label)}
+                  onBlur={(e) => {
+                    // Only close if focus is leaving the entire dropdown,
+                    // not just bouncing between trigger and child link.
+                    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                      setOpenDropdown(null);
+                    }
+                  }}
                 >
-                  <button type="button" className="le-nav-dropdown-trigger">
+                  <button
+                    type="button"
+                    className="le-nav-dropdown-trigger"
+                    aria-haspopup="menu"
+                    aria-expanded={isOpen}
+                    onClick={() =>
+                      setOpenDropdown((cur) =>
+                        cur === link.label ? null : link.label,
+                      )
+                    }
+                  >
                     {link.label}
-                    <span className="le-nav-caret" aria-hidden="true">
-                      ▾
-                    </span>
                   </button>
                   <ul className="le-nav-dropdown-menu">
                     {link.children.map((child) => (
@@ -103,7 +159,12 @@ export function Nav({
                           isActive(pathname, child.href) ? "active" : ""
                         }
                       >
-                        <Link href={child.href}>{child.label}</Link>
+                        <Link
+                          href={child.href}
+                          onClick={() => setOpenDropdown(null)}
+                        >
+                          {child.label}
+                        </Link>
                       </li>
                     ))}
                   </ul>

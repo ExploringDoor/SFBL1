@@ -6,6 +6,7 @@
 // stays in sync.
 
 import Link from "next/link";
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { getAdminDb } from "@/lib/firebase-admin";
@@ -14,8 +15,49 @@ import {
   type PlayerSeasonBatting,
   type PlayerSeasonPitching,
 } from "@/components/ui/PlayerProfile";
+import { AvatarUpload } from "@/components/ui/AvatarUpload";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { playerId: string };
+}): Promise<Metadata> {
+  const tenantId = headers().get("x-tenant-id");
+  if (!tenantId) return {};
+  const db = getAdminDb();
+  const snap = await db
+    .doc(`leagues/${tenantId}/players/${params.playerId}`)
+    .get();
+  if (!snap.exists) return {};
+  const data = snap.data() ?? {};
+  const name = String(data.name ?? params.playerId);
+  const teamId = String(data.team_id ?? "");
+  let teamName = teamId;
+  if (teamId) {
+    const ts = await db
+      .doc(`leagues/${tenantId}/teams/${teamId}`)
+      .get();
+    teamName = String(ts.data()?.name ?? teamId);
+  }
+  const jersey = data.jersey != null ? `#${data.jersey} ` : "";
+  const description = `${jersey}${name} — ${teamName}. Batting / pitching stats and game log.`;
+  return {
+    title: `${jersey}${name}`.trim(),
+    description,
+    openGraph: {
+      title: `${jersey}${name}`.trim(),
+      description,
+      type: "profile",
+    },
+    twitter: {
+      card: "summary",
+      title: `${jersey}${name}`.trim(),
+      description,
+    },
+  };
+}
 
 interface GameLogRow {
   gameId: string;
@@ -132,6 +174,18 @@ export default async function PlayerDetailPage({
         photoUrl={data.photo_url ? String(data.photo_url) : null}
         batting={battingSeason}
         pitching={pitchingSeason}
+        avatarOverlay={
+          tenantId && team?.team_id ? (
+            <AvatarUpload
+              leagueId={tenantId}
+              playerId={params.playerId}
+              teamId={team.team_id}
+              initialPhotoUrl={
+                data.photo_url ? String(data.photo_url) : null
+              }
+            />
+          ) : null
+        }
       />
 
       {gameLog.length > 0 && <GameLog rows={gameLog} />}

@@ -70,19 +70,37 @@ export async function POST(req: Request) {
   }
 
   const db = getAdminDb();
+  // Email lives on /_private/contact subdocs post-PII migration. We
+  // walk the league's player docs and fetch each contact in
+  // parallel, looking for matches. For typical league sizes (≤ a
+  // few hundred players) this is one query + N parallel reads —
+  // well within Firestore's per-request budget. (Avoids
+  // collectionGroup so the test mock layer doesn't need to model
+  // cross-collection queries.)
   const playersSnap = await db
     .collection(`leagues/${leagueId}/players`)
-    .where("email", "==", email)
     .get();
-
-  // Filter out inactive + already-linked-to-someone-else.
-  const matches: { id: string; team_id: string; alreadyLinked: boolean }[] = [];
-  for (const d of playersSnap.docs) {
+  const candidates = playersSnap.docs.filter((d) => {
     const p = d.data();
-    if (p.active === false) continue;
-    if (p.auth_uid && p.auth_uid !== decoded.uid) continue; // someone else's
+    if (p.active === false) return false;
+    if (p.auth_uid && p.auth_uid !== decoded.uid) return false;
+    return true;
+  });
+  const contactSnaps = await Promise.all(
+    candidates.map((d) =>
+      db
+        .doc(`leagues/${leagueId}/players/${d.id}/_private/contact`)
+        .get(),
+    ),
+  );
+  const matches: { id: string; team_id: string; alreadyLinked: boolean }[] = [];
+  for (let i = 0; i < candidates.length; i++) {
+    const contact = contactSnaps[i]!.exists ? contactSnaps[i]!.data()! : {};
+    const peml = String(contact.email ?? "").toLowerCase();
+    if (!peml || peml !== email) continue;
+    const p = candidates[i]!.data();
     matches.push({
-      id: d.id,
+      id: candidates[i]!.id,
       team_id: String(p.team_id ?? ""),
       alreadyLinked: p.auth_uid === decoded.uid,
     });
@@ -108,13 +126,14 @@ export async function POST(req: Request) {
     });
   }
 
+  // Public doc gets auth_uid; email stays in /_private/contact.
   await db.doc(`leagues/${leagueId}/players/${match.id}`).set(
-    {
-      auth_uid: decoded.uid,
-      email,
-    },
+    { auth_uid: decoded.uid },
     { merge: true },
   );
+  await db
+    .doc(`leagues/${leagueId}/players/${match.id}/_private/contact`)
+    .set({ email }, { merge: true });
 
   return NextResponse.json({
     matches: 1,

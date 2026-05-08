@@ -136,7 +136,118 @@ export async function POST(req: Request) {
 
   await ref.delete();
 
+  // Audit the moderation action so commissioners can review what
+  // got deleted by whom (especially relevant when admins delete
+  // captain messages). Best-effort — never let an audit-write
+  // failure shadow a successful delete.
+  if (!isAuthor) {
+    try {
+      await db.collection(`leagues/${leagueId}/audit`).add({
+        kind: "chat_moderate",
+        by_uid: decoded.uid,
+        by_role: isAdmin ? "admin" : "captain",
+        changes: {
+          collection: coll,
+          msg_id: msgId,
+          author_uid: authorUid || null,
+          team_id: msgTeamId || null,
+        },
+        at: new Date().toISOString(),
+      });
+    } catch (e) {
+      console.warn("[chat-delete] audit write failed:", e);
+    }
+  }
+
   // FUTURE: cascade to /api/delete-by-source once the inbox lands.
 
   return NextResponse.json({ ok: true });
+}
+
+// DELETE /api/chat-message-delete?leagueId=&collection=&teamId=
+//
+// Admin-only "Clear all" — wipes every message in the chosen chat.
+// `teamId` is required when collection=team_messages (so the admin
+// can wipe one team without touching others). Captains_chat is
+// league-wide; teamId is ignored for that.
+export async function DELETE(req: Request) {
+  const authHdr = req.headers.get("authorization");
+  if (!authHdr?.startsWith("Bearer ")) {
+    return NextResponse.json(
+      { error: "Missing bearer token" },
+      { status: 401 },
+    );
+  }
+  const idToken = authHdr.slice("Bearer ".length).trim();
+
+  let decoded;
+  try {
+    decoded = await getAdminAuth().verifyIdToken(idToken);
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid or expired token" },
+      { status: 401 },
+    );
+  }
+
+  const url = new URL(req.url);
+  const leagueId = url.searchParams.get("leagueId");
+  const coll = url.searchParams.get("collection");
+  const teamId = url.searchParams.get("teamId");
+
+  if (!leagueId) {
+    return NextResponse.json(
+      { error: "leagueId is required" },
+      { status: 400 },
+    );
+  }
+  if (!coll || !ALLOWED_COLLECTIONS.has(coll)) {
+    return NextResponse.json(
+      { error: "Invalid collection" },
+      { status: 400 },
+    );
+  }
+
+  const callerLeagues = decoded.leagues as
+    | Record<string, string>
+    | undefined;
+  if (callerLeagues?.[leagueId] !== "admin") {
+    return NextResponse.json(
+      { error: "Admin only" },
+      { status: 403 },
+    );
+  }
+
+  const db = getAdminDb();
+  let q: FirebaseFirestore.Query = db.collection(
+    `leagues/${leagueId}/${coll}`,
+  );
+  if (coll === "team_messages") {
+    if (!teamId) {
+      return NextResponse.json(
+        { error: "teamId is required for team_messages clear-all" },
+        { status: 400 },
+      );
+    }
+    q = q.where("team_id", "==", teamId);
+  }
+  const snap = await q.get();
+
+  let deleted = 0;
+  for (let i = 0; i < snap.docs.length; i += 450) {
+    const batch = db.batch();
+    for (const d of snap.docs.slice(i, i + 450)) batch.delete(d.ref);
+    await batch.commit();
+    deleted += Math.min(450, snap.docs.length - i);
+  }
+
+  await db.collection(`leagues/${leagueId}/audit`).add({
+    kind: "chat_clear_all",
+    by_uid: decoded.uid,
+    by_role: "admin",
+    changes: { collection: coll, team_id: teamId, deleted },
+    at: new Date().toISOString(),
+  });
+
+  return NextResponse.json({ ok: true, deleted });
 }

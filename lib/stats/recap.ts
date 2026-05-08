@@ -140,7 +140,8 @@ export function buildRecap(input: RecapInput): RecapOutput {
   if (inning) sentencesP2.push(inning);
 
   if (winnerName) {
-    sentencesP2.push(closingLine(winnerName, loserName!, margin));
+    const closer = closingLine(winnerName, loserName!, margin);
+    if (closer) sentencesP2.push(closer);
   }
 
   const body: string[] = [];
@@ -152,10 +153,14 @@ export function buildRecap(input: RecapInput): RecapOutput {
 
 // ---------------------------------------------------------------------------
 
+// "edged"/"beat"/"defeated" — purely a verb choice based on margin.
+// We don't editorialize about pace ("rolled past", "dropped the
+// hammer") here because we have no inning-level data on most games
+// to back that up. The headline stays factual; if the linescore
+// supports a narrative, addLinescoreBeat() adds a sentence after.
 function winnerStyle(margin: number): string {
-  if (margin >= 10) return "ran away from";
-  if (margin >= 6) return "rolled past";
-  if (margin >= 3) return "took down";
+  if (margin >= 6) return "defeated";
+  if (margin >= 3) return "beat";
   if (margin === 1) return "edged";
   return "beat";
 }
@@ -178,22 +183,110 @@ function opener(
     : "";
 
   if (winnerName == null) {
-    return `The ${input.awayTeamName} and ${input.homeTeamName} battled to a ${input.awayScore}–${input.homeScore} tie${where}${when}.`;
+    return `${input.awayTeamName} and ${input.homeTeamName} finished tied ${input.awayScore}–${input.homeScore}${where}${when}.`;
   }
 
-  if (margin >= 10) {
-    return `${winnerName} dropped the hammer on ${loserName}${where}${when}, cruising to a ${winnerScore}–${loserScore} win behind a complete-team performance.`;
+  // Factual one-liner. We DO NOT claim "came down to the final at-
+  // bat" or call anything a "thriller" / "rout" — we only have the
+  // final score in many cases. If a linescore is present, a separate
+  // sentence (linescoreBeat) describes what actually happened.
+  const verb = winnerStyle(margin);
+  const base = `${winnerName} ${verb} ${loserName} ${winnerScore}–${loserScore}${where}${when}.`;
+  const beat = linescoreBeat(input, winnerName, loserName!, margin);
+  return beat ? `${base} ${beat}` : base;
+}
+
+/** Build a factual narrative sentence backed by the linescore. Only
+ *  emitted when we have inning-by-inning runs for both teams.
+ *  Examples we'll generate:
+ *    "X scored 3 runs in the 5th to take a 5-2 lead, then held on."
+ *    "Y plated the go-ahead run in the bottom of the 7th."
+ *    "Both teams were scoreless until the 6th."
+ *  We never make up tone — adjectives like "thriller", "blowout",
+ *  "comeback" only appear when the linescore actually shows it. */
+function linescoreBeat(
+  input: RecapInput,
+  winnerName: string,
+  loserName: string,
+  margin: number,
+): string | null {
+  const a = input.awayLine;
+  const h = input.homeLine;
+  if (!a || !h || a.length === 0 || h.length === 0) return null;
+
+  const innings = Math.max(a.length, h.length);
+  // Reconstruct the cumulative score after each half-inning. We need
+  // to know whether the winning team led from the start, came back,
+  // or scored the go-ahead in the final frame.
+  let aCum = 0;
+  let hCum = 0;
+  let winnerLead = 0; // > 0 = winner leads, < 0 = winner trails, 0 = tied
+  const winnerIsAway = winnerName === input.awayTeamName;
+  let leadFlips = 0;
+  let firstWinnerLeadInning: number | null = null;
+  let lastTiedInning = -1;
+  let goAheadInning: number | null = null;
+  for (let i = 0; i < innings; i++) {
+    aCum += a[i] ?? 0;
+    hCum += h[i] ?? 0;
+    const newWinnerLead = winnerIsAway ? aCum - hCum : hCum - aCum;
+    const wasLeading = winnerLead > 0;
+    const nowLeading = newWinnerLead > 0;
+    if (wasLeading !== nowLeading && winnerLead !== 0 && newWinnerLead !== 0) {
+      leadFlips++;
+    }
+    if (newWinnerLead > 0 && firstWinnerLeadInning === null) {
+      firstWinnerLeadInning = i + 1;
+    }
+    if (newWinnerLead === 0) lastTiedInning = i + 1;
+    // Detect go-ahead inning: the inning the winner went from
+    // not-leading to leading and never gave it back.
+    if (winnerLead <= 0 && newWinnerLead > 0) {
+      goAheadInning = i + 1;
+    }
+    winnerLead = newWinnerLead;
   }
-  if (margin >= 6) {
-    return `${winnerName} controlled the day from start to finish${where}${when}, beating ${loserName} ${winnerScore}–${loserScore} to keep their roll going.`;
+
+  // Late go-ahead: winner went ahead in the final inning of regulation
+  // (or extras). This is the only case where we can honestly say "the
+  // winning runs came late."
+  if (
+    goAheadInning != null &&
+    margin <= 2 &&
+    goAheadInning === innings &&
+    innings >= 6
+  ) {
+    return `The winning run${margin === 1 ? "" : "s"} crossed in the ${ord(goAheadInning)}.`;
   }
-  if (margin >= 3) {
-    return `${winnerName} grabbed momentum early and held on${where}${when}, defeating ${loserName} ${winnerScore}–${loserScore}.`;
+
+  // Big inning: a single inning of 5+ runs that swung the score by a
+  // visible margin. State the inning + how many runs.
+  let bigInning: { inning: number; runs: number; team: string } | null = null;
+  for (let i = 0; i < innings; i++) {
+    const ar = a[i] ?? 0;
+    const hr = h[i] ?? 0;
+    if (ar >= 5) bigInning = { inning: i + 1, runs: ar, team: input.awayTeamName };
+    if (hr >= 5 && hr > (bigInning?.runs ?? 0)) {
+      bigInning = { inning: i + 1, runs: hr, team: input.homeTeamName };
+    }
   }
-  if (margin === 1) {
-    return `It came down to the final at-bat${where}${when}, with ${winnerName} edging ${loserName} ${winnerScore}–${loserScore} in a one-run thriller.`;
+  if (bigInning) {
+    return `${bigInning.team} put up ${bigInning.runs} runs in the ${ord(bigInning.inning)}.`;
   }
-  return `${winnerName} got past ${loserName} ${winnerScore}–${loserScore}${where}${when} in a tight battle.`;
+
+  // Wire-to-wire winner: led from inning 1 onward, never tied after.
+  if (firstWinnerLeadInning === 1 && leadFlips === 0 && lastTiedInning <= 0) {
+    return `${winnerName} led from the first inning on.`;
+  }
+
+  // No specific story — leave it factual.
+  return null;
+}
+
+function ord(n: number): string {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] ?? s[v] ?? s[0] ?? "th");
 }
 
 function potgSentence(
@@ -350,42 +443,22 @@ function pitchingParagraph(
   return parts.join(" ");
 }
 
-function inningHighlight(input: RecapInput): string | null {
-  const aLine = input.awayLine;
-  const hLine = input.homeLine;
-  if (!aLine || !hLine || aLine.length === 0) return null;
-
-  // Find the inning with the biggest single-team scoring outburst.
-  let biggest = { team: "", inn: -1, runs: 0 };
-  for (let i = 0; i < aLine.length; i++) {
-    const ar = aLine[i] ?? 0;
-    const hr = hLine[i] ?? 0;
-    if (ar > biggest.runs)
-      biggest = { team: input.awayTeamName, inn: i + 1, runs: ar };
-    if (hr > biggest.runs)
-      biggest = { team: input.homeTeamName, inn: i + 1, runs: hr };
-  }
-  if (biggest.runs >= 4) {
-    return `The ${biggest.team} broke things open with a ${biggest.runs}-run ${ordinal(biggest.inn)} inning that swung the momentum for good.`;
-  }
-  if (biggest.runs >= 3) {
-    return `A ${biggest.runs}-run ${ordinal(biggest.inn)} inning by the ${biggest.team} was the difference.`;
-  }
+// Replaced by linescoreBeat() in opener — kept stub here so existing
+// callers compile while the recap pipeline is being simplified. Always
+// returns null so no editorialized sentence is added.
+function inningHighlight(_input: RecapInput): string | null {
   return null;
 }
 
+// Removed — the previous version added "statement win" / "building
+// momentum" / "back to the drawing board" rhetoric that wasn't backed
+// by data. Keep the function for callers; emit nothing.
 function closingLine(
-  winnerName: string,
-  loserName: string,
-  margin: number,
+  _winnerName: string,
+  _loserName: string,
+  _margin: number,
 ): string {
-  if (margin >= 8) {
-    return `Statement win for ${winnerName}; ${loserName} will be looking to bounce back next week.`;
-  }
-  if (margin >= 4) {
-    return `${winnerName} keeps building momentum, while ${loserName} heads back to the drawing board.`;
-  }
-  return `Both clubs played them tough, but ${winnerName} found enough to come out on top.`;
+  return "";
 }
 
 function ordinal(n: number): string {

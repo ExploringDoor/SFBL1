@@ -121,3 +121,92 @@ export async function GET(req: Request) {
     total: snap.size,
   });
 }
+
+// DELETE /api/admin-audit-log?leagueId=X[&olderThanDays=30]
+//
+// Clears audit entries. Without `olderThanDays`, deletes ALL entries
+// for the league — equivalent to DVSL's "Clear All" button. With
+// `olderThanDays=30`, only deletes entries older than that cutoff
+// (less destructive — keeps the recent activity for context).
+//
+// Audit log retention is at the commissioner's discretion. Compliance-
+// minded leagues can leave it untouched (Firestore is cheap for
+// this volume); leagues that just want a clean slate after season
+// end can wipe it.
+export async function DELETE(req: Request) {
+  const auth = req.headers.get("authorization");
+  if (!auth?.startsWith("Bearer ")) {
+    return NextResponse.json(
+      { error: "Missing bearer token" },
+      { status: 401 },
+    );
+  }
+  const idToken = auth.slice("Bearer ".length).trim();
+
+  let decoded;
+  try {
+    decoded = await getAdminAuth().verifyIdToken(idToken);
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid or expired token" },
+      { status: 401 },
+    );
+  }
+
+  const url = new URL(req.url);
+  const leagueId = url.searchParams.get("leagueId");
+  if (!leagueId) {
+    return NextResponse.json(
+      { error: "leagueId is required" },
+      { status: 400 },
+    );
+  }
+
+  const callerLeagues = decoded.leagues as
+    | Record<string, string>
+    | undefined;
+  if (callerLeagues?.[leagueId] !== "admin") {
+    return NextResponse.json(
+      { error: `Not admin of league "${leagueId}"` },
+      { status: 403 },
+    );
+  }
+
+  const olderThanDaysRaw = url.searchParams.get("olderThanDays");
+  const olderThanDays =
+    olderThanDaysRaw && Number.isFinite(Number(olderThanDaysRaw))
+      ? Number(olderThanDaysRaw)
+      : null;
+  const cutoffIso =
+    olderThanDays != null
+      ? new Date(Date.now() - olderThanDays * 86_400_000).toISOString()
+      : null;
+
+  const db = getAdminDb();
+  const snap = await db.collection(`leagues/${leagueId}/audit`).get();
+  const docsToDelete = snap.docs.filter((d) => {
+    if (cutoffIso == null) return true;
+    const at = String(d.data().at ?? "");
+    return at && at < cutoffIso;
+  });
+
+  // Batch deletes — Firestore limits to 500 ops per batch. For audit
+  // volumes this is a single batch in practice (per-season cap is
+  // a few hundred), but loop anyway so we don't break later.
+  let deleted = 0;
+  for (let i = 0; i < docsToDelete.length; i += 450) {
+    const batch = db.batch();
+    for (const d of docsToDelete.slice(i, i + 450)) {
+      batch.delete(d.ref);
+    }
+    await batch.commit();
+    deleted += Math.min(450, docsToDelete.length - i);
+  }
+
+  return NextResponse.json({
+    ok: true,
+    deleted,
+    total_before: snap.size,
+    total_after: snap.size - deleted,
+  });
+}

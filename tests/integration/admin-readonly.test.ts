@@ -68,8 +68,25 @@ vi.mock("@/lib/firebase-admin", () => ({
       };
       return baseQuery([]);
     },
-    doc: () => ({
-      get: async () => ({ exists: false, data: () => ({}) }),
+    doc: (path: string) => ({
+      get: async () => {
+        // Support /_private/contact subdoc reads — admin-league-health
+        // walks players + their contact docs to count emails.
+        // Tests can pre-seed contacts via mockState.collections, with
+        // path "leagues/{l}/players/{pid}/_private" → list of contact
+        // docs. For tests that don't need contact data, just return
+        // empty.
+        const m = path.match(
+          /^leagues\/([^/]+)\/players\/([^/]+)\/_private\/(.+)$/,
+        );
+        if (m) {
+          const subPath = `leagues/${m[1]}/players/${m[2]}/_private`;
+          const docs = mockState.collections.get(subPath) ?? [];
+          const found = docs.find((d) => d.id === m[3]);
+          if (found) return { exists: true, data: () => found.data };
+        }
+        return { exists: false, data: () => ({}) };
+      },
     }),
   }),
   getAdminMessaging: () => ({}),
@@ -126,13 +143,15 @@ describe("/api/admin-league-health — counts", () => {
       { id: "team_b", data: { name: "Team B", active: true } },
       { id: "team_c", data: { name: "Old Team", active: false } },
     ]);
+    // Post-PII: email lives on /_private/contact subdocs. Seed
+    // both the public doc and the contact subdoc for players that
+    // should have email.
     mockState.collections.set("leagues/sfbl/players", [
       {
         id: "p1",
         data: {
           name: "P1",
           team_id: "team_a",
-          email: "p1@example.com",
           active: true,
           auth_uid: "uid_p1",
         },
@@ -142,7 +161,6 @@ describe("/api/admin-league-health — counts", () => {
         data: {
           name: "P2",
           team_id: "team_a",
-          email: "p2@example.com",
           active: true,
         },
       },
@@ -152,9 +170,16 @@ describe("/api/admin-league-health — counts", () => {
           name: "P3",
           team_id: "team_b",
           active: true,
-          // no email
+          // no contact subdoc — counts as no-email
         },
       },
+    ]);
+    // Contact subdocs for p1 and p2 (post-PII storage).
+    mockState.collections.set("leagues/sfbl/players/p1/_private", [
+      { id: "contact", data: { email: "p1@example.com" } },
+    ]);
+    mockState.collections.set("leagues/sfbl/players/p2/_private", [
+      { id: "contact", data: { email: "p2@example.com" } },
     ]);
     mockState.collections.set("leagues/sfbl/games", [
       { id: "g1", data: { status: "final", updated_at: "2026-05-01" } },

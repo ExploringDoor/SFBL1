@@ -37,6 +37,24 @@ const mockState = {
   setCalls: [] as Array<{ path: string; data: Record<string, unknown> }>,
 };
 
+// Helper to split a test-seeded player object into public-doc data
+// (everything except email/phone) and contact-doc data (just
+// email/phone). After PII migration these live in different
+// Firestore docs; tests still seed via a flat object for ergonomics.
+function splitPlayerData(d: Record<string, unknown>): {
+  publicData: Record<string, unknown>;
+  contactData: Record<string, unknown>;
+} {
+  const { email, phone, ...rest } = d;
+  return {
+    publicData: rest,
+    contactData: {
+      ...(email !== undefined ? { email } : {}),
+      ...(phone !== undefined ? { phone } : {}),
+    },
+  };
+}
+
 vi.mock("@/lib/firebase-admin", () => ({
   getAdminAuth: () => ({
     verifyIdToken: vi.fn(async () => mockState.decoded),
@@ -46,36 +64,73 @@ vi.mock("@/lib/firebase-admin", () => ({
       const m = path.match(/^leagues\/([^/]+)\/players$/);
       if (!m) {
         return {
-          where: () => ({
-            get: async () => ({ docs: [] }),
-          }),
+          where: () => ({ get: async () => ({ docs: [] }) }),
+          get: async () => ({ docs: [] }),
         };
       }
+      const allDocs = () =>
+        Array.from(mockState.players.values()).map((p) => {
+          const { publicData } = splitPlayerData(p.data);
+          return { id: p.id, data: () => publicData };
+        });
       return {
+        // Where queries hit the public doc — only public fields exist
+        // there post-PII. (Tests that wrote `where("email", "==", x)`
+        // are now invalid; player-link no longer queries by email
+        // directly.)
         where: (field: string, _op: string, value: unknown) => ({
-          get: async () => {
-            const docs = [];
-            for (const p of mockState.players.values()) {
-              const v = (p.data as Record<string, unknown>)[field];
-              if (v === value) {
-                docs.push({
-                  id: p.id,
-                  data: () => p.data,
-                });
-              }
-            }
-            return { docs };
-          },
+          get: async () => ({
+            docs: allDocs().filter((d) => {
+              const v = (d.data() as Record<string, unknown>)[field];
+              return v === value;
+            }),
+          }),
         }),
+        get: async () => ({ docs: allDocs() }),
       };
     },
     doc: (path: string) => ({
+      get: async () => {
+        const contactMatch = path.match(
+          /^leagues\/[^/]+\/players\/([^/]+)\/_private\/contact$/,
+        );
+        if (contactMatch) {
+          const player = mockState.players.get(contactMatch[1]!);
+          if (!player) return { exists: false, data: () => undefined };
+          const { contactData } = splitPlayerData(player.data);
+          return { exists: true, data: () => contactData };
+        }
+        const playerMatch = path.match(
+          /^leagues\/[^/]+\/players\/([^/]+)$/,
+        );
+        if (playerMatch) {
+          const player = mockState.players.get(playerMatch[1]!);
+          if (!player) return { exists: false, data: () => undefined };
+          const { publicData } = splitPlayerData(player.data);
+          return { exists: true, data: () => publicData };
+        }
+        return { exists: false, data: () => undefined };
+      },
       set: async (
         data: Record<string, unknown>,
         _opts?: { merge?: boolean },
       ) => {
         mockState.setCalls.push({ path, data });
-        // Reflect into mockState so subsequent reads see the link.
+        // Reflect contact writes back into the seed so re-reads see
+        // updates (linked email, etc.).
+        const contactMatch = path.match(
+          /^leagues\/[^/]+\/players\/([^/]+)\/_private\/contact$/,
+        );
+        if (contactMatch) {
+          const existing = mockState.players.get(contactMatch[1]!);
+          if (existing) {
+            mockState.players.set(contactMatch[1]!, {
+              ...existing,
+              data: { ...existing.data, ...data },
+            });
+          }
+          return;
+        }
         const m = path.match(/^leagues\/[^/]+\/players\/(.+)$/);
         if (m) {
           const existing = mockState.players.get(m[1]!);
@@ -204,12 +259,17 @@ describe("/api/player-link — 1 match (happy path)", () => {
     expect(data.linked).toBe("p1");
     expect(data.team_id).toBe("team_a");
 
-    expect(mockState.setCalls).toHaveLength(1);
-    expect(mockState.setCalls[0]!.path).toBe("leagues/sfbl/players/p1");
-    expect(mockState.setCalls[0]!.data).toMatchObject({
-      auth_uid: "uid_player",
-      email: "alice@example.com",
-    });
+    // Two writes post-PII: auth_uid on public doc, email on
+    // /_private/contact subdoc.
+    expect(mockState.setCalls).toHaveLength(2);
+    const publicCall = mockState.setCalls.find(
+      (c) => c.path === "leagues/sfbl/players/p1",
+    );
+    const contactCall = mockState.setCalls.find(
+      (c) => c.path === "leagues/sfbl/players/p1/_private/contact",
+    );
+    expect(publicCall?.data).toMatchObject({ auth_uid: "uid_player" });
+    expect(contactCall?.data).toMatchObject({ email: "alice@example.com" });
   });
 
   it("normalizes email to lowercase before stamping", async () => {
@@ -220,7 +280,10 @@ describe("/api/player-link — 1 match (happy path)", () => {
     });
     const res = await POST(makeReq({ leagueId: "sfbl" }));
     expect(res.status).toBe(200);
-    expect(mockState.setCalls[0]!.data.email).toBe("alice@example.com");
+    const contactCall = mockState.setCalls.find((c) =>
+      c.path.endsWith("/_private/contact"),
+    );
+    expect(contactCall?.data.email).toBe("alice@example.com");
   });
 
   it("returns alreadyLinked:true and skips write when same auth_uid already linked", async () => {

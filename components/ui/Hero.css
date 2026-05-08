@@ -29,6 +29,25 @@
   background: var(--brand-primary, #002D72);
 }
 
+/* Logo mode — strip the dark navy + gradient. Hero sits flat on the
+ * page background so the league banner reads as the page header,
+ * not as a separate dark bar. The pill colors swap to the brand
+ * palette since they no longer need to pop against navy. */
+.le-hero.logo-mode {
+  background: transparent;
+  color: var(--text-strong);
+  min-height: 0;
+  height: auto;
+  padding: 32px 16px 24px;
+}
+.le-hero.logo-mode .le-hero-pill {
+  background: rgba(0, 45, 114, 0.06);
+  border-color: rgba(0, 45, 114, 0.2);
+  color: var(--brand-primary);
+  box-shadow: none;
+  margin-bottom: 18px;
+}
+
 .le-hero-bg {
   position: absolute;
   inset: 0;
@@ -96,6 +115,28 @@
   text-shadow:
     0 0 60px rgba(96, 165, 250, 0.4),
     0 4px 40px rgba(0, 0, 0, 0.8);
+}
+
+/* Logo-mode title — when the tenant supplies a banner image, render
+ * the league wordmark in place of the giant text title. The h1 still
+ * exists for SEO + accessibility (alt text), but its visible payload
+ * is the image. Drop the text-shadow + uppercase rules so they don't
+ * apply to the <img>. */
+.le-hero-title-logo {
+  text-shadow: none;
+  letter-spacing: 0;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.le-hero-logo {
+  display: block;
+  width: auto;
+  max-width: min(720px, 92vw);
+  height: auto;
+  max-height: clamp(140px, 22vw, 280px);
+  object-fit: contain;
 }
 
 .le-hero-sub {

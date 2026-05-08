@@ -154,7 +154,13 @@ export function StandingsTable({
                             Full standings page keeps it. */}
                         {meta?.logoUrl && (
                           <span className="le-team-logo">
-                            <img src={meta.logoUrl} alt="" />
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={meta.logoUrl}
+                              alt=""
+                              loading="lazy"
+                              decoding="async"
+                            />
                           </span>
                         )}
                         <Link
@@ -185,8 +191,11 @@ export function StandingsTable({
                       </>
                     )}
                     {showStreak && (
-                      <td className={streakClass(r.streak)}>
-                        {r.streak ?? "-"}
+                      <td>
+                        <span className={streakClass(r.streak)}>
+                          {r.streak ?? "-"}
+                        </span>
+                        <RecentFormSparkline recent={r.recent} />
                       </td>
                     )}
                   </tr>
@@ -211,4 +220,36 @@ function streakClass(streak: string | undefined): string {
 function formatPct(p: number): string {
   if (p === 1) return "1.000";
   return p.toFixed(3).replace(/^0/, "");
+}
+
+// Last-5 recent-form indicator. Renders a horizontal row of 5
+// colored dots — green (W), red (L), gray (T). DVSL parity. Pads
+// with empty slots if a team has played fewer than 5 games. Hidden
+// on the compact (sidebar) standings via CSS — only the full page
+// has the horizontal room.
+function RecentFormSparkline({
+  recent,
+}: {
+  recent?: ("W" | "L" | "T")[];
+}) {
+  if (!recent || recent.length === 0) return null;
+  const padded = [...Array(Math.max(0, 5 - recent.length)).fill(null), ...recent].slice(-5);
+  return (
+    <span
+      className="le-form-spark"
+      title={`Last ${recent.length}: ${recent.join("")}`}
+      aria-label={`Last ${recent.length} games: ${recent.join(", ")}`}
+    >
+      {padded.map((o, i) => (
+        <span
+          key={i}
+          className={
+            "le-form-dot " +
+            (o === "W" ? "win" : o === "L" ? "loss" : o === "T" ? "tie" : "empty")
+          }
+          aria-hidden
+        />
+      ))}
+    </span>
+  );
 }

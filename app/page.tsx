@@ -11,6 +11,8 @@ import type { PublicLeagueConfig } from "@/lib/tenants";
 import { GameCard, type GameCardTeam } from "@/components/ui/GameCard";
 import { PreviewCard, type PreviewCardTeam } from "@/components/ui/PreviewCard";
 import { Hero as DvslHero } from "@/components/ui/Hero";
+import { HomepageBanner } from "@/components/ui/HomepageBanner";
+import { HomepageLiveGames } from "@/components/ui/HomepageLiveGames";
 import {
   StandingsTable,
   type DivisionGroup,
@@ -53,11 +55,24 @@ export default async function HomePage() {
 
   return (
     <main>
+      {/* Banner alert sits above the hero so weather/registration
+          announcements catch the eye on first visit. Renders nothing
+          when no banner is active. */}
+      <HomepageBanner leagueId={tenantId} />
       <DvslHero
         pill={`⚾ ${season} Regular Season`}
         title={`${big} ${season}`}
         accentWord={season}
         subtitle={leagueName}
+        logoUrl={config?.theme?.logo_url ?? null}
+      />
+      {/* Live games strip — appears below the hero whenever any
+          game in the league is in progress. Subscribes via
+          onSnapshot so scores update in real time as the field-side
+          scorekeeper taps. Hidden when no games are live. */}
+      <HomepageLiveGames
+        leagueId={tenantId}
+        teamLabels={teamLabelsForLive(teams)}
       />
 
       <section className="sec">
@@ -434,4 +449,19 @@ function BareApex() {
       </p>
     </main>
   );
+}
+
+// Reduce the rich TeamMeta map to the subset HomepageLiveGames needs
+// — keeps the props surface narrow so the client component doesn't
+// pull a giant blob into its bundle.
+function teamLabelsForLive(
+  teams: Record<string, TeamMeta>,
+): Record<string, { name: string; abbrev?: string }> {
+  const out: Record<string, { name: string; abbrev?: string }> = {};
+  for (const id of Object.keys(teams)) {
+    const t = teams[id];
+    if (!t) continue;
+    out[id] = { name: t.name, abbrev: t.abbrev };
+  }
+  return out;
 }

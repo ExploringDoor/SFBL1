@@ -1,0 +1,145 @@
+/* ── Print-route stylesheet ───────────────────────────────────
+ *
+ * Used by /print/{kind} pages — clean, dense tables with
+ * sensible page breaks. Designed to look right both on-screen
+ * (so admin can preview before saving) and when sent to a
+ * printer / PDF.
+ *
+ * The PDF buttons in admin open these routes in a new tab. The
+ * page autorun-prints when ?autoprint=1 is on the URL.
+ */
+
+.print-page {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: #111;
+  background: #fff;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 32px 80px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.print-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  border-bottom: 2px solid #111;
+  padding-bottom: 8px;
+  margin-bottom: 18px;
+}
+
+.print-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.print-meta {
+  font-size: 11px;
+  color: #555;
+}
+
+.print-section {
+  margin: 16px 0;
+}
+
+.print-section-heading {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: #111;
+  color: #fff;
+  padding: 4px 10px;
+  margin: 14px 0 6px;
+}
+
+.print-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.print-table th,
+.print-table td {
+  text-align: left;
+  padding: 5px 8px;
+  border-bottom: 1px solid #ccc;
+  vertical-align: top;
+}
+
+.print-table th {
+  background: #f3f3f3;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.print-table tr:nth-child(even) td {
+  background: #fafafa;
+}
+
+.print-num {
+  font-variant-numeric: tabular-nums;
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 12px;
+}
+
+.print-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.print-toolbar button {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.print-toolbar button.secondary {
+  background: #fff;
+  color: #111;
+  border: 1px solid #999;
+}
+
+.print-status-pill {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.print-status-final { background: #d6f3df; color: #16542b; }
+.print-status-postponed { background: #fdf0c1; color: #6b4502; }
+.print-status-cancelled { background: #e6e6e6; color: #444; }
+.print-status-scheduled { background: #d6e4f5; color: #1a3c7d; }
+
+/* Page breaks — try to keep tables intact, break between sections. */
+.print-section { page-break-inside: avoid; }
+.print-table { page-break-inside: auto; }
+.print-table tr { page-break-inside: avoid; page-break-after: auto; }
+.print-section-heading { page-break-after: avoid; }
+
+/* Hide toolbar when actually printing */
+@media print {
+  .print-toolbar { display: none; }
+  .print-page { padding: 0; max-width: none; }
+  body { background: #fff; }
+}
+
+@page {
+  margin: 0.5in 0.5in;
+  size: letter;
+}

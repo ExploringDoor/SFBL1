@@ -1,4 +1,9 @@
-import type { DomainMapping, LeagueConfig, ResolvedTenant } from "./types";
+import type {
+  DomainMapping,
+  LeagueConfig,
+  LeagueSponsor,
+  ResolvedTenant,
+} from "./types";
 
 // What ships to server components via the `x-tenant-config-json` header.
 // Strips `billing.notes`, `paid_through`, `last_payment` (which can carry
@@ -19,6 +24,7 @@ export interface PublicLeagueConfig {
   billing: { status: LeagueConfig["billing"]["status"] };
   flags?: LeagueConfig["flags"];
   standings?: LeagueConfig["standings"];
+  sponsors?: LeagueSponsor[];
 }
 
 export function toPublicConfig(c: LeagueConfig): PublicLeagueConfig {
@@ -37,6 +43,7 @@ export function toPublicConfig(c: LeagueConfig): PublicLeagueConfig {
     billing: { status: c.billing?.status ?? "active" },
     flags: c.flags,
     standings: c.standings,
+    sponsors: c.sponsors,
   };
 }
 

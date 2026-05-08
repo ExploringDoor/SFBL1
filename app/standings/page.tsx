@@ -129,6 +129,32 @@ export default async function StandingsPage() {
           </p>
         </div>
       )}
+
+      {/* Footer CTA: surface the league archive at the bottom of the
+          standings page since users who care about today's standings
+          are exactly the ones likely to want past-season comparisons.
+          /history renders an empty-state message for tenants without
+          archived data, so this link is harmless in that case. */}
+      <p
+        style={{
+          marginTop: 24,
+          fontSize: 13,
+          color: "var(--muted)",
+          textAlign: "center",
+        }}
+      >
+        Looking for past seasons?{" "}
+        <a
+          href="/history"
+          style={{
+            color: "var(--brand-primary)",
+            fontWeight: 700,
+            textDecoration: "underline",
+          }}
+        >
+          View league history →
+        </a>
+      </p>
     </main>
   );
 }

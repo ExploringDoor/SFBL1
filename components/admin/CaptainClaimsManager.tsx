@@ -16,7 +16,7 @@
 // ID-token refresh (~1 hour cache). Tell users to sign out + back in
 // if they need it immediately.
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { User } from "firebase/auth";
 import { collection, getDocs } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
@@ -24,6 +24,14 @@ import { getDb } from "@/lib/firebase";
 interface TeamOpt {
   id: string;
   name: string;
+}
+
+interface PlayerOpt {
+  id: string;
+  team_id: string;
+  name: string;
+  jersey: string;
+  email: string;
 }
 
 interface Result {
@@ -38,11 +46,13 @@ interface Props {
 
 export function CaptainClaimsManager({ leagueId, user }: Props) {
   const [teams, setTeams] = useState<TeamOpt[]>([]);
+  const [players, setPlayers] = useState<PlayerOpt[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Form state — one shared input pair, three submit handlers.
   const [email, setEmail] = useState("");
   const [teamId, setTeamId] = useState("");
+  const [pickedPlayerId, setPickedPlayerId] = useState("");
   const [busy, setBusy] = useState<null | "captain" | "admin" | "remove">(
     null,
   );
@@ -52,19 +62,65 @@ export function CaptainClaimsManager({ leagueId, user }: Props) {
     let cancelled = false;
     (async () => {
       const db = getDb();
-      const snap = await getDocs(collection(db, `leagues/${leagueId}/teams`));
+      // Teams from public Firestore; player contacts via admin API
+      // (post-PII migration, email/phone live in /_private/contact
+      // and aren't client-readable directly).
+      const idToken = await user.getIdToken();
+      const [teamSnap, contactsRes] = await Promise.all([
+        getDocs(collection(db, `leagues/${leagueId}/teams`)),
+        fetch(
+          `/api/admin-contacts?leagueId=${encodeURIComponent(leagueId)}`,
+          { headers: { authorization: `Bearer ${idToken}` } },
+        ),
+      ]);
       if (cancelled) return;
       setTeams(
-        snap.docs
+        teamSnap.docs
           .map((d) => ({ id: d.id, name: String(d.data().name ?? d.id) }))
           .sort((a, b) => a.name.localeCompare(b.name)),
       );
+      const contactsBody = (await contactsRes.json().catch(() => ({}))) as {
+        players?: PlayerOpt[];
+      };
+      setPlayers(contactsBody.players ?? []);
       setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, [leagueId]);
+  }, [leagueId, user]);
+
+  // Roster for the currently-selected team — what populates the
+  // "Pick a player" dropdown. Sort by jersey, then name.
+  const teamRoster = useMemo(() => {
+    if (!teamId) return [];
+    return players
+      .filter((p) => p.team_id === teamId)
+      .sort((a, b) => {
+        const aj = parseInt(a.jersey || "999", 10);
+        const bj = parseInt(b.jersey || "999", 10);
+        if (!Number.isNaN(aj) && !Number.isNaN(bj) && aj !== bj) return aj - bj;
+        return a.name.localeCompare(b.name);
+      });
+  }, [players, teamId]);
+
+  function pickPlayer(playerId: string) {
+    setPickedPlayerId(playerId);
+    if (!playerId) return;
+    const p = players.find((x) => x.id === playerId);
+    if (p?.email) {
+      // Auto-fill email when the player has one on file. If they
+      // don't, leave the field as-is so admin can type it.
+      setEmail(p.email);
+    }
+  }
+
+  // Reset player pick when team changes — a player from team A
+  // shouldn't be lingering when admin switches to team B.
+  function changeTeam(nextTeamId: string) {
+    setTeamId(nextTeamId);
+    setPickedPlayerId("");
+  }
 
   async function call(
     role: "admin" | "captain" | "remove",
@@ -114,9 +170,13 @@ export function CaptainClaimsManager({ leagueId, user }: Props) {
             : `Granted ${role}${teamLabel} to ${email}. ${data.note ?? ""}`,
       });
       // Reset on successful grant so a flurry of captain grants is
-      // fast — clear email but keep teamId so admin can quickly add
-      // another captain to the same team or pick a new team.
-      if (res.ok) setEmail("");
+      // fast — clear email + picked player, keep teamId so admin can
+      // quickly add another captain to the same team or pick a new
+      // team.
+      if (res.ok) {
+        setEmail("");
+        setPickedPlayerId("");
+      }
     } catch (e) {
       setResult({
         ok: false,
@@ -138,37 +198,90 @@ export function CaptainClaimsManager({ leagueId, user }: Props) {
 
       <label className="block">
         <span className="block text-xs font-semibold text-slate-700 mb-1">
-          Email
-        </span>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="captain@example.com"
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-          disabled={busy !== null}
-          autoComplete="email"
-        />
-      </label>
-
-      <label className="block">
-        <span className="block text-xs font-semibold text-slate-700 mb-1">
           Team (for captain grants)
         </span>
         <select
           value={teamId}
-          onChange={(e) => setTeamId(e.target.value)}
+          onChange={(e) => changeTeam(e.target.value)}
           disabled={busy !== null || loading}
           className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
         >
           <option value="">— select team —</option>
           {teams.map((t) => (
             <option key={t.id} value={t.id}>
-              {t.name} ({t.id})
+              {t.name}
             </option>
           ))}
         </select>
       </label>
+
+      {teamId && teamRoster.length > 0 && (
+        <label className="block">
+          <span className="block text-xs font-semibold text-slate-700 mb-1">
+            Pick the captain
+          </span>
+          <select
+            value={pickedPlayerId}
+            onChange={(e) => pickPlayer(e.target.value)}
+            disabled={busy !== null}
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          >
+            <option value="">— pick a player —</option>
+            {teamRoster.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.jersey ? `#${p.jersey} ` : ""}
+                {p.name}
+                {p.email ? ` · ${p.email}` : " · ⚠ no email on file"}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+
+      {/* Email field: auto-filled from the picked player. We hide
+          the visible input when the player has an email — admin
+          shouldn't need to retype it. The field surfaces only when
+          (a) no player is picked yet (free-form email entry for
+          someone not on the roster), or (b) the picked player has
+          no email on file (admin needs to type one to enable sign-in). */}
+      {(() => {
+        const picked = players.find((x) => x.id === pickedPlayerId);
+        const showEmailInput =
+          !pickedPlayerId || (picked && !picked.email);
+        if (!showEmailInput) {
+          return (
+            <p className="text-xs text-slate-600 rounded bg-slate-50 px-3 py-2 border border-slate-200">
+              Will grant captain access to{" "}
+              <span className="font-semibold">{picked?.name}</span> using{" "}
+              <span className="font-mono">{email}</span>.
+            </p>
+          );
+        }
+        return (
+          <label className="block">
+            <span className="block text-xs font-semibold text-slate-700 mb-1">
+              {pickedPlayerId
+                ? `Email for ${picked?.name} (none on file yet)`
+                : "Email (for someone not on the roster)"}
+            </span>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+              }}
+              placeholder="captain@example.com"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              disabled={busy !== null}
+              autoComplete="email"
+            />
+            <span className="block text-xs text-slate-500 mt-1">
+              They'll sign in with this email via magic link. Stored on
+              their player profile too.
+            </span>
+          </label>
+        );
+      })()}
 
       <div className="flex flex-wrap gap-2">
         <button

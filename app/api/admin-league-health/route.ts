@@ -89,17 +89,29 @@ export async function GET(req: Request) {
     if (t.data().active !== false) teamsActive++;
   }
 
-  // Players + linked-status (have auth_uid means they've signed in)
-  let playersActive = 0;
+  // Players + linked-status (have auth_uid means they've signed in).
+  // Email counts come from /_private/contact subdocs (post-PII migration);
+  // we batch-fetch in parallel so the dashboard loads in roughly the
+  // same time as before.
+  const activePlayerDocs = playersSnap.docs.filter(
+    (d) => d.data().active !== false,
+  );
+  let playersActive = activePlayerDocs.length;
   let playersLinked = 0;
   let playersWithEmail = 0;
-  for (const p of playersSnap.docs) {
-    const data = p.data();
-    if (data.active === false) continue;
-    playersActive++;
-    if (typeof data.email === "string" && data.email) playersWithEmail++;
+  const contactDocs = await Promise.all(
+    activePlayerDocs.map((d) =>
+      db.doc(`leagues/${leagueId}/players/${d.id}/_private/contact`).get(),
+    ),
+  );
+  for (let i = 0; i < activePlayerDocs.length; i++) {
+    const data = activePlayerDocs[i]!.data();
     if (typeof data.auth_uid === "string" && data.auth_uid) {
       playersLinked++;
+    }
+    const contact = contactDocs[i]!.exists ? contactDocs[i]!.data()! : {};
+    if (typeof contact.email === "string" && contact.email) {
+      playersWithEmail++;
     }
   }
 
