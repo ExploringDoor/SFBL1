@@ -51,10 +51,21 @@ export default async function PhotosPage() {
       </header>
 
       {photos.length === 0 ? (
-        <p className="le-photos-empty">
-          No photos yet. Captains and admins can add photos from the admin
-          dashboard.
-        </p>
+        <div className="le-photos-empty">
+          <div aria-hidden style={{ fontSize: 56, lineHeight: 1, marginBottom: 12 }}>
+            📷
+          </div>
+          <strong style={{ fontSize: 18, color: "var(--text-strong)" }}>
+            No photos yet
+          </strong>
+          <p style={{ fontSize: 14, color: "var(--muted)", margin: "6px 0 0", lineHeight: 1.5 }}>
+            Got a great team or game-day shot? Send it to{" "}
+            <a href="mailto:playball@sfbl.com" style={{ color: "var(--brand-primary)", fontWeight: 600 }}>
+              playball@sfbl.com
+            </a>{" "}
+            and we&rsquo;ll add it to the gallery.
+          </p>
+        </div>
       ) : (
         <div className="le-photos-grid">
           {photos.map((p) => (

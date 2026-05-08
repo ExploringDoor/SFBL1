@@ -85,11 +85,25 @@ export async function generateMetadata(): Promise<Metadata> {
       abbrev && abbrev !== name ? ` (${abbrev})` : ""
     }. Live ${sport} updates, team rosters, and captain tools.`;
     const logo = cfg.theme?.logo_url;
-    // Build absolute URL for OG image. We don't know the host here
-    // (middleware redacts), so use protocol-relative when possible
-    // OR fall back to the data URL or a relative path as-is. iMessage
-    // and most chat apps resolve relative paths against the page URL.
-    const ogImage = logo ? [{ url: logo, alt: `${name} logo` }] : undefined;
+    // OG image priority:
+    //   1. /og-default.png — purpose-built 1200×630 share image
+    //      (banner on navy gradient). Best aspect for FB / iMessage /
+    //      Twitter previews.
+    //   2. Tenant logo_url — fallback for tenants without a custom
+    //      OG image. Aspect ratio may not be ideal but better than
+    //      nothing.
+    // Tenants who want their own per-page OG image override
+    // generateMetadata in their page.tsx (e.g. team / player pages
+    // do this with the team logo).
+    const ogImage = [
+      {
+        url: "/og-default.png",
+        width: 1200,
+        height: 630,
+        alt: `${name} — South Florida Baseball League`,
+      },
+      ...(logo ? [{ url: logo, alt: `${name} logo` }] : []),
+    ];
 
     return {
       title: { default: name, template: `%s · ${abbrev ?? name}` },
@@ -99,13 +113,13 @@ export async function generateMetadata(): Promise<Metadata> {
         description,
         siteName: name,
         type: "website",
-        ...(ogImage ? { images: ogImage } : {}),
+        images: ogImage,
       },
       twitter: {
-        card: "summary",
+        card: "summary_large_image",
         title: name,
         description,
-        ...(ogImage ? { images: ogImage } : {}),
+        images: ogImage,
       },
     };
   } catch {

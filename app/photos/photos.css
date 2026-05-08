@@ -26,10 +26,17 @@
 }
 
 .le-photos-empty {
-  color: #64748b;
-  font-style: italic;
-  padding: 40px 0;
+  padding: 56px 24px;
   text-align: center;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 45, 114, 0.04),
+    rgba(218, 165, 32, 0.06)
+  );
+  border: 1px dashed rgba(0, 0, 0, 0.12);
+  border-radius: 14px;
+  margin: 24px auto;
+  max-width: 540px;
 }
 
 .le-photos-grid {

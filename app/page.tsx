@@ -47,8 +47,15 @@ export default async function HomePage() {
 
   if (!tenantId) return <BareApex />;
 
-  const { upcoming, recent, teams, divisionGroups, scheme, leagueName } =
-    await loadHomeData(tenantId, config);
+  const {
+    upcoming,
+    recent,
+    teams,
+    divisionGroups,
+    scheme,
+    leagueName,
+    seasonStats,
+  } = await loadHomeData(tenantId, config);
 
   const season = String(new Date().getFullYear());
   const big = config?.abbrev ?? deriveAbbrev(leagueName);
@@ -74,6 +81,31 @@ export default async function HomePage() {
         leagueId={tenantId}
         teamLabels={teamLabelsForLive(teams)}
       />
+
+      {/* Season highlights strip — at-a-glance KPIs (games played,
+          runs scored, teams, top team). Only renders once at least
+          one game has gone final; pre-launch the row would show all
+          zeros which reads as "nothing's happening." */}
+      {seasonStats.gamesPlayed > 0 && (
+        <section
+          className="le-home-stats"
+          aria-label="Season at a glance"
+        >
+          <Stat label="Games" value={String(seasonStats.gamesPlayed)} />
+          <Stat
+            label="Runs scored"
+            value={seasonStats.totalRuns.toLocaleString()}
+          />
+          <Stat label="Teams" value={String(seasonStats.teamCount)} />
+          {seasonStats.topTeam && (
+            <Stat
+              label={`Top team (${seasonStats.topTeam.record})`}
+              value={seasonStats.topTeam.name}
+              isWide
+            />
+          )}
+        </section>
+      )}
 
       <section className="sec">
         <div className="le-home-grid">
@@ -359,6 +391,36 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
     (teams[id] as TeamMeta & { record?: string }).record = recordByTeam.get(id);
   }
 
+  // Season-wide stats for the homepage highlights strip. Only counts
+  // final/approved games — scheduled games' 0-0 placeholders would
+  // pollute the totals.
+  const finals = allGameItems.filter(
+    (g) => g.status === "final" || g.status === "approved",
+  );
+  const totalRuns = finals.reduce(
+    (n, g) => n + g.away_score + g.home_score,
+    0,
+  );
+  // Best record: max(W) team, breaking ties by highest pct.
+  let topTeam: { name: string; record: string } | null = null;
+  if (standings.length > 0) {
+    const best = [...standings].sort(
+      (a, b) => b.w - a.w || b.pct - a.pct,
+    )[0]!;
+    if (best.gp > 0) {
+      topTeam = {
+        name: teams[best.team_id]?.name ?? best.team_id,
+        record: formatRecord(best.w, best.l, best.t),
+      };
+    }
+  }
+  const seasonStats = {
+    gamesPlayed: finals.length,
+    totalRuns,
+    teamCount: Object.keys(teams).length,
+    topTeam,
+  };
+
   return {
     upcoming,
     recent,
@@ -366,7 +428,28 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
     divisionGroups,
     scheme: usePoints ? scheme : null,
     leagueName: config?.name ?? "League",
+    seasonStats,
   };
+}
+
+function Stat({
+  label,
+  value,
+  isWide,
+}: {
+  label: string;
+  value: string;
+  isWide?: boolean;
+}) {
+  return (
+    <div
+      className={"le-home-stat" + (isWide ? " wide" : "")}
+      role="group"
+    >
+      <div className="le-home-stat-val">{value}</div>
+      <div className="le-home-stat-lbl">{label}</div>
+    </div>
+  );
 }
 
 function teamCardData(
