@@ -24,6 +24,19 @@
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  /* Smooth slide as the ticker hides on scroll. */
+  transition: top 0.3s ease;
+}
+
+/* When the ticker hides on scroll (body gets .ticker-hidden from
+ * TickerScrollHide.tsx), the nav slides up to fill the gap so the
+ * page doesn't have a navy strip at the top. DVSL pattern. */
+body.ticker-hidden .le-nav {
+  top: env(safe-area-inset-top, 0px) !important;
+}
+body.ticker-hidden .le-mob-menu {
+  /* Mobile menu sits flush below the now-top-anchored nav. */
+  top: calc(62px + env(safe-area-inset-top, 0px)) !important;
 }
 
 @media (max-width: 700px) {
@@ -195,28 +208,66 @@
   -webkit-backdrop-filter: blur(24px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   flex-direction: column;
-  padding: 20px;
+  padding: 16px 14px calc(env(safe-area-inset-bottom, 0px) + 24px);
   overflow-y: auto;
+  gap: 14px;
 }
 
 .le-mob-menu.open {
   display: flex;
 }
 
-.le-mob-menu a {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 700;
-  font-size: 26px;
-  text-transform: uppercase;
-  color: #1a1a1a;
-  text-decoration: none;
-  cursor: pointer;
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+/* DVSL-style icon grid. 2-column tiles, ~14px label, brand-tinted
+ * icons. Replaces the old all-caps 26px stack — easier to scan,
+ * uses less vertical space, and visually matches the PwaTabBar
+ * More sheet so the two menus feel like one system. */
+.le-mob-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.le-mob-grid-top {
+  /* Single-card grids for top-level entries get the same row width
+   * as the multi-card section grids — looks consistent. */
 }
 
-.le-mob-menu a:last-child {
-  border-bottom: none;
+.le-mob-tile {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px !important;
+  font-family: var(--font-inter), -apple-system, sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  text-transform: none !important;
+  color: var(--text-strong, #1a1a1a) !important;
+  background: rgba(0, 0, 0, 0.025);
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  border-radius: 10px;
+  text-decoration: none !important;
+  letter-spacing: 0;
+  line-height: 1.2;
+  transition: background 0.12s ease, border-color 0.12s ease,
+    transform 0.05s ease;
+}
+.le-mob-tile:active {
+  transform: scale(0.98);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.le-mob-tile-icon {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+  width: 26px;
+  text-align: center;
+}
+
+.le-mob-tile-label {
+  flex: 1 1 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @media (max-width: 900px) {
@@ -387,15 +438,23 @@ body.dvsl-modal-open .le-mob-menu {
   }
 }
 
-.le-mob-section {
-  padding: 14px 16px 4px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
+.le-mob-section-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
+.le-mob-section {
+  padding: 4px 4px 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted, rgba(0, 0, 0, 0.5));
+}
+
+/* Legacy class kept for any hash-routed pages still rendering the
+ * old DOM. New mob menu uses .le-mob-tile. */
 .le-mob-sub {
   padding-left: 28px !important;
 }

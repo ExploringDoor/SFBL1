@@ -27,7 +27,8 @@
 }
 
 #score-ticker.hidden,
-#score-ticker.scroll-hidden {
+#score-ticker.scroll-hidden,
+body.ticker-hidden #score-ticker {
   transform: translateY(-100%);
   opacity: 0;
   pointer-events: none;

@@ -199,37 +199,56 @@ export function Nav({
       </nav>
 
       <div className={"le-mob-menu" + (mobOpen ? " open" : "")}>
-        {links.flatMap((link) => {
+        {/* Top-level links render as a 2-column grid of icon+label
+            cards (DVSL pattern). Sub-pages (children of "More") get
+            their own grid below a section header. The flat 26px
+            uppercase line list it replaced was harder to scan and
+            felt out of proportion to phone screens. */}
+        {links.map((link) => {
           if (link.children && link.children.length > 0) {
-            // Render the parent as a dimmed section header followed
-            // by its children indented; users on touch devices don't
-            // get hover, so a flat list with grouping reads cleaner
-            // than a click-to-expand accordion at this scale.
-            return [
-              <div key={link.label + ":h"} className="le-mob-section">
-                {link.label}
-              </div>,
-              ...link.children.map((child) => (
-                <Link
-                  key={child.href}
-                  href={child.href}
-                  className="le-mob-sub"
-                  onClick={() => setMobOpen(false)}
-                >
-                  {child.label}
-                </Link>
-              )),
-            ];
+            return (
+              <section key={link.label} className="le-mob-section-block">
+                <div className="le-mob-section">{link.label}</div>
+                <div className="le-mob-grid">
+                  {link.children.map((child) => (
+                    <Link
+                      key={child.href}
+                      href={child.href}
+                      className="le-mob-tile"
+                      onClick={() => setMobOpen(false)}
+                    >
+                      <span className="le-mob-tile-icon" aria-hidden>
+                        {iconFor(child.href)}
+                      </span>
+                      <span className="le-mob-tile-label">
+                        {child.label}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            );
           }
-          return [
-            <Link
+          // Top-level link with no children — render as a single
+          // tile inside its own 1-card row so spacing matches the
+          // sectioned grids above.
+          return (
+            <div
               key={link.href}
-              href={link.href}
-              onClick={() => setMobOpen(false)}
+              className="le-mob-grid le-mob-grid-top"
             >
-              {link.label}
-            </Link>,
-          ];
+              <Link
+                href={link.href}
+                className="le-mob-tile"
+                onClick={() => setMobOpen(false)}
+              >
+                <span className="le-mob-tile-icon" aria-hidden>
+                  {iconFor(link.href)}
+                </span>
+                <span className="le-mob-tile-label">{link.label}</span>
+              </Link>
+            </div>
+          );
         })}
       </div>
     </>
@@ -240,4 +259,37 @@ function isActive(pathname: string | null, href: string): boolean {
   if (!pathname) return false;
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(href + "/");
+}
+
+// Pick a recognizable emoji icon for each known route. Mirrors the
+// PwaTabBar More sheet so the two menus feel like one design system.
+// Anything unmapped falls back to a neutral dot — better than a
+// missing icon shifting the layout.
+function iconFor(href: string): string {
+  const ICONS: Record<string, string> = {
+    "/": "🏠",
+    "/scores": "⚾",
+    "/schedule": "📅",
+    "/standings": "🏆",
+    "/players": "📊",
+    "/teams": "👥",
+    "/rules": "📜",
+    "/content/news": "📰",
+    "/photos": "📷",
+    "/leaders": "🥇",
+    "/playoffs": "🥎",
+    "/history": "📚",
+    "/fields": "📍",
+    "/sfbl-info": "ℹ️",
+    "/player-registration": "🧢",
+    "/team-registration": "🏟️",
+    "/team-waiver-form": "✍️",
+    "/umpire-evaluation-form": "👨‍⚖️",
+    "/content/pay-online": "💳",
+    "/content/sponsors": "🤝",
+    "/content/store": "🛒",
+    "/content/contact": "✉️",
+    "/profile": "🙋",
+  };
+  return ICONS[href] ?? "•";
 }
