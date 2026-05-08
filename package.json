@@ -63,5 +63,11 @@
     "tsx": "^4.19.0",
     "typescript": "^5.5.3",
     "vitest": "^2.1.0"
+  },
+  "overrides": {
+    "isomorphic-dompurify": {
+      "jsdom": "^26.0.0"
+    },
+    "html-encoding-sniffer": "^4.0.0"
   }
 }
