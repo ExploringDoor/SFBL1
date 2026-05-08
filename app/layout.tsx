@@ -6,6 +6,10 @@ import { Nav } from "@/components/ui/Nav";
 import { SiteFooter } from "@/components/ui/SiteFooter";
 import { ProfileButton } from "@/components/ProfileButton";
 import { PwaShell } from "@/components/PwaShell";
+import { PwaTabBar } from "@/components/ui/PwaTabBar";
+import { TickerScrollHide } from "@/components/ui/TickerScrollHide";
+import { TickerInputEnhancer } from "@/components/ui/TickerInputEnhancer";
+import { SwVersionPill } from "@/components/ui/SwVersionPill";
 import { SwNavigateListener } from "@/components/SwNavigateListener";
 import { Ticker } from "@/components/ui/Ticker";
 import { loadTickerGames } from "@/lib/site-data";
@@ -195,10 +199,15 @@ export default async function RootLayout({
         {themePrimary && (
           <meta name="theme-color" content={themePrimary} />
         )}
-        {/* iOS — recognized only by older Safari but doesn't hurt newer
-            ones. apple-touch-icon falls back to logo_url; ideally a
-            512x512 PNG with the league logo on a brand-color square. */}
-        {logoUrl && <link rel="apple-touch-icon" href={logoUrl} />}
+        {/* iOS — Safari uses apple-touch-icon for the home-screen tile.
+            We always serve the prebuilt 180x180 (square, brand-bg)
+            icon rather than the tenant's banner logo_url, because
+            wide banners get distorted into the rounded-square iOS
+            tile. Generated alongside the manifest icons by
+            scripts/build-pwa-icons.js. */}
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta
           name="apple-mobile-web-app-status-bar-style"
@@ -220,12 +229,16 @@ export default async function RootLayout({
               opt into pushes. */}
           <PwaShell />
           {tenantId && (
-            <Ticker
-              games={tickerGames}
-              tenantShort={leagueAbbrev ?? leagueName ?? "League"}
-              seasonYear={new Date().getFullYear()}
-              logoUrl={logoUrl}
-            />
+            <>
+              <Ticker
+                games={tickerGames}
+                tenantShort={leagueAbbrev ?? leagueName ?? "League"}
+                seasonYear={new Date().getFullYear()}
+                logoUrl={logoUrl}
+              />
+              <TickerScrollHide />
+              <TickerInputEnhancer />
+            </>
           )}
           {tenantId ? (
             <Nav
@@ -237,6 +250,14 @@ export default async function RootLayout({
           <div className="site-content">{children}</div>
           {modal}
           {tenantId ? <SiteFooter /> : null}
+          {/* PWA bottom tab bar — gates itself on standalone display
+              mode (regular browser tabs see nothing). DVSL pattern. */}
+          {tenantId ? <PwaTabBar /> : null}
+          {/* Service-worker version pill — bottom-right debug stamp.
+              Invaluable when triaging "I don't see your fix" reports:
+              we ask the user to read off the version. Hides itself
+              when there's no controlling SW. */}
+          {tenantId ? <SwVersionPill /> : null}
         </TenantProvider>
       </body>
     </html>

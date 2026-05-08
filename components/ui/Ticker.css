@@ -26,7 +26,8 @@
   color: #ffffff;
 }
 
-#score-ticker.hidden {
+#score-ticker.hidden,
+#score-ticker.scroll-hidden {
   transform: translateY(-100%);
   opacity: 0;
   pointer-events: none;
@@ -86,9 +87,14 @@
      game list. Comment in Ticker.tsx says "user pans manually" but
      the CSS was overflow:hidden which blocked panning entirely.
      overflow-x:auto enables it. scrollbar-width:thin keeps the
-     scrollbar visible so users know more games are off-screen. */
+     scrollbar visible so users know more games are off-screen.
+     touch-action: pan-x explicitly tells iOS Safari "this element
+     pans horizontally" — without it, a vertical swipe that starts
+     on the ticker can be eaten by the scroller and fail to scroll
+     the page. DVSL learned this the hard way. */
   overflow-x: auto;
   overflow-y: hidden;
+  touch-action: pan-x;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
   position: relative;

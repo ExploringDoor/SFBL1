@@ -1,0 +1,194 @@
+/* ── PWA bottom tab bar ──────────────────────────────────────────
+ * Mirrors DVSL's pattern: white bar, top hairline border, soft
+ * shadow above so it appears to float over content. !important on
+ * positioning to defeat any global `nav` rules elsewhere.
+ *
+ * Only ever rendered when display-mode:standalone (the component
+ * gates render itself); these styles assume the bar exists.
+ */
+
+#le-tabbar {
+  position: fixed !important;
+  left: 50% !important;
+  bottom: 0 !important;
+  transform: translateX(-50%) !important;
+  width: 100% !important;
+  max-width: 480px !important;
+  /* Fixed visible height + safe-area padding so icons sit visibly
+   * above the iPhone home indicator instead of hugging the bottom. */
+  height: calc(56px + env(safe-area-inset-bottom)) !important;
+  padding-top: 2px !important;
+  padding-left: max(8px, env(safe-area-inset-left)) !important;
+  padding-right: max(8px, env(safe-area-inset-right)) !important;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 6px) !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: stretch !important;
+  background: #fff !important;
+  border-top: 1px solid #e6e6e6 !important;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06) !important;
+  z-index: 99995 !important;
+  box-sizing: border-box !important;
+  font: 600 10px/1.1 -apple-system, BlinkMacSystemFont, "Segoe UI",
+    system-ui, Inter, sans-serif !important;
+}
+
+#le-tabbar > .le-tab {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 4px 2px;
+  background: transparent;
+  border: 0;
+  color: #8b8b8b;
+  text-decoration: none;
+  cursor: pointer;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  transition: color 160ms ease, transform 160ms ease;
+}
+
+#le-tabbar > .le-tab:active {
+  transform: scale(0.96);
+}
+
+#le-tabbar > .le-tab.active {
+  color: var(--brand-primary, #002d72);
+}
+
+.le-tab-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.le-tab-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* Reserve space at the bottom of the page so content isn't hidden
+ * behind the bar. The tab bar is `position: fixed` so without this
+ * the page's last few pixels would be obscured. We only add this
+ * spacer when running standalone — `<body>` gets the class via the
+ * client component on mount. */
+body.has-tabbar {
+  padding-bottom: calc(56px + env(safe-area-inset-bottom)) !important;
+}
+
+/* ── More sheet (bottom-anchored modal) ───────────────────────── */
+
+.le-tabbar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.32);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 99996;
+}
+.le-tabbar-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.le-tabbar-sheet {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translate(-50%, 100%);
+  width: 100%;
+  max-width: 480px;
+  max-height: 78vh;
+  background: white;
+  border-radius: 18px 18px 0 0;
+  box-shadow: 0 -10px 36px rgba(0, 0, 0, 0.18);
+  z-index: 99997;
+  transition: transform 0.28s cubic-bezier(0.32, 0.72, 0.0, 1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 16px);
+}
+.le-tabbar-sheet.open {
+  transform: translate(-50%, 0);
+}
+
+.le-tabbar-sheet-grab {
+  margin: 8px auto 6px;
+  width: 38px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.18);
+  flex: 0 0 auto;
+}
+
+.le-tabbar-sheet-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 8px 18px 12px;
+}
+
+.le-tabbar-sheet-section {
+  margin-bottom: 14px;
+}
+.le-tabbar-sheet-section h3 {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted, rgba(0, 0, 0, 0.5));
+  margin: 0 0 6px;
+}
+.le-tabbar-sheet-section ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 8px;
+}
+.le-tabbar-sheet-section li a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-strong, #1a1a1a);
+  text-decoration: none;
+  background: rgba(0, 0, 0, 0.025);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+.le-tabbar-sheet-section li a:active {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.le-tabbar-sheet-icon {
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.le-tabbar-sheet-close {
+  margin: 8px 18px 0;
+  background: var(--brand-primary, #002d72);
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-family: inherit;
+}

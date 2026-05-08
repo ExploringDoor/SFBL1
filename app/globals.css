@@ -41,6 +41,18 @@ body {
   height: 100%;
 }
 
+/* iOS PWA fix — when launched from the home screen with the
+ * "black-translucent" status bar style, the browser renders the
+ * page UNDER the iOS status bar. The strip above the ticker would
+ * otherwise show the page's white background, breaking the ticker's
+ * navy band into two visual segments. Setting html's background to
+ * the brand primary makes the safe-area strip read as one continuous
+ * navy bar from status bar all the way down through the ticker.
+ * Defaults to navy when no tenant theme is set. */
+html {
+  background: var(--brand-primary, #002d72);
+}
+
 body {
   background: var(--bg);
   color: var(--text-body);

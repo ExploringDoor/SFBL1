@@ -43,7 +43,17 @@ export function PwaShell() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // 0. Track viewport width so we can suppress the install CTA on
+    // 0a. Defensive: clear any stuck `body { overflow: hidden }`
+    // from a prior page's modal/sheet that didn't get to run its
+    // cleanup. iOS PWA in particular can leave the body locked if
+    // JS hiccuped before dismiss — symptom is "page loads but
+    // content under the hero is unscrollable." Costs nothing to do
+    // on every load. (DVSL hit this; commit fa17649.)
+    if (document.body.style.overflow === "hidden") {
+      document.body.style.overflow = "";
+    }
+
+    // 0b. Track viewport width so we can suppress the install CTA on
     // desktop. 900px matches the breakpoint the Nav uses for "mobile".
     const mq = window.matchMedia("(max-width: 900px)");
     const updateViewport = () => setIsMobileViewport(mq.matches);

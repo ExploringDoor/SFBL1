@@ -23,7 +23,12 @@
 // Cache version is bumped manually when ship-breaking SW changes go
 // out (skipWaiting + clients.claim ensures next page load picks up
 // the new SW without forcing a manual reload).
-const CACHE_VERSION = "v1";
+// Bump this whenever an SW change ships that should invalidate
+// existing caches (e.g. cache strategy change, push handler update,
+// new offline shell). The page-side `getServiceWorkerVersion()`
+// helper reads this via postMessage so we can render it as a small
+// pill in the UI for "what version are you on?" debugging.
+const CACHE_VERSION = "v2-pwa-tabbar";
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 
@@ -167,10 +172,15 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(title, {
       body,
-      icon: "/logos/icon-192.png",
-      badge: "/logos/icon-192.png",
-      tag: leagueId ? `${leagueId}-${category || "push"}` : "le-push",
-      renotify: true,
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+      // NO `tag` field. iOS Safari PWA silently drops pushes that
+      // share a tag with a previously-shown notification (treats it
+      // as a replace), even when renotify:true is set. DVSL hit this
+      // and learned the hard way — every push needs to be its own
+      // notification on iOS or fans miss alerts. Trade-off: Android
+      // shows multiple stacked banners instead of replacing in place,
+      // which is the lesser evil.
       data: { url, leagueId, category },
     }),
   );
@@ -242,4 +252,23 @@ self.addEventListener("notificationclick", (event) => {
       }
     })(),
   );
+});
+
+// ── Build-version stamp ────────────────────────────────────────────
+// Pages call navigator.serviceWorker.controller.postMessage({type:
+// "GET_VERSION"}) and listen for the {type:"VERSION", version:...}
+// reply. Renders the SW's CACHE_VERSION as a small pill in the UI so
+// when a captain says "I don't see the fix" we can ask "what version
+// is shown?" and know definitively whether they got the new build.
+self.addEventListener("message", (event) => {
+  if (!event.data || event.data.type !== "GET_VERSION") return;
+  const port = event.ports && event.ports[0];
+  const reply = { type: "VERSION", version: CACHE_VERSION };
+  if (port) {
+    port.postMessage(reply);
+  } else if (event.source && "postMessage" in event.source) {
+    try {
+      event.source.postMessage(reply);
+    } catch (_) {}
+  }
 });

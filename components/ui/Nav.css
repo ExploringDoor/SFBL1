@@ -221,7 +221,13 @@
 
 @media (max-width: 900px) {
   .le-nav {
-    padding: 0 18px;
+    /* iOS edge-swipe-zone clearance: anything within ~30px of the
+     * left edge (back-gesture region) becomes hard to tap reliably
+     * on iPhones in standalone PWA. Pull both edges in past 32px so
+     * the brand logo + hamburger don't fight the OS gesture.
+     * env(safe-area-inset-left/right) handles landscape notches. */
+    padding-left: max(32px, env(safe-area-inset-left, 0px) + 18px);
+    padding-right: max(32px, env(safe-area-inset-right, 0px) + 18px);
   }
   .le-nav-links,
   .le-nav-signup-btn {
