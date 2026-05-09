@@ -69,6 +69,12 @@ const APEX_DOMAINS = (
 // baselines on conflict.
 const HOST_ALIAS_BASELINE: Record<string, string> = {
   "sfbl-1.vercel.app": "sfbl",
+  // Adam has two Vercel projects pointed at the same GitHub repo
+  // (sfbl-1 and sfbl-12). Both auto-deploy on every push, so both
+  // URLs need to resolve to the SFBL tenant regardless of which
+  // project a visitor lands on. Should consolidate to one project
+  // eventually but not today.
+  "sfbl-12.vercel.app": "sfbl",
 };
 const HOST_ALIASES: Record<string, string> = (() => {
   const out: Record<string, string> = { ...HOST_ALIAS_BASELINE };
