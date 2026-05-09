@@ -13,17 +13,17 @@
 
 .le-preview-grid {
   display: grid;
-  /* Locked at 2 cards per row at desktop sizes (matching the recent
-   * scores grid). One card per row on phones. Consistent with
-   * .le-gc-cards-grid so the homepage and /schedule look uniform. */
-  grid-template-columns: 1fr;
-  gap: 14px;
-  padding: 24px 0;
+  /* 2 cards per row on phones (Adam asked for this — single-col was
+   * making cards too tall and the page felt sparse). 2 cards on
+   * tablet+ as well. Consistent with .le-gc-cards-grid. */
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 20px 0;
 }
 
 @media (min-width: 720px) {
   .le-preview-grid {
-    grid-template-columns: 1fr 1fr;
+    gap: 14px;
   }
 }
 
@@ -76,6 +76,15 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  /* Allow children to shrink — without min-width:0 in the row, the
+   * team-name div would force the row wider than its grid cell,
+   * pushing the card off-screen left on phones. */
+  min-width: 0;
+}
+.le-preview-team-row > div:not(.le-preview-logo) {
+  min-width: 0;
+  flex: 1 1 0;
+  overflow: hidden;
 }
 
 .le-preview-logo {
@@ -102,6 +111,11 @@
   cursor: pointer;
   line-height: 1.2;
   text-decoration: none;
+  /* Truncate long names rather than push past the card edge. */
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .le-preview-name:hover { text-decoration: underline; }

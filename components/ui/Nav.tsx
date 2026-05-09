@@ -90,7 +90,23 @@ export function Nav({
   // expect it.
   useEffect(() => {
     setOpenDropdown(null);
+    setMobOpen(false);
   }, [pathname]);
+
+  // Scroll-lock the body when the mobile menu is open. Without this
+  // the page behind the menu stays scrollable — pulling the menu
+  // along on touch and breaking the modal feel. Restore on close.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (mobOpen) {
+      document.body.classList.add("le-mob-menu-open");
+    } else {
+      document.body.classList.remove("le-mob-menu-open");
+    }
+    return () => {
+      document.body.classList.remove("le-mob-menu-open");
+    };
+  }, [mobOpen]);
 
   return (
     <>
@@ -197,6 +213,14 @@ export function Nav({
           </button>
         </div>
       </nav>
+
+      {/* Backdrop sits between the page content and the menu sheet
+          when open. Tap-to-close, plus a subtle dim. */}
+      <div
+        className={"le-mob-backdrop" + (mobOpen ? " open" : "")}
+        onClick={() => setMobOpen(false)}
+        aria-hidden={!mobOpen}
+      />
 
       <div className={"le-mob-menu" + (mobOpen ? " open" : "")}>
         {/* Top-level links render as a 2-column grid of icon+label

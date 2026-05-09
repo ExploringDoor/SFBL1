@@ -80,8 +80,17 @@
  * the page's last few pixels would be obscured. We only add this
  * spacer when running standalone — `<body>` gets the class via the
  * client component on mount. */
+/* Tab bar's visible height = 56px content + 8px top/bottom padding +
+ * env(safe-area-inset-bottom). Reserve a bit MORE than that on body
+ * so the last few pixels of every page aren't cut off by the bar. */
 body.has-tabbar {
-  padding-bottom: calc(56px + env(safe-area-inset-bottom)) !important;
+  padding-bottom: calc(78px + env(safe-area-inset-bottom)) !important;
+}
+/* Also push the SiteFooter clear of the tab bar — the footer is
+ * inside .site-content but its visual baseline shouldn't sit
+ * directly under the bar. */
+body.has-tabbar .le-footer {
+  margin-bottom: calc(12px + env(safe-area-inset-bottom));
 }
 
 /* ── More sheet (bottom-anchored modal) ───────────────────────── */

@@ -217,8 +217,15 @@ export default async function TeamDetailPage({
           >
             ← All Teams
           </Link>
-          <div className="flex items-center gap-6">
-            <div style={{ background: "white", borderRadius: 16, padding: 14 }}>
+          {/* flex-wrap so the badge + info stack vertically on phones
+              instead of forcing horizontal overflow (which would let
+              the page swipe-scroll left/right). min-width:0 on the
+              info column so long team names don't push past. */}
+          <div
+            className="flex items-center gap-6"
+            style={{ flexWrap: "wrap", minWidth: 0 }}
+          >
+            <div style={{ background: "white", borderRadius: 16, padding: 14, flexShrink: 0 }}>
               <TeamBadge
                 teamId={params.teamId}
                 name={teamName}
@@ -228,7 +235,7 @@ export default async function TeamDetailPage({
                 size="xl"
               />
             </div>
-            <div>
+            <div style={{ minWidth: 0, flex: "1 1 200px" }}>
               {division && (
                 <p className="sec-eyebrow" style={{ color: "rgba(255,255,255,0.7)" }}>
                   {division}
@@ -236,7 +243,12 @@ export default async function TeamDetailPage({
               )}
               <h1
                 className="font-display"
-                style={{ fontSize: "clamp(40px, 6vw, 72px)", color: "#fff", marginTop: 4 }}
+                style={{
+                  fontSize: "clamp(32px, 6vw, 72px)",
+                  color: "#fff",
+                  marginTop: 4,
+                  wordBreak: "break-word",
+                }}
               >
                 {teamName}
               </h1>

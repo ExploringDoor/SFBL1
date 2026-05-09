@@ -14,17 +14,18 @@
 
 .le-gc-cards-grid {
   display: grid;
-  /* Default: 2-column grid. Single column on phones, two cards per
-   * row on tablet+. Locked at 2 columns max so the layout stays
-   * predictable regardless of card count. */
-  grid-template-columns: 1fr;
-  gap: 14px;
+  /* 2 cards per row on phones (Adam) and tablet+. Locked at 2 cols
+   * so the layout stays predictable regardless of card count.
+   * Card content is tight on phone — see .le-gc-team-name (12px) +
+   * .le-gc-team-row (smaller logo + score column at <640px). */
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
   max-width: 1060px;
 }
 
 @media (min-width: 720px) {
   .le-gc-cards-grid {
-    grid-template-columns: 1fr 1fr;
+    gap: 14px;
   }
 }
 
@@ -218,10 +219,22 @@
 .le-gc-btn-share { margin-left: auto; }
 
 @media (max-width: 700px) {
-  .le-gc-card-hdr { padding: 6px 10px; }
-  .le-gc-card-body { padding: 8px 10px 6px; }
-  .le-gc-card-footer { padding: 8px 10px 10px; }
-  .le-gc-card-headline { font-size: 11px; }
-  .le-gc-score { font-size: 26px; min-width: 34px; }
-  .le-gc-team-name { font-size: 14px; }
+  /* Tighter layout for the 2-up grid on phones. The grid track is
+   * ~165px wide at 375px viewport, so logo + name + score have to
+   * sit very close. Scale down the team-row track + score column;
+   * use a smaller logo + smaller score number. Footer buttons drop
+   * to a single row instead of side-by-side. */
+  .le-gc-card-hdr { padding: 5px 8px; }
+  .le-gc-card-body { padding: 6px 8px 4px; }
+  .le-gc-card-footer { padding: 6px 8px 8px; }
+  .le-gc-card-headline { font-size: 10px; }
+  .le-gc-team-row {
+    grid-template-columns: 28px minmax(0, 1fr) 32px;
+    gap: 6px;
+    padding: 3px 0;
+  }
+  .le-gc-logo { width: 28px; height: 28px; }
+  .le-gc-team-name { font-size: 12px; }
+  .le-gc-record { font-size: 10px; }
+  .le-gc-score { font-size: 22px; min-width: 32px; }
 }

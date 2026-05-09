@@ -243,7 +243,12 @@ body {
   font-weight: 800;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--muted);
+  /* Use currentColor so the eyebrow inherits from its container —
+   * white on the team-page hero (dark navy), default text color on
+   * the schedule page header (light bg). var(--muted) was 50% black
+   * which is invisible on the navy hero. */
+  color: currentColor;
+  opacity: 0.7;
 }
 
 .le-cal-buttons {

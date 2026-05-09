@@ -24,19 +24,26 @@
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  /* Smooth slide as the ticker hides on scroll. */
-  transition: top 0.3s ease;
+  /* Smooth slide off-screen when scrolling. */
+  transition: transform 0.3s ease, opacity 0.2s ease;
 }
 
 /* When the ticker hides on scroll (body gets .ticker-hidden from
- * TickerScrollHide.tsx), the nav slides up to fill the gap so the
- * page doesn't have a navy strip at the top. DVSL pattern. */
+ * TickerScrollHide.tsx), the nav ALSO slides off-screen. Adam wants
+ * the entire top bar (logo + sign-in + hamburger) gone while
+ * scrolled, not just the ticker. In standalone PWA the bottom tab
+ * bar provides navigation; in regular browsers scrolling back to
+ * the top restores the nav. */
 body.ticker-hidden .le-nav {
-  top: env(safe-area-inset-top, 0px) !important;
+  transform: translateY(-100%);
+  pointer-events: none;
+  opacity: 0;
 }
 body.ticker-hidden .le-mob-menu {
-  /* Mobile menu sits flush below the now-top-anchored nav. */
-  top: calc(62px + env(safe-area-inset-top, 0px)) !important;
+  /* Mobile menu was anchored below the nav; with the nav gone, it
+   * floats up to fill the space. Hidden when nav is hidden anyway. */
+  transform: translateY(-100%);
+  pointer-events: none;
 }
 
 @media (max-width: 700px) {
@@ -195,26 +202,71 @@ body.ticker-hidden .le-mob-menu {
   transform: translateY(-7px) rotate(-45deg);
 }
 
-.le-mob-menu {
+/* ── Backdrop overlay ──────────────────────────────────────────
+ * Sits between the page content and the menu sheet when open.
+ * Tap-to-close. Blocks pointer events on the page below so the
+ * menu reads as a proper modal (Adam: "lets you scroll the
+ * website in background"). */
+.le-mob-backdrop {
   display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 298;
+  background: rgba(0, 0, 0, 0.32);
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  pointer-events: none;
+}
+.le-mob-backdrop.open {
+  display: block;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Lock body scroll when menu is open — keeps the page underneath
+ * from sliding around when the user pans the menu. */
+body.le-mob-menu-open {
+  overflow: hidden !important;
+  /* Preserve scroll position via position:fixed approach is fancier
+   * but adds layout thrash; plain overflow:hidden is fine for the
+   * menu-open duration. */
+  touch-action: none;
+}
+
+.le-mob-menu {
+  display: flex;
+  flex-direction: column;
   position: fixed;
   top: calc(110px + env(safe-area-inset-top, 0px));
   left: 0;
   right: 0;
   bottom: 0;
   z-index: 299;
-  background: rgba(255, 255, 255, 0.97);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(248, 250, 252, 1) 100%
+  );
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  flex-direction: column;
-  padding: 16px 14px calc(env(safe-area-inset-bottom, 0px) + 24px);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.06);
+  padding: 18px 14px calc(env(safe-area-inset-bottom, 0px) + 24px);
   overflow-y: auto;
-  gap: 14px;
+  -webkit-overflow-scrolling: touch;
+  gap: 16px;
+  /* Slide in from the top instead of just appearing — smoother feel. */
+  transform: translateY(-8px);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.22s cubic-bezier(0.32, 0.72, 0.0, 1),
+    opacity 0.18s ease;
 }
 
 .le-mob-menu.open {
-  display: flex;
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* DVSL-style icon grid. 2-column tiles, ~14px label, brand-tinted
@@ -235,31 +287,33 @@ body.ticker-hidden .le-mob-menu {
   display: flex !important;
   align-items: center;
   gap: 10px;
-  padding: 12px 14px !important;
+  padding: 14px 14px !important;
   font-family: var(--font-inter), -apple-system, sans-serif !important;
   font-weight: 600 !important;
   font-size: 14px !important;
   text-transform: none !important;
   color: var(--text-strong, #1a1a1a) !important;
-  background: rgba(0, 0, 0, 0.025);
-  border: 1px solid rgba(0, 0, 0, 0.06) !important;
-  border-radius: 10px;
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.07) !important;
+  border-radius: 12px;
   text-decoration: none !important;
   letter-spacing: 0;
   line-height: 1.2;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
   transition: background 0.12s ease, border-color 0.12s ease,
-    transform 0.05s ease;
+    transform 0.05s ease, box-shadow 0.12s ease;
 }
 .le-mob-tile:active {
   transform: scale(0.98);
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(0, 0, 0, 0.025);
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
 }
 
 .le-mob-tile-icon {
-  font-size: 20px;
+  font-size: 22px;
   line-height: 1;
   flex-shrink: 0;
-  width: 26px;
+  width: 28px;
   text-align: center;
 }
 

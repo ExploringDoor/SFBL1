@@ -267,11 +267,9 @@ export default async function RootLayout({
           {/* PWA bottom tab bar — gates itself on standalone display
               mode (regular browser tabs see nothing). DVSL pattern. */}
           {tenantId ? <PwaTabBar /> : null}
-          {/* Service-worker version pill — bottom-right debug stamp.
-              Invaluable when triaging "I don't see your fix" reports:
-              we ask the user to read off the version. Hides itself
-              when there's no controlling SW. */}
-          {tenantId ? <SwVersionPill /> : null}
+          {/* Service-worker version pill removed — Adam saw it as
+              user-visible noise. Re-mount during debug if needed:
+              {tenantId ? <SwVersionPill /> : null} */}
         </TenantProvider>
       </body>
     </html>
