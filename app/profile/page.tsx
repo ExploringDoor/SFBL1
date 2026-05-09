@@ -12,7 +12,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useUser } from "@/lib/auth-client";
+import { signOut, useUser } from "@/lib/auth-client";
 import { useTenant } from "@/lib/tenant-context";
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
 import { PlayerAvailabilityPanel } from "@/components/profile/PlayerAvailabilityPanel";
@@ -189,9 +189,61 @@ export default function ProfilePage() {
           <div className="cap-section-head">
             <h2 className="cap-section-title">Account</h2>
             <p className="cap-section-sub">
-              Account settings (email, password, sign out) — coming soon.
-              For now, sign out from the top-right menu.
+              Signed in with{" "}
+              <span style={{ fontFamily: "ui-monospace, monospace" }}>
+                {user.email ?? user.uid}
+              </span>
+              .
             </p>
+          </div>
+          <div
+            style={{
+              padding: "16px 20px",
+              background: "white",
+              border: "1px solid rgba(0, 0, 0, 0.08)",
+              borderRadius: 12,
+              display: "flex",
+              flexDirection: "column",
+              gap: 12,
+              maxWidth: 460,
+              marginTop: 12,
+            }}
+          >
+            <p
+              style={{
+                margin: 0,
+                fontSize: 13,
+                color: "var(--muted)",
+                lineHeight: 1.55,
+              }}
+            >
+              Switching accounts? Sign out, then sign back in with a
+              different email.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                signOut().then(() => {
+                  window.location.href = "/";
+                });
+              }}
+              style={{
+                alignSelf: "flex-start",
+                background: "transparent",
+                color: "#991b1b",
+                border: "1px solid rgba(220, 38, 38, 0.25)",
+                padding: "10px 18px",
+                borderRadius: 8,
+                fontWeight: 700,
+                fontSize: 13,
+                fontFamily: "inherit",
+                cursor: "pointer",
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+              }}
+            >
+              Sign out
+            </button>
           </div>
         </div>
       )}
