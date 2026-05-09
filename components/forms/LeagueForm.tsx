@@ -47,9 +47,11 @@ export interface LeagueFormProps {
     | "umpire_evaluation";
   title: string;
   description?: string;
-  /** Optional intro paragraph(s) — shown above the form. Plain text;
-   *  one paragraph per array item. */
-  intro?: string[];
+  /** Optional intro paragraph(s) — shown above the form. Each entry
+   *  renders as its own <p>. ReactNode so callers can embed
+   *  tel:/mailto: links inline; plain strings still work for simple
+   *  blocks. */
+  intro?: React.ReactNode[];
   /** Field config. Order is render order. */
   fields: FormField[];
   /** Optional waiver / agreement text. Renders inside a scrollable

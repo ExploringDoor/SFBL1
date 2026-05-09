@@ -64,7 +64,13 @@ export default function TeamRegistrationPage() {
       description="Register a new team for the South Florida Baseball League."
       intro={[
         "The Team Registration Fee is $2,440, plus umpire fees of $1,200 — $3,640 total for a 13-player roster.",
-        "After submitting this form, contact the league office (786-372-0034 / playball@sfbl.com) to arrange payment. Each team must also submit a signed Team Waiver — link is in the nav once you're done here.",
+        <>
+          After submitting this form, contact the league office (
+          <a href="tel:+17863720034">786-372-0034</a> /{" "}
+          <a href="mailto:playball@sfbl.com">playball@sfbl.com</a>) to
+          arrange payment. Each team must also submit a signed Team
+          Waiver — link is in the nav once you&rsquo;re done here.
+        </>,
       ]}
       fields={FIELDS}
       submitLabel="Register Team"

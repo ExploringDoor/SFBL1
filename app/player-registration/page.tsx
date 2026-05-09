@@ -86,7 +86,12 @@ export default function PlayerRegistrationPage() {
       description="All SFBL players must register online each season. Players must be at least 18 years old."
       intro={[
         "The player registration fee is $280 per season. Pro-rated fees are available after the third game.",
-        "Preferred payment methods are Zelle and Venmo. Contact playball@sfbl.com or 786-372-0034 with payment questions.",
+        <>
+          Preferred payment methods are Zelle and Venmo. Contact{" "}
+          <a href="mailto:playball@sfbl.com">playball@sfbl.com</a> or{" "}
+          <a href="tel:+17863720034">786-372-0034</a> with payment
+          questions.
+        </>,
       ]}
       fields={FIELDS}
       waiverText={WAIVER_TEXT}
