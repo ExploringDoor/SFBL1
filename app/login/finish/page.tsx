@@ -101,36 +101,122 @@ export default function LoginFinishPage() {
   }, []);
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 px-6 py-16">
-      <h1 className="text-3xl font-bold tracking-tight">Finishing sign-in…</h1>
-
+    <main
+      style={{
+        maxWidth: 460,
+        margin: "0 auto",
+        padding: "48px 20px 64px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 18,
+        minHeight: "60vh",
+        justifyContent: "center",
+        textAlign: "center",
+      }}
+    >
       {state.kind === "verifying" && (
-        <p className="text-slate-600">Verifying your link…</p>
+        <>
+          <div aria-hidden style={{ fontSize: 40 }}>
+            🔑
+          </div>
+          <h1
+            className="font-display"
+            style={{
+              fontSize: 28,
+              fontWeight: 800,
+              color: "var(--text-strong)",
+              margin: 0,
+            }}
+          >
+            Finishing sign-in…
+          </h1>
+          <p style={{ color: "var(--muted)", fontSize: 14, margin: 0 }}>
+            Verifying your link.
+          </p>
+        </>
       )}
 
       {state.kind === "success" && (
-        <section className="space-y-2 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm">
-          <p className="font-semibold text-emerald-900">Signed in.</p>
-          <p className="text-emerald-800">
-            Redirecting to{" "}
-            <span className="font-mono">{state.redirectTo}</span>…
+        <>
+          <div aria-hidden style={{ fontSize: 40 }}>
+            ✓
+          </div>
+          <h1
+            className="font-display"
+            style={{
+              fontSize: 28,
+              fontWeight: 800,
+              color: "#047857",
+              margin: 0,
+            }}
+          >
+            Signed in
+          </h1>
+          <p
+            style={{
+              color: "var(--text-strong)",
+              fontSize: 14,
+              lineHeight: 1.55,
+              margin: 0,
+            }}
+          >
+            Welcome back
+            {state.email ? (
+              <>
+                ,{" "}
+                <strong style={{ fontWeight: 700 }}>{state.email}</strong>
+              </>
+            ) : null}
+            . Taking you to your dashboard now…
           </p>
-          <p className="font-mono text-xs text-emerald-700">
-            {state.email ? state.email : `uid: ${state.uid}`}
-          </p>
-        </section>
+        </>
       )}
 
       {state.kind === "error" && (
-        <section className="space-y-2 rounded-md border border-red-200 bg-red-50 p-4 text-sm">
-          <p className="font-semibold text-red-900">Couldn't finish sign-in.</p>
-          <p className="text-red-800">{state.message}</p>
-          <p className="text-xs text-red-700">
-            <a href="/login" className="underline">
-              Try requesting a new link.
-            </a>
+        <>
+          <div aria-hidden style={{ fontSize: 40 }}>
+            ⚠️
+          </div>
+          <h1
+            className="font-display"
+            style={{
+              fontSize: 28,
+              fontWeight: 800,
+              color: "#991b1b",
+              margin: 0,
+            }}
+          >
+            Couldn&rsquo;t finish sign-in
+          </h1>
+          <p
+            style={{
+              color: "var(--text-strong)",
+              fontSize: 14,
+              lineHeight: 1.55,
+              margin: 0,
+            }}
+          >
+            {state.message}
           </p>
-        </section>
+          <a
+            href="/login"
+            style={{
+              display: "inline-block",
+              alignSelf: "center",
+              padding: "10px 22px",
+              background: "var(--brand-primary)",
+              color: "white",
+              borderRadius: 10,
+              fontWeight: 800,
+              fontSize: 13,
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
+              textDecoration: "none",
+            }}
+          >
+            Send a new link
+          </a>
+        </>
       )}
     </main>
   );
