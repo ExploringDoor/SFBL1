@@ -14,11 +14,28 @@ interface TeamMeta {
 }
 
 export async function loadTickerGames(tenantId: string): Promise<TickerGame[]> {
-  const db = getAdminDb();
-  const [gamesSnap, teamsSnap] = await Promise.all([
-    db.collection(`leagues/${tenantId}/games`).get(),
-    db.collection(`leagues/${tenantId}/teams`).get(),
-  ]);
+  // Defensive: the layout calls this on every request. If Firebase
+  // Admin SDK can't init (missing service account env, network
+  // failure, quota exhausted), we'd otherwise crash the layout and
+  // every page on the site. Return an empty ticker instead — the
+  // ticker just won't show games.
+  let db;
+  try {
+    db = getAdminDb();
+  } catch (e) {
+    console.error("[site-data] getAdminDb failed:", e);
+    return [];
+  }
+  let gamesSnap, teamsSnap;
+  try {
+    [gamesSnap, teamsSnap] = await Promise.all([
+      db.collection(`leagues/${tenantId}/games`).get(),
+      db.collection(`leagues/${tenantId}/teams`).get(),
+    ]);
+  } catch (e) {
+    console.error("[site-data] Firestore read failed:", e);
+    return [];
+  }
 
   const teamMeta: Record<string, TeamMeta> = {};
   const standingsGames: GameResult[] = [];
