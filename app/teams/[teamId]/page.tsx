@@ -289,22 +289,43 @@ export default async function TeamDetailPage({
                   )}
                 </div>
               ) : (
-                <p
-                  className="font-barlow mt-3"
+                <div
                   style={{
-                    display: "inline-block",
-                    fontSize: 11,
-                    fontWeight: 800,
-                    letterSpacing: "0.12em",
-                    textTransform: "uppercase",
-                    color: "#fff",
-                    background: "rgba(255,255,255,0.12)",
-                    padding: "5px 12px",
-                    borderRadius: 999,
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 10,
+                    marginTop: 12,
+                    alignItems: "center",
                   }}
                 >
-                  Season starts soon
-                </p>
+                  <p
+                    className="font-barlow"
+                    style={{
+                      display: "inline-block",
+                      fontSize: 11,
+                      fontWeight: 800,
+                      letterSpacing: "0.12em",
+                      textTransform: "uppercase",
+                      color: "#fff",
+                      background: "rgba(255,255,255,0.12)",
+                      padding: "5px 12px",
+                      borderRadius: 999,
+                      margin: 0,
+                    }}
+                  >
+                    Season starts soon
+                  </p>
+                  {/* Even pre-season, surface heritage. A team
+                      visitor seeing "4 Titles 🏆" before the first
+                      game has been played gets a real read on the
+                      franchise's history. */}
+                  {championships > 0 && (
+                    <HeroPill
+                      primary={String(championships)}
+                      label={`Title${championships === 1 ? "" : "s"} 🏆`}
+                    />
+                  )}
+                </div>
               )}
               <div style={{ marginTop: 14 }}>
                 <SubscribeCalendar teamId={params.teamId} />
