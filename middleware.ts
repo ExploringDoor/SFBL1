@@ -7,7 +7,7 @@ export async function middleware(req: NextRequest) {
   const parsed = parseHost(host);
 
   console.log(
-    `[middleware] host=${host} kind=${parsed.kind} slug=${parsed.slug ?? "-"} path=${req.nextUrl.pathname}`,
+    `[middleware v3] host=${host} kind=${parsed.kind} slug=${parsed.slug ?? "-"} path=${req.nextUrl.pathname}`,
   );
 
   // Bare apex (`localhost`, `leagueengine.com`) — no tenant, render landing.
@@ -26,7 +26,7 @@ export async function middleware(req: NextRequest) {
 
   if (!tenant) {
     return new NextResponse(
-      `Tenant not found for host: ${parsed.hostname}\n`,
+      `Tenant not found for host: ${parsed.hostname} (kind=${parsed.kind} slug=${parsed.slug ?? "-"})\n`,
       { status: 404, headers: { "content-type": "text/plain; charset=utf-8" } },
     );
   }
