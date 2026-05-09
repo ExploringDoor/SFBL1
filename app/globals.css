@@ -36,8 +36,14 @@
   :root { --ticker-height: 64px; }
 }
 
-html,
-body {
+/* html keeps `height: 100%` so its navy background paints the
+ * iOS PWA safe-area strip at the very top. Body must NOT be
+ * constrained to 100% — that pins body's box to viewport height
+ * and leaves the html navy showing through wherever page content
+ * overflows the viewport (manifested as a navy lower half on
+ * any long page). `.site-shell` below sets `min-height: 100vh`
+ * so the body still fills short pages. */
+html {
   height: 100%;
 }
 
