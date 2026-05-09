@@ -261,10 +261,52 @@ export default function CaptainHomePage() {
   if (user === null) {
     return (
       <CaptainShell>
-        <p style={{ marginBottom: 16 }}>You're not signed in.</p>
-        <Link href="/login" className="le-cap-btn-primary">
-          Sign in
-        </Link>
+        <div style={{ maxWidth: 460, textAlign: "center", margin: "0 auto" }}>
+          <div aria-hidden style={{ fontSize: 48, marginBottom: 10 }}>
+            ⚾
+          </div>
+          <h2
+            style={{
+              fontFamily: "var(--font-barlow), sans-serif",
+              fontSize: 24,
+              fontWeight: 800,
+              color: "var(--text-strong)",
+              margin: "0 0 8px",
+            }}
+          >
+            Captain sign-in
+          </h2>
+          <p
+            style={{
+              color: "var(--muted)",
+              fontSize: 14,
+              lineHeight: 1.6,
+              margin: "0 0 22px",
+            }}
+          >
+            Manage your roster, submit final scores, upload box-score
+            scoresheets, and chat with your team. Sign in by email —
+            no password.
+          </p>
+          <Link
+            href="/login"
+            className="le-cap-btn-primary"
+            style={{
+              display: "inline-block",
+              padding: "12px 28px",
+              background: "var(--brand-primary)",
+              color: "white",
+              borderRadius: 10,
+              fontWeight: 800,
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
+              textDecoration: "none",
+              fontSize: 14,
+            }}
+          >
+            Sign in
+          </Link>
+        </div>
       </CaptainShell>
     );
   }
