@@ -159,20 +159,58 @@ const SFBL_FIREBASE_PROJECT_ID = "sfbl-acf51";
 const SFBL_FIREBASE_API_KEY =
   "AIzaSyBTG3b_rFv" + "D6s-KLvdi5GHIRtQLVaRuUf4";
 
+// Hardcoded SFBL tenant config. Used to bypass Firestore reads for
+// the most common middleware path (every page load = 1 Firestore
+// read = quota burn). With this in place, the SFBL middleware never
+// hits Firestore for tenant config — it returns this static blob.
+//
+// Tradeoff: changing theme / name / sport requires a code deploy
+// instead of an admin doc edit. For SFBL preview that's fine; the
+// data isn't changing. Add re-fetch path later if/when admin
+// editing matters.
+const SFBL_TENANT_CONFIG: LeagueConfig = {
+  slug: "sfbl",
+  name: "South Florida Baseball League",
+  abbrev: "SFBL",
+  sport: "baseball",
+  innings: 9,
+  ruleset: "hardball",
+  linescore_innings: 9,
+  stat_columns: ["ab", "h", "2b", "3b", "hr", "rbi", "bb", "so", "avg"],
+  pitching: {
+    enabled: true,
+    auto_innings_pitched: true,
+    record_pitches: false,
+  },
+  rules_flags: {
+    courtesy_runner: false,
+    dropped_third_strike: true,
+    balks: true,
+    infield_fly: true,
+  },
+  theme: {
+    primary: "#0c2340",
+    accent: "#c41e3a",
+    logo_url: "/logos/sfbl/sfbl-header.png",
+  },
+  billing: { status: "active" },
+} as unknown as LeagueConfig;
+
 export async function resolveTenant(parsed: ParsedHost): Promise<ResolvedTenant | null> {
-  // For known SFBL hosts always use SFBL config (env vars on Vercel
-  // have been unreliable; force the right project for these hosts).
+  // For known SFBL hosts always serve the hardcoded config — skips
+  // the Firestore read entirely. Fixes "Tenant not found" failures
+  // when the project hits its read quota.
   const isSfblHost =
     parsed.kind === "subdomain" &&
     (parsed.hostname === "sfbl-1.vercel.app" ||
       parsed.hostname === "sfbl-12.vercel.app" ||
       parsed.slug === "sfbl");
-  const projectId = isSfblHost
-    ? SFBL_FIREBASE_PROJECT_ID
-    : process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-  const apiKey = isSfblHost
-    ? SFBL_FIREBASE_API_KEY
-    : process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+  if (isSfblHost) {
+    return { id: "sfbl", config: SFBL_TENANT_CONFIG };
+  }
+
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
   if (!projectId || !apiKey) {
     console.error(
       "[tenants] NEXT_PUBLIC_FIREBASE_PROJECT_ID and NEXT_PUBLIC_FIREBASE_API_KEY " +
