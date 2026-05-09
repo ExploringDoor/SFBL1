@@ -57,14 +57,22 @@ const APEX_DOMAINS = (
   .filter(Boolean);
 
 // Host aliases for preview deploys / one-off hostnames that don't
-// match the {tenant}.{apex} convention. Configure via env, format
-// "host1=slug1,host2=slug2". Example use: Vercel preview URLs like
-// `sfbl-1.vercel.app` (project name auto-suffixed by Vercel) get
-// rerouted to the `sfbl` tenant without needing a Firestore /domains
-// doc. Bypasses the apex-suffix logic entirely.
+// match the {tenant}.{apex} convention. Hardcoded baseline + env-var
+// override.
+//
+// Why a hardcoded baseline: relying on Vercel env vars to keep the
+// SFBL preview URL alive proved fragile (a missing env var = whole
+// site 404s with "Tenant not found"). The Vercel-generated preview
+// URL is fixed, so we hardcode that mapping here. New tenants /
+// preview URLs can still be added via the `LEAGUEENGINE_HOST_ALIASES`
+// env var without code changes; env-var entries override hardcoded
+// baselines on conflict.
+const HOST_ALIAS_BASELINE: Record<string, string> = {
+  "sfbl-1.vercel.app": "sfbl",
+};
 const HOST_ALIASES: Record<string, string> = (() => {
+  const out: Record<string, string> = { ...HOST_ALIAS_BASELINE };
   const raw = process.env.LEAGUEENGINE_HOST_ALIASES ?? "";
-  const out: Record<string, string> = {};
   for (const pair of raw.split(",")) {
     const [host, slug] = pair.split("=").map((s) => s?.trim().toLowerCase());
     if (host && slug) out[host] = slug;
