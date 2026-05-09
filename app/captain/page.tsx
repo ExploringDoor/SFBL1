@@ -313,12 +313,102 @@ export default function CaptainHomePage() {
   if (role !== "captain" || !teamId) {
     return (
       <CaptainShell>
-        <p>
-          You're signed in as <strong>{user.email}</strong>, but you don't
-          have captain access for{" "}
-          <span className="font-mono">{tenantId}</span>. Ask the
-          commissioner to grant you the captain claim for your team.
-        </p>
+        <div style={{ maxWidth: 480, textAlign: "center", margin: "0 auto" }}>
+          <div aria-hidden style={{ fontSize: 48, marginBottom: 10 }}>
+            🔒
+          </div>
+          <h2
+            style={{
+              fontFamily: "var(--font-barlow), sans-serif",
+              fontSize: 22,
+              fontWeight: 800,
+              color: "var(--text-strong)",
+              margin: "0 0 10px",
+            }}
+          >
+            No captain access yet
+          </h2>
+          <p
+            style={{
+              color: "var(--muted)",
+              fontSize: 14,
+              lineHeight: 1.6,
+              margin: "0 0 8px",
+            }}
+          >
+            Signed in as{" "}
+            <strong style={{ color: "var(--text-strong)" }}>
+              {user.email}
+            </strong>
+            , but this account doesn&rsquo;t have captain privileges
+            for SFBL.
+          </p>
+          <p
+            style={{
+              color: "var(--muted)",
+              fontSize: 13,
+              lineHeight: 1.55,
+              margin: "0 0 22px",
+            }}
+          >
+            Email{" "}
+            <a
+              href="mailto:playball@sfbl.com"
+              style={{
+                color: "var(--brand-primary)",
+                fontWeight: 600,
+              }}
+            >
+              playball@sfbl.com
+            </a>{" "}
+            to get added as your team&rsquo;s captain. Until then,
+            head back to the public site.
+          </p>
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+              justifyContent: "center",
+              flexWrap: "wrap",
+            }}
+          >
+            <Link
+              href="/profile"
+              style={{
+                display: "inline-block",
+                padding: "10px 22px",
+                background: "var(--brand-primary)",
+                color: "white",
+                borderRadius: 10,
+                fontWeight: 800,
+                fontSize: 13,
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+                textDecoration: "none",
+              }}
+            >
+              My Profile
+            </Link>
+            <Link
+              href="/"
+              style={{
+                display: "inline-block",
+                padding: "10px 22px",
+                background: "transparent",
+                color: "var(--text-strong)",
+                border: "1px solid rgba(0,0,0,0.15)",
+                borderRadius: 10,
+                fontWeight: 800,
+                fontSize: 13,
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+                textDecoration: "none",
+              }}
+            >
+              Home
+            </Link>
+          </div>
+        </div>
       </CaptainShell>
     );
   }
