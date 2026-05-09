@@ -1,6 +1,8 @@
 // DVSL-style team detail page: hero strip with team logo + name +
 // record, two-column layout (roster left, recent games right).
 
+import * as fs from "node:fs";
+import * as path from "node:path";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
@@ -98,6 +100,13 @@ export default async function TeamDetailPage({
   const abbrev = t.abbrev ? String(t.abbrev) : undefined;
   const color = t.color ? String(t.color) : undefined;
   const logoUrl = t.logo_url ? String(t.logo_url) : null;
+
+  // Count all-time championships from the historical-standings
+  // archive — every playoff block where this team finished
+  // undefeated (top of standings, l=0) counts as one bracket win.
+  // Match by exact team name (case-insensitive). Tenants without an
+  // archive (or franchises that never won) just get 0 → no pill.
+  const championships = countChampionships(tenantId, teamName);
 
   const teamNames: Record<string, { name: string; abbrev?: string; color?: string; logoUrl?: string | null }> = {};
   for (const d of teamsSnap.docs) {
@@ -270,6 +279,12 @@ export default async function TeamDetailPage({
                           ? `in ${division}`
                           : `of ${divisionRank.total}`
                       }
+                    />
+                  )}
+                  {championships > 0 && (
+                    <HeroPill
+                      primary={String(championships)}
+                      label={`Title${championships === 1 ? "" : "s"} 🏆`}
                     />
                   )}
                 </div>
@@ -799,4 +814,42 @@ function aggregateRosterPitching(pitchingList: Array<unknown>): PitchingAgg {
   }
   const era = ip_outs > 0 ? (er * 27) / ip_outs : 0;
   return { app, ip_outs, er, era };
+}
+
+// All-time championship count for this team. Reads the historical
+// standings archive at data/{tenantId}/historical-standings.json,
+// scans every playoff block, and counts entries where this team
+// was the undefeated top finisher (i.e. won the bracket).
+//
+// File-based cache: Next's force-dynamic rendering re-reads on
+// every request, but the archive is small (256KB for SFBL's 23
+// years) and JSON.parse is fast. No network round-trip.
+//
+// Returns 0 if the archive doesn't exist (other tenants) or the
+// team name doesn't appear in any playoff block.
+function countChampionships(tenantId: string, teamName: string): number {
+  const file = path.resolve(
+    process.cwd(),
+    `data/${tenantId}/historical-standings.json`,
+  );
+  if (!fs.existsSync(file)) return 0;
+  let archive: Array<{
+    game_type: string;
+    standings: Array<{ team: string; l: number }>;
+  }>;
+  try {
+    archive = JSON.parse(fs.readFileSync(file, "utf8"));
+  } catch {
+    return 0;
+  }
+  const lowered = teamName.trim().toLowerCase();
+  let count = 0;
+  for (const block of archive) {
+    if (block.game_type !== "playoff") continue;
+    if (block.standings.length === 0) continue;
+    const top = block.standings[0]!;
+    if (top.l !== 0) continue; // not an undefeated bracket winner
+    if (top.team.trim().toLowerCase() === lowered) count++;
+  }
+  return count;
 }
