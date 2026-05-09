@@ -28,9 +28,9 @@ When you register, we'll collect:
 
 ## How to Register
 
-Email **playball@sfbl.com** with your full name, phone, age, division preference, and team (or "free agent"). Pay your registration fee via Zelle or Venmo (see the **Pay Online** page) and we'll add you to the Eligible Players list within 24 hours.
+Email **[playball@sfbl.com](mailto:playball@sfbl.com)** with your full name, phone, age, division preference, and team (or "free agent"). Pay your registration fee via Zelle or Venmo (see the **Pay Online** page) and we'll add you to the Eligible Players list within 24 hours.
 
 ## Contact
 
-- Phone: **786-372-0034**
-- Email: **playball@sfbl.com**
+- Phone: **[786-372-0034](tel:+17863720034)**
+- Email: **[playball@sfbl.com](mailto:playball@sfbl.com)**

@@ -2,7 +2,7 @@
 
 ## SFBL Merchandise
 
-To purchase items, email your order to **playball@sfbl.com**.
+To purchase items, email your order to **[playball@sfbl.com](mailto:playball@sfbl.com)**.
 
 | Item | Price |
 |---|---|
@@ -13,4 +13,4 @@ To purchase items, email your order to **playball@sfbl.com**.
 
 ## Ordering
 
-No check-out cart — simply place your order through our email at **playball@sfbl.com**. We'll confirm availability and arrange pickup or delivery.
+No check-out cart — simply place your order through our email at **[playball@sfbl.com](mailto:playball@sfbl.com)**. We'll confirm availability and arrange pickup or delivery.

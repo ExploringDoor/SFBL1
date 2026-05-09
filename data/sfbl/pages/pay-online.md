@@ -16,5 +16,5 @@ The SFBL player registration fee for the upcoming season is **$280**.
 
 For questions regarding payments:
 
-- Phone: 786-372-0034
-- Email: playball@sfbl.com
+- Phone: [786-372-0034](tel:+17863720034)
+- Email: [playball@sfbl.com](mailto:playball@sfbl.com)
