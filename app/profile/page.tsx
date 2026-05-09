@@ -64,18 +64,94 @@ export default function ProfilePage() {
     );
   }
   if (user === undefined) {
+    // Quick auth-resolution skeleton — Firebase typically settles in
+    // <300ms but on iOS PWA cold starts it can take a beat. The
+    // "Loading…" string used to flash here looked broken; this hero
+    // skeleton matches the eventual layout so the page doesn't pop.
     return (
       <main className="container py-16">
-        <p>Loading…</p>
+        <div
+          style={{
+            maxWidth: 360,
+            margin: "0 auto",
+            textAlign: "center",
+            color: "var(--muted)",
+          }}
+        >
+          <div
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: "50%",
+              background: "rgba(0,0,0,0.06)",
+              margin: "0 auto 16px",
+            }}
+          />
+          <div
+            style={{
+              width: "60%",
+              height: 14,
+              background: "rgba(0,0,0,0.06)",
+              borderRadius: 4,
+              margin: "0 auto",
+            }}
+          />
+        </div>
       </main>
     );
   }
   if (user === null) {
+    // Friendlier sign-in CTA than a one-liner. Explains why the user
+    // would sign in (RSVP availability, push notifications, captain
+    // tools) rather than just demanding it.
     return (
-      <main className="container py-16">
-        <p style={{ marginBottom: 16 }}>You're not signed in.</p>
-        <Link href="/login" className="le-cap-btn-primary">
-          Sign in
+      <main
+        className="container py-16"
+        style={{ maxWidth: 480, textAlign: "center" }}
+      >
+        <div aria-hidden style={{ fontSize: 56, marginBottom: 12 }}>
+          🙋
+        </div>
+        <h1
+          className="font-display"
+          style={{
+            fontSize: 28,
+            color: "var(--text-strong)",
+            margin: "0 0 8px",
+          }}
+        >
+          Sign in to your profile
+        </h1>
+        <p
+          style={{
+            color: "var(--muted)",
+            fontSize: 14,
+            lineHeight: 1.6,
+            margin: "0 0 24px",
+          }}
+        >
+          RSVP for games, get push notifications when your team plays,
+          chat with your team, and (if you&rsquo;re a captain) submit
+          scores. Signs you in by emailing a one-tap link — no
+          password needed.
+        </p>
+        <Link
+          href="/login"
+          className="le-cap-btn-primary"
+          style={{
+            display: "inline-block",
+            padding: "12px 28px",
+            background: "var(--brand-primary)",
+            color: "white",
+            borderRadius: 10,
+            fontWeight: 800,
+            letterSpacing: "0.04em",
+            textTransform: "uppercase",
+            textDecoration: "none",
+            fontSize: 14,
+          }}
+        >
+          Sign in by email
         </Link>
       </main>
     );
