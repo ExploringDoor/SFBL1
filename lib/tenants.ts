@@ -149,19 +149,9 @@ function cacheSet(key: string, value: ResolvedTenant | null) {
 // Tenant resolution (Edge-runtime safe — uses fetch only, no Firebase SDK).
 // -----------------------------------------------------------------------------
 
-// Hardcoded SFBL Firebase fallback. NEXT_PUBLIC_* values are
-// already public (embedded in client bundles by definition); putting
-// them here as a fallback removes one more single-point-of-failure
-// when Vercel env vars get edited / dropped. Real per-tenant config
-// still comes from env in non-SFBL deployments.
-const SFBL_FIREBASE_PROJECT_ID = "sfbl-acf51";
-const SFBL_FIREBASE_API_KEY = "AIzaSyBTG3b_rFvD6s-KLvdi5GHIRtQLVaRuUf4";
-
 export async function resolveTenant(parsed: ParsedHost): Promise<ResolvedTenant | null> {
-  const projectId =
-    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || SFBL_FIREBASE_PROJECT_ID;
-  const apiKey =
-    process.env.NEXT_PUBLIC_FIREBASE_API_KEY || SFBL_FIREBASE_API_KEY;
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
   if (!projectId || !apiKey) {
     console.error(
       "[tenants] NEXT_PUBLIC_FIREBASE_PROJECT_ID and NEXT_PUBLIC_FIREBASE_API_KEY " +
