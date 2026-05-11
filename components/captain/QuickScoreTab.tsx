@@ -17,6 +17,7 @@ import type { User } from "firebase/auth";
 import { useUser } from "@/lib/auth-client";
 import { collection, getDocs } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
+import { formatTime12 } from "@/lib/format-time";
 
 interface Game {
   id: string;
@@ -233,7 +234,7 @@ export function QuickScoreTab({ leagueId, teamId, teamNamesById }: Props) {
                 <div className="qs-meta">
                   <div className="qs-date">
                     {formatDate(g.date)}
-                    {g.time ? ` · ${g.time}` : ""}
+                    {g.time ? ` · ${formatTime12(g.time)}` : ""}
                   </div>
                   <div className="qs-matchup">
                     {isAway ? "Away @ " : "Home vs "}

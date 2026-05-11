@@ -8,6 +8,7 @@ import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import "../print.css";
 import { PrintToolbar } from "../PrintToolbar";
+import { formatTime12 } from "@/lib/format-time";
 
 export const dynamic = "force-dynamic";
 
@@ -124,7 +125,7 @@ export default async function PrintSchedulePage({
               <tbody>
                 {list.map((g) => (
                   <tr key={g.id}>
-                    <td className="print-num">{g.time || "—"}</td>
+                    <td className="print-num">{formatTime12(g.time) || "—"}</td>
                     <td>{g.division || "—"}</td>
                     <td>
                       {teamName.get(g.away_team_id) ?? g.away_team_id}{" "}

@@ -23,6 +23,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { User } from "firebase/auth";
+import { formatTime12 } from "@/lib/format-time";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 
@@ -427,7 +428,7 @@ export function ScoresManager({ leagueId, user }: Props) {
                       {g.date}
                       {g.time && (
                         <div className="text-[10px] text-slate-400">
-                          {g.time}
+                          {formatTime12(g.time)}
                         </div>
                       )}
                     </td>
