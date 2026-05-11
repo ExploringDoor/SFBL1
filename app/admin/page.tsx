@@ -24,7 +24,6 @@ import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
 import { FormSubmissionsViewer } from "@/components/admin/FormSubmissionsViewer";
 import { TeamsManager } from "@/components/admin/TeamsManager";
 import { LeagueHealthDashboard } from "@/components/admin/LeagueHealthDashboard";
-import { RecalcStatsButton } from "@/components/admin/RecalcStatsButton";
 import { ScheduleEditor } from "@/components/admin/ScheduleEditor";
 import { AlertsManager } from "@/components/admin/AlertsManager";
 import { SignupsReview } from "@/components/admin/SignupsReview";
@@ -248,14 +247,15 @@ export default function AdminPage() {
                 </a>
               </div>
             </section>
-            <section className="rounded-md border border-slate-200 bg-white p-4 space-y-2">
-              <p className="font-semibold text-slate-900">Maintenance</p>
-              <p className="text-xs text-slate-600">
-                Recompute aggregated player stats from box scores. Standings
-                auto-update from game docs, no recalc needed for those.
-              </p>
-              <RecalcStatsButton tenantId={tenantId} user={user} variant="compact" />
-            </section>
+            {/* Recalc Maintenance card hidden per Adam — confusing UI
+             *  for the commissioner since stats auto-write on box score
+             *  save. Re-mount this section if a manual data fix ever
+             *  drifts the cache:
+             *    <section ...>
+             *      <p>Maintenance</p>
+             *      <RecalcStatsButton tenantId={tenantId} user={user} variant="compact" />
+             *    </section>
+             */}
           </div>
         )}
         {activeTab === "scores" && (
