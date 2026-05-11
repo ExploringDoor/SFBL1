@@ -118,6 +118,22 @@ export function PwaTabBar() {
     setMoreOpen(false);
   }, [pathname]);
 
+  // Body scroll-lock while the More sheet is open — without this,
+  // panning a sheet that's already at its scroll edge bubbles up
+  // and scrolls the page behind it (Adam: "scrolls the website in
+  // background"). Same trick as the hamburger menu in Nav.tsx.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (moreOpen) {
+      document.body.classList.add("le-tabbar-sheet-open");
+    } else {
+      document.body.classList.remove("le-tabbar-sheet-open");
+    }
+    return () => {
+      document.body.classList.remove("le-tabbar-sheet-open");
+    };
+  }, [moreOpen]);
+
   if (!isStandalone) return null;
 
   return (

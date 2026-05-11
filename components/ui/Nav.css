@@ -254,6 +254,9 @@ body.le-mob-menu-open {
   padding: 18px 14px calc(env(safe-area-inset-bottom, 0px) + 24px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  /* Stop pull-past-end from scrolling the page underneath when the
+   * menu reaches its own scroll limits (iOS rubber-band leakage). */
+  overscroll-behavior: contain;
   gap: 16px;
   /* Slide in from the top instead of just appearing — smoother feel. */
   transform: translateY(-8px);
@@ -261,6 +264,15 @@ body.le-mob-menu-open {
   pointer-events: none;
   transition: transform 0.22s cubic-bezier(0.32, 0.72, 0.0, 1),
     opacity 0.18s ease;
+}
+
+/* When the PWA tab bar is mounted (body.has-tabbar), the last two
+ * tiles in the menu used to sit underneath the bar — unreachable
+ * even when the menu was scrolled to its bottom. Pad an extra
+ * tab-bar-height in to clear it. The 56px matches PwaTabBar.css's
+ * fixed `height: 56px + safe-area` figure. */
+body.has-tabbar .le-mob-menu {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 24px + 64px);
 }
 
 .le-mob-menu.open {
