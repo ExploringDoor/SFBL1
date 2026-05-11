@@ -53,7 +53,9 @@ const DEFAULT_LINKS: NavLink[] = [
       { label: "News", href: "/content/news" },
       { label: "Photos", href: "/photos" },
       { label: "Leaders", href: "/leaders" },
-      { label: "Playoffs", href: "/playoffs" },
+      // Playoffs link suppressed per Adam — no bracket yet, no need to
+      // expose a dead page. Re-enable once /playoffs has real content.
+      // { label: "Playoffs", href: "/playoffs" },
       { label: "History", href: "/history" },
       { label: "Fields", href: "/fields" },
       { label: "About SFBL", href: "/sfbl-info" },

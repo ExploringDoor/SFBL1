@@ -86,13 +86,36 @@ export default async function SchedulePage({
     ? upcoming.filter((g) => activeWeek.dates.includes(g.date.slice(0, 10)))
     : [];
 
-  const byDate = new Map<string, ScheduleGame[]>();
-  for (const g of activeGames) {
-    const key = g.date.slice(0, 10);
-    if (!byDate.has(key)) byDate.set(key, []);
-    byDate.get(key)!.push(g);
+  // Split games into upcoming vs already-played so the page reads
+  // top-down "what's next" → "what happened" instead of a single
+  // chronological run. Adam's call: he wants to land on /schedule
+  // and see future Sundays first, with past results below as
+  // reference. Within each section we group by day.
+  function groupByDate(
+    list: ScheduleGame[],
+    asc: boolean,
+  ): [string, ScheduleGame[]][] {
+    const byDate = new Map<string, ScheduleGame[]>();
+    for (const g of list) {
+      const key = g.date.slice(0, 10);
+      if (!byDate.has(key)) byDate.set(key, []);
+      byDate.get(key)!.push(g);
+    }
+    return [...byDate.entries()].sort(([a], [b]) =>
+      asc ? a.localeCompare(b) : b.localeCompare(a),
+    );
   }
-  const dayGroups = [...byDate.entries()].sort(([a], [b]) => a.localeCompare(b));
+  const upcomingGames = activeGames.filter(
+    (g) => g.status !== "final" && g.status !== "approved",
+  );
+  const pastGames = activeGames.filter(
+    (g) => g.status === "final" || g.status === "approved",
+  );
+  // Upcoming asc (earliest day first); past desc (most recent
+  // result first, so it sits right under the upcoming list).
+  const upcomingDayGroups = groupByDate(upcomingGames, true);
+  const pastDayGroups = groupByDate(pastGames, false);
+  const dayGroups = [...upcomingDayGroups, ...pastDayGroups];
 
   return (
     <main className="container py-10">
@@ -158,60 +181,60 @@ export default async function SchedulePage({
             </p>
           ) : (
         <div className="space-y-8 mt-6">
-          {dayGroups.map(([date, list]) => (
-            <section key={date}>
-              <header className="mb-3 flex items-baseline gap-3">
-                <h3 className="font-display" style={{ fontSize: 24 }}>
-                  {formatDayHeading(date)}
-                </h3>
-                <span className="text-xs" style={{ color: "var(--muted)" }}>
-                  {list.length} game{list.length === 1 ? "" : "s"}
-                </span>
-              </header>
-              <div className="le-preview-grid">
-                {list.map((g, idx) => {
-                  // Past finals render as a GameCard (with score)
-                  // since the schedule now spans the whole season.
-                  // Scheduled / postponed / cancelled get the
-                  // PreviewCard with a status badge.
-                  if (g.status === "final" || g.status === "approved") {
-                    return (
-                      <GameCard
-                        key={g.id}
-                        gameId={g.id}
-                        date={g.date}
-                        away={teamGameCardData(
-                          g.away_team_id,
-                          teams,
-                          g.away_score,
-                        )}
-                        home={teamGameCardData(
-                          g.home_team_id,
-                          teams,
-                          g.home_score,
-                        )}
-                      />
-                    );
-                  }
-                  return (
-                    <PreviewCard
-                      key={g.id}
-                      gameId={g.id}
-                      date={g.date}
-                      field={g.field}
-                      away={teamCardData(g.away_team_id, teams)}
-                      home={teamCardData(g.home_team_id, teams)}
-                      isNext={
-                        idx === 0 &&
-                        date === dayGroups[0]?.[0] &&
-                        g.status === "scheduled"
-                      }
-                      status={g.status}
-                    />
-                  );
-                })}
-              </div>
-            </section>
+          {/* Upcoming first (chronological), then a divider, then
+              played games (most recent first). Each section omits
+              its header when the other side is empty so the page
+              isn't littered with "PLAYED (0)" labels off-season. */}
+          {upcomingDayGroups.length > 0 && pastDayGroups.length > 0 && (
+            <div
+              className="font-barlow"
+              style={{
+                fontSize: 12,
+                fontWeight: 800,
+                letterSpacing: "0.18em",
+                textTransform: "uppercase",
+                color: "var(--muted)",
+                paddingBottom: 4,
+                borderBottom: "1px solid rgba(0,0,0,0.08)",
+              }}
+            >
+              Upcoming
+            </div>
+          )}
+          {upcomingDayGroups.map(([date, list]) => (
+            <DaySection
+              key={`u-${date}`}
+              date={date}
+              list={list}
+              teams={teams}
+              isFirstUpcomingDay={date === upcomingDayGroups[0]?.[0]}
+            />
+          ))}
+          {upcomingDayGroups.length > 0 && pastDayGroups.length > 0 && (
+            <div
+              className="font-barlow"
+              style={{
+                marginTop: 16,
+                fontSize: 12,
+                fontWeight: 800,
+                letterSpacing: "0.18em",
+                textTransform: "uppercase",
+                color: "var(--muted)",
+                paddingBottom: 4,
+                borderBottom: "1px solid rgba(0,0,0,0.08)",
+              }}
+            >
+              Played
+            </div>
+          )}
+          {pastDayGroups.map(([date, list]) => (
+            <DaySection
+              key={`p-${date}`}
+              date={date}
+              list={list}
+              teams={teams}
+              isFirstUpcomingDay={false}
+            />
           ))}
             </div>
           )}
@@ -332,3 +355,63 @@ function formatRecord(w: number, l: number, t: number): string {
 
 // (DivisionFilter moved to components/ui/DivisionFilter.tsx — used
 // by both /scores and /schedule. Linked from the imports above.)
+
+// Single day block — header (Sunday, May 18) + game grid. Pulled
+// out so the upcoming-vs-past split above doesn't have to duplicate
+// the rendering. `isFirstUpcomingDay` is true on exactly one day —
+// the very first upcoming day — so its first scheduled card can
+// render with the "NEXT" pill.
+function DaySection({
+  date,
+  list,
+  teams,
+  isFirstUpcomingDay,
+}: {
+  date: string;
+  list: ScheduleGame[];
+  teams: Record<string, TeamMeta>;
+  isFirstUpcomingDay: boolean;
+}) {
+  return (
+    <section>
+      <header className="mb-3 flex items-baseline gap-3">
+        <h3 className="font-display" style={{ fontSize: 24 }}>
+          {formatDayHeading(date)}
+        </h3>
+        <span className="text-xs" style={{ color: "var(--muted)" }}>
+          {list.length} game{list.length === 1 ? "" : "s"}
+        </span>
+      </header>
+      <div className="le-preview-grid">
+        {list.map((g, idx) => {
+          // Past finals render as a GameCard (with score); scheduled
+          // / postponed / cancelled get the PreviewCard with a
+          // status badge.
+          if (g.status === "final" || g.status === "approved") {
+            return (
+              <GameCard
+                key={g.id}
+                gameId={g.id}
+                date={g.date}
+                away={teamGameCardData(g.away_team_id, teams, g.away_score)}
+                home={teamGameCardData(g.home_team_id, teams, g.home_score)}
+              />
+            );
+          }
+          return (
+            <PreviewCard
+              key={g.id}
+              gameId={g.id}
+              date={g.date}
+              field={g.field}
+              away={teamCardData(g.away_team_id, teams)}
+              home={teamCardData(g.home_team_id, teams)}
+              isNext={isFirstUpcomingDay && idx === 0 && g.status === "scheduled"}
+              status={g.status}
+            />
+          );
+        })}
+      </div>
+    </section>
+  );
+}

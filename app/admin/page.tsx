@@ -28,7 +28,6 @@ import { RecalcStatsButton } from "@/components/admin/RecalcStatsButton";
 import { ScheduleEditor } from "@/components/admin/ScheduleEditor";
 import { AlertsManager } from "@/components/admin/AlertsManager";
 import { SignupsReview } from "@/components/admin/SignupsReview";
-import { CsvImporter } from "@/components/admin/CsvImporter";
 import { CalendarFeeds } from "@/components/admin/CalendarFeeds";
 import { ChatModerator } from "@/components/admin/ChatModerator";
 import { PhotosManager } from "@/components/admin/PhotosManager";
@@ -53,8 +52,7 @@ type TabKey =
   | "calendar"
   | "chat"
   | "forms"
-  | "audit"
-  | "tools";
+  | "audit";
 
 const TABS: { key: TabKey; label: string; description: string }[] = [
   { key: "health", label: "Health", description: "League snapshot, pending submissions, rule violations." },
@@ -74,7 +72,10 @@ const TABS: { key: TabKey; label: string; description: string }[] = [
   { key: "chat", label: "Chat", description: "Browse and moderate captains-chat or team chats." },
   { key: "forms", label: "Form intake", description: "Review player + team registrations, waivers, and umpire evaluations submitted from the public site." },
   { key: "audit", label: "Audit log", description: "Recent admin actions and score changes." },
-  { key: "tools", label: "Tools", description: "Recalculate stats, write-permission smoke test." },
+  // Tools tab (recalc / smoke test / CSV importer) hidden per Adam —
+  // Recalc is already accessible from the Health tab, CSV import is a
+  // first-day-of-onboarding workflow not a commissioner one, smoke test
+  // is dev-only. Re-add the entry here if SFBL needs CSV reimports.
 ];
 
 export default function AdminPage() {
@@ -309,18 +310,7 @@ export default function AdminPage() {
         {activeTab === "audit" && (
           <AuditLogViewer leagueId={tenantId} user={user} />
         )}
-        {activeTab === "tools" && (
-          <div className="space-y-4">
-            <RecalcStatsButton tenantId={tenantId} user={user} />
-            {/* CSV importer: gated per-tenant. SFBL set
-                flags.csv_schedule_import=false so it stays hidden
-                here; new tenants in onboarding see it. */}
-            {config?.flags?.csv_schedule_import !== false && (
-              <CsvImporter leagueId={tenantId} user={user} />
-            )}
-            <AdminSmokeTest tenantId={tenantId} />
-          </div>
-        )}
+        {/* Tools tab render block removed (see comment near TABS list). */}
       </div>
     </Shell>
   );
