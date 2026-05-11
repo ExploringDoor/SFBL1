@@ -5,6 +5,7 @@ import {
   isSignInWithEmailLink,
   onAuthStateChanged,
   sendSignInLinkToEmail,
+  signInWithCustomToken,
   signInWithEmailLink,
   signOut as fbSignOut,
   type User,
@@ -15,14 +16,38 @@ import { getFirebaseAuth } from "./firebase";
 // magic-link click on a (possibly different) device. Per Firebase docs.
 const PENDING_EMAIL_KEY = "leagueplatform:pendingMagicLinkEmail";
 
-export async function sendMagicLink(email: string): Promise<void> {
+// When a magic link is requested from an iOS PWA, tapping the link
+// opens Safari (Apple won't let it land back in the standalone
+// PWA). To get the user signed in inside the PWA too, we generate a
+// bridgeId here, encode it into the magic-link's continue URL, and
+// the PWA polls /api/auth-bridge/claim for the resulting custom
+// token. See app/api/auth-bridge/{create,claim}/route.ts.
+//
+// `bridgeId` is a UUID v4 created by the caller (LoginPage). When
+// provided, we append it to the finishUrl as ?bridge=<id> so
+// /login/finish can complete the bridge handoff after sign-in.
+export async function sendMagicLink(
+  email: string,
+  bridgeId?: string,
+): Promise<void> {
   const auth = getFirebaseAuth();
-  const finishUrl = `${window.location.origin}/login/finish`;
+  const base = `${window.location.origin}/login/finish`;
+  const finishUrl = bridgeId
+    ? `${base}?bridge=${encodeURIComponent(bridgeId)}`
+    : base;
   await sendSignInLinkToEmail(auth, email, {
     url: finishUrl,
     handleCodeInApp: true,
   });
   window.localStorage.setItem(PENDING_EMAIL_KEY, email);
+}
+
+// Sign the local Firebase Auth instance into the same uid that
+// completed the bridged sign-in in Safari. Called by the PWA after
+// the claim endpoint returns a token.
+export async function signInWithBridgeToken(token: string): Promise<User> {
+  const result = await signInWithCustomToken(getFirebaseAuth(), token);
+  return result.user;
 }
 
 // Module-level dedup. React Strict Mode (Next dev) runs useEffect twice

@@ -21,7 +21,13 @@ import { completeSignIn } from "@/lib/auth-client";
 
 type State =
   | { kind: "verifying" }
-  | { kind: "success"; uid: string; email: string | null; redirectTo: string }
+  | {
+      kind: "success";
+      uid: string;
+      email: string | null;
+      redirectTo: string;
+      bridged: boolean;
+    }
   | { kind: "error"; message: string };
 
 export default function LoginFinishPage() {
@@ -38,6 +44,30 @@ export default function LoginFinishPage() {
         // an external phishing page.
         const params = new URLSearchParams(window.location.search);
         const nextParam = params.get("next");
+        const bridgeId = params.get("bridge");
+        // If the link came from a PWA (the LoginPage attached a
+        // bridgeId), publish a custom token under that id so the
+        // PWA's poller can pick it up and sign in too. Fire-and-
+        // log — if the bridge call fails for any reason, the
+        // user's still signed in here in Safari, which is the
+        // immediate goal.
+        let bridged = false;
+        if (bridgeId && /^[0-9a-f-]{36}$/i.test(bridgeId)) {
+          try {
+            const idToken = await user.getIdToken();
+            const res = await fetch("/api/auth-bridge/create", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${idToken}`,
+              },
+              body: JSON.stringify({ bridgeId }),
+            });
+            bridged = res.ok;
+          } catch {
+            bridged = false;
+          }
+        }
         let redirectTo: string;
         if (
           typeof nextParam === "string" &&
@@ -83,10 +113,16 @@ export default function LoginFinishPage() {
           uid: user.uid,
           email: user.email,
           redirectTo,
+          bridged,
         });
-        setTimeout(() => {
-          if (!cancelled) window.location.href = redirectTo;
-        }, 1200);
+        // Don't auto-redirect when we bridged a PWA sign-in — the
+        // user needs to leave Safari and reopen the app, not be
+        // shuffled around inside Safari.
+        if (!bridged) {
+          setTimeout(() => {
+            if (!cancelled) window.location.href = redirectTo;
+          }, 1200);
+        }
       } catch (err) {
         if (cancelled) return;
         setState({
@@ -136,7 +172,7 @@ export default function LoginFinishPage() {
         </>
       )}
 
-      {state.kind === "success" && (
+      {state.kind === "success" && !state.bridged && (
         <>
           <div aria-hidden style={{ fontSize: 40 }}>
             ✓
@@ -168,6 +204,57 @@ export default function LoginFinishPage() {
               </>
             ) : null}
             . Taking you to your dashboard now…
+          </p>
+        </>
+      )}
+
+      {state.kind === "success" && state.bridged && (
+        <>
+          <div aria-hidden style={{ fontSize: 40 }}>
+            ✓
+          </div>
+          <h1
+            className="font-display"
+            style={{
+              fontSize: 28,
+              fontWeight: 800,
+              color: "#047857",
+              margin: 0,
+            }}
+          >
+            Signed in
+          </h1>
+          <p
+            style={{
+              color: "var(--text-strong)",
+              fontSize: 14,
+              lineHeight: 1.55,
+              margin: 0,
+            }}
+          >
+            Welcome back
+            {state.email ? (
+              <>
+                ,{" "}
+                <strong style={{ fontWeight: 700 }}>{state.email}</strong>
+              </>
+            ) : null}
+            .
+          </p>
+          <p
+            style={{
+              color: "var(--text-strong)",
+              fontSize: 14,
+              lineHeight: 1.55,
+              margin: 0,
+              padding: "14px 16px",
+              background: "rgba(0, 45, 114, 0.06)",
+              border: "1px solid rgba(0, 45, 114, 0.18)",
+              borderRadius: 12,
+            }}
+          >
+            Now reopen the home-screen app — it&rsquo;s already
+            picked up your sign-in.
           </p>
         </>
       )}
