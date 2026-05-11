@@ -141,17 +141,23 @@
 .le-preview-link:hover { text-decoration: underline; }
 
 @media (max-width: 700px) {
+  /* Single card per row on phones (Adam's call — the 2-up grid
+   * felt cramped). Records stay visible since we no longer need
+   * to scavenge every pixel of horizontal space. */
   .le-preview-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-    padding: 8px 0;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 14px 0;
   }
-  .le-preview-card { padding: 7px 8px; }
-  .le-preview-logo { width: 26px; height: 26px; }
-  .le-preview-time { font-size: 9px; margin-bottom: 3px; padding-bottom: 2px; }
-  .le-preview-rec { display: none; }
-  .le-preview-name { font-size: 13px; }
-  .le-preview-link { font-size: 10px; padding: 3px 0; }
+  .le-preview-card { padding: 12px 14px; }
+  .le-preview-logo { width: 36px; height: 36px; }
+  .le-preview-time {
+    font-size: 11px;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+  }
+  .le-preview-name { font-size: 15px; }
+  .le-preview-link { font-size: 12px; padding: 5px 0; }
 }
 
 /* ── Status badge + muted state ────────────────────────────────────

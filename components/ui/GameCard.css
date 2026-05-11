@@ -14,17 +14,17 @@
 
 .le-gc-cards-grid {
   display: grid;
-  /* 2 cards per row on phones (Adam) and tablet+. Locked at 2 cols
-   * so the layout stays predictable regardless of card count.
-   * Card content is tight on phone — see .le-gc-team-name (12px) +
-   * .le-gc-team-row (smaller logo + score column at <640px). */
-  grid-template-columns: 1fr 1fr;
+  /* One card per row on phones (Adam reverted the 2-up grid —
+   * felt squashed). Desktop stays at 2 cards per row so a season's
+   * worth of finals doesn't render as one long vertical stack. */
+  grid-template-columns: 1fr;
   gap: 10px;
   max-width: 1060px;
 }
 
-@media (min-width: 720px) {
+@media (min-width: 700px) {
   .le-gc-cards-grid {
+    grid-template-columns: 1fr 1fr;
     gap: 14px;
   }
 }
@@ -218,23 +218,21 @@
 
 .le-gc-btn-share { margin-left: auto; }
 
-@media (max-width: 700px) {
-  /* Tighter layout for the 2-up grid on phones. The grid track is
-   * ~165px wide at 375px viewport, so logo + name + score have to
-   * sit very close. Scale down the team-row track + score column;
-   * use a smaller logo + smaller score number. Footer buttons drop
-   * to a single row instead of side-by-side. */
-  .le-gc-card-hdr { padding: 5px 8px; }
-  .le-gc-card-body { padding: 6px 8px 4px; }
-  .le-gc-card-footer { padding: 6px 8px 8px; }
-  .le-gc-card-headline { font-size: 10px; }
+@media (max-width: 699px) {
+  /* Single-column on phones — full card width, so logo + name +
+   * score can breathe. Restore desktop-ish sizing instead of the
+   * cramped 2-up dimensions. */
+  .le-gc-card-hdr { padding: 8px 12px; }
+  .le-gc-card-body { padding: 10px 12px 6px; }
+  .le-gc-card-footer { padding: 10px 12px 12px; }
+  .le-gc-card-headline { font-size: 12px; }
   .le-gc-team-row {
-    grid-template-columns: 28px minmax(0, 1fr) 32px;
-    gap: 6px;
-    padding: 3px 0;
+    grid-template-columns: 38px minmax(0, 1fr) 48px;
+    gap: 10px;
+    padding: 5px 0;
   }
-  .le-gc-logo { width: 28px; height: 28px; }
-  .le-gc-team-name { font-size: 12px; }
-  .le-gc-record { font-size: 10px; }
-  .le-gc-score { font-size: 22px; min-width: 32px; }
+  .le-gc-logo { width: 38px; height: 38px; }
+  .le-gc-team-name { font-size: 15px; }
+  .le-gc-record { font-size: 12px; }
+  .le-gc-score { font-size: 30px; min-width: 48px; }
 }
