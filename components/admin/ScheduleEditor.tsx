@@ -116,8 +116,14 @@ export function ScheduleEditor({ leagueId, user }: Props) {
             };
           })
           .sort((a, b) => {
-            // Newest-future first; group by date desc isn't ideal for
-            // a schedule editor — admin usually wants upcoming on top.
+            // Upcoming games on top, played games at the bottom —
+            // admin spends 95% of their time editing what's still
+            // ahead, not auditing the past. Within each group sort
+            // by date+time ascending so 9:30 AM lines up before
+            // 12:00 PM and earlier Sundays come before later ones.
+            const aPast = a.status === "final" || a.status === "approved";
+            const bPast = b.status === "final" || b.status === "approved";
+            if (aPast !== bPast) return aPast ? 1 : -1;
             if (a.date !== b.date) return a.date < b.date ? -1 : 1;
             return a.time < b.time ? -1 : a.time > b.time ? 1 : 0;
           }),

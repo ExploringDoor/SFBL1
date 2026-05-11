@@ -17,6 +17,11 @@ export const dynamic = "force-dynamic";
 interface ScheduleGame {
   id: string;
   date: string;
+  // Separate `time` field when Firestore stores date+time apart
+  // (ScheduleEditor's two-column shape). Empty when the time is
+  // embedded in `date` as an ISO datetime, or when the game has no
+  // posted time yet.
+  time: string;
   status: string;
   field: string | null;
   away_team_id: string;
@@ -100,6 +105,17 @@ export default async function SchedulePage({
       const key = g.date.slice(0, 10);
       if (!byDate.has(key)) byDate.set(key, []);
       byDate.get(key)!.push(g);
+    }
+    // Within each day, sort by start time ascending so a 9:30 AM
+    // game appears before a 12:00 PM game. The sort key falls back
+    // to `date` (covers the ISO-datetime storage shape) and finally
+    // doc id so the order stays stable when nothing has a time.
+    for (const [, dayList] of byDate) {
+      dayList.sort((a, b) => {
+        const ka = a.time || a.date.slice(11) || a.id;
+        const kb = b.time || b.date.slice(11) || b.id;
+        return ka.localeCompare(kb);
+      });
     }
     return [...byDate.entries()].sort(([a], [b]) =>
       asc ? a.localeCompare(b) : b.localeCompare(a),
@@ -267,6 +283,7 @@ async function loadSchedule(tenantId: string): Promise<{
     return {
       id: d.id,
       date: data.date ? String(data.date) : "",
+      time: data.time ? String(data.time) : "",
       status: String(data.status ?? "draft"),
       field: data.field ? String(data.field) : null,
       away_team_id: String(data.away_team_id ?? ""),
@@ -339,6 +356,18 @@ function teamGameCardData(
   };
 }
 
+// Stitch a separately-stored date ("YYYY-MM-DD") and time ("HH:MM")
+// into one ISO-ish string so `new Date(...)` returns the right
+// instant. If `date` already contains a T (combined storage shape)
+// or the time is empty, return `date` untouched.
+function combineDateTime(date: string, time: string): string {
+  if (!date) return date;
+  if (date.includes("T")) return date;
+  if (!time) return date;
+  const t = /^\d{1,2}:\d{2}$/.test(time) ? `${time}:00` : time;
+  return `${date.slice(0, 10)}T${t}`;
+}
+
 function formatDayHeading(yyyyMmDd: string): string {
   const d = new Date(yyyyMmDd + "T12:00:00Z");
   return d.toLocaleDateString("en-US", {
@@ -398,11 +427,16 @@ function DaySection({
               />
             );
           }
+          // PreviewCard's time label parses the date string. If the
+          // doc stored date + time separately, stitch them into a
+          // single ISO so "TBD" doesn't show up for games that
+          // actually have a posted time.
+          const dateLabel = combineDateTime(g.date, g.time);
           return (
             <PreviewCard
               key={g.id}
               gameId={g.id}
-              date={g.date}
+              date={dateLabel}
               field={g.field}
               away={teamCardData(g.away_team_id, teams)}
               home={teamCardData(g.home_team_id, teams)}
