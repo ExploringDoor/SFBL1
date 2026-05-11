@@ -33,13 +33,11 @@ import { ChatModerator } from "@/components/admin/ChatModerator";
 import { PhotosManager } from "@/components/admin/PhotosManager";
 import { ScoresManager } from "@/components/admin/ScoresManager";
 import { SponsorsManager } from "@/components/admin/SponsorsManager";
-import { PlayoffsManager } from "@/components/admin/PlayoffsManager";
 
 type TabKey =
   | "health"
   | "scores"
   | "schedule"
-  | "playoffs"
   | "teams"
   | "signups"
   | "captains"
@@ -58,7 +56,8 @@ const TABS: { key: TabKey; label: string; description: string }[] = [
   { key: "health", label: "Health", description: "League snapshot, pending submissions, rule violations." },
   { key: "scores", label: "Scores", description: "Quick batch score entry + resolve captain submission conflicts." },
   { key: "schedule", label: "Schedule", description: "Add games, reschedule, mark a date rained out, edit scores." },
-  { key: "playoffs", label: "Playoffs", description: "Build the playoff bracket — divisions, rounds, matchups, results." },
+  // Playoffs tab hidden per Adam — no bracket workflow until later.
+  // { key: "playoffs", label: "Playoffs", description: "Build the playoff bracket — divisions, rounds, matchups, results." },
   { key: "teams", label: "Teams", description: "Roster import, edit team metadata, manage divisions." },
   { key: "signups", label: "Signups", description: "Approve or reject players added by captains (walk-ons)." },
   { key: "captains", label: "Captains", description: "Grant or revoke captain access to specific teams." },
@@ -265,9 +264,7 @@ export default function AdminPage() {
         {activeTab === "schedule" && (
           <ScheduleEditor leagueId={tenantId} user={user} />
         )}
-        {activeTab === "playoffs" && (
-          <PlayoffsManager leagueId={tenantId} user={user} />
-        )}
+        {/* Playoffs render block removed (see TABS list comment). */}
         {activeTab === "teams" && (
           <TeamsManager leagueId={tenantId} user={user} />
         )}
