@@ -133,13 +133,21 @@ export function ScoresManager({ leagueId, user }: Props) {
           has_conflict: hasConflict,
         };
       });
-      // Sort: conflicts first, then most-recent date desc, then time.
+      // Sort: conflicts first (always — they need resolution),
+      // then upcoming games (status != final/approved) ascending so
+      // the very next game is on top and you walk forward through
+      // the season, then played games at the bottom also ascending.
+      // Mirrors the admin schedule + public /schedule ordering Adam
+      // wants everywhere.
       rows.sort((a, b) => {
         if (a.has_conflict !== b.has_conflict) {
           return a.has_conflict ? -1 : 1;
         }
-        if (a.date !== b.date) return a.date < b.date ? 1 : -1;
-        return a.time < b.time ? 1 : -1;
+        const aPast = a.status === "final" || a.status === "approved";
+        const bPast = b.status === "final" || b.status === "approved";
+        if (aPast !== bPast) return aPast ? 1 : -1;
+        if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+        return a.time < b.time ? -1 : a.time > b.time ? 1 : 0;
       });
       setGames(rows);
     } catch (e) {
