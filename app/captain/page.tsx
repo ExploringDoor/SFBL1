@@ -467,7 +467,9 @@ const TABS: Tab[] = [
   { key: "attendance", label: "Attendance" },
   { key: "teamchat", label: "Team Chat" },
   { key: "captchat", label: "Captains Chat" },
-  { key: "announcements", label: "Announcements" },
+  // Announcements tab hidden — body is still a "Coming soon"
+  // placeholder. Re-enable once admin-pushed announcements ship.
+  // { key: "announcements", label: "Announcements" },
   { key: "help", label: "Help" },
 ];
 
