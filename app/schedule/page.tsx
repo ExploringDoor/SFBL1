@@ -11,6 +11,7 @@ import type { PublicLeagueConfig } from "@/lib/tenants";
 import { ScoresScheduleTabs, WeekRow } from "../scores/tabs-and-weeks";
 import { SubscribeCalendar } from "@/components/SubscribeCalendar";
 import { DivisionFilter } from "@/components/ui/DivisionFilter";
+import { combineDateTime } from "@/lib/format-time";
 
 export const dynamic = "force-dynamic";
 
@@ -354,18 +355,6 @@ function teamGameCardData(
     record: t?.record,
     score,
   };
-}
-
-// Stitch a separately-stored date ("YYYY-MM-DD") and time ("HH:MM")
-// into one ISO-ish string so `new Date(...)` returns the right
-// instant. If `date` already contains a T (combined storage shape)
-// or the time is empty, return `date` untouched.
-function combineDateTime(date: string, time: string): string {
-  if (!date) return date;
-  if (date.includes("T")) return date;
-  if (!time) return date;
-  const t = /^\d{1,2}:\d{2}$/.test(time) ? `${time}:00` : time;
-  return `${date.slice(0, 10)}T${t}`;
 }
 
 function formatDayHeading(yyyyMmDd: string): string {

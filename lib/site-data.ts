@@ -5,6 +5,7 @@
 import { getAdminDb } from "./firebase-admin";
 import type { TickerGame } from "@/components/ui/Ticker";
 import { computeStandings, type GameResult } from "./stats/shared";
+import { combineDateTime } from "./format-time";
 
 interface TeamMeta {
   name: string;
@@ -68,9 +69,17 @@ export async function loadTickerGames(tenantId: string): Promise<TickerGame[]> {
   const all = gamesSnap.docs
     .map((d) => {
       const data = d.data();
+      // Combine the (sometimes separate) date + time fields so the
+      // Ticker, which only sees a single `date` string, can still
+      // render "9:05 AM" instead of falling back to "12:00 AM" when
+      // the time lived in a sibling field.
+      const combined = combineDateTime(
+        data.date ? String(data.date) : null,
+        data.time ? String(data.time) : null,
+      );
       return {
         id: d.id,
-        date: data.date ? String(data.date) : null,
+        date: combined || null,
         status: String(data.status ?? "draft"),
         home_team_id: String(data.home_team_id ?? ""),
         away_team_id: String(data.away_team_id ?? ""),

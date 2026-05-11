@@ -9,6 +9,7 @@ import { computeStandings, type GameResult } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { ScoresScheduleTabs, WeekRow } from "./tabs-and-weeks";
 import { DivisionFilter } from "@/components/ui/DivisionFilter";
+import { combineDateTime } from "@/lib/format-time";
 
 export const dynamic = "force-dynamic";
 
@@ -306,9 +307,17 @@ async function loadScores(tenantId: string): Promise<{
 
   const games: ScoreGame[] = gamesSnap.docs.map((d) => {
     const data = d.data();
+    // Combine date + time so preview cards show real start times
+    // for not-yet-played games (same fix as /schedule, ticker,
+    // homepage). When date already has a T, combineDateTime is
+    // a no-op.
+    const combinedDate = combineDateTime(
+      data.date ? String(data.date) : null,
+      data.time ? String(data.time) : null,
+    );
     return {
       id: d.id,
-      date: data.date ? String(data.date) : "",
+      date: combinedDate,
       status: String(data.status ?? "draft"),
       field: data.field ? String(data.field) : null,
       away_team_id: String(data.away_team_id ?? ""),

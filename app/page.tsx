@@ -8,6 +8,7 @@ import {
   type StandingsRow,
 } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
+import { combineDateTime } from "@/lib/format-time";
 import { GameCard, type GameCardTeam } from "@/components/ui/GameCard";
 import { PreviewCard, type PreviewCardTeam } from "@/components/ui/PreviewCard";
 import { Hero as DvslHero } from "@/components/ui/Hero";
@@ -338,9 +339,16 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
 
   const allGameItems: ScheduleItem[] = gamesSnap.docs.map((d) => {
     const data = d.data();
+    // Combine separate date + time fields so the Preview/Game cards
+    // render the real start time. Without this the homepage preview
+    // shows "12:00 AM" for games that posted e.g. 9:05.
+    const combinedDate = combineDateTime(
+      data.date ? String(data.date) : null,
+      data.time ? String(data.time) : null,
+    );
     return {
       id: d.id,
-      date: data.date ? String(data.date) : "",
+      date: combinedDate,
       field: data.field ? String(data.field) : null,
       status: String(data.status ?? "draft"),
       home_team_id: String(data.home_team_id ?? ""),
