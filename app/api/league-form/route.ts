@@ -22,6 +22,7 @@
 import { NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { headers } from "next/headers";
+import { parseHost, resolveTenant } from "@/lib/tenants";
 
 export const runtime = "nodejs";
 
@@ -160,7 +161,15 @@ function pickAllowed(
 
 export async function POST(req: Request) {
   const h = headers();
-  const tenantId = h.get("x-tenant-id");
+  // Resolve the tenant from the request Host header. Middleware is
+  // intentionally excluded for /api/* (see PRELAUNCH_AUDIT Fix #2),
+  // so the `x-tenant-id` header middleware injects on page routes
+  // is NEVER present here. Same pattern as /api/schedule.ics.
+  const host =
+    h.get("x-forwarded-host") ?? h.get("host") ?? "";
+  const parsed = parseHost(host);
+  const tenant = await resolveTenant(parsed);
+  const tenantId = tenant?.id ?? null;
   if (!tenantId) {
     return NextResponse.json({ error: "no tenant" }, { status: 400 });
   }
