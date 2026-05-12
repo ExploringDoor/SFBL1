@@ -85,6 +85,31 @@ export function LeagueForm({
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    // Client-side required-field check. The <form> uses `noValidate`
+    // (so we own the UX and don't inherit the browser's clunky
+    // bubbles), which means we have to enforce `required` ourselves.
+    // Without this the waiver-agree checkbox didn't actually gate
+    // submission — users could send a player_registration without
+    // checking it.
+    for (const f of fields) {
+      if (!f.required) continue;
+      const v = data[f.name];
+      const missing =
+        v == null ||
+        v === "" ||
+        v === false ||
+        (Array.isArray(v) && v.length === 0);
+      if (missing) {
+        setError(
+          f.type === "checkbox"
+            ? `Please check: ${f.label}`
+            : `Please fill in: ${f.label}`,
+        );
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       const res = await fetch("/api/league-form", {
