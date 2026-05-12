@@ -64,8 +64,24 @@ export function Hero({
 
       {isLogoMode ? (
         <h1 className="le-hero-title le-hero-title-logo">
+          {/* Closes audit M9: hero logo is the LCP candidate on
+              every page. Adding width/height stops the layout from
+              shifting once the image bytes land, and
+              fetchPriority="high" tells the browser to bump it
+              ahead of below-the-fold imagery. Dimensions match the
+              normalize-logos.js output (max 600x180 banner). */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={logoUrl!} alt={title} className="le-hero-logo" />
+          <img
+            src={logoUrl!}
+            alt={title}
+            className="le-hero-logo"
+            width={600}
+            height={180}
+            // @ts-expect-error fetchPriority is valid HTML attr but
+            // not yet typed in React 18.
+            fetchpriority="high"
+            decoding="async"
+          />
         </h1>
       ) : (
         <h1 className="le-hero-title">{renderTitle(title, accentWord)}</h1>
