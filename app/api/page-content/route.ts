@@ -98,6 +98,19 @@ export async function POST(req: Request) {
 
   if (hasHtml) {
     const cleanHtml = sanitizeHtml(rawHtml as string);
+    // Closes audit M16. The MAX_BYTES cap above is checked against
+    // the source payload — re-check after sanitization so a
+    // payload that's small post-strip (e.g. mostly <script> tags
+    // that DOMPurify nukes) doesn't sneak through, and so the
+    // doc we actually persist obeys the limit. Belt-and-suspenders
+    // on both sides of sanitization.
+    const cleanLen = Buffer.byteLength(cleanHtml, "utf8");
+    if (cleanLen > MAX_BYTES) {
+      return NextResponse.json(
+        { error: `sanitized html exceeds ${MAX_BYTES}-byte limit` },
+        { status: 413 },
+      );
+    }
     await ref.set(
       {
         html: cleanHtml,
@@ -110,7 +123,7 @@ export async function POST(req: Request) {
       },
       { merge: true },
     );
-    return NextResponse.json({ ok: true, bytes: sourceLen, mode: "html" });
+    return NextResponse.json({ ok: true, bytes: cleanLen, mode: "html" });
   }
 
   // Legacy markdown path.
