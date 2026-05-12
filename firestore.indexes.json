@@ -1,4 +1,5 @@
 {
+  "_comment": "Firestore auto-creates single-field indexes for every queried field. Today every query in the codebase is single-field (notification_tokens.where('leagueId'), audit.where('at'), games.where('status'), etc.) so the explicit indexes list stays empty. If you add a compound query — `.where(...).orderBy(...)` on different fields, or two `.where(...)` filters — Firestore throws FAILED_PRECONDITION at runtime. Declare the composite index here and run `firebase deploy --only firestore:indexes`. First failure prints a console URL with the exact index JSON to paste in.",
   "indexes": [],
   "fieldOverrides": []
 }
