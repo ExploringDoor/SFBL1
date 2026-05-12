@@ -101,17 +101,29 @@
   font-weight: 500;
 }
 
-/* Checkbox (single line, with label inline) */
+/* Checkbox (single line, with label inline) — overrides the
+ * `appearance: none` from the generic `.le-form-cell input` rule
+ * above so the box renders as the native checkbox (visible + tappable
+ * tick). Without this the checkbox is an invisible 18px square,
+ * which on the waiver-agree row reads as "the checkbox is broken." */
 .le-form-checkbox {
   flex-direction: row;
   align-items: flex-start;
   gap: 10px;
+  cursor: pointer;
 }
 .le-form-checkbox input {
+  appearance: auto;
+  -webkit-appearance: auto;
   width: 18px;
   height: 18px;
   margin-top: 2px;
+  padding: 0;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  border-radius: 3px;
   flex-shrink: 0;
+  cursor: pointer;
+  accent-color: var(--brand-primary);
 }
 .le-form-checkbox > span {
   font-size: 13px;
