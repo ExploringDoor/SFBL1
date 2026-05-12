@@ -14,7 +14,31 @@ interface TeamMeta {
   logoUrl?: string | null;
 }
 
+// Closes H10. The layout fires loadTickerGames(tenantId) on EVERY
+// request — without caching, every page navigation re-pulled the
+// full /games + /teams collections (~450 docs for SFBL at launch).
+// On a busy Sunday with 18 captains × 6 page-views, that's ~50k
+// ticker-only Firestore reads per game day.
+//
+// Process-local in-memory cache keyed by tenantId. 30s TTL is short
+// enough that admin schedule edits land in the ticker quickly,
+// long enough to soak up a captain's typical page-hopping burst.
+// Cache survives per Node process — each Vercel cold-start gets a
+// fresh map, which is fine for a low-tenancy launch.
+interface TickerCacheEntry {
+  games: TickerGame[];
+  expires_at: number;
+}
+const TICKER_TTL_MS = 30_000;
+const tickerCache = new Map<string, TickerCacheEntry>();
+
 export async function loadTickerGames(tenantId: string): Promise<TickerGame[]> {
+  // Cache hit short-circuits the entire fetch + compute.
+  const cached = tickerCache.get(tenantId);
+  if (cached && Date.now() < cached.expires_at) {
+    return cached.games;
+  }
+
   // Defensive: the layout calls this on every request. If Firebase
   // Admin SDK can't init (missing service account env, network
   // failure, quota exhausted), we'd otherwise crash the layout and
@@ -100,7 +124,7 @@ export async function loadTickerGames(tenantId: string): Promise<TickerGame[]> {
     .sort((a, b) => (a.date ?? "").localeCompare(b.date ?? ""))
     .slice(0, 8);
 
-  return [...finals, ...upcoming].map((g) => ({
+  const result: TickerGame[] = [...finals, ...upcoming].map((g) => ({
     id: g.id,
     date: g.date,
     status: g.status,
@@ -113,6 +137,11 @@ export async function loadTickerGames(tenantId: string): Promise<TickerGame[]> {
     away_record: recordByTeam.get(g.away_team_id),
     home_record: recordByTeam.get(g.home_team_id),
   }));
+  tickerCache.set(tenantId, {
+    games: result,
+    expires_at: Date.now() + TICKER_TTL_MS,
+  });
+  return result;
 }
 
 function formatRecord(w: number, l: number, t: number): string {
