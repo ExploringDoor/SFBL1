@@ -111,30 +111,37 @@ export async function GET(req: Request) {
   tenants.sort((a, b) => a.slug.localeCompare(b.slug));
 
   // 4) Load recent errors ───────────────────────────────────────
-  // Sort by `at` descending if present, fall back to insertion order.
-  const errorsSnap = await db.collection("errors").get();
+  // Bounded read: 50 most-recent errors, server-side ordered by
+  // `at`. Previously this pulled the entire /errors collection on
+  // every page render and sliced in memory — fine when the
+  // collection had 5 docs, ruinous once the platform ran for a
+  // few months. Single-field `at` index is auto-created. Tolerate
+  // docs that pre-date the field-name standardization (read both
+  // `at` and the legacy `logged_at`).
+  const errorsSnap = await db
+    .collection("errors")
+    .orderBy("at", "desc")
+    .limit(50)
+    .get();
   const errorRows: ErrorRow[] = errorsSnap.docs.map((d) => {
     const data = d.data() ?? {};
     return {
       id: d.id,
-      at: data.at ? String(data.at) : null,
+      at: data.at
+        ? String(data.at)
+        : data.logged_at
+          ? String(data.logged_at)
+          : null,
       message: String(data.message ?? data.error ?? "(no message)"),
       leagueId: data.leagueId ? String(data.leagueId) : null,
       url: data.url ? String(data.url) : null,
       uid: data.uid ? String(data.uid) : null,
     };
   });
-  errorRows.sort((a, b) => {
-    // Newest first; missing `at` sorts to the end.
-    if (a.at && b.at) return b.at.localeCompare(a.at);
-    if (a.at && !b.at) return -1;
-    if (!a.at && b.at) return 1;
-    return 0;
-  });
 
   const payload: OverviewPayload = {
     tenants,
-    errors: errorRows.slice(0, 50),
+    errors: errorRows,
   };
   return NextResponse.json(payload);
 }

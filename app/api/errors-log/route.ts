@@ -87,7 +87,10 @@ export async function POST(req: Request) {
       ua: trim(body.ua) || null,
       // Tenant context is not provided by the client (would require
       // re-resolving from Host); platform admin can correlate via URL.
-      logged_at: new Date().toISOString(),
+      // Field name matches the convention in /leagues/<id>/audit so
+      // /_platform-overview can orderBy("at", "desc") + limit(50)
+      // instead of pulling the entire collection on every render.
+      at: new Date().toISOString(),
     });
   } catch (e) {
     console.error("[errors-log] write failed:", e);
