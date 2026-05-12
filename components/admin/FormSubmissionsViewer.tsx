@@ -59,12 +59,18 @@ const NEXT_LABEL: Record<Status, string> = {
   done: "Reopen",
 };
 
-type FilterMode = "actionable" | "all" | Status;
+// "deleted" is a virtual filter — soft-deleted docs are excluded
+// from every other view (Actionable / New / In progress / Done /
+// All all hide deleted), and the Deleted pill is the only place to
+// see them. Restoring from Deleted brings the row back wherever it
+// would have lived.
+type FilterMode = "actionable" | "all" | "deleted" | Status;
 
 interface Submission {
   id: string;
   submitted_at: string;
   status?: Status;
+  deleted?: boolean;
   [k: string]: unknown;
 }
 
@@ -112,6 +118,51 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
       setItems((cur) =>
         cur.map((row) => (row.id === s.id ? { ...row, status: next } : row)),
       );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function setDeleted(s: Submission, deleted: boolean) {
+    if (deleted) {
+      // Confirm before trashing — the audit log records who/what but
+      // a confirm prompt is the cheap UX guard against misclicks.
+      const summary = summaryLine(kind, s);
+      const ok = window.confirm(
+        `Delete this submission?\n\n${summary}\n\n` +
+          `It'll move to the Deleted tab and can be restored from there.`,
+      );
+      if (!ok) return;
+    }
+    setBusy(s.id);
+    setError(null);
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch("/api/admin-form-submission-delete", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ leagueId, kind, id: s.id, deleted }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        setError(data.error ?? `HTTP ${res.status}`);
+        return;
+      }
+      setItems((cur) =>
+        cur.map((row) =>
+          row.id === s.id ? { ...row, deleted } : row,
+        ),
+      );
+      // Collapse if the just-deleted row was expanded — it's about
+      // to disappear from the active view anyway.
+      setExpanded((cur) => (cur === s.id ? null : cur));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed");
     } finally {
@@ -232,8 +283,15 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
             <ul className="divide-y divide-slate-200 border border-slate-200 rounded-md overflow-hidden">
               {filtered.map((it) => {
                 const st = statusOf(it);
+                const isDeleted = it.deleted === true;
                 return (
-                  <li key={it.id} className="text-xs">
+                  <li
+                    key={it.id}
+                    className={
+                      "text-xs " +
+                      (isDeleted ? "bg-slate-50/60 opacity-70" : "")
+                    }
+                  >
                     <div className="px-3 py-2 hover:bg-slate-50 flex items-center gap-2">
                       <button
                         type="button"
@@ -247,23 +305,54 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
                         <span
                           className={
                             "inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold rounded uppercase tracking-wider border " +
-                            STATUS_PILL[st]
+                            (isDeleted
+                              ? "bg-slate-200 text-slate-600 border-slate-300"
+                              : STATUS_PILL[st])
                           }
                         >
-                          {STATUS_LABEL[st]}
+                          {isDeleted ? "Deleted" : STATUS_LABEL[st]}
                         </span>
-                        <span className="flex-1 min-w-0 truncate font-semibold text-slate-900">
+                        <span
+                          className={
+                            "flex-1 min-w-0 truncate font-semibold " +
+                            (isDeleted
+                              ? "text-slate-500 line-through"
+                              : "text-slate-900")
+                          }
+                        >
                           {summaryLine(kind, it)}
                         </span>
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => advanceStatus(it)}
-                        disabled={busy === it.id}
-                        className="rounded border border-slate-300 bg-white px-2 py-0.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 whitespace-nowrap"
-                      >
-                        {busy === it.id ? "…" : NEXT_LABEL[st]}
-                      </button>
+                      {isDeleted ? (
+                        <button
+                          type="button"
+                          onClick={() => setDeleted(it, false)}
+                          disabled={busy === it.id}
+                          className="rounded border border-slate-300 bg-white px-2 py-0.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 whitespace-nowrap"
+                        >
+                          {busy === it.id ? "…" : "Restore"}
+                        </button>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => advanceStatus(it)}
+                            disabled={busy === it.id}
+                            className="rounded border border-slate-300 bg-white px-2 py-0.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 whitespace-nowrap"
+                          >
+                            {busy === it.id ? "…" : NEXT_LABEL[st]}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeleted(it, true)}
+                            disabled={busy === it.id}
+                            className="rounded border border-red-200 bg-white px-2 py-0.5 text-[11px] font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50 whitespace-nowrap"
+                            title="Soft delete — moves to the Deleted tab, can be restored."
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
                       <span className="text-[11px] text-slate-500 font-mono whitespace-nowrap">
                         {fmtTime(String(it.submitted_at ?? ""))}
                       </span>
@@ -293,13 +382,17 @@ function StatusFilterBar({
   active: FilterMode;
   onChange: (f: FilterMode) => void;
 }) {
+  // Live items only — deleted submissions have their own bucket
+  // and shouldn't pollute the status counts.
+  const live = items.filter((s) => s.deleted !== true);
   const counts = {
-    new: items.filter((s) => (s.status ?? "new") === "new").length,
-    in_progress: items.filter((s) => s.status === "in_progress").length,
-    done: items.filter((s) => s.status === "done").length,
+    new: live.filter((s) => (s.status ?? "new") === "new").length,
+    in_progress: live.filter((s) => s.status === "in_progress").length,
+    done: live.filter((s) => s.status === "done").length,
   };
   const actionable = counts.new + counts.in_progress;
-  const all = items.length;
+  const all = live.length;
+  const deleted = items.filter((s) => s.deleted === true).length;
 
   const pills: { key: FilterMode; label: string; count: number }[] = [
     { key: "actionable", label: "Actionable", count: actionable },
@@ -307,6 +400,7 @@ function StatusFilterBar({
     { key: "in_progress", label: "In progress", count: counts.in_progress },
     { key: "done", label: "Done", count: counts.done },
     { key: "all", label: "All", count: all },
+    { key: "deleted", label: "Deleted", count: deleted },
   ];
 
   return (
@@ -345,16 +439,20 @@ function filterItems(
   filter: FilterMode,
   statusOf: (s: Submission) => Status,
 ): Submission[] {
-  if (filter === "all") return items;
+  if (filter === "deleted") return items.filter((s) => s.deleted === true);
+  // Every non-deleted filter excludes trashed items.
+  const live = items.filter((s) => s.deleted !== true);
+  if (filter === "all") return live;
   if (filter === "actionable") {
-    return items.filter((s) => statusOf(s) !== "done");
+    return live.filter((s) => statusOf(s) !== "done");
   }
-  return items.filter((s) => statusOf(s) === filter);
+  return live.filter((s) => statusOf(s) === filter);
 }
 
 function filterLabel(f: FilterMode): string {
   if (f === "actionable") return "Actionable";
   if (f === "all") return "All";
+  if (f === "deleted") return "Deleted";
   return STATUS_LABEL[f];
 }
 
