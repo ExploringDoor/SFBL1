@@ -74,7 +74,14 @@ export interface LeagueConfig {
   // Manual billing tracker (Stripe replaces this in v2)
   billing: LeagueBilling;
 
-  // Boolean per-tenant feature flags
+  // Boolean per-tenant feature flags.
+  //
+  // Closes audit M17. Field is declared but currently has zero
+  // consumers in the codebase — `grep -rn 'config.flags' app/
+  // components/ lib/` returns nothing. Left in place because PLAN
+  // §7 calls out feature-flag plumbing for v1, but flag-aware code
+  // must look like `config?.flags?.<name>` (optional-chained both
+  // ways) since the flags object itself is still optional.
   flags?: LeagueFeatureFlags;
 
   // Standings scoring config (optional — defaults to PCT-based)

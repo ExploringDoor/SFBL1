@@ -875,13 +875,24 @@ function countChampionships(tenantId: string, teamName: string): number {
   } catch {
     return 0;
   }
+  // Closes audit M2. Validate each block's shape defensively. The
+  // try/catch above covers JSON.parse failure, but a row with
+  // `standings: null` (or missing fields) used to crash the server
+  // component with TypeError on `.length`, turning every visit to
+  // /teams/<id> into a 500.
+  if (!Array.isArray(archive)) return 0;
   const lowered = teamName.trim().toLowerCase();
   let count = 0;
   for (const block of archive) {
+    if (!block || typeof block !== "object") continue;
     if (block.game_type !== "playoff") continue;
-    if (block.standings.length === 0) continue;
-    const top = block.standings[0]!;
+    if (!Array.isArray(block.standings) || block.standings.length === 0) {
+      continue;
+    }
+    const top = block.standings[0];
+    if (!top || typeof top !== "object") continue;
     if (top.l !== 0) continue; // not an undefeated bracket winner
+    if (typeof top.team !== "string") continue;
     if (top.team.trim().toLowerCase() === lowered) count++;
   }
   return count;

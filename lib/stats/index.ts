@@ -100,11 +100,17 @@ export async function recalcLeague(
   let batterStats: SoftballPlayerStats[] | BaseballBatterStats[];
   let pitcherStats: BaseballPitcherStats[] = [];
 
+  // Closes audit M1. Replace `else` with `else if/else assertNever`
+  // so adding a third sport to the Sport union (PLAN §3 calls for
+  // variants) becomes a typecheck failure here instead of silently
+  // running baseball logic.
   if (sport === "softball") {
     batterStats = aggregateSoftballBatting(battingLines as SoftballBattingLine[]);
-  } else {
+  } else if (sport === "baseball") {
     batterStats = aggregateBaseballBatting(battingLines as BaseballBattingLine[]);
     pitcherStats = aggregatePitching(pitchingLines);
+  } else {
+    assertNever(sport);
   }
 
   // 5. Write stats to /leagues/{id}/players/{pid}.stats with dirty-check.
@@ -142,8 +148,10 @@ function toBattingLine(
   };
   if (sport === "softball") {
     return { ...base, pb: raw.pb !== undefined ? num(raw.pb) : undefined };
+  } else if (sport === "baseball") {
+    return base;
   }
-  return base;
+  assertNever(sport);
 }
 
 function toPitchingLine(raw: Record<string, unknown>): BaseballPitchingLine {
@@ -231,6 +239,15 @@ function areBatterStatsEqual(
 ): boolean {
   if (sport === "softball") {
     return softballStatsAreEqual(a as SoftballPlayerStats, b as SoftballPlayerStats);
+  } else if (sport === "baseball") {
+    return batterStatsAreEqual(a as BaseballBatterStats, b as BaseballBatterStats);
   }
-  return batterStatsAreEqual(a as BaseballBatterStats, b as BaseballBatterStats);
+  assertNever(sport);
+}
+
+// Exhaustiveness guard. If `Sport` ever grows a third member,
+// every if/else-if chain that calls this fails to typecheck —
+// catches sport-variant additions at build time.
+function assertNever(x: never): never {
+  throw new Error(`Unhandled sport variant: ${String(x)}`);
 }
