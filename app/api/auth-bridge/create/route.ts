@@ -71,15 +71,51 @@ export async function POST(req: Request) {
   // attached to the user.
   const customToken = await getAdminAuth().createCustomToken(decoded.uid);
 
+  // Audit H4 (2026-05-09): block bridge-doc overwrite to prevent
+  // session fixation. Without this, Alice (with any valid token of
+  // her own) could call /create with Bob's bridgeId — taken from
+  // his magic-link URL — and overwrite the parked token. Bob's PWA
+  // polls /claim, gets a custom token for ALICE's uid, and signs
+  // in as her, unwittingly operating the captain/admin UI as her
+  // account. Run as a transaction: if a doc already exists for
+  // this bridgeId AND was created for a different uid, reject.
   const now = Date.now();
-  await getAdminDb()
-    .doc(`auth_bridges/${bridgeId}`)
-    .set({
-      token: customToken,
-      uid: decoded.uid,
-      created_at: now,
-      expires_at: now + BRIDGE_TTL_MS,
+  const bridgeRef = getAdminDb().doc(`auth_bridges/${bridgeId}`);
+  try {
+    await getAdminDb().runTransaction(async (tx) => {
+      const snap = await tx.get(bridgeRef);
+      if (snap.exists) {
+        const existing = snap.data() as { uid?: string } | undefined;
+        if (existing?.uid && existing.uid !== decoded.uid) {
+          throw new BridgeConflictError();
+        }
+        // Same uid claiming the same bridgeId again — idempotent
+        // refresh (e.g. user retried the magic link). Fine to
+        // re-set with a fresh token + extended TTL.
+      }
+      tx.set(bridgeRef, {
+        token: customToken,
+        uid: decoded.uid,
+        created_at: now,
+        expires_at: now + BRIDGE_TTL_MS,
+      });
     });
+  } catch (e) {
+    if (e instanceof BridgeConflictError) {
+      return NextResponse.json(
+        { error: "bridgeId already claimed by another user" },
+        { status: 409 },
+      );
+    }
+    throw e;
+  }
 
   return NextResponse.json({ ok: true }, { status: 200 });
+}
+
+class BridgeConflictError extends Error {
+  constructor() {
+    super("bridge conflict");
+    this.name = "BridgeConflictError";
+  }
 }
