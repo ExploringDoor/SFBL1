@@ -33,6 +33,72 @@ interface TenantBoxCacheEntry {
 const BOX_TENANT_TTL_MS = 30_000;
 const boxTenantCache = new Map<string, TenantBoxCacheEntry>();
 
+// Closes audit M4. The box doc is written by the captain via the
+// Web SDK and Firestore rules don't validate per-field shape. The
+// previous `as BoxBatter[]` cast trusted every numeric field on
+// faith; a captain-side bug writing "5" instead of 5 would render
+// verbatim ("5") in the public box score. Coerce each numeric
+// field through Number() and drop rows missing player_id.
+function num(v: unknown): number | undefined {
+  if (v === undefined || v === null) return undefined;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+function coerceLineup(raw: unknown): BoxBatter[] {
+  if (!Array.isArray(raw)) return [];
+  const out: BoxBatter[] = [];
+  for (const r of raw) {
+    if (!r || typeof r !== "object") continue;
+    const obj = r as Record<string, unknown>;
+    const player_id = typeof obj.player_id === "string" ? obj.player_id : "";
+    if (!player_id) continue;
+    out.push({
+      player_id,
+      ab: num(obj.ab),
+      r: num(obj.r),
+      h: num(obj.h),
+      doubles: num(obj.doubles),
+      triples: num(obj.triples),
+      hr: num(obj.hr),
+      rbi: num(obj.rbi),
+      bb: num(obj.bb),
+      so: num(obj.so),
+      sb: num(obj.sb),
+    });
+  }
+  return out;
+}
+
+function coercePitchers(raw: unknown): BoxPitcher[] {
+  if (!Array.isArray(raw)) return [];
+  const out: BoxPitcher[] = [];
+  for (const r of raw) {
+    if (!r || typeof r !== "object") continue;
+    const obj = r as Record<string, unknown>;
+    const player_id = typeof obj.player_id === "string" ? obj.player_id : "";
+    if (!player_id) continue;
+    const decisionRaw =
+      typeof obj.decision === "string" ? obj.decision : undefined;
+    const decision: "W" | "L" | "S" | undefined =
+      decisionRaw === "W" || decisionRaw === "L" || decisionRaw === "S"
+        ? decisionRaw
+        : undefined;
+    out.push({
+      player_id,
+      ip_outs: num(obj.ip_outs),
+      h: num(obj.h),
+      r: num(obj.r),
+      er: num(obj.er),
+      bb: num(obj.bb),
+      so: num(obj.so),
+      hr: num(obj.hr),
+      decision,
+    });
+  }
+  return out;
+}
+
 async function loadTenantBoxAggregates(
   tenantId: string,
 ): Promise<TenantBoxCacheEntry> {
@@ -131,12 +197,8 @@ export async function loadBoxScoreData(
       linescore: linescore[side],
       hits: hits[side],
       errors: errors[side],
-      lineup: ((box?.[`${side}_lineup`] as BoxBatter[] | undefined) ?? []).filter(
-        (b) => b.player_id,
-      ),
-      pitchers: ((box?.[`${side}_pitchers`] as BoxPitcher[] | undefined) ?? []).filter(
-        (p) => p.player_id,
-      ),
+      lineup: coerceLineup(box?.[`${side}_lineup`]),
+      pitchers: coercePitchers(box?.[`${side}_pitchers`]),
       score_only: scoreOnly,
     };
   }

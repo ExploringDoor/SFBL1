@@ -10,6 +10,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { numericStats } from "@/lib/safe-stats";
 import {
   PlayerProfile,
   type PlayerSeasonBatting,
@@ -112,8 +113,11 @@ export default async function PlayerDetailPage({
   const data = playerSnap.data() ?? {};
   const name = String(data.name ?? params.playerId);
   const teamId = String(data.team_id ?? "");
-  const stats = (data.stats ?? null) as Record<string, number> | null;
-  const pitching = (data.pitching ?? null) as Record<string, number> | null;
+  // Audit M3: coerce through numericStats so a string slipping into
+  // a numeric stat field (rare captain-side bug) doesn't render
+  // verbatim in JSX.
+  const stats = numericStats(data.stats);
+  const pitching = numericStats(data.pitching);
 
   let team: {
     team_id: string;

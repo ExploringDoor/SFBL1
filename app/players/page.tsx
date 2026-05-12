@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { numericStatsOrEmpty } from "@/lib/safe-stats";
 import { TeamBadge } from "@/components/TeamBadge";
 import { formatIP } from "@/lib/stats/ip";
 import type { PublicLeagueConfig } from "@/lib/tenants";
@@ -82,8 +83,9 @@ export default async function PlayersPage() {
 
   const players: PlayerRow[] = playersSnap.docs.map((d) => {
     const data = d.data();
-    const stats = (data.stats ?? {}) as Record<string, number>;
-    const pitching = (data.pitching ?? {}) as Record<string, number>;
+    // Audit M3.
+    const stats = numericStatsOrEmpty(data.stats);
+    const pitching = numericStatsOrEmpty(data.pitching);
     const teamId = String(data.team_id ?? "");
     const t = teams[teamId];
     return {

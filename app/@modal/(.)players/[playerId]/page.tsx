@@ -9,6 +9,7 @@
 import { headers } from "next/headers";
 import { Modal } from "@/components/Modal";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { numericStats } from "@/lib/safe-stats";
 import {
   PlayerProfile,
   type PlayerSeasonBatting,
@@ -34,8 +35,9 @@ export default async function PlayerModalRoute({
   const data = playerSnap.data() ?? {};
   const name = String(data.name ?? params.playerId);
   const teamId = String(data.team_id ?? "");
-  const stats = (data.stats ?? null) as Record<string, number> | null;
-  const pitching = (data.pitching ?? null) as Record<string, number> | null;
+  // Audit M3: same coercion as the full-page route.
+  const stats = numericStats(data.stats);
+  const pitching = numericStats(data.pitching);
 
   let team: {
     team_id: string;
