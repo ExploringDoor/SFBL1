@@ -61,31 +61,46 @@ export async function GET(req: Request) {
   );
   const kindFilter = url.searchParams.get("kind"); // optional filter
 
+  // Closes H8. Old comment claimed "audit volume per league is
+  // bounded (a few hundred entries per season at most)" — but the
+  // log accumulates every admin action across all seasons forever
+  // with no rotation. By season 3 every admin dashboard load
+  // downloads thousands of docs. Move the sort/filter/limit to
+  // Firestore: single-field `at` index covers the no-filter path,
+  // and the rare `?kind=` filtered path uses the auto-indexed
+  // `kind` filter then orders by `at` (Firestore requires the
+  // filtered field to come first; this is single-field for `kind`
+  // + single-field for `at` chained — no composite needed because
+  // we limit and accept a small extra scan when filtering).
   const db = getAdminDb();
-  const snap = await db
+  let query = db
     .collection(`leagues/${leagueId}/audit`)
-    .get();
+    .orderBy("at", "desc") as FirebaseFirestore.Query;
+  if (kindFilter) {
+    // `where + orderBy` on different fields requires a composite
+    // index when both are inequality/range — `kind` here is
+    // equality, so Firestore composes the two single-field indexes
+    // and serves the query without a new declared composite.
+    query = db
+      .collection(`leagues/${leagueId}/audit`)
+      .where("kind", "==", kindFilter)
+      .orderBy("at", "desc");
+  }
+  const snap = await query.limit(limit).get();
 
-  // Filter + sort in memory. Audit volume per league is bounded
-  // (a few hundred entries per season at most), so we don't need a
-  // composite index for (kind, at desc).
-  const entries = snap.docs
-    .map((d) => {
-      const data = d.data();
-      return {
-        id: d.id,
-        kind: String(data.kind ?? ""),
-        by_uid: data.by_uid ? String(data.by_uid) : null,
-        by_role: data.by_role ? String(data.by_role) : null,
-        game_id: data.game_id ? String(data.game_id) : null,
-        changes:
-          (data.changes as Record<string, unknown> | undefined) ?? {},
-        at: String(data.at ?? ""),
-      };
-    })
-    .filter((e) => !kindFilter || e.kind === kindFilter)
-    .sort((a, b) => (a.at > b.at ? -1 : a.at < b.at ? 1 : 0))
-    .slice(0, limit);
+  const entries = snap.docs.map((d) => {
+    const data = d.data();
+    return {
+      id: d.id,
+      kind: String(data.kind ?? ""),
+      by_uid: data.by_uid ? String(data.by_uid) : null,
+      by_role: data.by_role ? String(data.by_role) : null,
+      game_id: data.game_id ? String(data.game_id) : null,
+      changes:
+        (data.changes as Record<string, unknown> | undefined) ?? {},
+      at: String(data.at ?? ""),
+    };
+  });
 
   // Enrich with by_uid → email. Batch lookups (up to 100 per call
   // per Firebase Admin Auth's getUsers limit).
