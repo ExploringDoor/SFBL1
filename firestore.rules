@@ -388,6 +388,23 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // ---------------------------------------------------------------------
+    // /auth_bridges — short-TTL custom-token handoff for the Safari → PWA
+    // sign-in bridge. Each doc holds a Firebase Admin custom token that
+    // exchanges for a full session, so a single read by an unauthorized
+    // client would let them impersonate any uid mid-bridge. Admin SDK is
+    // the ONLY thing meant to read or write here; clients reach the bridge
+    // via /api/auth-bridge/* which proxy through the server.
+    //
+    // Explicit deny instead of relying on the catch-all so a future
+    // permissive `{document=**}` rule added during a debugging session
+    // can't accidentally expose parked tokens.
+    // ---------------------------------------------------------------------
+
+    match /auth_bridges/{bridgeId} {
+      allow read, write: if false;
+    }
+
     // Default deny everything else.
     match /{document=**} {
       allow read, write: if false;
