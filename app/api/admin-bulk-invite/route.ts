@@ -52,7 +52,9 @@ export async function POST(req: Request) {
 
   let decoded;
   try {
-    decoded = await getAdminAuth().verifyIdToken(idToken);
+    // checkRevoked=true: bulk-grants captain claims to every emailed
+    // recipient — high-trust mutation, no stale-token window.
+    decoded = await getAdminAuth().verifyIdToken(idToken, true);
   } catch {
     return NextResponse.json(
       { error: "Invalid or expired token" },

@@ -31,7 +31,8 @@ export async function POST(req: Request) {
 
   let decoded;
   try {
-    decoded = await getAdminAuth().verifyIdToken(idToken);
+    // checkRevoked=true: admin-only public-photo write.
+    decoded = await getAdminAuth().verifyIdToken(idToken, true);
   } catch {
     return NextResponse.json(
       { error: "Invalid or expired token" },

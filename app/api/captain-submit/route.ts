@@ -77,7 +77,9 @@ export async function POST(req: Request) {
 
   let decoded;
   try {
-    decoded = await getAdminAuth().verifyIdToken(idToken);
+    // checkRevoked=true: captain final-score submission — hard for
+    // the league to retract bad data after the fact.
+    decoded = await getAdminAuth().verifyIdToken(idToken, true);
   } catch {
     return NextResponse.json(
       { error: "Invalid or expired token" },

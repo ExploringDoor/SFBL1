@@ -35,7 +35,9 @@ export async function POST(req: Request) {
 
   let decoded;
   try {
-    decoded = await getAdminAuth().verifyIdToken(idToken);
+    // checkRevoked=true: publishes the homepage-banner alert seen
+    // by every visitor; demoted admins shouldn't have a window.
+    decoded = await getAdminAuth().verifyIdToken(idToken, true);
   } catch {
     return NextResponse.json(
       { error: "Invalid or expired token" },

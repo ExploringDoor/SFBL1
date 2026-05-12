@@ -68,7 +68,9 @@ export async function POST(req: Request) {
   const idToken = auth.slice("Bearer ".length).trim();
   let decoded;
   try {
-    decoded = await getAdminAuth().verifyIdToken(idToken);
+    // checkRevoked=true: pushes go to every subscriber's lock screen
+    // — even a 1-hour window for a fired admin to spam is too much.
+    decoded = await getAdminAuth().verifyIdToken(idToken, true);
   } catch {
     return NextResponse.json(
       { error: "Invalid or expired token" },

@@ -58,7 +58,11 @@ export async function POST(req: Request) {
 
   let decoded;
   try {
-    decoded = await getAdminAuth().verifyIdToken(idToken);
+    // checkRevoked=true honors tokensValidAfter on the user record, so
+    // a demoted admin's still-issued ID token (valid up to 1 hr) stops
+    // working immediately. Costs one extra Firestore read; worth it
+    // on the endpoint that mutates custom claims.
+    decoded = await getAdminAuth().verifyIdToken(idToken, true);
   } catch {
     return NextResponse.json(
       { error: "Invalid or expired token" },
