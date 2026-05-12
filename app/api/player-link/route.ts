@@ -25,6 +25,7 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { parseHost, resolveTenant } from "@/lib/tenants";
 
 export const runtime = "nodejs";
 
@@ -62,6 +63,35 @@ export async function POST(req: Request) {
       { error: "leagueId is required" },
       { status: 400 },
     );
+  }
+
+  // Audit B5 (2026-05-09): require the request to originate from the
+  // tenant's own host. Without this, anyone signed in (to any league
+  // or none) could call /api/player-link with a leagueId from another
+  // tenant and self-link to a player record there by email match.
+  // No privilege gain — downstream endpoints still re-check claims —
+  // but it's a cross-tenant write that violates the platform's
+  // "every write scoped to the caller's leagueId" invariant.
+  //
+  // Caller exemption: if the user already has any role on this
+  // league, they're clearly meant to be there (admin tools, captain
+  // re-link after a roster move, etc.) — let it through.
+  const callerLeagues = decoded.leagues as
+    | Record<string, string>
+    | undefined;
+  const hasExistingClaim = Boolean(callerLeagues?.[leagueId]);
+  if (!hasExistingClaim) {
+    const host =
+      req.headers.get("x-forwarded-host") ??
+      req.headers.get("host") ??
+      "";
+    const tenant = await resolveTenant(parseHost(host));
+    if (tenant?.id !== leagueId) {
+      return NextResponse.json(
+        { error: "leagueId does not match request host" },
+        { status: 403 },
+      );
+    }
   }
 
   const email = (decoded.email ?? "").toLowerCase();
