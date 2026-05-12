@@ -31,7 +31,7 @@
 // captains see their new claim within seconds of signing in again.
 
 import { NextResponse } from "next/server";
-import { getAdminAuth } from "@/lib/firebase-admin";
+import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 
 export const runtime = "nodejs";
 
@@ -180,6 +180,34 @@ export async function POST(req: Request) {
   const nextClaims = { ...existing, leagues: nextLeagues };
 
   await adminAuth.setCustomUserClaims(user.uid, nextClaims);
+
+  // Audit H2 (2026-05-09): every other admin mutation writes to
+  // /leagues/{id}/audit. The one endpoint that mutates Firebase Auth
+  // custom claims (granting admin, demoting admin, changing captain
+  // teams) had no forensic trail — the highest-trust action in the
+  // system was effectively unlogged. Capture before/after state so a
+  // disputed permission change can be reconstructed.
+  try {
+    const previousClaim = existingLeagues[leagueId] ?? null;
+    await getAdminDb()
+      .collection(`leagues/${leagueId}/audit`)
+      .add({
+        kind: "grant_claim",
+        by_uid: decoded.uid,
+        by_email: decoded.email ?? null,
+        target_uid: user.uid,
+        target_email: user.email ?? null,
+        previous_claim: previousClaim,
+        next_claim: claimValue,
+        removed: claimValue === null,
+        at: new Date().toISOString(),
+      });
+  } catch (err) {
+    // Don't fail the grant if the audit write fails — the claim
+    // mutation is already committed. Surface to server logs so
+    // we can correlate later.
+    console.error("[admin-grant-claim] audit write failed:", err);
+  }
 
   return NextResponse.json({
     ok: true,
