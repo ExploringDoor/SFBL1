@@ -19,10 +19,20 @@
 // they tap it, otherwise users stare at an empty Google Calendar
 // wondering what happened.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function SubscribeCalendar({ teamId }: { teamId?: string }) {
   const [copied, setCopied] = useState(false);
+  // Closes H11. The component builds anchor hrefs from
+  // window.location.host, which is empty during SSR. React 18 warns
+  // on the SSR/CSR href mismatch, and a tap during the pre-hydrate
+  // window navigates to "webcal://" with no path. Gate the entire
+  // render on a post-mount flag so the buttons only appear once we
+  // know the real host.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   function buildUrl(scheme: "https" | "webcal"): string {
     if (typeof window === "undefined") return "";
@@ -39,6 +49,18 @@ export function SubscribeCalendar({ teamId }: { teamId?: string }) {
     } catch {
       /* clipboard blocked — silent fail */
     }
+  }
+
+  // SSR / pre-hydrate: render a placeholder shell so layout doesn't
+  // shift when the buttons swap in. Eyebrow stays visible; buttons
+  // appear on mount.
+  if (!mounted) {
+    return (
+      <div className="le-cal-wrap">
+        <span className="le-cal-eyebrow">Subscribe to schedule</span>
+        <div className="le-cal-buttons" aria-hidden />
+      </div>
+    );
   }
 
   return (

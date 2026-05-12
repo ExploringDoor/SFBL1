@@ -144,10 +144,33 @@ self.addEventListener("fetch", (event) => {
 });
 
 self.addEventListener("push", (event) => {
+  // Closes H13. The previous silent catch meant any payload that
+  // wasn't valid JSON resulted in a notification titled "League"
+  // with an empty body — captains and players saw mystery pings
+  // they couldn't interpret. Log the failure for diagnostics and
+  // fall back to a generic-but-actionable notification so the
+  // user at least knows the league site has something new.
   let payload = {};
   try {
     payload = event.data ? event.data.json() : {};
-  } catch (_) {}
+  } catch (e) {
+    console.error("[sw] push payload not JSON:", e);
+    // Try a plain-text decode as a secondary fallback (some senders
+    // emit text-only payloads).
+    let text = "";
+    try {
+      text = event.data ? event.data.text() : "";
+    } catch (_) {}
+    payload = {
+      notification: {
+        title: "New activity",
+        body:
+          text && text.length < 200
+            ? text
+            : "Open the league site to see what changed.",
+      },
+    };
+  }
 
   // FCM HTTP v1 nests the `data` object at payload.data; some paths
   // wrap it in FCM_MSG. Handle both.
