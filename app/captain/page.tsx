@@ -206,8 +206,11 @@ export default function CaptainHomePage() {
           }
         }
         setNextGameRsvps(map);
-      } catch {
-        /* best effort — spotlight gracefully shows 0/0/0 */
+      } catch (err) {
+        // Spotlight gracefully shows 0/0/0 if this fails — but
+        // log the error so the platform-admin error feed picks it
+        // up instead of silently swallowing.
+        console.warn("[captain] next-game RSVP fetch failed:", err);
       }
     })();
     return () => {
@@ -230,7 +233,7 @@ export default function CaptainHomePage() {
       try {
         const idToken = await user.getIdToken();
         if (cancelled) return;
-        await fetch("/api/captain-link", {
+        const res = await fetch("/api/captain-link", {
           method: "POST",
           headers: {
             "content-type": "application/json",
@@ -238,8 +241,23 @@ export default function CaptainHomePage() {
           },
           body: JSON.stringify({ leagueId: tenantId }),
         });
-      } catch {
-        /* non-fatal */
+        // Closes audit M12. Don't silently swallow non-OK
+        // responses — the captain-player auto-link is the #3
+        // captain support ticket in DVSL's history ("I'm not
+        // seeing my roster correctly"). Surface to console with
+        // the response body so the captain can screenshot it for
+        // diagnostics. Still non-fatal — the dashboard renders
+        // either way.
+        if (!res.ok) {
+          const body = await res.text().catch(() => "");
+          console.warn(
+            "[captain] captain-link non-OK:",
+            res.status,
+            body,
+          );
+        }
+      } catch (err) {
+        console.warn("[captain] captain-link failed:", err);
       }
     })();
     return () => {
