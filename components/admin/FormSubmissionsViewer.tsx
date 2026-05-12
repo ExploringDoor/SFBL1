@@ -33,6 +33,16 @@ const KIND_TABS: { key: Kind; label: string }[] = [
 // migrate implicitly when an admin first interacts with them.
 type Status = "new" | "in_progress" | "done";
 
+// Status icon + text travel together on every status pill so the row
+// glance reads at sub-second speed: shape and color tell you the
+// state even before the word registers. Matches the original pitch
+// Adam approved.
+const STATUS_ICON: Record<Status, string> = {
+  new: "⭕",
+  in_progress: "👀",
+  done: "✅",
+};
+
 const STATUS_LABEL: Record<Status, string> = {
   new: "New",
   in_progress: "In progress",
@@ -304,13 +314,20 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
                       >
                         <span
                           className={
-                            "inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold rounded uppercase tracking-wider border " +
+                            "inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold rounded uppercase tracking-wider border " +
                             (isDeleted
                               ? "bg-slate-200 text-slate-600 border-slate-300"
                               : STATUS_PILL[st])
                           }
                         >
-                          {isDeleted ? "Deleted" : STATUS_LABEL[st]}
+                          {isDeleted ? (
+                            <>🗑️ Deleted</>
+                          ) : (
+                            <>
+                              <span aria-hidden>{STATUS_ICON[st]}</span>
+                              {STATUS_LABEL[st]}
+                            </>
+                          )}
                         </span>
                         <span
                           className={
@@ -394,13 +411,19 @@ function StatusFilterBar({
   const all = live.length;
   const deleted = items.filter((s) => s.deleted === true).length;
 
+  // Filter labels use the same icons as the row pills so the bar
+  // and the row state map 1:1 visually.
   const pills: { key: FilterMode; label: string; count: number }[] = [
     { key: "actionable", label: "Actionable", count: actionable },
-    { key: "new", label: "New", count: counts.new },
-    { key: "in_progress", label: "In progress", count: counts.in_progress },
-    { key: "done", label: "Done", count: counts.done },
+    { key: "new", label: `${STATUS_ICON.new} New`, count: counts.new },
+    {
+      key: "in_progress",
+      label: `${STATUS_ICON.in_progress} In progress`,
+      count: counts.in_progress,
+    },
+    { key: "done", label: `${STATUS_ICON.done} Done`, count: counts.done },
     { key: "all", label: "All", count: all },
-    { key: "deleted", label: "Deleted", count: deleted },
+    { key: "deleted", label: "🗑️ Deleted", count: deleted },
   ];
 
   return (
