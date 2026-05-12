@@ -11,29 +11,45 @@ import type {
 } from "@/components/BoxScoreContent";
 import { computeStandings, type GameResult } from "./stats/shared";
 
-export async function loadBoxScoreData(
+// Closes H9. The expensive part of loadBoxScoreData isn't the per-
+// game doc — it's the three tenant-wide reads (teams, players, all
+// games) needed only to render the season-record badges + look up
+// player names in the box. Sharing a box-score link in iMessage
+// fans out into many parallel page loads; each used to pull ~450
+// docs from Firestore.
+//
+// Process-local TTL cache for the three tenant aggregates, keyed by
+// tenant. Per-game game + box_score docs are always read fresh so
+// score updates surface immediately. 30s TTL collapses bursts.
+interface TenantBoxCacheEntry {
+  teamMeta: Record<
+    string,
+    { name: string; abbrev?: string; color?: string; logoUrl?: string | null }
+  >;
+  recordByTeam: Map<string, string>;
+  playerNames: Record<string, string>;
+  expires_at: number;
+}
+const BOX_TENANT_TTL_MS = 30_000;
+const boxTenantCache = new Map<string, TenantBoxCacheEntry>();
+
+async function loadTenantBoxAggregates(
   tenantId: string,
-  gameId: string,
-  innings: number,
-): Promise<BoxScoreContentProps | null> {
+): Promise<TenantBoxCacheEntry> {
+  const cached = boxTenantCache.get(tenantId);
+  if (cached && Date.now() < cached.expires_at) {
+    return cached;
+  }
   const db = getAdminDb();
-  const [gameSnap, boxSnap, teamsSnap, playersSnap, allGamesSnap] =
-    await Promise.all([
-      db.doc(`leagues/${tenantId}/games/${gameId}`).get(),
-      db.doc(`leagues/${tenantId}/box_scores/${gameId}`).get(),
-      db.collection(`leagues/${tenantId}/teams`).get(),
-      db.collection(`leagues/${tenantId}/players`).get(),
-      // Pull every game for this tenant so we can compute season
-      // records to label the box-score header (e.g. "WPBC (3-0)").
-      db.collection(`leagues/${tenantId}/games`).get(),
-    ]);
-  if (!gameSnap.exists) return null;
-
-  const game = gameSnap.data() ?? {};
-  const homeTeamId = String(game.home_team_id ?? "");
-  const awayTeamId = String(game.away_team_id ?? "");
-
-  const teamMeta: Record<string, { name: string; abbrev?: string; color?: string; logoUrl?: string | null }> = {};
+  const [teamsSnap, playersSnap, allGamesSnap] = await Promise.all([
+    db.collection(`leagues/${tenantId}/teams`).get(),
+    db.collection(`leagues/${tenantId}/players`).get(),
+    db.collection(`leagues/${tenantId}/games`).get(),
+  ]);
+  const teamMeta: Record<
+    string,
+    { name: string; abbrev?: string; color?: string; logoUrl?: string | null }
+  > = {};
   for (const d of teamsSnap.docs) {
     const data = d.data();
     teamMeta[d.id] = {
@@ -43,8 +59,6 @@ export async function loadBoxScoreData(
       logoUrl: data.logo_url ? String(data.logo_url) : null,
     };
   }
-
-  // Records by team — bare "W-L" / "W-L-T", UI components add parens.
   const standingsGames: GameResult[] = allGamesSnap.docs.map((d) => {
     const data = d.data();
     return {
@@ -67,6 +81,36 @@ export async function loadBoxScoreData(
   for (const d of playersSnap.docs) {
     playerNames[d.id] = String(d.data().name ?? d.id);
   }
+  const entry: TenantBoxCacheEntry = {
+    teamMeta,
+    recordByTeam,
+    playerNames,
+    expires_at: Date.now() + BOX_TENANT_TTL_MS,
+  };
+  boxTenantCache.set(tenantId, entry);
+  return entry;
+}
+
+export async function loadBoxScoreData(
+  tenantId: string,
+  gameId: string,
+  innings: number,
+): Promise<BoxScoreContentProps | null> {
+  const db = getAdminDb();
+  // Per-game reads (always fresh) in parallel with the cached
+  // tenant aggregates. On a cache hit, only the two doc reads cost
+  // Firestore — down from ~450 doc reads per page-load.
+  const [gameSnap, boxSnap, tenantAgg] = await Promise.all([
+    db.doc(`leagues/${tenantId}/games/${gameId}`).get(),
+    db.doc(`leagues/${tenantId}/box_scores/${gameId}`).get(),
+    loadTenantBoxAggregates(tenantId),
+  ]);
+  if (!gameSnap.exists) return null;
+
+  const game = gameSnap.data() ?? {};
+  const homeTeamId = String(game.home_team_id ?? "");
+  const awayTeamId = String(game.away_team_id ?? "");
+  const { teamMeta, recordByTeam, playerNames } = tenantAgg;
 
   const box = boxSnap.exists ? (boxSnap.data() as Record<string, unknown>) : null;
   const linescore = (box?.linescore as { away?: number[]; home?: number[] } | undefined) ?? {};
