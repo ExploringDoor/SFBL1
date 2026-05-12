@@ -28,9 +28,43 @@ const KIND_TABS: { key: Kind; label: string }[] = [
   { key: "umpire_evaluation", label: "Umpire evaluation" },
 ];
 
+// Three states a submission can occupy. Missing status field on
+// existing docs is treated as "new" — pre-workflow submissions
+// migrate implicitly when an admin first interacts with them.
+type Status = "new" | "in_progress" | "done";
+
+const STATUS_LABEL: Record<Status, string> = {
+  new: "New",
+  in_progress: "In progress",
+  done: "Done",
+};
+
+const STATUS_PILL: Record<Status, string> = {
+  new: "bg-blue-100 text-blue-800 border-blue-200",
+  in_progress: "bg-amber-100 text-amber-800 border-amber-200",
+  done: "bg-emerald-100 text-emerald-800 border-emerald-200",
+};
+
+// Single-click advance: new → in_progress → done → in_progress (so a
+// done can be reopened without an extra step).
+const NEXT_STATUS: Record<Status, Status> = {
+  new: "in_progress",
+  in_progress: "done",
+  done: "in_progress",
+};
+
+const NEXT_LABEL: Record<Status, string> = {
+  new: "Start review",
+  in_progress: "Mark done",
+  done: "Reopen",
+};
+
+type FilterMode = "actionable" | "all" | Status;
+
 interface Submission {
   id: string;
   submitted_at: string;
+  status?: Status;
   [k: string]: unknown;
 }
 
@@ -45,6 +79,45 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [filter, setFilter] = useState<FilterMode>("actionable");
+  const [busy, setBusy] = useState<string | null>(null);
+
+  function statusOf(s: Submission): Status {
+    return s.status ?? "new";
+  }
+
+  async function advanceStatus(s: Submission) {
+    const next = NEXT_STATUS[statusOf(s)];
+    setBusy(s.id);
+    setError(null);
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch("/api/admin-form-submission-status", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ leagueId, kind, id: s.id, status: next }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        setError(data.error ?? `HTTP ${res.status}`);
+        return;
+      }
+      // Optimistic: patch in place so the row updates without a full
+      // re-fetch. Caller can hit Refresh if they want to re-sync.
+      setItems((cur) =>
+        cur.map((row) => (row.id === s.id ? { ...row, status: next } : row)),
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed");
+    } finally {
+      setBusy(null);
+    }
+  }
 
   const fetchItems = useCallback(async () => {
     setLoading(true);
@@ -118,6 +191,19 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
         ))}
       </div>
 
+      {/* Status filter. Default "Actionable" (new + in_progress) so
+          Adam opens admin and sees only what still needs work. The
+          counts under the labels make the inbox queue visible at a
+          glance without expanding any row. */}
+      <StatusFilterBar
+        items={items}
+        active={filter}
+        onChange={(f) => {
+          setFilter(f);
+          setExpanded(null);
+        }}
+      />
+
       {error && (
         <p className="text-sm text-red-700 rounded bg-red-50 px-2 py-1 border border-red-200">
           {error}
@@ -131,35 +217,145 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
           No {KIND_TABS.find((t) => t.key === kind)?.label.toLowerCase()}{" "}
           submissions yet.
         </p>
-      ) : (
-        <ul className="divide-y divide-slate-200 border border-slate-200 rounded-md overflow-hidden">
-          {items.map((it) => (
-            <li key={it.id} className="text-xs">
-              <button
-                type="button"
-                onClick={() =>
-                  setExpanded((cur) => (cur === it.id ? null : it.id))
-                }
-                className="w-full text-left px-3 py-2 hover:bg-slate-50 flex items-center justify-between gap-2"
-              >
-                <span className="flex-1 min-w-0 truncate">
-                  <span className="font-semibold text-slate-900">
-                    {summaryLine(kind, it)}
-                  </span>
-                </span>
-                <span className="text-[11px] text-slate-500 font-mono whitespace-nowrap">
-                  {fmtTime(String(it.submitted_at ?? ""))}
-                </span>
-              </button>
-              {expanded === it.id && (
-                <SubmissionDetail submission={it} />
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+      ) : (() => {
+          const filtered = filterItems(items, filter, statusOf);
+          if (filtered.length === 0) {
+            return (
+              <p className="text-sm text-slate-500 italic">
+                No submissions match the &ldquo;
+                {filterLabel(filter)}&rdquo; filter. Switch to &ldquo;All&rdquo;
+                to see every entry.
+              </p>
+            );
+          }
+          return (
+            <ul className="divide-y divide-slate-200 border border-slate-200 rounded-md overflow-hidden">
+              {filtered.map((it) => {
+                const st = statusOf(it);
+                return (
+                  <li key={it.id} className="text-xs">
+                    <div className="px-3 py-2 hover:bg-slate-50 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setExpanded((cur) =>
+                            cur === it.id ? null : it.id,
+                          )
+                        }
+                        className="flex-1 min-w-0 text-left flex items-center gap-2"
+                      >
+                        <span
+                          className={
+                            "inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold rounded uppercase tracking-wider border " +
+                            STATUS_PILL[st]
+                          }
+                        >
+                          {STATUS_LABEL[st]}
+                        </span>
+                        <span className="flex-1 min-w-0 truncate font-semibold text-slate-900">
+                          {summaryLine(kind, it)}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => advanceStatus(it)}
+                        disabled={busy === it.id}
+                        className="rounded border border-slate-300 bg-white px-2 py-0.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 whitespace-nowrap"
+                      >
+                        {busy === it.id ? "…" : NEXT_LABEL[st]}
+                      </button>
+                      <span className="text-[11px] text-slate-500 font-mono whitespace-nowrap">
+                        {fmtTime(String(it.submitted_at ?? ""))}
+                      </span>
+                    </div>
+                    {expanded === it.id && (
+                      <SubmissionDetail submission={it} />
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          );
+        })()}
     </section>
   );
+}
+
+// Filter pill row. Counts derived from the unfiltered list so even
+// when the "Done" tab is empty Adam can see at a glance that 8
+// total submissions exist.
+function StatusFilterBar({
+  items,
+  active,
+  onChange,
+}: {
+  items: Submission[];
+  active: FilterMode;
+  onChange: (f: FilterMode) => void;
+}) {
+  const counts = {
+    new: items.filter((s) => (s.status ?? "new") === "new").length,
+    in_progress: items.filter((s) => s.status === "in_progress").length,
+    done: items.filter((s) => s.status === "done").length,
+  };
+  const actionable = counts.new + counts.in_progress;
+  const all = items.length;
+
+  const pills: { key: FilterMode; label: string; count: number }[] = [
+    { key: "actionable", label: "Actionable", count: actionable },
+    { key: "new", label: "New", count: counts.new },
+    { key: "in_progress", label: "In progress", count: counts.in_progress },
+    { key: "done", label: "Done", count: counts.done },
+    { key: "all", label: "All", count: all },
+  ];
+
+  return (
+    <div className="flex gap-1 overflow-x-auto pb-1">
+      {pills.map((p) => (
+        <button
+          key={p.key}
+          type="button"
+          onClick={() => onChange(p.key)}
+          className={
+            "px-2.5 py-1 text-[11px] font-semibold rounded whitespace-nowrap flex items-center gap-1.5 " +
+            (active === p.key
+              ? "bg-slate-700 text-white"
+              : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200")
+          }
+        >
+          {p.label}
+          <span
+            className={
+              "inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold " +
+              (active === p.key
+                ? "bg-white/20 text-white"
+                : "bg-slate-200 text-slate-700")
+            }
+          >
+            {p.count}
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function filterItems(
+  items: Submission[],
+  filter: FilterMode,
+  statusOf: (s: Submission) => Status,
+): Submission[] {
+  if (filter === "all") return items;
+  if (filter === "actionable") {
+    return items.filter((s) => statusOf(s) !== "done");
+  }
+  return items.filter((s) => statusOf(s) === filter);
+}
+
+function filterLabel(f: FilterMode): string {
+  if (f === "actionable") return "Actionable";
+  if (f === "all") return "All";
+  return STATUS_LABEL[f];
 }
 
 // One-line preview per submission kind. Surfaces the most useful
