@@ -152,9 +152,7 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
                 </span>
               </button>
               {expanded === it.id && (
-                <pre className="px-3 py-2 bg-slate-50 text-[11px] text-slate-800 font-mono overflow-x-auto whitespace-pre-wrap break-words">
-                  {JSON.stringify(omitNoise(it), null, 2)}
-                </pre>
+                <SubmissionDetail submission={it} />
               )}
             </li>
           ))}
@@ -198,10 +196,203 @@ function summaryLine(kind: Kind, s: Submission): string {
   return s.id;
 }
 
-function omitNoise(s: Submission): Record<string, unknown> {
-  // Hide the auto-injected fields the admin doesn't need to read.
-  const { id: _id, ...rest } = s;
-  return rest;
+// Render an expanded submission as a labeled table instead of raw JSON.
+// Adam's feedback: "let make it actually lookk readable and nice." We
+// turn snake_case keys into Title Case, format dates / phones / emails
+// into tappable links, and prettify booleans. Unknown keys fall through
+// to a plain string render rather than being dropped, so a future
+// schema addition still appears (just without the prettifier).
+function SubmissionDetail({ submission }: { submission: Submission }) {
+  // Fields we never want to show in the body — already surfaced in the
+  // row header (submitted_at + id) or pure plumbing.
+  const HIDE = new Set(["id", "submitted_at"]);
+  const entries = Object.entries(submission).filter(
+    ([k]) => !HIDE.has(k),
+  );
+  return (
+    <div className="px-3 py-3 bg-slate-50 border-t border-slate-200">
+      <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1.5 text-[12px]">
+        {entries.map(([key, value]) => (
+          <FieldRow key={key} fieldKey={key} value={value} />
+        ))}
+      </dl>
+    </div>
+  );
+}
+
+function FieldRow({
+  fieldKey,
+  value,
+}: {
+  fieldKey: string;
+  value: unknown;
+}) {
+  const label = humanLabel(fieldKey);
+  return (
+    <>
+      <dt className="text-slate-500 font-medium uppercase tracking-wider text-[10px] self-center">
+        {label}
+      </dt>
+      <dd className="text-slate-900 break-words min-w-0">
+        <FieldValue fieldKey={fieldKey} value={value} />
+      </dd>
+    </>
+  );
+}
+
+function FieldValue({
+  fieldKey,
+  value,
+}: {
+  fieldKey: string;
+  value: unknown;
+}) {
+  // Empty / missing → muted dash so the row doesn't look broken.
+  if (value == null || value === "") {
+    return <span className="text-slate-400">—</span>;
+  }
+  // Consent / waiver booleans get a real visual check, not just
+  // "true". Other booleans fall through to the same treatment so
+  // future yes/no fields don't need bespoke handling.
+  if (typeof value === "boolean") {
+    return value ? (
+      <span className="text-emerald-700 font-semibold">✓ Yes</span>
+    ) : (
+      <span className="text-red-700 font-semibold">✗ No</span>
+    );
+  }
+  if (typeof value === "string") {
+    // Email — open in the admin's mail client.
+    if (fieldKey === "email" || /^email_/.test(fieldKey)) {
+      return (
+        <a
+          href={`mailto:${value}`}
+          className="text-blue-700 underline-offset-2 hover:underline break-all"
+        >
+          {value}
+        </a>
+      );
+    }
+    // Phone — tappable on mobile, normalized digits in the href.
+    if (fieldKey === "phone" || /_phone$/.test(fieldKey)) {
+      const digits = value.replace(/[^\d+]/g, "");
+      return (
+        <a
+          href={`tel:${digits}`}
+          className="text-blue-700 underline-offset-2 hover:underline"
+        >
+          {value}
+        </a>
+      );
+    }
+    // Date of birth / game_date / signed_on — display in a friendly
+    // way and include age when we recognize a DOB.
+    if (/^date_|_date$|^dob$/.test(fieldKey) || fieldKey === "game_date") {
+      const friendly = formatDate(value);
+      if (fieldKey === "dob") {
+        const age = ageFromDob(value);
+        return (
+          <span>
+            {friendly}
+            {age != null && (
+              <span className="text-slate-500 ml-2">({age} yo)</span>
+            )}
+          </span>
+        );
+      }
+      return <span>{friendly}</span>;
+    }
+    // Position abbreviations get expanded so "C" isn't ambiguous.
+    if (fieldKey === "primary_position") {
+      return <span>{expandPosition(value)}</span>;
+    }
+    // Long notes / signatures — preserve newlines.
+    if (
+      fieldKey === "notes" ||
+      fieldKey === "signature" ||
+      fieldKey === "comments"
+    ) {
+      return <span className="whitespace-pre-wrap">{value}</span>;
+    }
+    return <span>{value}</span>;
+  }
+  if (typeof value === "number") {
+    return <span>{value}</span>;
+  }
+  // Arrays / objects / anything else — show the JSON inline; rare
+  // enough that a generic fallback is fine.
+  return (
+    <code className="text-[11px] text-slate-700">
+      {JSON.stringify(value)}
+    </code>
+  );
+}
+
+function humanLabel(key: string): string {
+  // Hand-overrides where the auto title-case looks off.
+  const OVERRIDES: Record<string, string> = {
+    dob: "Date of birth",
+    primary_position: "Position",
+    agreed_to_terms: "Waiver agreed",
+    team_name: "Team",
+    manager_first_name: "Manager first",
+    manager_last_name: "Manager last",
+    evaluator_name: "Evaluator",
+    visiting_team: "Visiting team",
+    home_team: "Home team",
+  };
+  if (OVERRIDES[key]) return OVERRIDES[key];
+  return key
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function formatDate(s: string): string {
+  // Accept YYYY-MM-DD or full ISO. Render in en-US "May 11, 1992".
+  const ymd = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+  if (!ymd) return s;
+  const d = new Date(`${ymd[1]}-${ymd[2]}-${ymd[3]}T12:00:00Z`);
+  if (Number.isNaN(d.getTime())) return s;
+  return d.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+function ageFromDob(s: string): number | null {
+  const ymd = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+  if (!ymd) return null;
+  const dob = new Date(`${ymd[1]}-${ymd[2]}-${ymd[3]}T12:00:00Z`);
+  if (Number.isNaN(dob.getTime())) return null;
+  const now = new Date();
+  let age = now.getUTCFullYear() - dob.getUTCFullYear();
+  const before =
+    now.getUTCMonth() < dob.getUTCMonth() ||
+    (now.getUTCMonth() === dob.getUTCMonth() &&
+      now.getUTCDate() < dob.getUTCDate());
+  if (before) age--;
+  return age;
+}
+
+function expandPosition(code: string): string {
+  const MAP: Record<string, string> = {
+    P: "Pitcher",
+    C: "Catcher",
+    "1B": "First Base",
+    "2B": "Second Base",
+    "3B": "Third Base",
+    SS: "Shortstop",
+    LF: "Left Field",
+    CF: "Center Field",
+    RF: "Right Field",
+    OF: "Outfield",
+    IF: "Infield",
+    DH: "Designated Hitter",
+    UT: "Utility",
+  };
+  return MAP[code.toUpperCase()] ?? code;
 }
 
 function fmtTime(iso: string): string {
