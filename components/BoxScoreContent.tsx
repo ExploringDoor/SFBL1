@@ -16,6 +16,7 @@
 import Link from "next/link";
 import { formatIP } from "@/lib/stats/ip";
 import { buildRecap } from "@/lib/stats/recap";
+import { sanitizeHtml } from "@/lib/markdown";
 import { BoxScoreTabs } from "@/components/ui/BoxScoreTabs";
 
 export interface BoxBatter {
@@ -199,13 +200,18 @@ export function BoxScoreContent(props: BoxScoreContentProps) {
               <div className="bs-recap-edit-slot">{props.recapEditor}</div>
             )}
             {props.recapOverrideHtml ? (
-              // Admin/captain wrote a custom recap — render that HTML
-              // directly. The override is markdown sanitized to HTML
-              // server-side via markdownToHtml() before storage.
+              // Admin/captain wrote a custom recap. Sanitized at
+              // write time via /api/game-recap → markdownToHtml; we
+              // sanitize AGAIN at render (closes audit M11) as
+              // belt-and-suspenders defense against any future
+              // out-of-band write to /recaps/{gameId} that
+              // bypasses the API path (Admin SDK migration, manual
+              // Firestore edit, etc.). Matches the HomepageBanner
+              // pattern.
               <div
                 className="bs-recap-override"
                 dangerouslySetInnerHTML={{
-                  __html: props.recapOverrideHtml,
+                  __html: sanitizeHtml(props.recapOverrideHtml),
                 }}
               />
             ) : recap ? (

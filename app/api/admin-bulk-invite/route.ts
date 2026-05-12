@@ -112,10 +112,38 @@ export async function POST(req: Request) {
     const proto = req.headers.get("x-forwarded-proto") ?? "https";
     return `${proto}://${host}`;
   })();
-  const continueUrl =
-    typeof body.continueUrl === "string" && body.continueUrl
-      ? body.continueUrl
-      : `${fallbackOrigin}/login/finish`;
+  // Closes audit M14. Validate the admin-supplied continueUrl
+  // against the tenant's own origin — without this, a compromised
+  // admin account could send every captain a magic link that
+  // redirects to evil.com after sign-in. Allow: same-origin
+  // absolute URL, or a relative path starting with '/' (in which
+  // case we anchor it to the tenant origin).
+  let continueUrl = `${fallbackOrigin}/login/finish`;
+  if (typeof body.continueUrl === "string" && body.continueUrl) {
+    const raw = body.continueUrl;
+    if (raw.startsWith("/") && !raw.startsWith("//")) {
+      continueUrl = `${fallbackOrigin}${raw}`;
+    } else {
+      try {
+        const target = new URL(raw);
+        if (target.origin === fallbackOrigin) {
+          continueUrl = target.toString();
+        } else {
+          return NextResponse.json(
+            {
+              error: `continueUrl must be relative or on origin ${fallbackOrigin}`,
+            },
+            { status: 400 },
+          );
+        }
+      } catch {
+        return NextResponse.json(
+          { error: "continueUrl is not a valid URL" },
+          { status: 400 },
+        );
+      }
+    }
+  }
 
   const auth = getAdminAuth();
   const db = getAdminDb();

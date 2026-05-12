@@ -85,6 +85,30 @@ export async function POST(req: Request) {
         { status: 400 },
       );
     }
+    // Closes audit M15. Reject SVG even when wrapped in a data:
+    // URL — SVG can carry inline <script>, and while today's
+    // gallery renders photos via plain <img> (which neutralizes
+    // SVG-XSS), storing arbitrary blobs labeled as images is
+    // fragile if anything ever switches to <object>/<iframe>.
+    // Also reject anything that isn't a recognized raster type;
+    // image/jpeg, image/png, image/webp, image/gif cover the
+    // entire admin-upload flow (Sharp-normalized in scripts/).
+    const ALLOWED_MIME = new Set([
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/gif",
+    ]);
+    const mimeMatch = /^data:([^;,]+)[;,]/.exec(body.imageDataUrl);
+    const mime = mimeMatch?.[1]?.toLowerCase() ?? "";
+    if (!ALLOWED_MIME.has(mime)) {
+      return NextResponse.json(
+        {
+          error: `Unsupported image type "${mime || "unknown"}" — use jpg, png, webp, or gif.`,
+        },
+        { status: 400 },
+      );
+    }
     if (body.imageDataUrl.length > MAX_DATA_URL) {
       return NextResponse.json(
         {
