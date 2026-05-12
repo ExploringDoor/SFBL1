@@ -30,6 +30,23 @@ export const runtime = "nodejs";
 // kill the function mid-Claude-call.
 export const maxDuration = 60;
 
+// Audit H3 (2026-05-09): per-uid rate limit on a paid third-party
+// call. Without this, a compromised captain credential (or a leaked
+// admin token) can loop and dump Anthropic spend in minutes. 10
+// requests per 10-minute window covers a real captain re-uploading
+// after a parse error a few times without blocking a normal workflow.
+// In-memory store is per-instance — fine until we scale beyond a
+// single Vercel region. Swap to a shared store there.
+const ocrRate = new Map<string, { count: number; reset: number }>();
+const OCR_RATE_WINDOW_MS = 10 * 60 * 1000;
+const OCR_RATE_LIMIT = 10;
+
+// Cap the actual payload bytes too. A 50-page PDF round-trip is
+// the realistic ceiling for a real game; anything bigger is an
+// abuse signal or a misconfigured client.
+const MAX_PDF_BYTES = 12 * 1024 * 1024; // 12 MB base64-decoded
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8 MB base64-decoded
+
 interface Body {
   leagueId?: unknown;
   gameId?: unknown;
@@ -91,11 +108,50 @@ export async function POST(req: Request) {
     );
   }
 
+  // Per-uid rate limit. Keyed by uid (not IP) so a captain at the
+  // ballpark behind a shared NAT isn't punished for a teammate's
+  // burst, and a stolen token can't move to a different IP to evade.
+  const rateKey = decoded.uid;
+  const now = Date.now();
+  const entry = ocrRate.get(rateKey);
+  if (entry && now < entry.reset) {
+    if (entry.count >= OCR_RATE_LIMIT) {
+      return NextResponse.json(
+        {
+          error:
+            "Too many parse requests. Wait a few minutes and try again, or enter the box score manually.",
+        },
+        { status: 429 },
+      );
+    }
+    entry.count++;
+  } else {
+    ocrRate.set(rateKey, {
+      count: 1,
+      reset: now + OCR_RATE_WINDOW_MS,
+    });
+  }
+
   const text = typeof body.text === "string" ? body.text : null;
   const pdfBase64 =
     typeof body.pdfBase64 === "string" ? body.pdfBase64 : null;
   const imageBase64 =
     typeof body.imageBase64 === "string" ? body.imageBase64 : null;
+  // Base64 expands ~4/3, so a 12 MB cap on encoded length blocks
+  // anything larger than ~9 MB raw. Big enough for a legitimate
+  // multi-page scorebook PDF, small enough to bound abuse.
+  if (pdfBase64 && pdfBase64.length > MAX_PDF_BYTES) {
+    return NextResponse.json(
+      { error: "PDF too large (max ~9 MB)" },
+      { status: 413 },
+    );
+  }
+  if (imageBase64 && imageBase64.length > MAX_IMAGE_BYTES) {
+    return NextResponse.json(
+      { error: "Image too large (max ~6 MB)" },
+      { status: 413 },
+    );
+  }
   const imageType =
     typeof body.imageType === "string" ? body.imageType : "image/jpeg";
 
