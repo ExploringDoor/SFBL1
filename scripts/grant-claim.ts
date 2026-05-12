@@ -79,10 +79,20 @@ function parseArgs(argv: string[]): Args {
 
 function validateRole(role: string): void {
   if (role === "admin") return;
-  if (/^captain:[^:]+$/.test(role)) return;
-  if (/^player:[^:]+$/.test(role)) return;
+  // Closes audit M5. Tighten the slug character class to match
+  // what the production claim-set paths (admin-grant-claim,
+  // admin-bulk-invite) enforce. The previous loose [^:]+ would
+  // accept a teamId like "a.*" which interpolates into
+  // firestore.rules' isCaptainOfDocGame regex (docId.matches(
+  // '^.+_' + teamId + '$')) and over-matches docs that aren't
+  // the captain's. Production grants run this validator too via
+  // the admin-* API routes, but this script is the bootstrap
+  // path Adam uses to seed the first admin — keep the rules
+  // contract intact even there.
+  if (/^captain:[a-z0-9_-]+$/.test(role)) return;
+  if (/^player:[a-z0-9_-]+$/.test(role)) return;
   console.error(
-    `Invalid role "${role}". Must be "admin", "captain:<teamId>", or "player:<playerId>".`,
+    `Invalid role "${role}". Must be "admin", "captain:<teamId>", or "player:<playerId>" with [a-z0-9_-] slug.`,
   );
   process.exit(1);
 }
