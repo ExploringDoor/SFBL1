@@ -64,3 +64,10 @@ next-env.d.ts
 # Testing
 coverage/
 .nyc_output/
+
+# LBDC migration data — raw dumps from Supabase + transformed
+# Firestore-shape JSON. Contains PII (player emails, phones,
+# signup info). Regenerable via `npm run dump:lbdc` then
+# `npx tsx scripts/transform-lbdc.ts`. Never commit.
+data/lbdc/raw/
+data/lbdc/firestore/

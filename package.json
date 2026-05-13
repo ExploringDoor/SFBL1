@@ -23,6 +23,7 @@
     "audit:tenant:emulator": "FIRESTORE_EMULATOR_HOST=localhost:8080 tsx scripts/audit-tenant.ts",
     "seed:page": "tsx scripts/seed-page-content.ts",
     "seed:page:emulator": "FIRESTORE_EMULATOR_HOST=localhost:8080 tsx scripts/seed-page-content.ts",
+    "dump:lbdc": "tsx scripts/dump-lbdc-from-supabase.ts",
     "dev:emulators": "firebase emulators:exec --only auth,firestore,ui 'NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true next dev'",
     "test": "firebase emulators:exec --config firebase.test.json --project demo-test --only auth,firestore 'FIRESTORE_EMULATOR_PORT=8085 FIREBASE_AUTH_EMULATOR_HOST=localhost:9095 vitest run'",
     "test:rules": "firebase emulators:exec --config firebase.test.json --project demo-rules-test --only firestore 'FIRESTORE_EMULATOR_PORT=8085 vitest run tests/rules'",
