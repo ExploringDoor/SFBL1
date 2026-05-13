@@ -507,6 +507,375 @@ function buildTournamentGames(
   return out;
 }
 
+// ── box scores ──────────────────────────────────────────────────────
+// LBDC stores per-line rows in batting_lines + pitching_lines. The
+// leagueplatform model keeps the entire box score for one game as a
+// single doc at /leagues/{id}/box_scores/{gameId} with
+// away_lineup/home_lineup/away_pitchers/home_pitchers arrays.
+//
+// LBDC → leagueplatform field renames:
+//   k          → so          (strikeouts)
+//   ip "5.2"   → ip_outs 17   (baseball IP encoding: 5 innings + 2 outs)
+//   team       → resolves to away or home side via game lookup
+//
+// Player linking: LBDC stores player_id as NULL (they never bound it
+// — name + team is the identity key). We resolve via the nameToId
+// map produced by buildPlayers(), team-scoped first, then a generic
+// matchKey fallback. Unmatched lines record the player_name and
+// player_id="" — the seeder can decide whether to create an orphan
+// player doc.
+
+interface BattingLineRaw {
+  id: number;
+  game_id: number;
+  player_name: string;
+  team: string;
+  ab?: number; r?: number; h?: number; rbi?: number; bb?: number; k?: number;
+  doubles?: number; triples?: number; hr?: number; sb?: number;
+  hbp?: number; sf?: number; sac?: number; fc?: number; roe?: number; cs?: number;
+  slot?: string | number | null;
+  pos?: string | null;
+}
+
+interface PitchingLineRaw {
+  id: number;
+  game_id: number;
+  player_name: string;
+  team: string;
+  ip?: number | string;
+  h?: number; r?: number; er?: number; bb?: number; k?: number;
+  decision?: string | null;
+}
+
+interface BoxBatterOut {
+  player_id: string;
+  player_name: string;
+  slot: string | null;
+  pos: string | null;
+  ab: number;
+  r: number;
+  h: number;
+  doubles: number;
+  triples: number;
+  hr: number;
+  rbi: number;
+  bb: number;
+  so: number;
+  sb: number;
+  // Extended LBDC fields (lossless retention so we don't drop info).
+  hbp: number;
+  sf: number;
+  sac: number;
+  fc: number;
+  roe: number;
+  cs: number;
+  source_line_id: number;
+}
+
+interface BoxPitcherOut {
+  player_id: string;
+  player_name: string;
+  ip_outs: number;
+  h: number;
+  r: number;
+  er: number;
+  bb: number;
+  so: number;
+  decision: "W" | "L" | "S" | null;
+  source_line_id: number;
+}
+
+interface BoxScoreOut {
+  game_id: string;
+  away_lineup: BoxBatterOut[];
+  home_lineup: BoxBatterOut[];
+  away_pitchers: BoxPitcherOut[];
+  home_pitchers: BoxPitcherOut[];
+  linescore: { away: number[]; home: number[] };
+  hits: { away: number | null; home: number | null };
+  errors: { away: number | null; home: number | null };
+}
+
+// LBDC baseball IP encoding: "5.2" means 5 innings + 2 outs = 17
+// outs total. ".3"/".7" exists in legacy data as decimal corruption
+// (see PLATFORM_MIGRATION.md §14). We tolerate but don't try to
+// "fix" — leave as-is via best-effort coercion.
+function ipToOuts(raw: unknown): number {
+  if (raw == null || raw === "") return 0;
+  const v = String(raw).trim();
+  if (!v) return 0;
+  const [whole, fracStr] = v.split(".");
+  const innings = parseInt(whole ?? "0", 10) || 0;
+  let outs = 0;
+  if (fracStr != null) {
+    const f = parseInt(fracStr, 10);
+    if (f === 1 || f === 2) outs = f;
+    // Decimal corruption (.3, .7, etc.) → drop the fraction. The
+    // counts are off in legacy data anyway and we'd rather under-
+    // report than over-claim. Flagged in PLATFORM_MIGRATION.md §14.
+  }
+  return innings * 3 + outs;
+}
+
+// Drop a batting line that's all zeros (and no slot/pos meaningful) —
+// matches LBDC's save-time + load-time filter (PLATFORM_MIGRATION.md
+// §3 "Zero-stat filter"). Keeps the canonical box score from being
+// polluted by phantom rows.
+function isEmptyBattingLine(r: BattingLineRaw): boolean {
+  const counts = [
+    r.ab, r.r, r.h, r.doubles, r.triples, r.hr, r.rbi, r.bb,
+    r.k, r.sb, r.hbp, r.sf, r.sac, r.fc, r.roe, r.cs,
+  ];
+  if (counts.some((v) => Number(v) > 0)) return false;
+  if (r.slot && String(r.slot).trim()) return false;
+  if (r.pos && String(r.pos).trim()) return false;
+  return true;
+}
+
+function isEmptyPitchingLine(r: PitchingLineRaw): boolean {
+  if (Number(r.ip) > 0) return false;
+  if (Number(r.h) > 0 || Number(r.r) > 0 || Number(r.er) > 0) return false;
+  if (Number(r.bb) > 0 || Number(r.k) > 0) return false;
+  if (r.decision) return false;
+  return true;
+}
+
+function resolvePlayerId(
+  nameToId: Map<string, string>,
+  teamSlug: string,
+  playerName: string,
+): { id: string; resolved: boolean } {
+  const mk = matchKey(playerName);
+  if (!mk) return { id: "", resolved: false };
+  const teamKey = `${teamSlug}|${mk}`;
+  if (nameToId.has(teamKey)) return { id: nameToId.get(teamKey)!, resolved: true };
+  const fallback = nameToId.get(`|${mk}`);
+  if (fallback) return { id: fallback, resolved: true };
+  // No match. Synthesize an orphan id so the line still has a
+  // stable key, but flag as unresolved so the manifest counts.
+  return {
+    id: `orphan__${teamSlug || "?"}__${toSlug(mk)}`,
+    resolved: false,
+  };
+}
+
+interface OrphanPlayer {
+  id: string;
+  team_id: string;
+  player_name: string;
+  appearances: number; // how many lines reference this orphan
+}
+
+function buildBoxScores(
+  battingLines: BattingLineRaw[],
+  pitchingLines: PitchingLineRaw[],
+  games: GameOut[],
+  nameToId: Map<string, string>,
+  warnings: string[],
+): {
+  boxes: BoxScoreOut[];
+  unresolvedNames: number;
+  orphans: Map<string, OrphanPlayer>;
+} {
+  const orphans = new Map<string, OrphanPlayer>();
+  function bumpOrphan(
+    id: string,
+    teamSlug: string,
+    playerName: string,
+  ) {
+    const cur = orphans.get(id);
+    if (cur) {
+      cur.appearances++;
+    } else {
+      orphans.set(id, {
+        id,
+        team_id: teamSlug,
+        player_name: cleanName(playerName),
+        appearances: 1,
+      });
+    }
+  }
+  // Index games by source_id so the line's game_id (int) finds the
+  // canonical leagueplatform game doc.
+  const gameById = new Map<number, GameOut>();
+  for (const g of games) gameById.set(g.source_id, g);
+
+  // Bucket lines by game.
+  const battingByGame = new Map<number, BattingLineRaw[]>();
+  for (const r of battingLines) {
+    if (!battingByGame.has(r.game_id)) battingByGame.set(r.game_id, []);
+    battingByGame.get(r.game_id)!.push(r);
+  }
+  const pitchingByGame = new Map<number, PitchingLineRaw[]>();
+  for (const r of pitchingLines) {
+    if (!pitchingByGame.has(r.game_id)) pitchingByGame.set(r.game_id, []);
+    pitchingByGame.get(r.game_id)!.push(r);
+  }
+
+  const gameIds = new Set<number>([
+    ...battingByGame.keys(),
+    ...pitchingByGame.keys(),
+  ]);
+
+  const boxes: BoxScoreOut[] = [];
+  let unresolvedNames = 0;
+
+  for (const gameId of gameIds) {
+    const game = gameById.get(gameId);
+    if (!game) {
+      warnings.push(
+        `box_score: game_id=${gameId} referenced by lines but no game row — skipping ${
+          (battingByGame.get(gameId)?.length ?? 0) +
+          (pitchingByGame.get(gameId)?.length ?? 0)
+        } lines`,
+      );
+      continue;
+    }
+
+    const battingRaw = (battingByGame.get(gameId) ?? []).filter(
+      (r) => !isEmptyBattingLine(r),
+    );
+    const pitchingRaw = (pitchingByGame.get(gameId) ?? []).filter(
+      (r) => !isEmptyPitchingLine(r),
+    );
+
+    const awayLineup: BoxBatterOut[] = [];
+    const homeLineup: BoxBatterOut[] = [];
+    const awayPitchers: BoxPitcherOut[] = [];
+    const homePitchers: BoxPitcherOut[] = [];
+
+    function sideFor(teamRaw: string): "away" | "home" | null {
+      const slug = toSlug(cleanName(teamRaw));
+      if (slug === game!.away_team_id) return "away";
+      if (slug === game!.home_team_id) return "home";
+      return null;
+    }
+
+    for (const r of battingRaw) {
+      const side = sideFor(r.team);
+      if (!side) {
+        warnings.push(
+          `batting_line ${r.id}: team "${r.team}" matches neither away "${game.away_team_id}" nor home "${game.home_team_id}" of game ${gameId}`,
+        );
+        continue;
+      }
+      const teamSlug =
+        side === "away" ? game.away_team_id : game.home_team_id;
+      const resolved = resolvePlayerId(
+        nameToId,
+        teamSlug,
+        r.player_name,
+      );
+      if (!resolved.resolved) {
+        unresolvedNames++;
+        bumpOrphan(resolved.id, teamSlug, r.player_name);
+      }
+      const out: BoxBatterOut = {
+        player_id: resolved.id,
+        player_name: cleanName(r.player_name),
+        slot: r.slot == null || r.slot === "" ? null : String(r.slot),
+        pos: r.pos ?? null,
+        ab: Number(r.ab ?? 0),
+        r: Number(r.r ?? 0),
+        h: Number(r.h ?? 0),
+        doubles: Number(r.doubles ?? 0),
+        triples: Number(r.triples ?? 0),
+        hr: Number(r.hr ?? 0),
+        rbi: Number(r.rbi ?? 0),
+        bb: Number(r.bb ?? 0),
+        so: Number(r.k ?? 0),
+        sb: Number(r.sb ?? 0),
+        hbp: Number(r.hbp ?? 0),
+        sf: Number(r.sf ?? 0),
+        sac: Number(r.sac ?? 0),
+        fc: Number(r.fc ?? 0),
+        roe: Number(r.roe ?? 0),
+        cs: Number(r.cs ?? 0),
+        source_line_id: r.id,
+      };
+      (side === "away" ? awayLineup : homeLineup).push(out);
+    }
+
+    for (const r of pitchingRaw) {
+      const side = sideFor(r.team);
+      if (!side) {
+        warnings.push(
+          `pitching_line ${r.id}: team "${r.team}" matches neither away nor home of game ${gameId}`,
+        );
+        continue;
+      }
+      const teamSlug =
+        side === "away" ? game.away_team_id : game.home_team_id;
+      const resolved = resolvePlayerId(
+        nameToId,
+        teamSlug,
+        r.player_name,
+      );
+      if (!resolved.resolved) {
+        unresolvedNames++;
+        bumpOrphan(resolved.id, teamSlug, r.player_name);
+      }
+      const dec =
+        r.decision === "W" || r.decision === "L" || r.decision === "S"
+          ? r.decision
+          : null;
+      const out: BoxPitcherOut = {
+        player_id: resolved.id,
+        player_name: cleanName(r.player_name),
+        ip_outs: ipToOuts(r.ip),
+        h: Number(r.h ?? 0),
+        r: Number(r.r ?? 0),
+        er: Number(r.er ?? 0),
+        bb: Number(r.bb ?? 0),
+        so: Number(r.k ?? 0),
+        decision: dec,
+        source_line_id: r.id,
+      };
+      (side === "away" ? awayPitchers : homePitchers).push(out);
+    }
+
+    // Sort lineups by slot when present (numeric leading number),
+    // else stable insertion order.
+    function slotKey(b: BoxBatterOut): number {
+      if (!b.slot) return 999;
+      const m = /^(\d+)/.exec(String(b.slot));
+      return m ? parseInt(m[1]!, 10) : 999;
+    }
+    awayLineup.sort((a, b) => slotKey(a) - slotKey(b));
+    homeLineup.sort((a, b) => slotKey(a) - slotKey(b));
+
+    // Linescore + H/E live in games.innings (jsonb). Shape from
+    // PLATFORM_MIGRATION.md §3:
+    //   { away: [r1..r9], home: [...], awayH, awayE, homeH, homeE }
+    const inn = (game.innings ?? {}) as Record<string, unknown>;
+    const awayLine = Array.isArray(inn.away)
+      ? (inn.away as unknown[]).map((v) => Number(v) || 0)
+      : [];
+    const homeLine = Array.isArray(inn.home)
+      ? (inn.home as unknown[]).map((v) => Number(v) || 0)
+      : [];
+
+    boxes.push({
+      game_id: String(gameId),
+      away_lineup: awayLineup,
+      home_lineup: homeLineup,
+      away_pitchers: awayPitchers,
+      home_pitchers: homePitchers,
+      linescore: { away: awayLine, home: homeLine },
+      hits: {
+        away: inn.awayH == null ? null : Number(inn.awayH),
+        home: inn.homeH == null ? null : Number(inn.homeH),
+      },
+      errors: {
+        away: inn.awayE == null ? null : Number(inn.awayE),
+        home: inn.homeE == null ? null : Number(inn.homeE),
+      },
+    });
+  }
+
+  return { boxes, unresolvedNames, orphans };
+}
+
 // ── main ────────────────────────────────────────────────────────────
 
 function main() {
@@ -645,6 +1014,42 @@ function main() {
     })),
   );
 
+  // 10b. Box scores (assembled from batting + pitching lines, keyed
+  // by game source_id so it matches games/<id>.json).
+  const battingRaw = readRaw<BattingLineRaw>("batting_lines");
+  const pitchingRaw = readRaw<PitchingLineRaw>("pitching_lines");
+  const { boxes, unresolvedNames, orphans } = buildBoxScores(
+    battingRaw,
+    pitchingRaw,
+    gameOut,
+    nameToId,
+    warnings,
+  );
+  writeDocs(
+    "box_scores",
+    boxes.map((b) => ({ id: b.game_id, data: b })),
+  );
+
+  // 10c. Auto-create orphan player docs so box-score views still
+  // resolve names to a player record. These are batters/pitchers
+  // who appeared in stat lines but aren't in lbdc_rosters — mostly
+  // players on cross-league opposing teams (Angels, Mets, HBC, etc.)
+  // that LBDC plays but doesn't maintain rosters for.
+  const orphanPlayerDocs = [...orphans.values()].map((o) => ({
+    id: o.id,
+    data: {
+      id: o.id,
+      name: o.player_name,
+      team_id: o.team_id,
+      number: null,
+      status: "unknown" as const,
+      under_21: /\*\s*$/.test(o.player_name),
+      orphan: true,
+      appearances: o.appearances,
+    },
+  }));
+  writeDocs("players", orphanPlayerDocs);
+
   // 11. Singletons → /_config/<key>.json
   const configDir = path.join(OUT_DIR, "_config");
   fs.mkdirSync(configDir, { recursive: true });
@@ -689,7 +1094,9 @@ function main() {
     counts: {
       seasons: seasonOut.size,
       teams: teams.size,
-      players: players.size,
+      players_rostered: players.size,
+      players_orphan: orphans.size,
+      players_total: players.size + orphans.size,
       games: gameOut.length,
       tournament_games: tournOut.length,
       news: news.length,
@@ -697,6 +1104,11 @@ function main() {
       payments: payments.length,
       availability: availability.length,
       photos: gallery.length,
+      box_scores: boxes.length,
+      batting_lines_input: battingRaw.length,
+      pitching_lines_input: pitchingRaw.length,
+      unresolved_player_names: unresolvedNames,
+      orphan_players_created: orphans.size,
     },
     season_merges: [...seasonOut.values()]
       .filter((s) => s.source_ids.length > 1)
@@ -720,7 +1132,7 @@ function main() {
     `  teams:            ${manifest.counts.teams.toString().padStart(5)}`,
   );
   console.log(
-    `  players:          ${manifest.counts.players.toString().padStart(5)}`,
+    `  players:          ${manifest.counts.players_total.toString().padStart(5)}  (rostered: ${manifest.counts.players_rostered}, orphan auto-created: ${manifest.counts.players_orphan})`,
   );
   console.log(
     `  games:            ${manifest.counts.games.toString().padStart(5)}`,
@@ -743,6 +1155,14 @@ function main() {
   console.log(
     `  photos:           ${manifest.counts.photos.toString().padStart(5)}`,
   );
+  console.log(
+    `  box_scores:       ${manifest.counts.box_scores.toString().padStart(5)}  (from ${manifest.counts.batting_lines_input} batting + ${manifest.counts.pitching_lines_input} pitching lines)`,
+  );
+  if (manifest.counts.unresolved_player_names > 0) {
+    console.log(
+      `                    ⚠ ${manifest.counts.unresolved_player_names} player_name(s) couldn't be resolved to a roster — emitted as orphan ids`,
+    );
+  }
   if (manifest.season_merges.length) {
     console.log(`\n[transform-lbdc] Merged seasons:`);
     for (const m of manifest.season_merges) {
