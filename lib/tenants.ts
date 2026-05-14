@@ -75,6 +75,12 @@ const HOST_ALIAS_BASELINE: Record<string, string> = {
   // project a visitor lands on. Should consolidate to one project
   // eventually but not today.
   "sfbl-12.vercel.app": "sfbl",
+  // lbdc1 — third Vercel project pointed at the same GitHub repo,
+  // serves the LBDC staging tenant. The temporary "second site"
+  // until LBDC commits to a real custom domain, at which point we
+  // re-point that domain at one of the existing projects and
+  // retire lbdc1.
+  "lbdc1.vercel.app": "lbdc-staging",
 };
 const HOST_ALIASES: Record<string, string> = (() => {
   const out: Record<string, string> = { ...HOST_ALIAS_BASELINE };
