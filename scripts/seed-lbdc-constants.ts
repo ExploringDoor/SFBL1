@@ -305,13 +305,17 @@ async function main() {
   for (const teamName of Object.keys(TEAM_COLORS)) {
     if (!ACTIVE_TEAMS.has(teamName)) continue;
     const slug = toSlug(teamName);
+    // Division stored as the DISPLAY string so leagueplatform's
+    // standings page can use the team.division value as the
+    // section header verbatim. Matches the "Saturday Division" /
+    // "Boomers 60/70" strings the divisions singleton uses.
     const patch: Record<string, unknown> = {
       color: TEAM_COLORS[teamName] ?? null,
       logo_url: TEAM_LOGOS[teamName] ?? null,
       division: SAT_TEAMS.includes(teamName)
-        ? "saturday"
+        ? "Saturday Division"
         : BOM_TEAMS.includes(teamName)
-          ? "boomers"
+          ? "Boomers 60/70"
           : null,
     };
     if (!dryRun && db) {
