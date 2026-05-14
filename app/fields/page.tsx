@@ -1,22 +1,37 @@
-// SFBL fields directory. Public list of every park/field used by the
-// league with addresses + Google-Maps deep-links. Mirrors the
-// content of sfbl.com/sfbl-fields/ but as a real, native page so it's
-// indexed and bookmarkable on the new site.
+// Public fields directory. Tenant-scoped: first tries to read the
+// rich field list out of /leagues/<id>/site_config/fields (set by
+// admin or a migration script), falls back to the hardcoded SFBL
+// list when no doc exists.
+//
+// Tenant-doc shape (matches LBDC's lbdc_fields source):
+//   { data: Array<{
+//       name: string,
+//       location?: string,
+//       address: string,
+//       mapsUrl?: string,        // Google Maps deep-link
+//       appleMapsUrl?: string,   // Apple Maps deep-link
+//       notes?: string[],        // optional bullet list / description
+//       color?: string,          // accent color for the card
+//     }> }
 
 import { headers } from "next/headers";
+import { getAdminDb } from "@/lib/firebase-admin";
 
 export const dynamic = "force-dynamic";
 
 interface Field {
   name: string;
+  location?: string | null;
   address: string;
+  mapsUrl?: string | null;
+  appleMapsUrl?: string | null;
+  notes?: string[];
+  color?: string | null;
 }
 
-// Same list as sfbl.com/sfbl-fields/ as of 2026-05-08. If the league
-// adds or drops a field, edit this array — no Firestore round-trip.
-// (Fields are de-facto static for SFBL; making them admin-editable
-// is a future task if/when the list churns.)
-const FIELDS: Field[] = [
+// SFBL fallback list (same as the hardcoded array we used before).
+// LBDC + any future tenants supply their own via site_config/fields.
+const SFBL_FIELDS: Field[] = [
   { name: "American High School", address: "18350 NW 67th Avenue, Miami Lakes FL 33015" },
   { name: "Barbara Goleman High School", address: "14100 NW 89th Avenue, Miami Lakes FL 33018" },
   { name: "Braddock High School", address: "3601 SW 147 Avenue, Miami FL 33185" },
@@ -46,7 +61,28 @@ const FIELDS: Field[] = [
   { name: "Weston Tequesta Park", address: "600 Indian Trace, Weston FL 33326" },
 ];
 
-export default function FieldsPage() {
+async function loadFields(tenantId: string): Promise<Field[]> {
+  try {
+    const snap = await getAdminDb()
+      .doc(`leagues/${tenantId}/site_config/fields`)
+      .get();
+    if (!snap.exists) return SFBL_FIELDS;
+    const data = snap.data() ?? {};
+    // Either { data: [...] } shape (used by LBDC migration) or a
+    // top-level array if a future writer sets the doc directly.
+    const arr = Array.isArray(data.data)
+      ? (data.data as Field[])
+      : Array.isArray(data)
+        ? (data as unknown as Field[])
+        : null;
+    if (!arr || arr.length === 0) return SFBL_FIELDS;
+    return arr;
+  } catch {
+    return SFBL_FIELDS;
+  }
+}
+
+export default async function FieldsPage() {
   const tenantId = headers().get("x-tenant-id");
   if (!tenantId) {
     return (
@@ -55,6 +91,8 @@ export default function FieldsPage() {
       </main>
     );
   }
+
+  const fields = await loadFields(tenantId);
 
   return (
     <main className="container py-10">
@@ -74,8 +112,8 @@ export default function FieldsPage() {
           Fields
         </h1>
         <p style={{ marginTop: 8, color: "var(--muted)", maxWidth: 680 }}>
-          Every park and field SFBL plays at. Tap any address to open
-          directions in your phone&rsquo;s map app.
+          Every park and field the league plays at. Tap a button to
+          open directions in Google Maps or Apple Maps.
         </p>
       </header>
 
@@ -85,49 +123,129 @@ export default function FieldsPage() {
           padding: 0,
           margin: 0,
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-          gap: 12,
+          gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+          gap: 14,
         }}
       >
-        {FIELDS.map((f) => {
-          const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(f.address)}`;
+        {fields.map((f) => {
+          const accent = f.color ?? "var(--brand-primary)";
+          // Build Google Maps deep-link from explicit field, else
+          // synthesize from address (matches old SFBL behaviour).
+          const googleHref =
+            f.mapsUrl ||
+            `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(f.address)}`;
+          const appleHref =
+            f.appleMapsUrl ||
+            `https://maps.apple.com/?q=${encodeURIComponent(f.address)}`;
           return (
             <li
               key={f.name}
               style={{
                 background: "white",
                 border: "1px solid rgba(0,0,0,0.08)",
+                borderLeft: `4px solid ${accent}`,
                 borderRadius: 12,
-                padding: "14px 16px",
-                transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+                padding: "16px 18px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
               }}
             >
-              <h3
-                className="font-display"
-                style={{
-                  margin: 0,
-                  fontSize: 17,
-                  color: "var(--text-strong)",
-                  letterSpacing: "-0.01em",
-                }}
-              >
-                {f.name}
-              </h3>
-              <a
-                href={mapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  marginTop: 6,
-                  display: "block",
-                  color: "var(--brand-primary)",
-                  fontSize: 13,
-                  textDecoration: "none",
-                  lineHeight: 1.4,
-                }}
-              >
-                {f.address}
-              </a>
+              <div>
+                <h3
+                  className="font-display"
+                  style={{
+                    margin: 0,
+                    fontSize: 18,
+                    color: "var(--text-strong)",
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  {f.name}
+                  {f.location && (
+                    <span
+                      style={{
+                        marginLeft: 8,
+                        fontSize: 13,
+                        color: "var(--muted)",
+                        fontWeight: 500,
+                      }}
+                    >
+                      · {f.location}
+                    </span>
+                  )}
+                </h3>
+                <p
+                  style={{
+                    margin: "4px 0 0",
+                    fontSize: 13,
+                    color: "var(--muted)",
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {f.address}
+                </p>
+              </div>
+
+              {Array.isArray(f.notes) && f.notes.length > 0 && (
+                <ul
+                  style={{
+                    listStyle: "disc",
+                    paddingLeft: 18,
+                    margin: 0,
+                    color: "var(--text-body)",
+                    fontSize: 13,
+                    lineHeight: 1.55,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 3,
+                  }}
+                >
+                  {f.notes.map((n, i) => (
+                    <li key={i}>{n}</li>
+                  ))}
+                </ul>
+              )}
+
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <a
+                  href={googleHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    flex: "1 1 130px",
+                    textAlign: "center",
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    background: "var(--brand-primary)",
+                    color: "white",
+                    textDecoration: "none",
+                    fontSize: 13,
+                    fontWeight: 700,
+                  }}
+                >
+                  Google Maps
+                </a>
+                <a
+                  href={appleHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    flex: "1 1 130px",
+                    textAlign: "center",
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    background: "rgba(0,0,0,0.06)",
+                    color: "var(--text-strong)",
+                    textDecoration: "none",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    border: "1px solid rgba(0,0,0,0.1)",
+                  }}
+                >
+                  Apple Maps
+                </a>
+              </div>
             </li>
           );
         })}
