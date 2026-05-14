@@ -292,16 +292,15 @@ async function seedTenantDoc(db: Firestore | null): Promise<void> {
     },
     // Per-tenant nav customization — labels matched case-insensitively
     // against the Nav component's link list (both top-level and
-    // dropdown children). LBDC doesn't run a /news page, doesn't
-    // share SFBL's about/team-registration/waiver/store surface.
+    // dropdown children). LBDC doesn't run a /news page and doesn't
+    // share SFBL's team-registration/waiver/store surface.
+    //
+    // "About SFBL" is NOT hidden — Nav.tsx relabels it to
+    // "About <tenant abbrev>" (so it reads "About LBDC") and points
+    // at /sfbl-info, which serves the tenant's page_content/sfbl-info
+    // doc.
     nav: {
-      hide: [
-        "News",
-        "About SFBL",
-        "Team Registration",
-        "Team Waiver",
-        "Store",
-      ],
+      hide: ["News", "Team Registration", "Team Waiver", "Store"],
     },
     migrated_at: new Date().toISOString(),
     migrated_from: "supabase://vhovzpajuyphjatjlodo",

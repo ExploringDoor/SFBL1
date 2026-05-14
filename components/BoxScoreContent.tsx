@@ -549,6 +549,19 @@ function BattingTable({
   rows: BoxBatter[];
   playerNames: Record<string, string>;
 }) {
+  // Per-row TB (total bases) = 1B + 2*2B + 3*3B + 4*HR. We don't
+  // store TB on the line; deriving it here saves a captain-side
+  // schema change. 1B = h - (2b + 3b + hr). The Math.max guard
+  // shields against a corrupted line where h < 2b+3b+hr (would
+  // imply negative singles).
+  function tbFor(r: BoxBatter): number {
+    const h = r.h ?? 0;
+    const d = r.doubles ?? 0;
+    const t = r.triples ?? 0;
+    const hr = r.hr ?? 0;
+    const singles = Math.max(0, h - d - t - hr);
+    return singles + 2 * d + 3 * t + 4 * hr;
+  }
   const totals = rows.reduce(
     (acc, r) => ({
       ab: acc.ab + (r.ab ?? 0),
@@ -560,8 +573,9 @@ function BattingTable({
       rbi: acc.rbi + (r.rbi ?? 0),
       bb: acc.bb + (r.bb ?? 0),
       so: acc.so + (r.so ?? 0),
+      tb: acc.tb + tbFor(r),
     }),
-    { ab: 0, r: 0, h: 0, doubles: 0, triples: 0, hr: 0, rbi: 0, bb: 0, so: 0 },
+    { ab: 0, r: 0, h: 0, doubles: 0, triples: 0, hr: 0, rbi: 0, bb: 0, so: 0, tb: 0 },
   );
   return (
     <div className="bat-tbl-wrap">
@@ -578,6 +592,7 @@ function BattingTable({
             <th>RBI</th>
             <th>BB</th>
             <th>K</th>
+            <th>TB</th>
             <th>AVG</th>
           </tr>
         </thead>
@@ -605,6 +620,7 @@ function BattingTable({
                 <td>{r.rbi ?? 0}</td>
                 <td>{r.bb ?? 0}</td>
                 <td>{r.so ?? 0}</td>
+                <td>{tbFor(r)}</td>
                 <td>{avg}</td>
               </tr>
             );
@@ -620,6 +636,7 @@ function BattingTable({
             <td>{totals.rbi}</td>
             <td>{totals.bb}</td>
             <td>{totals.so}</td>
+            <td>{totals.tb}</td>
             <td>—</td>
           </tr>
         </tbody>
@@ -685,7 +702,53 @@ function PitchingPanel({
                   <td>{p.so ?? 0}</td>
                   <td>{p.hr ?? 0}</td>
                   <td>{era}</td>
-                  <td>{p.decision ?? "—"}</td>
+                  <td>
+                    {p.decision === "W" ? (
+                      <span
+                        style={{
+                          display: "inline-block",
+                          padding: "2px 8px",
+                          borderRadius: 4,
+                          background: "rgba(22, 163, 74, 0.12)",
+                          color: "#15803d",
+                          fontWeight: 800,
+                          fontFamily: "var(--font-barlow), sans-serif",
+                        }}
+                      >
+                        W
+                      </span>
+                    ) : p.decision === "L" ? (
+                      <span
+                        style={{
+                          display: "inline-block",
+                          padding: "2px 8px",
+                          borderRadius: 4,
+                          background: "rgba(220, 38, 38, 0.12)",
+                          color: "#b91c1c",
+                          fontWeight: 800,
+                          fontFamily: "var(--font-barlow), sans-serif",
+                        }}
+                      >
+                        L
+                      </span>
+                    ) : p.decision === "S" ? (
+                      <span
+                        style={{
+                          display: "inline-block",
+                          padding: "2px 8px",
+                          borderRadius: 4,
+                          background: "rgba(37, 99, 235, 0.12)",
+                          color: "#1d4ed8",
+                          fontWeight: 800,
+                          fontFamily: "var(--font-barlow), sans-serif",
+                        }}
+                      >
+                        SV
+                      </span>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
                 </tr>
               );
             })}

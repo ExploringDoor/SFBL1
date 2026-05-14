@@ -81,10 +81,31 @@ const MORE_SECTIONS: MoreSection[] = [
   },
 ];
 
-export function PwaTabBar() {
+export interface PwaTabBarProps {
+  /** Labels to hide from the More sheet — same shape Nav uses. */
+  hideLabels?: string[];
+  /** Tenant short name — drives "About <abbrev>" relabel. */
+  tenantShort?: string;
+}
+
+export function PwaTabBar({ hideLabels, tenantShort }: PwaTabBarProps = {}) {
   const pathname = usePathname() ?? "/";
   const [isStandalone, setIsStandalone] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  // Apply the per-tenant hide list + the "About SFBL" → "About
+  // <tenantShort>" rename so the More sheet matches the public nav.
+  // A section with all items filtered out drops itself entirely.
+  const hide = new Set((hideLabels ?? []).map((s) => s.toLowerCase()));
+  const filteredSections = MORE_SECTIONS.map((section) => ({
+    ...section,
+    items: section.items
+      .filter((it) => !hide.has(it.label.toLowerCase()))
+      .map((it) =>
+        it.href === "/sfbl-info" && tenantShort
+          ? { ...it, label: `About ${tenantShort}` }
+          : it,
+      ),
+  })).filter((s) => s.items.length > 0);
 
   // Detect standalone PWA mode — the manifest's display:standalone
   // makes the OS launch us in a separate window without a browser
@@ -189,7 +210,7 @@ export function PwaTabBar() {
       >
         <div className="le-tabbar-sheet-grab" />
         <div className="le-tabbar-sheet-body">
-          {MORE_SECTIONS.map((section) => (
+          {filteredSections.map((section) => (
             <div key={section.title} className="le-tabbar-sheet-section">
               <h3>{section.title}</h3>
               <ul>

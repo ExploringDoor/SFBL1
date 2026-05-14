@@ -4377,10 +4377,24 @@ body {
 .bat-tbl-wrap {
   border: 1px solid var(--border);
   border-radius: 12px;
-  overflow: hidden;
+  /* Horizontal scroll on phones — the batting / pitching tables
+   * carry 11+ columns and can't be made narrower without losing
+   * data. -webkit-overflow-scrolling: touch keeps momentum scroll
+   * on iOS. The min-width on .bat-tbl forces the table to its
+   * natural width so the scroll actually engages. */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   margin-bottom: 18px;
 }
-.bat-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.bat-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  /* Wide enough that the column headers (PLAYER + 11 stat cols)
+   * don't overlap on phones. Triggers overflow-x scroll on
+   * <650px viewports. */
+  min-width: 640px;
+}
 .bat-tbl th {
   background: var(--bg2);
   font-family: var(--font-barlow), sans-serif;

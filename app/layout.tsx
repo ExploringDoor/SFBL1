@@ -277,7 +277,12 @@ export default async function RootLayout({
           {tenantId ? <SiteFooter /> : null}
           {/* PWA bottom tab bar — gates itself on standalone display
               mode (regular browser tabs see nothing). DVSL pattern. */}
-          {tenantId ? <PwaTabBar /> : null}
+          {tenantId ? (
+            <PwaTabBar
+              hideLabels={navHideLabels}
+              tenantShort={leagueAbbrev ?? leagueName ?? undefined}
+            />
+          ) : null}
           {/* Service-worker version pill removed — Adam saw it as
               user-visible noise. Re-mount during debug if needed:
               {tenantId ? <SwVersionPill /> : null} */}

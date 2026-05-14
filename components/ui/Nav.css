@@ -253,6 +253,13 @@ body.le-mob-menu-open {
   box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.06);
   padding: 18px 14px calc(env(safe-area-inset-bottom, 0px) + 24px);
   overflow-y: auto;
+  /* Lock horizontal axis — Adam reported the menu was scrollable
+   * sideways on phones. Tile labels with white-space:nowrap were
+   * pushing their parent wider than the viewport, and the menu's
+   * `overflow-y: auto` on the y axis defaults to `overflow-x: auto`
+   * for the x axis, which let that overflow scroll. Pinning x to
+   * `hidden` plus the tile-label wrap rule below kills both. */
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   /* Stop pull-past-end from scrolling the page underneath when the
    * menu reaches its own scroll limits (iOS rubber-band leakage). */
@@ -331,9 +338,17 @@ body.has-tabbar .le-mob-menu {
 
 .le-mob-tile-label {
   flex: 1 1 auto;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* Wrap long labels onto a second line ("Player Registration",
+   * "Umpire Evaluation") instead of clipping them with an ellipsis.
+   * `min-width: 0` lets the flex item shrink past the intrinsic
+   * width of its content (required for word-wrap to engage inside
+   * a flex parent). */
+  min-width: 0;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+  font-size: 13px;
 }
 
 @media (max-width: 900px) {

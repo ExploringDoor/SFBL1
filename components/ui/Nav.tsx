@@ -82,25 +82,38 @@ export function Nav({
   hideLabels,
   rightSlot,
 }: NavProps) {
-  // Apply per-tenant hide-list. Filters at both levels: top-level
-  // items, and children inside any dropdown. A dropdown with all
-  // children hidden drops itself.
+  // Apply per-tenant hide-list AND rename "About SFBL" → "About
+  // <tenantShort>" so the link appears for every league without
+  // dragging the SFBL acronym along. Hide-list match still uses the
+  // ORIGINAL label ("About SFBL") so existing nav.hide configs
+  // remain valid.
   const hide = new Set((hideLabels ?? []).map((s) => s.toLowerCase()));
+  function relabel(l: NavLink): NavLink {
+    if (l.label === "About SFBL" && tenantShort && tenantShort !== "SFBL") {
+      return { ...l, label: `About ${tenantShort}` };
+    }
+    return l;
+  }
   const links: NavLink[] = hide.size
     ? linksProp
         .map((l) => {
           if (hide.has(l.label.toLowerCase())) return null;
           if (l.children && l.children.length > 0) {
-            const kept = l.children.filter(
-              (c) => !hide.has(c.label.toLowerCase()),
-            );
+            const kept = l.children
+              .filter((c) => !hide.has(c.label.toLowerCase()))
+              .map(relabel);
             if (kept.length === 0) return null;
             return { ...l, children: kept };
           }
-          return l;
+          return relabel(l);
         })
         .filter((l): l is NavLink => l !== null)
-    : linksProp;
+    : linksProp.map((l) => {
+        if (l.children) {
+          return { ...l, children: l.children.map(relabel) };
+        }
+        return relabel(l);
+      });
   const pathname = usePathname();
   const [mobOpen, setMobOpen] = useState(false);
   // Track which dropdown (by label) is open. JS-controlled rather than

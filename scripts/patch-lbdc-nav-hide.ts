@@ -39,9 +39,13 @@ initializeApp({
 });
 const db = getFirestore();
 
+// "About SFBL" intentionally absent — the Nav component now relabels
+// it to "About <tenant abbrev>" for non-SFBL leagues, so LBDC sees a
+// real "About LBDC" link backed by /sfbl-info (which reads tenant-
+// specific content). Hiding it would leave LBDC without an about
+// page entirely.
 const HIDE = [
   "News",
-  "About SFBL",
   "Team Registration",
   "Team Waiver",
   "Store",
