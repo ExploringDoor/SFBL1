@@ -2,21 +2,35 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { parseHost, resolveTenant, toPublicConfig } from "./lib/tenants";
 
-// Cookie + query-param name for the tenant-override preview flow.
+// Cookie + query-param names for the tenant-override preview flow.
 // Letting a developer/admin point at a staging tenant from a
-// production hostname without having to set up DNS first. Visit
-// `?_tenant=lbdc-staging` once → cookie persists the override for
-// 4 hours so subsequent in-app navigation stays on the previewed
-// tenant. Visit `?_tenant=` (empty) to clear.
+// production hostname without having to set up DNS first.
 //
-// Safety: the override only works if the target tenant exists in
-// Firestore (resolveTenant returns null otherwise), so an attacker
-// can't preview a tenant that hasn't been seeded. The cookie has
-// no security implications — it just selects which league's public
-// data the renderer shows.
+// To activate, visit:
+//   /?_tenant=<slug>&_preview_key=<secret>
+// Once the cookie is set, subsequent in-app navigation stays on
+// the previewed tenant for 4 hours (no need to re-pass the key).
+// Visit `/?_tenant=` (empty) on any page to clear.
+//
+// Safety:
+//   1. The preview key must match the env-configured secret on
+//      every cookie-setting request. Without it, the query param
+//      is silently ignored — so a non-admin who guesses
+//      `?_tenant=lbdc-staging` never sees anything change. Nelson
+//      can't accidentally end up in LBDC's view, even if someone
+//      sends him a URL with `?_tenant=` in it.
+//   2. The override only works if the target tenant exists in
+//      Firestore (resolveTenant returns null otherwise), so an
+//      attacker can't preview a tenant that hasn't been seeded.
+//   3. The cookie has no other security implications — it just
+//      selects which league public data the renderer shows.
 const PREVIEW_COOKIE = "le_preview_tenant";
 const PREVIEW_SLUG_RE = /^[a-z][a-z0-9-]+$/;
 const PREVIEW_TTL_SECONDS = 4 * 60 * 60;
+// Env-configurable secret. Hardcoded fallback lets us ship the
+// flow without touching Vercel env on day one — Adam can rotate
+// by setting LE_PREVIEW_KEY in Vercel any time.
+const PREVIEW_KEY = process.env.LE_PREVIEW_KEY || "lbdc-preview-2026";
 
 export async function middleware(req: NextRequest) {
   const host = req.headers.get("host") ?? "";
@@ -28,13 +42,25 @@ export async function middleware(req: NextRequest) {
 
   // ── tenant preview override ──────────────────────────────────────
   const previewQuery = req.nextUrl.searchParams.get("_tenant");
+  const previewKey = req.nextUrl.searchParams.get("_preview_key");
   const previewCookie = req.cookies.get(PREVIEW_COOKIE)?.value ?? null;
-  // Empty query param clears the cookie; non-empty value (or any
-  // already-set cookie) selects an override tenant.
+  // Empty query param clears the cookie regardless of key.
   const clearPreview = previewQuery === "";
+
+  // To ACTIVATE a new preview via query param the caller must
+  // supply the matching key. Once the cookie is set, subsequent
+  // requests don't need the key — the cookie itself is the proof
+  // that someone admin-side opted in. This is the gate that
+  // prevents a curious user (or Nelson) who guesses `?_tenant=`
+  // from being able to switch tenants without our consent.
+  const queryActivates =
+    !!previewQuery &&
+    PREVIEW_SLUG_RE.test(previewQuery) &&
+    previewKey === PREVIEW_KEY;
+
   const overrideSlug = clearPreview
     ? null
-    : previewQuery && PREVIEW_SLUG_RE.test(previewQuery)
+    : queryActivates
       ? previewQuery
       : previewCookie && PREVIEW_SLUG_RE.test(previewCookie)
         ? previewCookie
@@ -55,9 +81,9 @@ export async function middleware(req: NextRequest) {
         JSON.stringify(toPublicConfig(overrideTenant.config)),
       );
       const res = NextResponse.next({ request: { headers } });
-      // Persist (or refresh) the cookie when a query param triggered
-      // this override. Cookie is rolling-TTL: every request renews.
-      if (previewQuery && previewQuery === overrideSlug) {
+      // Persist (or refresh) the cookie only when the query
+      // param + matching key triggered this override.
+      if (queryActivates) {
         res.cookies.set({
           name: PREVIEW_COOKIE,
           value: overrideSlug,
