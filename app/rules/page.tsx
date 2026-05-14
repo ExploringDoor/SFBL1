@@ -3,6 +3,7 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { markdownToHtml } from "@/lib/markdown";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { PageContentEditor } from "@/components/PageContentEditor";
+import { RulesRichView, type RulesSection } from "@/components/RulesRichView";
 
 export const dynamic = "force-dynamic";
 
@@ -38,12 +39,63 @@ export default async function RulesPage() {
   }
 
   const db = getAdminDb();
-  const docSnap = await db
-    .doc(`leagues/${tenantId}/page_content/rules`)
-    .get();
-  // Prefer the stored html (RichEditor source) over re-rendering
-  // markdown. Existing markdown-only pages still work via fallback.
-  const data = docSnap.exists ? docSnap.data() : null;
+  // Prefer structured rules (site_config/rules.data = array of
+  // sections) when present — renders the rich LBDC-style UI with
+  // division tabs + per-section cards. Falls back to the freeform
+  // page_content/rules HTML path for tenants like SFBL.
+  const [structuredSnap, contentSnap] = await Promise.all([
+    db.doc(`leagues/${tenantId}/site_config/rules`).get(),
+    db.doc(`leagues/${tenantId}/page_content/rules`).get(),
+  ]);
+
+  const structuredData = structuredSnap.exists ? structuredSnap.data() : null;
+  const sections =
+    structuredData && Array.isArray(structuredData.data)
+      ? (structuredData.data as RulesSection[]).filter(
+          (s) =>
+            s &&
+            typeof s.section === "string" &&
+            Array.isArray(s.items) &&
+            s.items.length > 0,
+        )
+      : [];
+
+  if (sections.length > 0) {
+    const hasSat = sections.some(
+      (s) => !s.section.toLowerCase().includes("boomers"),
+    );
+    const hasBom = sections.some((s) =>
+      s.section.toLowerCase().includes("boomers"),
+    );
+    const divisionsAvailable: Array<"saturday" | "boomers"> = [
+      ...(hasSat ? (["saturday"] as const) : []),
+      ...(hasBom ? (["boomers"] as const) : []),
+    ];
+    const richUpdatedAt =
+      (structuredData?.updated_at as string | undefined) ??
+      (contentSnap.data()?.updated_at as string | undefined);
+    return (
+      <Shell heading={config?.name ? `${config.name} — Rules` : "Rules"}>
+        {richUpdatedAt && (
+          <p className="mb-4 text-xs text-slate-500">
+            Last updated{" "}
+            {new Date(richUpdatedAt).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </p>
+        )}
+        <RulesRichView
+          sections={sections}
+          divisionsAvailable={divisionsAvailable}
+        />
+      </Shell>
+    );
+  }
+
+  // Fallback: page_content/rules HTML path (SFBL today).
+  const data = contentSnap.exists ? contentSnap.data() : null;
   const cachedHtml =
     data && typeof data.html === "string" && data.html
       ? String(data.html)
