@@ -407,6 +407,24 @@ interface GameOut {
   source_ll_game_id: string | null;
 }
 
+// Postgres season ids that count as "live" — included in the
+// public /games collection so standings/scores/schedule render
+// only the current league(s). Everything else (historical seasons,
+// NABA / Memorial Weekend / Father-Son tournaments, archived
+// fall/winter seasons from prior years) is excluded. They still
+// land in data/lbdc/historical-standings.json for the /history
+// page, and tournament_games keeps its own collection.
+//
+// Current set:
+//   id=2  Spring/Summer 2026          (Saturday primary)
+//   id=28 2026 BOOMERS 60/70 Division (Boomers parallel)
+//   id=31 Spring/Summer 2026 Diamond Classics Saturdays (alias)
+//   id=36 2026 Fall/Winter Season    (Season #10)
+//
+// Updated when LBDC opens a new regular season — just append the
+// new id here, re-run dump+transform+seed.
+const LBDC_LIVE_SEASON_IDS = new Set<number>([2, 28, 31, 36]);
+
 function buildGames(
   games: GameRaw[],
   pgSeasonToSlug: Map<number, string>,
@@ -415,6 +433,10 @@ function buildGames(
 ): GameOut[] {
   const out: GameOut[] = [];
   for (const g of games) {
+    // Drop any game whose season isn't in the live set. Their data
+    // sits in historical-standings.json instead, which the future
+    // /history page reads.
+    if (!LBDC_LIVE_SEASON_IDS.has(g.season_id)) continue;
     const awaySlug = toSlug(cleanName(g.away_team));
     const homeSlug = toSlug(cleanName(g.home_team));
     if (!teams.has(awaySlug)) {
