@@ -402,9 +402,36 @@ interface GameOut {
   forfeit: boolean;
   headline: string;
   season_id: string | null;
+  // Division label (display string). LBDC reads this on
+  // /scores + /schedule to populate the division-filter dropdown.
+  // "Saturday Division" or "Boomers 60/70"; crossover/unknown
+  // games leave it null and just show up in "All divisions".
+  division: string | null;
   innings: Record<string, unknown>;
   source_id: number;
   source_ll_game_id: string | null;
+}
+
+// Hardcoded team→division map matching what seed-lbdc-constants.ts
+// writes into team docs. Keeping the source-of-truth here so a
+// fresh transform doesn't need to round-trip through Firestore.
+const LBDC_TEAM_DIVISIONS: Record<string, string> = {
+  tribe: "Saturday Division",
+  pirates: "Saturday Division",
+  titans: "Saturday Division",
+  brooklyn: "Saturday Division",
+  generals: "Saturday Division",
+  "black-sox": "Saturday Division",
+  "eddie-murray-mashers-56": "Boomers 60/70",
+  "greg-maddux-magicians-66": "Boomers 60/70",
+};
+
+function divisionForGame(awaySlug: string, homeSlug: string): string | null {
+  const away = LBDC_TEAM_DIVISIONS[awaySlug];
+  const home = LBDC_TEAM_DIVISIONS[homeSlug];
+  if (away && home && away === home) return away;
+  // Crossover or unknown — let it land in "All divisions".
+  return null;
 }
 
 // Postgres season ids that count as "live" — included in the
@@ -473,6 +500,7 @@ function buildGames(
       forfeit: n.forfeit,
       headline: cleanHeadline(g.headline),
       season_id: pgSeasonToSlug.get(g.season_id) ?? null,
+      division: divisionForGame(awaySlug, homeSlug),
       innings: g.innings ?? {},
       source_id: g.id,
       source_ll_game_id: g.ll_game_id ?? null,
