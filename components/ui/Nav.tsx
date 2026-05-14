@@ -55,6 +55,7 @@ const DEFAULT_LINKS: NavLink[] = [
       { label: "Leaders", href: "/leaders" },
       { label: "Playoffs", href: "/playoffs" },
       { label: "Tournaments", href: "/tournaments" },
+      { label: "Availability", href: "/availability" },
       { label: "History", href: "/history" },
       { label: "Fields", href: "/fields" },
       { label: "About SFBL", href: "/sfbl-info" },
