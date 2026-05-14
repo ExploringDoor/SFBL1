@@ -266,6 +266,13 @@ function buildTeams(
     if (cleaned.toLowerCase() === "test") return;
     const slug = toSlug(cleaned);
     if (!slug) return;
+    // Only include teams in the current Saturday/Boomers divisions
+    // — keeps /teams from showing tournament-only rosters
+    // ("Diamond Classics 65's NABA World Series Arizona") and
+    // long-retired opposing teams referenced by old game rows
+    // (Angels, Mets, HBC). Same source-of-truth as the team→division
+    // mapping the constants seed writes onto each team doc.
+    if (!LBDC_TEAM_DIVISIONS[slug]) return;
     if (!teams.has(slug)) {
       teams.set(slug, {
         id: slug,

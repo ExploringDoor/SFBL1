@@ -296,10 +296,14 @@ async function main() {
     `\n[seed-constants] target /leagues/${league}/  mode: ${dryRun ? "DRY" : "WRITE"}\n`,
   );
 
-  // 1. Patch team docs.
+  // 1. Patch team docs. Skip any team that's not actually in the
+  // current Saturday or Boomers divisions — earlier versions of
+  // this script created phantom rows for "Dodgers" etc. that had
+  // logos defined in App.jsx but aren't on the active roster.
+  const ACTIVE_TEAMS = new Set([...SAT_TEAMS, ...BOM_TEAMS]);
   let teamUpdates = 0;
-  const allTeams = Object.keys(TEAM_COLORS);
-  for (const teamName of allTeams) {
+  for (const teamName of Object.keys(TEAM_COLORS)) {
+    if (!ACTIVE_TEAMS.has(teamName)) continue;
     const slug = toSlug(teamName);
     const patch: Record<string, unknown> = {
       color: TEAM_COLORS[teamName] ?? null,
