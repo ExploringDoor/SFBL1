@@ -84,14 +84,28 @@ export default async function TeamDetailPage({
   }
 
   const db = getAdminDb();
-  const [teamSnap, rosterSnap, gamesSnap, teamsSnap] = await Promise.all([
+  // Roster query filters to status=="active" so we don't surface the
+  // orphan player docs auto-created from box-score name resolution
+  // (Billy Crews / Pool Players / etc — anybody who appeared in a
+  // line but isn't on lbdc_rosters lands as `status: "unknown"` /
+  // `orphan: true`). Captains manage the real roster, those entries
+  // shouldn't show up alongside.
+  const [teamSnap, rosterSnap, gamesSnap, teamsSnap, boxesSnap] = await Promise.all([
     db.doc(`leagues/${tenantId}/teams/${params.teamId}`).get(),
     db
       .collection(`leagues/${tenantId}/players`)
       .where("team_id", "==", params.teamId)
+      .where("status", "==", "active")
       .get(),
     db.collection(`leagues/${tenantId}/games`).get(),
     db.collection(`leagues/${tenantId}/teams`).get(),
+    // All box_scores — we use these to compute CURRENT-SEASON per-
+    // player stats. The career aggregate on player.stats was the
+    // source of the "Bill Crews has 17 GP and a .352 average" bug
+    // when the actual spring season only had 5 games played
+    // (2026-05-14): recalcLeague writes a career-wide total and the
+    // team roster was reading that.
+    db.collection(`leagues/${tenantId}/box_scores`).get(),
   ]);
   if (!teamSnap.exists) notFound();
 
@@ -160,65 +174,168 @@ export default async function TeamDetailPage({
     if (idx >= 0) divisionRank = { rank: idx + 1, total: standings.length };
   }
 
-  // Team batting/pitching aggregates from rosterSnap player.stats.
-  const aggBatting = aggregateRoster(rosterSnap.docs.map((d) => d.data().stats));
-  const aggPitching = aggregateRosterPitching(rosterSnap.docs.map((d) => d.data().pitching));
+  // Determine the team's CURRENT season — the season_id of the most
+  // recent box_score this team appears in. Older seasons' lines
+  // (Bill Crews on Tribe in 2024, etc.) sit in box_scores too but
+  // shouldn't drive the spring 2026 roster table. Falls back to null
+  // when the team has no box_scores yet (pre-launch).
+  const teamBoxes = boxesSnap.docs.filter((d) => {
+    const b = d.data();
+    return (
+      String(b.away_team_id ?? "") === params.teamId ||
+      String(b.home_team_id ?? "") === params.teamId
+    );
+  });
+  const sortedBoxes = [...teamBoxes].sort((a, b) =>
+    String(b.data().date ?? "").localeCompare(String(a.data().date ?? "")),
+  );
+  const currentSeasonId =
+    (sortedBoxes[0]?.data().season_id as string | undefined) ?? null;
+  const currentSeasonBoxes = currentSeasonId
+    ? teamBoxes.filter(
+        (d) => String(d.data().season_id ?? "") === currentSeasonId,
+      )
+    : [];
 
-  // Roster row — pulls the full batting + pitching aggregates the
-  // recalcLeague() job writes onto each player doc, so the team page
-  // can render the dense stat tables LBDC's site uses (and matches
-  // captain-side decision making). Anything missing comes back as
-  // undefined so the table cell renders an em-dash.
+  // Per-player current-season aggregator. Walks the team's current-
+  // season box_scores, pulls this player's batting + pitching line
+  // out of away_lineup/home_lineup/away_pitchers/home_pitchers, and
+  // sums. Mirrors the logic in lib/player-profile-data.ts but
+  // de-duped for the wider roster-table use case.
+  function aggregateForPlayer(playerId: string): {
+    bat: ReturnType<typeof emptyBat>;
+    pit: ReturnType<typeof emptyPit>;
+  } {
+    const bat = emptyBat();
+    const pit = emptyPit();
+    for (const doc of currentSeasonBoxes) {
+      const b = doc.data();
+      const isAway = String(b.away_team_id ?? "") === params.teamId;
+      const lineupKey = isAway ? "away_lineup" : "home_lineup";
+      const pitchersKey = isAway ? "away_pitchers" : "home_pitchers";
+      const batLine = findPlayerLine(b[lineupKey], playerId);
+      if (batLine) {
+        bat.gp += 1;
+        bat.ab += batLine.ab;
+        bat.r += batLine.r;
+        bat.h += batLine.h;
+        bat.doubles += batLine.doubles;
+        bat.triples += batLine.triples;
+        bat.hr += batLine.hr;
+        bat.rbi += batLine.rbi;
+        bat.bb += batLine.bb;
+        bat.so += batLine.so;
+        bat.sb += batLine.sb;
+      }
+      const pitchLine = findPlayerLine(b[pitchersKey], playerId);
+      if (pitchLine) {
+        pit.app += 1;
+        pit.ip_outs += pitchLine.ip_outs;
+        if (pitchLine.decision === "W") pit.w += 1;
+        if (pitchLine.decision === "L") pit.l += 1;
+        if (pitchLine.decision === "S") pit.sv += 1;
+        pit.h += pitchLine.h;
+        pit.r += pitchLine.r;
+        pit.er += pitchLine.er;
+        pit.bb += pitchLine.bb;
+        pit.so += pitchLine.so;
+      }
+    }
+    return { bat, pit };
+  }
+
+  // Roster row — current-season stats only. Career stats live on the
+  // player profile page (which intentionally spans every season).
   const roster = rosterSnap.docs
     .map((d) => {
       const data = d.data();
-      const s = (data.stats ?? {}) as Record<string, number | undefined>;
-      const p = (data.pitching ?? {}) as Record<string, number | undefined>;
-      // TB (total bases) — derived because we don't store it. 1B is
-      // (h − 2B − 3B − HR). TB = 1B + 2*2B + 3*3B + 4*HR.
-      const h = Number(s.h ?? 0);
-      const doubles = Number(s.doubles ?? 0);
-      const triples = Number(s.triples ?? 0);
-      const hr = Number(s.hr ?? 0);
-      const singles = Math.max(0, h - doubles - triples - hr);
-      const tb = singles + 2 * doubles + 3 * triples + 4 * hr;
+      const { bat, pit } = aggregateForPlayer(d.id);
+      // Derived: TB (total bases) and rate stats.
+      const singles = Math.max(0, bat.h - bat.doubles - bat.triples - bat.hr);
+      const tb =
+        bat.ab > 0
+          ? singles + 2 * bat.doubles + 3 * bat.triples + 4 * bat.hr
+          : undefined;
+      const avg = bat.ab > 0 ? bat.h / bat.ab : undefined;
+      const obp =
+        bat.ab + bat.bb > 0
+          ? (bat.h + bat.bb) / (bat.ab + bat.bb)
+          : undefined;
+      const slg = bat.ab > 0 && tb != null ? tb / bat.ab : undefined;
+      const ops =
+        obp != null && slg != null ? obp + slg : undefined;
+      const era =
+        pit.ip_outs > 0 ? (pit.er * 27) / pit.ip_outs : undefined;
+      const whip =
+        pit.ip_outs > 0
+          ? ((pit.h + pit.bb) * 3) / pit.ip_outs
+          : undefined;
       return {
         id: d.id,
         name: String(data.name ?? d.id),
         jersey: data.jersey != null ? Number(data.jersey) : null,
         position: data.position ? String(data.position) : null,
-        // Batting line
-        gp: s.gp,
-        ab: s.ab,
-        r: s.r,
-        h: s.h,
-        doubles: s.doubles,
-        triples: s.triples,
-        hr: s.hr,
-        rbi: s.rbi,
-        bb: s.bb,
-        so: s.so,
-        sb: s.sb,
-        tb: Number(s.ab ?? 0) > 0 ? tb : undefined,
-        avg: s.avg,
-        obp: s.obp,
-        ops: s.ops,
-        // Pitching line (undefined = didn't pitch this season)
-        p_app: p.app,
-        p_ip_outs: p.ip_outs,
-        p_w: p.w,
-        p_l: p.l,
-        p_sv: p.sv,
-        p_era: p.era,
-        p_whip: p.whip,
-        p_h: p.h,
-        p_r: p.r,
-        p_er: p.er,
-        p_bb: p.bb,
-        p_so: p.so,
+        // Batting line — undefined when this player has 0 GP this
+        // season so the cells render em-dashes instead of zeros.
+        gp: bat.gp || undefined,
+        ab: bat.gp ? bat.ab : undefined,
+        r: bat.gp ? bat.r : undefined,
+        h: bat.gp ? bat.h : undefined,
+        doubles: bat.gp ? bat.doubles : undefined,
+        triples: bat.gp ? bat.triples : undefined,
+        hr: bat.gp ? bat.hr : undefined,
+        rbi: bat.gp ? bat.rbi : undefined,
+        bb: bat.gp ? bat.bb : undefined,
+        so: bat.gp ? bat.so : undefined,
+        sb: bat.gp ? bat.sb : undefined,
+        tb,
+        avg,
+        obp,
+        ops,
+        // Pitching — undefined when this player hasn't pitched.
+        p_app: pit.app || undefined,
+        p_ip_outs: pit.app ? pit.ip_outs : undefined,
+        p_w: pit.app ? pit.w : undefined,
+        p_l: pit.app ? pit.l : undefined,
+        p_sv: pit.app ? pit.sv : undefined,
+        p_era: era,
+        p_whip: whip,
+        p_h: pit.app ? pit.h : undefined,
+        p_r: pit.app ? pit.r : undefined,
+        p_er: pit.app ? pit.er : undefined,
+        p_bb: pit.app ? pit.bb : undefined,
+        p_so: pit.app ? pit.so : undefined,
       };
     })
     .sort((a, b) => (a.jersey ?? 999) - (b.jersey ?? 999) || a.name.localeCompare(b.name));
+
+  // Team aggregates — same source as the per-player roster rows.
+  const aggBatting = roster.reduce(
+    (acc, p) => ({
+      gp: acc.gp + (p.gp ?? 0),
+      ab: acc.ab + (p.ab ?? 0),
+      h: acc.h + (p.h ?? 0),
+      r: acc.r + (p.r ?? 0),
+      hr: acc.hr + (p.hr ?? 0),
+      rbi: acc.rbi + (p.rbi ?? 0),
+      avg: 0, // recomputed below
+    }),
+    { gp: 0, ab: 0, h: 0, r: 0, hr: 0, rbi: 0, avg: 0 },
+  );
+  aggBatting.avg = aggBatting.ab > 0 ? aggBatting.h / aggBatting.ab : 0;
+  const aggPitching = roster.reduce(
+    (acc, p) => ({
+      app: acc.app + (p.p_app ?? 0),
+      ip_outs: acc.ip_outs + (p.p_ip_outs ?? 0),
+      er: acc.er + (p.p_er ?? 0),
+      era: 0,
+    }),
+    { app: 0, ip_outs: 0, er: 0, era: 0 },
+  );
+  aggPitching.era =
+    aggPitching.ip_outs > 0
+      ? (aggPitching.er * 27) / aggPitching.ip_outs
+      : 0;
 
   // Recent + upcoming games for this team.
   const myGames = gamesSnap.docs
@@ -997,51 +1114,69 @@ function formatOps(n: number): string {
   return n < 1 ? s.replace(/^0/, "") : s;
 }
 
-interface BattingAgg {
-  gp: number;
-  ab: number;
-  h: number;
-  r: number;
-  hr: number;
-  rbi: number;
-  avg: number;
+// Per-player accumulators for the on-the-fly current-season
+// aggregation. Returning an object with explicit `gp`/`app` lets the
+// caller cheaply distinguish "played 0 games" from "never appeared"
+// at the cell-render level (where we want em-dashes, not zeros).
+function emptyBat() {
+  return {
+    gp: 0,
+    ab: 0,
+    r: 0,
+    h: 0,
+    doubles: 0,
+    triples: 0,
+    hr: 0,
+    rbi: 0,
+    bb: 0,
+    so: 0,
+    sb: 0,
+  };
 }
-function aggregateRoster(statsList: Array<unknown>): BattingAgg {
-  let gp = 0,
-    ab = 0,
-    h = 0,
-    r = 0,
-    hr = 0,
-    rbi = 0;
-  for (const s of statsList) {
-    const v = (s ?? {}) as Record<string, number>;
-    gp += Number(v.gp ?? 0);
-    ab += Number(v.ab ?? 0);
-    h += Number(v.h ?? 0);
-    r += Number(v.r ?? 0);
-    hr += Number(v.hr ?? 0);
-    rbi += Number(v.rbi ?? 0);
+function emptyPit() {
+  return {
+    app: 0,
+    ip_outs: 0,
+    w: 0,
+    l: 0,
+    sv: 0,
+    h: 0,
+    r: 0,
+    er: 0,
+    bb: 0,
+    so: 0,
+  };
+}
+
+// Pull a single player's batting OR pitching line out of an
+// away_lineup / home_lineup / away_pitchers / home_pitchers array.
+// Returns null when the player wasn't in that side of the box.
+function findPlayerLine(arr: unknown, playerId: string) {
+  if (!Array.isArray(arr)) return null;
+  for (const r of arr as Array<Record<string, unknown>>) {
+    if (String(r.player_id ?? "") !== playerId) continue;
+    return {
+      // Batting fields
+      ab: Number(r.ab ?? 0),
+      r: Number(r.r ?? 0),
+      h: Number(r.h ?? 0),
+      doubles: Number(r.doubles ?? 0),
+      triples: Number(r.triples ?? 0),
+      hr: Number(r.hr ?? 0),
+      rbi: Number(r.rbi ?? 0),
+      bb: Number(r.bb ?? 0),
+      so: Number(r.so ?? r.k ?? 0),
+      sb: Number(r.sb ?? 0),
+      // Pitching fields
+      ip_outs: Number(r.ip_outs ?? 0),
+      er: Number(r.er ?? 0),
+      decision:
+        r.decision === "W" || r.decision === "L" || r.decision === "S"
+          ? (r.decision as "W" | "L" | "S")
+          : undefined,
+    };
   }
-  return { gp, ab, h, r, hr, rbi, avg: ab > 0 ? h / ab : 0 };
-}
-interface PitchingAgg {
-  app: number;
-  ip_outs: number;
-  er: number;
-  era: number;
-}
-function aggregateRosterPitching(pitchingList: Array<unknown>): PitchingAgg {
-  let app = 0,
-    ip_outs = 0,
-    er = 0;
-  for (const p of pitchingList) {
-    const v = (p ?? {}) as Record<string, number>;
-    app += Number(v.app ?? 0);
-    ip_outs += Number(v.ip_outs ?? 0);
-    er += Number(v.er ?? 0);
-  }
-  const era = ip_outs > 0 ? (er * 27) / ip_outs : 0;
-  return { app, ip_outs, er, era };
+  return null;
 }
 
 // All-time championship count for this team. Reads the historical

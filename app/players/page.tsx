@@ -65,8 +65,15 @@ export default async function PlayersPage() {
   }
 
   const db = getAdminDb();
+  // status=="active" filter mirrors /teams/[id] — drops the orphan
+  // player docs auto-created during box-score name resolution
+  // (Billy Crews / Pool Players / Richard Glavas variants) so the
+  // league stats page only shows real rostered players.
   const [playersSnap, teamsSnap] = await Promise.all([
-    db.collection(`leagues/${tenantId}/players`).get(),
+    db
+      .collection(`leagues/${tenantId}/players`)
+      .where("status", "==", "active")
+      .get(),
     db.collection(`leagues/${tenantId}/teams`).get(),
   ]);
 

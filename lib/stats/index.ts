@@ -76,51 +76,100 @@ export async function recalcLeague(
     return status === "final" || status === "approved";
   });
 
-  // 3. Flatten lineups across all box scores into per-game lines.
-  const battingLines: Array<SoftballBattingLine | BaseballBattingLine> = [];
-  const pitchingLines: BaseballPitchingLine[] = [];
+  // 2b. Determine the "current" season for this league. Box scores
+  //     migrated from LBDC's source carry a season_id slug (see
+  //     scripts/transform-lbdc.ts) — we pick the season_id from the
+  //     newest dated box. For SFBL (no season_id yet) currentSeasonId
+  //     stays null, in which case currentSeasonBoxes === all boxes —
+  //     stats and career_stats end up identical and the page reads
+  //     stay backwards-compatible.
+  let currentSeasonId: string | null = null;
+  let latestDate = "";
+  for (const d of boxScores) {
+    const data = d.data();
+    const seasonId =
+      typeof data.season_id === "string" ? data.season_id : null;
+    const date = String(data.date ?? "");
+    if (!seasonId || !date) continue;
+    if (date > latestDate) {
+      latestDate = date;
+      currentSeasonId = seasonId;
+    }
+  }
+  const currentSeasonBoxes = currentSeasonId
+    ? boxScores.filter((d) => d.data().season_id === currentSeasonId)
+    : boxScores;
+
+  // 3. Flatten lineups into per-game lines. We collect two parallel
+  //    sets: current-season (writes to player.stats) and all-time
+  //    (writes to player.career_stats). The all-time bucket is the
+  //    superset of current-season.
+  const currentBatting: Array<SoftballBattingLine | BaseballBattingLine> = [];
+  const careerBatting: Array<SoftballBattingLine | BaseballBattingLine> = [];
+  const currentPitching: BaseballPitchingLine[] = [];
+  const careerPitching: BaseballPitchingLine[] = [];
 
   for (const doc of boxScores) {
     const data = doc.data();
+    const isCurrent =
+      currentSeasonId === null || data.season_id === currentSeasonId;
     const away = (data.away_lineup ?? []) as Array<Record<string, unknown>>;
     const home = (data.home_lineup ?? []) as Array<Record<string, unknown>>;
     for (const line of [...away, ...home]) {
-      battingLines.push(toBattingLine(line, sport));
+      const bl = toBattingLine(line, sport);
+      careerBatting.push(bl);
+      if (isCurrent) currentBatting.push(bl);
     }
     if (sport === "baseball") {
       const aw = (data.away_pitchers ?? []) as Array<Record<string, unknown>>;
       const hp = (data.home_pitchers ?? []) as Array<Record<string, unknown>>;
       for (const line of [...aw, ...hp]) {
-        pitchingLines.push(toPitchingLine(line));
+        const pl = toPitchingLine(line);
+        careerPitching.push(pl);
+        if (isCurrent) currentPitching.push(pl);
       }
     }
   }
 
-  // 4. Run sport-specific aggregators.
-  let batterStats: SoftballPlayerStats[] | BaseballBatterStats[];
-  let pitcherStats: BaseballPitcherStats[] = [];
-
-  // Closes audit M1. Replace `else` with `else if/else assertNever`
-  // so adding a third sport to the Sport union (PLAN §3 calls for
-  // variants) becomes a typecheck failure here instead of silently
-  // running baseball logic.
-  if (sport === "softball") {
-    batterStats = aggregateSoftballBatting(battingLines as SoftballBattingLine[]);
-  } else if (sport === "baseball") {
-    batterStats = aggregateBaseballBatting(battingLines as BaseballBattingLine[]);
-    pitcherStats = aggregatePitching(pitchingLines);
-  } else {
-    assertNever(sport);
+  // 4. Run sport-specific aggregators on BOTH buckets.
+  function aggBatting(
+    lines: Array<SoftballBattingLine | BaseballBattingLine>,
+  ): SoftballPlayerStats[] | BaseballBatterStats[] {
+    if (sport === "softball") {
+      return aggregateSoftballBatting(lines as SoftballBattingLine[]);
+    }
+    if (sport === "baseball") {
+      return aggregateBaseballBatting(lines as BaseballBattingLine[]);
+    }
+    // Sport union is exhausted above; this throw exists only so TS
+    // can prove the function returns a value on every branch.
+    throw new Error(`unreachable sport variant: ${String(sport)}`);
   }
+  const currentBatterStats = aggBatting(currentBatting);
+  const careerBatterStats = aggBatting(careerBatting);
+  const currentPitcherStats =
+    sport === "baseball" ? aggregatePitching(currentPitching) : [];
+  const careerPitcherStats =
+    sport === "baseball" ? aggregatePitching(careerPitching) : [];
 
-  // 5. Write stats to /leagues/{id}/players/{pid}.stats with dirty-check.
-  const writes = await writeStats(db, leagueId, sport, batterStats, pitcherStats);
+  // 5. Write stats. player.stats / player.pitching = current-season;
+  //    player.career_stats / player.career_pitching = all-time. We
+  //    pass both into writeStats which dirty-checks each independently.
+  const writes = await writeStats(
+    db,
+    leagueId,
+    sport,
+    currentBatterStats,
+    careerBatterStats,
+    currentPitcherStats,
+    careerPitcherStats,
+  );
 
   return {
     league_id: leagueId,
     sport,
     box_scores_read: boxScores.length,
-    players_aggregated: batterStats.length,
+    players_aggregated: careerBatterStats.length,
     players_written: writes.batter_writes,
     pitchers_written: writes.pitcher_writes,
     duration_ms: Date.now() - startedAt,
@@ -182,52 +231,143 @@ async function writeStats(
   db: Firestore,
   leagueId: string,
   sport: Sport,
-  batters: SoftballPlayerStats[] | BaseballBatterStats[],
-  pitchers: BaseballPitcherStats[],
+  currentBatters: SoftballPlayerStats[] | BaseballBatterStats[],
+  careerBatters: SoftballPlayerStats[] | BaseballBatterStats[],
+  currentPitchers: BaseballPitcherStats[],
+  careerPitchers: BaseballPitcherStats[],
 ): Promise<{ batter_writes: number; pitcher_writes: number }> {
-  // Collect EVERY player id we'll touch — batter or pitcher — so we
-  // fetch their existing doc once and can dirty-check both subfields.
-  const allPlayerIds = new Set<string>();
-  for (const b of batters) if (b.player_id) allPlayerIds.add(b.player_id);
-  for (const p of pitchers) if (p.player_id) allPlayerIds.add(p.player_id);
+  // Index by player_id so we can pair current with career.
+  const currentBattersById = new Map<
+    string,
+    SoftballPlayerStats | BaseballBatterStats
+  >();
+  for (const b of currentBatters)
+    if (b.player_id) currentBattersById.set(b.player_id, b);
+  const careerBattersById = new Map<
+    string,
+    SoftballPlayerStats | BaseballBatterStats
+  >();
+  for (const b of careerBatters)
+    if (b.player_id) careerBattersById.set(b.player_id, b);
+  const currentPitchersById = new Map<string, BaseballPitcherStats>();
+  for (const p of currentPitchers)
+    if (p.player_id) currentPitchersById.set(p.player_id, p);
+  const careerPitchersById = new Map<string, BaseballPitcherStats>();
+  for (const p of careerPitchers)
+    if (p.player_id) careerPitchersById.set(p.player_id, p);
+
+  // Touch every player that appears in any of the four buckets.
+  const allPlayerIds = new Set<string>([
+    ...currentBattersById.keys(),
+    ...careerBattersById.keys(),
+    ...currentPitchersById.keys(),
+    ...careerPitchersById.keys(),
+  ]);
 
   const playerRefs = [...allPlayerIds].map((pid) =>
     db.doc(`leagues/${leagueId}/players/${pid}`),
   );
-
   const existingDocs = playerRefs.length ? await db.getAll(...playerRefs) : [];
-  // Store the full doc data so we can read both `.stats` (batter) and
-  // `.pitching` (pitcher) subfields. Earlier version stored only `.stats`,
-  // which silently broke pitcher dirty-check (every recalc rewrote
-  // pitchers even when totals were unchanged).
   const existingByPath = new Map(
     existingDocs.map((d) => [d.ref.path, d.data() ?? {}]),
   );
 
-  const batch = db.batch();
+  // Firestore caps a single batch at 500 operations. With split
+  // current/career writes per player, the LBDC migration touches
+  // 1100+ players → easily blows the limit if we use one batch.
+  // Stash the per-player updates and flush in chunks of 400.
+  const pendingWrites: Array<{
+    ref: FirebaseFirestore.DocumentReference;
+    data: Record<string, unknown>;
+  }> = [];
   let batterWrites = 0;
-
-  for (const next of batters) {
-    if (!next.player_id) continue;
-    const ref = db.doc(`leagues/${leagueId}/players/${next.player_id}`);
-    const prev = existingByPath.get(ref.path);
-    if (prev?.stats && areBatterStatsEqual(prev.stats, next, sport)) continue;
-    batch.set(ref, { stats: next }, { merge: true });
-    batterWrites += 1;
-  }
-
   let pitcherWrites = 0;
-  for (const p of pitchers) {
-    if (!p.player_id) continue;
-    const ref = db.doc(`leagues/${leagueId}/players/${p.player_id}`);
-    const prev = existingByPath.get(ref.path);
-    if (prev?.pitching && pitcherStatsAreEqual(prev.pitching, p)) continue;
-    batch.set(ref, { pitching: p }, { merge: true });
-    pitcherWrites += 1;
+
+  // Empty-stat sentinels — for players who appeared career-wide but
+  // not this season (or vice-versa) we still write a zeroed bucket
+  // so the page never reads stale career into a "current season"
+  // slot. emptyBatter/emptyPitcher live in the sport modules.
+  function zeroBatter(player_id: string): SoftballPlayerStats | BaseballBatterStats {
+    if (sport === "baseball") {
+      return {
+        player_id, gp: 0, ab: 0, r: 0, h: 0, doubles: 0, triples: 0,
+        hr: 0, rbi: 0, bb: 0, so: 0, sb: 0,
+        avg: 0, slg: 0, obp: 0, ops: 0,
+      } as BaseballBatterStats;
+    }
+    // Softball
+    return {
+      player_id, gp: 0, ab: 0, r: 0, h: 0, doubles: 0, triples: 0,
+      hr: 0, rbi: 0, bb: 0, so: 0,
+    } as unknown as SoftballPlayerStats;
+  }
+  function zeroPitcher(player_id: string): BaseballPitcherStats {
+    return {
+      player_id, app: 0, w: 0, l: 0, sv: 0,
+      ip_outs: 0, h: 0, r: 0, er: 0, bb: 0, so: 0, hr: 0,
+      era: 0, whip: 0,
+    };
   }
 
-  if (batterWrites + pitcherWrites > 0) {
-    await batch.commit();
+  for (const pid of allPlayerIds) {
+    const ref = db.doc(`leagues/${leagueId}/players/${pid}`);
+    const prev = existingByPath.get(ref.path);
+    const update: Record<string, unknown> = {};
+
+    // Current-season batter (player.stats)
+    const curBat = currentBattersById.get(pid) ?? zeroBatter(pid);
+    if (
+      !prev?.stats ||
+      !areBatterStatsEqual(prev.stats, curBat, sport)
+    ) {
+      update.stats = curBat;
+    }
+    // Career batter (player.career_stats)
+    const carBat = careerBattersById.get(pid) ?? zeroBatter(pid);
+    if (
+      !prev?.career_stats ||
+      !areBatterStatsEqual(prev.career_stats, carBat, sport)
+    ) {
+      update.career_stats = carBat;
+    }
+
+    // Pitching (baseball only — softball aggregators don't emit it)
+    if (sport === "baseball") {
+      const curPit = currentPitchersById.get(pid) ?? zeroPitcher(pid);
+      if (
+        !prev?.pitching ||
+        !pitcherStatsAreEqual(
+          prev.pitching as BaseballPitcherStats,
+          curPit,
+        )
+      ) {
+        update.pitching = curPit;
+      }
+      const carPit = careerPitchersById.get(pid) ?? zeroPitcher(pid);
+      if (
+        !prev?.career_pitching ||
+        !pitcherStatsAreEqual(
+          prev.career_pitching as BaseballPitcherStats,
+          carPit,
+        )
+      ) {
+        update.career_pitching = carPit;
+      }
+    }
+
+    if (Object.keys(update).length === 0) continue;
+    pendingWrites.push({ ref, data: update });
+    if ("stats" in update || "career_stats" in update) batterWrites += 1;
+    if ("pitching" in update || "career_pitching" in update)
+      pitcherWrites += 1;
+  }
+
+  // Flush in chunks of 400 (under Firestore's 500-op batch limit).
+  for (let i = 0; i < pendingWrites.length; i += 400) {
+    const chunk = pendingWrites.slice(i, i + 400);
+    const b = db.batch();
+    for (const { ref, data } of chunk) b.set(ref, data, { merge: true });
+    await b.commit();
   }
   return { batter_writes: batterWrites, pitcher_writes: pitcherWrites };
 }
