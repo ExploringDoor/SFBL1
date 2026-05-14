@@ -146,6 +146,7 @@ export default async function RootLayout({
   let themePrimary: string | undefined;
   let themeAccent: string | undefined;
   let themeSecondary: string | undefined;
+  let navHideLabels: string[] = [];
   if (configJson) {
     try {
       const cfg = JSON.parse(configJson) as {
@@ -157,6 +158,7 @@ export default async function RootLayout({
           secondary?: string;
           logo_url?: string;
         };
+        nav?: { hide?: string[] };
       };
       leagueName = cfg.name ?? null;
       leagueAbbrev = cfg.abbrev;
@@ -164,6 +166,14 @@ export default async function RootLayout({
       themePrimary = cfg.theme?.primary;
       themeAccent = cfg.theme?.accent;
       themeSecondary = cfg.theme?.secondary;
+      // Tenant can hide specific nav labels — e.g. LBDC doesn't use
+      // a /news page so it sets nav.hide = ["News"]. Hidden labels
+      // are matched case-insensitively against the link's label.
+      if (Array.isArray(cfg.nav?.hide)) {
+        navHideLabels = cfg.nav!.hide!
+          .filter((s): s is string => typeof s === "string")
+          .map((s) => s.toLowerCase());
+      }
     } catch {
       /* fall through */
     }
@@ -258,6 +268,7 @@ export default async function RootLayout({
             <Nav
               tenantShort={leagueAbbrev ?? leagueName ?? "League"}
               logoUrl={logoUrl}
+              hideLabels={navHideLabels}
               rightSlot={<ProfileButton tenantId={tenantId} />}
             />
           ) : null}

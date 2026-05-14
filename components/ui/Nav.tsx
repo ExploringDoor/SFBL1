@@ -33,6 +33,10 @@ export interface NavProps {
   logoUrl?: string | null;
   /** Nav link list. Defaults to LeagueEngine standard pages. */
   links?: NavLink[];
+  /** Lowercased labels to hide from the rendered nav. Used for
+   *  per-tenant customization (e.g. LBDC hides "news"). Matches
+   *  both top-level links and More-dropdown children. */
+  hideLabels?: string[];
   /** Right-hand slot — typically the ProfileButton. Falls back to a
    *  "Sign in" link when omitted. */
   rightSlot?: React.ReactNode;
@@ -74,9 +78,29 @@ const DEFAULT_LINKS: NavLink[] = [
 export function Nav({
   tenantShort,
   logoUrl,
-  links = DEFAULT_LINKS,
+  links: linksProp = DEFAULT_LINKS,
+  hideLabels,
   rightSlot,
 }: NavProps) {
+  // Apply per-tenant hide-list. Filters at both levels: top-level
+  // items, and children inside any dropdown. A dropdown with all
+  // children hidden drops itself.
+  const hide = new Set((hideLabels ?? []).map((s) => s.toLowerCase()));
+  const links: NavLink[] = hide.size
+    ? linksProp
+        .map((l) => {
+          if (hide.has(l.label.toLowerCase())) return null;
+          if (l.children && l.children.length > 0) {
+            const kept = l.children.filter(
+              (c) => !hide.has(c.label.toLowerCase()),
+            );
+            if (kept.length === 0) return null;
+            return { ...l, children: kept };
+          }
+          return l;
+        })
+        .filter((l): l is NavLink => l !== null)
+    : linksProp;
   const pathname = usePathname();
   const [mobOpen, setMobOpen] = useState(false);
   // Track which dropdown (by label) is open. JS-controlled rather than

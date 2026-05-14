@@ -329,11 +329,16 @@ async function main() {
     );
   }
 
-  // 2. site_config singletons.
+  // 2. site_config singletons. NOTE: 'fields' deliberately omitted —
+  // the LBDC Supabase lbdc_fields singleton has 5 entries (Clark,
+  // Fromhold, St Pius X, South Gate Park #9, Cantwell Sacred Heart)
+  // and is seeded directly from the dump by seed-lbdc-to-firestore.
+  // Earlier this script also wrote 'fields' from a 3-entry App.jsx
+  // const that was missing 2 fields; that overwrote the DB version
+  // every run.
   const singletons: [string, unknown][] = [
     ["contact", CONTACT_INFO],
     ["sponsors", { data: SPONSORS_DATA }],
-    ["fields", { data: FIELDS_INFO }],
     ["payment_categories", { data: PAYMENT_CATEGORIES }],
     ["divisions", { data: DIVISIONS }],
   ];

@@ -290,6 +290,8 @@ async function seedTenantDoc(db: Firestore | null): Promise<void> {
       scoring: "pct",
       tiebreaker: "rd",
     },
+    // Per-tenant nav customization. LBDC doesn't run a /news page.
+    nav: { hide: ["News"] },
     migrated_at: new Date().toISOString(),
     migrated_from: "supabase://vhovzpajuyphjatjlodo",
   };
