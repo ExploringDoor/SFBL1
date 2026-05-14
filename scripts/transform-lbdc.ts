@@ -873,6 +873,37 @@ function buildBoxScores(
     });
   }
 
+  // Fill in score-only stubs for every final game that has no
+  // batting/pitching lines. LBDC's "Score Only" capture mode (per
+  // PLATFORM_MIGRATION.md §3) and any older games where the
+  // captain never entered a lineup end up here. Without a stub,
+  // leagueplatform's /games/[id] route shows "no box score yet"
+  // even though we know the final score. The stub sets
+  // away_score_only/home_score_only = true so the renderer hides
+  // the empty lineup table cleanly.
+  const haveBox = new Set(boxes.map((b) => b.game_id));
+  for (const g of games) {
+    if (g.status !== "final") continue;
+    if (haveBox.has(g.id)) continue;
+    boxes.push({
+      game_id: g.id,
+      away_lineup: [],
+      home_lineup: [],
+      away_pitchers: [],
+      home_pitchers: [],
+      linescore: { away: [], home: [] },
+      hits: { away: null, home: null },
+      errors: { away: null, home: null },
+      // Score-only flags — picked up by the leagueplatform
+      // box-score renderer (lib/box-score-data.ts) to suppress
+      // the empty lineup table.
+      // @ts-expect-error extending BoxScoreOut shape ad-hoc; these
+      // pass through verbatim and the seed step doesn't care.
+      away_score_only: true,
+      home_score_only: true,
+    });
+  }
+
   return { boxes, unresolvedNames, orphans };
 }
 

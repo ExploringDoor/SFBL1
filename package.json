@@ -26,6 +26,7 @@
     "dump:lbdc": "tsx scripts/dump-lbdc-from-supabase.ts",
     "transform:lbdc": "tsx scripts/transform-lbdc.ts",
     "seed:lbdc": "tsx scripts/seed-lbdc-to-firestore.ts",
+    "seed:lbdc:constants": "tsx scripts/seed-lbdc-constants.ts",
     "dev:emulators": "firebase emulators:exec --only auth,firestore,ui 'NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true next dev'",
     "test": "firebase emulators:exec --config firebase.test.json --project demo-test --only auth,firestore 'FIRESTORE_EMULATOR_PORT=8085 FIREBASE_AUTH_EMULATOR_HOST=localhost:9095 vitest run'",
     "test:rules": "firebase emulators:exec --config firebase.test.json --project demo-rules-test --only firestore 'FIRESTORE_EMULATOR_PORT=8085 vitest run tests/rules'",
