@@ -25,6 +25,10 @@ export interface PublicLeagueConfig {
   flags?: LeagueConfig["flags"];
   standings?: LeagueConfig["standings"];
   sponsors?: LeagueSponsor[];
+  // Per-tenant nav customization (label hide list). Mirrored from
+  // /leagues/<slug>.nav.hide. The layout reads this off the x-tenant-
+  // config-json header and passes it to <Nav> + <PwaTabBar>.
+  nav?: { hide?: string[] };
 }
 
 export function toPublicConfig(c: LeagueConfig): PublicLeagueConfig {
@@ -44,6 +48,7 @@ export function toPublicConfig(c: LeagueConfig): PublicLeagueConfig {
     flags: c.flags,
     standings: c.standings,
     sponsors: c.sponsors,
+    nav: c.nav,
   };
 }
 

@@ -97,6 +97,15 @@ export interface LeagueConfig {
   // dropdown so admins can't typo a venue. Free-text fallback if
   // empty.
   fields?: string[];
+
+  // Per-tenant nav customization. `hide` is a label list (matched
+  // case-insensitively against the Nav component's default link
+  // labels) — used by LBDC to drop News / Team Registration / Team
+  // Waiver / Store from the More dropdown. Mirrored into
+  // PublicLeagueConfig so the layout can pass it to <Nav>.
+  nav?: {
+    hide?: string[];
+  };
 }
 
 export interface LeagueSponsor {
