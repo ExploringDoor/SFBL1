@@ -415,15 +415,22 @@ interface GameOut {
 // land in data/lbdc/historical-standings.json for the /history
 // page, and tournament_games keeps its own collection.
 //
-// Current set:
-//   id=2  Spring/Summer 2026          (Saturday primary)
-//   id=28 2026 BOOMERS 60/70 Division (Boomers parallel)
-//   id=31 Spring/Summer 2026 Diamond Classics Saturdays (alias)
-//   id=36 2026 Fall/Winter Season    (Season #10)
+// Current set (per Adam, 2026-05-13):
+//   id=2  Spring/Summer 2026          (Saturday primary, started 4/11)
+//   id=28 2026 BOOMERS 60/70 Division (Boomers parallel, started 4/11)
+//   id=31 Spring/Summer 2026 Diamond Classics Saturdays (alias of id=2)
 //
-// Updated when LBDC opens a new regular season — just append the
-// new id here, re-run dump+transform+seed.
-const LBDC_LIVE_SEASON_IDS = new Set<number>([2, 28, 31, 36]);
+// Fall/Winter (id=36) is intentionally excluded — those games shouldn't
+// surface in the "current schedule" / "standings" / "ticker" view.
+// Their data lives in historical-standings.json instead. Add id=36
+// back here when the fall season actually starts.
+const LBDC_LIVE_SEASON_IDS = new Set<number>([2, 28, 31]);
+
+// Hard date floor — drops any game dated before the 2026 season
+// opener (2026-04-11). Catches stragglers tagged with the current
+// season_id but actually belonging to a pre-season or rescheduled
+// older game.
+const LBDC_LIVE_DATE_FLOOR = "2026-04-11";
 
 function buildGames(
   games: GameRaw[],
@@ -437,6 +444,8 @@ function buildGames(
     // sits in historical-standings.json instead, which the future
     // /history page reads.
     if (!LBDC_LIVE_SEASON_IDS.has(g.season_id)) continue;
+    // Date floor — drops pre-season / off-by-one season tags.
+    if (g.game_date && g.game_date < LBDC_LIVE_DATE_FLOOR) continue;
     const awaySlug = toSlug(cleanName(g.away_team));
     const homeSlug = toSlug(cleanName(g.home_team));
     if (!teams.has(awaySlug)) {
