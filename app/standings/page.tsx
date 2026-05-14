@@ -251,7 +251,19 @@ function groupByDivision(
     if (!buckets.has(div)) buckets.set(div, []);
     buckets.get(div)!.push(r);
   }
+  // Sort key: Saturday-style "main" divisions ALWAYS render first,
+  // even when alphabetical ordering would slot them after another
+  // division (e.g. "Boomers 60/70" sorts before "Saturday Division"
+  // by default). Adam's LBDC convention is Saturday → Boomers, so
+  // we encode that here. Anything that doesn't start with
+  // "Saturday" / "Main" falls back to alphabetical.
   return [...buckets.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
+    .sort(([a], [b]) => divisionSortKey(a).localeCompare(divisionSortKey(b)))
     .map(([division, rows]) => ({ division, rows }));
+}
+
+function divisionSortKey(div: string): string {
+  if (/^saturday/i.test(div)) return "0_" + div;
+  if (/^main/i.test(div)) return "0_" + div;
+  return "1_" + div;
 }

@@ -5187,3 +5187,238 @@ select:focus-visible {
   white-space: nowrap;
   border: 0;
 }
+
+/* ── LBDC-style player profile (full-page) ───────────────────────
+ * Renders the matching layout from LBDC's existing site: navy
+ * header bar with the player name in white uppercase, then stacked
+ * sections (2026 Batting / Recent Games / Career Pitching) each
+ * with a thin top border and a section title.
+ * Column header text is small + grey + uppercase. Body rows have
+ * tabular numerics. The "AVG" / "ERA" columns get bolder navy text
+ * via .hl. Per-game W/L is colored green/red. */
+.le-prof-lbdc {
+  background: white;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.le-prof-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 22px;
+  color: white;
+}
+.le-prof-head h1 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  margin: 0;
+  text-transform: uppercase;
+}
+.le-prof-close {
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 14px;
+}
+.le-prof-section {
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 18px 22px 6px;
+}
+.le-prof-section:first-of-type {
+  border-top: none;
+}
+.le-prof-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.le-prof-section-head h2 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0;
+  color: #0f172a;
+  margin: 0;
+}
+.le-prof-see-all {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2563eb;
+  text-decoration: none;
+}
+.le-prof-table-wrap {
+  overflow-x: auto;
+  margin: 0 -22px 12px;
+  padding: 0 22px;
+}
+.le-prof-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  min-width: 720px;
+}
+.le-prof-table thead th {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 10px 6px 10px;
+  white-space: nowrap;
+}
+.le-prof-table thead th.stats,
+.le-prof-table thead th.opp { text-align: left; padding-left: 0; }
+.le-prof-table tbody td,
+.le-prof-table tfoot td {
+  padding: 10px 6px;
+  text-align: center;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  color: #1e293b;
+}
+.le-prof-table tbody td.stats,
+.le-prof-table tbody td.opp,
+.le-prof-table tfoot td.stats {
+  text-align: left;
+  padding-left: 0;
+  white-space: nowrap;
+}
+.le-prof-table tfoot td {
+  border-top: 2px solid rgba(0, 0, 0, 0.18);
+  font-weight: 800;
+}
+.le-prof-table td.hl {
+  color: var(--brand-primary, #002d6e);
+  font-weight: 700;
+}
+.le-prof-footnote {
+  font-size: 12px;
+  color: #94a3b8;
+  padding: 4px 22px 18px;
+  margin: 0;
+}
+
+/* ── Homepage "From the Commissioner — News & Events" strip ──────
+ * Renders below the season-stats row, above the recent+upcoming
+ * grid. LBDC's existing site uses this layout: orange "PINNED"
+ * pill, optional 📅 + date row, bold title, body text, all inside
+ * a white card with a colored left border that matches post.color. */
+.le-home-news {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+  margin-top: 28px;
+}
+@media (min-width: 1100px) {
+  .le-home-news {
+    padding: 0 32px;
+  }
+}
+.le-home-news-eyebrow {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--brand-primary, #002d6e);
+  margin: 0 0 4px;
+}
+.le-home-news-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(32px, 4vw, 44px);
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+  color: var(--text-strong, #0f172a);
+  margin: 0 0 16px;
+}
+.le-home-news-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.le-home-news-card {
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-left: 4px solid var(--brand-primary, #002d6e);
+  border-radius: 14px;
+  padding: 18px 22px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+.le-home-news-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  line-height: 1;
+}
+.le-home-news-pin {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #fed7aa;
+  color: #9a3412;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+}
+.le-home-news-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #475569;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  font-weight: 600;
+  font-size: 12px;
+}
+.le-home-news-card-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  line-height: 1.15;
+  color: var(--text-strong, #0f172a);
+  margin: 0 0 8px;
+}
+/* Inline HTML body — keep paragraph/list spacing readable, but
+ * inherit the surrounding font so a single post doesn't visually
+ * fight with the rest of the homepage. */
+.le-home-news-body {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #374151;
+}
+.le-home-news-body p { margin: 0 0 8px; }
+.le-home-news-body p:last-child { margin-bottom: 0; }
+.le-home-news-body ul,
+.le-home-news-body ol { padding-left: 20px; margin: 4px 0 8px; }
+.le-home-news-body a { color: var(--brand-primary, #002d6e); text-decoration: underline; }
+.le-home-news-body strong { font-weight: 700; }
+.le-home-news-body em { font-style: italic; }

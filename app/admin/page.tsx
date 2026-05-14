@@ -32,6 +32,7 @@ import { ChatModerator } from "@/components/admin/ChatModerator";
 import { PhotosManager } from "@/components/admin/PhotosManager";
 import { ScoresManager } from "@/components/admin/ScoresManager";
 import { SponsorsManager } from "@/components/admin/SponsorsManager";
+import { NewsManager } from "@/components/admin/NewsManager";
 
 type TabKey =
   | "health"
@@ -41,6 +42,7 @@ type TabKey =
   | "signups"
   | "captains"
   | "alerts"
+  | "news"
   | "pages"
   | "photos"
   | "sponsors"
@@ -61,6 +63,7 @@ const TABS: { key: TabKey; label: string; description: string }[] = [
   { key: "signups", label: "Signups", description: "Approve or reject players added by captains (walk-ons)." },
   { key: "captains", label: "Captains", description: "Grant or revoke captain access to specific teams." },
   { key: "alerts", label: "Alerts", description: "Publish a homepage banner — weather, registration, deadlines." },
+  { key: "news", label: "News", description: "From-the-commissioner news & events shown on the homepage." },
   { key: "pages", label: "Pages", description: "Edit Rules, News, Register, Sponsors, and other content pages." },
   { key: "photos", label: "Photos", description: "Upload photos to the public gallery at /photos." },
   { key: "sponsors", label: "Sponsors", description: "Manage the sponsor logo strip in the site footer." },
@@ -279,6 +282,9 @@ export default function AdminPage() {
         )}
         {activeTab === "alerts" && (
           <AlertsManager leagueId={tenantId} user={user} />
+        )}
+        {activeTab === "news" && (
+          <NewsManager leagueId={tenantId} user={user} />
         )}
         {activeTab === "pages" && (
           <PagesManager leagueId={tenantId} user={user} />

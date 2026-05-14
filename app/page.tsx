@@ -14,6 +14,7 @@ import { PreviewCard, type PreviewCardTeam } from "@/components/ui/PreviewCard";
 import { Hero as DvslHero } from "@/components/ui/Hero";
 import { HomepageBanner } from "@/components/ui/HomepageBanner";
 import { HomepageLiveGames } from "@/components/ui/HomepageLiveGames";
+import { HomepageNews } from "@/components/ui/HomepageNews";
 import {
   StandingsTable,
   type DivisionGroup,
@@ -82,6 +83,12 @@ export default async function HomePage() {
         leagueId={tenantId}
         teamLabels={teamLabelsForLive(teams)}
       />
+
+      {/* From-the-commissioner News & Events strip. Renders nothing
+          when the league has no posts (no empty state). Pinned
+          posts hoist to the top. Admin posts live at
+          /leagues/<id>/news. */}
+      <HomepageNews leagueId={tenantId} />
 
       {/* Season highlights strip — at-a-glance KPIs (games played,
           runs scored, teams, top team). Only renders once at least
@@ -503,9 +510,18 @@ function groupByDivision(
     if (!buckets.has(div)) buckets.set(div, []);
     buckets.get(div)!.push(r);
   }
+  // Saturday-style divisions render first (LBDC convention: Saturday →
+  // Boomers, not alphabetical). See app/standings/page.tsx for the
+  // matching key.
   return [...buckets.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
+    .sort(([a], [b]) => divisionSortKey(a).localeCompare(divisionSortKey(b)))
     .map(([division, rows]) => ({ division, rows }));
+}
+
+function divisionSortKey(div: string): string {
+  if (/^saturday/i.test(div)) return "0_" + div;
+  if (/^main/i.test(div)) return "0_" + div;
+  return "1_" + div;
 }
 
 function formatRecord(w: number, l: number, t: number): string {

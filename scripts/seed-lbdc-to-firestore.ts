@@ -290,8 +290,19 @@ async function seedTenantDoc(db: Firestore | null): Promise<void> {
       scoring: "pct",
       tiebreaker: "rd",
     },
-    // Per-tenant nav customization. LBDC doesn't run a /news page.
-    nav: { hide: ["News"] },
+    // Per-tenant nav customization — labels matched case-insensitively
+    // against the Nav component's link list (both top-level and
+    // dropdown children). LBDC doesn't run a /news page, doesn't
+    // share SFBL's about/team-registration/waiver/store surface.
+    nav: {
+      hide: [
+        "News",
+        "About SFBL",
+        "Team Registration",
+        "Team Waiver",
+        "Store",
+      ],
+    },
     migrated_at: new Date().toISOString(),
     migrated_from: "supabase://vhovzpajuyphjatjlodo",
   };

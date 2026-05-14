@@ -151,9 +151,15 @@
   gap: 10px;
 }
 
+/* Logo size — bumped up so the standings page reads as "team
+ * identity → record" rather than a wall of text. Adam wanted them
+ * much bigger to match the look-and-feel of LBDC's existing site
+ * (2026-05-13). The compact homepage sidebar uses the same class
+ * but already hides the logo column via .le-compact-row layout, so
+ * this only affects the full standings table. */
 .le-s-tbl .le-team-logo {
-  width: 22px;
-  height: 22px;
+  width: 40px;
+  height: 40px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -318,6 +324,12 @@
   .le-s-tbl th:first-child,
   .le-s-tbl td:first-child { padding-left: 12px; }
   .le-s-tbl .le-tname { font-size: 14px; }
+  /* Logo stays visually prominent on phones — 32px lets a 4-letter
+   * team name still fit on one line in the team cell. */
+  .le-s-tbl .le-team-logo {
+    width: 32px;
+    height: 32px;
+  }
   .le-form-dot {
     width: 6px;
     height: 6px;

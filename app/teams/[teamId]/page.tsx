@@ -16,6 +16,7 @@ import {
   sortByPoints,
   type GameResult,
 } from "@/lib/stats/shared";
+import { formatIP } from "@/lib/stats/ip";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 
 export const dynamic = "force-dynamic";
@@ -163,18 +164,58 @@ export default async function TeamDetailPage({
   const aggBatting = aggregateRoster(rosterSnap.docs.map((d) => d.data().stats));
   const aggPitching = aggregateRosterPitching(rosterSnap.docs.map((d) => d.data().pitching));
 
-  // Roster sorted by jersey #.
+  // Roster row — pulls the full batting + pitching aggregates the
+  // recalcLeague() job writes onto each player doc, so the team page
+  // can render the dense stat tables LBDC's site uses (and matches
+  // captain-side decision making). Anything missing comes back as
+  // undefined so the table cell renders an em-dash.
   const roster = rosterSnap.docs
     .map((d) => {
       const data = d.data();
+      const s = (data.stats ?? {}) as Record<string, number | undefined>;
+      const p = (data.pitching ?? {}) as Record<string, number | undefined>;
+      // TB (total bases) — derived because we don't store it. 1B is
+      // (h − 2B − 3B − HR). TB = 1B + 2*2B + 3*3B + 4*HR.
+      const h = Number(s.h ?? 0);
+      const doubles = Number(s.doubles ?? 0);
+      const triples = Number(s.triples ?? 0);
+      const hr = Number(s.hr ?? 0);
+      const singles = Math.max(0, h - doubles - triples - hr);
+      const tb = singles + 2 * doubles + 3 * triples + 4 * hr;
       return {
         id: d.id,
         name: String(data.name ?? d.id),
         jersey: data.jersey != null ? Number(data.jersey) : null,
         position: data.position ? String(data.position) : null,
-        avg: data.stats?.avg as number | undefined,
-        hr: data.stats?.hr as number | undefined,
-        rbi: data.stats?.rbi as number | undefined,
+        // Batting line
+        gp: s.gp,
+        ab: s.ab,
+        r: s.r,
+        h: s.h,
+        doubles: s.doubles,
+        triples: s.triples,
+        hr: s.hr,
+        rbi: s.rbi,
+        bb: s.bb,
+        so: s.so,
+        sb: s.sb,
+        tb: Number(s.ab ?? 0) > 0 ? tb : undefined,
+        avg: s.avg,
+        obp: s.obp,
+        ops: s.ops,
+        // Pitching line (undefined = didn't pitch this season)
+        p_app: p.app,
+        p_ip_outs: p.ip_outs,
+        p_w: p.w,
+        p_l: p.l,
+        p_sv: p.sv,
+        p_era: p.era,
+        p_whip: p.whip,
+        p_h: p.h,
+        p_r: p.r,
+        p_er: p.er,
+        p_bb: p.bb,
+        p_so: p.so,
       };
     })
     .sort((a, b) => (a.jersey ?? 999) - (b.jersey ?? 999) || a.name.localeCompare(b.name));
@@ -430,17 +471,37 @@ export default async function TeamDetailPage({
           );
         })()}
 
-        <div className="grid gap-10 lg:grid-cols-[1fr_360px]">
-          <div>
+        {/* Roster + pitching tables span full width. The original
+            layout had them in a narrow main column next to the
+            schedule sidebar; once we expanded to LBDC's 15 stat
+            columns the table couldn't fit. We stack: roster on top
+            (full width), then pitching (when there's data), then
+            recent/upcoming as a separate section. */}
+        <div>
+          <h2 className="font-display mb-4" style={{ fontSize: 28 }}>
+            Roster
+          </h2>
+          {roster.length === 0 ? (
+            <p style={{ color: "var(--muted)" }}>No players on roster yet.</p>
+          ) : (
+            <RosterTable roster={roster} hasGames={hasGames} />
+          )}
+        </div>
+
+        {/* Pitching table appears only when at least one player on
+            the roster has thrown a pitch this season. Hidden for
+            position-player-only teams (and pre-launch). */}
+        {roster.some((p) => (p.p_app ?? 0) > 0) && (
+          <div style={{ marginTop: 40 }}>
             <h2 className="font-display mb-4" style={{ fontSize: 28 }}>
-              Roster
+              Pitching
             </h2>
-            {roster.length === 0 ? (
-              <p style={{ color: "var(--muted)" }}>No players on roster yet.</p>
-            ) : (
-              <RosterTable roster={roster} hasGames={hasGames} />
-            )}
+            <PitchingTable roster={roster} />
           </div>
+        )}
+
+        <div className="grid gap-10 lg:grid-cols-[1fr_360px]" style={{ marginTop: 40 }}>
+          <div />
 
           <aside>
             <h2 className="font-display mb-4" style={{ fontSize: 22 }}>
@@ -555,9 +616,35 @@ interface RosterPlayer {
   name: string;
   jersey: number | null;
   position: string | null;
-  avg?: number;
+  // Batting
+  gp?: number;
+  ab?: number;
+  r?: number;
+  h?: number;
+  doubles?: number;
+  triples?: number;
   hr?: number;
   rbi?: number;
+  bb?: number;
+  so?: number;
+  sb?: number;
+  tb?: number;
+  avg?: number;
+  obp?: number;
+  ops?: number;
+  // Pitching
+  p_app?: number;
+  p_ip_outs?: number;
+  p_w?: number;
+  p_l?: number;
+  p_sv?: number;
+  p_era?: number;
+  p_whip?: number;
+  p_h?: number;
+  p_r?: number;
+  p_er?: number;
+  p_bb?: number;
+  p_so?: number;
 }
 
 function RosterTable({
@@ -567,10 +654,9 @@ function RosterTable({
   roster: RosterPlayer[];
   hasGames: boolean;
 }) {
-  // When the season hasn't started, drop the AVG/HR/RBI columns
-  // entirely. The all-dashes table just looks broken; bare jersey/
-  // name/position is cleaner and matches what the data actually
-  // supports.
+  // Pre-season: bare #/name/pos. The all-em-dash stat table looked
+  // broken on launch day, so we hide stat columns until the first
+  // box score lands.
   if (!hasGames) {
     return (
       <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
@@ -605,17 +691,37 @@ function RosterTable({
       </div>
     );
   }
+  // Full batting table — columns mirror what LBDC's existing site
+  // shows: # / Player / GP / AB / R / H / 2B / 3B / HR / RBI / BB /
+  // K / SB / TB / AVG / OBP / OPS. We deliberately drop the Pos
+  // column on the full table — players move around, position has
+  // less signal than the stat line. Overflow-x scroll on narrow
+  // viewports so phones can pan instead of squeezing 17 columns.
   return (
-    <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
-      <table className="s-tbl">
+    <div
+      className="rounded-md border border-slate-200 bg-white"
+      style={{ overflowX: "auto" }}
+    >
+      <table className="s-tbl" style={{ minWidth: 1000 }}>
         <thead>
           <tr>
             <th className="text-left">#</th>
             <th className="text-left">Player</th>
-            <th className="text-left">Pos</th>
-            <th>AVG</th>
+            <th>GP</th>
+            <th>AB</th>
+            <th>R</th>
+            <th>H</th>
+            <th>2B</th>
+            <th>3B</th>
             <th>HR</th>
             <th>RBI</th>
+            <th>BB</th>
+            <th>K</th>
+            <th>SB</th>
+            <th>TB</th>
+            <th>AVG</th>
+            <th>OBP</th>
+            <th>OPS</th>
           </tr>
         </thead>
         <tbody>
@@ -629,14 +735,96 @@ function RosterTable({
                   {p.name}
                 </Link>
               </td>
-              <td className="text-left">
-                <span style={{ color: "var(--muted)", fontSize: 12 }}>
-                  {p.position ?? "—"}
-                </span>
-              </td>
-              <td>{p.avg != null ? formatAvg(p.avg) : "—"}</td>
+              <td>{p.gp ?? "—"}</td>
+              <td>{p.ab ?? "—"}</td>
+              <td>{p.r ?? "—"}</td>
+              <td>{p.h ?? "—"}</td>
+              <td>{p.doubles ?? "—"}</td>
+              <td>{p.triples ?? "—"}</td>
               <td>{p.hr ?? "—"}</td>
               <td>{p.rbi ?? "—"}</td>
+              <td>{p.bb ?? "—"}</td>
+              <td>{p.so ?? "—"}</td>
+              <td>{p.sb ?? "—"}</td>
+              <td>{p.tb ?? "—"}</td>
+              <td>{p.avg != null ? formatAvg(p.avg) : "—"}</td>
+              <td>{p.obp != null ? formatAvg(p.obp) : "—"}</td>
+              <td>{p.ops != null ? formatOps(p.ops) : "—"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// Pitching table — same data shape as RosterPlayer (we attached the
+// pitching aggregate alongside batting), filtered to players with at
+// least one appearance. Columns: Player / APP / IP / W / L / SV /
+// ERA / WHIP / H / R / ER / BB / K. Hidden entirely when no one on
+// the team has pitched yet (we gate at the call site).
+function PitchingTable({ roster }: { roster: RosterPlayer[] }) {
+  const pitchers = roster
+    .filter((p) => (p.p_app ?? 0) > 0)
+    .sort((a, b) => {
+      // Sort by IP desc (more innings → higher in the table). Tie-
+      // break by ERA asc (lower is better) then by name.
+      const ipa = a.p_ip_outs ?? 0;
+      const ipb = b.p_ip_outs ?? 0;
+      if (ipa !== ipb) return ipb - ipa;
+      const ea = a.p_era ?? 99;
+      const eb = b.p_era ?? 99;
+      if (ea !== eb) return ea - eb;
+      return a.name.localeCompare(b.name);
+    });
+
+  if (pitchers.length === 0) return null;
+
+  return (
+    <div
+      className="rounded-md border border-slate-200 bg-white"
+      style={{ overflowX: "auto" }}
+    >
+      <table className="s-tbl" style={{ minWidth: 900 }}>
+        <thead>
+          <tr>
+            <th className="text-left">Player</th>
+            <th>APP</th>
+            <th>IP</th>
+            <th>W</th>
+            <th>L</th>
+            <th>SV</th>
+            <th>ERA</th>
+            <th>WHIP</th>
+            <th>H</th>
+            <th>R</th>
+            <th>ER</th>
+            <th>BB</th>
+            <th>K</th>
+          </tr>
+        </thead>
+        <tbody>
+          {pitchers.map((p) => (
+            <tr key={p.id}>
+              <td className="text-left">
+                <Link href={`/players/${p.id}`} style={{ fontWeight: 600 }}>
+                  {p.name}
+                </Link>
+              </td>
+              <td>{p.p_app ?? "—"}</td>
+              <td>
+                {p.p_ip_outs != null ? formatIP(p.p_ip_outs) : "—"}
+              </td>
+              <td>{p.p_w ?? "—"}</td>
+              <td>{p.p_l ?? "—"}</td>
+              <td>{p.p_sv ?? "—"}</td>
+              <td>{p.p_era != null ? p.p_era.toFixed(2) : "—"}</td>
+              <td>{p.p_whip != null ? p.p_whip.toFixed(2) : "—"}</td>
+              <td>{p.p_h ?? "—"}</td>
+              <td>{p.p_r ?? "—"}</td>
+              <td>{p.p_er ?? "—"}</td>
+              <td>{p.p_bb ?? "—"}</td>
+              <td>{p.p_so ?? "—"}</td>
             </tr>
           ))}
         </tbody>
@@ -800,6 +988,13 @@ function formatRecord(w: number, l: number, t: number): string {
 function formatAvg(n: number): string {
   if (n === 1) return "1.000";
   return n.toFixed(3).replace(/^0/, "");
+}
+// OPS can exceed 1.000 (a great year). Keep the leading 1 in that
+// case ("1.778"); strip the leading zero only when ≤ 1.000 ("0.456"
+// → ".456").
+function formatOps(n: number): string {
+  const s = n.toFixed(3);
+  return n < 1 ? s.replace(/^0/, "") : s;
 }
 
 interface BattingAgg {

@@ -1,6955 +1,1866 @@
 [
   {
-    "name": "2026 BOOMERS 60/70 Division",
-    "divisionId": "1064571",
-    "games": [],
+    "season": "Season - 2026",
+    "game_type": "season",
+    "division": "BOOMERS 60/70 Division",
     "standings": [
       {
         "team": "Eddie Murray Mashers '56",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "--"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Greg Maddux Magicians '66",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "--"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       }
     ]
   },
   {
-    "name": "2026 Diamond Classics Memorial",
-    "divisionId": "1065143",
-    "games": [],
+    "season": "Postseason - 2026",
+    "game_type": "playoff",
+    "division": "Diamond Classics Memorial",
     "standings": [
       {
         "team": "Diamond Classics",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "--"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "So Cal Trojans",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "--"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       }
     ]
   },
   {
-    "name": "2026 Las Vegas 60's World Series",
-    "divisionId": "1065193",
-    "games": [],
+    "season": "Postseason - 2026",
+    "game_type": "playoff",
+    "division": "Las Vegas 60's World Series",
     "standings": [
       {
         "team": "Diamond Classics 60's",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "--"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       }
     ]
   },
   {
-    "name": "Spring/Summer 2026 Diamond Classics Saturdays",
-    "divisionId": "1064043",
-    "games": [],
-    "rosters": [
-      {
-        "team": "Pirates",
-        "players": [
-          {
-            "number": "",
-            "name": "Ron Arbolida"
-          },
-          {
-            "number": "",
-            "name": "Terrence Herren"
-          },
-          {
-            "number": "",
-            "name": "Kevin Johnson"
-          },
-          {
-            "number": "",
-            "name": "Luis Luna"
-          },
-          {
-            "number": "",
-            "name": "JR Rodriguez"
-          },
-          {
-            "number": "",
-            "name": "Joe Sandoval"
-          },
-          {
-            "number": "",
-            "name": "Dylan Smith"
-          }
-        ]
-      },
-      {
-        "team": "Brooklyn",
-        "players": [
-          {
-            "number": "34",
-            "name": "Alan Acosta"
-          },
-          {
-            "number": "8",
-            "name": "Joe Barrett"
-          },
-          {
-            "number": "26",
-            "name": "JD Campbell"
-          },
-          {
-            "number": "23",
-            "name": "Marty Campbell"
-          },
-          {
-            "number": "7",
-            "name": "Johnny Fennel"
-          },
-          {
-            "number": "44",
-            "name": "Tony Garcia"
-          },
-          {
-            "number": "66",
-            "name": "Jose Gomez"
-          },
-          {
-            "number": "22",
-            "name": "Daniel Gutierrez"
-          },
-          {
-            "number": "33",
-            "name": "Marshall Landry"
-          },
-          {
-            "number": "27",
-            "name": "Ryan Lieberman"
-          },
-          {
-            "number": "4",
-            "name": "Mooch Machado"
-          },
-          {
-            "number": "",
-            "name": "Kurt Mascio"
-          },
-          {
-            "number": "6",
-            "name": "Craig McKendall"
-          },
-          {
-            "number": "29",
-            "name": "Mark Newman"
-          },
-          {
-            "number": "",
-            "name": "John Perkins"
-          },
-          {
-            "number": "21",
-            "name": "Eddie Rosas"
-          },
-          {
-            "number": "3",
-            "name": "John Sosa"
-          },
-          {
-            "number": "5",
-            "name": "Brian Stoltz"
-          }
-        ]
-      }
-    ],
+    "season": "Spring/Summer - 2026",
+    "game_type": "season",
+    "division": "Diamond Classics Saturdays",
     "standings": [
       {
         "team": "Black Sox",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "--"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Brooklyn",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "--"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Dodgers",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "--"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Generals",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "--"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Pirates",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "--"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Titans",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "--"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Tribe",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "--"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       }
     ]
   },
   {
-    "name": "2025 NABA AZ World Series 50's",
-    "divisionId": "1053560",
-    "games": [
-      {
-        "date": "10/9/2025",
-        "status": "Final",
-        "away_team": "Diamond Classics Titans 50's",
-        "away_score": 10,
-        "home_team": "erpientes",
-        "home_score": 5,
-        "headline": "DC Titans Take 1st Round Playoff"
-      },
-      {
-        "date": "10/8/2025",
-        "status": "Final",
-        "away_team": "Diamond Classics Titans 50's",
-        "away_score": 19,
-        "home_team": "erpientes",
-        "home_score": 9,
-        "headline": ""
-      },
-      {
-        "date": "10/7/2025",
-        "status": "Final",
-        "away_team": "KC Royals",
-        "away_score": 18,
-        "home_team": "Diamond Classics Titans 50's",
-        "home_score": 8,
-        "headline": ""
-      },
-      {
-        "date": "10/6/2025",
-        "status": "Final",
-        "away_team": "Dallas Redbirds",
-        "away_score": 15,
-        "home_team": "Diamond Classics Titans 50's",
-        "home_score": 1,
-        "headline": ""
-      },
-      {
-        "date": "10/5/2025",
-        "status": "Final",
-        "away_team": "Diamond Classics Titans 50's",
-        "away_score": 18,
-        "home_team": "Guam",
-        "home_score": 0,
-        "headline": "Diamond Classics Titans 50's Wins First Game of Pool vs Guam"
-      }
-    ],
+    "season": "Postseason - 2025",
+    "game_type": "playoff",
+    "division": "NABA AZ World Series 50's",
     "standings": [
       {
         "team": "Diamond Classics Titans 50's",
         "w": 3,
         "l": 2,
         "t": 0,
-        "pts": 6,
-        "gb": "--"
+        "g": 5,
+        "pct": ".600",
+        "p": 6
       },
       {
         "team": "Dallas Redbirds",
         "w": 1,
         "l": 0,
         "t": 0,
-        "pts": 2,
-        "gb": "--"
+        "g": 1,
+        "pct": "1.000",
+        "p": 2
       },
       {
         "team": "KC Royals",
         "w": 1,
         "l": 0,
         "t": 0,
-        "pts": 2,
-        "gb": "--"
+        "g": 1,
+        "pct": "1.000",
+        "p": 2
       },
       {
         "team": "SD BC",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "0.5"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Yeti",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "0.5"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Guam",
         "w": 0,
         "l": 1,
         "t": 0,
-        "pts": 0,
-        "gb": "1.0"
+        "g": 1,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Serpientes",
         "w": 0,
         "l": 2,
         "t": 0,
-        "pts": 0,
-        "gb": "1.5"
+        "g": 2,
+        "pct": ".000",
+        "p": 0
       }
     ]
   },
   {
-    "name": "2025 NABA Father/Son",
-    "divisionId": "1059946",
-    "games": [
-      {
-        "date": "10/3/2025",
-        "status": "Final",
-        "away_team": "MVP23",
-        "away_score": 13,
-        "home_team": "Diamond Classics Titans",
-        "home_score": 9,
-        "headline": ""
-      },
-      {
-        "date": "10/3/2025",
-        "status": "Final",
-        "away_team": "Colorado Nuts",
-        "away_score": 11,
-        "home_team": "Diamond Classics Titans",
-        "home_score": 4,
-        "headline": ""
-      },
-      {
-        "date": "10/2/2025",
-        "status": "Final",
-        "away_team": "Diamond Classics Titans",
-        "away_score": 19,
-        "home_team": "Vancouver Expos",
-        "home_score": 12,
-        "headline": ""
-      },
-      {
-        "date": "10/2/2025",
-        "status": "Final",
-        "away_team": "SD Banditos",
-        "away_score": 14,
-        "home_team": "Diamond Classics Titans",
-        "home_score": 4,
-        "headline": ""
-      }
-    ],
+    "season": "Postseason - 2025",
+    "game_type": "playoff",
+    "division": "NABA Father/Son",
     "standings": [
       {
         "team": "Colorado Nuts",
         "w": 1,
         "l": 0,
         "t": 0,
-        "pts": 2,
-        "gb": "--"
+        "g": 1,
+        "pct": "1.000",
+        "p": 2
       },
       {
         "team": "SD Banditos",
         "w": 1,
         "l": 0,
         "t": 0,
-        "pts": 2,
-        "gb": "--"
+        "g": 1,
+        "pct": "1.000",
+        "p": 2
       },
       {
         "team": "MVP23",
         "w": 1,
         "l": 0,
         "t": 0,
-        "pts": 2,
-        "gb": "--"
+        "g": 1,
+        "pct": "1.000",
+        "p": 2
       },
       {
         "team": "Diamond Classics Titans",
         "w": 1,
         "l": 3,
         "t": 0,
-        "pts": 2,
-        "gb": "1.5"
+        "g": 4,
+        "pct": ".250",
+        "p": 2
       },
       {
         "team": "Vancouver Expos",
         "w": 0,
         "l": 1,
         "t": 0,
-        "pts": 0,
-        "gb": "1.0"
+        "g": 1,
+        "pct": ".000",
+        "p": 0
       }
     ]
   },
   {
-    "name": "2025 NABA Las Vegas World Series 60's",
-    "divisionId": "1053561",
-    "games": [
-      {
-        "date": "10/25/2025",
-        "status": "Final",
-        "away_team": "Diamond Classics 60's",
-        "away_score": 14,
-        "home_team": "Tortugas",
-        "home_score": 1,
-        "headline": "Diamond Classics Titans Shell Tortugas!"
-      },
-      {
-        "date": "10/24/2025",
-        "status": "Final",
-        "away_team": "Diamond Classics 60's",
-        "away_score": 6,
-        "home_team": "Zephyrs",
-        "home_score": 2,
-        "headline": "Diamond Classics Come From Behind"
-      },
-      {
-        "date": "10/23/2025",
-        "status": "Final",
-        "away_team": "Diamond Classics 60's",
-        "away_score": 14,
-        "home_team": "Denver Bears",
-        "home_score": 3,
-        "headline": "Sosa Stymies Bears. Offense Erupts."
-      },
-      {
-        "date": "10/22/2025",
-        "status": "Final",
-        "away_team": "Diamond Classics 60's",
-        "away_score": 13,
-        "home_team": "lues",
-        "home_score": 4,
-        "headline": "Diamond Classics TCB"
-      },
-      {
-        "date": "10/21/2025",
-        "status": "Final",
-        "away_team": "Tortugas",
-        "away_score": 10,
-        "home_team": "Diamond Classics 60's",
-        "home_score": 9,
-        "headline": "Tortugas Walk Off"
-      },
-      {
-        "date": "10/20/2025",
-        "status": "Final",
-        "away_team": "Diamond Classics 60's",
-        "away_score": 5,
-        "home_team": "ortland Red Sox 50's",
-        "home_score": 2,
-        "headline": "Petrocelli Stifles Sox"
-      }
-    ],
+    "season": "Postseason - 2025",
+    "game_type": "playoff",
+    "division": "NABA Las Vegas World Series 60's",
     "standings": [
       {
         "team": "Diamond Classics 60's",
         "w": 5,
         "l": 1,
         "t": 0,
-        "pts": 10,
-        "gb": "--"
+        "g": 6,
+        "pct": ".833",
+        "p": 10
       },
       {
         "team": "Tortugas",
         "w": 1,
         "l": 1,
         "t": 0,
-        "pts": 2,
-        "gb": "2.0"
+        "g": 2,
+        "pct": ".500",
+        "p": 2
       },
       {
         "team": "Portland Red Sox 50's",
         "w": 0,
         "l": 1,
         "t": 0,
-        "pts": 0,
-        "gb": "2.5"
+        "g": 1,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Zephyrs",
         "w": 0,
         "l": 1,
         "t": 0,
-        "pts": 0,
-        "gb": "2.5"
+        "g": 1,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Blues",
         "w": 0,
         "l": 1,
         "t": 0,
-        "pts": 0,
-        "gb": "2.5"
+        "g": 1,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Denver Bears",
         "w": 0,
         "l": 1,
         "t": 0,
-        "pts": 0,
-        "gb": "2.5"
+        "g": 1,
+        "pct": ".000",
+        "p": 0
       }
     ]
   },
   {
-    "name": "2026 Fall/Winter Season (Season #10)",
-    "divisionId": "1061488",
-    "games": [
-      {
-        "date": "3/28/2026",
-        "status": "Playoff",
-        "away_team": "Generals",
-        "away_score": 10,
-        "home_team": "Dodgers",
-        "home_score": 6,
-        "headline": "Generals Champs!!"
-      },
-      {
-        "date": "3/14/2026",
-        "status": "Playoff",
-        "away_team": "Dodgers",
-        "away_score": 10,
-        "home_team": "Tribe",
-        "home_score": 5,
-        "headline": "Dodgers Advance To Championship Game!"
-      },
-      {
-        "date": "3/14/2026",
-        "status": "Playoff",
-        "away_team": "Generals",
-        "away_score": 12,
-        "home_team": "rooklyn",
-        "home_score": 8,
-        "headline": "General Potvin Takes Out Brooklyn!"
-      },
-      {
-        "date": "2/28/2026",
-        "status": "Final",
-        "away_team": "Pirates",
-        "away_score": 20,
-        "home_team": "Titans",
-        "home_score": 10,
-        "headline": ""
-      },
-      {
-        "date": "2/28/2026",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 5,
-        "home_team": "Titans",
-        "home_score": 4,
-        "headline": "Generals beat Titans to clinch playoff berth."
-      },
-      {
-        "date": "2/28/2026",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 13,
-        "home_team": "Tribe",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "2/21/2026",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 11,
-        "home_team": "Titans",
-        "home_score": 4,
-        "headline": "Brooklyn Bests Titans"
-      },
-      {
-        "date": "2/14/2026",
-        "status": "Final",
-        "away_team": "Tribe",
-        "away_score": 15,
-        "home_team": "irates",
-        "home_score": 5,
-        "headline": ""
-      },
-      {
-        "date": "2/14/2026",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 10,
-        "home_team": "Titans",
-        "home_score": 4,
-        "headline": ""
-      },
-      {
-        "date": "2/14/2026",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 10,
-        "home_team": "Generals",
-        "home_score": 6,
-        "headline": "Brooklyn Stages Comeback!"
-      },
-      {
-        "date": "2/7/2026",
-        "status": "PPD",
-        "away_team": "Generals",
-        "away_score": 0,
-        "home_team": "Titans",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "2/7/2026",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 9,
-        "home_team": "irates",
-        "home_score": 0,
-        "headline": "Protest Upheld"
-      },
-      {
-        "date": "2/7/2026",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 10,
-        "home_team": "Tribe",
-        "home_score": 9,
-        "headline": "Brooklyn Survives Tribal Scare!"
-      },
-      {
-        "date": "1/31/2026",
-        "status": "Final",
-        "away_team": "Tribe",
-        "away_score": 21,
-        "home_team": "Titans",
-        "home_score": 4,
-        "headline": ""
-      },
-      {
-        "date": "1/31/2026",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 14,
-        "home_team": "Generals",
-        "home_score": 4,
-        "headline": ""
-      },
-      {
-        "date": "1/31/2026",
-        "status": "Final",
-        "away_team": "Pirates",
-        "away_score": 4,
-        "home_team": "rooklyn",
-        "home_score": 4,
-        "headline": "It's a Draw!"
-      },
-      {
-        "date": "1/24/2026",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 18,
-        "home_team": "irates",
-        "home_score": 6,
-        "headline": "Generals Cruise to Win"
-      },
-      {
-        "date": "1/24/2026",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 7,
-        "home_team": "rooklyn",
-        "home_score": 5,
-        "headline": "Weinrich Holds Off Brooklyn!"
-      },
-      {
-        "date": "1/24/2026",
-        "status": "Final",
-        "away_team": "Tribe",
-        "away_score": 12,
-        "home_team": "Dodgers",
-        "home_score": 4,
-        "headline": ""
-      },
-      {
-        "date": "1/10/2026",
-        "status": "Final",
-        "away_team": "Tribe",
-        "away_score": 16,
-        "home_team": "irates",
-        "home_score": 9,
-        "headline": ""
-      },
-      {
-        "date": "1/10/2026",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 6,
-        "home_team": "Generals",
-        "home_score": 2,
-        "headline": "Brooklyn Holds Off Generals"
-      },
-      {
-        "date": "1/10/2026",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 10,
-        "home_team": "Titans",
-        "home_score": 3,
-        "headline": ""
-      },
-      {
-        "date": "1/3/2026",
-        "status": "PPD",
-        "away_team": "Titans",
-        "away_score": 0,
-        "home_team": "irates",
-        "home_score": 0,
-        "headline": "Field unplayable due to rain"
-      },
-      {
-        "date": "12/20/2025",
-        "status": "PPD",
-        "away_team": "Titans",
-        "away_score": 0,
-        "home_team": "irates",
-        "home_score": 0,
-        "headline": "Field Unavailable"
-      },
-      {
-        "date": "12/20/2025",
-        "status": "Final",
-        "away_team": "Tribe",
-        "away_score": 11,
-        "home_team": "Generals",
-        "home_score": 6,
-        "headline": ""
-      },
-      {
-        "date": "12/20/2025",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 7,
-        "home_team": "Dodgers",
-        "home_score": 4,
-        "headline": "Brooklyn Holds Off Dodgers"
-      },
-      {
-        "date": "12/13/2025",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 9,
-        "home_team": "Generals",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "12/13/2025",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 10,
-        "home_team": "Tribe",
-        "home_score": 4,
-        "headline": "Brooklyn Holds Off Tribe"
-      },
-      {
-        "date": "12/13/2025",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 16,
-        "home_team": "irates",
-        "home_score": 1,
-        "headline": ""
-      },
-      {
-        "date": "12/6/2025",
-        "status": "Final",
-        "away_team": "Tribe",
-        "away_score": 21,
-        "home_team": "Titans",
-        "home_score": 5,
-        "headline": ""
-      },
-      {
-        "date": "12/6/2025",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 10,
-        "home_team": "Dodgers",
-        "home_score": 5,
-        "headline": ""
-      },
-      {
-        "date": "12/6/2025",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 11,
-        "home_team": "irates",
-        "home_score": 0,
-        "headline": "Pirates Garner Just 2 Hits"
-      },
-      {
-        "date": "11/22/2025",
-        "status": "PPD",
-        "away_team": "Pirates",
-        "away_score": 0,
-        "home_team": "Generals",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "11/22/2025",
-        "status": "PPD",
-        "away_team": "Titans",
-        "away_score": 0,
-        "home_team": "rooklyn",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "11/22/2025",
-        "status": "PPD",
-        "away_team": "Dodgers",
-        "away_score": 0,
-        "home_team": "Tribe",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "11/15/2025",
-        "status": "PPD",
-        "away_team": "Brooklyn",
-        "away_score": 0,
-        "home_team": "Generals",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "11/15/2025",
-        "status": "PPD",
-        "away_team": "Titans",
-        "away_score": 0,
-        "home_team": "Dodgers",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "11/15/2025",
-        "status": "PPD",
-        "away_team": "Tribe",
-        "away_score": 0,
-        "home_team": "irates",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "11/8/2025",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 15,
-        "home_team": "Dodgers",
-        "home_score": 3,
-        "headline": "Brooklyn Breaks Open Game Late"
-      },
-      {
-        "date": "11/8/2025",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 5,
-        "home_team": "Tribe",
-        "home_score": 4,
-        "headline": "Generals win a close game with Tribe."
-      },
-      {
-        "date": "11/8/2025",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 10,
-        "home_team": "irates",
-        "home_score": 6,
-        "headline": "Titans start season with a W"
-      }
-    ],
+    "season": "Fall/Winter - 2026",
+    "game_type": "season",
+    "division": "(Season #10)",
     "standings": [
       {
         "team": "Brooklyn",
         "w": 8,
         "l": 1,
         "t": 1,
-        "pts": 17,
-        "gb": "--"
+        "g": 10,
+        "pct": ".850",
+        "p": 17
       },
       {
         "team": "Dodgers",
         "w": 6,
         "l": 4,
         "t": 0,
-        "pts": 12,
-        "gb": "2.5"
+        "g": 10,
+        "pct": ".600",
+        "p": 12
       },
       {
         "team": "Tribe",
         "w": 6,
         "l": 4,
         "t": 0,
-        "pts": 12,
-        "gb": "2.5"
+        "g": 10,
+        "pct": ".600",
+        "p": 12
       },
       {
         "team": "Generals",
         "w": 4,
         "l": 5,
         "t": 0,
-        "pts": 8,
-        "gb": "4.0"
+        "g": 9,
+        "pct": ".444",
+        "p": 8
       },
       {
         "team": "Titans",
         "w": 3,
         "l": 7,
         "t": 0,
-        "pts": 6,
-        "gb": "5.5"
+        "g": 10,
+        "pct": ".300",
+        "p": 6
       },
       {
         "team": "Pirates",
         "w": 1,
         "l": 7,
         "t": 1,
-        "pts": 3,
-        "gb": "6.5"
+        "g": 9,
+        "pct": ".167",
+        "p": 3
       }
     ]
   },
   {
-    "name": "2025 4th of July-NABA",
-    "divisionId": "1055104",
-    "games": [
-      {
-        "date": "7/5/2025",
-        "status": "Final",
-        "away_team": "Diamond Classics Titans",
-        "away_score": 6,
-        "home_team": "Indians",
-        "home_score": 4,
-        "headline": ""
-      },
-      {
-        "date": "7/4/2025",
-        "status": "Final",
-        "away_team": "Heat",
-        "away_score": 9,
-        "home_team": "Diamond Classics Titans",
-        "home_score": 1,
-        "headline": ""
-      },
-      {
-        "date": "7/4/2025",
-        "status": "Final",
-        "away_team": "Diamond Classics Titans",
-        "away_score": 3,
-        "home_team": "Cerveceros",
-        "home_score": 2,
-        "headline": ""
-      }
-    ],
+    "season": "Postseason - 2025",
+    "game_type": "playoff",
+    "division": "4th of July-NABA",
     "standings": [
       {
         "team": "Diamond Classics Titans",
         "w": 2,
         "l": 1,
         "t": 0,
-        "pts": 4,
-        "gb": "--"
+        "g": 3,
+        "pct": ".667",
+        "p": 4
       },
       {
         "team": "Heat",
         "w": 1,
         "l": 0,
         "t": 0,
-        "pts": 2,
-        "gb": "--"
+        "g": 1,
+        "pct": "1.000",
+        "p": 2
       },
       {
         "team": "Cerveceros",
         "w": 0,
         "l": 1,
         "t": 0,
-        "pts": 0,
-        "gb": "1.0"
+        "g": 1,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Indians",
         "w": 0,
         "l": 1,
         "t": 0,
-        "pts": 0,
-        "gb": "1.0"
+        "g": 1,
+        "pct": ".000",
+        "p": 0
       }
     ]
   },
   {
-    "name": "2025 Memorial Weekend Tournament-Las Vegas",
-    "divisionId": "1056761",
-    "games": [
-      {
-        "date": "5/25/2025",
-        "status": "Final",
-        "away_team": "KC Royals",
-        "away_score": 10,
-        "home_team": "Diamond Classics Titans",
-        "home_score": 8,
-        "headline": ""
-      },
-      {
-        "date": "5/24/2025",
-        "status": "Final",
-        "away_team": "Diamond Classics Titans",
-        "away_score": 12,
-        "home_team": "ayarit",
-        "home_score": 10,
-        "headline": ""
-      },
-      {
-        "date": "5/24/2025",
-        "status": "Final",
-        "away_team": "Sonora",
-        "away_score": 8,
-        "home_team": "Diamond Classics Titans",
-        "home_score": 5,
-        "headline": ""
-      }
-    ],
+    "season": "Postseason - 2025",
+    "game_type": "playoff",
+    "division": "Memorial Weekend Tournament-Las Vegas",
     "standings": [
       {
         "team": "Sonora",
         "w": 1,
         "l": 0,
         "t": 0,
-        "pts": 2,
-        "gb": "--"
+        "g": 1,
+        "pct": "1.000",
+        "p": 2
       },
       {
         "team": "KC Royals",
         "w": 1,
         "l": 0,
         "t": 0,
-        "pts": 2,
-        "gb": "--"
+        "g": 1,
+        "pct": "1.000",
+        "p": 2
       },
       {
         "team": "Diamond Classics Titans",
         "w": 1,
         "l": 2,
         "t": 0,
-        "pts": 2,
-        "gb": "1.0"
+        "g": 3,
+        "pct": ".333",
+        "p": 2
       },
       {
         "team": "Nayarit",
         "w": 0,
         "l": 1,
         "t": 0,
-        "pts": 0,
-        "gb": "1.0"
+        "g": 1,
+        "pct": ".000",
+        "p": 0
       }
     ]
   },
   {
-    "name": "2025 NABA Great Park Tournament",
-    "divisionId": "1055186",
-    "games": [
-      {
-        "date": "2/23/2025",
-        "status": "Final",
-        "away_team": "Sonora",
-        "away_score": 11,
-        "home_team": "Diamond Classics",
-        "home_score": 1,
-        "headline": ""
-      },
-      {
-        "date": "2/22/2025",
-        "status": "Final",
-        "away_team": "STXX",
-        "away_score": 21,
-        "home_team": "Diamond Classics",
-        "home_score": 11,
-        "headline": ""
-      },
-      {
-        "date": "2/22/2025",
-        "status": "Final",
-        "away_team": "SD Black Sox",
-        "away_score": 10,
-        "home_team": "Diamond Classics",
-        "home_score": 0,
-        "headline": ""
-      }
-    ],
+    "season": "Postseason - 2025",
+    "game_type": "playoff",
+    "division": "NABA Great Park Tournament",
     "standings": [
       {
         "team": "SD Black Sox",
         "w": 1,
         "l": 0,
         "t": 0,
-        "pts": 2,
-        "gb": "--"
+        "g": 1,
+        "pct": "1.000",
+        "p": 2
       },
       {
         "team": "Sonora",
         "w": 1,
         "l": 0,
         "t": 0,
-        "pts": 2,
-        "gb": "--"
+        "g": 1,
+        "pct": "1.000",
+        "p": 2
       },
       {
         "team": "STXX",
         "w": 1,
         "l": 0,
         "t": 0,
-        "pts": 2,
-        "gb": "--"
+        "g": 1,
+        "pct": "1.000",
+        "p": 2
       },
       {
         "team": "Diamond Classics",
         "w": 0,
         "l": 3,
         "t": 0,
-        "pts": 0,
-        "gb": "2.0"
+        "g": 3,
+        "pct": ".000",
+        "p": 0
       }
     ]
   },
   {
-    "name": "2025 NABA MLK Tournament",
-    "divisionId": "1053559",
-    "games": [
-      {
-        "date": "1/19/2025",
-        "status": "Final",
-        "away_team": "Diamond Classics 50's",
-        "away_score": 7,
-        "home_team": "acramento Seals",
-        "home_score": 6,
-        "headline": ""
-      },
-      {
-        "date": "1/19/2025",
-        "status": "Final",
-        "away_team": "San Diego Black Sox",
-        "away_score": 14,
-        "home_team": "Diamond Classics 50's",
-        "home_score": 4,
-        "headline": ""
-      },
-      {
-        "date": "1/18/2025",
-        "status": "Final",
-        "away_team": "San Diego Black Sox",
-        "away_score": 23,
-        "home_team": "Diamond Classics 50's",
-        "home_score": 4,
-        "headline": ""
-      },
-      {
-        "date": "1/18/2025",
-        "status": "Final",
-        "away_team": "Sacramento Seals",
-        "away_score": 7,
-        "home_team": "Diamond Classics 50's",
-        "home_score": 6,
-        "headline": ""
-      }
-    ],
+    "season": "Postseason - 2025",
+    "game_type": "playoff",
+    "division": "NABA MLK Tournament",
     "standings": [
       {
         "team": "San Diego Black Sox",
         "w": 2,
         "l": 0,
         "t": 0,
-        "pts": 4,
-        "gb": "--"
+        "g": 2,
+        "pct": "1.000",
+        "p": 4
       },
       {
         "team": "Sacramento Seals",
         "w": 1,
         "l": 1,
         "t": 0,
-        "pts": 2,
-        "gb": "1.0"
+        "g": 2,
+        "pct": ".500",
+        "p": 2
       },
       {
         "team": "Diamond Classics 50's",
         "w": 1,
         "l": 3,
         "t": 0,
-        "pts": 2,
-        "gb": "2.0"
+        "g": 4,
+        "pct": ".250",
+        "p": 2
       }
     ]
   },
   {
-    "name": "2025 Spring/Summer Season",
-    "divisionId": "1055551",
-    "games": [
-      {
-        "date": "9/27/2025",
-        "status": "Playoff",
-        "away_team": "(#1) Tribe",
-        "away_score": 3,
-        "home_team": "#3 Generals",
-        "home_score": 2,
-        "headline": "Tribe Wins Most Exciting Championship To Date!!"
-      },
-      {
-        "date": "9/20/2025",
-        "status": "Playoff",
-        "away_team": "#3 Generals",
-        "away_score": 13,
-        "home_team": "(#2)Brooklyn",
-        "home_score": 8,
-        "headline": "Brooklyn Defense Dashes Championship Hopes"
-      },
-      {
-        "date": "9/20/2025",
-        "status": "Final",
-        "away_team": "#4 DodgerTown West",
-        "away_score": 9,
-        "home_team": "Victory",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "9/20/2025",
-        "status": "Playoff",
-        "away_team": "(#1) Tribe",
-        "away_score": 12,
-        "home_team": "#4 DodgerTown West",
-        "home_score": 11,
-        "headline": "Tribe Blast Granny To Walk Off To The Championship Game!"
-      },
-      {
-        "date": "9/13/2025",
-        "status": "Final",
-        "away_team": "(#2)Brooklyn",
-        "away_score": 9,
-        "home_team": "Victory",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "9/13/2025",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 8,
-        "home_team": "#4 DodgerTown West",
-        "home_score": 8,
-        "headline": ""
-      },
-      {
-        "date": "9/6/2025",
-        "status": "Final",
-        "away_team": "#3 Generals",
-        "away_score": 9,
-        "home_team": "Victory",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "9/6/2025",
-        "status": "Final",
-        "away_team": "#3 Generals",
-        "away_score": 16,
-        "home_team": "Titans",
-        "home_score": 0,
-        "headline": "Generals Bats Come Alive Behind Shutdown Pitching"
-      },
-      {
-        "date": "9/6/2025",
-        "status": "Final",
-        "away_team": "(#2)Brooklyn",
-        "away_score": 7,
-        "home_team": "#4 DodgerTown West",
-        "home_score": 3,
-        "headline": "Brooklyn Breaks Through In the Sixth!"
-      },
-      {
-        "date": "8/23/2025",
-        "status": "Final",
-        "away_team": "(#1) Tribe",
-        "away_score": 4,
-        "home_team": "#3 Generals",
-        "home_score": 2,
-        "headline": ""
-      },
-      {
-        "date": "8/23/2025",
-        "status": "Final",
-        "away_team": "(#2)Brooklyn",
-        "away_score": 13,
-        "home_team": "Titans",
-        "home_score": 0,
-        "headline": "Brooklyn Blanks Titans"
-      },
-      {
-        "date": "8/23/2025",
-        "status": "Final",
-        "away_team": "Victory",
-        "away_score": 21,
-        "home_team": "#4 DodgerTown West",
-        "home_score": 9,
-        "headline": ""
-      },
-      {
-        "date": "8/16/2025",
-        "status": "Final",
-        "away_team": "Victory",
-        "away_score": 12,
-        "home_team": "Titans",
-        "home_score": 2,
-        "headline": ""
-      },
-      {
-        "date": "8/16/2025",
-        "status": "Final",
-        "away_team": "(#1) Tribe",
-        "away_score": 15,
-        "home_team": "(#2)Brooklyn",
-        "home_score": 4,
-        "headline": "Big Innings, Big Bombs Sink Brooklyn"
-      },
-      {
-        "date": "8/9/2025",
-        "status": "Final",
-        "away_team": "(#1) Tribe",
-        "away_score": 17,
-        "home_team": "#4 DodgerTown West",
-        "home_score": 7,
-        "headline": ""
-      },
-      {
-        "date": "8/9/2025",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 9,
-        "home_team": "Victory",
-        "home_score": 0,
-        "headline": "Score Reverted Due To Expulsion"
-      },
-      {
-        "date": "8/2/2025",
-        "status": "Final",
-        "away_team": "(#1) Tribe",
-        "away_score": 15,
-        "home_team": "Victory",
-        "home_score": 6,
-        "headline": ""
-      },
-      {
-        "date": "8/2/2025",
-        "status": "Final",
-        "away_team": "#4 DodgerTown West",
-        "away_score": 7,
-        "home_team": "#3 Generals",
-        "home_score": 6,
-        "headline": ""
-      },
-      {
-        "date": "8/2/2025",
-        "status": "Final",
-        "away_team": "(#2)Brooklyn",
-        "away_score": 14,
-        "home_team": "Titans",
-        "home_score": 4,
-        "headline": "Torres and Alloway Dominate."
-      },
-      {
-        "date": "7/26/2025",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 14,
-        "home_team": "#3 Generals",
-        "home_score": 4,
-        "headline": "Titans climbing out od cellar"
-      },
-      {
-        "date": "7/26/2025",
-        "status": "Final",
-        "away_team": "(#1) Tribe",
-        "away_score": 15,
-        "home_team": "(#2)Brooklyn",
-        "home_score": 7,
-        "headline": "9 Run Inning Sinks Brooklyn"
-      },
-      {
-        "date": "7/19/2025",
-        "status": "Final",
-        "away_team": "(#1) Tribe",
-        "away_score": 10,
-        "home_team": "Victory",
-        "home_score": 8,
-        "headline": ""
-      },
-      {
-        "date": "7/19/2025",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 11,
-        "home_team": "#4 DodgerTown West",
-        "home_score": 6,
-        "headline": ""
-      },
-      {
-        "date": "7/19/2025",
-        "status": "Final",
-        "away_team": "(#2)Brooklyn",
-        "away_score": 14,
-        "home_team": "#3 Generals",
-        "home_score": 5,
-        "headline": "Donnels Dominates!"
-      },
-      {
-        "date": "7/12/2025",
-        "status": "Final",
-        "away_team": "Victory",
-        "away_score": 16,
-        "home_team": "Titans",
-        "home_score": 14,
-        "headline": ""
-      },
-      {
-        "date": "7/12/2025",
-        "status": "Final",
-        "away_team": "#4 DodgerTown West",
-        "away_score": 12,
-        "home_team": "#3 Generals",
-        "home_score": 7,
-        "headline": ""
-      },
-      {
-        "date": "7/12/2025",
-        "status": "Final",
-        "away_team": "(#1) Tribe",
-        "away_score": 7,
-        "home_team": "(#2)Brooklyn",
-        "home_score": 5,
-        "headline": "Tribe Takes Advantage of Untimely Error"
-      },
-      {
-        "date": "6/28/2025",
-        "status": "Final",
-        "away_team": "(#2)Brooklyn",
-        "away_score": 0,
-        "home_team": "Victory",
-        "home_score": 0,
-        "headline": "Victory Forfeits Due to Too Many Underage Players."
-      },
-      {
-        "date": "6/28/2025",
-        "status": "Final",
-        "away_team": "#4 DodgerTown West",
-        "away_score": 11,
-        "home_team": "Titans",
-        "home_score": 10,
-        "headline": ""
-      },
-      {
-        "date": "6/28/2025",
-        "status": "Final",
-        "away_team": "#3 Generals",
-        "away_score": 20,
-        "home_team": "(#1) Tribe",
-        "home_score": 9,
-        "headline": "Generals Topple Undefeated Tribe"
-      },
-      {
-        "date": "6/21/2025",
-        "status": "Final",
-        "away_team": "(#1) Tribe",
-        "away_score": 10,
-        "home_team": "#4 DodgerTown West",
-        "home_score": 2,
-        "headline": ""
-      },
-      {
-        "date": "6/21/2025",
-        "status": "Final",
-        "away_team": "(#2)Brooklyn",
-        "away_score": 12,
-        "home_team": "#3 Generals",
-        "home_score": 10,
-        "headline": "Brooklyn Comes Back"
-      },
-      {
-        "date": "6/21/2025",
-        "status": "Playoff",
-        "away_team": "Victory",
-        "away_score": 9,
-        "home_team": "Dropped Out",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "6/14/2025",
-        "status": "Final",
-        "away_team": "(#1) Tribe",
-        "away_score": 18,
-        "home_team": "Titans",
-        "home_score": 3,
-        "headline": ""
-      },
-      {
-        "date": "6/14/2025",
-        "status": "Final",
-        "away_team": "(#2)Brooklyn",
-        "away_score": 8,
-        "home_team": "#4 DodgerTown West",
-        "home_score": 7,
-        "headline": "Brooklyn Hangs On!"
-      },
-      {
-        "date": "6/14/2025",
-        "status": "Final",
-        "away_team": "Victory",
-        "away_score": 13,
-        "home_team": "#3 Generals",
-        "home_score": 12,
-        "headline": ""
-      },
-      {
-        "date": "6/7/2025",
-        "status": "Playoff",
-        "away_team": "Dropped Out",
-        "away_score": 7,
-        "home_team": "Titans",
-        "home_score": 3,
-        "headline": "STXX cruises to a 7-3 win"
-      },
-      {
-        "date": "6/7/2025",
-        "status": "Final",
-        "away_team": "(#2)Brooklyn",
-        "away_score": 18,
-        "home_team": "Victory",
-        "home_score": 11,
-        "headline": "Brooklyn Vanquishes Victory"
-      },
-      {
-        "date": "6/7/2025",
-        "status": "Final",
-        "away_team": "(#1) Tribe",
-        "away_score": 10,
-        "home_team": "#3 Generals",
-        "home_score": 7,
-        "headline": ""
-      },
-      {
-        "date": "5/31/2025",
-        "status": "Final",
-        "away_team": "(#2)Brooklyn",
-        "away_score": 20,
-        "home_team": "#4 DodgerTown West",
-        "home_score": 7,
-        "headline": "BROOKLYN KICKS SOME ASS"
-      },
-      {
-        "date": "5/31/2025",
-        "status": "Final",
-        "away_team": "(#1) Tribe",
-        "away_score": 9,
-        "home_team": "Titans",
-        "home_score": 1,
-        "headline": ""
-      },
-      {
-        "date": "5/31/2025",
-        "status": "Final",
-        "away_team": "#3 Generals",
-        "away_score": 17,
-        "home_team": "Victory",
-        "home_score": 14,
-        "headline": "Generals Hold on for the Win."
-      },
-      {
-        "date": "5/17/2025",
-        "status": "Playoff",
-        "away_team": "(#1) Tribe",
-        "away_score": 10,
-        "home_team": "Dropped Out",
-        "home_score": 4,
-        "headline": "Errors plague STXX to a loss to Tribe"
-      },
-      {
-        "date": "5/17/2025",
-        "status": "Final",
-        "away_team": "#3 Generals",
-        "away_score": 11,
-        "home_team": "#4 DodgerTown West",
-        "home_score": 9,
-        "headline": "Generals Walk it Off in Tenth!"
-      },
-      {
-        "date": "5/17/2025",
-        "status": "Final",
-        "away_team": "(#2)Brooklyn",
-        "away_score": 6,
-        "home_team": "Titans",
-        "home_score": 5,
-        "headline": "Brooklyn Hangs On vs Tenacious Titans!"
-      },
-      {
-        "date": "5/10/2025",
-        "status": "Playoff",
-        "away_team": "(#2)Brooklyn",
-        "away_score": 17,
-        "home_team": "Dropped Out",
-        "home_score": 7,
-        "headline": "Donnels Slows Down Stxx. Torres Blasts One!"
-      },
-      {
-        "date": "5/10/2025",
-        "status": "Final",
-        "away_team": "#4 DodgerTown West",
-        "away_score": 10,
-        "home_team": "Victory",
-        "home_score": 8,
-        "headline": ""
-      },
-      {
-        "date": "5/10/2025",
-        "status": "Final",
-        "away_team": "#3 Generals",
-        "away_score": 9,
-        "home_team": "Titans",
-        "home_score": 7,
-        "headline": "Fun Game on a hot spring morning -"
-      },
-      {
-        "date": "5/3/2025",
-        "status": "Final",
-        "away_team": "(#1) Tribe",
-        "away_score": 25,
-        "home_team": "Victory",
-        "home_score": 3,
-        "headline": "Tribe Win"
-      },
-      {
-        "date": "5/3/2025",
-        "status": "Playoff",
-        "away_team": "#3 Generals",
-        "away_score": 9,
-        "home_team": "Dropped Out",
-        "home_score": 3,
-        "headline": "generals get first win of season!"
-      },
-      {
-        "date": "5/3/2025",
-        "status": "PPD",
-        "away_team": "#4 DodgerTown West",
-        "away_score": 0,
-        "home_team": "Titans",
-        "home_score": 0,
-        "headline": "Double booked"
-      },
-      {
-        "date": "4/26/2025",
-        "status": "PPD *",
-        "away_team": "Dropped Out",
-        "away_score": 0,
-        "home_team": "#4 DodgerTown West",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "4/26/2025",
-        "status": "SPD",
-        "away_team": "(#2)Brooklyn",
-        "away_score": 0,
-        "home_team": "(#1) Tribe",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "4/26/2025",
-        "status": "SPD",
-        "away_team": "Titans",
-        "away_score": 5,
-        "home_team": "Victory",
-        "home_score": 2,
-        "headline": "Game Suspended"
-      },
-      {
-        "date": "4/12/2025",
-        "status": "Playoff",
-        "away_team": "Dropped Out",
-        "away_score": 8,
-        "home_team": "Victory",
-        "home_score": 7,
-        "headline": ""
-      },
-      {
-        "date": "4/12/2025",
-        "status": "Final",
-        "away_team": "(#2)Brooklyn",
-        "away_score": 9,
-        "home_team": "#3 Generals",
-        "home_score": 8,
-        "headline": "Donnels Deals CG vs Generals"
-      },
-      {
-        "date": "4/12/2025",
-        "status": "Final",
-        "away_team": "(#1) Tribe",
-        "away_score": 10,
-        "home_team": "#4 DodgerTown West",
-        "home_score": 6,
-        "headline": "Tribe win inaugural Diamond League Game"
-      }
-    ],
+    "season": "Spring/Summer - 2025",
+    "game_type": "season",
+    "division": "Division",
     "standings": [
       {
         "team": "(#1) Tribe",
         "w": 13,
         "l": 1,
         "t": 0,
-        "pts": 26,
-        "gb": "--"
+        "g": 14,
+        "pct": ".929",
+        "p": 26
       },
       {
         "team": "(#2)Brooklyn",
         "w": 11,
         "l": 4,
         "t": 0,
-        "pts": 22,
-        "gb": "2.5"
+        "g": 15,
+        "pct": ".733",
+        "p": 22
       },
       {
         "team": "#3 Generals",
         "w": 6,
         "l": 9,
         "t": 0,
-        "pts": 12,
-        "gb": "7.5"
+        "g": 15,
+        "pct": ".400",
+        "p": 12
       },
       {
         "team": "#4 DodgerTown West",
         "w": 5,
         "l": 9,
         "t": 1,
-        "pts": 11,
-        "gb": "8.0"
+        "g": 15,
+        "pct": ".367",
+        "p": 11
       },
       {
         "team": "Victory",
         "w": 4,
         "l": 11,
         "t": 0,
-        "pts": 8,
-        "gb": "9.5"
+        "g": 15,
+        "pct": ".267",
+        "p": 8
       },
       {
         "team": "Titans",
         "w": 3,
         "l": 10,
         "t": 1,
-        "pts": 7,
-        "gb": "9.5"
+        "g": 14,
+        "pct": ".250",
+        "p": 7
       }
     ]
   },
   {
-    "name": "2026 NABA MLK 55+ Division",
-    "divisionId": "1062824",
-    "games": [
-      {
-        "date": "1/18/2026",
-        "status": "Final",
-        "away_team": "SD Nationals",
-        "away_score": 12,
-        "home_team": "Diamond Classics Titans-55's",
-        "home_score": 6,
-        "headline": "Strong Pavers Team Takes It!"
-      },
-      {
-        "date": "1/18/2026",
-        "status": "Final",
-        "away_team": "SD Black Sox",
-        "away_score": 15,
-        "home_team": "Diamond Classics Titans-55's",
-        "home_score": 14,
-        "headline": "Diamond Classics Fall JUST short!"
-      },
-      {
-        "date": "1/17/2026",
-        "status": "Final",
-        "away_team": "Diamond Classics Titans-55's",
-        "away_score": 9,
-        "home_team": "acramento Seals",
-        "home_score": 2,
-        "headline": "Donnels Skins Seals!"
-      }
-    ],
+    "season": "Postseason - 2026",
+    "game_type": "playoff",
+    "division": "NABA MLK 55+ Division",
     "standings": [
       {
         "team": "SD Nationals",
         "w": 1,
         "l": 0,
         "t": 0,
-        "pts": 2,
-        "gb": "--"
+        "g": 1,
+        "pct": "1.000",
+        "p": 2
       },
       {
         "team": "SD Black Sox",
         "w": 1,
         "l": 0,
         "t": 0,
-        "pts": 2,
-        "gb": "--"
+        "g": 1,
+        "pct": "1.000",
+        "p": 2
       },
       {
         "team": "Diamond Classics Titans-55's",
         "w": 1,
         "l": 2,
         "t": 0,
-        "pts": 2,
-        "gb": "1.0"
+        "g": 3,
+        "pct": ".333",
+        "p": 2
       },
       {
         "team": "Sacramento Seals",
         "w": 0,
         "l": 1,
         "t": 0,
-        "pts": 0,
-        "gb": "1.0"
+        "g": 1,
+        "pct": ".000",
+        "p": 0
       }
     ]
   },
   {
-    "name": "2024 4th of July-NABA",
-    "divisionId": "1045846",
-    "games": [
-      {
-        "date": "7/6/2024",
-        "status": "Final",
-        "away_team": "LA Cerveceros",
-        "away_score": 20,
-        "home_team": "Diamond Classics-",
-        "home_score": 9,
-        "headline": ""
-      },
-      {
-        "date": "7/5/2024",
-        "status": "Final",
-        "away_team": "So Cal Indians",
-        "away_score": 8,
-        "home_team": "Diamond Classics-",
-        "home_score": 1,
-        "headline": ""
-      },
-      {
-        "date": "7/5/2024",
-        "status": "Final",
-        "away_team": "STXX Sports",
-        "away_score": 8,
-        "home_team": "Diamond Classics-",
-        "home_score": 2,
-        "headline": ""
-      }
-    ],
+    "season": "Postseason - 2024",
+    "game_type": "playoff",
+    "division": "4th of July-NABA",
     "standings": [
       {
         "team": "So Cal Indians",
         "w": 1,
         "l": 0,
         "t": 0,
-        "pts": 2,
-        "gb": "--"
+        "g": 1,
+        "pct": "1.000",
+        "p": 2
       },
       {
         "team": "STXX Sports",
         "w": 1,
         "l": 0,
         "t": 0,
-        "pts": 2,
-        "gb": "--"
+        "g": 1,
+        "pct": "1.000",
+        "p": 2
       },
       {
         "team": "LA Cerveceros",
         "w": 1,
         "l": 0,
         "t": 0,
-        "pts": 2,
-        "gb": "--"
+        "g": 1,
+        "pct": "1.000",
+        "p": 2
       },
       {
         "team": "Bakersfield Heat",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "0.5"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Chi Cal",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "0.5"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Diamond Classics-",
         "w": 0,
         "l": 3,
         "t": 0,
-        "pts": 0,
-        "gb": "2.0"
+        "g": 3,
+        "pct": ".000",
+        "p": 0
       }
     ]
   },
   {
-    "name": "2024 Father/Son NABA",
-    "divisionId": "1049256",
-    "games": [
-      {
-        "date": "10/4/2024",
-        "status": "Final",
-        "away_team": "Phoenix Padres F/S",
-        "away_score": 25,
-        "home_team": "Diamond Classics Father/Son",
-        "home_score": 5,
-        "headline": ""
-      },
-      {
-        "date": "10/4/2024",
-        "status": "Final",
-        "away_team": "Diamond Classics Father/Son",
-        "away_score": 13,
-        "home_team": "Colorado Bandits F/S",
-        "home_score": 8,
-        "headline": ""
-      },
-      {
-        "date": "10/3/2024",
-        "status": "Final",
-        "away_team": "Diamond Classics Father/Son",
-        "away_score": 14,
-        "home_team": "California Pirates F/S",
-        "home_score": 8,
-        "headline": ""
-      }
-    ],
+    "season": "Postseason - 2024",
+    "game_type": "playoff",
+    "division": "Father/Son NABA",
     "standings": [
       {
         "team": "Diamond Classics Father/Son",
         "w": 2,
         "l": 1,
         "t": 0,
-        "pts": 4,
-        "gb": "--"
+        "g": 3,
+        "pct": ".667",
+        "p": 4
       },
       {
         "team": "Phoenix Padres F/S",
         "w": 1,
         "l": 0,
         "t": 0,
-        "pts": 2,
-        "gb": "--"
+        "g": 1,
+        "pct": "1.000",
+        "p": 2
       },
       {
         "team": "Durango F/S",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "0.5"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Colorado Bandits F/S",
         "w": 0,
         "l": 1,
         "t": 0,
-        "pts": 0,
-        "gb": "1.0"
+        "g": 1,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "California Pirates F/S",
         "w": 0,
         "l": 1,
         "t": 0,
-        "pts": 0,
-        "gb": "1.0"
+        "g": 1,
+        "pct": ".000",
+        "p": 0
       }
     ]
   },
   {
-    "name": "2024 MG Turkey Bowl Tournament",
-    "divisionId": "1053282",
-    "games": [
-      {
-        "date": "11/30/2024",
-        "status": "Final",
-        "away_team": "Diamond Classics",
-        "away_score": 11,
-        "home_team": "The Tribe",
-        "home_score": 7,
-        "headline": ""
-      },
-      {
-        "date": "11/30/2024",
-        "status": "Final",
-        "away_team": "The Tribe",
-        "away_score": 30,
-        "home_team": "Dodgers",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "11/30/2024",
-        "status": "Final",
-        "away_team": "Tigers",
-        "away_score": 12,
-        "home_team": "Dodgers",
-        "home_score": 8,
-        "headline": ""
-      },
-      {
-        "date": "11/29/2024",
-        "status": "Final",
-        "away_team": "Diamond Classics",
-        "away_score": 19,
-        "home_team": "Dodgers",
-        "home_score": 11,
-        "headline": ""
-      },
-      {
-        "date": "11/29/2024",
-        "status": "Final",
-        "away_team": "Diamond Classics",
-        "away_score": 15,
-        "home_team": "Tigers",
-        "home_score": 9,
-        "headline": ""
-      },
-      {
-        "date": "11/29/2024",
-        "status": "Final",
-        "away_team": "The Tribe",
-        "away_score": 9,
-        "home_team": "Tigers",
-        "home_score": 1,
-        "headline": ""
-      }
-    ],
+    "season": "Postseason - 2024",
+    "game_type": "playoff",
+    "division": "MG Turkey Bowl Tournament",
     "standings": [
       {
         "team": "Diamond Classics",
         "w": 3,
         "l": 0,
         "t": 0,
-        "pts": 6,
-        "gb": "--"
+        "g": 3,
+        "pct": "1.000",
+        "p": 6
       },
       {
         "team": "The Tribe",
         "w": 2,
         "l": 1,
         "t": 0,
-        "pts": 4,
-        "gb": "1.0"
+        "g": 3,
+        "pct": ".667",
+        "p": 4
       },
       {
         "team": "Tigers",
         "w": 1,
         "l": 2,
         "t": 0,
-        "pts": 2,
-        "gb": "2.0"
+        "g": 3,
+        "pct": ".333",
+        "p": 2
       },
       {
         "team": "Dodgers",
         "w": 0,
         "l": 3,
         "t": 0,
-        "pts": 0,
-        "gb": "3.0"
+        "g": 3,
+        "pct": ".000",
+        "p": 0
       }
     ]
   },
   {
-    "name": "2024 MLK-NABA",
-    "divisionId": "1041797",
-    "games": [
-      {
-        "date": "1/15/2024",
-        "status": "Final",
-        "away_team": "So Cal Trojans Red 55",
-        "away_score": 11,
-        "home_team": "Diamond Classics 50/55",
-        "home_score": 6,
-        "headline": "Sloppy D equals Runner Up!"
-      },
-      {
-        "date": "1/14/2024",
-        "status": "Final",
-        "away_team": "Diamond Classics 50/55",
-        "away_score": 6,
-        "home_team": "o Cal Trojans Red 55",
-        "home_score": 1,
-        "headline": "Diaz Defeats Trojans"
-      },
-      {
-        "date": "1/14/2024",
-        "status": "Final",
-        "away_team": "Diamond Classics 50/55",
-        "away_score": 13,
-        "home_team": "acramento Seals 55s",
-        "home_score": 1,
-        "headline": "Campbell Tames Seals"
-      },
-      {
-        "date": "1/13/2024",
-        "status": "Final",
-        "away_team": "Diamond Classics 50/55",
-        "away_score": 10,
-        "home_team": "o Cal Trojans Red 55",
-        "home_score": 7,
-        "headline": "Diamond Classics Hold Off Stormin' Trojans"
-      },
-      {
-        "date": "1/13/2024",
-        "status": "Final",
-        "away_team": "Diamond Classics 50/55",
-        "away_score": 13,
-        "home_team": "acramento Seals 55s",
-        "home_score": 1,
-        "headline": "Donnels Skins Seals"
-      }
-    ],
+    "season": "Postseason - 2024",
+    "game_type": "playoff",
+    "division": "MLK-NABA",
     "standings": [
       {
         "team": "Diamond Classics 50/55",
         "w": 4,
         "l": 1,
         "t": 0,
-        "pts": 8,
-        "gb": "--"
+        "g": 5,
+        "pct": ".800",
+        "p": 8
       },
       {
         "team": "So Cal Trojans Red 55",
         "w": 1,
         "l": 2,
         "t": 0,
-        "pts": 2,
-        "gb": "2.0"
+        "g": 3,
+        "pct": ".333",
+        "p": 2
       },
       {
         "team": "#1 Seed MLK",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "1.5"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "#2 Seed MLK",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "1.5"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "San Fernando Park Bums",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "1.5"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "So Cal Indians",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "1.5"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Sacramento Seals 55s",
         "w": 0,
         "l": 2,
         "t": 0,
-        "pts": 0,
-        "gb": "2.5"
+        "g": 2,
+        "pct": ".000",
+        "p": 0
       }
     ]
   },
   {
-    "name": "2024 NABA LAS VEGAS World Series - 60+",
-    "divisionId": "1042135",
-    "games": [
-      {
-        "date": "10/26/2024",
-        "status": "Final",
-        "away_team": "Diamond Classics 60+",
-        "away_score": 20,
-        "home_team": "Colorado Blues",
-        "home_score": 3,
-        "headline": "Corona Makes Colorado Sing the Blues!"
-      },
-      {
-        "date": "10/25/2024",
-        "status": "Final",
-        "away_team": "Diamond Classics 60+",
-        "away_score": 10,
-        "home_team": "Denver Bears",
-        "home_score": 5,
-        "headline": "Campbell Tames Bears!"
-      },
-      {
-        "date": "10/24/2024",
-        "status": "Final",
-        "away_team": "Diamond Classics 60+",
-        "away_score": 5,
-        "home_team": "Denver A's",
-        "home_score": 4,
-        "headline": "Diamond Classics Edge A's"
-      },
-      {
-        "date": "10/23/2024",
-        "status": "Final",
-        "away_team": "Dallas Phillies",
-        "away_score": 11,
-        "home_team": "Diamond Classics 60+",
-        "home_score": 9,
-        "headline": "Phillies Hang On"
-      },
-      {
-        "date": "10/22/2024",
-        "status": "Final",
-        "away_team": "Diamond Classics 60+",
-        "away_score": 6,
-        "home_team": "Zephyrs",
-        "home_score": 2,
-        "headline": "Corona Zaps Zephyrs"
-      },
-      {
-        "date": "10/21/2024",
-        "status": "Final",
-        "away_team": "Cincinnatti Tigers",
-        "away_score": 11,
-        "home_team": "Diamond Classics 60+",
-        "home_score": 9,
-        "headline": "Cincy Wins Opener"
-      }
-    ],
+    "season": "Postseason - 2024",
+    "game_type": "playoff",
+    "division": "NABA LAS VEGAS World Series - 60+",
     "standings": [
       {
         "team": "Diamond Classics 60+",
         "w": 4,
         "l": 2,
         "t": 0,
-        "pts": 8,
-        "gb": "--"
+        "g": 6,
+        "pct": ".667",
+        "p": 8
       },
       {
         "team": "Cincinnatti Tigers",
         "w": 1,
         "l": 0,
         "t": 0,
-        "pts": 2,
-        "gb": "0.5"
+        "g": 1,
+        "pct": "1.000",
+        "p": 2
       },
       {
         "team": "Dallas Phillies",
         "w": 1,
         "l": 0,
         "t": 0,
-        "pts": 2,
-        "gb": "0.5"
+        "g": 1,
+        "pct": "1.000",
+        "p": 2
       },
       {
         "team": "Denver A's",
         "w": 0,
         "l": 1,
         "t": 0,
-        "pts": 0,
-        "gb": "1.5"
+        "g": 1,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "SB Zephyrs",
         "w": 0,
         "l": 1,
         "t": 0,
-        "pts": 0,
-        "gb": "1.5"
+        "g": 1,
+        "pct": ".000",
+        "p": 0
       }
     ]
   },
   {
-    "name": "2024 NABA World Series - 50+",
-    "divisionId": "1042133",
-    "games": [],
+    "season": "Postseason - 2024",
+    "game_type": "playoff",
+    "division": "NABA World Series - 50+",
     "standings": [
       {
         "team": "Dallas Redbirds",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "--"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Denver Bears",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "--"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Diamond Classics 50+",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "--"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "KC Royals",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "--"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Team Colorado",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "--"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Texas Oilers",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "--"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       }
     ]
   },
   {
-    "name": "2024 NABA World Series - 65+",
-    "divisionId": "1042134",
-    "games": [
-      {
-        "date": "10/10/2024",
-        "status": "Final",
-        "away_team": "Arizona Stallions",
-        "away_score": 27,
-        "home_team": "Diamond Classics 65+",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "10/9/2024",
-        "status": "Final",
-        "away_team": "Diamond Classics 65+",
-        "away_score": 17,
-        "home_team": "Denver Bears",
-        "home_score": 12,
-        "headline": ""
-      },
-      {
-        "date": "10/8/2024",
-        "status": "Final",
-        "away_team": "San Antonio 65's",
-        "away_score": 16,
-        "home_team": "Diamond Classics 65+",
-        "home_score": 3,
-        "headline": ""
-      },
-      {
-        "date": "10/7/2024",
-        "status": "Final",
-        "away_team": "San Antonio Sixty-8's",
-        "away_score": 19,
-        "home_team": "Diamond Classics 65+",
-        "home_score": 4,
-        "headline": ""
-      },
-      {
-        "date": "10/6/2024",
-        "status": "Final",
-        "away_team": "Arizona Red Sox",
-        "away_score": 12,
-        "home_team": "Diamond Classics 65+",
-        "home_score": 10,
-        "headline": ""
-      }
-    ],
+    "season": "Postseason - 2024",
+    "game_type": "playoff",
+    "division": "NABA World Series - 65+",
     "standings": [
       {
         "team": "Arizona Stallions",
         "w": 1,
         "l": 0,
         "t": 0,
-        "pts": 2,
-        "gb": "--"
+        "g": 1,
+        "pct": "1.000",
+        "p": 2
       },
       {
         "team": "San Antonio 65's",
         "w": 1,
         "l": 0,
         "t": 0,
-        "pts": 2,
-        "gb": "--"
+        "g": 1,
+        "pct": "1.000",
+        "p": 2
       },
       {
         "team": "San Antonio Sixty-8's",
         "w": 1,
         "l": 0,
         "t": 0,
-        "pts": 2,
-        "gb": "--"
+        "g": 1,
+        "pct": "1.000",
+        "p": 2
       },
       {
         "team": "Arizona Red Sox",
         "w": 1,
         "l": 0,
         "t": 0,
-        "pts": 2,
-        "gb": "--"
+        "g": 1,
+        "pct": "1.000",
+        "p": 2
       },
       {
         "team": "Diamond Classics 65+",
         "w": 1,
         "l": 4,
         "t": 0,
-        "pts": 2,
-        "gb": "2.0"
+        "g": 5,
+        "pct": ".200",
+        "p": 2
       },
       {
         "team": "Denver Bears",
         "w": 0,
         "l": 1,
         "t": 0,
-        "pts": 0,
-        "gb": "1.0"
+        "g": 1,
+        "pct": ".000",
+        "p": 0
       }
     ]
   },
   {
-    "name": "2024 Spring/Summer Season",
-    "divisionId": "1044289",
-    "games": [
-      {
-        "date": "9/14/2024",
-        "status": "Playoff",
-        "away_team": "Angels",
-        "away_score": 10,
-        "home_team": "Generals",
-        "home_score": 7,
-        "headline": "Angels Win Championship!"
-      },
-      {
-        "date": "8/24/2024",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 20,
-        "home_team": "Dodgers",
-        "home_score": 0,
-        "headline": "Angels win to make it to the Championship game!"
-      },
-      {
-        "date": "8/24/2024",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 8,
-        "home_team": "rooklyn",
-        "home_score": 4,
-        "headline": "Generals return to championship game after beating Brooklyn."
-      },
-      {
-        "date": "8/17/2024",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 8,
-        "home_team": "HBC",
-        "home_score": 5,
-        "headline": "Fun game goes 9 and in favor of Titans"
-      },
-      {
-        "date": "8/17/2024",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 12,
-        "home_team": "Generals",
-        "home_score": 2,
-        "headline": "Angels clinch 1St place in last season game"
-      },
-      {
-        "date": "8/17/2024",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 10,
-        "home_team": "rooklyn",
-        "home_score": 9,
-        "headline": "Dodgers Slam Brooklyn!"
-      },
-      {
-        "date": "8/10/2024",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 16,
-        "home_team": "Dodgers",
-        "home_score": 15,
-        "headline": "Generals win in last inning"
-      },
-      {
-        "date": "8/10/2024",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 18,
-        "home_team": "HBC",
-        "home_score": 5,
-        "headline": "Angels beat Halo 18-5 in 6 innings."
-      },
-      {
-        "date": "8/10/2024",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 9,
-        "home_team": "Titans",
-        "home_score": 6,
-        "headline": "Brooklyn's 8 Barely Tops Titans!"
-      },
-      {
-        "date": "8/3/2024",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 6,
-        "home_team": "Titans",
-        "home_score": 5,
-        "headline": "Angels win close game 6-5 in 8 innings"
-      },
-      {
-        "date": "8/3/2024",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 22,
-        "home_team": "HBC",
-        "home_score": 4,
-        "headline": ""
-      },
-      {
-        "date": "8/3/2024",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 13,
-        "home_team": "Generals",
-        "home_score": 12,
-        "headline": "Brooklyn Comes From Behind and BARELY Escape with Win!!"
-      },
-      {
-        "date": "7/27/2024",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 9,
-        "home_team": "Dodgers",
-        "home_score": 0,
-        "headline": "Dodgers Forfeit (lack of players)"
-      },
-      {
-        "date": "7/27/2024",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 17,
-        "home_team": "HBC",
-        "home_score": 5,
-        "headline": "8 Run 2nd Inning Sinks Halos"
-      },
-      {
-        "date": "7/27/2024",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 18,
-        "home_team": "Titans",
-        "home_score": 1,
-        "headline": ""
-      },
-      {
-        "date": "7/20/2024",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 5,
-        "home_team": "Titans",
-        "home_score": 3,
-        "headline": "Dodgers plus others hold off late comeback by Titans"
-      },
-      {
-        "date": "7/20/2024",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 5,
-        "home_team": "rooklyn",
-        "home_score": 3,
-        "headline": "Angels Win!"
-      },
-      {
-        "date": "7/20/2024",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 15,
-        "home_team": "HBC",
-        "home_score": 7,
-        "headline": ""
-      },
-      {
-        "date": "7/13/2024",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 10,
-        "home_team": "Dodgers",
-        "home_score": 9,
-        "headline": "Brooklyn Rallies Back vs Dodgers"
-      },
-      {
-        "date": "7/13/2024",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 15,
-        "home_team": "Generals",
-        "home_score": 12,
-        "headline": "Angels beat Generals 15-12"
-      },
-      {
-        "date": "7/13/2024",
-        "status": "Final",
-        "away_team": "HBC",
-        "away_score": 8,
-        "home_team": "Titans",
-        "home_score": 7,
-        "headline": "Very Close game - HBC edges Titans"
-      },
-      {
-        "date": "6/29/2024",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 22,
-        "home_team": "HBC",
-        "home_score": 6,
-        "headline": "Angels beat Halo 22-6"
-      },
-      {
-        "date": "6/29/2024",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 15,
-        "home_team": "Dodgers",
-        "home_score": 2,
-        "headline": "Generals bats explode"
-      },
-      {
-        "date": "6/29/2024",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 12,
-        "home_team": "Titans",
-        "home_score": 10,
-        "headline": "Brooklyn Hangs On"
-      },
-      {
-        "date": "6/22/2024",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 8,
-        "home_team": "Generals",
-        "home_score": 6,
-        "headline": "Crews Missiles Disrupt General's Operative"
-      },
-      {
-        "date": "6/22/2024",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 8,
-        "home_team": "HBC",
-        "home_score": 4,
-        "headline": ""
-      },
-      {
-        "date": "6/22/2024",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 7,
-        "home_team": "Titans",
-        "home_score": 2,
-        "headline": "Angels beat Titans 7-2"
-      },
-      {
-        "date": "6/15/2024",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 11,
-        "home_team": "Dodgers",
-        "home_score": 1,
-        "headline": "Angels beat Dodgers 11-1"
-      },
-      {
-        "date": "6/15/2024",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 19,
-        "home_team": "HBC",
-        "home_score": 6,
-        "headline": "5 Run Innings Hamper Halos"
-      },
-      {
-        "date": "6/15/2024",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 9,
-        "home_team": "Generals",
-        "home_score": 6,
-        "headline": "Titans hold off Generals attempt"
-      },
-      {
-        "date": "6/8/2024",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 14,
-        "home_team": "Titans",
-        "home_score": 11,
-        "headline": ""
-      },
-      {
-        "date": "6/8/2024",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 22,
-        "home_team": "HBC",
-        "home_score": 5,
-        "headline": ""
-      },
-      {
-        "date": "6/8/2024",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 6,
-        "home_team": "rooklyn",
-        "home_score": 3,
-        "headline": "Angels Pitching Stymies Brooklyn Bats!"
-      },
-      {
-        "date": "6/1/2024",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 8,
-        "home_team": "Generals",
-        "home_score": 8,
-        "headline": "Generals and Angels tie 8-8 in 9 innings."
-      },
-      {
-        "date": "6/1/2024",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 15,
-        "home_team": "Dodgers",
-        "home_score": 9,
-        "headline": "Both Teams Explode Early"
-      },
-      {
-        "date": "6/1/2024",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 14,
-        "home_team": "HBC",
-        "home_score": 6,
-        "headline": ""
-      },
-      {
-        "date": "5/18/2024",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 12,
-        "home_team": "HBC",
-        "home_score": 4,
-        "headline": "Angels beat Halo 12-4 in 9"
-      },
-      {
-        "date": "5/18/2024",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 16,
-        "home_team": "Titans",
-        "home_score": 3,
-        "headline": "Big Innings Sink Titans"
-      },
-      {
-        "date": "5/18/2024",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 6,
-        "home_team": "Dodgers",
-        "home_score": 5,
-        "headline": ""
-      },
-      {
-        "date": "5/11/2024",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 23,
-        "home_team": "Generals",
-        "home_score": 7,
-        "headline": "Generals Have Off Day"
-      },
-      {
-        "date": "5/11/2024",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 15,
-        "home_team": "Titans",
-        "home_score": 8,
-        "headline": "Angels beat Titans 15-8"
-      },
-      {
-        "date": "5/11/2024",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 12,
-        "home_team": "HBC",
-        "home_score": 8,
-        "headline": ""
-      },
-      {
-        "date": "5/4/2024",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 6,
-        "home_team": "Angels",
-        "home_score": 5,
-        "headline": "Dodgers win in 8 innings"
-      },
-      {
-        "date": "5/4/2024",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 8,
-        "home_team": "Titans",
-        "home_score": 5,
-        "headline": "Generals win tight game against Titans. Guzman goes yard"
-      },
-      {
-        "date": "5/4/2024",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 7,
-        "home_team": "HBC",
-        "home_score": 6,
-        "headline": "Brooklyn Squeaks by HBC!"
-      },
-      {
-        "date": "4/27/2024",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 17,
-        "home_team": "Titans",
-        "home_score": 8,
-        "headline": ""
-      },
-      {
-        "date": "4/27/2024",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 9,
-        "home_team": "Angels",
-        "home_score": 6,
-        "headline": "Brooklyn Comes From Behind To Win"
-      },
-      {
-        "date": "4/27/2024",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 8,
-        "home_team": "HBC",
-        "home_score": 4,
-        "headline": "Generals return. Win game one"
-      }
-    ],
+    "season": "Spring/Summer - 2024",
+    "game_type": "season",
+    "division": "Division",
     "standings": [
       {
         "team": "Angels",
         "w": 13,
         "l": 2,
         "t": 1,
-        "pts": 27,
-        "gb": "--"
+        "g": 16,
+        "pct": ".844",
+        "p": 27
       },
       {
         "team": "Brooklyn",
         "w": 12,
         "l": 4,
         "t": 0,
-        "pts": 24,
-        "gb": "1.5"
+        "g": 16,
+        "pct": ".750",
+        "p": 24
       },
       {
         "team": "Generals",
         "w": 9,
         "l": 6,
         "t": 1,
-        "pts": 19,
-        "gb": "4.0"
+        "g": 16,
+        "pct": ".594",
+        "p": 19
       },
       {
         "team": "Dodgers",
         "w": 8,
         "l": 8,
         "t": 0,
-        "pts": 16,
-        "gb": "5.5"
+        "g": 16,
+        "pct": ".500",
+        "p": 16
       },
       {
         "team": "Titans",
         "w": 4,
         "l": 12,
         "t": 0,
-        "pts": 8,
-        "gb": "9.5"
+        "g": 16,
+        "pct": ".250",
+        "p": 8
       },
       {
         "team": "HBC",
         "w": 1,
         "l": 14,
         "t": 0,
-        "pts": 2,
-        "gb": "12.0"
+        "g": 15,
+        "pct": ".067",
+        "p": 2
       }
     ]
   },
   {
-    "name": "2024/2025 Fall Winter Season",
-    "divisionId": "1049932",
-    "games": [
-      {
-        "date": "3/29/2025",
-        "status": "Playoff",
-        "away_team": "Angels",
-        "away_score": 19,
-        "home_team": "Titans",
-        "home_score": 3,
-        "headline": "Angels win Championship game vs Titans"
-      },
-      {
-        "date": "3/22/2025",
-        "status": "Playoff",
-        "away_team": "Titans",
-        "away_score": 16,
-        "home_team": "Generals",
-        "home_score": 13,
-        "headline": "Titans Top Generals in 1st round Playoffs"
-      },
-      {
-        "date": "3/22/2025",
-        "status": "Playoff",
-        "away_team": "Angels",
-        "away_score": 18,
-        "home_team": "rooklyn",
-        "home_score": 7,
-        "headline": "Angels beat Brooklyn 18-7 in semi final playoff game"
-      },
-      {
-        "date": "3/15/2025",
-        "status": "PPD",
-        "away_team": "Angels",
-        "away_score": 0,
-        "home_team": "rooklyn",
-        "home_score": 0,
-        "headline": "Playoff Game rained out."
-      },
-      {
-        "date": "3/8/2025",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 16,
-        "home_team": "Titans",
-        "home_score": 6,
-        "headline": ""
-      },
-      {
-        "date": "3/8/2025",
-        "status": "Final",
-        "away_team": "Halos Baseball Club",
-        "away_score": 9,
-        "home_team": "Aztecs",
-        "home_score": 0,
-        "headline": "Aztecs drop out"
-      },
-      {
-        "date": "3/8/2025",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 11,
-        "home_team": "rooklyn",
-        "home_score": 2,
-        "headline": "Angels win 11-2"
-      },
-      {
-        "date": "3/1/2025",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 7,
-        "home_team": "Generals",
-        "home_score": 6,
-        "headline": "Angels hold on to get 7-6 win"
-      },
-      {
-        "date": "3/1/2025",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 13,
-        "home_team": "Halos Baseball Club",
-        "home_score": 13,
-        "headline": "Halos take big lead early - Titans hold strong and come back"
-      },
-      {
-        "date": "2/15/2025",
-        "status": "PPD",
-        "away_team": "Titans",
-        "away_score": 0,
-        "home_team": "Generals",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "2/15/2025",
-        "status": "PPD",
-        "away_team": "Aztecs",
-        "away_score": 0,
-        "home_team": "Halos Baseball Club",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "2/15/2025",
-        "status": "PPD",
-        "away_team": "Brooklyn",
-        "away_score": 0,
-        "home_team": "Angels",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "2/8/2025",
-        "status": "Final",
-        "away_team": "Aztecs",
-        "away_score": 10,
-        "home_team": "rooklyn",
-        "home_score": 9,
-        "headline": "Aztecs Hang On"
-      },
-      {
-        "date": "2/8/2025",
-        "status": "PPD",
-        "away_team": "Angels",
-        "away_score": 0,
-        "home_team": "Generals",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "2/8/2025",
-        "status": "PPD",
-        "away_team": "Titans",
-        "away_score": 0,
-        "home_team": "Halos Baseball Club",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "2/1/2025",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 4,
-        "home_team": "rooklyn",
-        "home_score": 3,
-        "headline": "Weinrich Complete Game Win For Titans"
-      },
-      {
-        "date": "2/1/2025",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 2,
-        "home_team": "Aztecs",
-        "home_score": 1,
-        "headline": "Angels beat Aztecs 2-1 in a nail biter"
-      },
-      {
-        "date": "2/1/2025",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 23,
-        "home_team": "Halos Baseball Club",
-        "home_score": 3,
-        "headline": "Generals bats explode against Halos"
-      },
-      {
-        "date": "1/25/2025",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 10,
-        "home_team": "Aztecs",
-        "home_score": 4,
-        "headline": "Estabrook pitches complete game for Generals"
-      },
-      {
-        "date": "1/25/2025",
-        "status": "Final",
-        "away_team": "Halos Baseball Club",
-        "away_score": 10,
-        "home_team": "rooklyn",
-        "home_score": 9,
-        "headline": "Halos Walk It Off!"
-      },
-      {
-        "date": "1/25/2025",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 19,
-        "home_team": "Titans",
-        "home_score": 4,
-        "headline": "Angels beat 1st place Titans 19-4 in 5 innings"
-      },
-      {
-        "date": "1/11/2025",
-        "status": "PPD",
-        "away_team": "Aztecs",
-        "away_score": 0,
-        "home_team": "Halos Baseball Club",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "1/11/2025",
-        "status": "PPD",
-        "away_team": "Titans",
-        "away_score": 0,
-        "home_team": "Generals",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "1/11/2025",
-        "status": "PPD",
-        "away_team": "Brooklyn",
-        "away_score": 0,
-        "home_team": "Angels",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "1/4/2025",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 8,
-        "home_team": "Aztecs",
-        "home_score": 8,
-        "headline": ""
-      },
-      {
-        "date": "1/4/2025",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 13,
-        "home_team": "Halos Baseball Club",
-        "home_score": 3,
-        "headline": "Angels beat Halo 13-3 in 7 innings"
-      },
-      {
-        "date": "1/4/2025",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 4,
-        "home_team": "rooklyn",
-        "home_score": 3,
-        "headline": "Generals win intense game against Brooklyn"
-      },
-      {
-        "date": "12/21/2024",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 9,
-        "home_team": "Generals",
-        "home_score": 3,
-        "headline": "Angels beat Generals 9-3"
-      },
-      {
-        "date": "12/21/2024",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 14,
-        "home_team": "Halos Baseball Club",
-        "home_score": 9,
-        "headline": "Rematch results in a split - even up going into last round"
-      },
-      {
-        "date": "12/21/2024",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 9,
-        "home_team": "Aztecs",
-        "home_score": 5,
-        "headline": "6 Run 4th The Difference."
-      },
-      {
-        "date": "12/14/2024",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 16,
-        "home_team": "Titans",
-        "home_score": 4,
-        "headline": "Crews Missile Dusts Titans."
-      },
-      {
-        "date": "12/14/2024",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 13,
-        "home_team": "Aztecs",
-        "home_score": 11,
-        "headline": "Angels beat Aztecs 12-11 in 8 innings on walkoff"
-      },
-      {
-        "date": "12/14/2024",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 9,
-        "home_team": "Halos Baseball Club",
-        "home_score": 3,
-        "headline": "Generals bats explode in 8th inning."
-      },
-      {
-        "date": "12/7/2024",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 22,
-        "home_team": "Aztecs",
-        "home_score": 4,
-        "headline": "Generals bats on fire"
-      },
-      {
-        "date": "12/7/2024",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 7,
-        "home_team": "Angels",
-        "home_score": 6,
-        "headline": "Titans win in 9 innings on a walkoff 2 runs"
-      },
-      {
-        "date": "12/7/2024",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 13,
-        "home_team": "Halos Baseball Club",
-        "home_score": 12,
-        "headline": "Brooklyn Wins With 2 Out Fly Ball Lost In The Sun."
-      },
-      {
-        "date": "11/23/2024",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 17,
-        "home_team": "Generals",
-        "home_score": 15,
-        "headline": ""
-      },
-      {
-        "date": "11/23/2024",
-        "status": "Final",
-        "away_team": "Aztecs",
-        "away_score": 9,
-        "home_team": "Halos Baseball Club",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "11/23/2024",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 10,
-        "home_team": "Angels",
-        "home_score": 6,
-        "headline": "Brooklyn beats Angels 10-6 in 8"
-      },
-      {
-        "date": "11/16/2024",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 13,
-        "home_team": "Aztecs",
-        "home_score": 10,
-        "headline": "The Aztecs kept coming throughout the game but Titans Hold"
-      },
-      {
-        "date": "11/16/2024",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 11,
-        "home_team": "rooklyn",
-        "home_score": 8,
-        "headline": "Gudgeon stops Brooklyn Rally, Generals Win"
-      },
-      {
-        "date": "11/16/2024",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 9,
-        "home_team": "Halos Baseball Club",
-        "home_score": 8,
-        "headline": "Angels win on comeback 9-8 in 8 innings"
-      },
-      {
-        "date": "11/9/2024",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 7,
-        "home_team": "Angels",
-        "home_score": 4,
-        "headline": "Generals hold on to 7-4 win over the Angels"
-      },
-      {
-        "date": "11/9/2024",
-        "status": "Final",
-        "away_team": "Halos Baseball Club",
-        "away_score": 8,
-        "home_team": "Titans",
-        "home_score": 6,
-        "headline": ""
-      },
-      {
-        "date": "11/9/2024",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 17,
-        "home_team": "Aztecs",
-        "home_score": 4,
-        "headline": ""
-      },
-      {
-        "date": "11/2/2024",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 15,
-        "home_team": "Aztecs",
-        "home_score": 11,
-        "headline": "Angels win wild one vs Aztecs in 5 innings 15-11"
-      },
-      {
-        "date": "11/2/2024",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 14,
-        "home_team": "rooklyn",
-        "home_score": 13,
-        "headline": "McCann Creams Crews and Titans remain undefeated"
-      },
-      {
-        "date": "11/2/2024",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 24,
-        "home_team": "Halos Baseball Club",
-        "home_score": 10,
-        "headline": "Generals bats explode against Halos"
-      },
-      {
-        "date": "10/19/2024",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 15,
-        "home_team": "Aztecs",
-        "home_score": 3,
-        "headline": "Generals win.Walk off Grand Slam by Mike Liang"
-      },
-      {
-        "date": "10/19/2024",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 21,
-        "home_team": "Halos Baseball Club",
-        "home_score": 4,
-        "headline": "Brooklyn Finally Gets W"
-      },
-      {
-        "date": "10/19/2024",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 6,
-        "home_team": "Angels",
-        "home_score": 1,
-        "headline": "Weinrich Tames Angels"
-      },
-      {
-        "date": "9/28/2024",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 7,
-        "home_team": "rooklyn",
-        "home_score": 2,
-        "headline": "Angels beat Brooklyn 7-2 In a close game"
-      },
-      {
-        "date": "9/28/2024",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 13,
-        "home_team": "Generals",
-        "home_score": 5,
-        "headline": "Titans season opener is a WIN!!!"
-      },
-      {
-        "date": "9/28/2024",
-        "status": "Final",
-        "away_team": "Halos Baseball Club",
-        "away_score": 9,
-        "home_team": "Aztecs",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "9/21/2024",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 9,
-        "home_team": "Aztecs",
-        "home_score": 0,
-        "headline": "Aztecs Forfeit"
-      },
-      {
-        "date": "9/21/2024",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 10,
-        "home_team": "rooklyn",
-        "home_score": 0,
-        "headline": "Whitehill Blanks Brooklyn"
-      },
-      {
-        "date": "9/21/2024",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 6,
-        "home_team": "Halos Baseball Club",
-        "home_score": 3,
-        "headline": "Angels beat Halo 6-3 in 10 innings"
-      }
-    ],
+    "season": "Fall/Winter - 2024",
+    "game_type": "season",
+    "division": "/2025",
     "standings": [
       {
         "team": "Angels",
         "w": 11,
         "l": 4,
         "t": 0,
-        "pts": 22,
-        "gb": "--"
+        "g": 15,
+        "pct": ".733",
+        "p": 22
       },
       {
         "team": "Generals",
         "w": 11,
         "l": 4,
         "t": 0,
-        "pts": 22,
-        "gb": "--"
+        "g": 15,
+        "pct": ".733",
+        "p": 22
       },
       {
         "team": "Titans",
         "w": 9,
         "l": 4,
         "t": 2,
-        "pts": 20,
-        "gb": "1.0"
+        "g": 15,
+        "pct": ".667",
+        "p": 20
       },
       {
         "team": "Brooklyn",
         "w": 6,
         "l": 9,
         "t": 0,
-        "pts": 12,
-        "gb": "5.0"
+        "g": 15,
+        "pct": ".400",
+        "p": 12
       },
       {
         "team": "Halos Baseball Club",
         "w": 4,
         "l": 10,
         "t": 1,
-        "pts": 9,
-        "gb": "6.5"
+        "g": 15,
+        "pct": ".300",
+        "p": 9
       },
       {
         "team": "Aztecs",
         "w": 2,
         "l": 12,
         "t": 1,
-        "pts": 5,
-        "gb": "8.5"
+        "g": 15,
+        "pct": ".167",
+        "p": 5
       }
     ]
   },
   {
-    "name": "2023 Fall/Winter Season",
-    "divisionId": "1040472",
-    "games": [
-      {
-        "date": "4/20/2024",
-        "status": "Playoff",
-        "away_team": "Brooklyn",
-        "away_score": 11,
-        "home_team": "Dodgers",
-        "home_score": 4,
-        "headline": "Brooklyn Wins!"
-      },
-      {
-        "date": "4/13/2024",
-        "status": "PPD",
-        "away_team": "Brooklyn",
-        "away_score": 0,
-        "home_team": "Dodgers",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "4/6/2024",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 12,
-        "home_team": "Angels",
-        "home_score": 9,
-        "headline": ""
-      },
-      {
-        "date": "3/23/2024",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 0,
-        "home_team": "HBC",
-        "home_score": 0,
-        "headline": "HBC Forfeits"
-      },
-      {
-        "date": "3/23/2024",
-        "status": "PPD",
-        "away_team": "Angels",
-        "away_score": 0,
-        "home_team": "Dodgers",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "3/9/2024",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 10,
-        "home_team": "Dodgers",
-        "home_score": 7,
-        "headline": "Angels comeback to win 10-7"
-      },
-      {
-        "date": "3/9/2024",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 5,
-        "home_team": "HBC",
-        "home_score": 4,
-        "headline": "Brooklyn Comes Back in 9th"
-      },
-      {
-        "date": "3/3/2024",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 11,
-        "home_team": "HBC",
-        "home_score": 11,
-        "headline": ""
-      },
-      {
-        "date": "3/2/2024",
-        "status": "PPD",
-        "away_team": "Angels",
-        "away_score": 0,
-        "home_team": "Dodgers",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "3/2/2024",
-        "status": "PPD",
-        "away_team": "Titans",
-        "away_score": 0,
-        "home_team": "HBC",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "2/24/2024",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 9,
-        "home_team": "Titans",
-        "home_score": 1,
-        "headline": ""
-      },
-      {
-        "date": "2/24/2024",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 14,
-        "home_team": "Angels",
-        "home_score": 4,
-        "headline": "Close Contest Becomes Blowout"
-      },
-      {
-        "date": "2/17/2024",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 12,
-        "home_team": "Titans",
-        "home_score": 2,
-        "headline": "Crews Cruises to Victory"
-      },
-      {
-        "date": "2/17/2024",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 5,
-        "home_team": "HBC",
-        "home_score": 4,
-        "headline": ""
-      },
-      {
-        "date": "2/10/2024",
-        "status": "PPD",
-        "away_team": "HBC",
-        "away_score": 0,
-        "home_team": "Titans",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "2/10/2024",
-        "status": "PPD",
-        "away_team": "Dodgers",
-        "away_score": 0,
-        "home_team": "Angels",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "2/3/2024",
-        "status": "PPD",
-        "away_team": "Angels",
-        "away_score": 0,
-        "home_team": "HBC",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "2/3/2024",
-        "status": "PPD",
-        "away_team": "Brooklyn",
-        "away_score": 0,
-        "home_team": "Dodgers",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "1/27/2024",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 11,
-        "home_team": "HBC",
-        "home_score": 1,
-        "headline": "Campbell Checks Halos"
-      },
-      {
-        "date": "1/27/2024",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 16,
-        "home_team": "Titans",
-        "home_score": 11,
-        "headline": "Angels stay strong and beat Titans in 9"
-      },
-      {
-        "date": "1/20/2024",
-        "status": "PPD",
-        "away_team": "Dodgers",
-        "away_score": 0,
-        "home_team": "Titans",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "1/20/2024",
-        "status": "PPD",
-        "away_team": "Brooklyn",
-        "away_score": 0,
-        "home_team": "Angels",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "1/6/2024",
-        "status": "PPD",
-        "away_team": "Titans",
-        "away_score": 0,
-        "home_team": "HBC",
-        "home_score": 0,
-        "headline": "Field Unplayable"
-      },
-      {
-        "date": "1/6/2024",
-        "status": "PPD",
-        "away_team": "Angels",
-        "away_score": 0,
-        "home_team": "Dodgers",
-        "home_score": 0,
-        "headline": "Field Unplayable"
-      },
-      {
-        "date": "12/16/2023",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 14,
-        "home_team": "HBC",
-        "home_score": 1,
-        "headline": ""
-      },
-      {
-        "date": "12/16/2023",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 14,
-        "home_team": "Titans",
-        "home_score": 4,
-        "headline": "Brooklyn Jumps Ahead Quickly, Titans fall"
-      },
-      {
-        "date": "12/9/2023",
-        "status": "Final",
-        "away_team": "HBC",
-        "away_score": 16,
-        "home_team": "Angels",
-        "home_score": 12,
-        "headline": "Halo beats Angels 16-12 in 8innings"
-      },
-      {
-        "date": "12/9/2023",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 6,
-        "home_team": "Dodgers",
-        "home_score": 1,
-        "headline": "Crews Dominates Dodgers!"
-      },
-      {
-        "date": "12/2/2023",
-        "status": "Final",
-        "away_team": "HBC",
-        "away_score": 12,
-        "home_team": "rooklyn",
-        "home_score": 4,
-        "headline": "Errors Sink Brooklyn Early"
-      },
-      {
-        "date": "12/2/2023",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 15,
-        "home_team": "Titans",
-        "home_score": 5,
-        "headline": "Angels beat Titans in 7innings"
-      },
-      {
-        "date": "11/18/2023",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 16,
-        "home_team": "Titans",
-        "home_score": 11,
-        "headline": ""
-      },
-      {
-        "date": "11/18/2023",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 6,
-        "home_team": "Angels",
-        "home_score": 5,
-        "headline": "Brooklyn wins nail bitter 6-5 in 9innings"
-      },
-      {
-        "date": "11/11/2023",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 11,
-        "home_team": "Dodgers",
-        "home_score": 8,
-        "headline": "Angels beat Dodgers 11-8 in 8 innings"
-      },
-      {
-        "date": "11/11/2023",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 9,
-        "home_team": "HBC",
-        "home_score": 6,
-        "headline": ""
-      },
-      {
-        "date": "11/4/2023",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 21,
-        "home_team": "Titans",
-        "home_score": 3,
-        "headline": "Brooklyn Bats Explode"
-      },
-      {
-        "date": "11/4/2023",
-        "status": "PPD",
-        "away_team": "Dodgers",
-        "away_score": 0,
-        "home_team": "HBC",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "10/21/2023",
-        "status": "Final",
-        "away_team": "HBC",
-        "away_score": 6,
-        "home_team": "Angels",
-        "home_score": 4,
-        "headline": "Halos beat Angels 6-4 in 9 innings"
-      },
-      {
-        "date": "10/21/2023",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 7,
-        "home_team": "Dodgers",
-        "home_score": 6,
-        "headline": "Brooklyn Squeaks By Dodgers"
-      }
-    ],
+    "season": "Fall/Winter - 2023",
+    "game_type": "season",
+    "division": "Division",
     "standings": [
       {
         "team": "Brooklyn",
         "w": 10,
         "l": 1,
         "t": 0,
-        "pts": 20,
-        "gb": "--"
+        "g": 11,
+        "pct": ".909",
+        "p": 20
       },
       {
         "team": "Dodgers",
         "w": 5,
         "l": 4,
         "t": 0,
-        "pts": 10,
-        "gb": "4.0"
+        "g": 9,
+        "pct": ".556",
+        "p": 10
       },
       {
         "team": "Angels",
         "w": 4,
         "l": 5,
         "t": 0,
-        "pts": 8,
-        "gb": "5.0"
+        "g": 9,
+        "pct": ".444",
+        "p": 8
       },
       {
         "team": "HBC",
         "w": 3,
         "l": 6,
         "t": 1,
-        "pts": 7,
-        "gb": "6.0"
+        "g": 10,
+        "pct": ".350",
+        "p": 7
       },
       {
         "team": "Titans",
         "w": 1,
         "l": 7,
         "t": 1,
-        "pts": 3,
-        "gb": "7.5"
+        "g": 9,
+        "pct": ".167",
+        "p": 3
       },
       {
         "team": "#1 Seed",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "4.5"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "#2 Seed",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "4.5"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "#3 Seed",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "4.5"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "#4 Seed",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "4.5"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       }
     ]
   },
   {
-    "name": "2023 Thanksgiving Turkey Bowl",
-    "divisionId": "1040473",
-    "games": [
-      {
-        "date": "11/26/2023",
-        "status": "Final",
-        "away_team": "Diamond Classics",
-        "away_score": 3,
-        "home_team": "LABL Tigers",
-        "home_score": 2,
-        "headline": "Diamond Classics Edges LABL!"
-      },
-      {
-        "date": "11/25/2023",
-        "status": "Final",
-        "away_team": "So Cal MSBL Tigers",
-        "away_score": 14,
-        "home_team": "Diamond Classics",
-        "home_score": 4,
-        "headline": "Wong Stymies Classics"
-      },
-      {
-        "date": "11/25/2023",
-        "status": "Final",
-        "away_team": "Diamond Classics",
-        "away_score": 10,
-        "home_team": "LABL Tigers",
-        "home_score": 6,
-        "headline": "Classics Rally Late to Clip LABL"
-      },
-      {
-        "date": "11/25/2023",
-        "status": "Final",
-        "away_team": "LABL Tigers",
-        "away_score": 12,
-        "home_team": "ABA So Cal Trojans",
-        "home_score": 4,
-        "headline": ""
-      },
-      {
-        "date": "11/24/2023",
-        "status": "Final",
-        "away_team": "LABL Tigers",
-        "away_score": 11,
-        "home_team": "o Cal MSBL Tigers",
-        "home_score": 7,
-        "headline": ""
-      },
-      {
-        "date": "11/24/2023",
-        "status": "Final",
-        "away_team": "NABA So Cal Trojans",
-        "away_score": 17,
-        "home_team": "o Cal MSBL Tigers",
-        "home_score": 12,
-        "headline": ""
-      },
-      {
-        "date": "11/24/2023",
-        "status": "Final",
-        "away_team": "Diamond Classics",
-        "away_score": 9,
-        "home_team": "ABA So Cal Trojans",
-        "home_score": 4,
-        "headline": "Frankel Gets Win vs. Trojans"
-      }
-    ],
+    "season": "Postseason - 2023",
+    "game_type": "playoff",
+    "division": "Thanksgiving Turkey Bowl",
     "standings": [
       {
         "team": "Diamond Classics",
         "w": 3,
         "l": 1,
         "t": 0,
-        "pts": 6,
-        "gb": "--"
+        "g": 4,
+        "pct": ".750",
+        "p": 6
       },
       {
         "team": "LABL Tigers",
         "w": 2,
         "l": 2,
         "t": 0,
-        "pts": 4,
-        "gb": "1.0"
+        "g": 4,
+        "pct": ".500",
+        "p": 4
       },
       {
         "team": "So Cal MSBL Tigers",
         "w": 1,
         "l": 2,
         "t": 0,
-        "pts": 2,
-        "gb": "1.5"
+        "g": 3,
+        "pct": ".333",
+        "p": 2
       },
       {
         "team": "NABA So Cal Trojans",
         "w": 1,
         "l": 2,
         "t": 0,
-        "pts": 2,
-        "gb": "1.5"
+        "g": 3,
+        "pct": ".333",
+        "p": 2
       }
     ]
   },
   {
-    "name": "NABA World Series-LAS VEGAS 2023",
-    "divisionId": "1041039",
-    "games": [
-      {
-        "date": "10/28/2023",
-        "status": "Final",
-        "away_team": "Diamond Classics Titans",
-        "away_score": 13,
-        "home_team": "Denver A's",
-        "home_score": 2,
-        "headline": "Diamond Classics Win 1st Championship!"
-      },
-      {
-        "date": "10/27/2023",
-        "status": "Final",
-        "away_team": "Diamond Classics Titans",
-        "away_score": 5,
-        "home_team": "lues",
-        "home_score": 1,
-        "headline": "Campbell Dominates Blues"
-      },
-      {
-        "date": "10/26/2023",
-        "status": "Final",
-        "away_team": "Diamond Classics Titans",
-        "away_score": 11,
-        "home_team": "Denver A's",
-        "home_score": 2,
-        "headline": "Campbell Takes Down Undefeated A's"
-      },
-      {
-        "date": "10/25/2023",
-        "status": "Final",
-        "away_team": "Diamond Classics Titans",
-        "away_score": 19,
-        "home_team": "Denver Players",
-        "home_score": 2,
-        "headline": "Diamond Classics Take Down Players4"
-      },
-      {
-        "date": "10/24/2023",
-        "status": "Final",
-        "away_team": "Diamond Classics Titans",
-        "away_score": 7,
-        "home_team": "Tortugas",
-        "home_score": 1,
-        "headline": "First Victory For Diamond Classics in Vegas!!"
-      },
-      {
-        "date": "10/23/2023",
-        "status": "Final",
-        "away_team": "Denver Bears",
-        "away_score": 11,
-        "home_team": "Diamond Classics Titans",
-        "home_score": 9,
-        "headline": "Defense sinks Diamond Classics"
-      }
-    ],
+    "season": "Postseason - 2023",
+    "game_type": "playoff",
+    "division": "NABA World Series-LAS VEGAS",
     "standings": [
       {
         "team": "Diamond Classics Titans",
         "w": 5,
         "l": 1,
         "t": 0,
-        "pts": 10,
-        "gb": "--"
+        "g": 6,
+        "pct": ".833",
+        "p": 10
       },
       {
         "team": "Denver Bears",
         "w": 1,
         "l": 0,
         "t": 0,
-        "pts": 2,
-        "gb": "1.5"
+        "g": 1,
+        "pct": "1.000",
+        "p": 2
       },
       {
         "team": "Blues",
         "w": 0,
         "l": 1,
         "t": 0,
-        "pts": 0,
-        "gb": "2.5"
+        "g": 1,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Tortugas",
         "w": 0,
         "l": 1,
         "t": 0,
-        "pts": 0,
-        "gb": "2.5"
+        "g": 1,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Denver Players",
         "w": 0,
         "l": 1,
         "t": 0,
-        "pts": 0,
-        "gb": "2.5"
+        "g": 1,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Denver A's",
         "w": 0,
         "l": 2,
         "t": 0,
-        "pts": 0,
-        "gb": "3.0"
+        "g": 2,
+        "pct": ".000",
+        "p": 0
       }
     ]
   },
   {
-    "name": "2023 Spring/Summer Season",
-    "divisionId": "1032266",
-    "games": [
-      {
-        "date": "9/30/2023",
-        "status": "Playoff",
-        "away_team": "Generals",
-        "away_score": 17,
-        "home_team": "rooklyn",
-        "home_score": 13,
-        "headline": "Generals Slug Their Way to 3rd Title!!"
-      },
-      {
-        "date": "9/23/2023",
-        "status": "Playoff",
-        "away_team": "Brooklyn",
-        "away_score": 12,
-        "home_team": "Dodgers",
-        "home_score": 4,
-        "headline": "Quick Start Eliminates Dodgers"
-      },
-      {
-        "date": "9/16/2023",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 10,
-        "home_team": "Titans",
-        "home_score": 7,
-        "headline": ""
-      },
-      {
-        "date": "9/16/2023",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 12,
-        "home_team": "Halo Baseball Club",
-        "home_score": 5,
-        "headline": "Both teams agree to forfeit due to lack of players"
-      },
-      {
-        "date": "9/16/2023",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 12,
-        "home_team": "Angels",
-        "home_score": 7,
-        "headline": "7 Run Outburst Decides Division"
-      },
-      {
-        "date": "9/16/2023",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 14,
-        "home_team": "Halo Baseball Club",
-        "home_score": 4,
-        "headline": "Dodgers 14, Halos 4"
-      },
-      {
-        "date": "9/9/2023",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 5,
-        "home_team": "Titans",
-        "home_score": 4,
-        "headline": "Angels pull a walk off win in bottom of the 9th 5-4"
-      },
-      {
-        "date": "9/9/2023",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 15,
-        "home_team": "Halo Baseball Club",
-        "home_score": 4,
-        "headline": "Halos Jump Out to Quick Lead, and Quickly Give It Back"
-      },
-      {
-        "date": "9/9/2023",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 12,
-        "home_team": "Generals",
-        "home_score": 4,
-        "headline": "Generals 4, Dodgers 12"
-      },
-      {
-        "date": "8/26/2023",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 11,
-        "home_team": "Halo Baseball Club",
-        "home_score": 5,
-        "headline": ""
-      },
-      {
-        "date": "8/26/2023",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 13,
-        "home_team": "Generals",
-        "home_score": 11,
-        "headline": "Angels hang on to beat the Generals in 7innings"
-      },
-      {
-        "date": "8/26/2023",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 15,
-        "home_team": "Dodgers",
-        "home_score": 8,
-        "headline": "7 run inning sinks tenacious Dodgers"
-      },
-      {
-        "date": "8/19/2023",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 16,
-        "home_team": "Halo Baseball Club",
-        "home_score": 4,
-        "headline": "Generals win"
-      },
-      {
-        "date": "8/19/2023",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 14,
-        "home_team": "Dodgers",
-        "home_score": 7,
-        "headline": "Angels beat Dodgers 14-7"
-      },
-      {
-        "date": "8/19/2023",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 17,
-        "home_team": "Titans",
-        "home_score": 7,
-        "headline": "10 Run 1st Inning Holds Titans at Bay"
-      },
-      {
-        "date": "8/12/2023",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 9,
-        "home_team": "Dodgers",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "8/12/2023",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 3,
-        "home_team": "rooklyn",
-        "home_score": 2,
-        "headline": "Generals win close game"
-      },
-      {
-        "date": "8/12/2023",
-        "status": "Final",
-        "away_team": "Halo Baseball Club",
-        "away_score": 7,
-        "home_team": "Angels",
-        "home_score": 5,
-        "headline": "New Halo team beats the Angels in a close one 7-5"
-      },
-      {
-        "date": "8/5/2023",
-        "status": "PPD",
-        "away_team": "Dodgers",
-        "away_score": 0,
-        "home_team": "Halo Baseball Club",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "8/5/2023",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 20,
-        "home_team": "Titans",
-        "home_score": 0,
-        "headline": "Generals beat Titans"
-      },
-      {
-        "date": "8/5/2023",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 10,
-        "home_team": "rooklyn",
-        "home_score": 4,
-        "headline": "Late Rally Puts Away Brooklyn"
-      },
-      {
-        "date": "7/29/2023",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 8,
-        "home_team": "Generals",
-        "home_score": 5,
-        "headline": "DODGERS 8, GENERALS 5"
-      },
-      {
-        "date": "7/29/2023",
-        "status": "Final",
-        "away_team": "Halo Baseball Club",
-        "away_score": 0,
-        "home_team": "rooklyn",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "7/29/2023",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 12,
-        "home_team": "Titans",
-        "home_score": 2,
-        "headline": "Angels beat Titans 12-2"
-      },
-      {
-        "date": "7/22/2023",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 17,
-        "home_team": "Angels",
-        "home_score": 7,
-        "headline": "Standings Getting Tight!!"
-      },
-      {
-        "date": "7/22/2023",
-        "status": "Final",
-        "away_team": "Halo Baseball Club",
-        "away_score": 0,
-        "home_team": "Titans",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "7/22/2023",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 17,
-        "home_team": "Dodgers",
-        "home_score": 0,
-        "headline": "Brooklyn Romps vs Flat Dodgers"
-      },
-      {
-        "date": "7/15/2023",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 0,
-        "home_team": "Halo Baseball Club",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "7/15/2023",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 14,
-        "home_team": "Titans",
-        "home_score": 6,
-        "headline": "Brooklyn gets fast start. hangs on"
-      },
-      {
-        "date": "7/15/2023",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 14,
-        "home_team": "Angels",
-        "home_score": 11,
-        "headline": "Dodgers 14, Angels 11"
-      },
-      {
-        "date": "7/8/2023",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 13,
-        "home_team": "Halo Baseball Club",
-        "home_score": 2,
-        "headline": "Angels beat Yankees 13-2 in 7 innings"
-      },
-      {
-        "date": "7/8/2023",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 13,
-        "home_team": "Titans",
-        "home_score": 7,
-        "headline": "Titans 7, Dodgers 13 July 8, 2023 at Clark Field."
-      },
-      {
-        "date": "7/8/2023",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 12,
-        "home_team": "rooklyn",
-        "home_score": 2,
-        "headline": "7 Run 6th inning Sinks Brooklyn"
-      },
-      {
-        "date": "6/24/2023",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 16,
-        "home_team": "Titans",
-        "home_score": 13,
-        "headline": "Generals storm back to top Titans"
-      },
-      {
-        "date": "6/24/2023",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 12,
-        "home_team": "Halo Baseball Club",
-        "home_score": 6,
-        "headline": "June 24, 2023 Dodgers 12 Yankees 6"
-      },
-      {
-        "date": "6/24/2023",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 9,
-        "home_team": "rooklyn",
-        "home_score": 1,
-        "headline": "Cesario and Angels shut Brooklyn down!"
-      },
-      {
-        "date": "6/17/2023",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 13,
-        "home_team": "Angels",
-        "home_score": 9,
-        "headline": "Generals win there 1st game over the Angels"
-      },
-      {
-        "date": "6/17/2023",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 8,
-        "home_team": "Halo Baseball Club",
-        "home_score": 2,
-        "headline": "Mendoza lifts Titans to W over Yanks"
-      },
-      {
-        "date": "6/17/2023",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 9,
-        "home_team": "Dodgers",
-        "home_score": 6,
-        "headline": "Brooklyn 9, Dodgers 6"
-      },
-      {
-        "date": "6/10/2023",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 12,
-        "home_team": "Titans",
-        "home_score": 2,
-        "headline": "Angels defeat Titans 12-2"
-      },
-      {
-        "date": "6/10/2023",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 3,
-        "home_team": "Halo Baseball Club",
-        "home_score": 2,
-        "headline": "Pitcher's Duel at Clark!"
-      },
-      {
-        "date": "6/10/2023",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 15,
-        "home_team": "Generals",
-        "home_score": 8,
-        "headline": "Generals vs. Dodgers June 10, 2023"
-      },
-      {
-        "date": "5/20/2023",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 7,
-        "home_team": "rooklyn",
-        "home_score": 1,
-        "headline": "Titans get first win of the season"
-      },
-      {
-        "date": "5/20/2023",
-        "status": "Final",
-        "away_team": "Halo Baseball Club",
-        "away_score": 15,
-        "home_team": "Generals",
-        "home_score": 14,
-        "headline": ""
-      },
-      {
-        "date": "5/20/2023",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 8,
-        "home_team": "Angels",
-        "home_score": 8,
-        "headline": "Angels vs. Dodgers May 20, 2023"
-      },
-      {
-        "date": "5/13/2023",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 9,
-        "home_team": "Halo Baseball Club",
-        "home_score": 2,
-        "headline": "Angels win 9-2 vs one of the new teams Yankees"
-      },
-      {
-        "date": "5/13/2023",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 18,
-        "home_team": "Generals",
-        "home_score": 9,
-        "headline": "Brooklyn Begins Their Championship-Defense Decisively!"
-      },
-      {
-        "date": "5/13/2023",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 3,
-        "home_team": "Titans",
-        "home_score": 1,
-        "headline": "Dodgers at Titans May 13, 2023"
-      }
-    ],
+    "season": "Spring/Summer - 2023",
+    "game_type": "season",
+    "division": "Division",
     "standings": [
       {
         "team": "Brooklyn",
         "w": 10,
         "l": 5,
         "t": 0,
-        "pts": 20,
-        "gb": "--"
+        "g": 15,
+        "pct": ".667",
+        "p": 20
       },
       {
         "team": "Angels",
         "w": 9,
         "l": 5,
         "t": 1,
-        "pts": 19,
-        "gb": "0.5"
+        "g": 15,
+        "pct": ".633",
+        "p": 19
       },
       {
         "team": "Generals",
         "w": 9,
         "l": 6,
         "t": 0,
-        "pts": 18,
-        "gb": "1.0"
+        "g": 15,
+        "pct": ".600",
+        "p": 18
       },
       {
         "team": "Dodgers",
         "w": 8,
         "l": 6,
         "t": 1,
-        "pts": 17,
-        "gb": "1.5"
+        "g": 15,
+        "pct": ".567",
+        "p": 17
       },
       {
         "team": "Titans",
         "w": 5,
         "l": 10,
         "t": 0,
-        "pts": 10,
-        "gb": "5.0"
+        "g": 15,
+        "pct": ".333",
+        "p": 10
       },
       {
         "team": "Halo Baseball Club",
         "w": 2,
         "l": 13,
         "t": 0,
-        "pts": 4,
-        "gb": "8.0"
+        "g": 15,
+        "pct": ".133",
+        "p": 4
       }
     ]
   },
   {
-    "name": "2022 Fall/Winter Season",
-    "divisionId": "1022573",
-    "games": [
-      {
-        "date": "4/29/2023",
-        "status": "PPD",
-        "away_team": "Brooklyn",
-        "away_score": 0,
-        "home_team": "Angels",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "4/15/2023",
-        "status": "Playoff",
-        "away_team": "Angels",
-        "away_score": 14,
-        "home_team": "Generals",
-        "home_score": 7,
-        "headline": ""
-      },
-      {
-        "date": "4/15/2023",
-        "status": "Playoff",
-        "away_team": "Brooklyn",
-        "away_score": 7,
-        "home_team": "Titans",
-        "home_score": 6,
-        "headline": "Brooklyn Advances on 9th Inning Walk-Off!"
-      },
-      {
-        "date": "4/1/2023",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 6,
-        "home_team": "Mets",
-        "home_score": 4,
-        "headline": ""
-      },
-      {
-        "date": "3/25/2023",
-        "status": "SPD",
-        "away_team": "Mets",
-        "away_score": 0,
-        "home_team": "Titans",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "3/25/2023",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 21,
-        "home_team": "Angels",
-        "home_score": 12,
-        "headline": "Brooklyn comes from behind to earn division title"
-      },
-      {
-        "date": "3/18/2023",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 15,
-        "home_team": "Mets",
-        "home_score": 3,
-        "headline": "Robbie the legend throws a complete game"
-      },
-      {
-        "date": "3/18/2023",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 16,
-        "home_team": "Generals",
-        "home_score": 0,
-        "headline": "G. Mendoza pitches a 2-hit shut-out! M. Campbell goes yard!"
-      },
-      {
-        "date": "3/4/2023",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 11,
-        "home_team": "Titans",
-        "home_score": 2,
-        "headline": "Generals win. Guzman hits deep homer."
-      },
-      {
-        "date": "3/4/2023",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 13,
-        "home_team": "Mets",
-        "home_score": 6,
-        "headline": "Angels Comeback to Win 13-6"
-      },
-      {
-        "date": "2/18/2023",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 14,
-        "home_team": "Mets",
-        "home_score": 3,
-        "headline": "Guillermo &#34;Pluma&#34; Mendoza Stifles Mets."
-      },
-      {
-        "date": "2/18/2023",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 9,
-        "home_team": "Generals",
-        "home_score": 9,
-        "headline": "Generals and Angels battle to a 9-9 tie"
-      },
-      {
-        "date": "2/11/2023",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 16,
-        "home_team": "Mets",
-        "home_score": 6,
-        "headline": ""
-      },
-      {
-        "date": "2/11/2023",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 11,
-        "home_team": "Titans",
-        "home_score": 9,
-        "headline": "Brooklyn Hangs On vs Titans"
-      },
-      {
-        "date": "2/4/2023",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 17,
-        "home_team": "Generals",
-        "home_score": 8,
-        "headline": ""
-      },
-      {
-        "date": "2/4/2023",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 13,
-        "home_team": "Angels",
-        "home_score": 2,
-        "headline": "Brooklyn beats Angels 13-2"
-      },
-      {
-        "date": "1/28/2023",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 15,
-        "home_team": "Mets",
-        "home_score": 15,
-        "headline": "Rumblin' at Clark"
-      },
-      {
-        "date": "1/28/2023",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 17,
-        "home_team": "Titans",
-        "home_score": 1,
-        "headline": "Angels Beat Titans 17-1"
-      },
-      {
-        "date": "1/21/2023",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 12,
-        "home_team": "Angels",
-        "home_score": 7,
-        "headline": "Generals hand Angels their first loss of the season"
-      },
-      {
-        "date": "1/21/2023",
-        "status": "Final",
-        "away_team": "Mets",
-        "away_score": 13,
-        "home_team": "Titans",
-        "home_score": 11,
-        "headline": ""
-      },
-      {
-        "date": "12/10/2022",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 16,
-        "home_team": "Mets",
-        "home_score": 15,
-        "headline": "GENERALS WIN IN LAST AT BAT."
-      },
-      {
-        "date": "12/10/2022",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 8,
-        "home_team": "rooklyn",
-        "home_score": 7,
-        "headline": "Angels Hold Off Brooklyn"
-      },
-      {
-        "date": "12/3/2022",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 11,
-        "home_team": "Generals",
-        "home_score": 6,
-        "headline": "Brooklyn Bounces Back vs Generals"
-      },
-      {
-        "date": "12/3/2022",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 7,
-        "home_team": "Titans",
-        "home_score": 6,
-        "headline": "Angels win by 1run vs Titans 7-6"
-      },
-      {
-        "date": "11/19/2022",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 11,
-        "home_team": "Mets",
-        "home_score": 4,
-        "headline": "Angels beat Mets in 8 innings 11-4"
-      },
-      {
-        "date": "11/19/2022",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 12,
-        "home_team": "Titans",
-        "home_score": 7,
-        "headline": "Brooklyn Holds Off Titans"
-      },
-      {
-        "date": "11/12/2022",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 8,
-        "home_team": "Mets",
-        "home_score": 5,
-        "headline": "Titans score 4 in the 8th, beat Mets 8-5"
-      },
-      {
-        "date": "11/12/2022",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 20,
-        "home_team": "Generals",
-        "home_score": 7,
-        "headline": "Angels beat Generals 20-7"
-      },
-      {
-        "date": "11/5/2022",
-        "status": "PPD",
-        "away_team": "Generals",
-        "away_score": 0,
-        "home_team": "o Cal Titans",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "11/5/2022",
-        "status": "PPD",
-        "away_team": "Mets",
-        "away_score": 0,
-        "home_team": "rooklyn",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "10/1/2022",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 10,
-        "home_team": "Mets",
-        "home_score": 8,
-        "headline": "Brooklyn Nips Mets"
-      },
-      {
-        "date": "10/1/2022",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 17,
-        "home_team": "Titans",
-        "home_score": 7,
-        "headline": "DEFENDING CHAMPION GENERALS remain undefeated"
-      },
-      {
-        "date": "9/24/2022",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 11,
-        "home_team": "Titans",
-        "home_score": 2,
-        "headline": "Angels beat Titans 11-2 in 8innings"
-      },
-      {
-        "date": "9/24/2022",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 7,
-        "home_team": "rooklyn",
-        "home_score": 1,
-        "headline": "CHAMPIONSHIP GAME REMATCH GOES TO GENERALS"
-      },
-      {
-        "date": "9/17/2022",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 15,
-        "home_team": "Mets",
-        "home_score": 14,
-        "headline": "Angels comeback from 5 run deficit to win on walk off"
-      },
-      {
-        "date": "9/17/2022",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 18,
-        "home_team": "rooklyn",
-        "home_score": 1,
-        "headline": "Titans open season with 18-1 victory"
-      },
-      {
-        "date": "9/10/2022",
-        "status": "PPD",
-        "away_team": "Titans",
-        "away_score": 0,
-        "home_team": "Mets",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "9/10/2022",
-        "status": "PPD",
-        "away_team": "Generals",
-        "away_score": 0,
-        "home_team": "Angels",
-        "home_score": 0,
-        "headline": ""
-      }
-    ],
+    "season": "Fall/Winter - 2022",
+    "game_type": "season",
+    "division": "Division",
     "standings": [
       {
         "team": "Brooklyn",
         "w": 8,
         "l": 3,
         "t": 1,
-        "pts": 17,
-        "gb": "--"
+        "g": 12,
+        "pct": ".708",
+        "p": 17
       },
       {
         "team": "Angels",
         "w": 8,
         "l": 3,
         "t": 1,
-        "pts": 17,
-        "gb": "--"
+        "g": 12,
+        "pct": ".708",
+        "p": 17
       },
       {
         "team": "Generals",
         "w": 7,
         "l": 4,
         "t": 1,
-        "pts": 15,
-        "gb": "1.0"
+        "g": 12,
+        "pct": ".625",
+        "p": 15
       },
       {
         "team": "Titans",
         "w": 4,
         "l": 8,
         "t": 0,
-        "pts": 8,
-        "gb": "4.5"
+        "g": 12,
+        "pct": ".333",
+        "p": 8
       },
       {
         "team": "Mets",
         "w": 1,
         "l": 10,
         "t": 1,
-        "pts": 3,
-        "gb": "7.0"
+        "g": 12,
+        "pct": ".125",
+        "p": 3
       }
     ]
   },
   {
-    "name": "2022 Summer Season",
-    "divisionId": "1015858",
-    "games": [
-      {
-        "date": "11/5/2022",
-        "status": "PPD",
-        "away_team": "Generals",
-        "away_score": 0,
-        "home_team": "o Cal Titans",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "8/13/2022",
-        "status": "Playoff",
-        "away_team": "Generals",
-        "away_score": 14,
-        "home_team": "rooklyn",
-        "home_score": 0,
-        "headline": "Generals Go Back to Back!!"
-      },
-      {
-        "date": "8/6/2022",
-        "status": "Playoff",
-        "away_team": "Brooklyn",
-        "away_score": 14,
-        "home_team": "o Cal Titans",
-        "home_score": 13,
-        "headline": "Wild Finish to Playoff Game!!"
-      },
-      {
-        "date": "8/6/2022",
-        "status": "Playoff",
-        "away_team": "Generals",
-        "away_score": 18,
-        "home_team": "Angels",
-        "home_score": 13,
-        "headline": "Defending champions Generals beat #1 Angels."
-      },
-      {
-        "date": "7/30/2022",
-        "status": "Final",
-        "away_team": "So Cal Titans",
-        "away_score": 13,
-        "home_team": "Mets",
-        "home_score": 5,
-        "headline": ""
-      },
-      {
-        "date": "7/30/2022",
-        "status": "Final",
-        "away_team": "Mets",
-        "away_score": 17,
-        "home_team": "Generals",
-        "home_score": 8,
-        "headline": ""
-      },
-      {
-        "date": "7/23/2022",
-        "status": "Final",
-        "away_team": "So Cal Titans",
-        "away_score": 18,
-        "home_team": "Generals",
-        "home_score": 3,
-        "headline": ""
-      },
-      {
-        "date": "7/23/2022",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 13,
-        "home_team": "rooklyn",
-        "home_score": 8,
-        "headline": "Angels defeat Brooklyn in 9innings to clinch 1st place and#1"
-      },
-      {
-        "date": "7/16/2022",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 15,
-        "home_team": "Mets",
-        "home_score": 2,
-        "headline": "Angels beat Mets 15-2"
-      },
-      {
-        "date": "7/16/2022",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 14,
-        "home_team": "Generals",
-        "home_score": 13,
-        "headline": "Brooklyn Squeeks by Generals"
-      },
-      {
-        "date": "7/9/2022",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 13,
-        "home_team": "Angels",
-        "home_score": 6,
-        "headline": "Defending Champs Generals beat Angels"
-      },
-      {
-        "date": "7/9/2022",
-        "status": "Final",
-        "away_team": "So Cal Titans",
-        "away_score": 13,
-        "home_team": "rooklyn",
-        "home_score": 8,
-        "headline": "Titans Take Down Brooklyn"
-      },
-      {
-        "date": "6/25/2022",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 15,
-        "home_team": "Mets",
-        "home_score": 4,
-        "headline": "Brooklyn Beats Depleted Mets"
-      },
-      {
-        "date": "6/25/2022",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 12,
-        "home_team": "o Cal Titans",
-        "home_score": 7,
-        "headline": "Angels Beat Titans in 9innings"
-      },
-      {
-        "date": "6/18/2022",
-        "status": "Final",
-        "away_team": "So Cal Titans",
-        "away_score": 18,
-        "home_team": "Mets",
-        "home_score": 6,
-        "headline": "Ist titan hrs highlight 18-6 win over Mets"
-      },
-      {
-        "date": "6/18/2022",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 20,
-        "home_team": "Generals",
-        "home_score": 14,
-        "headline": "BROOKLYN beats GENERALS 20-14"
-      },
-      {
-        "date": "6/11/2022",
-        "status": "Final",
-        "away_team": "So Cal Titans",
-        "away_score": 18,
-        "home_team": "Generals",
-        "home_score": 11,
-        "headline": "Titans score 11 in 7th for comeback win"
-      },
-      {
-        "date": "6/11/2022",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 16,
-        "home_team": "Mets",
-        "home_score": 4,
-        "headline": "Angels Beat Mets 16-4"
-      },
-      {
-        "date": "6/4/2022",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 16,
-        "home_team": "Angels",
-        "home_score": 8,
-        "headline": "Brooklyn took it to the 1st place Angels 16-8"
-      },
-      {
-        "date": "6/4/2022",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 18,
-        "home_team": "Mets",
-        "home_score": 0,
-        "headline": "Generals came to play"
-      },
-      {
-        "date": "5/21/2022",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 16,
-        "home_team": "o Cal Titans",
-        "home_score": 8,
-        "headline": "Brooklyn Drops Dime vs Tenacious Titans"
-      },
-      {
-        "date": "5/21/2022",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 9,
-        "home_team": "Angels",
-        "home_score": 9,
-        "headline": "ANGELS & GENERALS battle to an 9-9 tie."
-      },
-      {
-        "date": "5/14/2022",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 14,
-        "home_team": "Mets",
-        "home_score": 6,
-        "headline": "BROOKLYN defeat METS 14-6"
-      },
-      {
-        "date": "5/14/2022",
-        "status": "Final",
-        "away_team": "So Cal Titans",
-        "away_score": 11,
-        "home_team": "Angels",
-        "home_score": 4,
-        "headline": "Titans Beat Angels"
-      },
-      {
-        "date": "5/7/2022",
-        "status": "Final",
-        "away_team": "So Cal Titans",
-        "away_score": 15,
-        "home_team": "Mets",
-        "home_score": 11,
-        "headline": ""
-      },
-      {
-        "date": "5/7/2022",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 15,
-        "home_team": "rooklyn",
-        "home_score": 5,
-        "headline": "The KYLE & DAVE SHOW!"
-      },
-      {
-        "date": "4/30/2022",
-        "status": "Final",
-        "away_team": "So Cal Titans",
-        "away_score": 11,
-        "home_team": "Generals",
-        "home_score": 7,
-        "headline": "TITANS get revenge!"
-      },
-      {
-        "date": "4/30/2022",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 13,
-        "home_team": "Mets",
-        "home_score": 5,
-        "headline": "Angels beat the Mets 13-5"
-      },
-      {
-        "date": "4/23/2022",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 15,
-        "home_team": "Mets",
-        "home_score": 4,
-        "headline": "GENERALS back in the WIN column."
-      },
-      {
-        "date": "4/23/2022",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 20,
-        "home_team": "rooklyn",
-        "home_score": 6,
-        "headline": "Angels defeat Brooklyn 20-6"
-      },
-      {
-        "date": "4/9/2022",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 19,
-        "home_team": "Generals",
-        "home_score": 11,
-        "headline": "Angels Win over the Generals 19-11"
-      },
-      {
-        "date": "4/9/2022",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 11,
-        "home_team": "o Cal Titans",
-        "home_score": 6,
-        "headline": "Brooklyn Hangs On vs Tenacious Titans"
-      },
-      {
-        "date": "4/2/2022",
-        "status": "Final",
-        "away_team": "Mets",
-        "away_score": 16,
-        "home_team": "rooklyn",
-        "home_score": 15,
-        "headline": "Mets Come Back Walk Off Style!"
-      },
-      {
-        "date": "4/2/2022",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 14,
-        "home_team": "o Cal Titans",
-        "home_score": 5,
-        "headline": "Angels beat Titans 14-5"
-      }
-    ],
+    "season": "Summer - 2022",
+    "game_type": "season",
+    "division": "Division",
     "standings": [
       {
         "team": "Angels",
         "w": 8,
         "l": 3,
         "t": 1,
-        "pts": 17,
-        "gb": "--"
+        "g": 12,
+        "pct": ".708",
+        "p": 17
       },
       {
         "team": "So Cal Titans",
         "w": 8,
         "l": 4,
         "t": 0,
-        "pts": 16,
-        "gb": "0.5"
+        "g": 12,
+        "pct": ".667",
+        "p": 16
       },
       {
         "team": "Brooklyn",
         "w": 7,
         "l": 5,
         "t": 0,
-        "pts": 14,
-        "gb": "1.5"
+        "g": 12,
+        "pct": ".583",
+        "p": 14
       },
       {
         "team": "Generals",
         "w": 4,
         "l": 8,
         "t": 1,
-        "pts": 9,
-        "gb": "4.5"
+        "g": 13,
+        "pct": ".346",
+        "p": 9
       },
       {
         "team": "Mets",
         "w": 2,
         "l": 10,
         "t": 0,
-        "pts": 4,
-        "gb": "6.5"
+        "g": 12,
+        "pct": ".167",
+        "p": 4
       },
       {
         "team": "2022-#1 Seed",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "2.5"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "2022-#2 Seed",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "2.5"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "2022-#3 Seed",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "2.5"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "2022-#4 Seed",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "2.5"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       }
     ]
   },
   {
-    "name": "2024 Practice Games",
-    "divisionId": "1044295",
-    "games": [],
+    "season": "Season - 2024",
+    "game_type": "season",
+    "division": "Practice Games",
     "standings": [
       {
         "team": "Angels",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "--"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Brooklyn",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "--"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Dodgers",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "--"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Generals",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "--"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "HBC",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "--"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Titans",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "--"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       }
     ]
   },
   {
-    "name": "2021 All Star Game",
-    "divisionId": "1009514",
-    "games": [],
+    "season": "Season - 2021",
+    "game_type": "season",
+    "division": "All Star Game",
     "standings": [
       {
         "team": "Antiques",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "--"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Relics",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "--"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       }
     ]
   },
   {
-    "name": "2021 Fall/Winter Season",
-    "divisionId": "1009695",
-    "games": [
-      {
-        "date": "3/5/2022",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 11,
-        "home_team": "rooklyn",
-        "home_score": 10,
-        "headline": "GENERALS WALK OFF WIN"
-      },
-      {
-        "date": "2/19/2022",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 13,
-        "home_team": "Generals",
-        "home_score": 7,
-        "headline": "Angels comeback win!"
-      },
-      {
-        "date": "2/19/2022",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 10,
-        "home_team": "DodgerTown West",
-        "home_score": 8,
-        "headline": ""
-      },
-      {
-        "date": "2/12/2022",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 15,
-        "home_team": "Mets",
-        "home_score": 7,
-        "headline": ""
-      },
-      {
-        "date": "2/12/2022",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 11,
-        "home_team": "DodgerTown West",
-        "home_score": 3,
-        "headline": "Angels beat DTW"
-      },
-      {
-        "date": "2/12/2022",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 8,
-        "home_team": "Titans",
-        "home_score": 7,
-        "headline": ""
-      },
-      {
-        "date": "2/5/2022",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 14,
-        "home_team": "Mets",
-        "home_score": 7,
-        "headline": ""
-      },
-      {
-        "date": "2/5/2022",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 8,
-        "home_team": "Angels",
-        "home_score": 6,
-        "headline": ""
-      },
-      {
-        "date": "2/5/2022",
-        "status": "Final",
-        "away_team": "DodgerTown West",
-        "away_score": 13,
-        "home_team": "rooklyn",
-        "home_score": 5,
-        "headline": "DTW Takes Down Brooklyn!"
-      },
-      {
-        "date": "1/29/2022",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 16,
-        "home_team": "rooklyn",
-        "home_score": 8,
-        "headline": "Generals Sweep Brooklyn"
-      },
-      {
-        "date": "1/29/2022",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 21,
-        "home_team": "Mets",
-        "home_score": 3,
-        "headline": "Angels Win"
-      },
-      {
-        "date": "1/29/2022",
-        "status": "Final",
-        "away_team": "DodgerTown West",
-        "away_score": 11,
-        "home_team": "Titans",
-        "home_score": 9,
-        "headline": "Dodgers Stay in Playoff Race"
-      },
-      {
-        "date": "1/22/2022",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 20,
-        "home_team": "DodgerTown West",
-        "home_score": 7,
-        "headline": "Angels win"
-      },
-      {
-        "date": "1/22/2022",
-        "status": "Final",
-        "away_team": "Mets",
-        "away_score": 11,
-        "home_team": "Generals",
-        "home_score": 9,
-        "headline": ""
-      },
-      {
-        "date": "1/22/2022",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 5,
-        "home_team": "Titans",
-        "home_score": 4,
-        "headline": "Brooklyn Hangs On..."
-      },
-      {
-        "date": "1/8/2022",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 8,
-        "home_team": "Mets",
-        "home_score": 8,
-        "headline": ""
-      },
-      {
-        "date": "1/8/2022",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 13,
-        "home_team": "DodgerTown West",
-        "home_score": 1,
-        "headline": ""
-      },
-      {
-        "date": "1/8/2022",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 10,
-        "home_team": "Angels",
-        "home_score": 2,
-        "headline": "Brooklyn Limits Angels to 4 Hits."
-      },
-      {
-        "date": "12/18/2021",
-        "status": "PPD",
-        "away_team": "DodgerTown West",
-        "away_score": 0,
-        "home_team": "Titans",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "12/18/2021",
-        "status": "PPD",
-        "away_team": "Generals",
-        "away_score": 0,
-        "home_team": "Angels",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "12/18/2021",
-        "status": "PPD",
-        "away_team": "Brooklyn",
-        "away_score": 0,
-        "home_team": "Mets",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "12/11/2021",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 11,
-        "home_team": "Titans",
-        "home_score": 4,
-        "headline": ""
-      },
-      {
-        "date": "12/11/2021",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 9,
-        "home_team": "DodgerTown West",
-        "home_score": 8,
-        "headline": "Comeback Win For Brooklyn"
-      },
-      {
-        "date": "12/11/2021",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 11,
-        "home_team": "Mets",
-        "home_score": 5,
-        "headline": "Angels beat Mets 11-5"
-      },
-      {
-        "date": "12/4/2021",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 10,
-        "home_team": "Titans",
-        "home_score": 10,
-        "headline": "10-10 tie Titans/Angels"
-      },
-      {
-        "date": "12/4/2021",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 19,
-        "home_team": "Mets",
-        "home_score": 8,
-        "headline": "Big Inning Sinks Mets"
-      },
-      {
-        "date": "12/4/2021",
-        "status": "Final",
-        "away_team": "DodgerTown West",
-        "away_score": 8,
-        "home_team": "Generals",
-        "home_score": 6,
-        "headline": "Dodgers Hold Off Generals in Close One"
-      },
-      {
-        "date": "11/27/2021",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 13,
-        "home_team": "rooklyn",
-        "home_score": 10,
-        "headline": "Angels hold off the Brooklyn team 13-10"
-      },
-      {
-        "date": "11/20/2021",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 9,
-        "home_team": "DodgerTown West",
-        "home_score": 8,
-        "headline": "Titans win in last AB"
-      },
-      {
-        "date": "11/20/2021",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 11,
-        "home_team": "rooklyn",
-        "home_score": 4,
-        "headline": "Generals Throttle Brooklyn"
-      },
-      {
-        "date": "11/20/2021",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 2,
-        "home_team": "Mets",
-        "home_score": 2,
-        "headline": "Mets and Angels tie 2-2"
-      },
-      {
-        "date": "11/13/2021",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 11,
-        "home_team": "DodgerTown West",
-        "home_score": 9,
-        "headline": "Brooklyn Rallies vs DTW"
-      },
-      {
-        "date": "11/13/2021",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 9,
-        "home_team": "Titans",
-        "home_score": 1,
-        "headline": "Angels beat Titans 9-1"
-      },
-      {
-        "date": "11/13/2021",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 11,
-        "home_team": "Mets",
-        "home_score": 6,
-        "headline": ""
-      },
-      {
-        "date": "10/30/2021",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 11,
-        "home_team": "Mets",
-        "home_score": 4,
-        "headline": ""
-      },
-      {
-        "date": "10/23/2021",
-        "status": "PPD",
-        "away_team": "Generals",
-        "away_score": 0,
-        "home_team": "DodgerTown West",
-        "home_score": 0,
-        "headline": "After a league vote, this game is Postponed due to rain"
-      },
-      {
-        "date": "10/23/2021",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 8,
-        "home_team": "Titans",
-        "home_score": 3,
-        "headline": ""
-      },
-      {
-        "date": "10/23/2021",
-        "status": "PPD",
-        "away_team": "Mets",
-        "away_score": 0,
-        "home_team": "Angels",
-        "home_score": 0,
-        "headline": "Rained Out"
-      },
-      {
-        "date": "10/2/2021",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 7,
-        "home_team": "Generals",
-        "home_score": 5,
-        "headline": ""
-      },
-      {
-        "date": "10/2/2021",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 16,
-        "home_team": "Mets",
-        "home_score": 8,
-        "headline": ""
-      },
-      {
-        "date": "10/2/2021",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 6,
-        "home_team": "DodgerTown West",
-        "home_score": 1,
-        "headline": "Angels beat Dodgertown 6-1"
-      },
-      {
-        "date": "9/25/2021",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 8,
-        "home_team": "Titans",
-        "home_score": 3,
-        "headline": ""
-      },
-      {
-        "date": "9/25/2021",
-        "status": "Final",
-        "away_team": "Mets",
-        "away_score": 7,
-        "home_team": "DodgerTown West",
-        "home_score": 3,
-        "headline": ""
-      },
-      {
-        "date": "9/25/2021",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 7,
-        "home_team": "Generals",
-        "home_score": 6,
-        "headline": "Angels comeback win"
-      },
-      {
-        "date": "9/18/2021",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 16,
-        "home_team": "rooklyn",
-        "home_score": 13,
-        "headline": "Brooklyn Blows 5 Run Lead!"
-      },
-      {
-        "date": "9/18/2021",
-        "status": "Final",
-        "away_team": "DodgerTown West",
-        "away_score": 9,
-        "home_team": "Mets",
-        "home_score": 4,
-        "headline": "Dodgers Get First Win"
-      },
-      {
-        "date": "9/18/2021",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 10,
-        "home_team": "Titans",
-        "home_score": 3,
-        "headline": "Angels 16 hits and 10 runs defeat Titans"
-      },
-      {
-        "date": "9/11/2021",
-        "status": "Final",
-        "away_team": "Titans",
-        "away_score": 7,
-        "home_team": "Mets",
-        "home_score": 5,
-        "headline": ""
-      },
-      {
-        "date": "9/11/2021",
-        "status": "Final",
-        "away_team": "Generals",
-        "away_score": 6,
-        "home_team": "DodgerTown West",
-        "home_score": 3,
-        "headline": "Generals Win Season Opener"
-      },
-      {
-        "date": "9/11/2021",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 17,
-        "home_team": "Angels",
-        "home_score": 10,
-        "headline": "Angels Squander Lead"
-      }
-    ],
+    "season": "Fall/Winter - 2021",
+    "game_type": "season",
+    "division": "Division",
     "standings": [
       {
         "team": "Generals",
         "w": 11,
         "l": 5,
         "t": 0,
-        "pts": 22,
-        "gb": "--"
+        "g": 16,
+        "pct": ".688",
+        "p": 22
       },
       {
         "team": "Angels",
         "w": 10,
         "l": 3,
         "t": 2,
-        "pts": 22,
-        "gb": "--"
+        "g": 15,
+        "pct": ".733",
+        "p": 22
       },
       {
         "team": "Brooklyn",
         "w": 10,
         "l": 6,
         "t": 0,
-        "pts": 20,
-        "gb": "1.0"
+        "g": 16,
+        "pct": ".625",
+        "p": 20
       },
       {
         "team": "Titans",
         "w": 5,
         "l": 8,
         "t": 2,
-        "pts": 12,
-        "gb": "4.5"
+        "g": 15,
+        "pct": ".400",
+        "p": 12
       },
       {
         "team": "DodgerTown West",
         "w": 4,
         "l": 10,
         "t": 0,
-        "pts": 8,
-        "gb": "6.0"
+        "g": 14,
+        "pct": ".286",
+        "p": 8
       },
       {
         "team": "Mets",
         "w": 2,
         "l": 10,
         "t": 2,
-        "pts": 6,
-        "gb": "7.0"
+        "g": 14,
+        "pct": ".214",
+        "p": 6
       },
       {
         "team": "Playoff Winner #1 vs #4",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "3.0"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       },
       {
         "team": "Playoff Winner #2 vs #3",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "3.0"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       }
     ]
   },
   {
-    "name": "Summer 2019",
-    "divisionId": "850923",
-    "games": [
-      {
-        "date": "2/1/2020",
-        "status": "Final",
-        "away_team": "Titanes",
-        "away_score": 16,
-        "home_team": "Orioles",
-        "home_score": 3,
-        "headline": ""
-      },
-      {
-        "date": "2/1/2020",
-        "status": "Final",
-        "away_team": "Naranjeros",
-        "away_score": 7,
-        "home_team": "Yankees",
-        "home_score": 6,
-        "headline": ""
-      },
-      {
-        "date": "2/1/2020",
-        "status": "Final",
-        "away_team": "Soyates",
-        "away_score": 7,
-        "home_team": "Long Beach",
-        "home_score": 5,
-        "headline": ""
-      },
-      {
-        "date": "1/25/2020",
-        "status": "Final",
-        "away_team": "Soyates",
-        "away_score": 8,
-        "home_team": "Dodgers",
-        "home_score": 7,
-        "headline": ""
-      },
-      {
-        "date": "1/25/2020",
-        "status": "Final",
-        "away_team": "Yankees",
-        "away_score": 20,
-        "home_team": "Titanes",
-        "home_score": 8,
-        "headline": ""
-      },
-      {
-        "date": "1/11/2020",
-        "status": "Final",
-        "away_team": "Soyates",
-        "away_score": 11,
-        "home_team": "aranjeros",
-        "home_score": 9,
-        "headline": ""
-      },
-      {
-        "date": "1/11/2020",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 6,
-        "home_team": "Ensenada",
-        "home_score": 3,
-        "headline": ""
-      },
-      {
-        "date": "1/11/2020",
-        "status": "Final",
-        "away_team": "Orioles",
-        "away_score": 20,
-        "home_team": "Titanes",
-        "home_score": 17,
-        "headline": ""
-      },
-      {
-        "date": "1/11/2020",
-        "status": "Final",
-        "away_team": "Long Beach",
-        "away_score": 13,
-        "home_team": "Yankees",
-        "home_score": 12,
-        "headline": ""
-      },
-      {
-        "date": "1/4/2020",
-        "status": "Final",
-        "away_team": "Titanes",
-        "away_score": 9,
-        "home_team": "Yankees",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "12/21/2019",
-        "status": "CAN",
-        "away_team": "Naranjeros",
-        "away_score": 0,
-        "home_team": "Titanes",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "12/14/2019",
-        "status": "Final",
-        "away_team": "Yankees",
-        "away_score": 11,
-        "home_team": "Dodgers",
-        "home_score": 9,
-        "headline": ""
-      },
-      {
-        "date": "12/14/2019",
-        "status": "PPD",
-        "away_team": "Soyates",
-        "away_score": 0,
-        "home_team": "Titanes",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "12/14/2019",
-        "status": "Final",
-        "away_team": "Ensenada",
-        "away_score": 10,
-        "home_team": "Orioles",
-        "home_score": 9,
-        "headline": ""
-      },
-      {
-        "date": "12/14/2019",
-        "status": "Final",
-        "away_team": "Naranjeros",
-        "away_score": 3,
-        "home_team": "Long Beach",
-        "home_score": 1,
-        "headline": ""
-      },
-      {
-        "date": "12/7/2019",
-        "status": "PPD",
-        "away_team": "Dodgers",
-        "away_score": 0,
-        "home_team": "Yankees",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "12/7/2019",
-        "status": "PPD",
-        "away_team": "Orioles",
-        "away_score": 0,
-        "home_team": "Ensenada",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "12/7/2019",
-        "status": "PPD",
-        "away_team": "Soyates",
-        "away_score": 0,
-        "home_team": "Titanes",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "12/7/2019",
-        "status": "PPD",
-        "away_team": "Long Beach",
-        "away_score": 0,
-        "home_team": "aranjeros",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "11/23/2019",
-        "status": "Final",
-        "away_team": "Orioles",
-        "away_score": 11,
-        "home_team": "aranjeros",
-        "home_score": 3,
-        "headline": ""
-      },
-      {
-        "date": "11/23/2019",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 12,
-        "home_team": "Long Beach",
-        "home_score": 7,
-        "headline": ""
-      },
-      {
-        "date": "11/23/2019",
-        "status": "Final",
-        "away_team": "Soyates",
-        "away_score": 12,
-        "home_team": "Yankees",
-        "home_score": 7,
-        "headline": ""
-      },
-      {
-        "date": "11/23/2019",
-        "status": "Final",
-        "away_team": "Ensenada",
-        "away_score": 10,
-        "home_team": "Titanes",
-        "home_score": 2,
-        "headline": ""
-      },
-      {
-        "date": "11/15/2019",
-        "status": "Final",
-        "away_team": "Yankees",
-        "away_score": 12,
-        "home_team": "Ensenada",
-        "home_score": 7,
-        "headline": ""
-      },
-      {
-        "date": "11/15/2019",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 5,
-        "home_team": "aranjeros",
-        "home_score": 3,
-        "headline": ""
-      },
-      {
-        "date": "11/15/2019",
-        "status": "Final",
-        "away_team": "Soyates",
-        "away_score": 8,
-        "home_team": "Orioles",
-        "home_score": 2,
-        "headline": ""
-      },
-      {
-        "date": "11/15/2019",
-        "status": "Final",
-        "away_team": "Long Beach",
-        "away_score": 11,
-        "home_team": "Titanes",
-        "home_score": 7,
-        "headline": ""
-      },
-      {
-        "date": "11/9/2019",
-        "status": "Final",
-        "away_team": "Yankees",
-        "away_score": 20,
-        "home_team": "oyates",
-        "home_score": 5,
-        "headline": ""
-      },
-      {
-        "date": "11/9/2019",
-        "status": "Final",
-        "away_team": "Titanes",
-        "away_score": 11,
-        "home_team": "aranjeros",
-        "home_score": 1,
-        "headline": ""
-      },
-      {
-        "date": "11/9/2019",
-        "status": "Final",
-        "away_team": "Ensenada",
-        "away_score": 9,
-        "home_team": "Dodgers",
-        "home_score": 4,
-        "headline": ""
-      },
-      {
-        "date": "11/9/2019",
-        "status": "Final",
-        "away_team": "Orioles",
-        "away_score": 9,
-        "home_team": "Long Beach",
-        "home_score": 1,
-        "headline": ""
-      },
-      {
-        "date": "11/2/2019",
-        "status": "Final",
-        "away_team": "Soyates",
-        "away_score": 31,
-        "home_team": "aranjeros",
-        "home_score": 22,
-        "headline": ""
-      },
-      {
-        "date": "11/2/2019",
-        "status": "Final",
-        "away_team": "Orioles",
-        "away_score": 12,
-        "home_team": "Ensenada",
-        "home_score": 10,
-        "headline": ""
-      },
-      {
-        "date": "11/2/2019",
-        "status": "Final",
-        "away_team": "Yankees",
-        "away_score": 12,
-        "home_team": "Long Beach",
-        "home_score": 10,
-        "headline": ""
-      },
-      {
-        "date": "10/26/2019",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 9,
-        "home_team": "oyates",
-        "home_score": 6,
-        "headline": ""
-      },
-      {
-        "date": "10/26/2019",
-        "status": "Final",
-        "away_team": "Naranjeros",
-        "away_score": 17,
-        "home_team": "Orioles",
-        "home_score": 8,
-        "headline": ""
-      },
-      {
-        "date": "10/26/2019",
-        "status": "Final",
-        "away_team": "Yankees",
-        "away_score": 16,
-        "home_team": "Ensenada",
-        "home_score": 6,
-        "headline": ""
-      },
-      {
-        "date": "10/26/2019",
-        "status": "Final",
-        "away_team": "Titanes",
-        "away_score": 17,
-        "home_team": "Long Beach",
-        "home_score": 3,
-        "headline": ""
-      },
-      {
-        "date": "10/19/2019",
-        "status": "Final",
-        "away_team": "Yankees",
-        "away_score": 20,
-        "home_team": "Orioles",
-        "home_score": 4,
-        "headline": ""
-      },
-      {
-        "date": "10/19/2019",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 13,
-        "home_team": "aranjeros",
-        "home_score": 6,
-        "headline": ""
-      },
-      {
-        "date": "10/19/2019",
-        "status": "Final",
-        "away_team": "Ensenada",
-        "away_score": 14,
-        "home_team": "Long Beach",
-        "home_score": 13,
-        "headline": ""
-      },
-      {
-        "date": "10/19/2019",
-        "status": "Final",
-        "away_team": "Titanes",
-        "away_score": 14,
-        "home_team": "oyates",
-        "home_score": 4,
-        "headline": ""
-      },
-      {
-        "date": "10/12/2019",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 15,
-        "home_team": "Yankees",
-        "home_score": 9,
-        "headline": ""
-      },
-      {
-        "date": "10/12/2019",
-        "status": "Final",
-        "away_team": "Ensenada",
-        "away_score": 6,
-        "home_team": "oyates",
-        "home_score": 5,
-        "headline": ""
-      },
-      {
-        "date": "10/12/2019",
-        "status": "Final",
-        "away_team": "Long Beach",
-        "away_score": 8,
-        "home_team": "aranjeros",
-        "home_score": 6,
-        "headline": ""
-      },
-      {
-        "date": "10/5/2019",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 16,
-        "home_team": "Orioles",
-        "home_score": 12,
-        "headline": ""
-      },
-      {
-        "date": "10/5/2019",
-        "status": "Final",
-        "away_team": "Soyates",
-        "away_score": 6,
-        "home_team": "Long Beach",
-        "home_score": 4,
-        "headline": ""
-      },
-      {
-        "date": "10/5/2019",
-        "status": "Final",
-        "away_team": "Yankees",
-        "away_score": 13,
-        "home_team": "Titanes",
-        "home_score": 6,
-        "headline": ""
-      },
-      {
-        "date": "9/28/2019",
-        "status": "Final",
-        "away_team": "Titanes",
-        "away_score": 13,
-        "home_team": "Orioles",
-        "home_score": 11,
-        "headline": ""
-      },
-      {
-        "date": "9/28/2019",
-        "status": "Final",
-        "away_team": "Naranjeros",
-        "away_score": 9,
-        "home_team": "Yankees",
-        "home_score": 6,
-        "headline": ""
-      },
-      {
-        "date": "9/28/2019",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 6,
-        "home_team": "Long Beach",
-        "home_score": 2,
-        "headline": ""
-      },
-      {
-        "date": "9/21/2019",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 6,
-        "home_team": "Titanes",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "9/14/2019",
-        "status": "Final",
-        "away_team": "Naranjeros",
-        "away_score": 5,
-        "home_team": "Titanes",
-        "home_score": 3,
-        "headline": ""
-      },
-      {
-        "date": "9/14/2019",
-        "status": "Final",
-        "away_team": "Long Beach",
-        "away_score": 9,
-        "home_team": "Orioles",
-        "home_score": 8,
-        "headline": ""
-      },
-      {
-        "date": "9/7/2019",
-        "status": "Final",
-        "away_team": "Orioles",
-        "away_score": 11,
-        "home_team": "Long Beach",
-        "home_score": 4,
-        "headline": ""
-      },
-      {
-        "date": "9/7/2019",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 5,
-        "home_team": "aranjeros",
-        "home_score": 4,
-        "headline": ""
-      },
-      {
-        "date": "8/24/2019",
-        "status": "Final",
-        "away_team": "Orioles",
-        "away_score": 7,
-        "home_team": "aranjeros",
-        "home_score": 5,
-        "headline": ""
-      },
-      {
-        "date": "8/24/2019",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 10,
-        "home_team": "Ensenada",
-        "home_score": 10,
-        "headline": ""
-      },
-      {
-        "date": "8/24/2019",
-        "status": "Final",
-        "away_team": "Long Beach",
-        "away_score": 21,
-        "home_team": "Titanes",
-        "home_score": 14,
-        "headline": ""
-      },
-      {
-        "date": "8/17/2019",
-        "status": "Final",
-        "away_team": "Titanes",
-        "away_score": 18,
-        "home_team": "Ensenada",
-        "home_score": 8,
-        "headline": ""
-      },
-      {
-        "date": "8/17/2019",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 15,
-        "home_team": "Orioles",
-        "home_score": 3,
-        "headline": ""
-      },
-      {
-        "date": "8/17/2019",
-        "status": "Final",
-        "away_team": "Naranjeros",
-        "away_score": 8,
-        "home_team": "Long Beach",
-        "home_score": 5,
-        "headline": ""
-      },
-      {
-        "date": "8/10/2019",
-        "status": "Final",
-        "away_team": "Ensenada",
-        "away_score": 18,
-        "home_team": "aranjeros",
-        "home_score": 6,
-        "headline": ""
-      },
-      {
-        "date": "8/10/2019",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 14,
-        "home_team": "Long Beach",
-        "home_score": 0,
-        "headline": ""
-      },
-      {
-        "date": "8/10/2019",
-        "status": "Final",
-        "away_team": "Orioles",
-        "away_score": 10,
-        "home_team": "Titanes",
-        "home_score": 5,
-        "headline": ""
-      },
-      {
-        "date": "8/3/2019",
-        "status": "Final",
-        "away_team": "Dodgers",
-        "away_score": 7,
-        "home_team": "Titanes",
-        "home_score": 5,
-        "headline": "Vazquez Wins it for Dodgers"
-      }
-    ],
+    "season": "Summer - 2019",
+    "game_type": "season",
+    "division": "Division",
     "standings": [
       {
         "team": "Dodgers",
         "w": 13,
         "l": 3,
         "t": 1,
-        "pts": 27,
-        "gb": "--"
+        "g": 17,
+        "pct": ".794",
+        "p": 27
       },
       {
         "team": "Yankees",
         "w": 8,
         "l": 6,
         "t": 0,
-        "pts": 16,
-        "gb": "4.0"
+        "g": 14,
+        "pct": ".571",
+        "p": 16
       },
       {
         "team": "Soyates",
         "w": 7,
         "l": 4,
         "t": 0,
-        "pts": 14,
-        "gb": "3.5"
+        "g": 11,
+        "pct": ".636",
+        "p": 14
       },
       {
         "team": "Orioles",
         "w": 7,
         "l": 9,
         "t": 0,
-        "pts": 14,
-        "gb": "6.0"
+        "g": 16,
+        "pct": ".438",
+        "p": 14
       },
       {
         "team": "Titanes",
         "w": 7,
         "l": 10,
         "t": 0,
-        "pts": 14,
-        "gb": "6.5"
+        "g": 17,
+        "pct": ".412",
+        "p": 14
       },
       {
         "team": "Ensenada",
         "w": 6,
         "l": 5,
         "t": 1,
-        "pts": 13,
-        "gb": "4.5"
+        "g": 12,
+        "pct": ".542",
+        "p": 13
       },
       {
         "team": "Naranjeros",
         "w": 6,
         "l": 10,
         "t": 0,
-        "pts": 12,
-        "gb": "7.0"
+        "g": 16,
+        "pct": ".375",
+        "p": 12
       },
       {
         "team": "Long Beach",
         "w": 5,
         "l": 12,
         "t": 0,
-        "pts": 10,
-        "gb": "8.5"
+        "g": 17,
+        "pct": ".294",
+        "p": 10
       }
     ]
   },
   {
-    "name": "2021 50+",
-    "divisionId": "997284",
-    "games": [
-      {
-        "date": "8/21/2021",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 8,
-        "home_team": "Angels",
-        "home_score": 2,
-        "headline": "Brooklyn Takes 1st Diamond Classics Championship!"
-      },
-      {
-        "date": "8/14/2021",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 12,
-        "home_team": "Taco's Titans",
-        "home_score": 5,
-        "headline": "Close Game for 3 Innings"
-      },
-      {
-        "date": "8/14/2021",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 22,
-        "home_team": "Mets",
-        "home_score": 0,
-        "headline": "Angels win playoff game"
-      },
-      {
-        "date": "8/7/2021",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 15,
-        "home_team": "rooklyn",
-        "home_score": 12,
-        "headline": "Angels Win"
-      },
-      {
-        "date": "8/7/2021",
-        "status": "Final",
-        "away_team": "Taco's Titans",
-        "away_score": 8,
-        "home_team": "Mets",
-        "home_score": 4,
-        "headline": ""
-      },
-      {
-        "date": "7/31/2021",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 11,
-        "home_team": "Taco's Titans",
-        "home_score": 4,
-        "headline": "Brooklyn Pulls Away"
-      },
-      {
-        "date": "7/31/2021",
-        "status": "Final",
-        "away_team": "Mets",
-        "away_score": 8,
-        "home_team": "Angels",
-        "home_score": 7,
-        "headline": "3 Homeruns by the Mets made the difference in the game"
-      },
-      {
-        "date": "7/24/2021",
-        "status": "Final",
-        "away_team": "Mets",
-        "away_score": 16,
-        "home_team": "Taco's Titans",
-        "home_score": 1,
-        "headline": ""
-      },
-      {
-        "date": "7/24/2021",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 10,
-        "home_team": "Angels",
-        "home_score": 4,
-        "headline": "Homers Decide Game"
-      },
-      {
-        "date": "7/17/2021",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 13,
-        "home_team": "Mets",
-        "home_score": 3,
-        "headline": "Mets Bats Flat"
-      },
-      {
-        "date": "7/17/2021",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 11,
-        "home_team": "Taco's Titans",
-        "home_score": 4,
-        "headline": "Angels Beat Taco's Titans"
-      },
-      {
-        "date": "7/10/2021",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 9,
-        "home_team": "Mets",
-        "home_score": 6,
-        "headline": "Angels Defeat the Mets"
-      },
-      {
-        "date": "7/10/2021",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 13,
-        "home_team": "Taco's Titans",
-        "home_score": 5,
-        "headline": "Brooklyn Holds Off Shorthanded Titans"
-      },
-      {
-        "date": "6/26/2021",
-        "status": "Final",
-        "away_team": "Taco's Titans",
-        "away_score": 8,
-        "home_team": "Mets",
-        "home_score": 5,
-        "headline": "Titan's Get the Win"
-      },
-      {
-        "date": "6/26/2021",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 11,
-        "home_team": "Angels",
-        "home_score": 10,
-        "headline": "See Saw Affair Ends In Walk Off"
-      },
-      {
-        "date": "6/19/2021",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 18,
-        "home_team": "Mets",
-        "home_score": 2,
-        "headline": "Error Opens Floodgates. Brooklyn Wins"
-      },
-      {
-        "date": "6/19/2021",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 9,
-        "home_team": "Taco's Titans",
-        "home_score": 8,
-        "headline": "Angels Win on Walkoff Hit"
-      },
-      {
-        "date": "6/12/2021",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 9,
-        "home_team": "Taco's Titans",
-        "home_score": 8,
-        "headline": "Nguyen Wins It For Brooklyn!"
-      },
-      {
-        "date": "6/12/2021",
-        "status": "Final",
-        "away_team": "Mets",
-        "away_score": 3,
-        "home_team": "Angels",
-        "home_score": 1,
-        "headline": "Mets take one from Angels"
-      },
-      {
-        "date": "6/5/2021",
-        "status": "Final",
-        "away_team": "Brooklyn",
-        "away_score": 16,
-        "home_team": "Mets",
-        "home_score": 3,
-        "headline": "Brooklyn Downs Mets"
-      },
-      {
-        "date": "6/5/2021",
-        "status": "Final",
-        "away_team": "Angels",
-        "away_score": 9,
-        "home_team": "Taco's Titans",
-        "home_score": 2,
-        "headline": "Pete Cesario CG"
-      }
-    ],
+    "season": "Season - 2021",
+    "game_type": "season",
+    "division": "50+",
     "standings": [
       {
         "team": "Brooklyn",
         "w": 10,
         "l": 1,
         "t": 0,
-        "pts": 20,
-        "gb": "--"
+        "g": 11,
+        "pct": ".909",
+        "p": 20
       },
       {
         "team": "Angels",
         "w": 6,
         "l": 5,
         "t": 0,
-        "pts": 12,
-        "gb": "4.0"
+        "g": 11,
+        "pct": ".545",
+        "p": 12
       },
       {
         "team": "Mets",
         "w": 3,
         "l": 7,
         "t": 0,
-        "pts": 6,
-        "gb": "6.5"
+        "g": 10,
+        "pct": ".300",
+        "p": 6
       },
       {
         "team": "Taco's Titans",
         "w": 2,
         "l": 8,
         "t": 0,
-        "pts": 4,
-        "gb": "7.5"
+        "g": 10,
+        "pct": ".200",
+        "p": 4
       },
       {
         "team": "Highest Seed",
         "w": 0,
         "l": 0,
         "t": 0,
-        "pts": 0,
-        "gb": "4.5"
+        "g": 0,
+        "pct": ".000",
+        "p": 0
       }
     ]
   },
   {
-    "name": "2024 60's Mid-Week Division",
-    "divisionId": "1044619",
-    "games": [],
+    "season": "Season - 2024",
+    "game_type": "season",
+    "division": "60's Mid-Week Division",
     "standings": []
   }
 ]

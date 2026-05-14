@@ -193,9 +193,11 @@ export default async function HistoryPage() {
   ]);
 
   if (all.length === 0) {
+    // Empty-state header still wants tenant-aware copy.
+    const leagueName = await loadLeagueName(tenantId);
     return (
       <main className="container py-10">
-        <Header />
+        <Header leagueName={leagueName} earliestYear={null} />
         <div className="le-history-empty">
           <strong>League history is not available yet.</strong>
           <p>Once past seasons are archived, they'll appear here.</p>
@@ -237,36 +239,82 @@ export default async function HistoryPage() {
     },
   };
 
+  // Compute the earliest year in the archive so the subtitle reads
+  // "all the way back to 2003" for SFBL, "back to 2019" for LBDC,
+  // etc. without us hardcoding it.
+  const seasonYearsForSub = all
+    .map((b) => /\b(20\d{2})\b/.exec(b.season)?.[1])
+    .filter((y): y is string => !!y)
+    .map((y) => parseInt(y, 10))
+    .filter((n) => !Number.isNaN(n));
+  const earliestYear = seasonYearsForSub.length
+    ? Math.min(...seasonYearsForSub)
+    : null;
+  const leagueName = await loadLeagueName(tenantId);
+
   return (
     <main className="container py-10">
-      <Header />
+      <Header leagueName={leagueName} earliestYear={earliestYear} />
       <HistoryView {...props} />
     </main>
   );
 }
 
-function Header() {
+// Reads the tenant's display name (e.g. "Long Beach Diamond Classic")
+// off the top-level league doc. Falls back to a generic phrase when
+// the doc isn't readable. The header subtitle uses it for copy.
+async function loadLeagueName(tenantId: string): Promise<string> {
+  try {
+    const db = getAdminDb();
+    const snap = await db.doc(`leagues/${tenantId}`).get();
+    if (!snap.exists) return "the league";
+    const data = snap.data() ?? {};
+    return String(data.name ?? data.abbrev ?? "the league");
+  } catch {
+    return "the league";
+  }
+}
+
+function Header({
+  leagueName,
+  earliestYear,
+}: {
+  leagueName: string;
+  earliestYear: number | null;
+}) {
   return (
     <header className="le-history-hd">
       <p className="le-history-eyebrow">Archive</p>
       <h1 className="le-history-title">League History</h1>
       <p className="le-history-sub">
-        Every recorded SFBL season — champions, standings, and
-        records — all the way back to 2003.
+        Every recorded {leagueName} season — champions, standings, and
+        records
+        {earliestYear ? ` — all the way back to ${earliestYear}.` : "."}
       </p>
     </header>
   );
 }
 
-// Sort key for season strings (Spring 2024 > Fall 2023 > …).
+// Sort key for season strings (Spring 2024 > Fall 2023 > …). Accepts
+// both single-word labels ("Spring") and slash-joined labels
+// ("Spring/Summer") that LBDC's archive uses. Anything that
+// doesn't match the canonical Label-Year shape gets tier 0 so it
+// still sorts by year alongside its peers (just unstably within a
+// year, which is acceptable for the long tail).
 function seasonKey(s: string): number {
-  const m = /^(\w+(?:\s\w+)?)\s*-\s*(\d{4})$/.exec(s);
+  const m = /^([A-Za-z][A-Za-z\/\s]*?)\s*-\s*(\d{4})$/.exec(s);
   if (!m) return 0;
+  const label = m[1]!.trim();
   const tier =
-    m[1] === "Florida Cup" ? 1
-    : m[1] === "Spring" ? 2
-    : m[1] === "Summer" ? 3
-    : m[1] === "Fall" ? 4
+    label === "Florida Cup" ? 1
+    : label === "Spring" ? 2
+    : label === "Spring/Summer" ? 2
+    : label === "Summer" ? 3
+    : label === "Fall" ? 4
+    : label === "Fall/Winter" ? 4
+    : label === "Winter" ? 5
+    : label === "Season" ? 6
+    : label === "Postseason" ? 7
     : 0;
   return parseInt(m[2]!, 10) * 10 + tier;
 }

@@ -16,6 +16,7 @@
 
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { sanitizeHtml } from "@/lib/markdown";
 
 export const dynamic = "force-dynamic";
 
@@ -202,7 +203,17 @@ export default async function FieldsPage() {
                   }}
                 >
                   {f.notes.map((n, i) => (
-                    <li key={i}>{n}</li>
+                    // LBDC's lbdc_fields rows store inline <b><i>
+                    // markup inside note strings (e.g. parking
+                    // directions, gate hours). Render as sanitized
+                    // HTML so the formatting comes through — without
+                    // this the user sees literal "<b><i>..." text.
+                    // sanitizeHtml uses the same DOMPurify allowlist
+                    // as the rich-text content pipeline.
+                    <li
+                      key={i}
+                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(n) }}
+                    />
                   ))}
                 </ul>
               )}

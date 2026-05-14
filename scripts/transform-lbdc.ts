@@ -466,6 +466,39 @@ const LBDC_LIVE_SEASON_IDS = new Set<number>([2, 28, 31]);
 // older game.
 const LBDC_LIVE_DATE_FLOOR = "2026-04-11";
 
+// Build the GameOut record for a single raw game row. Shared between
+// buildGames (current-season filter) and buildAllGamesLookup (no
+// filter — used by buildBoxScores so historical batting/pitching
+// lines still resolve to a game record for stat aggregation, even
+// though those games never get written to /leagues/<id>/games).
+function rawToGameOut(
+  g: GameRaw,
+  pgSeasonToSlug: Map<number, string>,
+): GameOut {
+  const awaySlug = toSlug(cleanName(g.away_team));
+  const homeSlug = toSlug(cleanName(g.home_team));
+  const n = normalizeStatus(g.status);
+  return {
+    id: String(g.id),
+    date: g.game_date ?? "",
+    time: normalizeTime(g.game_time),
+    field: g.field ?? null,
+    away_team_id: awaySlug,
+    home_team_id: homeSlug,
+    away_score: g.away_score == null ? 0 : Number(g.away_score),
+    home_score: g.home_score == null ? 0 : Number(g.home_score),
+    status: n.status,
+    is_playoff: n.is_playoff,
+    forfeit: n.forfeit,
+    headline: cleanHeadline(g.headline),
+    season_id: pgSeasonToSlug.get(g.season_id) ?? null,
+    division: divisionForGame(awaySlug, homeSlug),
+    innings: g.innings ?? {},
+    source_id: g.id,
+    source_ll_game_id: g.ll_game_id ?? null,
+  };
+}
+
 function buildGames(
   games: GameRaw[],
   pgSeasonToSlug: Map<number, string>,
@@ -492,28 +525,158 @@ function buildGames(
         `game ${g.id}: unknown home_team "${g.home_team}" (slug "${homeSlug}")`,
       );
     }
-    const n = normalizeStatus(g.status);
-    out.push({
-      id: String(g.id),
-      date: g.game_date ?? "",
-      time: normalizeTime(g.game_time),
-      field: g.field ?? null,
-      away_team_id: awaySlug,
-      home_team_id: homeSlug,
-      away_score: g.away_score == null ? 0 : Number(g.away_score),
-      home_score: g.home_score == null ? 0 : Number(g.home_score),
-      status: n.status,
-      is_playoff: n.is_playoff,
-      forfeit: n.forfeit,
-      headline: cleanHeadline(g.headline),
-      season_id: pgSeasonToSlug.get(g.season_id) ?? null,
-      division: divisionForGame(awaySlug, homeSlug),
-      innings: g.innings ?? {},
-      source_id: g.id,
-      source_ll_game_id: g.ll_game_id ?? null,
-    });
+    out.push(rawToGameOut(g, pgSeasonToSlug));
   }
   return out;
+}
+
+// Returns a lookup of *every* raw game, regardless of season/date
+// filter. Used as the games-lookup for buildBoxScores so historical
+// box scores get migrated for career-stats aggregation. The
+// resulting GameOut records aren't written to /leagues/<id>/games —
+// they exist only as in-memory context for the box_scores step.
+function buildAllGamesLookup(
+  games: GameRaw[],
+  pgSeasonToSlug: Map<number, string>,
+): Map<number, GameOut> {
+  const m = new Map<number, GameOut>();
+  for (const g of games) m.set(g.id, rawToGameOut(g, pgSeasonToSlug));
+  return m;
+}
+
+// lbdc_schedules rows look like:
+//   { id: "sat" | "bom",
+//     data: [ { id, away, home, date: "Apr 11"|"May 5, 2026",
+//                time: "9:00 AM", field, status?, source } ] }
+// The dates use short month names and either drop the year or stamp
+// the full one. We parse them to ISO yyyy-mm-dd assuming the current
+// year when the year is missing. Any entry that's already represented
+// in `existing` (the played-games output) by (date, away, home) is
+// suppressed — we don't want to clobber Final scores with Scheduled
+// stubs.
+interface ScheduleEntry {
+  id?: string;
+  away?: string;
+  home?: string;
+  date?: string;
+  time?: string;
+  field?: string | null;
+  status?: string;
+  source?: string;
+}
+interface ScheduleBlock {
+  id: string; // "sat" | "bom" | ...
+  data: ScheduleEntry[];
+  updated_at?: string;
+}
+
+function mergeScheduledGames(
+  existing: GameOut[],
+  scheduleBlocks: ScheduleBlock[],
+  teams: Map<string, TeamOut>,
+  warnings: string[],
+): GameOut[] {
+  // Built keys from existing games — `${date}|${away}|${home}`.
+  // Same matchup on the same day shouldn't be duplicated. Both
+  // teams are slugged for stability.
+  const have = new Set<string>();
+  for (const g of existing) {
+    have.add(`${g.date}|${g.away_team_id}|${g.home_team_id}`);
+  }
+
+  const out: GameOut[] = [...existing];
+  // Largest existing source_id so synthetic schedule entries get
+  // monotonically higher numeric ids. Avoids colliding with real
+  // games.id values from Supabase.
+  let nextId = existing.reduce((m, g) => Math.max(m, g.source_id), 100_000);
+
+  for (const block of scheduleBlocks ?? []) {
+    if (!Array.isArray(block?.data)) continue;
+    for (const e of block.data) {
+      if (!e || typeof e !== "object") continue;
+      // Skip entries explicitly marked as cancelled / past status
+      // results that have already been written through `games`.
+      const status = String(e.status ?? "").toUpperCase().trim();
+      if (status === "CAN" || status === "CANCELED" || status === "CANCELLED") {
+        continue;
+      }
+      const date = parseScheduleDate(e.date);
+      if (!date) continue;
+      const away = toSlug(cleanName(e.away ?? ""));
+      const home = toSlug(cleanName(e.home ?? ""));
+      if (!away || !home) continue;
+      if (!teams.has(away) && !teams.has(home)) {
+        warnings.push(
+          `lbdc_schedules ${block.id}: both teams unknown for ${date} ${e.away} @ ${e.home}`,
+        );
+        continue;
+      }
+      const key = `${date}|${away}|${home}`;
+      if (have.has(key)) continue;
+      have.add(key);
+      const id = ++nextId;
+      const time = normalizeTime(e.time ?? null);
+      const normStatus = status === "PPD" ? "postponed" : "scheduled";
+      out.push({
+        id: String(id),
+        date,
+        time,
+        field: e.field ?? null,
+        away_team_id: away,
+        home_team_id: home,
+        away_score: 0,
+        home_score: 0,
+        status: normStatus,
+        is_playoff: false,
+        forfeit: false,
+        headline: "",
+        season_id: null,
+        division: divisionForGame(away, home),
+        innings: {},
+        source_id: id,
+        source_ll_game_id: null,
+      });
+    }
+  }
+  console.log(
+    `[merge-schedules] added ${out.length - existing.length} scheduled-only entries (${out.length} total games)`,
+  );
+  // Re-sort by date asc so /schedule renders in chronological order
+  // (existing was already sorted by Supabase insert order which can
+  // diverge from date order).
+  out.sort((a, b) => (a.date || "9999").localeCompare(b.date || "9999"));
+  return out;
+}
+
+// "Apr 11" → "2026-04-11" (assumes current year when year is omitted).
+// "May 5, 2026" → "2026-05-05". Returns null for anything unparseable.
+const MONTHS: Record<string, string> = {
+  jan: "01", feb: "02", mar: "03", apr: "04",
+  may: "05", jun: "06", jul: "07", aug: "08",
+  sep: "09", oct: "10", nov: "11", dec: "12",
+};
+function parseScheduleDate(s: unknown): string | null {
+  if (typeof s !== "string") return null;
+  const t = s.trim();
+  if (!t) return null;
+  // Full ISO already: "2026-04-11"
+  if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return t;
+  // "May 5, 2026" / "May 5 2026"
+  let m = /^([A-Za-z]+)\.?\s+(\d{1,2})(?:,)?\s+(\d{4})$/.exec(t);
+  if (m) {
+    const mo = MONTHS[m[1]!.slice(0, 3).toLowerCase()];
+    if (!mo) return null;
+    return `${m[3]}-${mo}-${m[2]!.padStart(2, "0")}`;
+  }
+  // "Apr 11" → assume 2026 (the LIVE_DATE_FLOOR year)
+  m = /^([A-Za-z]+)\.?\s+(\d{1,2})$/.exec(t);
+  if (m) {
+    const mo = MONTHS[m[1]!.slice(0, 3).toLowerCase()];
+    if (!mo) return null;
+    const year = LBDC_LIVE_DATE_FLOOR.slice(0, 4);
+    return `${year}-${mo}-${m[2]!.padStart(2, "0")}`;
+  }
+  return null;
 }
 
 interface TournRaw {
@@ -657,6 +820,20 @@ interface BoxScoreOut {
   // "approved" docs contribute to season stats. Every box we emit
   // here corresponds to a finalized game, so tag explicitly.
   status: "final";
+  // Season slug (e.g. "spring-summer-2026", "fall-winter-2025-26").
+  // Mirrors the corresponding game's season_id so the player profile
+  // can bucket per-game lines into per-season aggregates without a
+  // join through /games. May be null for orphan box scores whose
+  // game we can't map back to a season (rare edge case).
+  season_id: string | null;
+  // ISO date of the game ("2026-04-11"). Carried for the same reason
+  // as season_id — lets the profile page render Recent Games + sort
+  // historical seasons chronologically without a games join.
+  date: string;
+  away_team_id: string;
+  home_team_id: string;
+  away_score: number;
+  home_score: number;
   away_lineup: BoxBatterOut[];
   home_lineup: BoxBatterOut[];
   away_pitchers: BoxPitcherOut[];
@@ -740,6 +917,11 @@ function buildBoxScores(
   battingLines: BattingLineRaw[],
   pitchingLines: PitchingLineRaw[],
   games: GameOut[],
+  /** Lookup over EVERY raw game (current + historical seasons).
+   *  Used for batting/pitching line resolution so career stats span
+   *  prior seasons. Pass the same map that buildAllGamesLookup
+   *  produced. */
+  gameLookup: Map<number, GameOut>,
   nameToId: Map<string, string>,
   warnings: string[],
 ): {
@@ -766,9 +948,10 @@ function buildBoxScores(
     }
   }
   // Index games by source_id so the line's game_id (int) finds the
-  // canonical leagueplatform game doc.
-  const gameById = new Map<number, GameOut>();
-  for (const g of games) gameById.set(g.source_id, g);
+  // canonical leagueplatform game doc. We use `gameLookup` (every
+  // raw game) instead of the filtered `games` array — career stats
+  // need lines from prior seasons too.
+  const gameById = gameLookup;
 
   // Bucket lines by game.
   const battingByGame = new Map<number, BattingLineRaw[]>();
@@ -928,6 +1111,12 @@ function buildBoxScores(
     boxes.push({
       game_id: String(gameId),
       status: "final",
+      season_id: game.season_id ?? null,
+      date: game.date ?? "",
+      away_team_id: game.away_team_id,
+      home_team_id: game.home_team_id,
+      away_score: game.away_score,
+      home_score: game.home_score,
       away_lineup: awayLineup,
       home_lineup: homeLineup,
       away_pitchers: awayPitchers,
@@ -959,6 +1148,12 @@ function buildBoxScores(
     boxes.push({
       game_id: g.id,
       status: "final",
+      season_id: g.season_id ?? null,
+      date: g.date ?? "",
+      away_team_id: g.away_team_id,
+      home_team_id: g.home_team_id,
+      away_score: g.away_score,
+      home_score: g.home_score,
       away_lineup: [],
       home_lineup: [],
       away_pitchers: [],
@@ -1012,7 +1207,7 @@ function main() {
   const sponsors = readRaw("lbdc_sponsors")[0] ?? null;
   const tournamentMeta = readRaw("lbdc_tournament_meta")[0] ?? null;
   const pageContent = readRaw("lbdc_page_content")[0] ?? null;
-  const schedules = readRaw("lbdc_schedules");
+  const schedules = readRaw<ScheduleBlock>("lbdc_schedules");
 
   // 1. Seasons.
   const { out: seasonOut, pgToSlug: seasonPgToSlug } = buildSeasons(seasons);
@@ -1036,10 +1231,27 @@ function main() {
   );
 
   // 4. Games (regular + playoff, but NOT tournament).
+  // Two outputs from this step:
+  //   - `gameOut`  : filtered to LIVE_SEASON_IDS, written to /games
+  //   - `allGames` : unfiltered lookup, fed to buildBoxScores so
+  //                  career stats span prior seasons.
   const gameOut = buildGames(games, seasonPgToSlug, teams, warnings);
+  const allGames = buildAllGamesLookup(games, seasonPgToSlug);
+  // Merge scheduled-but-not-yet-played games from lbdc_schedules.
+  // Supabase only writes to `games` after a captain enters a score,
+  // so future-dated Saturday/Boomers matchups live in `lbdc_schedules`
+  // (the published schedule view). Stitch them in so /schedule and
+  // /availability show the full season ahead, not just the games
+  // we already have results for.
+  const scheduledMerged = mergeScheduledGames(
+    gameOut,
+    schedules,
+    teams,
+    warnings,
+  );
   writeDocs(
     "games",
-    gameOut.map((g) => ({ id: g.id, data: g })),
+    scheduledMerged.map((g) => ({ id: g.id, data: g })),
   );
 
   // 5. Tournament games (separate collection).
@@ -1125,6 +1337,7 @@ function main() {
     battingRaw,
     pitchingRaw,
     gameOut,
+    allGames,
     nameToId,
     warnings,
   );
@@ -1200,7 +1413,7 @@ function main() {
       players_rostered: players.size,
       players_orphan: orphans.size,
       players_total: players.size + orphans.size,
-      games: gameOut.length,
+      games: scheduledMerged.length,
       tournament_games: tournOut.length,
       news: news.length,
       signups: signups.length,
