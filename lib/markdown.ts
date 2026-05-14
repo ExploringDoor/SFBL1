@@ -35,12 +35,23 @@ const ALLOWED_TAGS = [
   "img",
   "figure", "figcaption",
   "table", "thead", "tbody", "tr", "th", "td",
+  // Layout primitives — needed so seed scripts (and the rich-text
+  // editor) can produce styled cards/grids for content pages.
+  // Content pages are admin-only writes; we're trusting that
+  // surface. DOMPurify still strips event handlers and dangerous
+  // CSS expressions inside `style`.
+  "div", "span",
 ];
 
 const ALLOWED_ATTR = [
   "href", "title", "target", "rel",
   // <img> attributes — src is filtered by DOMPurify's URL allowlist.
   "src", "alt", "width", "height", "loading",
+  // Inline `style` allowed so admin-curated cards on /content/* can
+  // render their own layouts without a per-page React component.
+  // Same trust model as above. DOMPurify removes javascript:,
+  // expression(), and behavior:url from CSS.
+  "style", "class",
 ];
 
 export function markdownToHtml(md: string): string {
