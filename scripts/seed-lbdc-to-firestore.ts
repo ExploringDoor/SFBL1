@@ -284,9 +284,11 @@ async function seedTenantDoc(db: Firestore | null): Promise<void> {
     },
     billing: { status: "active", paid_through: null, notes: "Migrated from Supabase" },
     standings: {
-      scoring: "points",
-      points_per: { win: 2, tie: 1, loss: 0 },
-      tiebreaker: "pct",
+      // LBDC doesn't use a points system — standings show W/L/T
+      // sorted by PCT (with run-differential as the tiebreaker per
+      // their conventions). Per Adam, 2026-05-13.
+      scoring: "pct",
+      tiebreaker: "rd",
     },
     migrated_at: new Date().toISOString(),
     migrated_from: "supabase://vhovzpajuyphjatjlodo",
