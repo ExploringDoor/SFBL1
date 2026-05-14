@@ -197,15 +197,15 @@ const SFBL_TENANT_CONFIG: LeagueConfig = {
 } as unknown as LeagueConfig;
 
 export async function resolveTenant(parsed: ParsedHost): Promise<ResolvedTenant | null> {
-  // For known SFBL hosts always serve the hardcoded config — skips
-  // the Firestore read entirely. Fixes "Tenant not found" failures
-  // when the project hits its read quota.
-  const isSfblHost =
-    parsed.kind === "subdomain" &&
-    (parsed.hostname === "sfbl-1.vercel.app" ||
-      parsed.hostname === "sfbl-12.vercel.app" ||
-      parsed.slug === "sfbl");
-  if (isSfblHost) {
+  // SFBL fast-path: when the resolved slug is "sfbl" we serve the
+  // hardcoded config and skip Firestore entirely. Fixes the
+  // "Tenant not found" failures we hit when the project ran out of
+  // read quota. Gated on slug (NOT hostname) so the
+  // ?_tenant= preview override works from the SFBL hostname —
+  // earlier the check was hostname-only, which meant any request
+  // to sfbl-1.vercel.app got SFBL regardless of which tenant the
+  // preview override asked for.
+  if (parsed.kind === "subdomain" && parsed.slug === "sfbl") {
     return { id: "sfbl", config: SFBL_TENANT_CONFIG };
   }
 
