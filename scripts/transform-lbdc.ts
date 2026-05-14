@@ -653,6 +653,10 @@ interface BoxPitcherOut {
 
 interface BoxScoreOut {
   game_id: string;
+  // recalcLeague filters box scores by status — only "final" or
+  // "approved" docs contribute to season stats. Every box we emit
+  // here corresponds to a finalized game, so tag explicitly.
+  status: "final";
   away_lineup: BoxBatterOut[];
   home_lineup: BoxBatterOut[];
   away_pitchers: BoxPitcherOut[];
@@ -923,6 +927,7 @@ function buildBoxScores(
 
     boxes.push({
       game_id: String(gameId),
+      status: "final",
       away_lineup: awayLineup,
       home_lineup: homeLineup,
       away_pitchers: awayPitchers,
@@ -953,6 +958,7 @@ function buildBoxScores(
     if (haveBox.has(g.id)) continue;
     boxes.push({
       game_id: g.id,
+      status: "final",
       away_lineup: [],
       home_lineup: [],
       away_pitchers: [],
