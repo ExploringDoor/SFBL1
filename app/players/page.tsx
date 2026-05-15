@@ -103,7 +103,10 @@ export default async function PlayersPage() {
       team_abbrev: t?.abbrev,
       team_color: t?.color,
       team_logo: t?.logoUrl ?? null,
-      jersey: data.jersey != null ? Number(data.jersey) : null,
+      // Read either field — LBDC's migration writes `number`,
+      // SFBL captain UI writes `jersey`. Coerces "" / "—" / non-
+      // numeric strings to null so the cell renders an em-dash.
+      jersey: jerseyNum(data.jersey ?? data.number),
       ab: Number(stats.ab ?? 0),
       h: Number(stats.h ?? 0),
       hr: Number(stats.hr ?? 0),
@@ -384,6 +387,19 @@ function Leaderboard({
       )}
     </section>
   );
+}
+
+// Coerce an arbitrary jersey value to a number, returning null when
+// the input is empty / non-numeric. Mirrors the helper in
+// /teams/[id]/page.tsx — kept inline (not extracted to a shared
+// util) so each page-level loader stays self-contained.
+function jerseyNum(v: unknown): number | null {
+  if (v == null) return null;
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  const s = String(v).trim();
+  if (s === "" || s === "—" || s === "-") return null;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : null;
 }
 
 function formatAvg(n: number): string {

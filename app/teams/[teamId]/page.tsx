@@ -273,7 +273,11 @@ export default async function TeamDetailPage({
       return {
         id: d.id,
         name: String(data.name ?? d.id),
-        jersey: data.jersey != null ? Number(data.jersey) : null,
+        // LBDC's migration writes jersey on `number` (mirrors their
+        // Supabase column); SFBL captain UI writes it on `jersey`.
+        // Read whichever is present so the # column lights up for
+        // both. Empty strings ("") fall through to null.
+        jersey: jerseyNum(data.jersey ?? data.number),
         position: data.position ? String(data.position) : null,
         // Batting line — undefined when this player has 0 GP this
         // season so the cells render em-dashes instead of zeros.
@@ -1112,6 +1116,20 @@ function formatAvg(n: number): string {
 function formatOps(n: number): string {
   const s = n.toFixed(3);
   return n < 1 ? s.replace(/^0/, "") : s;
+}
+
+// Coerce an arbitrary jersey value to a number, returning null when
+// the input is empty / non-numeric. Handles LBDC's string-encoded
+// numbers ("13") and SFBL's actual numbers (13). Leading zero is
+// preserved as-is at the display layer, but for sorting we want
+// numeric.
+function jerseyNum(v: unknown): number | null {
+  if (v == null) return null;
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  const s = String(v).trim();
+  if (s === "" || s === "—" || s === "-") return null;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : null;
 }
 
 // Per-player accumulators for the on-the-fly current-season
