@@ -69,11 +69,10 @@ body.ticker-hidden #score-ticker {
 .st-label-img {
   display: block;
   height: 100%;
-  /* Caps mirror --ticker-height (80 desktop / 96 mobile) so a tall
-   * source PNG renders at full ticker height. Doubled on 2026-05-14
-   * to make the LBDC ticker tile read as a brand mark, not a
-   * decorative icon. */
-  max-height: 88px;
+  /* Caps mirror --ticker-height (160 desktop / 192 mobile after the
+   * 2026-05-15 second bump) so a tall source PNG renders at full
+   * ticker height. */
+  max-height: 168px;
   width: auto;
   object-fit: contain;
 }
@@ -82,7 +81,7 @@ body.ticker-hidden #score-ticker {
     padding: 4px 8px;
   }
   .st-label-img {
-    max-height: 88px;
+    max-height: 200px;
   }
 }
 
@@ -287,23 +286,23 @@ body.ticker-hidden #score-ticker {
 
 .st-full:hover { color: #ffffff; }
 
-/* Mobile: 96px tall (matches --ticker-height for ≤700px), label
- * sticks to left edge as you scroll. */
+/* Mobile: 192px tall (matches --ticker-height for ≤700px after the
+ * 2026-05-15 second-bump), label sticks to left edge as you scroll. */
 @media (max-width: 700px) {
   #score-ticker {
     overflow: hidden !important;
     max-width: 100vw !important;
-    height: 96px !important;
-    min-height: 96px !important;
+    height: 192px !important;
+    min-height: 192px !important;
   }
   .st-track {
     width: max-content !important;
     display: inline-flex !important;
-    height: 96px !important;
+    height: 192px !important;
     align-items: stretch !important;
   }
   .st-game {
-    height: 96px !important;
+    height: 192px !important;
     padding: 0 12px !important;
     align-items: center !important;
     overflow: visible !important;
@@ -318,7 +317,7 @@ body.ticker-hidden #score-ticker {
     z-index: 2;
     flex-shrink: 0;
     background: var(--brand-primary, #002D72) !important;
-    height: 96px !important;
+    height: 192px !important;
   }
 }
 
