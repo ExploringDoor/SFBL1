@@ -881,8 +881,6 @@ function splitDateTime(
   dateRaw: string,
   timeRaw: string,
 ): { date: string; time: string } {
-  // If timeRaw is already a clean "HH:MM" and dateRaw is a clean date,
-  // just trust them.
   const isCleanDate = /^\d{4}-\d{2}-\d{2}$/.test(dateRaw);
   const isCleanTime = /^\d{1,2}:\d{2}$/.test(timeRaw);
   if (isCleanDate && isCleanTime) {
@@ -891,13 +889,30 @@ function splitDateTime(
   if (isCleanDate && !timeRaw) {
     return { date: dateRaw, time: "" };
   }
-  // Otherwise try to parse dateRaw as ISO datetime.
+  // dateRaw has a time component (e.g. "2026-05-18T00:00:00.000Z").
+  //
+  // CRITICAL: if timeRaw is set, TRUST IT and just slice the YYYY-MM-DD
+  // off dateRaw as plain text — DO NOT parse-as-Date, which would
+  // re-interpret the ISO in the user's local timezone and silently
+  // shift the date by a day for early-morning / late-night ISO
+  // strings. Adam saw "Generals @ Black Sox should be 12 PM" but the
+  // game came back as 5 PM because:
+  //   dateRaw="2026-05-18T00:00:00.000Z" → UTC midnight May 18
+  //   In Pacific (UTC-7) that's 5 PM May 17
+  //   getHours() returns 17, getDate() returns 17
+  //   → "2026-05-17" / "17:00"  ← wrong on BOTH axes
+  // The fix: timeRaw="12:00" is the authoritative time, so we keep
+  // it and ignore the bogus 00:00:00.000Z in dateRaw.
+  if (isCleanTime) {
+    return { date: dateRaw.slice(0, 10), time: timeRaw };
+  }
+  // Last-resort: timeRaw is empty AND dateRaw has a time component.
+  // Parse-as-Date and use the local-time pieces (existing behaviour;
+  // mostly hit for legacy data shipped from old DVSL imports).
   const d = new Date(dateRaw);
   if (Number.isNaN(d.getTime())) {
     return { date: dateRaw.slice(0, 10), time: timeRaw };
   }
-  // Build local YYYY-MM-DD without TZ shift. We use the *local*
-  // pieces because the user's calendar shows local time, not UTC.
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");

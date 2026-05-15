@@ -21,8 +21,18 @@ export function combineDateTime(
   time: string | null | undefined,
 ): string {
   if (!date) return "";
-  if (date.includes("T")) return date;
-  if (!time) return date;
+  // Common case: clean YYYY-MM-DD + clean HH:MM. Stitch them.
+  if (!time) {
+    // Date may be ISO (with T + offset/Z). Returning as-is means
+    // downstream `new Date()` will TZ-shift; that's fine when no
+    // separate time was stored — the ISO IS the source of truth.
+    return date;
+  }
+  // If the date string also includes a T-time component, throw it
+  // away — the separate `time` field is authoritative (Adam ran
+  // into "Generals @ Black Sox should be 12 PM" because the date
+  // ended up stored as "2026-05-18T00:00:00.000Z" and a naive ISO
+  // return shifted the game to 5 PM the previous day in Pacific).
   const t = /^\d{1,2}:\d{2}$/.test(time) ? `${time}:00` : time;
   return `${date.slice(0, 10)}T${t}`;
 }
