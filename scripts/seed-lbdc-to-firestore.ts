@@ -280,7 +280,13 @@ async function seedTenantDoc(db: Firestore | null): Promise<void> {
     theme: {
       primary: "#002d6e", // LBDC navy
       accent: "#FFD700",   // LBDC gold
-      logo_url: null,
+      // Transparent-PNG square logo at public/lbdc/logo.png. Shows
+      // in the ticker (48px tile), the homepage Hero (full-width
+      // contained), and as the share-card fallback. The wide
+      // hero.jpg banner that previously lived here got dropped on
+      // 2026-05-14 — it caused a "double logo" effect against the
+      // Nav brand.
+      logo_url: "/lbdc/logo.png",
     },
     billing: { status: "active", paid_through: null, notes: "Migrated from Supabase" },
     standings: {
