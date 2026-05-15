@@ -17,8 +17,13 @@
   border-bottom: 1px solid rgba(0, 0, 0, 0.15);
   /* On iOS PWA black-translucent status bar, html's navy bg fills the
    * area ABOVE the ticker so the safe-area strip reads as one navy
-   * band. env() is 0 in plain Safari → no-op there. */
-  height: 48px;
+   * band. env() is 0 in plain Safari → no-op there.
+   *
+   * Height tracks --ticker-height (declared in app/globals.css). The
+   * earlier hardcoded `height: 48px` is why bumping the variable
+   * silently failed on desktop — Adam's ticker stayed 48px tall no
+   * matter what the var said. Fixed 2026-05-15. */
+  height: var(--ticker-height, 48px);
   display: flex;
   align-items: stretch;
   overflow: visible;
