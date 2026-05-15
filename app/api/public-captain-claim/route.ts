@@ -116,45 +116,61 @@ export async function POST(req: Request) {
     );
   }
 
-  // Resolve the team_id. If the caller passed teamId we look it up
-  // directly; otherwise we scan the league's teams and find one whose
-  // id or name normalizes to the same value as the password.
+  // Resolve the team_id. Three input shapes the endpoint accepts:
+  //
+  //   1. {teamId, teamPassword} — two-step UI: the user picked their
+  //      team first, then typed the password. Validate the password
+  //      against THAT team only.
+  //   2. {teamId} — admin tooling / deep links. No password check;
+  //      just confirm the team exists. (Same as before; keeps any
+  //      privileged callers working.)
+  //   3. {teamPassword} only — legacy single-field flow. Scan every
+  //      team and match by normalized id / name / abbrev / first
+  //      word / captain_password.
+  //
+  // All comparisons use normalize() which strips non-alphanumerics
+  // and lowercases so "Black Sox" / "blacksox" / "black-sox" match.
   let teamId: string | null = null;
-  if (explicitTeamId) {
+  if (explicitTeamId && rawPassword) {
+    // Two-step path. Validate password against the picked team.
+    const teamSnap = await db
+      .doc(`leagues/${leagueId}/teams/${explicitTeamId}`)
+      .get();
+    if (!teamSnap.exists) {
+      return NextResponse.json(
+        { error: `Team "${explicitTeamId}" not found` },
+        { status: 404 },
+      );
+    }
+    const td = teamSnap.data() ?? {};
+    const target = normalize(rawPassword);
+    const candidates = teamPasswordCandidates(explicitTeamId, td);
+    if (candidates.some((c) => normalize(c) === target)) {
+      teamId = explicitTeamId;
+    }
+  } else if (explicitTeamId) {
+    // Privileged "trust the caller" path — no password required.
     const teamSnap = await db
       .doc(`leagues/${leagueId}/teams/${explicitTeamId}`)
       .get();
     if (teamSnap.exists) teamId = explicitTeamId;
   } else {
+    // Legacy single-input search.
     const target = normalize(rawPassword);
     const teamsSnap = await db
       .collection(`leagues/${leagueId}/teams`)
       .get();
     for (const d of teamsSnap.docs) {
-      const td = d.data();
-      const id = d.id;
-      const name = String(td.name ?? "");
-      const abbrev = String(td.abbrev ?? "");
-      // Admin-set custom password wins if present — gives Adam a way
-      // to assign weird per-team passwords later without renaming.
-      const custom = String(td.captain_password ?? "");
-      // Also accept the first word of the team name so the boomers
-      // teams (Eddie Murray Mashers '56) don't require typing 22
-      // chars. Means captain of "Eddie Murray Mashers '56" can sign
-      // in with "eddie" / "Eddie" / etc.
-      const firstWord = name.split(/\s+/)[0] ?? "";
-      const candidates = [custom, id, name, abbrev, firstWord].filter(
-        Boolean,
-      );
+      const candidates = teamPasswordCandidates(d.id, d.data() ?? {});
       if (candidates.some((c) => normalize(c) === target)) {
-        teamId = id;
+        teamId = d.id;
         break;
       }
     }
   }
   if (!teamId) {
     return NextResponse.json(
-      { error: "Wrong password. The password is your team's name." },
+      { error: "Wrong password." },
       { status: 401 },
     );
   }
@@ -198,4 +214,20 @@ export async function POST(req: Request) {
 //   "Eddie Murray Mashers '56" -> "eddiemurraymashers56"
 function normalize(s: string): string {
   return String(s).toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+// Build the list of strings that count as "the password" for a
+// given team. Admin can set a custom `captain_password` on the team
+// doc to override; otherwise we accept the team's id, name, abbrev,
+// or first-word-of-name interchangeably so long team names (Eddie
+// Murray Mashers '56) don't require typing the whole thing.
+function teamPasswordCandidates(
+  id: string,
+  td: FirebaseFirestore.DocumentData,
+): string[] {
+  const custom = String(td.captain_password ?? "");
+  const name = String(td.name ?? "");
+  const abbrev = String(td.abbrev ?? "");
+  const firstWord = name.split(/\s+/)[0] ?? "";
+  return [custom, id, name, abbrev, firstWord].filter(Boolean);
 }
