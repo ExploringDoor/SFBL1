@@ -64,8 +64,11 @@ export default async function HomePage() {
 
   return (
     <main>
+      {/* No `pill` — the "⚾ {YEAR} Regular Season" tag sat awkwardly
+          above the hero banner and Adam asked to drop it (2026-05-14).
+          Leaving the prop optional in the component so we can pass it
+          again on a different surface if we ever want it. */}
       <DvslHero
-        pill={`⚾ ${season} Regular Season`}
         title={`${big} ${season}`}
         accentWord={season}
         subtitle={leagueName}
