@@ -198,7 +198,11 @@ const SFBL_TENANT_CONFIG: LeagueConfig = {
   innings: 9,
   ruleset: "hardball",
   linescore_innings: 9,
-  stat_columns: ["ab", "h", "2b", "3b", "hr", "rbi", "bb", "so", "avg"],
+  // Audit C4 fix (2026-05-15): R and SB were missing from this list
+  // and "avg" isn't a captureable column (it's derived). Captains
+  // couldn't enter the two most common counting stats, and leaderboards
+  // pulled from these zeros gave the wrong league leaders.
+  stat_columns: ["ab", "r", "h", "doubles", "triples", "hr", "rbi", "bb", "so", "sb"],
   pitching: {
     enabled: true,
     auto_innings_pitched: true,
