@@ -66,6 +66,9 @@ import * as path from "node:path";
 
 import { cert, initializeApp } from "firebase-admin/app";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";
+// Audit H6: single source of truth — shared with the one-shot patch
+// scripts so the live tenant can't drift from the next seed run.
+import { LBDC_STAT_COLUMNS, LBDC_NAV_HIDE } from "./lbdc-tenant-config";
 
 // ── CLI args ────────────────────────────────────────────────────────
 function parseArgs() {
@@ -279,10 +282,7 @@ async function seedTenantDoc(db: Firestore | null): Promise<void> {
     // batting line: the standard 10 plus HBP, SF, SAC, FC, ROE,
     // CS. Pitching columns are always shown (not gated on this
     // list).
-    stat_columns: [
-      "ab", "r", "h", "doubles", "triples", "hr", "rbi", "bb", "so", "sb",
-      "hbp", "sf", "sac", "fc", "roe", "cs",
-    ],
+    stat_columns: [...LBDC_STAT_COLUMNS],
     pitching: { enabled: true, auto_innings_pitched: true, record_pitches: false },
     rules_flags: { dropped_third_strike: true, balks: true, infield_fly: true },
     theme: {
@@ -316,7 +316,7 @@ async function seedTenantDoc(db: Firestore | null): Promise<void> {
     // at /sfbl-info, which serves the tenant's page_content/sfbl-info
     // doc.
     nav: {
-      hide: ["News", "Team Registration", "Team Waiver", "Store"],
+      hide: [...LBDC_NAV_HIDE],
     },
     // Captain UX: passwordless mode. Captain landing shows a team
     // picker that calls /api/public-captain-claim → Firebase

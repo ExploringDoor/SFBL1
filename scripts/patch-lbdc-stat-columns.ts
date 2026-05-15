@@ -20,6 +20,9 @@ import * as path from "node:path";
 
 import { cert, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
+// Audit H6: shared with seed-lbdc-to-firestore.ts so this one-shot
+// patch can't drift from what the next full seed would write.
+import { LBDC_STAT_COLUMNS } from "./lbdc-tenant-config";
 
 let league: string | null = null;
 const args = process.argv.slice(2);
@@ -40,25 +43,9 @@ initializeApp({
 const db = getFirestore();
 
 // Match the BatStats fields the captain editor knows about. Order
-// matters for the rendered column order in the editor.
-const COLS = [
-  "ab",
-  "r",
-  "h",
-  "doubles",
-  "triples",
-  "hr",
-  "rbi",
-  "bb",
-  "so",
-  "sb",
-  "hbp",
-  "sf",
-  "sac",
-  "fc",
-  "roe",
-  "cs",
-];
+// matters for the rendered column order in the editor. Sourced from
+// the shared module (audit H6) — edit there, not here.
+const COLS = [...LBDC_STAT_COLUMNS];
 
 (async () => {
   const ref = db.doc(`leagues/${league}`);

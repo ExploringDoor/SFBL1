@@ -110,6 +110,42 @@ export async function setupLeagueCalendar(
   return { calendarId, publicUrl };
 }
 
+// Audit H9: add `hours` to a "YYYY-MM-DD" + "HH:MM" wall clock and
+// return a naive ISO ("YYYY-MM-DDTHH:MM:SS") in the SAME wall clock.
+// All math runs through Date.UTC / getUTC* purely as a calendar
+// calculator, so the server's own timezone never enters — GCal
+// re-anchors the floating value via the `timeZone` field. This also
+// correctly rolls the date over (e.g. 23:30 + 2h → next day 01:30),
+// which the previous getHours()/getDate() code did not.
+function addHoursWallClock(
+  date: string,
+  hhmm: string,
+  hours: number,
+): string {
+  // Destructuring defaults keep these `string` (not string|undefined)
+  // for strict TS. Callers only reach here with a regex-validated
+  // "HH:MM" time and a "YYYY-MM-DD" date, so the defaults are inert.
+  const [hStr = "0", mStr = "0"] = hhmm.split(":");
+  const [yStr = "1970", moStr = "1", dStr = "1"] = date.split("-");
+  const ms =
+    Date.UTC(
+      Number(yStr),
+      Number(moStr) - 1,
+      Number(dStr),
+      Number(hStr),
+      Number(mStr),
+      0,
+      0,
+    ) +
+    hours * 3600_000;
+  const d = new Date(ms);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return (
+    `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}` +
+    `T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:00`
+  );
+}
+
 function buildEventBody(
   game: GameForSync,
   timeZone: string,
@@ -139,15 +175,12 @@ function buildEventBody(
   // game runs ~2-3 hrs; 2 is a sensible default for calendar block).
   // Otherwise treat as all-day event on the date.
   if (game.time && /^\d{1,2}:\d{2}$/.test(game.time)) {
-    const startIso = `${game.date}T${game.time.padStart(5, "0")}:00`;
-    // Add 2 hours.
-    const startDate = new Date(`${startIso}-00:00`);
-    const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const endIso =
-      `${endDate.getFullYear()}-${pad(endDate.getMonth() + 1)}-${pad(
-        endDate.getDate(),
-      )}T${pad(endDate.getHours())}:${pad(endDate.getMinutes())}:00`;
+    const hhmm = game.time.padStart(5, "0");
+    const startIso = `${game.date}T${hhmm}:00`;
+    // Audit H9: end = start + 2h computed as pure calendar math so a
+    // non-UTC Vercel region can't desync start/end (the old code mixed
+    // a UTC-parsed start with local getHours()/getDate() for the end).
+    const endIso = addHoursWallClock(game.date, hhmm, 2);
     return {
       summary,
       start: { dateTime: startIso, timeZone },

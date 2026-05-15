@@ -79,6 +79,13 @@ export async function GET() {
     const data = d.data();
     if (data.active === false) continue;
     if (data.walk_on === true) continue;
+    // Audit H8: LBDC migration orphans (~1100 docs: status:"unknown"
+    // / orphan:true, no `active` field) were sailing into the
+    // sitemap, so Google would index thousands of stub
+    // "player not found" pages. Same predicate as audit C1/H7 —
+    // missing status still passes (SFBL legacy).
+    if (data.orphan === true) continue;
+    if (data.status && data.status !== "active") continue;
     urls.push({
       loc: `${origin}/players/${d.id}`,
       lastmod: now,

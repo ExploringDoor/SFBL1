@@ -50,7 +50,19 @@ export default async function PrintRosterPage({
   const leagueName = String(leagueSnap.data()?.name ?? tenantId);
 
   const players = playerSnap.docs
-    .filter((d) => d.data().active !== false)
+    // Audit H7: the old `active !== false` filter let LBDC migration
+    // orphan docs (status:"unknown" / orphan:true, no `active` field)
+    // through, so the confidential contacts PDF showed ~154 rows
+    // instead of the real ~15-person roster. Same 3-condition
+    // predicate the public roster surfaces use (audit C1): missing
+    // status passes (SFBL legacy), explicit non-active is dropped.
+    .filter((d) => {
+      const data = d.data();
+      if (data.active === false) return false;
+      if (data.orphan === true) return false;
+      if (data.status && data.status !== "active") return false;
+      return true;
+    })
     .map((d) => {
       const data = d.data();
       return {

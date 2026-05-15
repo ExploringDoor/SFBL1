@@ -20,6 +20,9 @@ import * as path from "node:path";
 
 import { cert, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
+// Audit H6: shared with seed-lbdc-to-firestore.ts so this one-shot
+// patch can't drift from what the next full seed would write.
+import { LBDC_NAV_HIDE } from "./lbdc-tenant-config";
 
 let league: string | null = null;
 const args = process.argv.slice(2);
@@ -39,17 +42,12 @@ initializeApp({
 });
 const db = getFirestore();
 
-// "About SFBL" intentionally absent — the Nav component now relabels
-// it to "About <tenant abbrev>" for non-SFBL leagues, so LBDC sees a
-// real "About LBDC" link backed by /sfbl-info (which reads tenant-
-// specific content). Hiding it would leave LBDC without an about
-// page entirely.
-const HIDE = [
-  "News",
-  "Team Registration",
-  "Team Waiver",
-  "Store",
-];
+// Sourced from the shared module (audit H6) — edit there, not here.
+// "About SFBL" intentionally absent: the Nav component relabels it to
+// "About <tenant abbrev>" for non-SFBL leagues, so LBDC sees a real
+// "About LBDC" link backed by /sfbl-info. Hiding it would leave LBDC
+// without an about page entirely.
+const HIDE = [...LBDC_NAV_HIDE];
 
 (async () => {
   const ref = db.doc(`leagues/${league}`);
