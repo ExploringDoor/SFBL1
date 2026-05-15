@@ -37,6 +37,15 @@ export const runtime = "nodejs";
 
 const ALLOWED_ROLES = new Set(["admin", "captain", "player", "remove"]);
 const TEAM_ID_RE = /^[a-z0-9_-]+$/;
+// Audit H4: player doc ids are slugs like "tribe__greg-maddux-66"
+// (LBDC: <teamSlug>__<nameSlug>) or "john_smith" (SFBL). The old
+// code reused TEAM_ID_RE for playerId, which silently 400s any id
+// containing uppercase or a dot AND returned the misleading
+// "playerId is required" even when one WAS supplied. Use a
+// dedicated, slightly more permissive matcher (uppercase + dots are
+// valid in Firestore doc ids and plausible in future imports) and a
+// format-specific error message below.
+const PLAYER_ID_RE = /^[A-Za-z0-9._-]+$/;
 
 interface Body {
   leagueId?: unknown;
@@ -127,13 +136,28 @@ export async function POST(req: Request) {
     }
     claimValue = `captain:${body.teamId}`;
   } else if (role === "player") {
-    if (typeof body.playerId !== "string" || !TEAM_ID_RE.test(body.playerId)) {
+    if (typeof body.playerId !== "string" || !body.playerId) {
       return NextResponse.json(
         { error: "playerId is required for role=player" },
         { status: 400 },
       );
     }
-    claimValue = `player:${body.playerId}`;
+    const pid = body.playerId;
+    if (
+      pid.length > 256 ||
+      pid === "." ||
+      pid === ".." ||
+      pid.includes("..") ||
+      !PLAYER_ID_RE.test(pid)
+    ) {
+      return NextResponse.json(
+        {
+          error: `playerId "${pid}" has an invalid format (allowed: letters, digits, dot, underscore, hyphen)`,
+        },
+        { status: 400 },
+      );
+    }
+    claimValue = `player:${pid}`;
   } else if (role === "remove") {
     claimValue = null;
   }

@@ -159,12 +159,21 @@ export async function POST(req: Request) {
         typeof g.division === "string" && g.division
           ? g.division
           : String(awayDoc.data()?.division ?? homeDoc.data()?.division ?? ""),
-      date:
-        typeof g.date === "string" && g.date ? String(g.date).slice(0, 10) : "",
+      // Audit H10: store a clean "YYYY-MM-DD" or null — never "".
+      // The update path already normalizes "" → null; the create
+      // path was the inconsistent one. Empty/garbage dates stored as
+      // "" render downstream as "Invalid Date" instead of "TBD", and
+      // the old code stored an unvalidated 10-char slice of whatever
+      // was posted.
+      date: (() => {
+        if (typeof g.date !== "string" || !g.date) return null;
+        const d = g.date.slice(0, 10);
+        return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : null;
+      })(),
       time:
         typeof g.time === "string" && /^\d{1,2}:\d{2}$/.test(g.time)
           ? g.time
-          : "",
+          : null,
       field: typeof g.field === "string" ? g.field.trim() : "",
       status: "scheduled" as const,
       away_score: 0,

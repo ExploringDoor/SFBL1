@@ -46,6 +46,7 @@ export async function POST(req: Request) {
   let body: {
     leagueId?: unknown;
     playerId?: unknown;
+    teamId?: unknown;
     paid?: unknown;
     note?: unknown;
     amount_paid?: unknown;
@@ -77,11 +78,26 @@ export async function POST(req: Request) {
 
   const leagues = decoded.leagues as Record<string, string> | undefined;
   const claim = leagues?.[leagueId];
-  let captainTeamId: string | null = null;
+  let targetTeamId: string;
   let isAdmin = false;
-  if (claim === "admin") isAdmin = true;
-  else if (typeof claim === "string" && claim.startsWith("captain:")) {
-    captainTeamId = claim.slice("captain:".length);
+  if (claim === "admin") {
+    isAdmin = true;
+    // Audit H2: every other captain-* endpoint (captain-add-player,
+    // captain-roster) forces admins to pass { teamId } as a
+    // fat-finger guard. Without it here, an admin token with a
+    // typo'd playerId silently wrote a payment row for the wrong
+    // player. Require it, then verify the player's team_id matches
+    // below — same shape as the sibling endpoints.
+    if (typeof body.teamId !== "string" || !body.teamId) {
+      return NextResponse.json(
+        { error: "Admin must include { teamId } in body" },
+        { status: 400 },
+      );
+    }
+    targetTeamId = body.teamId;
+  } else if (typeof claim === "string" && claim.startsWith("captain:")) {
+    // Captains are scoped to their own team — body.teamId is ignored.
+    targetTeamId = claim.slice("captain:".length);
   } else {
     return NextResponse.json(
       { error: `Not admin/captain of league "${leagueId}"` },
@@ -99,9 +115,17 @@ export async function POST(req: Request) {
       { status: 404 },
     );
   }
-  if (!isAdmin && playerSnap.data()?.team_id !== captainTeamId) {
+  // Verify the target player actually belongs to the resolved team
+  // for BOTH roles now (audit H2). For captains this is the existing
+  // own-team scope; for admins it turns a typo'd playerId into a
+  // clean 403 instead of a silent wrong-player write.
+  if (playerSnap.data()?.team_id !== targetTeamId) {
     return NextResponse.json(
-      { error: "Player isn't on your team" },
+      {
+        error: isAdmin
+          ? "Player isn't on the specified team (check playerId / teamId)"
+          : "Player isn't on your team",
+      },
       { status: 403 },
     );
   }
