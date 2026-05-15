@@ -153,34 +153,16 @@ body.ticker-hidden #score-ticker {
 }
 
 .st-game-inner {
-  /* 4-column grid (logo | abbrev | record | score) shared by both
-   * team rows so logos + scores align vertically. Each row uses
-   * line-height: 1 so 3 rows + gaps fit cleanly inside the taller
-   * ticker without clipping top/bottom. */
+  /* 3-column grid (abbrev | record | score) shared by both team
+   * rows so scores align vertically. Each row uses line-height: 1
+   * so the 3 rows + gaps fit cleanly inside the taller ticker
+   * without clipping top/bottom. */
   display: grid;
-  grid-template-columns: 26px max-content max-content auto;
+  grid-template-columns: max-content max-content auto;
   grid-template-rows: 13px 22px 22px;
   align-items: center;
   column-gap: 8px;
   row-gap: 3px;
-}
-
-/* Per-team logo cell — small square thumbnail. The img is forced
- * to a fixed 22x22 box; transparent / non-square sources contain
- * via object-fit. Empty cell (no logo) leaves the column slot so
- * tiles without logos stay grid-aligned. */
-.st-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  overflow: hidden;
-}
-.st-logo img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
 }
 
 .st-datetime {
@@ -259,19 +241,20 @@ body.ticker-hidden #score-ticker {
   /* Right-justify the score column so 1-digit and 2-digit scores
    * (e.g. 8 vs 10) end at the same x-position. */
   justify-self: end;
-  /* Both winning + losing scores render in the tenant's accent
-   * (LBDC gold, configurable per league). Winner is the brighter
-   * variant; loser dims slightly so the eye lands on the winner
-   * first. Falls back to gold for tenants without an accent set. */
-  color: var(--brand-accent, #FFD700);
+  /* Scores hardcoded to gold (rather than var(--brand-accent))
+   * because some tenant accents (SFBL's #c41e3a red) don't read
+   * well as bright numerics on the navy ticker bg. Gold-on-navy is
+   * a universal scoreboard idiom — keep it consistent across all
+   * leagues. */
+  color: #FFD700;
 }
 
 .st-score.winner {
-  color: var(--brand-accent, #FFD700);
+  color: #FFD700;
   font-weight: 900;
 }
 .st-score.loser {
-  color: var(--brand-accent, #FFD700);
+  color: #FFD700;
   opacity: 0.55;
 }
 
