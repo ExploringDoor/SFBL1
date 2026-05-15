@@ -145,6 +145,12 @@ export async function POST(req: Request) {
     created_by_uid: decoded.uid,
     created_at: new Date().toISOString(),
     active: true,
+    // Defensive: every player created via the supported APIs gets
+    // `status: "active"`. The shared captain/admin/public filters
+    // skip docs whose status is something else (LBDC migration
+    // creates `status: "unknown"` orphans). This guarantees a new
+    // player can never accidentally inherit the orphan treatment.
+    status: "active",
   });
 
   // Private contact subdoc — only readable by admin or the player

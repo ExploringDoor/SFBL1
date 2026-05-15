@@ -171,6 +171,10 @@ export async function POST(req: Request) {
       created_by_uid: decoded.uid,
       created_at: new Date().toISOString(),
       active: true,
+      // Defensive — keep new docs visible to the shared
+      // status-based filters. See app/api/captain-add-player for
+      // the full rationale.
+      status: "active",
     });
     const email =
       typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
