@@ -1,15 +1,19 @@
-// POST /api/captain-schedule — captain edits their team's game.
-// Allowed mutations:
-//   - date / time (one ISO datetime string)
-//   - field (text)
-//   - status: scheduled | postponed | cancelled
+// POST /api/captain-schedule — captain edits / creates their team's game.
+//
+// Actions:
+//   - (default, no action set) — edit an existing game. Allowed
+//     mutations: date / time / field / status.
+//   - action: "create" — captain schedules a new game. The captain's
+//     team MUST be one of the two participants (home or away);
+//     they can't create games between two other teams. Admin can
+//     pass any pair of team ids.
 //
 // Server-side because /games is admin-write at the rules level. We
-// allow either captain in the matchup to edit the game so weather
-// reschedules can come from either side. Admin can edit any game.
+// allow either captain in the matchup to edit so weather reschedules
+// can come from either side.
 //
-// Audit trail: every edit appends to /audit/{auto_id} with who-changed-what
-// so commissioners can see schedule churn.
+// Audit trail: every edit/create appends to /audit/{auto_id} with
+// who-changed-what so commissioners can see schedule churn.
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
@@ -50,11 +54,14 @@ export async function POST(req: Request) {
 
   let body: {
     leagueId?: unknown;
+    action?: unknown;
     gameId?: unknown;
     date?: unknown;
     time?: unknown;
     field?: unknown;
     status?: unknown;
+    // Create-action only — used when scheduling a new game.
+    game?: unknown;
   };
   try {
     body = await req.json();
@@ -65,16 +72,9 @@ export async function POST(req: Request) {
     );
   }
   const leagueId = body.leagueId;
-  const gameId = body.gameId;
   if (typeof leagueId !== "string" || !leagueId) {
     return NextResponse.json(
       { error: "Body must include { leagueId }" },
-      { status: 400 },
-    );
-  }
-  if (typeof gameId !== "string" || !gameId) {
-    return NextResponse.json(
-      { error: "Body must include { gameId }" },
       { status: 400 },
     );
   }
@@ -94,6 +94,112 @@ export async function POST(req: Request) {
   }
 
   const db = getAdminDb();
+
+  // ── action: "create" — captain (or admin) schedules a new game.
+  if (body.action === "create") {
+    const g = (body.game ?? {}) as Record<string, unknown>;
+    const awayId = typeof g.away_team_id === "string" ? g.away_team_id : "";
+    const homeId = typeof g.home_team_id === "string" ? g.home_team_id : "";
+    if (!awayId || !homeId) {
+      return NextResponse.json(
+        { error: "Game needs away_team_id + home_team_id" },
+        { status: 400 },
+      );
+    }
+    if (awayId === homeId) {
+      return NextResponse.json(
+        { error: "Home and away can't be the same team" },
+        { status: 400 },
+      );
+    }
+    if (!isAdmin && captainTeamId !== awayId && captainTeamId !== homeId) {
+      return NextResponse.json(
+        {
+          error:
+            "Captains can only schedule games involving their own team",
+        },
+        { status: 403 },
+      );
+    }
+    // Verify both teams actually exist in this league. Prevents typos
+    // / API-poking from creating ghost-team entries.
+    const [awayDoc, homeDoc] = await Promise.all([
+      db.doc(`leagues/${leagueId}/teams/${awayId}`).get(),
+      db.doc(`leagues/${leagueId}/teams/${homeId}`).get(),
+    ]);
+    if (!awayDoc.exists || !homeDoc.exists) {
+      return NextResponse.json(
+        { error: "One or both teams don't exist in this league" },
+        { status: 400 },
+      );
+    }
+
+    // Generate a fresh game id. Same `g-NNNN` pattern admin-schedule
+    // uses so the data shape stays consistent across surfaces.
+    const allGamesSnap = await db
+      .collection(`leagues/${leagueId}/games`)
+      .get();
+    let maxNum = 0;
+    for (const d of allGamesSnap.docs) {
+      const m = d.id.match(/^g-(\d+)$/);
+      if (m) {
+        const n = parseInt(m[1]!, 10);
+        if (n > maxNum) maxNum = n;
+      }
+    }
+    const newId = `g-${String(maxNum + 1).padStart(4, "0")}`;
+
+    const doc: Record<string, unknown> = {
+      away_team_id: awayId,
+      home_team_id: homeId,
+      // Pull division from either team's doc if not supplied — the
+      // schedule editor + standings need it. Captain UI will normally
+      // pass the team's own division.
+      division:
+        typeof g.division === "string" && g.division
+          ? g.division
+          : String(awayDoc.data()?.division ?? homeDoc.data()?.division ?? ""),
+      date:
+        typeof g.date === "string" && g.date ? String(g.date).slice(0, 10) : "",
+      time:
+        typeof g.time === "string" && /^\d{1,2}:\d{2}$/.test(g.time)
+          ? g.time
+          : "",
+      field: typeof g.field === "string" ? g.field.trim() : "",
+      status: "scheduled" as const,
+      away_score: 0,
+      home_score: 0,
+      created_at: new Date().toISOString(),
+      created_by_uid: decoded.uid,
+      created_by_role: isAdmin ? "admin" : "captain",
+    };
+    await db.doc(`leagues/${leagueId}/games/${newId}`).set(doc);
+
+    await db
+      .collection(`leagues/${leagueId}/audit`)
+      .add({
+        kind: "schedule_create",
+        game_id: newId,
+        by_uid: decoded.uid,
+        by_role: isAdmin ? "admin" : "captain",
+        changes: doc,
+        at: new Date().toISOString(),
+      })
+      .catch(() => {});
+
+    return NextResponse.json({ ok: true, gameId: newId, game: doc });
+  }
+
+  // ── action: (default) — edit existing game ────────────────────
+  const gameId = body.gameId;
+  if (typeof gameId !== "string" || !gameId) {
+    return NextResponse.json(
+      { error: "Body must include { gameId }" },
+      { status: 400 },
+    );
+  }
+
+  // `db` already initialized above the action branch.
   const gameRef = db.doc(`leagues/${leagueId}/games/${gameId}`);
   const gameSnap = await gameRef.get();
   if (!gameSnap.exists) {

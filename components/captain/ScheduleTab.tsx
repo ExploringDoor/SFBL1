@@ -45,10 +45,12 @@ export function ScheduleTab({ leagueId, teamId }: ScheduleTabProps) {
   const user = useUser();
   const [games, setGames] = useState<GameRow[]>([]);
   const [teamNames, setTeamNames] = useState<Record<string, string>>({});
+  const [teamList, setTeamList] = useState<{ id: string; name: string }[]>([]);
   const [fields, setFields] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [editId, setEditId] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -114,6 +116,13 @@ export function ScheduleTab({ leagueId, teamId }: ScheduleTabProps) {
       cfgFields.sort((a, b) => a.localeCompare(b));
       setFields(cfgFields);
       setTeamNames(names);
+      // Also keep a sorted team list for the Add Game form's opponent
+      // dropdown (excluding our own team when rendered).
+      setTeamList(
+        teamsSnap.docs
+          .map((d) => ({ id: d.id, name: String(d.data().name ?? d.id) }))
+          .sort((a, b) => a.name.localeCompare(b.name)),
+      );
       setGames(myGames);
       setLoading(false);
     })();
@@ -138,9 +147,74 @@ export function ScheduleTab({ leagueId, teamId }: ScheduleTabProps) {
         </p>
       </div>
 
-      <div style={{ marginBottom: 22 }}>
+      <div
+        style={{
+          marginBottom: 22,
+          display: "flex",
+          gap: 10,
+          flexWrap: "wrap",
+          alignItems: "center",
+        }}
+      >
         <SubscribeCalendar teamId={teamId} />
+        <button
+          type="button"
+          onClick={() => setShowAdd((v) => !v)}
+          style={{
+            padding: "10px 18px",
+            background: showAdd ? "#64748b" : "#059669",
+            color: "white",
+            borderRadius: 10,
+            fontWeight: 800,
+            fontSize: 14,
+            letterSpacing: "0.04em",
+            textTransform: "uppercase",
+            border: "none",
+            cursor: "pointer",
+          }}
+        >
+          {showAdd ? "Close" : "+ Add Game"}
+        </button>
       </div>
+
+      {showAdd && (
+        <AddGameForm
+          leagueId={leagueId}
+          myTeamId={teamId}
+          teamList={teamList}
+          fields={fields}
+          onCancel={() => setShowAdd(false)}
+          onCreated={async () => {
+            setShowAdd(false);
+            // Re-load games so the new row appears.
+            const db = getDb();
+            const fresh = await getDocs(
+              collection(db, `leagues/${leagueId}/games`),
+            );
+            const myGames: GameRow[] = fresh.docs
+              .map((d) => {
+                const data = d.data();
+                return {
+                  id: d.id,
+                  date: data.date ? String(data.date) : null,
+                  time: data.time ? String(data.time) : null,
+                  field: data.field ? String(data.field) : null,
+                  status: String(data.status ?? "draft"),
+                  away_team_id: String(data.away_team_id ?? ""),
+                  home_team_id: String(data.home_team_id ?? ""),
+                  away_score: Number(data.away_score ?? 0),
+                  home_score: Number(data.home_score ?? 0),
+                };
+              })
+              .filter(
+                (g) =>
+                  g.away_team_id === teamId || g.home_team_id === teamId,
+              )
+              .sort((a, b) => (a.date ?? "").localeCompare(b.date ?? ""));
+            setGames(myGames);
+          }}
+        />
+      )}
 
       {loading ? (
         <p style={{ color: "var(--muted)", fontSize: 13 }}>
@@ -508,6 +582,224 @@ function ScheduleEditForm({
           type="button"
           className="le-cap-btn-secondary"
           onClick={onCancel}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// New-game form. Captain picks home/away (their own team is the
+// default for both halves of the opponent dropdown so they get to
+// choose), date, time, field, and the inline form POSTs to
+// /api/captain-schedule with action: "create". The API enforces
+// that the captain's team is one of the two participants.
+function AddGameForm({
+  leagueId,
+  myTeamId,
+  teamList,
+  fields,
+  onCancel,
+  onCreated,
+}: {
+  leagueId: string;
+  myTeamId: string;
+  teamList: { id: string; name: string }[];
+  fields: string[];
+  onCancel: () => void;
+  onCreated: () => Promise<void> | void;
+}) {
+  const user = useUser();
+  // Default home/away: captain's team batting at home, opponent
+  // blank (admin / captain still has to pick). Most leagues track
+  // home/away by who hosts; flipping these two is a one-click swap.
+  const [homeId, setHomeId] = useState(myTeamId);
+  const [awayId, setAwayId] = useState("");
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [field, setField] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const opponents = teamList.filter((t) => t.id !== myTeamId);
+
+  async function submit(e?: React.FormEvent) {
+    e?.preventDefault();
+    if (!user) return;
+    if (homeId === awayId || !awayId || !homeId) {
+      setError("Pick a different opponent team.");
+      return;
+    }
+    if (!date) {
+      setError("Pick a date.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch("/api/captain-schedule", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          leagueId,
+          action: "create",
+          game: {
+            home_team_id: homeId,
+            away_team_id: awayId,
+            date,
+            time,
+            field,
+          },
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+      };
+      if (!res.ok || !data.ok) {
+        setError(data.error ?? `HTTP ${res.status}`);
+        return;
+      }
+      await onCreated();
+    } catch (err) {
+      setError(String(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div
+      className="cap-schedule-edit-row"
+      style={{
+        marginBottom: 18,
+        padding: "16px 18px",
+        background: "rgba(5, 150, 105, 0.04)",
+        border: "1px solid rgba(5, 150, 105, 0.18)",
+        borderRadius: 12,
+      }}
+    >
+      <h4
+        style={{
+          fontFamily: "var(--font-barlow), sans-serif",
+          fontSize: 14,
+          fontWeight: 800,
+          textTransform: "uppercase",
+          letterSpacing: "0.08em",
+          color: "#065f46",
+          margin: "0 0 12px",
+        }}
+      >
+        Schedule a new game
+      </h4>
+      <form onSubmit={submit} className="cap-form-grid">
+        <div className="cap-form-col">
+          <label className="cap-form-lbl">Home</label>
+          <select
+            className="cap-form-input"
+            value={homeId}
+            onChange={(e) => setHomeId(e.target.value)}
+          >
+            {teamList.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="cap-form-col">
+          <label className="cap-form-lbl">Away</label>
+          <select
+            className="cap-form-input"
+            value={awayId}
+            onChange={(e) => setAwayId(e.target.value)}
+          >
+            <option value="">— pick opponent —</option>
+            {opponents.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="cap-form-col">
+          <label className="cap-form-lbl">Date</label>
+          <input
+            type="date"
+            className="cap-form-input"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+          />
+        </div>
+        <div className="cap-form-col">
+          <label className="cap-form-lbl">Time</label>
+          <input
+            type="time"
+            className="cap-form-input"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+          />
+        </div>
+        <div className="cap-form-col" style={{ gridColumn: "span 2" }}>
+          <label className="cap-form-lbl">Field</label>
+          {fields.length > 0 ? (
+            <select
+              className="cap-form-input"
+              value={field}
+              onChange={(e) => setField(e.target.value)}
+            >
+              <option value="">— pick a field —</option>
+              {fields.map((f) => (
+                <option key={f} value={f}>
+                  {f}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              type="text"
+              className="cap-form-input"
+              value={field}
+              onChange={(e) => setField(e.target.value)}
+              placeholder="Field name"
+            />
+          )}
+        </div>
+      </form>
+      {error && (
+        <p
+          style={{
+            marginTop: 10,
+            padding: "6px 10px",
+            background: "#fef2f2",
+            border: "1px solid #fecaca",
+            color: "#991b1b",
+            borderRadius: 8,
+            fontSize: 13,
+          }}
+        >
+          {error}
+        </p>
+      )}
+      <div className="cap-form-actions" style={{ marginTop: 14 }}>
+        <button
+          type="button"
+          className="le-cap-btn-primary"
+          onClick={submit}
+          disabled={busy}
+        >
+          {busy ? "Saving…" : "Add game"}
+        </button>
+        <button
+          type="button"
+          className="le-cap-btn-secondary"
+          onClick={onCancel}
+          disabled={busy}
         >
           Cancel
         </button>
