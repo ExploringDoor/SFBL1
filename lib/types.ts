@@ -115,6 +115,17 @@ export interface LeagueConfig {
   nav?: {
     hide?: string[];
   };
+
+  // Captain UX toggles. `passwordless` skips the sign-in/magic-link
+  // flow entirely: the captain landing page shows a team picker
+  // dropdown and on selection the client gets a Firebase custom
+  // token with the `captain:<team_id>` claim. ANYONE can pick any
+  // team — security is "trust the URL," appropriate for small
+  // leagues like LBDC where every captain is known to the
+  // commissioner. SFBL keeps the magic-link gate.
+  captain?: {
+    passwordless?: boolean;
+  };
 }
 
 export interface LeagueSponsor {

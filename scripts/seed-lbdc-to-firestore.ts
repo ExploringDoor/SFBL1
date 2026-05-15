@@ -310,6 +310,15 @@ async function seedTenantDoc(db: Firestore | null): Promise<void> {
     nav: {
       hide: ["News", "Team Registration", "Team Waiver", "Store"],
     },
+    // Captain UX: passwordless mode. Captain landing shows a team
+    // picker that calls /api/public-captain-claim → Firebase
+    // custom token → signInWithCustomToken. ANY visitor can pick a
+    // team and start managing it — security is "trust the URL,"
+    // appropriate for LBDC where every captain is known to the
+    // commissioner and magic-link friction killed adoption.
+    captain: {
+      passwordless: true,
+    },
     migrated_at: new Date().toISOString(),
     migrated_from: "supabase://vhovzpajuyphjatjlodo",
   };

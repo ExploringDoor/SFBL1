@@ -29,6 +29,8 @@ export interface PublicLeagueConfig {
   // /leagues/<slug>.nav.hide. The layout reads this off the x-tenant-
   // config-json header and passes it to <Nav> + <PwaTabBar>.
   nav?: { hide?: string[] };
+  // Captain access UX toggle. See LeagueConfig["captain"].
+  captain?: { passwordless?: boolean };
 }
 
 export function toPublicConfig(c: LeagueConfig): PublicLeagueConfig {
@@ -49,6 +51,7 @@ export function toPublicConfig(c: LeagueConfig): PublicLeagueConfig {
     standings: c.standings,
     sponsors: c.sponsors,
     nav: c.nav,
+    captain: c.captain,
   };
 }
 

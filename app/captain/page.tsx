@@ -34,6 +34,7 @@ import { CaptainsChatTab } from "@/components/captain/CaptainsChatTab";
 import { HelpTab } from "@/components/captain/HelpTab";
 import { QuickScoreTab } from "@/components/captain/QuickScoreTab";
 import { FirstTimeWelcome } from "@/components/captain/FirstTimeWelcome";
+import { PasswordlessCaptainPicker } from "@/components/captain/PasswordlessCaptainPicker";
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
 import { getDb } from "@/lib/firebase";
 import { useTenant } from "@/lib/tenant-context";
@@ -275,6 +276,18 @@ export default function CaptainHomePage() {
   }
   if (user === undefined || role === "loading" || teamLoading) {
     return <CaptainShell>Checking your access…</CaptainShell>;
+  }
+  // Passwordless tenants (LBDC) skip the sign-in screen entirely —
+  // show a team-picker that calls /api/public-captain-claim and
+  // signs in with a custom token. Once signed in, the existing
+  // flow takes over (useUser becomes non-null, useCaptainTeam
+  // resolves the team_id from the claim).
+  if (user === null && config?.captain?.passwordless === true) {
+    return (
+      <CaptainShell>
+        <PasswordlessCaptainPicker leagueId={tenantId} />
+      </CaptainShell>
+    );
   }
   if (user === null) {
     return (
