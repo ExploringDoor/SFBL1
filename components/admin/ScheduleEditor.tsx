@@ -70,20 +70,40 @@ export function ScheduleEditor({ leagueId, user }: Props) {
     setLoading(true);
     try {
       const db = getDb();
-      const [gameSnap, teamSnap, leagueDoc] = await Promise.all([
+      const [gameSnap, teamSnap, leagueDoc, fieldsDoc] = await Promise.all([
         getDocs(collection(db, `leagues/${leagueId}/games`)),
         getDocs(collection(db, `leagues/${leagueId}/teams`)),
-        // League config doc — we read `fields` (the league's
-        // commonly-used venues) so the schedule editor can show a
-        // dropdown instead of a free-text field.
+        // League config doc — older convention: a flat string array
+        // at leagueData.fields. SFBL set this in lib/tenants.ts.
         getDoc(doc(db, `leagues/${leagueId}`)),
+        // Newer convention (LBDC): rich field records at
+        // /leagues/<id>/site_config/fields.data with {name, address,
+        // mapsUrl, ...}. We extract just the names for the dropdown.
+        // Either shape works — first non-empty list wins.
+        getDoc(doc(db, `leagues/${leagueId}/site_config/fields`)),
       ]);
       const leagueData = leagueDoc.exists() ? leagueDoc.data() : null;
-      const cfgFields = Array.isArray(leagueData?.fields)
+      let cfgFields = Array.isArray(leagueData?.fields)
         ? (leagueData!.fields as unknown[]).filter(
             (x): x is string => typeof x === "string" && x.length > 0,
           )
         : [];
+      if (cfgFields.length === 0 && fieldsDoc.exists()) {
+        const arr = fieldsDoc.data()?.data;
+        if (Array.isArray(arr)) {
+          cfgFields = arr
+            .map((f) => {
+              if (typeof f === "string") return f;
+              if (f && typeof f === "object" && typeof f.name === "string") {
+                return f.name;
+              }
+              return null;
+            })
+            .filter((s): s is string => !!s);
+        }
+      }
+      // Stable, alphabetical so the dropdown reads consistently.
+      cfgFields.sort((a, b) => a.localeCompare(b));
       setFields(cfgFields);
       setGames(
         gameSnap.docs
