@@ -189,6 +189,15 @@ export async function sendNotification(
   // shows unread count + dropdown. Dismissing marks `dismissed_at`.
   // Match DVSL's `/api/check-pending-nav` shape.
   //
+  // Audit M14 (convention exception): pending_nav is a TOP-LEVEL
+  // collection with leagueId as a FIELD — the inverse of the
+  // platform's "leagueId in the path" rule everywhere else. Tenant
+  // isolation is still enforced by the combination of the read-side
+  // leagueId filter (check-pending-nav) AND the firestore.rules
+  // owner check (request.auth.uid === resource.data.auth_uid),
+  // documented at firestore.rules:362-368. Safe, but if anything
+  // here changes keep both guards in lockstep.
+  //
   // Batched at 400 to stay under Firestore writeBatch limit (matches
   // every other batch op in this codebase). Fire-and-forget — failure
   // means the user sees no bell entry but the OS push already

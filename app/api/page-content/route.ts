@@ -85,6 +85,16 @@ export async function POST(req: Request) {
     );
   }
 
+  // Audit M18: no write-side rate limit here by design. Auth is a
+  // verified Firebase ID token carrying leagues[leagueId]==="admin".
+  // For passwordless tenants (LBDC) that claim is minted only via
+  // /api/public-admin-claim, which IS rate-limited (20/IP/10min) and
+  // uses a hardened constant-time compare (audit M10) — that is the
+  // primary brute-force control. A per-endpoint write limiter here
+  // would be inconsistent (every admin write endpoint shares this
+  // posture) and could throttle a legitimate bulk content migration.
+  // Platform-wide admin write throttling is a deliberate v2 decision,
+  // tracked in the audit, not a per-route patch.
   const leagues = decoded.leagues as Record<string, string> | undefined;
   if (leagues?.[leagueId] !== "admin") {
     return NextResponse.json(

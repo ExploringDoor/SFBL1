@@ -432,6 +432,12 @@ export async function POST(req: Request) {
     }
 
     // 5) Recalc — refresh per-player season aggregates ──────
+    // Audit M6 (scale watch): recalcLeague reads the entire
+    // leagues/<id>/box_scores collection plus every referenced
+    // player doc on EVERY captain submit (~hundreds of reads + ~50
+    // writes at LBDC's 1100 players / 200+ box scores). Fine at 1-2
+    // tenants; gets expensive at 5+. Move to the standings Cloud
+    // Function / incremental aggregate per PLAN.md §10 before scaling.
     const result = await recalcLeague(db, leagueId);
     return NextResponse.json({ ok: true, recalc: result });
   } catch (err) {

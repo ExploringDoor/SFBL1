@@ -86,13 +86,45 @@ describe("/api/captain-payment — authority", () => {
     expect(res.status).toBe(403);
   });
 
-  it("admin CAN touch any team's player", async () => {
+  // Audit H2: admin may touch any team's player, but — like every
+  // other captain-* endpoint — must explicitly pass { teamId } and
+  // the player must actually be on it. This turns a typo'd playerId
+  // into a clean 4xx instead of a silent wrong-player write.
+  it("admin CAN touch any team's player when teamId matches", async () => {
+    mockState.decoded.leagues = { sfbl: "admin" };
+    mockState.players.set("sfbl/p1", { team_id: "team_b" });
+    const res = await POST(
+      makeReq({
+        leagueId: "sfbl",
+        playerId: "p1",
+        teamId: "team_b",
+        paid: true,
+      }),
+    );
+    expect(res.status).toBe(200);
+  });
+
+  it("admin WITHOUT teamId is rejected (H2 fat-finger guard)", async () => {
     mockState.decoded.leagues = { sfbl: "admin" };
     mockState.players.set("sfbl/p1", { team_id: "team_b" });
     const res = await POST(
       makeReq({ leagueId: "sfbl", playerId: "p1", paid: true }),
     );
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(400);
+  });
+
+  it("admin with MISMATCHED teamId is rejected (catches typo'd playerId)", async () => {
+    mockState.decoded.leagues = { sfbl: "admin" };
+    mockState.players.set("sfbl/p1", { team_id: "team_b" });
+    const res = await POST(
+      makeReq({
+        leagueId: "sfbl",
+        playerId: "p1",
+        teamId: "team_a",
+        paid: true,
+      }),
+    );
+    expect(res.status).toBe(403);
   });
 });
 

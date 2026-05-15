@@ -40,19 +40,22 @@ function rateLimit(ip: string): boolean {
   return cur.count <= RATE_LIMIT;
 }
 
-// Constant-time string compare so a brute-force attacker can't
-// learn the password length / leading-char-correctness from response
-// timing. Crypto.timingSafeEqual requires same length, so we pad
-// both to a fixed 256 chars before comparing — if lengths actually
-// differ we still return false but uniformly.
+// Constant-time password compare so a brute-force attacker can't
+// learn password length / prefix-correctness from response timing.
+//
+// Audit M10: the previous implementation padded/truncated both
+// strings to 256 chars before comparing. Two inputs longer than 256
+// that shared a 256-char prefix would falsely compare equal (the
+// length check after only catches *differing* lengths, not a shared
+// truncated prefix at equal length). Hashing both to fixed 32-byte
+// SHA-256 digests removes the cap entirely: digests are always the
+// same length (so timingSafeEqual is happy), the FULL content is
+// covered (no truncation), and the comparison is still constant-time.
 async function safeEqual(a: string, b: string): Promise<boolean> {
-  // Cheap up-front length check that doesn't leak via timing — both
-  // strings are normalized to length=256 then compared byte-for-byte.
-  const { timingSafeEqual } = await import("node:crypto");
-  const pad = (s: string) => Buffer.from(s.padEnd(256, "\0").slice(0, 256));
-  const aBuf = pad(a);
-  const bBuf = pad(b);
-  return timingSafeEqual(aBuf, bBuf) && a.length === b.length;
+  const { createHash, timingSafeEqual } = await import("node:crypto");
+  const digest = (s: string) =>
+    createHash("sha256").update(s, "utf8").digest();
+  return timingSafeEqual(digest(a), digest(b));
 }
 
 export async function POST(req: Request) {

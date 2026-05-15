@@ -26,6 +26,11 @@ interface TeamMeta {
 // long enough to soak up a captain's typical page-hopping burst.
 // Cache survives per Node process — each Vercel cold-start gets a
 // fresh map, which is fine for a low-tenancy launch.
+//
+// Audit M12: acknowledged as intentional. Every cold start re-reads
+// the full /games + /teams collections; acceptable at 1-2 tenants
+// with the 30s TTL absorbing bursts. Revisit (shared Edge cache /
+// the standings Cloud Function, PLAN.md §10) before scaling tenants.
 interface TickerCacheEntry {
   games: TickerGame[];
   expires_at: number;

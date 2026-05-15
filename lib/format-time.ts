@@ -37,13 +37,38 @@ export function combineDateTime(
   return `${date.slice(0, 10)}T${t}`;
 }
 
+// Audit M3: strict 24-hour "HH:MM" validator (hour 0-23, minute
+// 0-59). Use this at WRITE time — a bare /^\d{1,2}:\d{2}$/ accepts
+// nonsense like "25:00" or "9:75". Returns false for null/empty so
+// callers can branch cleanly.
+export function isValidClockTime(raw: string | null | undefined): boolean {
+  if (!raw) return false;
+  const m = /^(\d{1,2}):(\d{2})$/.exec(raw.trim());
+  if (!m) return false;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  return h >= 0 && h <= 23 && min >= 0 && min <= 59;
+}
+
+/**
+ * Format a stored 24-hour "HH:MM" string as "h:mm AM/PM".
+ *
+ * Contract (audit M9): this returns a 12-hour string ONLY when the
+ * input is a parseable, in-range 24-hour time. For anything else —
+ * already-formatted strings ("4:00 PM"), out-of-range values
+ * ("25:00", "9:75"), or non-time text — it ECHOES the input back
+ * unchanged (empty string for null/empty). It is deliberately safe
+ * to pipe arbitrary user data through; it is NOT a validator. Use
+ * isValidClockTime() if you need to reject bad input at write time.
+ */
 export function formatTime12(raw: string | null | undefined): string {
   if (!raw) return "";
   const m = /^(\d{1,2}):(\d{2})$/.exec(raw.trim());
   if (!m) return raw;
   const h24 = Number(m[1]);
   const mm = m[2];
-  if (h24 < 0 || h24 > 23) return raw;
+  // Audit M3: also reject an out-of-range minute, not just the hour.
+  if (h24 < 0 || h24 > 23 || Number(mm) > 59) return raw;
   const period = h24 >= 12 ? "PM" : "AM";
   const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
   return `${h12}:${mm} ${period}`;

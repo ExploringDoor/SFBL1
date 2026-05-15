@@ -177,6 +177,14 @@ function cacheSet(key: string, value: ResolvedTenant | null) {
 // concatenated to evade the regex while keeping the same runtime
 // behavior. Real per-tenant config still comes from env in non-SFBL
 // deployments.
+//
+// Audit M15 (drift hazard — verify in Vercel, can't be checked from
+// code): these two literals must stay byte-identical to the Vercel
+// env vars NEXT_PUBLIC_FIREBASE_PROJECT_ID / NEXT_PUBLIC_FIREBASE_API_KEY
+// for the SFBL project. The SFBL fast-path uses these constants while
+// other code paths read the env vars; if they diverge, SFBL preview
+// and live SFBL would talk to different Firebase projects. On any
+// SFBL Firebase key rotation, update BOTH here and in Vercel.
 const SFBL_FIREBASE_PROJECT_ID = "sfbl-acf51";
 const SFBL_FIREBASE_API_KEY =
   "AIzaSyBTG3b_rFv" + "D6s-KLvdi5GHIRtQLVaRuUf4";
@@ -190,6 +198,13 @@ const SFBL_FIREBASE_API_KEY =
 // instead of an admin doc edit. For SFBL preview that's fine; the
 // data isn't changing. Add re-fetch path later if/when admin
 // editing matters.
+// Audit M7: there is intentionally no `flags` block here. The audit
+// brief referenced a `flags.captain_passwordless` gate — that name
+// does not exist anywhere in the code. The real gates are
+// `captain.passwordless` and `admin.passwordless` (see their reads
+// earlier in this file). SFBL sets NEITHER, so both SFBL captain
+// and admin auth correctly fall through to the magic-link flow.
+// Passwordless is an LBDC-only opt-in written by its seed script.
 const SFBL_TENANT_CONFIG: LeagueConfig = {
   slug: "sfbl",
   name: "South Florida Baseball League",

@@ -1,5 +1,14 @@
 {
-  "_comment": "Firestore auto-creates single-field indexes for every queried field. Today every query in the codebase is single-field (notification_tokens.where('leagueId'), audit.where('at'), games.where('status'), etc.) so the explicit indexes list stays empty. If you add a compound query — `.where(...).orderBy(...)` on different fields, or two `.where(...)` filters — Firestore throws FAILED_PRECONDITION at runtime. Declare the composite index here and run `firebase deploy --only firestore:indexes`. First failure prints a console URL with the exact index JSON to paste in.",
-  "indexes": [],
+  "_comment": "Firestore auto-creates single-field indexes for every queried field. Most queries here are single-field (notification_tokens.where('leagueId'), audit.where('at'), games.where('status')). A compound query — `.where(...).orderBy(...)` on different fields, or two `.where(...)` filters — needs an explicit composite index or Firestore throws FAILED_PRECONDITION at runtime. Declare it below and run `firebase deploy --only firestore:indexes`. CURRENT ENTRIES: (1) pending_nav[auth_uid,leagueId] — audit M5: app/api/check-pending-nav does .where('auth_uid','==',uid).where('leagueId','==',leagueId); without this index that route 500s.",
+  "indexes": [
+    {
+      "collectionGroup": "pending_nav",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "auth_uid", "order": "ASCENDING" },
+        { "fieldPath": "leagueId", "order": "ASCENDING" }
+      ]
+    }
+  ],
   "fieldOverrides": []
 }

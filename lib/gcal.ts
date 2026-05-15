@@ -5,6 +5,16 @@
 // service account, set to public-read so subscribers see events
 // without authentication.
 //
+// Audit M4 (prod verification, not code): this write path has no
+// read-back consumer, so a stale games/<id>.gcal_event_id (pointing
+// at a calendar event that was deleted out-of-band) would surface
+// only as a failed update on the next sync. Before relying on the
+// SFBL preview tenant's calendar, confirm it has no orphaned
+// gcal_event_ids from an earlier sync. upsertGameEvent below should
+// treat a 404/410 on update as "create a fresh event" rather than
+// hard-failing — verify that behavior when the integration is next
+// exercised end-to-end.
+//
 // Setup an admin has to do ONCE per Google Cloud project:
 //   1. Enable the Google Calendar API
 //      → console.cloud.google.com → APIs & Services → Library

@@ -118,6 +118,11 @@ export async function POST(req: Request) {
   // redirects to evil.com after sign-in. Allow: same-origin
   // absolute URL, or a relative path starting with '/' (in which
   // case we anchor it to the tenant origin).
+  // Audit M13 (cosmetic): /login/finish is the right default for
+  // magic-link (SFBL) tenants. For passwordless tenants (LBDC)
+  // admins normally share the team/admin password instead of
+  // bulk-inviting, so this path is rarely hit there; if it is, the
+  // magic link still works — just a redundant route, not a bug.
   let continueUrl = `${fallbackOrigin}/login/finish`;
   if (typeof body.continueUrl === "string" && body.continueUrl) {
     const raw = body.continueUrl;

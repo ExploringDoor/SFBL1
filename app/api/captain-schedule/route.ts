@@ -21,6 +21,7 @@ import {
   fanoutPush,
   originFromRequest,
 } from "@/lib/notifications/server-fanout";
+import { isValidClockTime } from "@/lib/format-time";
 
 export const runtime = "nodejs";
 
@@ -170,8 +171,10 @@ export async function POST(req: Request) {
         const d = g.date.slice(0, 10);
         return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : null;
       })(),
+      // Audit M3: validate hour 0-23 / minute 0-59, not just shape —
+      // a bare regex stores garbage like "25:00".
       time:
-        typeof g.time === "string" && /^\d{1,2}:\d{2}$/.test(g.time)
+        typeof g.time === "string" && isValidClockTime(g.time)
           ? g.time
           : null,
       field: typeof g.field === "string" ? g.field.trim() : "",
@@ -239,8 +242,18 @@ export async function POST(req: Request) {
   // UTC ISO, which was the shape that created the "every game at
   // 8 PM" bug for EDT users.
   if (body.time !== undefined) {
-    if (typeof body.time === "string" && body.time) update.time = body.time;
-    else if (body.time === null || body.time === "") update.time = null;
+    if (body.time === null || body.time === "") {
+      update.time = null; // explicit "time TBD"
+    } else if (typeof body.time === "string" && isValidClockTime(body.time)) {
+      update.time = body.time;
+    } else {
+      // Audit M3: reject "25:00" / "9:75" / junk on edit instead of
+      // silently storing it (the old path stored any truthy string).
+      return NextResponse.json(
+        { error: "time must be HH:MM (00:00–23:59) or empty" },
+        { status: 400 },
+      );
+    }
   }
   if (body.field !== undefined) {
     update.field =
@@ -262,6 +275,13 @@ export async function POST(req: Request) {
     );
   }
 
+  // Audit M17 (note, not a bug): the edit path stamps
+  // updated_at/updated_by_uid but never created_by_uid — that field
+  // is written only by the create flow above. "Who first created
+  // this game" is therefore answerable only for games made via this
+  // endpoint's create branch; pre-existing/imported games have no
+  // creator. The dedicated /audit log entry below is the
+  // authoritative per-mutation trail.
   update.updated_at = new Date().toISOString();
   update.updated_by_uid = decoded.uid;
   await gameRef.set(update, { merge: true });

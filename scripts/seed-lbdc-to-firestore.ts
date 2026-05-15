@@ -343,11 +343,23 @@ async function seedTenantDoc(db: Firestore | null): Promise<void> {
     admin: {
       passwordless: true,
     },
-    migrated_at: new Date().toISOString(),
     migrated_from: "supabase://vhovzpajuyphjatjlodo",
+    // Audit M8: `last_seeded_at` is the always-updated "when did the
+    // seed last run" timestamp. `migrated_at` (set below) is
+    // set-ONCE — it records the original Supabase migration and must
+    // survive every subsequent --provision re-run.
+    last_seeded_at: new Date().toISOString(),
   };
   if (!dryRun && ref) {
-    await ref.set(data, { merge: true });
+    // Preserve an existing migrated_at; only stamp it on first write.
+    const existing = await ref.get();
+    const priorMigratedAt = existing.exists
+      ? (existing.data()?.migrated_at as string | undefined)
+      : undefined;
+    await ref.set(
+      { ...data, migrated_at: priorMigratedAt ?? new Date().toISOString() },
+      { merge: true },
+    );
   }
   console.log(
     `[seed-lbdc] tenant doc /leagues/${league} (${dryRun ? "DRY" : "WROTE"})`,

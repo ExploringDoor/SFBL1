@@ -155,7 +155,20 @@ export async function POST(req: Request) {
       .get();
     if (teamSnap.exists) teamId = explicitTeamId;
   } else {
-    // Legacy single-input search.
+    // Legacy single-input search. Scans every team and normalize-
+    // compares each candidate string.
+    //
+    // Audit M2: at LBDC's ~8 teams this is trivial; at 100+ teams
+    // it's a full-collection read per attempt and a (weak)
+    // normalized-string enumeration vector. It's bounded by the
+    // per-IP RATE_LIMIT and every candidate is already
+    // public-readable, so it's defensible for v1. The two-step
+    // picker ({teamId, teamPassword}) is the supported UI path; this
+    // single-field branch is legacy/admin tooling. NOT hard-gated
+    // behind an explicit flag yet — that would break any bookmarked
+    // or automated single-field caller on the live LBDC tenant.
+    // Revisit (require `legacy:true`) once the picker is confirmed
+    // to be the only producer in the wild.
     const target = normalize(rawPassword);
     const teamsSnap = await db
       .collection(`leagues/${leagueId}/teams`)
@@ -180,6 +193,16 @@ export async function POST(req: Request) {
   // doesn't mind a re-issued token. We tag the user as
   // public_captain so audit logs can distinguish these submissions
   // from magic-link captains if we ever want to.
+  //
+  // Audit M1 (known limitation): because the uid is per-TEAM, every
+  // public captain of a team is one Firebase identity. created_by_uid
+  // / updated_by_uid on box_scores and games therefore resolve only
+  // to "a public captain of team X", not to a specific person. To
+  // dispute a specific edit, correlate on the IP recorded in the
+  // audit log entry below — that's the only per-actor signal in
+  // passwordless mode. Acceptable for LBDC (every captain is known
+  // to the commissioner); revisit if a tenant needs per-person
+  // attribution.
   const uid = `public-captain:${leagueId}:${teamId}`;
   const claims = {
     leagues: { [leagueId]: `captain:${teamId}` },

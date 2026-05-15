@@ -17,7 +17,7 @@ import type { User } from "firebase/auth";
 import { useUser } from "@/lib/auth-client";
 import { collection, getDocs } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
-import { formatTime12 } from "@/lib/format-time";
+import { formatTime12, parseGameDate } from "@/lib/format-time";
 
 interface Game {
   id: string;
@@ -81,8 +81,12 @@ export function QuickScoreTab({ leagueId, teamId, teamNamesById }: Props) {
           )
           .sort((a, b) => {
             // Past games first (most recent), then upcoming.
-            const ad = new Date(`${a.date}T12:00:00`).getTime();
-            const bd = new Date(`${b.date}T12:00:00`).getTime();
+            // Audit M16: parseGameDate handles both date-only and
+            // combined-ISO storage (the old `${date}T12:00:00`
+            // concat produced an Invalid Date → NaN sort for any
+            // combined-ISO value). NaN → 0 fallback keeps it stable.
+            const ad = parseGameDate(a.date, a.time)?.getTime() ?? 0;
+            const bd = parseGameDate(b.date, b.time)?.getTime() ?? 0;
             const tNow = today.getTime();
             const aPast = ad <= tNow;
             const bPast = bd <= tNow;
