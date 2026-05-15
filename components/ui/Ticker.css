@@ -74,8 +74,8 @@ body.ticker-hidden #score-ticker {
 .st-label-img {
   display: block;
   height: 100%;
-  /* Caps mirror --ticker-height (100 desktop / 120 mobile). */
-  max-height: 108px;
+  /* Caps mirror --ticker-height (80 desktop / 96 mobile). */
+  max-height: 88px;
   width: auto;
   object-fit: contain;
 }
@@ -84,7 +84,7 @@ body.ticker-hidden #score-ticker {
     padding: 4px 8px;
   }
   .st-label-img {
-    max-height: 128px;
+    max-height: 104px;
   }
 }
 
@@ -289,23 +289,23 @@ body.ticker-hidden #score-ticker {
 
 .st-full:hover { color: #ffffff; }
 
-/* Mobile: 120px tall (matches --ticker-height for ≤700px), label
+/* Mobile: 96px tall (matches --ticker-height for ≤700px), label
  * sticks to left edge as you scroll. */
 @media (max-width: 700px) {
   #score-ticker {
     overflow: hidden !important;
     max-width: 100vw !important;
-    height: 120px !important;
-    min-height: 120px !important;
+    height: 96px !important;
+    min-height: 96px !important;
   }
   .st-track {
     width: max-content !important;
     display: inline-flex !important;
-    height: 120px !important;
+    height: 96px !important;
     align-items: stretch !important;
   }
   .st-game {
-    height: 120px !important;
+    height: 96px !important;
     padding: 0 12px !important;
     align-items: center !important;
     overflow: visible !important;
@@ -320,7 +320,7 @@ body.ticker-hidden #score-ticker {
     z-index: 2;
     flex-shrink: 0;
     background: var(--brand-primary, #002D72) !important;
-    height: 120px !important;
+    height: 96px !important;
   }
 }
 
