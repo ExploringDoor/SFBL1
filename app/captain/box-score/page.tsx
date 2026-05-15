@@ -2395,6 +2395,17 @@ function parseRoster(
     data: () => Record<string, unknown>;
   }>;
   return arr
+    // Drop orphan / inactive players. LBDC's migration auto-creates
+    // `status:"unknown"` orphans from box-score line resolution
+    // (Pool Player, name variants, opposing-team players) and the
+    // box-score editor shouldn't list them as roster options.
+    .filter((p) => {
+      const d = p.data();
+      if (d.active === false) return false;
+      if (d.orphan === true) return false;
+      if (d.status && d.status !== "active") return false;
+      return true;
+    })
     .map((p) => {
       const d = p.data();
       return {

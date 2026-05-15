@@ -131,6 +131,17 @@ export default function CaptainHomePage() {
       }
       setRoster(
         rosterSnap.docs
+          // Same status/orphan filter as the team page + attendance
+          // — LBDC's migration auto-creates `status:"unknown"`
+          // orphans from box-score line resolution that shouldn't
+          // bleed into the captain's roster spotlight.
+          .filter((p) => {
+            const data = p.data();
+            if (data.active === false) return false;
+            if (data.orphan === true) return false;
+            if (data.status && data.status !== "active") return false;
+            return true;
+          })
           .map((p) => {
             const data = p.data();
             return {

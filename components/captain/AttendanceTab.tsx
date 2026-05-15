@@ -107,7 +107,17 @@ export function AttendanceTab({ leagueId, teamId }: Props) {
       const ps: PlayerRow[] = playersSnap.docs
         .map((d) => {
           const data = d.data();
+          // Skip orphan / inactive docs. LBDC's migration auto-
+          // creates player records when a box-score line references
+          // a player not on the canonical roster (Pool Player, name
+          // variants, opposing team players in a tournament, etc.);
+          // those get status="unknown" + orphan=true. Without this
+          // filter the AttendanceTab listed ~150 ghost players per
+          // team. Keeping the legacy `active === false` check too
+          // for any older SFBL data that used that shape.
           if (data.active === false) return null;
+          if (data.orphan === true) return null;
+          if (data.status && data.status !== "active") return null;
           return {
             id: d.id,
             name: String(data.name ?? d.id),

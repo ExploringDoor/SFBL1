@@ -90,6 +90,16 @@ export default function LineupEditorPage() {
       ]);
       if (cancelled) return;
       const r: Player[] = rosterSnap.docs
+        // Drop orphan / inactive players so the lineup editor only
+        // shows real rostered eligible captains. Same filter as the
+        // other captain surfaces.
+        .filter((p) => {
+          const d = p.data();
+          if (d.active === false) return false;
+          if (d.orphan === true) return false;
+          if (d.status && d.status !== "active") return false;
+          return true;
+        })
         .map((p) => {
           const d = p.data();
           return {

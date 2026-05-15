@@ -116,6 +116,18 @@ export function PaymentsTab({ leagueId, teamId }: PaymentsTabProps) {
     }
     setRows(
       rosterSnap.docs
+        // Drop orphan / non-active player docs. Same filter as the
+        // /teams/[id] roster + AttendanceTab — LBDC's migration
+        // creates `status: "unknown"` orphans from box-score line
+        // resolution that shouldn't appear on the captain's
+        // payments roster.
+        .filter((p) => {
+          const data = p.data();
+          if (data.active === false) return false;
+          if (data.orphan === true) return false;
+          if (data.status && data.status !== "active") return false;
+          return true;
+        })
         .map((p) => {
           const data = p.data();
           const pay = payByPlayer.get(p.id);
