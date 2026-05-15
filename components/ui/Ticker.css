@@ -74,10 +74,9 @@ body.ticker-hidden #score-ticker {
 .st-label-img {
   display: block;
   height: 100%;
-  /* Caps mirror --ticker-height (160 desktop / 192 mobile after the
-   * 2026-05-15 second bump) so a tall source PNG renders at full
-   * ticker height. */
-  max-height: 168px;
+  /* Caps mirror --ticker-height (120 desktop / 144 mobile after
+   * Adam dialed back the 160/192 overshoot 2026-05-15). */
+  max-height: 128px;
   width: auto;
   object-fit: contain;
 }
@@ -86,7 +85,7 @@ body.ticker-hidden #score-ticker {
     padding: 4px 8px;
   }
   .st-label-img {
-    max-height: 200px;
+    max-height: 152px;
   }
 }
 
@@ -291,23 +290,23 @@ body.ticker-hidden #score-ticker {
 
 .st-full:hover { color: #ffffff; }
 
-/* Mobile: 192px tall (matches --ticker-height for ≤700px after the
- * 2026-05-15 second-bump), label sticks to left edge as you scroll. */
+/* Mobile: 144px tall (matches --ticker-height for ≤700px), label
+ * sticks to left edge as you scroll. */
 @media (max-width: 700px) {
   #score-ticker {
     overflow: hidden !important;
     max-width: 100vw !important;
-    height: 192px !important;
-    min-height: 192px !important;
+    height: 144px !important;
+    min-height: 144px !important;
   }
   .st-track {
     width: max-content !important;
     display: inline-flex !important;
-    height: 192px !important;
+    height: 144px !important;
     align-items: stretch !important;
   }
   .st-game {
-    height: 192px !important;
+    height: 144px !important;
     padding: 0 12px !important;
     align-items: center !important;
     overflow: visible !important;
@@ -322,7 +321,7 @@ body.ticker-hidden #score-ticker {
     z-index: 2;
     flex-shrink: 0;
     background: var(--brand-primary, #002D72) !important;
-    height: 192px !important;
+    height: 144px !important;
   }
 }
 

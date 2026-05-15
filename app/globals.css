@@ -29,15 +29,15 @@
   /* Ticker is `position: fixed` (see components/ui/Ticker.css).
    * Height progression:
    *   48 / 64  (original)
-   *   80 / 96  (first bump 2026-05-14)
-   *  160 / 192 (second bump 2026-05-15 — Adam asked for the logo
-   *             "2x bigger" again after the first bump landed)
+   *   80 / 96  (first bump 2026-05-14 — Adam approved)
+   *  160 / 192 (second bump — too big, Adam rejected)
+   *  120 / 144 (current — splits the difference)
    * .site-shell padding-top tracks this var so content flows. */
-  --ticker-height: 160px;
+  --ticker-height: 120px;
 }
 
 @media (max-width: 700px) {
-  :root { --ticker-height: 192px; }
+  :root { --ticker-height: 144px; }
 }
 
 /* html keeps `height: 100%` so its navy background paints the
