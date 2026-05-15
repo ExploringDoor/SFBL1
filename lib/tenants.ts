@@ -31,6 +31,10 @@ export interface PublicLeagueConfig {
   nav?: { hide?: string[] };
   // Captain access UX toggle. See LeagueConfig["captain"].
   captain?: { passwordless?: boolean };
+  // Admin access UX toggle. Only the boolean — the actual password
+  // lives at LeagueConfig.admin.password and stays server-side via
+  // toPublicConfig's explicit field allowlist.
+  admin?: { passwordless?: boolean };
 }
 
 export function toPublicConfig(c: LeagueConfig): PublicLeagueConfig {
@@ -52,6 +56,10 @@ export function toPublicConfig(c: LeagueConfig): PublicLeagueConfig {
     sponsors: c.sponsors,
     nav: c.nav,
     captain: c.captain,
+    // Strip `admin.password` — only forward whether passwordless is
+    // enabled. The actual password lives in the source LeagueConfig
+    // and is read server-side via /api/public-admin-claim only.
+    admin: c.admin?.passwordless ? { passwordless: true } : undefined,
   };
 }
 

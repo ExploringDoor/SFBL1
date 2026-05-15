@@ -126,6 +126,18 @@ export interface LeagueConfig {
   captain?: {
     passwordless?: boolean;
   };
+  // Admin UX. `passwordless: true` + a `password` enables a single-
+  // field "admin sign-in" on /admin: the user types the shared
+  // password and the server mints a custom token with the admin
+  // claim. The password is stored in plaintext here because the
+  // doc is admin-SDK-readable only (Firestore rules) and
+  // toPublicConfig() never forwards `admin` to the client. Adam
+  // opted into this for LBDC — same trust model as captain
+  // passwordless. SFBL keeps Firebase Auth magic-link.
+  admin?: {
+    passwordless?: boolean;
+    password?: string;
+  };
 }
 
 export interface LeagueSponsor {

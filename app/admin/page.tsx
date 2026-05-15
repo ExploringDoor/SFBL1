@@ -33,6 +33,7 @@ import { PhotosManager } from "@/components/admin/PhotosManager";
 import { ScoresManager } from "@/components/admin/ScoresManager";
 import { SponsorsManager } from "@/components/admin/SponsorsManager";
 import { NewsManager } from "@/components/admin/NewsManager";
+import { AdminPasswordGate } from "@/components/admin/AdminPasswordGate";
 
 type TabKey =
   | "health"
@@ -90,6 +91,14 @@ export default function AdminPage() {
   }
 
   if (user === null) {
+    // Passwordless tenants (LBDC) show a shared-password gate
+    // instead of redirecting to magic-link sign-in. The gate
+    // posts to /api/public-admin-claim, gets a Firebase custom
+    // token with admin claim, and signs in via
+    // signInWithCustomToken — the rest of this page then renders.
+    if (tenantId && config?.admin?.passwordless === true) {
+      return <AdminPasswordGate leagueId={tenantId} />;
+    }
     return (
       <Shell heading={config?.name ?? "Admin"}>
         <p className="text-slate-700">You're not signed in.</p>

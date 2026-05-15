@@ -319,6 +319,16 @@ async function seedTenantDoc(db: Firestore | null): Promise<void> {
     captain: {
       passwordless: true,
     },
+    // Admin UX: single shared password instead of magic-link. The
+    // password lives only in this doc and is read server-side by
+    // /api/public-admin-claim. toPublicConfig() strips
+    // admin.password before the doc reaches the client.
+    // Rotate via:
+    //   scripts/patch-lbdc-admin-password.ts --password <new>
+    admin: {
+      passwordless: true,
+      password: "lbdc2026",
+    },
     migrated_at: new Date().toISOString(),
     migrated_from: "supabase://vhovzpajuyphjatjlodo",
   };
