@@ -26,6 +26,7 @@ import {
 } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useUser } from "@/lib/auth-client";
+import { formatGameDate, formatTime12 } from "@/lib/format-time";
 
 interface PlayerRow {
   id: string;
@@ -37,6 +38,7 @@ interface PlayerRow {
 interface GameRow {
   id: string;
   date: string | null;
+  time: string | null;
   field: string | null;
   status: string;
   away_team_id: string;
@@ -146,6 +148,7 @@ export function AttendanceTab({ leagueId, teamId }: Props) {
           return {
             id: d.id,
             date: data.date ? String(data.date) : null,
+            time: data.time ? String(data.time) : null,
             field: data.field ? String(data.field) : null,
             status: String(data.status ?? "draft"),
             away_team_id: String(data.away_team_id ?? ""),
@@ -310,15 +313,16 @@ export function AttendanceTab({ leagueId, teamId }: Props) {
     const oppName = teamNames[oppId] ?? oppId;
     const ha = game.home_team_id === teamId ? "vs" : "@";
     const myTeamName = teamNames[teamId] ?? teamId;
-    const when = game.date
-      ? new Date(game.date).toLocaleString("en-US", {
-          weekday: "short",
-          month: "short",
-          day: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-        })
-      : "";
+    // Audit H1: build the push body's "when" from a stable local
+    // calendar day + the separate time field (no UTC-midnight skew
+    // for LBDC's Pacific captains).
+    const whenDay = formatGameDate(game.date, game.time, {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+    const whenTime = game.time ? formatTime12(game.time) : "";
+    const when = [whenDay, whenTime].filter(Boolean).join(" · ");
     const title = `${myTeamName} · Availability needed`;
     const body =
       `Please mark your availability for Wk ${game.wk ?? "?"} ${ha} ${oppName}` +
@@ -805,19 +809,14 @@ function GameMeta({
   const isHome = game.home_team_id === teamId;
   const oppId = isHome ? game.away_team_id : game.home_team_id;
   const oppName = teamNames[oppId] ?? oppId;
-  const dateLabel = game.date
-    ? new Date(game.date).toLocaleDateString("en-US", {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-      })
-    : "TBD";
-  const timeLabel = game.date
-    ? new Date(game.date).toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-      })
-    : "";
+  // Audit H1: stable local calendar day + separate time field.
+  const dateLabel =
+    formatGameDate(game.date, game.time, {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    }) || "TBD";
+  const timeLabel = game.time ? formatTime12(game.time) : "";
   return (
     <div className="avail-game-meta">
       {game.wk != null && (

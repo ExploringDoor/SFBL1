@@ -35,10 +35,12 @@ import {
 import { getDb } from "@/lib/firebase";
 import { useUser } from "@/lib/auth-client";
 import { usePlayerLink } from "@/lib/usePlayerLink";
+import { formatGameDate, formatTime12 } from "@/lib/format-time";
 
 interface GameRow {
   id: string;
   date: string | null;
+  time: string | null;
   field: string | null;
   status: string;
   away_team_id: string;
@@ -110,6 +112,7 @@ export function PlayerAvailabilityPanel({ leagueId }: Props) {
             return {
               id: d.id,
               date: data.date ? String(data.date) : null,
+              time: data.time ? String(data.time) : null,
               field: data.field ? String(data.field) : null,
               status: String(data.status ?? "draft"),
               away_team_id: String(data.away_team_id ?? ""),
@@ -270,19 +273,17 @@ export function PlayerAvailabilityPanel({ leagueId }: Props) {
               const isHome = g.home_team_id === linkState.teamId;
               const oppId = isHome ? g.away_team_id : g.home_team_id;
               const oppName = teamNames[oppId] ?? oppId;
-              const dateLabel = g.date
-                ? new Date(g.date).toLocaleDateString("en-US", {
-                    weekday: "short",
-                    month: "short",
-                    day: "numeric",
-                  })
-                : "TBD";
-              const timeLabel = g.date
-                ? new Date(g.date).toLocaleTimeString("en-US", {
-                    hour: "numeric",
-                    minute: "2-digit",
-                  })
-                : "";
+              // Audit H1: parse date-only as a stable local calendar
+              // day; prefer the separate `time` field for the clock
+              // (no Date()/TZ math) so LBDC's Pacific RSVP panel
+              // doesn't slip a day or show a bogus midnight.
+              const dateLabel =
+                formatGameDate(g.date, g.time, {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+                }) || "TBD";
+              const timeLabel = g.time ? formatTime12(g.time) : "";
               const status = avail.find((a) => a.game_id === g.id)?.status;
               return (
                 <li key={g.id} className="avail-game-row">

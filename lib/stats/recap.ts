@@ -13,6 +13,7 @@
 
 import { calcPOTG, type POTGBatterLine, type POTGPitcherLine } from "./potg";
 import { formatIP } from "./ip";
+import { formatGameDate } from "@/lib/format-time";
 
 export interface RecapInput {
   awayTeamName: string;
@@ -174,13 +175,15 @@ function opener(
   margin: number,
 ): string {
   const where = input.field ? ` at ${input.field}` : "";
-  const when = input.date
-    ? ` on ${new Date(input.date).toLocaleDateString("en-US", {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-      })}`
-    : "";
+  // Audit H1: formatGameDate parses date-only strings as a local
+  // calendar day, so the recap headline doesn't slip a day for
+  // Pacific (LBDC) readers. Recap only shows the day, no time.
+  const whenStr = formatGameDate(input.date, null, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+  const when = whenStr ? ` on ${whenStr}` : "";
 
   if (winnerName == null) {
     return `${input.awayTeamName} and ${input.homeTeamName} finished tied ${input.awayScore}–${input.homeScore}${where}${when}.`;

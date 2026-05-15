@@ -16,6 +16,7 @@
 import Link from "next/link";
 import { formatIP } from "@/lib/stats/ip";
 import { buildRecap } from "@/lib/stats/recap";
+import { formatGameDate, formatTime12 } from "@/lib/format-time";
 import { sanitizeHtml } from "@/lib/markdown";
 import { BoxScoreTabs } from "@/components/ui/BoxScoreTabs";
 
@@ -68,6 +69,10 @@ export interface BoxTeam {
 export interface BoxScoreContentProps {
   gameId: string;
   date: string | null;
+  /** Separate "HH:MM" start time when the league stores it apart
+   *  from the date (LBDC). Audit H1 — used so date-only docs don't
+   *  UTC-shift a day for Pacific viewers. */
+  time: string | null;
   field: string | null;
   status: string;
   innings: number;
@@ -86,7 +91,7 @@ export interface BoxScoreContentProps {
 }
 
 export function BoxScoreContent(props: BoxScoreContentProps) {
-  const { gameId, date, field, status, innings, away, home, playerNames } =
+  const { gameId, date, time, field, status, innings, away, home, playerNames } =
     props;
   const view = props.view ?? "box";
   const isFinal = status === "final" || status === "approved";
@@ -95,8 +100,8 @@ export function BoxScoreContent(props: BoxScoreContentProps) {
   if (!isFinal) {
     return (
       <div className="bs-root">
-        <PreviewHero away={away} home={home} date={date} field={field} />
-        <PreviewBlurb away={away} home={home} date={date} field={field} />
+        <PreviewHero away={away} home={home} date={date} time={time} field={field} />
+        <PreviewBlurb away={away} home={home} date={date} time={time} field={field} />
       </div>
     );
   }
@@ -146,7 +151,10 @@ export function BoxScoreContent(props: BoxScoreContentProps) {
         {date && (
           <span>
             <span aria-hidden>🗓</span>{" "}
-            {new Date(date).toLocaleDateString("en-US", {
+            {/* Audit H1/H5: stable local calendar day. This is the
+                public box score shared in iMessage links — it was
+                showing the prior day for LBDC's Pacific readers. */}
+            {formatGameDate(date, time, {
               month: "short",
               day: "numeric",
             })}
@@ -287,14 +295,16 @@ function PreviewBlurb({
   away,
   home,
   date,
+  time,
   field,
 }: {
   away: BoxTeam;
   home: BoxTeam;
   date: string | null;
+  time: string | null;
   field: string | null;
 }) {
-  const lines = buildPreviewLines(away, home, date, field);
+  const lines = buildPreviewLines(away, home, date, time, field);
   return (
     <div
       className="bs-recap-body"
@@ -314,30 +324,28 @@ function buildPreviewLines(
   away: BoxTeam,
   home: BoxTeam,
   date: string | null,
+  time: string | null,
   field: string | null,
 ): { headline: string; body: string[] } {
   const aRec = parseRecord(away.record);
   const hRec = parseRecord(home.record);
-  const when = date
-    ? new Date(date).toLocaleDateString("en-US", {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-      })
-    : null;
-  const time = date
-    ? new Date(date).toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-      })
-    : null;
+  // Audit H1: stable local calendar day + the separate time field
+  // (no Date()/TZ math) so LBDC's Pacific preview blurb doesn't slip.
+  const when =
+    formatGameDate(date, time, {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+    }) || null;
+  const timeStr = time ? formatTime12(time) : null;
 
   const headline = `${away.name} at ${home.name}`;
   const body: string[] = [];
 
   // Sentence 1 — the matchup, when, where.
   const where = field ? ` at ${field}` : "";
-  const whenStr = when && time ? `${when} at ${time}` : when ?? "TBD";
+  const whenStr =
+    when && timeStr ? `${when} at ${timeStr}` : when ?? "TBD";
   body.push(
     `${away.name}${aRec ? ` (${away.record})` : ""} visit ${home.name}${hRec ? ` (${home.record})` : ""} on ${whenStr}${where}.`,
   );
@@ -401,13 +409,23 @@ function PreviewHero({
   away,
   home,
   date,
+  time,
   field,
 }: {
   away: BoxTeam;
   home: BoxTeam;
   date: string | null;
+  time: string | null;
   field: string | null;
 }) {
+  // Audit H1: stable local calendar day; prefer the separate time
+  // field (no Date()/TZ math) so LBDC's Pacific preview doesn't skew.
+  const dayLabel = formatGameDate(date, time, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+  const timeLabel = time ? formatTime12(time) : "";
   return (
     <div className="bs-hero">
       <TeamBlock team={away} side="Away" winner={false} />
@@ -415,21 +433,10 @@ function PreviewHero({
         <div className="bs-score-line">
           <span className="bs-vs">VS</span>
         </div>
-        <span className="bs-final">
-          {date
-            ? new Date(date).toLocaleDateString("en-US", {
-                weekday: "short",
-                month: "short",
-                day: "numeric",
-              })
-            : "TBD"}
-        </span>
-        {date && (
+        <span className="bs-final">{dayLabel || "TBD"}</span>
+        {timeLabel && (
           <span className="bs-final" style={{ marginTop: 2 }}>
-            {new Date(date).toLocaleTimeString("en-US", {
-              hour: "numeric",
-              minute: "2-digit",
-            })}
+            {timeLabel}
           </span>
         )}
         {field && (

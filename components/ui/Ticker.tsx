@@ -18,6 +18,7 @@
 // game list is wide; the user pans manually.
 
 import Link from "next/link";
+import { parseGameDate } from "@/lib/format-time";
 import "./Ticker.css";
 
 export interface TickerGame {
@@ -204,12 +205,18 @@ function statusLabel(g: TickerGame, done: boolean): string {
   if (done) return "FINAL";
   if (g.status === "live") return "🔴 LIVE";
   if (!g.date) return "TBD";
-  const d = new Date(g.date);
+  // Audit H1: parseGameDate keeps the calendar day stable for every
+  // viewer. site-data's combineDateTime only inserts a "T" when a
+  // start time exists, so a bare date means start time is TBD —
+  // render just the day, not a bogus UTC-midnight "12:00 AM".
+  const d = parseGameDate(g.date);
+  if (!d) return "TBD";
   const day = d.toLocaleDateString("en-US", {
     weekday: "short",
     month: "numeric",
     day: "numeric",
   });
+  if (!g.date.includes("T")) return day;
   const time = d.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",

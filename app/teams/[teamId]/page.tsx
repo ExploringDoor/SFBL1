@@ -17,6 +17,7 @@ import {
   type GameResult,
 } from "@/lib/stats/shared";
 import { formatIP } from "@/lib/stats/ip";
+import { formatGameDate } from "@/lib/format-time";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 
 export const dynamic = "force-dynamic";
@@ -1062,12 +1063,13 @@ function GameLine({
   const isFinal = status === "final" || status === "approved";
   const won = isFinal && myScore > oppScore;
   const lost = isFinal && myScore < oppScore;
-  const dateStr = game.date
-    ? new Date(String(game.date)).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      })
-    : "";
+  // Audit H1: date-only strings must render as a stable local
+  // calendar day (was slipping a day for LBDC's Pacific users).
+  const dateStr = formatGameDate(
+    game.date ? String(game.date) : null,
+    game.time ? String(game.time) : null,
+    { month: "short", day: "numeric" },
+  );
 
   return (
     <li>

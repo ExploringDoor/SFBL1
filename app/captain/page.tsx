@@ -25,6 +25,11 @@ import {
   where,
 } from "firebase/firestore";
 import { awaitingScoreGames } from "@/lib/captain-next-up";
+import {
+  parseGameDate,
+  formatGameDate,
+  formatTime12,
+} from "@/lib/format-time";
 import { RosterTab } from "@/components/captain/RosterTab";
 import { ScheduleTab } from "@/components/captain/ScheduleTab";
 import { PaymentsTab } from "@/components/captain/PaymentsTab";
@@ -63,6 +68,7 @@ interface PlayerSnap {
 interface GameSnap {
   id: string;
   date: string | null;
+  time: string | null;
   field: string | null;
   status: string;
   away_team_id: string;
@@ -164,6 +170,7 @@ export default function CaptainHomePage() {
             return {
               id: g.id,
               date: data.date ? String(data.date) : null,
+              time: data.time ? String(data.time) : null,
               field: data.field ? String(data.field) : null,
               status: String(data.status ?? "draft"),
               away_team_id: String(data.away_team_id ?? ""),
@@ -933,6 +940,7 @@ function AwaitingScoreCard({
     game: {
       id: string;
       date: string | null;
+      time: string | null;
       away_team_id: string;
       home_team_id: string;
     };
@@ -988,7 +996,7 @@ function AwaitingScoreCard({
             side === "away" ? game.home_team_id : game.away_team_id;
           const opponentName = teamNames[opponentId] ?? opponentId;
           const dateLabel = game.date
-            ? formatGameDate(game.date)
+            ? formatGameDate(game.date, game.time) || "(no date)"
             : "(no date)";
           return (
             <li
@@ -1047,19 +1055,12 @@ function AwaitingScoreCard({
   );
 }
 
-function formatGameDate(s: string): string {
-  try {
-    const d = s.includes("T") ? new Date(s) : new Date(`${s}T12:00:00Z`);
-    if (Number.isNaN(d.getTime())) return s;
-    return d.toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    });
-  } catch {
-    return s;
-  }
-}
+// Audit H1: the old local formatGameDate() used a `${s}T12:00:00Z`
+// noon-UTC hack to dodge the date-shift — close, but still wrong for
+// far-Eastern viewers and it discarded the real start time. Replaced
+// by the shared lib/format-time helpers (parseGameDate /
+// formatGameDate / formatTime12), which read the separate `time`
+// field LBDC stores and keep the calendar day stable everywhere.
 
 function NextGameSpotlight({
   game,
@@ -1079,21 +1080,21 @@ function NextGameSpotlight({
   const oppName = teamNames[oppId] ?? oppId;
 
   // Date/time + days-until calculation. Guard against bad date.
+  // Audit H1: parseGameDate keeps the calendar day stable for every
+  // viewer; formatTime12 reads LBDC's separate time field directly.
   let when = "TBD";
   let timeLabel = "";
   let daysUntil: number | null = null;
   if (game.date) {
-    const d = new Date(game.date);
-    if (Number.isFinite(d.getTime())) {
-      when = d.toLocaleDateString("en-US", {
-        weekday: "long",
-        month: "short",
-        day: "numeric",
-      });
-      timeLabel = d.toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-      });
+    const d = parseGameDate(game.date, game.time);
+    if (d && Number.isFinite(d.getTime())) {
+      when =
+        formatGameDate(game.date, game.time, {
+          weekday: "long",
+          month: "short",
+          day: "numeric",
+        }) || "TBD";
+      timeLabel = game.time ? formatTime12(game.time) : "";
       const ms = d.getTime() - Date.now();
       daysUntil = Math.max(0, Math.ceil(ms / (24 * 60 * 60 * 1000)));
     }
@@ -1246,19 +1247,14 @@ function CaptainGameRow({
   const isFinal = game.status === "final" || game.status === "approved";
   const won = isFinal && myScore > oppScore;
   const lost = isFinal && myScore < oppScore;
-  const dateLabel = game.date
-    ? new Date(game.date).toLocaleDateString("en-US", {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-      })
-    : "TBD";
-  const timeLabel = game.date
-    ? new Date(game.date).toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-      })
-    : "";
+  // Audit H1: stable local calendar day + separate time field.
+  const dateLabel =
+    formatGameDate(game.date, game.time, {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    }) || "TBD";
+  const timeLabel = game.time ? formatTime12(game.time) : "";
 
   return (
     <li className="le-cap-game-row">
@@ -1308,8 +1304,12 @@ function CaptainGameRow({
 
 function isGameToday(game: GameSnap): boolean {
   if (!game.date) return false;
-  const d = new Date(game.date);
-  if (!Number.isFinite(d.getTime())) return false;
+  // Audit H1: parseGameDate anchors a date-only string to the LOCAL
+  // calendar day. With raw `new Date("2026-05-16")` (UTC midnight),
+  // getDate() in Pacific returned the 15th, so GameDayHero never
+  // showed for LBDC and captains lost the day-of one-tap actions.
+  const d = parseGameDate(game.date, game.time);
+  if (!d || !Number.isFinite(d.getTime())) return false;
   const today = new Date();
   return (
     d.getFullYear() === today.getFullYear() &&
@@ -1335,10 +1335,13 @@ function GameDayHero({
   const oppId = isHome ? game.away_team_id : game.home_team_id;
   const oppName = teamNames[oppId] ?? oppId;
 
+  // Audit H1: prefer the separate time field (no Date()/TZ math).
   let timeLabel = "TBD";
-  if (game.date) {
-    const d = new Date(game.date);
-    if (Number.isFinite(d.getTime())) {
+  if (game.time) {
+    timeLabel = formatTime12(game.time);
+  } else if (game.date && game.date.includes("T")) {
+    const d = parseGameDate(game.date);
+    if (d && Number.isFinite(d.getTime())) {
       timeLabel = d.toLocaleTimeString("en-US", {
         hour: "numeric",
         minute: "2-digit",

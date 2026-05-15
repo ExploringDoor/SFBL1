@@ -206,6 +206,7 @@ export async function loadBoxScoreData(
   return {
     gameId,
     date: game.date ? String(game.date) : null,
+    time: game.time ? String(game.time) : null,
     field: game.field ? String(game.field) : null,
     status: String(game.status ?? "draft"),
     innings,
