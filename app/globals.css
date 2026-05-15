@@ -26,14 +26,18 @@
   --border2: rgba(0, 0, 0, 0.18);
 
   --header-height: 62px;
-  /* Ticker is `position: fixed` (see components/ui/Ticker.css) — 48px
-   * desktop, 64px on mobile (≤700px). The site-header sits below it
-   * at this offset, and .site-shell pads its top to clear both. */
-  --ticker-height: 48px;
+  /* Ticker is `position: fixed` (see components/ui/Ticker.css).
+   * Height bumped from 48 -> 80 (desktop) and 64 -> 96 (mobile) on
+   * 2026-05-14 so the tenant logo in the leftmost tile renders ~2x
+   * its previous size. Game-score tiles inside the ticker also get
+   * more vertical breathing room — Adam was OK with that. The
+   * site-header sits below the ticker at this offset, and
+   * .site-shell pads its top to clear both. */
+  --ticker-height: 80px;
 }
 
 @media (max-width: 700px) {
-  :root { --ticker-height: 64px; }
+  :root { --ticker-height: 96px; }
 }
 
 /* html keeps `height: 100%` so its navy background paints the
