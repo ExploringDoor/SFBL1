@@ -641,6 +641,106 @@ function BattingTable({
           </tr>
         </tbody>
       </table>
+      <BattingHighlights rows={rows} playerNames={playerNames} />
+    </div>
+  );
+}
+
+// Traditional box-score "highlights" footer — one line per stat
+// category that someone in the lineup actually produced. Common
+// baseball convention reads like:
+//   2B: Cesario, Tobin (2)
+//   3B: Glavas
+//   HR: Bunnell, Tobin
+//   RBI: Tobin (8), Cesario (3)
+//   SB: Aldrich
+// Players with a count >1 get "(N)" after their last name. Hidden
+// when nobody on this team produced anything notable (a pitchers'
+// duel where each side scratched a couple singles).
+function BattingHighlights({
+  rows,
+  playerNames,
+}: {
+  rows: BoxBatter[];
+  playerNames: Record<string, string>;
+}) {
+  // Last-name lookup so "BB: Aguila, Lehman" reads cleanly without
+  // first names cluttering the line. Falls back to full name when a
+  // player has only one word (or the name didn't migrate cleanly).
+  function shortName(id: string): string {
+    const full = (playerNames[id] ?? id).trim();
+    if (!full) return id;
+    const parts = full.split(/\s+/);
+    if (parts.length === 1) return parts[0]!;
+    return parts[parts.length - 1]!;
+  }
+
+  // Build one line per category. The accumulator key is the player
+  // id so multi-event games (Tobin: 2x 2B + 1 HR) count correctly.
+  function line(label: string, getter: (r: BoxBatter) => number) {
+    const counts = new Map<string, number>();
+    for (const r of rows) {
+      const v = getter(r) ?? 0;
+      if (v > 0) counts.set(r.player_id, (counts.get(r.player_id) ?? 0) + v);
+    }
+    if (counts.size === 0) return null;
+    const entries = [...counts.entries()]
+      .sort((a, b) => b[1] - a[1] || shortName(a[0]).localeCompare(shortName(b[0])))
+      .map(([id, n]) => (n > 1 ? `${shortName(id)} (${n})` : shortName(id)));
+    return { label, text: entries.join(", ") };
+  }
+
+  // TB (total bases) — derived per player same way as the column.
+  function tb(r: BoxBatter) {
+    const h = r.h ?? 0;
+    const d = r.doubles ?? 0;
+    const t = r.triples ?? 0;
+    const hr = r.hr ?? 0;
+    const singles = Math.max(0, h - d - t - hr);
+    return singles + 2 * d + 3 * t + 4 * hr;
+  }
+
+  const lines = [
+    line("2B", (r) => r.doubles ?? 0),
+    line("3B", (r) => r.triples ?? 0),
+    line("HR", (r) => r.hr ?? 0),
+    line("RBI", (r) => r.rbi ?? 0),
+    line("BB", (r) => r.bb ?? 0),
+    line("SB", (r) => r.sb ?? 0),
+    line("TB", tb),
+  ].filter((l): l is { label: string; text: string } => !!l);
+
+  if (lines.length === 0) return null;
+
+  return (
+    <div
+      className="bat-highlights"
+      style={{
+        padding: "10px 14px",
+        borderTop: "1px solid var(--border)",
+        background: "rgba(0, 45, 114, 0.02)",
+        fontSize: 12,
+        lineHeight: 1.6,
+        color: "var(--text-body, #334155)",
+        fontFamily: "var(--font-inter), sans-serif",
+      }}
+    >
+      {lines.map((l) => (
+        <div key={l.label}>
+          <span
+            style={{
+              fontFamily: "var(--font-barlow), sans-serif",
+              fontWeight: 800,
+              letterSpacing: "0.06em",
+              color: "var(--brand-primary, #002d72)",
+              marginRight: 6,
+            }}
+          >
+            {l.label}:
+          </span>
+          {l.text}
+        </div>
+      ))}
     </div>
   );
 }
