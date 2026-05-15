@@ -274,7 +274,15 @@ async function seedTenantDoc(db: Firestore | null): Promise<void> {
     innings: 9,
     ruleset: "hardball",
     linescore_innings: 9,
-    stat_columns: ["AB", "R", "H", "2B", "3B", "HR", "RBI", "BB", "SO", "SB"],
+    // Captain box-score editor surfaces every column listed here.
+    // Mirrors what LBDC's original Supabase site captured per
+    // batting line: the standard 10 plus HBP, SF, SAC, FC, ROE,
+    // CS. Pitching columns are always shown (not gated on this
+    // list).
+    stat_columns: [
+      "ab", "r", "h", "doubles", "triples", "hr", "rbi", "bb", "so", "sb",
+      "hbp", "sf", "sac", "fc", "roe", "cs",
+    ],
     pitching: { enabled: true, auto_innings_pitched: true, record_pitches: false },
     rules_flags: { dropped_third_strike: true, balks: true, infield_fly: true },
     theme: {

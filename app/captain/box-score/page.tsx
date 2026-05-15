@@ -82,6 +82,10 @@ interface BatStats {
   roe: number;
   /** Fielder's choice — optional. */
   fc: number;
+  /** Hit by pitch. */
+  hbp: number;
+  /** Caught stealing. */
+  cs: number;
 }
 
 type BatRow = LineupEntry & BatStats;
@@ -97,6 +101,12 @@ interface PitRow {
   bb: number;
   so: number;
   hr: number;
+  /** Hit batters. */
+  hbp: number;
+  /** Wild pitches. */
+  wp: number;
+  /** Balks. */
+  bk: number;
   decision: "" | "W" | "L" | "S";
 }
 
@@ -140,6 +150,8 @@ const ALL_COLS: StatCol[] = [
   { key: "roe", label: "ROE", kind: "bat" },
   { key: "fc", label: "FC", kind: "bat" },
   { key: "pb", label: "PB", kind: "bat" },
+  { key: "hbp", label: "HBP", kind: "bat" },
+  { key: "cs", label: "CS", kind: "bat" },
   { key: "ip_outs", label: "IP", kind: "pit" },
   { key: "h", label: "H", kind: "pit" },
   { key: "r", label: "R", kind: "pit" },
@@ -147,6 +159,9 @@ const ALL_COLS: StatCol[] = [
   { key: "bb", label: "BB", kind: "pit" },
   { key: "so", label: "K", kind: "pit" },
   { key: "hr", label: "HR", kind: "pit" },
+  { key: "hbp", label: "HBP", kind: "pit" },
+  { key: "wp", label: "WP", kind: "pit" },
+  { key: "bk", label: "BK", kind: "pit" },
 ];
 
 const COL_ALIASES: Record<string, string> = {
@@ -197,6 +212,8 @@ function newBatRow(e: LineupEntry): BatRow {
     sf: 0,
     roe: 0,
     fc: 0,
+    hbp: 0,
+    cs: 0,
   };
 }
 
@@ -571,6 +588,9 @@ export default function BoxScoreEditorPage() {
           bb: 0,
           so: 0,
           hr: 0,
+          hbp: 0,
+          wp: 0,
+          bk: 0,
           decision: "",
         },
       ];
@@ -650,6 +670,8 @@ export default function BoxScoreEditorPage() {
         sf: 0,
         roe: 0,
         fc: 0,
+        hbp: 0,
+        cs: 0,
       };
     };
     const toPitRow = (
@@ -676,6 +698,9 @@ export default function BoxScoreEditorPage() {
         bb: pp.bb || 0,
         so: pp.so || 0,
         hr: pp.hr || 0,
+        hbp: 0,
+        wp: 0,
+        bk: 0,
         decision:
           pp.decision === "W" ||
           pp.decision === "L" ||
@@ -769,6 +794,9 @@ export default function BoxScoreEditorPage() {
         bb: 0,
         so: 0,
         hr: 0,
+        hbp: 0,
+        wp: 0,
+        bk: 0,
         decision: "",
       },
     ]);
