@@ -156,13 +156,15 @@ body.ticker-hidden #score-ticker {
   /* 3-column grid (abbrev | record | score) shared by both team
    * rows so scores align vertically. Each row uses line-height: 1
    * so the 3 rows + gaps fit cleanly inside the taller ticker
-   * without clipping top/bottom. */
+   * without clipping top/bottom. Row heights tightened 2026-05-14
+   * after Adam reported the previous 13/22/22 layout was cutting
+   * off content. */
   display: grid;
   grid-template-columns: max-content max-content auto;
-  grid-template-rows: 13px 22px 22px;
+  grid-template-rows: 11px 18px 18px;
   align-items: center;
-  column-gap: 8px;
-  row-gap: 3px;
+  column-gap: 6px;
+  row-gap: 2px;
 }
 
 .st-datetime {
@@ -178,9 +180,9 @@ body.ticker-hidden #score-ticker {
 
 .st-datetime {
   font-family: 'Inter', sans-serif;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.8);
   line-height: 1;
@@ -202,8 +204,8 @@ body.ticker-hidden #score-ticker {
 .st-abbr {
   font-family: 'Oswald', sans-serif;
   font-weight: 700;
-  font-size: 16px;
-  letter-spacing: 0.04em;
+  font-size: 13px;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
   min-width: 36px;
   white-space: nowrap;
@@ -234,7 +236,7 @@ body.ticker-hidden #score-ticker {
 .st-score {
   font-family: 'Oswald', sans-serif;
   font-weight: 800;
-  font-size: 18px;
+  font-size: 15px;
   min-width: 18px;
   text-align: right;
   font-variant-numeric: tabular-nums;
