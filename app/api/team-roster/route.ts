@@ -60,9 +60,19 @@ export async function GET(req: Request) {
     .collection(`leagues/${leagueId}/players`)
     .where("team_id", "==", teamId)
     .get();
-  const activeDocs = playersSnap.docs.filter(
-    (d) => d.data().active !== false,
-  );
+  // Drop orphan / inactive docs the same way the captain UI does.
+  // The previous filter only checked `active !== false` which let
+  // LBDC's migration-created orphans (status: "unknown",
+  // orphan: true, no `active` field) slip through — that's why
+  // Brooklyn was showing 154 players. Identical predicate to the
+  // client-side filters so the captain RosterTab and the API agree.
+  const activeDocs = playersSnap.docs.filter((d) => {
+    const data = d.data();
+    if (data.active === false) return false;
+    if (data.orphan === true) return false;
+    if (data.status && data.status !== "active") return false;
+    return true;
+  });
 
   const contactDocs = await Promise.all(
     activeDocs.map((d) =>
