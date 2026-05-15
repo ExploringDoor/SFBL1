@@ -265,9 +265,15 @@ export default async function RootLayout({
             </>
           )}
           {tenantId ? (
+            // Nav brand intentionally rendered as the tenant short
+            // text (no logoUrl passed) so the league banner doesn't
+            // show up twice in the top stack — the ticker already
+            // shows it on its leftmost tile, and the homepage Hero
+            // shows it full-width. Three identical banners felt
+            // redundant; Adam called this out 2026-05-14.
             <Nav
               tenantShort={leagueAbbrev ?? leagueName ?? "League"}
-              logoUrl={logoUrl}
+              logoUrl={null}
               hideLabels={navHideLabels}
               rightSlot={<ProfileButton tenantId={tenantId} />}
             />

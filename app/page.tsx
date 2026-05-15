@@ -64,10 +64,6 @@ export default async function HomePage() {
 
   return (
     <main>
-      {/* Banner alert sits above the hero so weather/registration
-          announcements catch the eye on first visit. Renders nothing
-          when no banner is active. */}
-      <HomepageBanner leagueId={tenantId} />
       <DvslHero
         pill={`⚾ ${season} Regular Season`}
         title={`${big} ${season}`}
@@ -75,6 +71,11 @@ export default async function HomePage() {
         subtitle={leagueName}
         logoUrl={config?.theme?.logo_url ?? null}
       />
+      {/* "PLAYERS — JOIN THE LIST" registration alert now sits
+          UNDER the hero — matches LBDC's existing site layout
+          (Adam 2026-05-14). Renders nothing when the tenant
+          hasn't published a banner doc. */}
+      <HomepageBanner leagueId={tenantId} />
       {/* Live games strip — appears below the hero whenever any
           game in the league is in progress. Subscribes via
           onSnapshot so scores update in real time as the field-side
@@ -90,30 +91,12 @@ export default async function HomePage() {
           /leagues/<id>/news. */}
       <HomepageNews leagueId={tenantId} />
 
-      {/* Season highlights strip — at-a-glance KPIs (games played,
-          runs scored, teams, top team). Only renders once at least
-          one game has gone final; pre-launch the row would show all
-          zeros which reads as "nothing's happening." */}
-      {seasonStats.gamesPlayed > 0 && (
-        <section
-          className="le-home-stats"
-          aria-label="Season at a glance"
-        >
-          <Stat label="Games" value={String(seasonStats.gamesPlayed)} />
-          <Stat
-            label="Runs scored"
-            value={seasonStats.totalRuns.toLocaleString()}
-          />
-          <Stat label="Teams" value={String(seasonStats.teamCount)} />
-          {seasonStats.topTeam && (
-            <Stat
-              label={`Top team (${seasonStats.topTeam.record})`}
-              value={seasonStats.topTeam.name}
-              isWide
-            />
-          )}
-        </section>
-      )}
+      {/* Season highlights strip (Games / Runs / Teams / Top team)
+          was removed per Adam — too noisy on the homepage, doesn't
+          add information beyond what /standings already shows. The
+          season-stats computation is still done up in loadHomeData
+          because other call sites in this file reference it; just
+          not rendered. */}
 
       <section className="sec">
         <div className="le-home-grid">
