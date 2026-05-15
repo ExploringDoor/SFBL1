@@ -8,6 +8,7 @@
 
 import { getAdminDb } from "@/lib/firebase-admin";
 import { parseHost, resolveTenant } from "@/lib/tenants";
+import { combineDateTime } from "@/lib/format-time";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -71,7 +72,16 @@ export async function GET(req: Request) {
     const data = doc.data();
     const date = data.date ? String(data.date) : null;
     if (!date) continue;
-    const start = new Date(date);
+    // Audit C3 fix (2026-05-15): the previous code parsed
+    // `game.date` as UTC midnight when it was a plain "YYYY-MM-DD"
+    // string, leaving every iCal subscriber's event shifted by their
+    // browser TZ offset. Now we stitch the separate `time` field in
+    // so iCal sees a real local-time ISO with the right wall clock.
+    const combined = combineDateTime(
+      date,
+      data.time ? String(data.time) : null,
+    );
+    const start = new Date(combined);
     if (Number.isNaN(start.getTime())) continue;
     const end = new Date(start.getTime() + 3 * 60 * 60 * 1000); // 3hr default
 

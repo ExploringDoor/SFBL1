@@ -31,6 +31,7 @@ import {
   getAdminMessaging,
 } from "@/lib/firebase-admin";
 import { sendNotification } from "@/lib/notifications/send";
+import { combineDateTime, formatTime12 } from "@/lib/format-time";
 
 export const runtime = "nodejs";
 // Don't cache the cron response.
@@ -108,7 +109,18 @@ export async function GET(req: Request) {
       if (game.status !== "scheduled") continue; // belt + suspenders
       if (!game.date) continue;
 
-      const startMs = new Date(String(game.date)).getTime();
+      // Combine the separate date + time fields before parsing.
+      // Audit C2 fix (2026-05-15): the previous code did
+      // `new Date(game.date)` on a date-only "YYYY-MM-DD" string,
+      // which parses as UTC midnight. For LBDC's 9 AM PT games
+      // that meant the cron was always 9 hours off and never
+      // fired the reminder. combineDateTime stitches date + time
+      // into a parseable local ISO.
+      const combined = combineDateTime(
+        game.date ? String(game.date) : null,
+        game.time ? String(game.time) : null,
+      );
+      const startMs = new Date(combined).getTime();
       if (!Number.isFinite(startMs)) continue;
       if (startMs < windowStart || startMs > windowEnd) continue;
 
@@ -118,8 +130,12 @@ export async function GET(req: Request) {
       const homeShort = teamShorts[homeId] ?? homeId;
 
       const timeStr = (() => {
+        // Prefer the separate `time` field formatted via
+        // formatTime12 — no Date()/TZ math at all. Falls back to
+        // the combined ISO only if no separate time was stored.
+        if (game.time) return formatTime12(String(game.time));
         try {
-          return new Date(String(game.date)).toLocaleTimeString("en-US", {
+          return new Date(combined).toLocaleTimeString("en-US", {
             hour: "numeric",
             minute: "2-digit",
           });
