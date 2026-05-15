@@ -240,8 +240,15 @@ export function ScheduleEditor({ leagueId, user }: Props) {
   }, [filteredGames]);
 
   const allDivisions = useMemo(() => {
-    return Array.from(new Set(games.map((g) => g.division).filter(Boolean))).sort();
-  }, [games]);
+    // Merge divisions seen on games + on teams so brand-new leagues
+    // (no games yet) still get a populated dropdown, and a tenant's
+    // first game can be created with a real division pick instead
+    // of "type 28+ manually."
+    const set = new Set<string>();
+    for (const g of games) if (g.division) set.add(g.division);
+    for (const t of teams) if (t.division) set.add(t.division);
+    return Array.from(set).sort();
+  }, [games, teams]);
 
   return (
     <section className="space-y-3 rounded-md border border-slate-200 bg-white p-4">
@@ -341,6 +348,7 @@ export function ScheduleEditor({ leagueId, user }: Props) {
           mode="create"
           teams={teams}
           fields={fields}
+          divisions={allDivisions}
           busy={busy}
           onCancel={() => setShowAdd(false)}
           onSubmit={async (g) => {
@@ -398,6 +406,7 @@ export function ScheduleEditor({ leagueId, user }: Props) {
                       busy={busy}
                       teams={teams}
                       fields={fields}
+                      divisions={allDivisions}
                       onToggleEdit={() =>
                         setEditingId(editingId === g.id ? null : g.id)
                       }
@@ -439,6 +448,7 @@ function GameRowItem({
   teamName,
   teams,
   fields,
+  divisions,
   isEditing,
   busy,
   onToggleEdit,
@@ -449,6 +459,7 @@ function GameRowItem({
   teamName: (id: string) => string;
   teams: TeamOpt[];
   fields: string[];
+  divisions: string[];
   isEditing: boolean;
   busy: boolean;
   onToggleEdit: () => void;
@@ -505,6 +516,7 @@ function GameRowItem({
           initial={g}
           teams={teams}
           fields={fields}
+          divisions={divisions}
           busy={busy}
           onCancel={onToggleEdit}
           onSubmit={async (patch) => {
@@ -544,6 +556,7 @@ function GameForm({
   initial,
   teams,
   fields,
+  divisions,
   busy,
   onCancel,
   onSubmit,
@@ -552,6 +565,7 @@ function GameForm({
   initial?: GameRow;
   teams: TeamOpt[];
   fields: string[];
+  divisions: string[];
   busy: boolean;
   onCancel: () => void;
   onSubmit: (g: Partial<GameRow>) => Promise<void>;
@@ -709,14 +723,38 @@ function GameForm({
           <span className="block text-xs font-semibold text-slate-700 mb-1">
             Division
           </span>
-          <input
-            type="text"
-            value={division}
-            onChange={(e) => setDivision(e.target.value)}
-            disabled={busy}
-            placeholder="28+"
-            className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-          />
+          {divisions.length > 0 ? (
+            <select
+              value={division}
+              onChange={(e) => setDivision(e.target.value)}
+              disabled={busy}
+              className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+            >
+              <option value="">— pick a division —</option>
+              {divisions.map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
+              {/* Preserve any one-off division name already on the
+                  game (e.g. imported from a CSV) so editing doesn't
+                  silently strip it. */}
+              {division && !divisions.includes(division) && (
+                <option key="__custom" value={division}>
+                  {division} (one-off)
+                </option>
+              )}
+            </select>
+          ) : (
+            <input
+              type="text"
+              value={division}
+              onChange={(e) => setDivision(e.target.value)}
+              disabled={busy}
+              placeholder="28+"
+              className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+            />
+          )}
         </label>
       </div>
 
