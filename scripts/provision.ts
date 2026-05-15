@@ -400,6 +400,14 @@ function stagePlayers(): StageResult {
         ...(jersey != null ? { jersey } : {}),
         ...(r.position ? { position: r.position } : {}),
         active: true,
+        // Audit C5 fix (2026-05-15): stamp BOTH the legacy `active`
+        // flag and the newer `status` field. The captain surfaces
+        // and several read paths filter on `status === "active"`;
+        // SFBL was provisioned with `active: true` only, so every
+        // newly-provisioned tenant inherited the C1 empty-roster
+        // bug. captain-add-player / captain-roster already write
+        // status:"active" — the bulk CSV path must match.
+        status: "active",
         updated_at: new Date().toISOString(),
       },
     });
