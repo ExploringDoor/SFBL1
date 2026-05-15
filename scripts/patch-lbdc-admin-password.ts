@@ -5,8 +5,12 @@
 // DevTools poke at the page payload can't lift it.
 //
 // Usage:
-//   npx tsx scripts/patch-lbdc-admin-password.ts --league lbdc-staging --password lbdc2026
+//   npx tsx scripts/patch-lbdc-admin-password.ts --league lbdc-staging --password <SECRET>
 //   npx tsx scripts/patch-lbdc-admin-password.ts --league lbdc-staging --off   # turn off
+//
+// Don't paste the literal password into shell history. Prefer:
+//   read -s PW    # type the secret at the prompt
+//   npx tsx scripts/patch-lbdc-admin-password.ts --league lbdc-staging --password "$PW"
 
 import * as fs from "node:fs";
 import * as path from "node:path";

@@ -319,15 +319,21 @@ async function seedTenantDoc(db: Firestore | null): Promise<void> {
     captain: {
       passwordless: true,
     },
-    // Admin UX: single shared password instead of magic-link. The
-    // password lives only in this doc and is read server-side by
-    // /api/public-admin-claim. toPublicConfig() strips
-    // admin.password before the doc reaches the client.
-    // Rotate via:
-    //   scripts/patch-lbdc-admin-password.ts --password <new>
+    // Admin UX: single shared password instead of magic-link.
+    // The password itself is intentionally NOT in this file —
+    // committing a real secret here would land in GitHub history
+    // (and GitGuardian's logs). Set/rotate via:
+    //
+    //   LBDC_ADMIN_PASSWORD=<value> \
+    //   npx tsx scripts/patch-lbdc-admin-password.ts \
+    //     --league lbdc-staging --password "$LBDC_ADMIN_PASSWORD"
+    //
+    // The patch script writes to /leagues/<id>.admin.password.
+    // toPublicConfig() strips that field before the doc reaches
+    // the client; /api/public-admin-claim reads it server-side
+    // with the Admin SDK to validate sign-in attempts.
     admin: {
       passwordless: true,
-      password: "lbdc2026",
     },
     migrated_at: new Date().toISOString(),
     migrated_from: "supabase://vhovzpajuyphjatjlodo",

@@ -55,7 +55,7 @@ Captain portal is reached via `AdminPage` (line 9186) — same login screen, dif
 | Availability View | `CaptainAvailabilityView` (9052) | See yes/no/maybe per player per upcoming game |
 
 **Auth posture — REALLY IMPORTANT:**
-- Admin password: **hardcoded `lbdc2026`** (line 9404 + 9407). Checked client-side. No Supabase Auth.
+- Admin password: **hardcoded `[redacted]`** (line 9404 + 9407). Checked client-side. No Supabase Auth.
 - Captain "login": **no password at all** — just pick the team. Anyone with the admin URL can edit any captain's roster.
 - This is wildly insecure relative to LeagueEngine's claim-based model. Migrating to Firebase Auth + custom claims is a **massive security upgrade for them.**
 
@@ -65,7 +65,7 @@ Captain portal is reached via `AdminPage` (line 9186) — same login screen, dif
 
 ## 3. Admin tools
 
-`AdminPage` (9186) wraps a quickView dropdown that swaps between admin sub-screens. Hardcoded password `lbdc2026` gates all of these.
+`AdminPage` (9186) wraps a quickView dropdown that swaps between admin sub-screens. Hardcoded password `[redacted]` gates all of these.
 
 | Sub-screen | Component (line) | What it does |
 |---|---|---|
@@ -231,7 +231,7 @@ Probable additional tables (need to confirm by reading more):
 
 ## 6. Auth model
 
-- **Admin:** hardcoded password `lbdc2026` (line 9404, 9407). Client-side check only. No Supabase Auth. **No row-level security** (since the service-role key is exposed in the bundle — the `SUPABASE_LBDC_SERVICE_KEY` would be visible in the deployed JS; need to confirm by reading the env-var loading code, but the `SB_URL` is hardcoded so it's plausible).
+- **Admin:** hardcoded password `[redacted]` (line 9404, 9407). Client-side check only. No Supabase Auth. **No row-level security** (since the service-role key is exposed in the bundle — the `SUPABASE_LBDC_SERVICE_KEY` would be visible in the deployed JS; need to confirm by reading the env-var loading code, but the `SB_URL` is hardcoded so it's plausible).
 - **Captain:** select-team-from-dropdown, **no password.** Whoever clicks "Log In as Tribe" gets captain permissions for Tribe.
 - **Player:** no concept of player accounts. Availability + RSVPs are keyed by player_name + team_name (string match).
 
