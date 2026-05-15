@@ -154,14 +154,12 @@ body.ticker-hidden #score-ticker {
 
 .st-game-inner {
   /* 3-column grid (abbrev | record | score) shared by both team
-   * rows so scores align vertically. Each row uses line-height: 1
-   * so the 3 rows + gaps fit cleanly inside the taller ticker
-   * without clipping top/bottom. Row heights tightened 2026-05-14
-   * after Adam reported the previous 13/22/22 layout was cutting
-   * off content. */
+   * rows so scores align vertically. Row heights tightened again
+   * 2026-05-15 (10/15/15) after Adam asked to shrink the type
+   * another notch. */
   display: grid;
   grid-template-columns: max-content max-content auto;
-  grid-template-rows: 11px 18px 18px;
+  grid-template-rows: 10px 15px 15px;
   align-items: center;
   column-gap: 6px;
   row-gap: 2px;
@@ -180,7 +178,7 @@ body.ticker-hidden #score-ticker {
 
 .st-datetime {
   font-family: 'Inter', sans-serif;
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -204,7 +202,7 @@ body.ticker-hidden #score-ticker {
 .st-abbr {
   font-family: 'Oswald', sans-serif;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 11px;
   letter-spacing: 0.03em;
   text-transform: uppercase;
   min-width: 36px;
@@ -236,7 +234,7 @@ body.ticker-hidden #score-ticker {
 .st-score {
   font-family: 'Oswald', sans-serif;
   font-weight: 800;
-  font-size: 15px;
+  font-size: 13px;
   min-width: 18px;
   text-align: right;
   font-variant-numeric: tabular-nums;
