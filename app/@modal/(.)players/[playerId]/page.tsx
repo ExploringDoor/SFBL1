@@ -41,6 +41,7 @@ export default async function PlayerModalRoute({
         recentGames={profile.recentGames}
         pitchingBySeason={profile.pitchingBySeason}
         careerPitching={profile.careerPitching}
+        showClose
       />
     </Modal>
   );

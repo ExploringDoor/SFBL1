@@ -67,11 +67,19 @@ export function BulkInviteSection({ leagueId, user }: Props) {
     const out: { email: string; teamId: string; line: number }[] = [];
     const errs: string[] = [];
     text.split(/\r?\n/).forEach((raw, i) => {
-      const trimmed = raw.trim();
+      // Strip trailing "# comment" added by the "Pre-fill rows for
+      // every team" helper so it doesn't show up as part of the
+      // team_id slug.
+      const noComment = raw.replace(/#.*$/, "");
+      const trimmed = noComment.trim();
       if (!trimmed) return;
+      // A row that's just ",team_id" (admin hasn't filled in the
+      // email yet) shouldn't count as a parse error — it's an
+      // in-progress row from the pre-fill helper. Skip silently.
+      if (trimmed.startsWith(",")) return;
       // Allow `email,team_id` OR `email | team_id` OR tabs.
       const parts = trimmed.split(/\s*[,|\t]\s*/);
-      if (parts.length < 2) {
+      if (parts.length < 2 || !parts[0] || !parts[1]) {
         errs.push(`Line ${i + 1}: needs two columns (email, team_id)`);
         return;
       }
@@ -174,6 +182,31 @@ export function BulkInviteSection({ leagueId, user }: Props) {
             </li>
           ))}
         </ul>
+        <div className="mt-3 flex gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => {
+              // Pre-fills one ",<team_id>" row per team. Saves the
+              // admin from typing 8-10 team slugs by hand — they just
+              // tab to the start of each line and type the email.
+              const lines = teams
+                .map((t) => `,${t.id}  # ${t.name}`)
+                .join("\n");
+              setText((prev) =>
+                prev.trim() ? prev.trimEnd() + "\n" + lines : lines,
+              );
+            }}
+            disabled={teams.length === 0}
+            className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          >
+            + Pre-fill rows for every team
+          </button>
+        </div>
+        <p className="mt-2 text-[11px] text-slate-500 leading-snug">
+          The "# Team Name" suffix is just a hint — the parser
+          ignores everything after a `#`. Type the captain's email
+          before each comma.
+        </p>
       </details>
 
       <label className="block">

@@ -16,6 +16,7 @@
 // rules added inline so it's clear what's new.
 
 import Link from "next/link";
+import { ProfileCloseButton } from "./ProfileCloseButton";
 
 export interface BattingLine {
   gp: number;
@@ -80,7 +81,11 @@ export interface PlayerProfileLBDCProps {
   recentGames: RecentGame[];
   pitchingBySeason: PitchingLine[];
   careerPitching: Omit<PitchingLine, "season"> | null;
-  closeHref?: string;
+  /** Show the navy-header "✕" button — wired to router.back() via
+   *  ProfileCloseButton, which is a tiny client-only component.
+   *  Only the intercepted modal route passes this; the full-page
+   *  route omits it since there's no modal to close there. */
+  showClose?: boolean;
 }
 
 export function PlayerProfileLBDC({
@@ -93,7 +98,7 @@ export function PlayerProfileLBDC({
   recentGames,
   pitchingBySeason,
   careerPitching,
-  closeHref,
+  showClose,
 }: PlayerProfileLBDCProps) {
   const accent = team?.color ?? "var(--brand-primary, #002d6e)";
   return (
@@ -103,11 +108,7 @@ export function PlayerProfileLBDC({
         style={{ background: accent }}
       >
         <h1>{name.toUpperCase()}</h1>
-        {closeHref && (
-          <Link href={closeHref} aria-label="Close" className="le-prof-close">
-            ✕
-          </Link>
-        )}
+        {showClose && <ProfileCloseButton />}
       </header>
 
       {/* "{year} Batting" section */}
@@ -260,13 +261,30 @@ export function PlayerProfileLBDC({
                   <PitchingRow key={p.season} line={p} />
                 ))}
               </tbody>
-              {careerPitching && (
+              {/* Career footer hidden when there's only one season —
+               *  in that case the season row IS the career total and
+               *  the footer would just duplicate it. Same idea for
+               *  zero seasons (only a career row, which we show
+               *  alone via the no-seasons fallback below). */}
+              {careerPitching && pitchingBySeason.length > 1 && (
                 <tfoot>
                   <PitchingRow
                     line={{ ...careerPitching, season: "Career" }}
                     bold
                   />
                 </tfoot>
+              )}
+              {/* Zero-season fallback: pitcher has career totals but
+               *  no season_id-tagged box scores (SFBL pre-schema-
+               *  change boxes). Render the career row as the only
+               *  body row so the table isn't empty. */}
+              {careerPitching && pitchingBySeason.length === 0 && (
+                <tbody>
+                  <PitchingRow
+                    line={{ ...careerPitching, season: "Career" }}
+                    bold
+                  />
+                </tbody>
               )}
             </table>
           </div>
