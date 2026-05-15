@@ -84,18 +84,21 @@ export default async function TeamDetailPage({
   }
 
   const db = getAdminDb();
-  // Roster query filters to status=="active" so we don't surface the
-  // orphan player docs auto-created from box-score name resolution
-  // (Billy Crews / Pool Players / etc — anybody who appeared in a
-  // line but isn't on lbdc_rosters lands as `status: "unknown"` /
-  // `orphan: true`). Captains manage the real roster, those entries
-  // shouldn't show up alongside.
+  // Roster query: scope to this team_id at the Firestore level, then
+  // filter for orphans IN MEMORY. The previous `.where("status",
+  // "==", "active")` compound filter broke every SFBL team page
+  // because SFBL player docs don't have a status field at all and
+  // Firestore equality filters exclude missing fields — audit C1
+  // fix (2026-05-15). Predicate matches the captain/admin surfaces:
+  //   - active === false   → drop
+  //   - orphan === true    → drop (LBDC migration orphans)
+  //   - status set and != active → drop (e.g. "unknown")
+  //   - missing status     → keep (SFBL legacy)
   const [teamSnap, rosterSnap, gamesSnap, teamsSnap, boxesSnap] = await Promise.all([
     db.doc(`leagues/${tenantId}/teams/${params.teamId}`).get(),
     db
       .collection(`leagues/${tenantId}/players`)
       .where("team_id", "==", params.teamId)
-      .where("status", "==", "active")
       .get(),
     db.collection(`leagues/${tenantId}/games`).get(),
     db.collection(`leagues/${tenantId}/teams`).get(),
@@ -247,6 +250,16 @@ export default async function TeamDetailPage({
   // Roster row — current-season stats only. Career stats live on the
   // player profile page (which intentionally spans every season).
   const roster = rosterSnap.docs
+    // In-memory orphan filter (see audit C1 — SFBL players have no
+    // `status` field at all and would be dropped by a Firestore-level
+    // equality filter on "active").
+    .filter((d) => {
+      const data = d.data();
+      if (data.active === false) return false;
+      if (data.orphan === true) return false;
+      if (data.status && data.status !== "active") return false;
+      return true;
+    })
     .map((d) => {
       const data = d.data();
       const { bat, pit } = aggregateForPlayer(d.id);

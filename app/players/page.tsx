@@ -65,15 +65,17 @@ export default async function PlayersPage() {
   }
 
   const db = getAdminDb();
-  // status=="active" filter mirrors /teams/[id] — drops the orphan
-  // player docs auto-created during box-score name resolution
-  // (Billy Crews / Pool Players / Richard Glavas variants) so the
-  // league stats page only shows real rostered players.
+  // Fetch ALL players, then filter in memory. The earlier
+  // `.where("status", "==", "active")` Firestore filter accidentally
+  // dropped every SFBL player (their docs were provisioned with
+  // `active: true` but no `status` field — equality filters in
+  // Firestore exclude missing fields). We need to keep both:
+  //   - SFBL docs (active:true, no status)  → keep
+  //   - LBDC active docs (status:"active")  → keep
+  //   - LBDC orphans (status:"unknown", orphan:true) → drop
+  // Audit C1 fix (2026-05-15).
   const [playersSnap, teamsSnap] = await Promise.all([
-    db
-      .collection(`leagues/${tenantId}/players`)
-      .where("status", "==", "active")
-      .get(),
+    db.collection(`leagues/${tenantId}/players`).get(),
     db.collection(`leagues/${tenantId}/teams`).get(),
   ]);
 
@@ -88,7 +90,17 @@ export default async function PlayersPage() {
     };
   }
 
-  const players: PlayerRow[] = playersSnap.docs.map((d) => {
+  const players: PlayerRow[] = playersSnap.docs
+    // Same orphan/inactive filter the captain surfaces use. Missing
+    // status field PASSES THROUGH (SFBL legacy convention).
+    .filter((d) => {
+      const data = d.data();
+      if (data.active === false) return false;
+      if (data.orphan === true) return false;
+      if (data.status && data.status !== "active") return false;
+      return true;
+    })
+    .map((d) => {
     const data = d.data();
     // Audit M3.
     const stats = numericStatsOrEmpty(data.stats);
