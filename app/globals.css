@@ -33,11 +33,11 @@
    *  100 / 120 (a hair too big after the Nav-overlap fix)
    *   80 / 96  (current — back down per Adam 2026-05-15)
    * .site-shell padding-top tracks this var so content flows. */
-  --ticker-height: 80px;
+  --ticker-height: 64px;
 }
 
 @media (max-width: 700px) {
-  :root { --ticker-height: 96px; }
+  :root { --ticker-height: 76px; }
 }
 
 /* html keeps `height: 100%` so its navy background paints the
