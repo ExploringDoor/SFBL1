@@ -11,6 +11,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   collection,
+  doc,
+  getDoc,
   getDocs,
 } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
@@ -43,6 +45,7 @@ export function ScheduleTab({ leagueId, teamId }: ScheduleTabProps) {
   const user = useUser();
   const [games, setGames] = useState<GameRow[]>([]);
   const [teamNames, setTeamNames] = useState<Record<string, string>>({});
+  const [fields, setFields] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [editId, setEditId] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
@@ -52,9 +55,15 @@ export function ScheduleTab({ leagueId, teamId }: ScheduleTabProps) {
     (async () => {
       setLoading(true);
       const db = getDb();
-      const [gamesSnap, teamsSnap] = await Promise.all([
+      // Pull fields list for the edit-form dropdown. Same dual-source
+      // lookup as the admin ScheduleEditor: try leagueData.fields
+      // (flat string array — SFBL convention) first, fall back to
+      // site_config/fields.data (rich records — LBDC convention).
+      const [gamesSnap, teamsSnap, leagueDoc, fieldsDoc] = await Promise.all([
         getDocs(collection(db, `leagues/${leagueId}/games`)),
         getDocs(collection(db, `leagues/${leagueId}/teams`)),
+        getDoc(doc(db, `leagues/${leagueId}`)),
+        getDoc(doc(db, `leagues/${leagueId}/site_config/fields`)),
       ]);
       if (cancelled) return;
       const names: Record<string, string> = {};
@@ -81,6 +90,29 @@ export function ScheduleTab({ leagueId, teamId }: ScheduleTabProps) {
             g.away_team_id === teamId || g.home_team_id === teamId,
         )
         .sort((a, b) => (a.date ?? "").localeCompare(b.date ?? ""));
+      // Build the fields dropdown options.
+      const leagueData = leagueDoc.exists() ? leagueDoc.data() : null;
+      let cfgFields: string[] = Array.isArray(leagueData?.fields)
+        ? (leagueData!.fields as unknown[]).filter(
+            (x): x is string => typeof x === "string" && x.length > 0,
+          )
+        : [];
+      if (cfgFields.length === 0 && fieldsDoc.exists()) {
+        const arr = fieldsDoc.data()?.data;
+        if (Array.isArray(arr)) {
+          cfgFields = arr
+            .map((f) => {
+              if (typeof f === "string") return f;
+              if (f && typeof f === "object" && typeof f.name === "string") {
+                return f.name;
+              }
+              return null;
+            })
+            .filter((s): s is string => !!s);
+        }
+      }
+      cfgFields.sort((a, b) => a.localeCompare(b));
+      setFields(cfgFields);
       setTeamNames(names);
       setGames(myGames);
       setLoading(false);
@@ -133,6 +165,7 @@ export function ScheduleTab({ leagueId, teamId }: ScheduleTabProps) {
                   g={g}
                   myTeamId={teamId}
                   teamNames={teamNames}
+                  fields={fields}
                   editing={editId === g.id}
                   onToggleEdit={() =>
                     setEditId(editId === g.id ? null : g.id)
@@ -219,6 +252,7 @@ export function ScheduleTab({ leagueId, teamId }: ScheduleTabProps) {
                   g={g}
                   myTeamId={teamId}
                   teamNames={teamNames}
+                  fields={fields}
                 />
               ))}
             </ul>
@@ -233,6 +267,7 @@ function GameRow({
   g,
   myTeamId,
   teamNames,
+  fields,
   editing,
   onToggleEdit,
   onSaveEdit,
@@ -240,6 +275,7 @@ function GameRow({
   g: GameRow;
   myTeamId: string;
   teamNames: Record<string, string>;
+  fields: string[];
   editing?: boolean;
   onToggleEdit?: () => void;
   onSaveEdit?: (payload: {
@@ -326,7 +362,12 @@ function GameRow({
         )}
       </div>
       {editing && onSaveEdit && (
-        <ScheduleEditForm game={g} onCancel={onToggleEdit!} onSave={onSaveEdit} />
+        <ScheduleEditForm
+          game={g}
+          fields={fields}
+          onCancel={onToggleEdit!}
+          onSave={onSaveEdit}
+        />
       )}
     </li>
   );
@@ -334,10 +375,12 @@ function GameRow({
 
 function ScheduleEditForm({
   game,
+  fields,
   onCancel,
   onSave,
 }: {
   game: GameRow;
+  fields: string[];
   onCancel: () => void;
   onSave: (payload: {
     date?: string | null;
@@ -346,19 +389,17 @@ function ScheduleEditForm({
     status?: string;
   }) => Promise<boolean>;
 }) {
-  // Split the stored ISO datetime into a date + time pair so the
-  // inputs are easy to use; we re-combine on save. Guard against
-  // malformed `game.date` — Date(badString).toISOString() throws.
-  const initialDateTime = (() => {
-    if (!game.date) return null;
-    const d = new Date(game.date);
-    return Number.isFinite(d.getTime()) ? d : null;
-  })();
-  const initialDate = initialDateTime
-    ? initialDateTime.toISOString().slice(0, 10)
-    : "";
-  const initialTime = initialDateTime
-    ? initialDateTime.toTimeString().slice(0, 5)
+  // Use the stored fields directly — `game.date` is "YYYY-MM-DD"
+  // and `game.time` is "HH:MM". The previous version did
+  // `new Date(game.date).toTimeString()` which parsed a date-only
+  // string as UTC midnight and Florida users (EDT) saw "08:00 PM"
+  // as the default time for every game. Now no timezone math:
+  // string in = string out.
+  const initialDate = game.date ? String(game.date).slice(0, 10) : "";
+  const initialTime = game.time
+    ? /^\d{1,2}:\d{2}$/.test(game.time)
+      ? game.time
+      : ""
     : "";
 
   const [date, setDate] = useState(initialDate);
@@ -393,13 +434,37 @@ function ScheduleEditForm({
         </div>
         <div className="cap-form-col">
           <label className="cap-form-lbl">Field</label>
-          <input
-            type="text"
-            className="cap-form-input"
-            value={field}
-            onChange={(e) => setField(e.target.value)}
-            placeholder="Field name"
-          />
+          {fields.length > 0 ? (
+            <select
+              className="cap-form-input"
+              value={field}
+              onChange={(e) => setField(e.target.value)}
+            >
+              <option value="">— pick a field —</option>
+              {fields.map((f) => (
+                <option key={f} value={f}>
+                  {f}
+                </option>
+              ))}
+              {/* Surface the existing field value even if it isn't
+                  in the configured list — keeps imported one-off
+                  fields editable rather than silently dropping them
+                  on save. */}
+              {field && !fields.includes(field) && (
+                <option key="__custom" value={field}>
+                  {field} (one-off)
+                </option>
+              )}
+            </select>
+          ) : (
+            <input
+              type="text"
+              className="cap-form-input"
+              value={field}
+              onChange={(e) => setField(e.target.value)}
+              placeholder="Field name"
+            />
+          )}
         </div>
         <div className="cap-form-col" style={{ maxWidth: 160 }}>
           <label className="cap-form-lbl">Status</label>
