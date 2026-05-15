@@ -59,23 +59,40 @@ export async function POST(req: Request) {
     );
   }
 
-  let body: { leagueId?: unknown; teamId?: unknown };
+  let body: {
+    leagueId?: unknown;
+    teamId?: unknown;
+    teamPassword?: unknown;
+  };
   try {
     body = (await req.json()) as typeof body;
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
   const leagueId = body.leagueId;
-  const teamId = body.teamId;
   if (typeof leagueId !== "string" || !/^[a-z][a-z0-9-]+$/i.test(leagueId)) {
     return NextResponse.json(
       { error: "leagueId required" },
       { status: 400 },
     );
   }
-  if (typeof teamId !== "string" || !/^[a-z0-9_-]+$/i.test(teamId)) {
+
+  // Two input modes:
+  //   - teamId: explicit team slug (admin tooling, deep links)
+  //   - teamPassword: free-text "password" — resolved to a team by
+  //     matching against the team_id slug OR the team name, both
+  //     normalized to alphanumerics-lowercased. So a captain can
+  //     type "Brooklyn", "brooklyn", "BROOKLYN", or "black sox" /
+  //     "BlackSox" / "black-sox" interchangeably.
+  const explicitTeamId =
+    typeof body.teamId === "string" && /^[a-z0-9_-]+$/i.test(body.teamId)
+      ? body.teamId
+      : null;
+  const rawPassword =
+    typeof body.teamPassword === "string" ? body.teamPassword.trim() : "";
+  if (!explicitTeamId && !rawPassword) {
     return NextResponse.json(
-      { error: "teamId required" },
+      { error: "Provide teamId or teamPassword" },
       { status: 400 },
     );
   }
@@ -99,12 +116,46 @@ export async function POST(req: Request) {
     );
   }
 
-  // Team must exist.
-  const teamSnap = await db.doc(`leagues/${leagueId}/teams/${teamId}`).get();
-  if (!teamSnap.exists) {
+  // Resolve the team_id. If the caller passed teamId we look it up
+  // directly; otherwise we scan the league's teams and find one whose
+  // id or name normalizes to the same value as the password.
+  let teamId: string | null = null;
+  if (explicitTeamId) {
+    const teamSnap = await db
+      .doc(`leagues/${leagueId}/teams/${explicitTeamId}`)
+      .get();
+    if (teamSnap.exists) teamId = explicitTeamId;
+  } else {
+    const target = normalize(rawPassword);
+    const teamsSnap = await db
+      .collection(`leagues/${leagueId}/teams`)
+      .get();
+    for (const d of teamsSnap.docs) {
+      const td = d.data();
+      const id = d.id;
+      const name = String(td.name ?? "");
+      const abbrev = String(td.abbrev ?? "");
+      // Admin-set custom password wins if present — gives Adam a way
+      // to assign weird per-team passwords later without renaming.
+      const custom = String(td.captain_password ?? "");
+      // Also accept the first word of the team name so the boomers
+      // teams (Eddie Murray Mashers '56) don't require typing 22
+      // chars. Means captain of "Eddie Murray Mashers '56" can sign
+      // in with "eddie" / "Eddie" / etc.
+      const firstWord = name.split(/\s+/)[0] ?? "";
+      const candidates = [custom, id, name, abbrev, firstWord].filter(
+        Boolean,
+      );
+      if (candidates.some((c) => normalize(c) === target)) {
+        teamId = id;
+        break;
+      }
+    }
+  }
+  if (!teamId) {
     return NextResponse.json(
-      { error: `Team "${teamId}" not found in league "${leagueId}"` },
-      { status: 404 },
+      { error: "Wrong password. The password is your team's name." },
+      { status: 401 },
     );
   }
 
@@ -136,4 +187,15 @@ export async function POST(req: Request) {
   }
 
   return NextResponse.json({ ok: true, customToken });
+}
+
+// Strip everything but [a-z0-9] and lowercase — used to compare a
+// captain's typed "password" against the team's id or display name
+// without worrying about spaces / hyphens / apostrophes / case.
+//   "Brooklyn"           -> "brooklyn"
+//   "Black Sox"          -> "blacksox"
+//   "black-sox"          -> "blacksox"
+//   "Eddie Murray Mashers '56" -> "eddiemurraymashers56"
+function normalize(s: string): string {
+  return String(s).toLowerCase().replace(/[^a-z0-9]/g, "");
 }

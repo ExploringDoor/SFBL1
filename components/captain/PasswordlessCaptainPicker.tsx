@@ -1,69 +1,42 @@
 "use client";
 
-// Team picker for tenants with captain.passwordless = true (LBDC).
-// Replaces the magic-link sign-in screen on the captain landing
-// page. Loads the league's teams, lets the user pick one, then mints
-// a Firebase custom token with the corresponding `captain:<team_id>`
-// claim via /api/public-captain-claim. Once signed in, the existing
-// captain portal renders normally — no API or hook changes needed.
+// Captain landing for tenants with captain.passwordless = true
+// (LBDC). Instead of the magic-link sign-in, captains type a simple
+// password — by convention, the lowercased team name. The client
+// POSTs to /api/public-captain-claim which scans the league's teams,
+// matches by normalized id or name, mints a Firebase custom token
+// with the corresponding `captain:<team_id>` claim, and signs in via
+// signInWithCustomToken. Once signed in the existing captain portal
+// renders normally.
+//
+// "Password" is intentionally a weak shared secret — Adam picked it
+// so the URL alone isn't enough to manage a team, but he doesn't
+// want the friction of real email/auth. Anyone who can guess the
+// team name can sign in. Per-IP rate limit on the API caps brute-
+// force attempts.
 
-import { useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { useState } from "react";
 import { getAuth, signInWithCustomToken } from "firebase/auth";
-import { getDb } from "@/lib/firebase";
-
-interface TeamOption {
-  id: string;
-  name: string;
-}
 
 export function PasswordlessCaptainPicker({
   leagueId,
 }: {
   leagueId: string;
 }) {
-  const [teams, setTeams] = useState<TeamOption[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [picked, setPicked] = useState<string>("");
+  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load the team list for the dropdown. Public read — security
-  // rules permit reading /teams for anyone.
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const db = getDb();
-        const snap = await getDocs(
-          collection(db, `leagues/${leagueId}/teams`),
-        );
-        if (cancelled) return;
-        const list: TeamOption[] = snap.docs
-          .map((d) => ({
-            id: d.id,
-            name: String(d.data().name ?? d.id),
-          }))
-          .sort((a, b) => a.name.localeCompare(b.name));
-        setTeams(list);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [leagueId]);
-
-  async function signIn() {
-    if (!picked) return;
+  async function signIn(e?: React.FormEvent) {
+    e?.preventDefault();
+    if (!password.trim()) return;
     setBusy(true);
     setError(null);
     try {
       const res = await fetch("/api/public-captain-claim", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ leagueId, teamId: picked }),
+        body: JSON.stringify({ leagueId, teamPassword: password.trim() }),
       });
       const data = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
@@ -74,13 +47,12 @@ export function PasswordlessCaptainPicker({
         setError(data.error ?? `HTTP ${res.status}`);
         return;
       }
-      // Sign in with the minted token. The existing useUser /
-      // useCaptainTeam / useLeagueRole hooks pick up the new auth
-      // state automatically — the captain portal re-renders into
-      // the normal post-sign-in view.
+      // Sign in. The captain page's useUser / useCaptainTeam /
+      // useLeagueRole hooks pick up the new auth state and re-
+      // render into the normal post-sign-in view.
       await signInWithCustomToken(getAuth(), data.customToken);
-    } catch (e) {
-      setError(String(e));
+    } catch (err) {
+      setError(String(err));
     } finally {
       setBusy(false);
     }
@@ -100,7 +72,7 @@ export function PasswordlessCaptainPicker({
           margin: "0 0 8px",
         }}
       >
-        Captain portal
+        Captain sign-in
       </h2>
       <p
         style={{
@@ -110,15 +82,22 @@ export function PasswordlessCaptainPicker({
           margin: "0 0 22px",
         }}
       >
-        Pick your team to manage your roster, submit final scores,
-        and chat with your players. No password required.
+        Enter your team password to manage your roster, submit
+        scores, and chat with your players.
       </p>
 
-      <div style={{ marginBottom: 14 }}>
-        <select
-          value={picked}
-          onChange={(e) => setPicked(e.target.value)}
-          disabled={loading || busy}
+      <form onSubmit={signIn}>
+        <input
+          type="password"
+          autoComplete="off"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          disabled={busy}
+          placeholder="Team password"
+          aria-label="Team password"
           style={{
             width: "100%",
             maxWidth: 360,
@@ -129,41 +108,34 @@ export function PasswordlessCaptainPicker({
             fontWeight: 600,
             background: "white",
             color: "var(--text-strong)",
-            cursor: loading || busy ? "wait" : "pointer",
+            textAlign: "center",
+            letterSpacing: "0.06em",
           }}
-        >
-          <option value="">
-            {loading ? "Loading teams…" : "— Choose your team —"}
-          </option>
-          {teams.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name}
-            </option>
-          ))}
-        </select>
-      </div>
+        />
 
-      <button
-        type="button"
-        onClick={signIn}
-        disabled={!picked || busy}
-        className="le-cap-btn-primary"
-        style={{
-          padding: "12px 28px",
-          background: "var(--brand-primary)",
-          color: "white",
-          borderRadius: 10,
-          fontWeight: 800,
-          letterSpacing: "0.04em",
-          textTransform: "uppercase",
-          fontSize: 14,
-          border: "none",
-          cursor: !picked || busy ? "not-allowed" : "pointer",
-          opacity: !picked || busy ? 0.6 : 1,
-        }}
-      >
-        {busy ? "Signing in…" : "Continue as captain"}
-      </button>
+        <div style={{ marginTop: 14 }}>
+          <button
+            type="submit"
+            disabled={!password.trim() || busy}
+            className="le-cap-btn-primary"
+            style={{
+              padding: "12px 28px",
+              background: "var(--brand-primary)",
+              color: "white",
+              borderRadius: 10,
+              fontWeight: 800,
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
+              fontSize: 14,
+              border: "none",
+              cursor: !password.trim() || busy ? "not-allowed" : "pointer",
+              opacity: !password.trim() || busy ? 0.6 : 1,
+            }}
+          >
+            {busy ? "Signing in…" : "Sign in"}
+          </button>
+        </div>
+      </form>
 
       {error && (
         <p
@@ -189,9 +161,7 @@ export function PasswordlessCaptainPicker({
           lineHeight: 1.55,
         }}
       >
-        Anyone on the league can pick a team and submit. If you need a
-        password-protected captain account instead, ask the
-        commissioner.
+        Don't know the password? Ask your commissioner.
       </p>
     </div>
   );
