@@ -118,6 +118,14 @@ export async function POST(req: Request) {
     if (typeof body.date === "string" && body.date) update.date = body.date;
     else if (body.date === null || body.date === "") update.date = null;
   }
+  // `time` is the new captain-side field — paired with `date` as
+  // two plain strings (YYYY-MM-DD + HH:MM) rather than a combined
+  // UTC ISO, which was the shape that created the "every game at
+  // 8 PM" bug for EDT users.
+  if (body.time !== undefined) {
+    if (typeof body.time === "string" && body.time) update.time = body.time;
+    else if (body.time === null || body.time === "") update.time = null;
+  }
   if (body.field !== undefined) {
     update.field =
       typeof body.field === "string" ? body.field.trim() : null;

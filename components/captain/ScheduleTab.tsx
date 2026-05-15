@@ -16,10 +16,16 @@ import {
 import { getDb } from "@/lib/firebase";
 import { useUser } from "@/lib/auth-client";
 import { SubscribeCalendar } from "@/components/SubscribeCalendar";
+import { combineDateTime, formatTime12 } from "@/lib/format-time";
 
 interface GameRow {
   id: string;
   date: string | null;
+  // Separate time field — most LBDC games store "HH:MM" here while
+  // `date` holds plain "YYYY-MM-DD". Without it, `new Date(date)`
+  // parses as UTC midnight and Florida users saw every game listed
+  // as 8 PM (UTC midnight = EDT 8 PM the previous day).
+  time: string | null;
   field: string | null;
   status: string;
   away_team_id: string;
@@ -61,6 +67,7 @@ export function ScheduleTab({ leagueId, teamId }: ScheduleTabProps) {
           return {
             id: d.id,
             date: data.date ? String(data.date) : null,
+            time: data.time ? String(data.time) : null,
             field: data.field ? String(data.field) : null,
             status: String(data.status ?? "draft"),
             away_team_id: String(data.away_team_id ?? ""),
@@ -167,6 +174,7 @@ export function ScheduleTab({ leagueId, teamId }: ScheduleTabProps) {
                         return {
                           id: d.id,
                           date: data.date ? String(data.date) : null,
+                          time: data.time ? String(data.time) : null,
                           field: data.field ? String(data.field) : null,
                           status: String(data.status ?? "draft"),
                           away_team_id: String(
@@ -236,6 +244,7 @@ function GameRow({
   onToggleEdit?: () => void;
   onSaveEdit?: (payload: {
     date?: string | null;
+    time?: string | null;
     field?: string;
     status?: string;
   }) => Promise<boolean>;
@@ -248,19 +257,29 @@ function GameRow({
   const isFinal = g.status === "final" || g.status === "approved";
   const won = isFinal && myScore > oppScore;
   const lost = isFinal && myScore < oppScore;
+  // Use the date PORTION (string slice) for the date label so we
+  // don't TZ-shift "2026-05-16" into "May 15" for evening users in
+  // EDT. Use the separate `time` field for the clock — if it's
+  // missing, hide the time row entirely rather than fall back to
+  // midnight UTC (which Adam saw as "every game at 8 PM").
   const dateLabel = g.date
-    ? new Date(g.date).toLocaleDateString("en-US", {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-      })
+    ? (() => {
+        const ymd = String(g.date).slice(0, 10);
+        const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd);
+        if (!m) return ymd;
+        const d = new Date(
+          Number(m[1]),
+          Number(m[2]) - 1,
+          Number(m[3]),
+        );
+        return d.toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+        });
+      })()
     : "TBD";
-  const timeLabel = g.date
-    ? new Date(g.date).toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-      })
-    : "";
+  const timeLabel = g.time ? formatTime12(g.time) : "";
 
   return (
     <li className="cap-schedule-row">
@@ -322,6 +341,7 @@ function ScheduleEditForm({
   onCancel: () => void;
   onSave: (payload: {
     date?: string | null;
+    time?: string | null;
     field?: string;
     status?: string;
   }) => Promise<boolean>;
@@ -401,15 +421,16 @@ function ScheduleEditForm({
           disabled={busy}
           onClick={async () => {
             setBusy(true);
-            // Combine date + time into an ISO string in local TZ.
-            let combined: string | null = null;
-            if (date) {
-              const t = time || "00:00";
-              const d = new Date(`${date}T${t}`);
-              combined = isNaN(d.getTime()) ? null : d.toISOString();
-            }
+            // Save date + time as two separate plain strings — NOT
+            // a combined ISO. Combining via toISOString() converts
+            // to UTC, which when read back in a different TZ shifts
+            // the date by a day (this is the bug that made game
+            // 100010 appear as "May 17, 5 PM" when it should have
+            // been "May 18, 12 PM"). The shape the rest of the
+            // platform expects is { date: "YYYY-MM-DD", time: "HH:MM" }.
             await onSave({
-              date: combined,
+              date: date || null,
+              time: time || null,
               field,
               status,
             });

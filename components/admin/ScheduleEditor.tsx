@@ -277,7 +277,10 @@ export function ScheduleEditor({ leagueId, user }: Props) {
           <button
             type="button"
             onClick={() => setShowAdd(true)}
-            className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:brightness-110"
+            // Sized up — Adam reported he couldn't find this button
+            // tucked among the other small action chips. Now reads
+            // as the primary CTA of the schedule page.
+            className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:brightness-110"
           >
             + Add Game
           </button>
