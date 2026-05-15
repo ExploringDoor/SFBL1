@@ -42,14 +42,22 @@ initializeApp({
 });
 const db = getFirestore();
 
+// Two assets:
+//   - logo_url:   small square icon for the top-left ticker tile,
+//                 OG share-card fallback, PWA manifest icon.
+//   - banner_url: wide banner used as the homepage Hero only.
+//                 Adam keeps the original LBDC banner art there.
 const NEW_LOGO = "/lbdc/logo.png";
+const HERO_BANNER = "/lbdc/hero.jpg";
 
 (async () => {
   const ref = db.doc(`leagues/${league}`);
   const snap = await ref.get();
   const cur = snap.exists ? snap.data()?.theme ?? {} : {};
-  const next = { ...cur, logo_url: NEW_LOGO };
+  const next = { ...cur, logo_url: NEW_LOGO, banner_url: HERO_BANNER };
   await ref.set({ theme: next }, { merge: true });
-  console.log(`[patch-logo] /leagues/${league} theme.logo_url = ${NEW_LOGO}`);
+  console.log(
+    `[patch-logo] /leagues/${league} theme.logo_url=${NEW_LOGO} banner_url=${HERO_BANNER}`,
+  );
   process.exit(0);
 })();

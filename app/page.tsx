@@ -67,12 +67,21 @@ export default async function HomePage() {
       {/* No `pill` — the "⚾ {YEAR} Regular Season" tag sat awkwardly
           above the hero banner and Adam asked to drop it (2026-05-14).
           Leaving the prop optional in the component so we can pass it
-          again on a different surface if we ever want it. */}
+          again on a different surface if we ever want it.
+
+          Hero image priority: theme.banner_url (the wide / hero
+          banner) when set, otherwise fall back to theme.logo_url
+          (the small ticker icon). LBDC uses two distinct assets —
+          /lbdc/hero.jpg as the wide banner and /lbdc/logo.png as
+          the square ticker icon. SFBL has only logo_url today, so
+          falls through to it for parity. */}
       <DvslHero
         title={`${big} ${season}`}
         accentWord={season}
         subtitle={leagueName}
-        logoUrl={config?.theme?.logo_url ?? null}
+        logoUrl={
+          config?.theme?.banner_url ?? config?.theme?.logo_url ?? null
+        }
       />
       {/* "PLAYERS — JOIN THE LIST" registration alert now sits
           UNDER the hero — matches LBDC's existing site layout

@@ -9,7 +9,16 @@ export interface LeagueTheme {
   primary: string;
   accent: string;
   secondary?: string;
+  /** Small / square league logo. Used in the top-left ticker tile,
+   *  the OG share-card fallback, and the PWA manifest icon. A
+   *  square or near-square aspect works best because the ticker
+   *  renders this at ~48px tall. */
   logo_url?: string;
+  /** Wide banner image used as the homepage Hero. Falls back to
+   *  `logo_url` when unset — but tenants with a separate wide
+   *  banner asset (LBDC's hero.jpg) can set this and keep their
+   *  ticker icon small. */
+  banner_url?: string;
 }
 
 export interface LeagueBilling {
