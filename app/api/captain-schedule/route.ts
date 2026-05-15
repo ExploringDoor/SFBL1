@@ -52,6 +52,7 @@ export async function POST(req: Request) {
     leagueId?: unknown;
     gameId?: unknown;
     date?: unknown;
+    time?: unknown;
     field?: unknown;
     status?: unknown;
   };
