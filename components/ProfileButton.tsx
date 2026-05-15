@@ -1,7 +1,13 @@
 "use client";
 
-// Header profile chip. Three states:
-//   - signed out → "Sign in" pill
+// Header profile chip. States:
+//   - signed out, passwordless tenant (LBDC) → "Captain" + "Admin"
+//     pills linking direct to /captain and /admin (each of which
+//     renders its own password prompt). Users have no "account" to
+//     sign in to here — the team-name / admin-password gates do all
+//     the auth.
+//   - signed out, regular tenant (SFBL)      → "Sign in" pill →
+//     /login (magic link).
 //   - signed in, captain → "Captain" + email + sign-out
 //   - signed in, admin   → "Admin" + email + sign-out
 //   - signed in, other   → email + sign-out
@@ -11,11 +17,15 @@
 
 import Link from "next/link";
 import { signOut, useLeagueRole, useUser } from "@/lib/auth-client";
+import { useTenant } from "@/lib/tenant-context";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 export function ProfileButton({ tenantId }: { tenantId: string }) {
   const user = useUser();
   const role = useLeagueRole(tenantId);
+  const { config } = useTenant();
+  const captainPasswordless = config?.captain?.passwordless === true;
+  const adminPasswordless = config?.admin?.passwordless === true;
 
   if (user === undefined) {
     return (
@@ -27,6 +37,34 @@ export function ProfileButton({ tenantId }: { tenantId: string }) {
   }
 
   if (user === null) {
+    // Passwordless tenants — show Captain / Admin pills directly so
+    // visitors can reach the password gates without needing to know
+    // the URLs. Each link renders its own gate (team-name for
+    // /captain, shared-secret for /admin).
+    if (captainPasswordless || adminPasswordless) {
+      return (
+        <div className="flex items-center gap-2">
+          {captainPasswordless && (
+            <Link
+              href="/captain"
+              className="rounded-md bg-brand-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-on-primary hover:opacity-90"
+              title="Captain portal"
+            >
+              ⚾ Captain
+            </Link>
+          )}
+          {adminPasswordless && (
+            <Link
+              href="/admin"
+              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-700 hover:bg-slate-50"
+              title="Admin"
+            >
+              ◉ Admin
+            </Link>
+          )}
+        </div>
+      );
+    }
     return (
       <Link
         href="/login"
