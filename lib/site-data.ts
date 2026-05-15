@@ -12,6 +12,7 @@ interface TeamMeta {
   abbrev?: string;
   color?: string;
   logoUrl?: string | null;
+  division?: string | null;
 }
 
 // Closes H10. The layout fires loadTickerGames(tenantId) on EVERY
@@ -71,6 +72,7 @@ export async function loadTickerGames(tenantId: string): Promise<TickerGame[]> {
       abbrev: data.abbrev ? String(data.abbrev) : undefined,
       color: data.color ? String(data.color) : undefined,
       logoUrl: data.logo_url ? String(data.logo_url) : null,
+      division: data.division ? String(data.division) : null,
     };
   }
 
@@ -90,6 +92,20 @@ export async function loadTickerGames(tenantId: string): Promise<TickerGame[]> {
   );
 
   // Pick a window: most recent 4 finals + next 6 upcoming, by date.
+  // Filter step:
+  //   - drop draft games (incomplete admin edits)
+  //   - drop Boomers-division games (LBDC convention — the ticker
+  //     only carries the main Saturday Division; secondary
+  //     mid-week / Boomers / development-league games sit on the
+  //     dedicated /scores + /schedule pages). The check is on the
+  //     teams' division metadata so any future tenant with a
+  //     similarly-named secondary division gets the same treatment
+  //     automatically. To turn this off for a tenant, blank out the
+  //     `division` field on those teams.
+  function isSecondaryDivision(teamId: string): boolean {
+    const div = teamMeta[teamId]?.division ?? "";
+    return /boomers/i.test(div);
+  }
   const all = gamesSnap.docs
     .map((d) => {
       const data = d.data();
@@ -111,7 +127,12 @@ export async function loadTickerGames(tenantId: string): Promise<TickerGame[]> {
         away_score: Number(data.away_score ?? 0),
       };
     })
-    .filter((g) => g.status !== "draft");
+    .filter((g) => g.status !== "draft")
+    .filter(
+      (g) =>
+        !isSecondaryDivision(g.away_team_id) &&
+        !isSecondaryDivision(g.home_team_id),
+    );
 
   const finals = all
     .filter((g) => g.status === "final" || g.status === "approved")

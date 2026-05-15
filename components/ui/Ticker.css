@@ -153,16 +153,34 @@ body.ticker-hidden #score-ticker {
 }
 
 .st-game-inner {
-  /* 3-column grid (abbrev | record | score) shared by both team
-   * rows so scores align vertically. Each row uses line-height: 1
-   * so 3 rows + gaps fit cleanly inside the 48px ticker (and 64px
-   * mobile ticker) without clipping top/bottom. */
+  /* 4-column grid (logo | abbrev | record | score) shared by both
+   * team rows so logos + scores align vertically. Each row uses
+   * line-height: 1 so 3 rows + gaps fit cleanly inside the taller
+   * ticker without clipping top/bottom. */
   display: grid;
-  grid-template-columns: max-content max-content auto;
-  grid-template-rows: 11px 14px 14px;
+  grid-template-columns: 26px max-content max-content auto;
+  grid-template-rows: 13px 22px 22px;
   align-items: center;
-  column-gap: 6px;
-  row-gap: 2px;
+  column-gap: 8px;
+  row-gap: 3px;
+}
+
+/* Per-team logo cell — small square thumbnail. The img is forced
+ * to a fixed 22x22 box; transparent / non-square sources contain
+ * via object-fit. Empty cell (no logo) leaves the column slot so
+ * tiles without logos stay grid-aligned. */
+.st-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  overflow: hidden;
+}
+.st-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .st-datetime {
@@ -178,13 +196,18 @@ body.ticker-hidden #score-ticker {
 
 .st-datetime {
   font-family: 'Inter', sans-serif;
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.8);
   line-height: 1;
   margin-bottom: 2px;
+}
+/* "FINAL" status — bright green to call out completed games at a
+ * glance. Scheduled games keep the muted white from above. */
+.st-datetime.final {
+  color: #22c55e;
 }
 
 .st-row {
@@ -196,16 +219,25 @@ body.ticker-hidden #score-ticker {
 
 .st-abbr {
   font-family: 'Oswald', sans-serif;
-  font-weight: 600;
-  font-size: 13px;
-  letter-spacing: 0.02em;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   min-width: 36px;
   white-space: nowrap;
   color: #ffffff;
 }
 
-.st-abbr.winner { color: #fff; }
-.st-abbr.loser { color: rgba(255, 255, 255, 0.45); }
+/* Winner stays bright white + bold; loser fades to muted gray.
+ * Mirrors the LBDC ticker pattern Adam shared 2026-05-14. */
+.st-abbr.winner {
+  color: #ffffff;
+  font-weight: 700;
+}
+.st-abbr.loser {
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 600;
+}
 .st-abbr.upcoming { color: inherit; }
 
 .st-rec {
@@ -219,18 +251,29 @@ body.ticker-hidden #score-ticker {
 
 .st-score {
   font-family: 'Oswald', sans-serif;
-  font-weight: 700;
-  font-size: 14px;
+  font-weight: 800;
+  font-size: 18px;
   min-width: 18px;
   text-align: right;
   font-variant-numeric: tabular-nums;
   /* Right-justify the score column so 1-digit and 2-digit scores
    * (e.g. 8 vs 10) end at the same x-position. */
   justify-self: end;
+  /* Both winning + losing scores render in the tenant's accent
+   * (LBDC gold, configurable per league). Winner is the brighter
+   * variant; loser dims slightly so the eye lands on the winner
+   * first. Falls back to gold for tenants without an accent set. */
+  color: var(--brand-accent, #FFD700);
 }
 
-.st-score.winner { color: #fff; }
-.st-score.loser { color: rgba(255, 255, 255, 0.45); }
+.st-score.winner {
+  color: var(--brand-accent, #FFD700);
+  font-weight: 900;
+}
+.st-score.loser {
+  color: var(--brand-accent, #FFD700);
+  opacity: 0.55;
+}
 
 .st-final {
   font-family: 'Inter', sans-serif;
@@ -261,29 +304,30 @@ body.ticker-hidden #score-ticker {
 
 .st-full:hover { color: #ffffff; }
 
-/* Mobile: 64px tall, label sticks to left edge as you scroll. */
+/* Mobile: 96px tall (matches --ticker-height for ≤700px), label
+ * sticks to left edge as you scroll. */
 @media (max-width: 700px) {
   #score-ticker {
     overflow: hidden !important;
     max-width: 100vw !important;
-    height: 64px !important;
-    min-height: 64px !important;
+    height: 96px !important;
+    min-height: 96px !important;
   }
   .st-track {
     width: max-content !important;
     display: inline-flex !important;
-    height: 64px !important;
+    height: 96px !important;
     align-items: stretch !important;
   }
   .st-game {
-    height: 64px !important;
-    padding: 0 10px !important;
+    height: 96px !important;
+    padding: 0 12px !important;
     align-items: center !important;
     overflow: visible !important;
   }
   .st-game-inner {
-    gap: 1px !important;
-    justify-content: center !important;
+    column-gap: 8px !important;
+    row-gap: 3px !important;
   }
   .st-label {
     position: sticky;
@@ -291,7 +335,7 @@ body.ticker-hidden #score-ticker {
     z-index: 2;
     flex-shrink: 0;
     background: var(--brand-primary, #002D72) !important;
-    height: 64px !important;
+    height: 96px !important;
   }
 }
 

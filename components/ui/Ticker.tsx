@@ -30,8 +30,16 @@ export interface TickerGame {
   home_team_id: string;
   away_score: number | null;
   home_score: number | null;
-  away_team: { name: string; abbrev?: string };
-  home_team: { name: string; abbrev?: string };
+  away_team: {
+    name: string;
+    abbrev?: string;
+    logoUrl?: string | null;
+  };
+  home_team: {
+    name: string;
+    abbrev?: string;
+    logoUrl?: string | null;
+  };
   /** "5-2" / "8-3-1" — formatted by the data layer. */
   away_record?: string;
   home_record?: string;
@@ -129,16 +137,19 @@ function TickerTile({ g }: { g: TickerGame }) {
     g.home_team.abbrev ||
     fallbackAbbrev(g.home_team_id, g.home_team.name);
 
-  // 3-column grid: abbrev | record | score. Each tile renders the
-  // datetime row spanning all 3 columns, then 6 cells (3 per team)
-  // as direct grid children. Empty strings render as zero-width
-  // cells that still hold the column position so scores stay
+  // 4-column grid: logo | abbrev | record | score. Each tile renders
+  // the datetime row spanning all 4 columns, then 8 cells (4 per
+  // team) as direct grid children. Empty strings render as zero-
+  // width cells that still hold the column position so scores stay
   // vertically aligned regardless of record presence.
   return (
     <Link href={`/games/${g.id}`} className="st-game">
       <div className="st-game-inner">
-        <div className="st-datetime">{statusLabel(g, done)}</div>
+        <div className={"st-datetime" + (done ? " final" : "")}>
+          {statusLabel(g, done)}
+        </div>
 
+        <TeamLogo url={g.away_team.logoUrl} alt={awayLabel} />
         <span
           className={
             "st-abbr" +
@@ -158,6 +169,7 @@ function TickerTile({ g }: { g: TickerGame }) {
           {done ? g.away_score : ""}
         </span>
 
+        <TeamLogo url={g.home_team.logoUrl} alt={homeLabel} />
         <span
           className={
             "st-abbr" +
@@ -178,6 +190,19 @@ function TickerTile({ g }: { g: TickerGame }) {
         </span>
       </div>
     </Link>
+  );
+}
+
+function TeamLogo({ url, alt }: { url?: string | null; alt: string }) {
+  // Empty cell when the team doesn't have a logo set so the rest of
+  // the grid stays column-aligned. Tile keeps a fixed-width slot
+  // either way.
+  if (!url) return <span className="st-logo" aria-hidden />;
+  return (
+    <span className="st-logo">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={url} alt={alt} loading="lazy" decoding="async" />
+    </span>
   );
 }
 
