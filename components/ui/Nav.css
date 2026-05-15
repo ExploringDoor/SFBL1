@@ -11,7 +11,11 @@
 
 .le-nav {
   position: fixed;
-  top: calc(48px + env(safe-area-inset-top, 0px));
+  /* Sit directly below the ticker. Use --ticker-height so this
+   * tracks any ticker size change; the previous hardcoded 48px
+   * was why Adam saw the Nav covering the bottom half of the
+   * ticker after the height got bumped to 100px (2026-05-15). */
+  top: calc(var(--ticker-height, 48px) + env(safe-area-inset-top, 0px));
   left: 0;
   right: 0;
   z-index: 400;
@@ -47,11 +51,14 @@ body.ticker-hidden .le-mob-menu {
 }
 
 @media (max-width: 700px) {
+  /* Same fix as the base rule: track --ticker-height instead of
+   * hardcoding the old 64px / 126px values. .le-mob-menu sits
+   * --ticker-height + 62px-nav below the page top. */
   .le-nav {
-    top: calc(64px + env(safe-area-inset-top, 0px)) !important;
+    top: calc(var(--ticker-height, 64px) + env(safe-area-inset-top, 0px)) !important;
   }
   .le-mob-menu {
-    top: calc(126px + env(safe-area-inset-top, 0px)) !important;
+    top: calc(var(--ticker-height, 64px) + 62px + env(safe-area-inset-top, 0px)) !important;
   }
 }
 
@@ -237,7 +244,9 @@ body.le-mob-menu-open {
   display: flex;
   flex-direction: column;
   position: fixed;
-  top: calc(110px + env(safe-area-inset-top, 0px));
+  /* Sits below ticker + nav. Tracks --ticker-height so it doesn't
+   * leak under the nav after a ticker-height change. */
+  top: calc(var(--ticker-height, 48px) + 62px + env(safe-area-inset-top, 0px));
   left: 0;
   right: 0;
   bottom: 0;
