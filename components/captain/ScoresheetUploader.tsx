@@ -353,7 +353,7 @@ function readFileAsBase64(file: File): Promise<string> {
     reader.onload = () => {
       const result = reader.result;
       if (typeof result === "string") {
-        // result format: "data:application/pdf;base64,XXXXX"
+        // result format: "data:application/pdf;base64,<base64-payload>"
         // Strip the prefix to get just the base64 payload, matching
         // what Anthropic's API expects.
         const idx = result.indexOf(",");

@@ -28,7 +28,10 @@
 //   /leagues/<slug>/tournament_games/<id>
 //   /leagues/<slug>/box_scores/<gameId>
 //   /leagues/<slug>/news/<id>
-//   /leagues/<slug>/signups/<id>    (form_submissions/player_registration eventually — see TODO)
+//   /leagues/<slug>/signups/<id>    (raw landing zone from the Supabase
+//        dump; scripts/migrate-lbdc-signups.ts copies these into
+//        form_submissions/player_registration, which is what the
+//        admin Forms tab reads — audit L4, no longer a TODO)
 //   /leagues/<slug>/payments/<id>
 //   /leagues/<slug>/availability/<id>
 //   /leagues/<slug>/photos/<id>

@@ -271,6 +271,12 @@ function BillingPill({
   if (!status) {
     return <span style={{ color: "var(--muted)" }}>—</span>;
   }
+  // Audit L16: this `status` is the league's billing.status
+  // (_platform-overview reads data.billing.status), NOT a player/team
+  // doc status. Every tenant config sets billing.status explicitly
+  // (tenants.ts; public-config defaults to "active"), so there is no
+  // C1-style "missing field" mismatch here — not a bug, do not
+  // "fix" it into an in-memory predicate.
   const color =
     status === "active"
       ? "#0a8f3a"

@@ -333,6 +333,13 @@ export function AttendanceTab({ leagueId, teamId }: Props) {
     // server can skip their devices. Cross-references by player_name
     // (DVSL pattern at captain.html:5475) — could also key by player_id,
     // but matching DVSL keeps the port faithful.
+    //
+    // Audit L10 (known edge case, accepted): if two players on the
+    // same team share an exact name ("John Smith" Jr/Sr), one's
+    // "responded" status suppresses the other's reminder. DVSL hit
+    // this once in years. Keying by player_id would fix it but
+    // diverges from the DVSL availability-doc shape; revisit only if
+    // a tenant actually reports a collision.
     const respondedNames = new Set(
       avail
         .filter((a) => a.game_id === gameId && a.team_id === teamId)

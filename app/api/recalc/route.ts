@@ -48,6 +48,13 @@ export async function POST(req: Request) {
     );
   }
 
+  // Audit L8: no per-uid rate limit here by design. The admin claim
+  // is the control; the only blast radius of a misbehaving admin
+  // client looping this is Firestore read cost on that one tenant
+  // (recalcLeague is a full-collection read — see audit M6). Same
+  // platform-wide admin-write-throttling decision as M18; not a
+  // per-route patch. Revisit with the standings Cloud Function
+  // (PLAN.md §10) which makes recalc incremental and cheap.
   try {
     const result = await recalcLeague(getAdminDb(), leagueId);
     return NextResponse.json(result);

@@ -23,7 +23,14 @@ import "./Ticker.css";
 
 export interface TickerGame {
   id: string;
-  /** ISO datetime string for game start, or null if TBD. */
+  /**
+   * Game start as produced by site-data's combineDateTime (audit
+   * L11): a combined local ISO ("2026-05-16T19:00:00") when a start
+   * time exists, OR a bare "YYYY-MM-DD" when the time is TBD, OR null
+   * if there's no date. statusLabel() handles all three via
+   * parseGameDate and only renders a clock when a "T" is present —
+   * so a date-only value shows the day with no bogus "12:00 AM".
+   */
   date: string | null;
   /** "scheduled" | "live" | "final" | "approved" | "postponed" */
   status: string;

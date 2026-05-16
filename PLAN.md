@@ -683,10 +683,12 @@ then FCM push token registration (unlocks the Notifications tab push
 toggles), then background sync (nice-to-have, defer if needed).
 
 Already in place pre-PWA-shell:
-- Notifications tab UI with email + push channel toggles
-  (`components/captain/NotificationsTab.tsx`) — push toggles disable
-  themselves when `Notification.permission !== "granted"` so we
-  degrade gracefully on browsers without the SW yet.
+- Notifications UI with email + push channel toggles
+  (`components/notifications/NotificationsPanel.tsx` — the captain-only
+  `components/captain/NotificationsTab.tsx` was refactored away into
+  this shared panel; audit L1/L17) — push toggles disable themselves
+  when `Notification.permission !== "granted"` so we degrade
+  gracefully on browsers without the SW yet.
 - Per-user notif prefs stored at `/users/{uid}.notif_prefs.{leagueId}`
   so the SW + Cloud Function fan-out has somewhere to read prefs from
   on day one.

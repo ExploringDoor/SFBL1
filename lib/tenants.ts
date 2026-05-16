@@ -89,7 +89,8 @@ const HOST_ALIAS_BASELINE: Record<string, string> = {
   // (sfbl-1 and sfbl-12). Both auto-deploy on every push, so both
   // URLs need to resolve to the SFBL tenant regardless of which
   // project a visitor lands on. Should consolidate to one project
-  // eventually but not today.
+  // eventually but not today. (Audit L2 — tracked; the L3 cache
+  // staleness note below depends on this being resolved.)
   "sfbl-12.vercel.app": "sfbl",
   // lbdc1 — third Vercel project pointed at the same GitHub repo,
   // serves the LBDC staging tenant. The temporary "second site"
@@ -148,6 +149,13 @@ export function parseHost(rawHost: string): ParsedHost {
 //
 // TODO(Phase 1.5): swap for `@vercel/edge-config` once the store is created
 // and the provisioning script writes through to it.
+//
+// Audit L3: accepted for launch. Consequence of staying on the
+// in-memory map: a tenant-config edit can read stale for up to the
+// 30s TTL on each *warm* instance, and because two Vercel projects
+// can serve the same tenant (audit L2) that staleness is per-project.
+// Acceptable at low tenancy / infrequent config edits; revisit with
+// L2 (project consolidation) and the Edge Config swap together.
 // -----------------------------------------------------------------------------
 type CacheEntry = { value: ResolvedTenant | null; expiresAt: number };
 const cache = new Map<string, CacheEntry>();

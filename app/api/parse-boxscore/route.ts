@@ -47,6 +47,13 @@ const OCR_RATE_LIMIT = 10;
 const MAX_PDF_BYTES = 12 * 1024 * 1024; // 12 MB base64-decoded
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8 MB base64-decoded
 
+// Audit L9: the Anthropic model id was hardcoded inline, so a model
+// deprecation meant a code change + redeploy with no warning. Read
+// from env with the current model as the typed default — set
+// ANTHROPIC_MODEL in Vercel to roll forward without a deploy.
+const ANTHROPIC_MODEL: string =
+  process.env.ANTHROPIC_MODEL?.trim() || "claude-sonnet-4-6";
+
 interface Body {
   leagueId?: unknown;
   gameId?: unknown;
@@ -266,7 +273,7 @@ Rules:
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-6",
+        model: ANTHROPIC_MODEL,
         max_tokens: 4000,
         messages: [{ role: "user", content: messageContent }],
       }),

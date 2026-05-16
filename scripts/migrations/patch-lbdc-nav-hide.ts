@@ -1,13 +1,13 @@
-// Expand LBDC's `stat_columns` so the captain box-score editor
-// surfaces all the columns the old LBDC Supabase site captured:
-// AB, R, H, 2B, 3B, HR, RBI, BB, K, SB, HBP, SF, SAC, FC, ROE, CS.
-// (Pitching columns are always all-in regardless of league config.)
+// Patch script — updates only the `nav.hide` field on the LBDC tenant
+// doc. Cheaper / safer than re-running the full seed when all we need
+// is to tweak which Nav links are suppressed for this tenant.
 //
-// Run:
-//   npx tsx scripts/patch-lbdc-stat-columns.ts --league lbdc-staging
+// Usage:
+//   npx tsx scripts/patch-lbdc-nav-hide.ts --league lbdc-staging
 
 import * as fs from "node:fs";
 import * as path from "node:path";
+
 (function loadEnvLocal() {
   const p = path.resolve(process.cwd(), ".env.local");
   if (!fs.existsSync(p)) return;
@@ -22,7 +22,7 @@ import { cert, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 // Audit H6: shared with seed-lbdc-to-firestore.ts so this one-shot
 // patch can't drift from what the next full seed would write.
-import { LBDC_STAT_COLUMNS } from "./lbdc-tenant-config";
+import { LBDC_NAV_HIDE } from "../lbdc-tenant-config";
 
 let league: string | null = null;
 const args = process.argv.slice(2);
@@ -42,16 +42,23 @@ initializeApp({
 });
 const db = getFirestore();
 
-// Match the BatStats fields the captain editor knows about. Order
-// matters for the rendered column order in the editor. Sourced from
-// the shared module (audit H6) — edit there, not here.
-const COLS = [...LBDC_STAT_COLUMNS];
+// Sourced from the shared module (audit H6) — edit there, not here.
+// "About SFBL" intentionally absent: the Nav component relabels it to
+// "About <tenant abbrev>" for non-SFBL leagues, so LBDC sees a real
+// "About LBDC" link backed by /sfbl-info. Hiding it would leave LBDC
+// without an about page entirely.
+const HIDE = [...LBDC_NAV_HIDE];
 
 (async () => {
   const ref = db.doc(`leagues/${league}`);
-  await ref.set({ stat_columns: COLS }, { merge: true });
+  // Read-then-write so we keep any other nav.* keys (e.g. nav.order)
+  // a future change might add. nav.hide is the only field we touch.
+  const snap = await ref.get();
+  const cur = snap.exists ? snap.data()?.nav ?? {} : {};
+  const next = { ...cur, hide: HIDE };
+  await ref.set({ nav: next }, { merge: true });
   console.log(
-    `[patch-stat-cols] /leagues/${league} stat_columns = [${COLS.join(", ")}]`,
+    `[patch-nav] /leagues/${league} nav.hide = ${JSON.stringify(HIDE)}`,
   );
   process.exit(0);
 })();

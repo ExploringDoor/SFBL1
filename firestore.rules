@@ -36,6 +36,13 @@ service cloud.firestore {
         : null;
     }
 
+    // Audit L20 (perf, accepted): the get() below is a billed read on
+    // every box-score / lineup write (~600 extra reads on a 20-captain
+    // Saturday). Required — rules can't otherwise know the game's
+    // teams — and negligible at current scale. Track if Firestore
+    // read cost ever surprises; there's no cheaper correct option in
+    // rules (denormalizing team ids onto the write doc would let a
+    // caller spoof them).
     function isCaptainOfGameTeam(leagueId, gameId) {
       let teamId = captainTeamId(leagueId);
       let game = get(/databases/$(database)/documents/leagues/$(leagueId)/games/$(gameId)).data;
