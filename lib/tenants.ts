@@ -244,6 +244,10 @@ const SFBL_TENANT_CONFIG: LeagueConfig = {
     primary: "#0c2340",
     accent: "#c41e3a",
     logo_url: "/logos/sfbl/sfbl-header.png",
+    // Wide homepage hero banner (Adam, 2026-05-18). The Hero uses
+    // banner_url when set; logo_url stays the squareish asset for
+    // the PWA icon / login / OG image, where a wide banner breaks.
+    banner_url: "/logos/sfbl/sfbl-wideheader.png",
   },
   billing: { status: "active" },
   // SFBL social profiles — rendered as footer icon links

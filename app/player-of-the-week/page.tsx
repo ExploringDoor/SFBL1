@@ -1,14 +1,16 @@
-// Public Player of the Week page. Tenant-scoped: reads
-// /leagues/<id>/player_of_week, renders the most recent entry (by
-// award_date, then created_at) as the big spotlight and the rest as
-// a dated archive. Manually curated by the commissioner via the
-// admin "Player of Week" tab (no auto-from-stats). Mirrors the
-// server-component + sanitizeHtml pattern used by /fields.
+// Public Player of the Week page. Tenant-scoped. Renders the most
+// recent honoree as a big spotlight and the rest as a season-grouped
+// archive. Manually curated by the commissioner via the admin
+// "Player of Week" tab (no auto-from-stats). SFBL also ships a
+// baked-in historical archive (lib/sfbl-potw-history) merged below
+// any admin Firestore entries — same built-in-fallback model as the
+// /fields page, so the history needs no migration script.
 
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { sanitizeHtml } from "@/lib/markdown";
 import { comparePotwDesc } from "@/lib/potw";
+import { SFBL_POTW_HISTORY } from "@/lib/sfbl-potw-history";
 
 export const dynamic = "force-dynamic";
 
@@ -41,15 +43,43 @@ function fmtDate(iso: string | null): string {
   });
 }
 
+// Baked SFBL history → PotwEntry shape. Only SFBL has a built-in
+// archive; other tenants rely solely on their Firestore entries.
+function bakedFor(tenantId: string): PotwEntry[] {
+  if (tenantId !== "sfbl") return [];
+  return SFBL_POTW_HISTORY.map((h) => ({
+    id: h.id,
+    player_name: h.player_name,
+    team_name: h.team_name,
+    season: h.season,
+    week: h.week,
+    week_label: "",
+    award_date: null,
+    stat_line: "",
+    blurb: h.blurb,
+    photo_url: h.photo_url,
+    created_at: null,
+  }));
+}
+
 async function loadEntries(tenantId: string): Promise<PotwEntry[]> {
+  // Start from the baked-in history (SFBL). Firestore entries the
+  // admin adds going forward are merged on top — same `id` overrides
+  // its baked counterpart, so the commissioner can correct a
+  // historical entry from the admin tab. Same fallback model as the
+  // /fields page; if Firestore is unreachable the history still
+  // renders.
+  const byId = new Map<string, PotwEntry>();
+  for (const e of bakedFor(tenantId)) byId.set(e.id, e);
   try {
     const snap = await getAdminDb()
       .collection(`leagues/${tenantId}/player_of_week`)
       .get();
-    const list: PotwEntry[] = snap.docs.map((d) => {
+    for (const d of snap.docs) {
       const data = d.data() as Record<string, unknown>;
-      return {
-        id: String(data.id ?? d.id),
+      const id = String(data.id ?? d.id);
+      byId.set(id, {
+        id,
         player_name: String(data.player_name ?? ""),
         team_name: String(data.team_name ?? ""),
         season: String(data.season ?? ""),
@@ -63,13 +93,14 @@ async function loadEntries(tenantId: string): Promise<PotwEntry[]> {
         blurb: String(data.blurb ?? ""),
         photo_url: data.photo_url ? String(data.photo_url) : null,
         created_at: data.created_at ? String(data.created_at) : null,
-      };
-    });
-    list.sort(comparePotwDesc);
-    return list;
+      });
+    }
   } catch {
-    return [];
+    // Keep the baked history even if the Firestore read fails.
   }
+  const list = [...byId.values()];
+  list.sort(comparePotwDesc);
+  return list;
 }
 
 export default async function PlayerOfTheWeekPage() {
