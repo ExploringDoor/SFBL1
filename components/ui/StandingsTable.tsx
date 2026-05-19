@@ -123,6 +123,13 @@ export function StandingsTable({
               <span className="le-div-card-label">{division}</span>
             </div>
           )}
+          {/* Horizontal scroll wrapper: the full table can be up to
+              11 columns wide — wider than a phone. The card is
+              overflow:hidden (rounded corners), which used to CLIP
+              GB / RS / RA / DIFF / STRK on mobile with no way to
+              reach them. Scrolling the table keeps every column,
+              GB included, reachable. */}
+          <div className="le-s-scroll">
           <table className="le-s-tbl">
             <thead>
               <tr>
@@ -203,6 +210,7 @@ export function StandingsTable({
               })}
             </tbody>
           </table>
+          </div>
         </div>
       ))}
     </div>

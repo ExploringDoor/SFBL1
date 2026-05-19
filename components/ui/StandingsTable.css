@@ -50,6 +50,20 @@
   color: rgba(0, 0, 0, 0.5);
 }
 
+/* Horizontal scroll wrapper for the full standings table. The card
+ * around it is overflow:hidden (rounded corners), which on a phone
+ * CLIPPED the right-hand columns — GB, RS, RA, DIFF, STRK — with no
+ * way to reach them. This wrapper scrolls the table inside the card
+ * so every column stays reachable on mobile, no data hidden. The
+ * division-label header is a sibling (outside this wrapper) so it
+ * stays put. (Adam: "GB in standings is cut off on phone", 2026-05-18.) */
+.le-s-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  /* Thin, unobtrusive scrollbar on the platforms that honor it. */
+  scrollbar-width: thin;
+}
+
 .le-s-tbl {
   width: 100%;
   border-collapse: collapse;
