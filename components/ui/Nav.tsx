@@ -93,20 +93,18 @@ export function Nav({
   hideLabels,
   rightSlot,
 }: NavProps) {
-  // Apply per-tenant hide-list AND rename "About SFBL" → "About
-  // <tenantShort>" so the link appears for every league without
-  // dragging the SFBL acronym along. Hide-list match still uses the
-  // ORIGINAL label ("About SFBL") so existing nav.hide configs
-  // remain valid.
+  // Per-tenant nav customization:
+  //   • hide-list (case-insensitive label match)
+  //   • legacy "About SFBL" → "About <tenantShort>" relabel
+  //   • the "SFBL" league-info dropdown is SFBL-ONLY — filtered out
+  //     entirely for every other tenant below (Adam, 2026-05-18:
+  //     SFBL-specific, no LBDC/other-tenant version).
+  // Hide-list match still uses the ORIGINAL label so existing
+  // nav.hide configs remain valid.
   const hide = new Set((hideLabels ?? []).map((s) => s.toLowerCase()));
   function relabel(l: NavLink): NavLink {
     if (l.label === "About SFBL" && tenantShort && tenantShort !== "SFBL") {
       return { ...l, label: `About ${tenantShort}` };
-    }
-    // The top-level league-info dropdown is authored as "SFBL"; show
-    // the actual tenant short for every other league ("LBDC", …).
-    if (l.label === "SFBL" && tenantShort && tenantShort !== "SFBL") {
-      return { ...l, label: tenantShort };
     }
     return l;
   }
@@ -119,19 +117,24 @@ export function Nav({
               .filter((c) => !hide.has(c.label.toLowerCase()))
               .map(relabel);
             if (kept.length === 0) return null;
-            // Relabel the PARENT too (e.g. "SFBL" → "LBDC"), not just
-            // its children.
-            return { ...relabel(l), children: kept };
+            return { ...l, children: kept };
           }
           return relabel(l);
         })
         .filter((l): l is NavLink => l !== null)
     : linksProp.map((l) => {
         if (l.children) {
-          return { ...relabel(l), children: l.children.map(relabel) };
+          return { ...l, children: l.children.map(relabel) };
         }
         return relabel(l);
       });
+  // SFBL-specific: the "SFBL" league-info dropdown renders ONLY on
+  // the SFBL tenant. Every other tenant (LBDC, future) drops it
+  // entirely — no relabeled version (Adam, 2026-05-18).
+  const navLinks =
+    tenantShort === "SFBL"
+      ? links
+      : links.filter((l) => l.label !== "SFBL");
   const pathname = usePathname();
   const [mobOpen, setMobOpen] = useState(false);
   // Track which dropdown (by label) is open. JS-controlled rather than
@@ -186,7 +189,7 @@ export function Nav({
         </Link>
 
         <ul className="le-nav-links">
-          {links.map((link) => {
+          {navLinks.map((link) => {
             if (link.children && link.children.length > 0) {
               const childActive = link.children.some((c) =>
                 isActive(pathname, c.href),
@@ -285,7 +288,7 @@ export function Nav({
             their own grid below a section header. The flat 26px
             uppercase line list it replaced was harder to scan and
             felt out of proportion to phone screens. */}
-        {links.map((link) => {
+        {navLinks.map((link) => {
           if (link.children && link.children.length > 0) {
             return (
               <section key={link.label} className="le-mob-section-block">
