@@ -59,6 +59,35 @@
   object-fit: contain;
 }
 
+/* ── Social icon row ─── */
+
+.le-footer-social {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  padding: 22px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.le-footer-social a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.04);
+  transition: color 0.15s, background 0.15s, transform 0.15s;
+}
+
+.le-footer-social a:hover {
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
 /* ── Bottom info bar ─── */
 
 .le-footer-bar {

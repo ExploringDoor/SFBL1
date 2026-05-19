@@ -1,6 +1,7 @@
 import type {
   DomainMapping,
   LeagueConfig,
+  LeagueSocial,
   LeagueSponsor,
   ResolvedTenant,
 } from "./types";
@@ -25,6 +26,7 @@ export interface PublicLeagueConfig {
   flags?: LeagueConfig["flags"];
   standings?: LeagueConfig["standings"];
   sponsors?: LeagueSponsor[];
+  social?: LeagueSocial;
   // Per-tenant nav customization (label hide list). Mirrored from
   // /leagues/<slug>.nav.hide. The layout reads this off the x-tenant-
   // config-json header and passes it to <Nav> + <PwaTabBar>.
@@ -54,6 +56,7 @@ export function toPublicConfig(c: LeagueConfig): PublicLeagueConfig {
     flags: c.flags,
     standings: c.standings,
     sponsors: c.sponsors,
+    social: c.social,
     nav: c.nav,
     captain: c.captain,
     // Strip `admin.password` — only forward whether passwordless is
@@ -243,6 +246,14 @@ const SFBL_TENANT_CONFIG: LeagueConfig = {
     logo_url: "/logos/sfbl/sfbl-header.png",
   },
   billing: { status: "active" },
+  // SFBL social profiles — rendered as footer icon links
+  // (Adam, 2026-05-18).
+  social: {
+    facebook: "https://www.facebook.com/southfloridabaseball/",
+    instagram: "https://www.instagram.com/southfloridabaseballleague",
+    x: "https://x.com/flahardball",
+    youtube: "https://www.youtube.com/@southfloridabaseballleague4262",
+  },
 } as unknown as LeagueConfig;
 
 export async function resolveTenant(parsed: ParsedHost): Promise<ResolvedTenant | null> {

@@ -107,6 +107,11 @@ export interface LeagueConfig {
   // empty.
   fields?: string[];
 
+  // Social-media profile URLs. Rendered as icon links in the site
+  // footer. Per-tenant; omit a platform to hide its icon. Public —
+  // forwarded by toPublicConfig().
+  social?: LeagueSocial;
+
   // Per-tenant nav customization. `hide` is a label list (matched
   // case-insensitively against the Nav component's default link
   // labels) — used by LBDC to drop News / Team Registration / Team
@@ -138,6 +143,16 @@ export interface LeagueConfig {
     passwordless?: boolean;
     password?: string;
   };
+}
+
+export interface LeagueSocial {
+  /** Full https URL to the league's profile on each platform.
+   *  Any field omitted/empty → that icon isn't rendered. */
+  facebook?: string;
+  instagram?: string;
+  /** X (formerly Twitter). */
+  x?: string;
+  youtube?: string;
 }
 
 export interface LeagueSponsor {
