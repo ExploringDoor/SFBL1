@@ -135,16 +135,22 @@
   align-items: center;
   justify-content: center;
 }
-/* Banner image renders edge-to-edge of the page container so it
- * reads as a true full-width header. We let intrinsic aspect ratio
- * drive height (height: auto), but cap it so an unusually tall
- * banner doesn't dominate the fold. object-fit covers any letterbox
- * vs. fit weirdness. */
+/* Banner image renders edge-to-edge, full width. height:auto lets
+ * the intrinsic aspect ratio drive the size so it never skews.
+ *
+ * The max-height is deliberately generous: SFBL's banner is ~2.5:1,
+ * so at a typical desktop width the natural height is 500-650px. A
+ * tight cap (the old 360px) forced object-fit:contain to SHRINK the
+ * image and letterbox it with big empty side margins — i.e. a wider
+ * source actually looked smaller. This clamp only trims the extreme
+ * (ultrawide monitors / very tall banners) so it can't swallow the
+ * whole fold, while letting it run full-bleed everywhere normal.
+ * (Adam: "make it wider", 2026-05-18.) */
 .le-hero-logo {
   display: block;
   width: 100%;
   height: auto;
-  max-height: clamp(160px, 28vw, 360px);
+  max-height: clamp(220px, 46vw, 760px);
   object-fit: contain;
 }
 
