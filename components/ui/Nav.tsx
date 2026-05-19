@@ -63,6 +63,18 @@ const DEFAULT_LINKS: NavLink[] = [
       { label: "Fields", href: "/fields" },
     ],
   },
+  // Dedicated Register dropdown so signing up isn't buried in "More"
+  // (Adam, 2026-05-18). Generic — nav.hide still controls which
+  // children show per tenant (LBDC hides Team Registration).
+  {
+    label: "Register",
+    href: "#",
+    children: [
+      { label: "Player Registration", href: "/player-registration" },
+      { label: "Team Registration", href: "/team-registration" },
+      { label: "Team Waiver", href: "/team-waiver-form" },
+    ],
+  },
   {
     label: "More",
     href: "#",
@@ -75,9 +87,6 @@ const DEFAULT_LINKS: NavLink[] = [
       { label: "Tournaments", href: "/tournaments" },
       { label: "Availability", href: "/availability" },
       { label: "History", href: "/history" },
-      { label: "Player Registration", href: "/player-registration" },
-      { label: "Team Registration", href: "/team-registration" },
-      { label: "Team Waiver", href: "/team-waiver-form" },
       { label: "Umpire Evaluation", href: "/umpire-evaluation-form" },
       { label: "Pay Online", href: "/pay-online" },
       { label: "Sponsors", href: "/content/sponsors" },
