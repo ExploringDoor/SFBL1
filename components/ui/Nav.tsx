@@ -70,6 +70,7 @@ const DEFAULT_LINKS: NavLink[] = [
       { label: "News", href: "/content/news" },
       { label: "Photos", href: "/photos" },
       { label: "Leaders", href: "/leaders" },
+      { label: "Player of the Week", href: "/player-of-the-week" },
       { label: "Playoffs", href: "/playoffs" },
       { label: "Tournaments", href: "/tournaments" },
       { label: "Availability", href: "/availability" },
@@ -128,13 +129,31 @@ export function Nav({
         }
         return relabel(l);
       });
-  // SFBL-specific: the "SFBL" league-info dropdown renders ONLY on
-  // the SFBL tenant. Every other tenant (LBDC, future) drops it
-  // entirely — no relabeled version (Adam, 2026-05-18).
-  const navLinks =
+  // SFBL-only nav items (Adam, 2026-05-18): the "SFBL" league-info
+  // dropdown and the "Player of the Week" page render ONLY on the
+  // SFBL tenant. For every other tenant they're dropped entirely —
+  // both as top-level entries and as children inside any dropdown
+  // (e.g. "Player of the Week" lives under "More"). No relabeled
+  // versions.
+  const SFBL_ONLY_LABELS = new Set(["SFBL", "Player of the Week"]);
+  const navLinks: NavLink[] =
     tenantShort === "SFBL"
       ? links
-      : links.filter((l) => l.label !== "SFBL");
+      : links
+          .filter((l) => !SFBL_ONLY_LABELS.has(l.label))
+          .map((l) =>
+            l.children
+              ? {
+                  ...l,
+                  children: l.children.filter(
+                    (c) => !SFBL_ONLY_LABELS.has(c.label),
+                  ),
+                }
+              : l,
+          )
+          .filter(
+            (l) => !l.children || l.children.length > 0,
+          );
   const pathname = usePathname();
   const [mobOpen, setMobOpen] = useState(false);
   // Track which dropdown (by label) is open. JS-controlled rather than
@@ -361,6 +380,7 @@ function iconFor(href: string): string {
     "/content/news": "📰",
     "/photos": "📷",
     "/leaders": "🥇",
+    "/player-of-the-week": "🌟",
     "/playoffs": "🥎",
     "/history": "📚",
     "/fields": "📍",

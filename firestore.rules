@@ -175,6 +175,18 @@ service cloud.firestore {
         allow write: if isAdmin(leagueId);
       }
 
+      // /leagues/{leagueId}/player_of_week/{entryId}
+      // Manually-curated Player of the Week entries. Public-read so
+      // the /player-of-the-week page + the admin manager's list can
+      // read them without an Admin-SDK round-trip. Admin-only write
+      // (mutations go through /api/admin-player-of-week, but the
+      // client-write rule mirrors the other public-content
+      // collections — photos / page_content / site_config).
+      match /player_of_week/{entryId} {
+        allow read: if true;
+        allow write: if isAdmin(leagueId);
+      }
+
       // Box scores: admin OR captain of one of the teams in the game.
       match /box_scores/{gameId} {
         allow read: if true;

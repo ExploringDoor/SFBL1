@@ -33,6 +33,7 @@ import { PhotosManager } from "@/components/admin/PhotosManager";
 import { ScoresManager } from "@/components/admin/ScoresManager";
 import { SponsorsManager } from "@/components/admin/SponsorsManager";
 import { NewsManager } from "@/components/admin/NewsManager";
+import { PlayerOfWeekManager } from "@/components/admin/PlayerOfWeekManager";
 import { AdminPasswordGate } from "@/components/admin/AdminPasswordGate";
 
 type TabKey =
@@ -44,6 +45,7 @@ type TabKey =
   | "captains"
   | "alerts"
   | "news"
+  | "potw"
   | "pages"
   | "photos"
   | "sponsors"
@@ -65,6 +67,7 @@ const TABS: { key: TabKey; label: string; description: string }[] = [
   { key: "captains", label: "Captains", description: "Grant or revoke captain access to specific teams." },
   { key: "alerts", label: "Alerts", description: "Publish a homepage banner — weather, registration, deadlines." },
   { key: "news", label: "News", description: "From-the-commissioner news & events shown on the homepage." },
+  { key: "potw", label: "Player of Week", description: "Curate the Player of the Week spotlight + archive shown at /player-of-the-week." },
   { key: "pages", label: "Pages", description: "Edit Rules, News, Register, Sponsors, and other content pages." },
   { key: "photos", label: "Photos", description: "Upload photos to the public gallery at /photos." },
   { key: "sponsors", label: "Sponsors", description: "Manage the sponsor logo strip in the site footer." },
@@ -294,6 +297,9 @@ export default function AdminPage() {
         )}
         {activeTab === "news" && (
           <NewsManager leagueId={tenantId} user={user} />
+        )}
+        {activeTab === "potw" && (
+          <PlayerOfWeekManager leagueId={tenantId} user={user} />
         )}
         {activeTab === "pages" && (
           <PagesManager leagueId={tenantId} user={user} />
