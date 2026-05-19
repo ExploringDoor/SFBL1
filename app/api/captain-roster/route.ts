@@ -70,6 +70,7 @@ export async function POST(req: Request) {
     pos?: unknown;
     email?: unknown;
     phone?: unknown;
+    dob?: unknown;
     teamId?: unknown;
   };
   try {
@@ -180,13 +181,17 @@ export async function POST(req: Request) {
       typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
     const phone =
       typeof body.phone === "string" ? body.phone.trim() : "";
-    if (email || phone) {
+    // DOB is PII → _private/contact only, never the public doc.
+    const dob =
+      typeof body.dob === "string" ? body.dob.trim() : "";
+    if (email || phone || dob) {
       await db
         .doc(`leagues/${leagueId}/players/${playerId}/_private/contact`)
         .set(
           {
             ...(email ? { email } : {}),
             ...(phone ? { phone } : {}),
+            ...(dob ? { dob } : {}),
             updated_at: new Date().toISOString(),
           },
           { merge: true },
@@ -247,6 +252,9 @@ export async function POST(req: Request) {
     }
     if (typeof body.phone === "string") {
       contactUpdate.phone = body.phone.trim();
+    }
+    if (typeof body.dob === "string") {
+      contactUpdate.dob = body.dob.trim();
     }
     if (Object.keys(contactUpdate).length > 0) {
       contactUpdate.updated_at = new Date().toISOString();

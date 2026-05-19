@@ -35,6 +35,9 @@ interface Player {
   position: string | null;
   email: string;
   phone: string;
+  /** Date of birth (YYYY-MM-DD). PII — captain/admin only, from
+   *  _private/contact via the team-roster API; never public. */
+  dob: string;
   auth_uid?: string;
   pending_approval?: boolean;
   active?: boolean;
@@ -78,6 +81,7 @@ export function RosterTab({ leagueId, teamId }: RosterTabProps) {
           position: string;
           email: string;
           phone: string;
+          dob: string;
           auth_uid: string | null;
           walk_on: boolean;
         }[];
@@ -113,6 +117,7 @@ export function RosterTab({ leagueId, teamId }: RosterTabProps) {
             position: p.position || null,
             email: p.email,
             phone: p.phone,
+            dob: p.dob ?? "",
             auth_uid: p.auth_uid ?? undefined,
             pending_approval: pendingById.get(p.id) ?? false,
             active: activeById.get(p.id) ?? true,
@@ -316,6 +321,7 @@ export function RosterTab({ leagueId, teamId }: RosterTabProps) {
                       <th>Pos</th>
                       <th title="Signed up for the player portal">✓</th>
                       <th className="cap-email-col">Email</th>
+                      <th>DOB</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -374,6 +380,7 @@ function AddPlayerForm({
   const [pos, setPos] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [dob, setDob] = useState("");
   const [busy, setBusy] = useState(false);
 
   return (
@@ -433,6 +440,15 @@ function AddPlayerForm({
             placeholder="(555) 123-0100"
           />
         </div>
+        <div className="cap-form-col" style={{ maxWidth: 170 }}>
+          <label className="cap-form-lbl">Date of birth</label>
+          <input
+            type="date"
+            className="cap-form-input"
+            value={dob}
+            onChange={(e) => setDob(e.target.value)}
+          />
+        </div>
       </div>
       <div className="cap-form-actions">
         <button
@@ -441,7 +457,14 @@ function AddPlayerForm({
           disabled={busy || !name.trim()}
           onClick={async () => {
             setBusy(true);
-            const ok = await onSubmit({ name, num, pos, email, phone });
+            const ok = await onSubmit({
+              name,
+              num,
+              pos,
+              email,
+              phone,
+              dob,
+            });
             setBusy(false);
             if (ok) {
               setName("");
@@ -449,6 +472,7 @@ function AddPlayerForm({
               setPos("");
               setEmail("");
               setPhone("");
+              setDob("");
             }
           }}
         >
@@ -492,6 +516,7 @@ function RosterRow({
   const [pos, setPos] = useState(player.position ?? "");
   const [email, setEmail] = useState(player.email);
   const [phone, setPhone] = useState(player.phone);
+  const [dob, setDob] = useState(player.dob ?? "");
 
   return (
     <>
@@ -513,6 +538,13 @@ function RosterRow({
         <td className="cap-email-col cap-roster-email">
           {player.email ? (
             <a href={`mailto:${player.email}`}>{player.email}</a>
+          ) : (
+            <span style={{ color: "rgba(0,0,0,0.3)" }}>—</span>
+          )}
+        </td>
+        <td style={{ whiteSpace: "nowrap" }}>
+          {player.dob ? (
+            fmtDob(player.dob)
           ) : (
             <span style={{ color: "rgba(0,0,0,0.3)" }}>—</span>
           )}
@@ -548,7 +580,7 @@ function RosterRow({
       </tr>
       {editing && (
         <tr className="cap-roster-edit-row">
-          <td colSpan={6}>
+          <td colSpan={7}>
             <div className="cap-inline-form" style={{ margin: 0 }}>
               <div className="cap-form-row">
                 <div className="cap-form-col">
@@ -599,6 +631,15 @@ function RosterRow({
                     onChange={(e) => setPhone(e.target.value)}
                   />
                 </div>
+                <div className="cap-form-col" style={{ maxWidth: 170 }}>
+                  <label className="cap-form-lbl">Date of birth</label>
+                  <input
+                    type="date"
+                    className="cap-form-input"
+                    value={dob}
+                    onChange={(e) => setDob(e.target.value)}
+                  />
+                </div>
               </div>
               <div className="cap-form-actions">
                 <button
@@ -606,7 +647,7 @@ function RosterRow({
                   className="le-cap-btn-primary"
                   disabled={busy || !name.trim()}
                   onClick={() =>
-                    onSaveEdit({ name, num, pos, email, phone })
+                    onSaveEdit({ name, num, pos, email, phone, dob })
                   }
                 >
                   {busy ? "Saving…" : "Save"}
@@ -625,4 +666,19 @@ function RosterRow({
       )}
     </>
   );
+}
+
+// "1992-05-11" → "May 11, 1992". Parsed at local noon so the
+// calendar day never shifts (same date-only TZ trap as audit H1).
+// Non-date-shaped input echoes back unchanged.
+function fmtDob(s: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+  if (!m) return s;
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12);
+  if (Number.isNaN(d.getTime())) return s;
+  return d.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 }

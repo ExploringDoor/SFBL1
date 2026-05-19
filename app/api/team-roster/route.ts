@@ -91,6 +91,11 @@ export async function GET(req: Request) {
       position: String(data.position ?? ""),
       email: String(contact.email ?? ""),
       phone: String(contact.phone ?? ""),
+      // DOB is PII — lives only on the _private/contact subdoc, never
+      // the public player doc. Returned here for the captain/manager
+      // roster view (this endpoint is already admin/captain-gated and
+      // reads via the Admin SDK). Not exposed on any public surface.
+      dob: String(contact.dob ?? ""),
       walk_on: data.walk_on === true,
       auth_uid: data.auth_uid ? String(data.auth_uid) : null,
     };
