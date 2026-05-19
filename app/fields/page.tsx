@@ -30,8 +30,13 @@ interface Field {
   color?: string | null;
 }
 
-// SFBL fallback list (same as the hardcoded array we used before).
-// LBDC + any future tenants supply their own via site_config/fields.
+// SFBL field directory — authoritative list supplied by Adam
+// (2026-05-18), alphabetical. SFBL serves from this hardcoded
+// fallback (no /leagues/sfbl/site_config/fields doc); LBDC + future
+// tenants supply their own via site_config/fields. The page
+// synthesizes Google + Apple Maps deep-links from `address` when
+// mapsUrl/appleMapsUrl aren't set, so name + address is all we need
+// here — same rendered result as LBDC's richer rows.
 const SFBL_FIELDS: Field[] = [
   { name: "American High School", address: "18350 NW 67th Avenue, Miami Lakes FL 33015" },
   { name: "Barbara Goleman High School", address: "14100 NW 89th Avenue, Miami Lakes FL 33018" },
@@ -43,23 +48,22 @@ const SFBL_FIELDS: Field[] = [
   { name: "Cypress Park", address: "1301 Coral Springs Dr, Coral Springs FL 33071" },
   { name: "Flamingo Park", address: "1435 Michigan Ave, Miami Beach FL 33139" },
   { name: "Florida Memorial University", address: "15800 NW 42nd Ave, Miami FL 33054" },
-  { name: "Floyd Hull Stadium", address: "2800 SW 8th Ave, Fort Lauderdale FL 33315" },
+  { name: "Floyd Hull Stadium", address: "2800 SW 8th Ave, Fort Lauderdale, FL 33315" },
   { name: "Little Fenway at Miller Park", address: "1905 SW 4th Ave, Delray Beach FL 33444" },
   { name: "Lynn University", address: "3601 North Military Trail, Boca Raton FL 33431" },
-  { name: "Margate Sports Complex #3", address: "1695 Banks Rd, Margate FL 33063" },
+  { name: "Margate Sports Complex #3", address: "1695 Banks Rd, Margate, FL 33063" },
   { name: "McArthur High School", address: "6501 Hollywood Blvd, Hollywood FL 33024" },
   { name: "Miami Christian School", address: "200 NW 109th Ave, Miami FL 33172" },
   { name: "Mullins Park", address: "10000 Ben Geiger Dr, Coral Springs FL 33065" },
   { name: "Northeast High School", address: "700 NE 56th Street, Oakland Park FL 33334" },
   { name: "Nova High School", address: "3600 College Ave, Fort Lauderdale FL 33314" },
-  { name: "Pompey Park", address: "1101 NW 2nd St, Delray Beach FL 33444" },
+  { name: "Pompey Park", address: "1101 NW 2nd St, Delray Beach, FL 33444" },
   { name: "Sabal Pines Park", address: "5005 NW 39th Ave, Coconut Creek FL 33073" },
   { name: "South Broward High School", address: "1901 North Federal Highway, Hollywood FL 33020" },
   { name: "South Miami High School", address: "6856 SW 53 Street, Miami FL 33155" },
   { name: "Sugar Sand Park", address: "300 South Military Trail, Boca Raton FL 33486" },
   { name: "Sunset Park", address: "10600 Cleary Blvd, Plantation FL 33324" },
   { name: "West Perrine Park", address: "17121 SW 104th Ave, Miami FL 33157" },
-  { name: "Weston Tequesta Park", address: "600 Indian Trace, Weston FL 33326" },
 ];
 
 async function loadFields(tenantId: string): Promise<Field[]> {
