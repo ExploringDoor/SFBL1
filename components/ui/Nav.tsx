@@ -49,11 +49,24 @@ const DEFAULT_LINKS: NavLink[] = [
   { label: "Standings", href: "/standings" },
   { label: "Stats", href: "/players" },
   { label: "Teams", href: "/teams" },
+  // League-info dropdown. Labeled "SFBL" for the SFBL tenant; the Nav
+  // relabel() swaps it to the tenant short ("LBDC" etc.) for others,
+  // same pattern as the old "About SFBL" leaf. Groups the three
+  // league-identity pages out of the catch-all "More" list so
+  // they're one obvious click. (Adam, 2026-05-18.)
+  {
+    label: "SFBL",
+    href: "#",
+    children: [
+      { label: "Info", href: "/sfbl-info" },
+      { label: "Rules", href: "/rules" },
+      { label: "Fields", href: "/fields" },
+    ],
+  },
   {
     label: "More",
     href: "#",
     children: [
-      { label: "Rules", href: "/rules" },
       { label: "News", href: "/content/news" },
       { label: "Photos", href: "/photos" },
       { label: "Leaders", href: "/leaders" },
@@ -61,8 +74,6 @@ const DEFAULT_LINKS: NavLink[] = [
       { label: "Tournaments", href: "/tournaments" },
       { label: "Availability", href: "/availability" },
       { label: "History", href: "/history" },
-      { label: "Fields", href: "/fields" },
-      { label: "About SFBL", href: "/sfbl-info" },
       { label: "Player Registration", href: "/player-registration" },
       { label: "Team Registration", href: "/team-registration" },
       { label: "Team Waiver", href: "/team-waiver-form" },
@@ -92,6 +103,11 @@ export function Nav({
     if (l.label === "About SFBL" && tenantShort && tenantShort !== "SFBL") {
       return { ...l, label: `About ${tenantShort}` };
     }
+    // The top-level league-info dropdown is authored as "SFBL"; show
+    // the actual tenant short for every other league ("LBDC", …).
+    if (l.label === "SFBL" && tenantShort && tenantShort !== "SFBL") {
+      return { ...l, label: tenantShort };
+    }
     return l;
   }
   const links: NavLink[] = hide.size
@@ -103,14 +119,16 @@ export function Nav({
               .filter((c) => !hide.has(c.label.toLowerCase()))
               .map(relabel);
             if (kept.length === 0) return null;
-            return { ...l, children: kept };
+            // Relabel the PARENT too (e.g. "SFBL" → "LBDC"), not just
+            // its children.
+            return { ...relabel(l), children: kept };
           }
           return relabel(l);
         })
         .filter((l): l is NavLink => l !== null)
     : linksProp.map((l) => {
         if (l.children) {
-          return { ...l, children: l.children.map(relabel) };
+          return { ...relabel(l), children: l.children.map(relabel) };
         }
         return relabel(l);
       });
