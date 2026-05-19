@@ -30,6 +30,8 @@ interface PotwPayload {
   id?: unknown;
   player_name?: unknown;
   team_name?: unknown;
+  season?: unknown;
+  week?: unknown;
   week_label?: unknown;
   award_date?: unknown;
   stat_line?: unknown;
@@ -123,6 +125,16 @@ export async function POST(req: Request) {
     }
     const team_name =
       typeof body.team_name === "string" ? body.team_name.trim() : "";
+    const season =
+      typeof body.season === "string" ? body.season.trim() : "";
+    const weekNum =
+      typeof body.week === "number"
+        ? body.week
+        : typeof body.week === "string" && body.week.trim() !== ""
+          ? Number(body.week)
+          : NaN;
+    const week =
+      Number.isFinite(weekNum) && weekNum >= 0 ? Math.floor(weekNum) : null;
     const week_label =
       typeof body.week_label === "string" ? body.week_label.trim() : "";
     const award_date =
@@ -145,6 +157,8 @@ export async function POST(req: Request) {
       id,
       player_name,
       team_name,
+      season,
+      week,
       week_label,
       award_date,
       stat_line,
@@ -163,7 +177,7 @@ export async function POST(req: Request) {
       kind: existing.exists ? "potw_update" : "potw_create",
       by_uid: decoded.uid,
       by_role: "admin",
-      changes: { id, player_name, week_label, award_date },
+      changes: { id, player_name, season, week, week_label, award_date },
       at: now,
     });
 

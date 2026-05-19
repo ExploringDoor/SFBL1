@@ -8,6 +8,7 @@
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { sanitizeHtml } from "@/lib/markdown";
+import { comparePotwDesc } from "@/lib/potw";
 
 export const dynamic = "force-dynamic";
 
@@ -15,16 +16,14 @@ interface PotwEntry {
   id: string;
   player_name: string;
   team_name: string;
+  season: string;
+  week: number | null;
   week_label: string;
   award_date: string | null;
   stat_line: string;
   blurb: string;
   photo_url: string | null;
   created_at: string | null;
-}
-
-function sortKey(e: PotwEntry): string {
-  return `${e.award_date ?? "0000-00-00"}T${e.created_at ?? ""}`;
 }
 
 function fmtDate(iso: string | null): string {
@@ -53,6 +52,11 @@ async function loadEntries(tenantId: string): Promise<PotwEntry[]> {
         id: String(data.id ?? d.id),
         player_name: String(data.player_name ?? ""),
         team_name: String(data.team_name ?? ""),
+        season: String(data.season ?? ""),
+        week:
+          typeof data.week === "number" && Number.isFinite(data.week)
+            ? data.week
+            : null,
         week_label: String(data.week_label ?? ""),
         award_date: data.award_date ? String(data.award_date) : null,
         stat_line: String(data.stat_line ?? ""),
@@ -61,7 +65,7 @@ async function loadEntries(tenantId: string): Promise<PotwEntry[]> {
         created_at: data.created_at ? String(data.created_at) : null,
       };
     });
-    list.sort((a, b) => sortKey(b).localeCompare(sortKey(a)));
+    list.sort(comparePotwDesc);
     return list;
   } catch {
     return [];
@@ -81,6 +85,18 @@ export default async function PlayerOfTheWeekPage() {
   const entries = await loadEntries(tenantId);
   const current = entries[0] ?? null;
   const archive = entries.slice(1);
+
+  // Group the archive by season, preserving the already-sorted order
+  // (newest season first, week high→low within). Entries without a
+  // season fall under an "Earlier" bucket at the end so nothing is
+  // dropped.
+  const groups: { season: string; items: PotwEntry[] }[] = [];
+  for (const e of archive) {
+    const key = e.season || "Earlier";
+    const last = groups[groups.length - 1];
+    if (last && last.season === key) last.items.push(e);
+    else groups.push({ season: key, items: [e] });
+  }
 
   return (
     <main className="container py-10">
@@ -227,30 +243,41 @@ export default async function PlayerOfTheWeekPage() {
         </section>
       )}
 
-      {archive.length > 0 && (
+      {groups.length > 0 && (
         <section style={{ marginTop: 40 }}>
           <h2
             className="font-display"
             style={{
               fontSize: 22,
               color: "var(--text-strong)",
-              margin: "0 0 14px",
+              margin: "0 0 18px",
             }}
           >
             Past honorees
           </h2>
-          <ul
-            style={{
-              listStyle: "none",
-              padding: 0,
-              margin: 0,
-              display: "grid",
-              gridTemplateColumns:
-                "repeat(auto-fill, minmax(280px, 1fr))",
-              gap: 14,
-            }}
-          >
-            {archive.map((e) => (
+          {groups.map((g) => (
+            <div key={g.season} style={{ marginBottom: 28 }}>
+              <h3
+                className="sec-eyebrow"
+                style={{
+                  color: "var(--brand-primary)",
+                  margin: "0 0 10px",
+                }}
+              >
+                {g.season}
+              </h3>
+              <ul
+                style={{
+                  listStyle: "none",
+                  padding: 0,
+                  margin: 0,
+                  display: "grid",
+                  gridTemplateColumns:
+                    "repeat(auto-fill, minmax(280px, 1fr))",
+                  gap: 14,
+                }}
+              >
+                {g.items.map((e) => (
               <li
                 key={e.id}
                 style={{
@@ -327,8 +354,10 @@ export default async function PlayerOfTheWeekPage() {
                   )}
                 </div>
               </li>
-            ))}
-          </ul>
+                ))}
+              </ul>
+            </div>
+          ))}
         </section>
       )}
     </main>

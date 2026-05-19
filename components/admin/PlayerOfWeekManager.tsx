@@ -20,12 +20,15 @@ import {
   query,
 } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
+import { comparePotwDesc } from "@/lib/potw";
 import { RichEditor } from "./RichEditor";
 
 interface PotwEntry {
   id: string;
   player_name: string;
   team_name: string;
+  season: string;
+  week: number | null;
   week_label: string;
   award_date: string | null;
   stat_line: string;
@@ -48,6 +51,8 @@ const EMPTY: PotwEntry = {
   id: "",
   player_name: "",
   team_name: "",
+  season: "",
+  week: null,
   week_label: "",
   award_date: null,
   stat_line: "",
@@ -56,12 +61,6 @@ const EMPTY: PotwEntry = {
   created_at: null,
   updated_at: null,
 };
-
-// Sort key: award_date desc, then created_at desc. Mirrors the
-// public page so the admin list order matches what subscribers see.
-function sortKey(e: PotwEntry): string {
-  return `${e.award_date ?? "0000-00-00"}T${e.created_at ?? ""}`;
-}
 
 export function PlayerOfWeekManager({ leagueId, user }: Props) {
   const [entries, setEntries] = useState<PotwEntry[]>([]);
@@ -84,6 +83,11 @@ export function PlayerOfWeekManager({ leagueId, user }: Props) {
         id: String(data.id ?? d.id),
         player_name: String(data.player_name ?? ""),
         team_name: String(data.team_name ?? ""),
+        season: String(data.season ?? ""),
+        week:
+          typeof data.week === "number" && Number.isFinite(data.week)
+            ? data.week
+            : null,
         week_label: String(data.week_label ?? ""),
         award_date: data.award_date ? String(data.award_date) : null,
         stat_line: String(data.stat_line ?? ""),
@@ -93,7 +97,7 @@ export function PlayerOfWeekManager({ leagueId, user }: Props) {
         updated_at: data.updated_at ? String(data.updated_at) : null,
       };
     });
-    list.sort((a, b) => sortKey(b).localeCompare(sortKey(a)));
+    list.sort(comparePotwDesc);
     setEntries(list);
     setLoading(false);
   }
@@ -119,6 +123,8 @@ export function PlayerOfWeekManager({ leagueId, user }: Props) {
           id: entry.id || undefined,
           player_name: entry.player_name,
           team_name: entry.team_name,
+          season: entry.season,
+          week: entry.week,
           week_label: entry.week_label,
           award_date: entry.award_date,
           stat_line: entry.stat_line,
@@ -249,6 +255,13 @@ export function PlayerOfWeekManager({ leagueId, user }: Props) {
                         ★ Current
                       </span>
                     )}
+                    {(e.season || e.week != null) && (
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 font-semibold text-slate-700">
+                        {[e.season, e.week != null ? `Wk ${e.week}` : ""]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </span>
+                    )}
                     {e.week_label && (
                       <span className="rounded-full bg-slate-100 px-2 py-0.5 font-semibold text-slate-700">
                         {e.week_label}
@@ -364,7 +377,44 @@ function Editor({
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <label className="mb-1 block text-xs font-semibold text-slate-700">
-              Week label (optional)
+              Season (groups the archive)
+            </label>
+            <input
+              type="text"
+              value={entry.season}
+              onChange={(e) =>
+                onChange({ ...entry, season: e.target.value })
+              }
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              placeholder="e.g. Spring 2026"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-slate-700">
+              Week # (orders within a season)
+            </label>
+            <input
+              type="number"
+              min={0}
+              value={entry.week ?? ""}
+              onChange={(e) =>
+                onChange({
+                  ...entry,
+                  week:
+                    e.target.value === ""
+                      ? null
+                      : Math.max(0, Math.floor(Number(e.target.value))),
+                })
+              }
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              placeholder="e.g. 6"
+            />
+          </div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-slate-700">
+              Week label (optional, free text)
             </label>
             <input
               type="text"
