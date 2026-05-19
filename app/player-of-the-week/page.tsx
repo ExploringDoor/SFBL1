@@ -119,6 +119,11 @@ export default async function PlayerOfTheWeekPage() {
     );
   }
 
+  // The intro / BEAST award / nomination instructions are
+  // SFBL-specific copy (references the SFBL season, the Baseball
+  // Beast Award, and playball@sfbl.com). Other tenants don't get it.
+  const isSfbl = tenantId === "sfbl";
+
   const entries = await loadEntries(tenantId);
   const current = entries[0] ?? null;
   const archive = entries.slice(1);
@@ -180,6 +185,54 @@ export default async function PlayerOfTheWeekPage() {
         </p>
       </header>
 
+      {isSfbl && (
+        <section style={{ maxWidth: 760, marginBottom: 32 }}>
+          <p
+            style={{
+              color: "var(--text-body)",
+              fontSize: 15.5,
+              lineHeight: 1.65,
+              margin: "0 0 14px",
+            }}
+          >
+            This page honors those players who turn in outstanding
+            performances during the course of the SFBL season.
+            Instructions on how to nominate a player are listed below.
+            Team managers and SFBL players are encouraged to nominate
+            deserving players each Monday of the season. Please send
+            photos and videos of your nominee.
+          </p>
+          <div
+            style={{
+              background: "rgba(0,0,0,0.03)",
+              border: "1px solid rgba(0,0,0,0.08)",
+              borderLeft: "4px solid var(--brand-primary)",
+              borderRadius: 12,
+              padding: "16px 18px",
+            }}
+          >
+            <p
+              style={{
+                color: "var(--text-body)",
+                fontSize: 15,
+                lineHeight: 1.65,
+                margin: 0,
+              }}
+            >
+              Every once in a while someone turns in an extraordinary
+              performance. So the SFBL created the{" "}
+              <strong>“Baseball Beast Award”</strong> for the best
+              individual performance of the season as voted by the
+              league members at the end of the regular season. The
+              SFBL conducts the special poll on Facebook to determine
+              the winner, who will earn the BEAST trophy, an authentic
+              SFBL logo baseball cap and a permanent spot in the
+              history books.
+            </p>
+          </div>
+        </section>
+      )}
+
       {!currentCard && (
         <p
           style={{
@@ -193,6 +246,71 @@ export default async function PlayerOfTheWeekPage() {
       )}
 
       <PotwClient current={currentCard} groups={groupCards} />
+
+      {isSfbl && (
+        <section
+          style={{
+            maxWidth: 760,
+            marginTop: 48,
+            background: "white",
+            border: "1px solid rgba(0,0,0,0.08)",
+            borderRadius: 12,
+            padding: "clamp(18px, 4vw, 28px)",
+          }}
+        >
+          <h2
+            className="font-display"
+            style={{
+              fontSize: 22,
+              color: "var(--text-strong)",
+              margin: "0 0 6px",
+            }}
+          >
+            Nominate a Player of the Week
+          </h2>
+          <p
+            style={{
+              color: "var(--muted)",
+              fontSize: 14,
+              margin: "0 0 14px",
+            }}
+          >
+            Team managers and SFBL players — send your nominees each
+            Monday of the season.
+          </p>
+          <ol
+            style={{
+              margin: 0,
+              paddingLeft: 20,
+              color: "var(--text-body)",
+              fontSize: 15,
+              lineHeight: 1.7,
+              display: "flex",
+              flexDirection: "column",
+              gap: 6,
+            }}
+          >
+            <li>
+              Email the league office at{" "}
+              <a
+                href="mailto:playball@sfbl.com"
+                style={{
+                  color: "var(--brand-primary)",
+                  fontWeight: 700,
+                }}
+              >
+                playball@sfbl.com
+              </a>
+              .
+            </li>
+            <li>
+              Please include the player’s full name, team name, and his
+              stats for the week — along with a photo and, if possible,
+              action shots.
+            </li>
+          </ol>
+        </section>
+      )}
     </main>
   );
 }

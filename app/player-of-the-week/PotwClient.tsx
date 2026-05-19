@@ -105,7 +105,12 @@ export function PotwClient({ current, groups }: Props) {
               className="sec-eyebrow"
               style={{ color: "var(--brand-primary)", margin: 0 }}
             >
-              {current.week_label || "This Week"}
+              {/* Never a misleading "This Week" — the newest entry
+                  may be a historical one (e.g. Spring 2019). Show
+                  the real season/week/date it carries. */}
+              {[current.season, current.week_label, current.date_label]
+                .filter(Boolean)
+                .join("  ·  ") || "Player of the Week"}
             </p>
             <h2
               className="font-display"
