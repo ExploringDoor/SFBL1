@@ -14,6 +14,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { User } from "firebase/auth";
+import { collection, getDocs } from "firebase/firestore";
+import { getDb } from "@/lib/firebase";
 
 type Kind =
   | "player_registration"
@@ -97,9 +99,44 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterMode>("actionable");
   const [busy, setBusy] = useState<string | null>(null);
+  // Teams for the "Assign to team" picker on player_registration
+  // rows. Public collection — a plain client read is fine.
+  const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const snap = await getDocs(
+          collection(getDb(), `leagues/${leagueId}/teams`),
+        );
+        if (cancelled) return;
+        setTeams(
+          snap.docs
+            .map((d) => ({
+              id: d.id,
+              name: String(d.data().name ?? d.id),
+            }))
+            .sort((a, b) => a.name.localeCompare(b.name)),
+        );
+      } catch {
+        /* picker just stays empty if teams can't load */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [leagueId]);
 
   function statusOf(s: Submission): Status {
     return s.status ?? "new";
+  }
+
+  // Optimistically merge fields into a row after an assign.
+  function patchItem(id: string, patch: Partial<Submission>) {
+    setItems((cur) =>
+      cur.map((row) => (row.id === id ? { ...row, ...patch } : row)),
+    );
   }
 
   async function advanceStatus(s: Submission) {
@@ -375,7 +412,24 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
                       </span>
                     </div>
                     {expanded === it.id && (
-                      <SubmissionDetail submission={it} />
+                      <>
+                        <SubmissionDetail submission={it} />
+                        {kind === "player_registration" && (
+                          <AssignRegistration
+                            leagueId={leagueId}
+                            user={user}
+                            submission={it}
+                            teams={teams}
+                            onAssigned={(playerId, teamId) =>
+                              patchItem(it.id, {
+                                status: "done",
+                                assigned_player_id: playerId,
+                                assigned_team_id: teamId,
+                              })
+                            }
+                          />
+                        )}
+                      </>
                     )}
                   </li>
                 );
@@ -511,6 +565,171 @@ function summaryLine(kind: Kind, s: Submission): string {
     return `${matchup}${date ? ` (${date})` : ""}${ev ? ` — ${ev}` : ""}`;
   }
   return s.id;
+}
+
+// Assign-to-team control for a player_registration submission.
+// Creates a real roster player (+ private contact incl. DOB) via
+// /api/admin-assign-registration and marks the submission done.
+// Idempotent server-side: once assigned this just shows the link.
+function AssignRegistration({
+  leagueId,
+  user,
+  submission,
+  teams,
+  onAssigned,
+}: {
+  leagueId: string;
+  user: User;
+  submission: Submission;
+  teams: { id: string; name: string }[];
+  onAssigned: (playerId: string, teamId: string) => void;
+}) {
+  const assignedPlayer =
+    typeof submission.assigned_player_id === "string"
+      ? submission.assigned_player_id
+      : "";
+  const assignedTeam =
+    typeof submission.assigned_team_id === "string"
+      ? submission.assigned_team_id
+      : "";
+
+  // Pre-select the team whose name matches what the registrant
+  // requested, when there's an exact (case-insensitive) match.
+  const requested =
+    typeof submission.team_name === "string"
+      ? submission.team_name.trim().toLowerCase()
+      : "";
+  const preselect =
+    teams.find((t) => t.name.trim().toLowerCase() === requested)?.id ?? "";
+
+  const [teamId, setTeamId] = useState(preselect);
+  const [jersey, setJersey] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(
+    null,
+  );
+
+  const teamName = (id: string) =>
+    teams.find((t) => t.id === id)?.name ?? id;
+
+  if (assignedPlayer) {
+    return (
+      <div className="px-3 py-3 bg-emerald-50 border-t border-emerald-200 text-[12px] text-emerald-800">
+        ✅ Added to the roster as{" "}
+        <span className="font-mono">{assignedPlayer}</span>
+        {assignedTeam ? <> on <strong>{teamName(assignedTeam)}</strong></> : null}
+        . Their info (including birthdate) is on that team — visible to
+        the team's captain/manager, never public.
+      </div>
+    );
+  }
+
+  async function assign() {
+    if (!teamId) {
+      setMsg({ ok: false, text: "Pick a team first." });
+      return;
+    }
+    setBusy(true);
+    setMsg(null);
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch("/api/admin-assign-registration", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          leagueId,
+          submissionId: submission.id,
+          teamId,
+          jersey: jersey.trim() || undefined,
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        player_id?: string;
+        team_id?: string;
+        error?: string;
+      };
+      if (res.ok && data.ok && data.player_id) {
+        setMsg({
+          ok: true,
+          text: `Added to ${teamName(data.team_id ?? teamId)}.`,
+        });
+        onAssigned(data.player_id, data.team_id ?? teamId);
+      } else {
+        setMsg({ ok: false, text: data.error ?? `HTTP ${res.status}` });
+      }
+    } catch (e) {
+      setMsg({ ok: false, text: e instanceof Error ? e.message : "Failed" });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="px-3 py-3 bg-blue-50 border-t border-blue-200">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-blue-800 mb-2">
+        Add to a team's roster
+      </p>
+      <div className="flex flex-wrap items-end gap-2">
+        <div>
+          <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">
+            Team
+          </label>
+          <select
+            value={teamId}
+            onChange={(e) => setTeamId(e.target.value)}
+            className="rounded-md border border-slate-300 px-2 py-1.5 text-xs bg-white min-w-[180px]"
+          >
+            <option value="">— Select team —</option>
+            {teams.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">
+            Jersey # (optional)
+          </label>
+          <input
+            type="number"
+            min={0}
+            value={jersey}
+            onChange={(e) => setJersey(e.target.value)}
+            className="rounded-md border border-slate-300 px-2 py-1.5 text-xs w-[90px]"
+            placeholder="#"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={assign}
+          disabled={busy || !teamId}
+          className="rounded-md bg-blue-700 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+        >
+          {busy ? "Adding…" : "Add to roster"}
+        </button>
+      </div>
+      {msg && (
+        <p
+          className={
+            "mt-2 text-[12px] " +
+            (msg.ok ? "text-emerald-700" : "text-red-700")
+          }
+        >
+          {msg.text}
+        </p>
+      )}
+      <p className="mt-2 text-[11px] text-slate-500">
+        Creates the player on the chosen team with their name,
+        position, email, phone, and birthdate. Birthdate stays
+        captain/admin-only — never shown publicly.
+      </p>
+    </div>
+  );
 }
 
 // Render an expanded submission as a labeled table instead of raw JSON.
