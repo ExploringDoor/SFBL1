@@ -1,5 +1,29 @@
 [
   {
+    "season": "Fall - 2025",
+    "game_type": "playoff",
+    "division": "18+ Division",
+    "standings": [
+      { "team": "Miami JC", "w": 1, "l": 0, "t": 0, "g": 1, "pct": "1.000", "p": 2 }
+    ]
+  },
+  {
+    "season": "Fall - 2025",
+    "game_type": "playoff",
+    "division": "28+ Division",
+    "standings": [
+      { "team": "Broward Senators", "w": 1, "l": 0, "t": 0, "g": 1, "pct": "1.000", "p": 2 }
+    ]
+  },
+  {
+    "season": "Fall - 2025",
+    "game_type": "playoff",
+    "division": "35+ Division",
+    "standings": [
+      { "team": "Miami Yankees", "w": 1, "l": 0, "t": 0, "g": 1, "pct": "1.000", "p": 2 }
+    ]
+  },
+  {
     "season": "Spring - 2026",
     "game_type": "season",
     "division": "18+ Division",

@@ -49,6 +49,40 @@ function loadHistory(tenantId: string): StandingsBlock[] {
   }
 }
 
+// Curated league-heritage facts (founding year + milestone counts).
+// The standings ARCHIVE only goes back to the years we have data
+// for; this lets the header state the real heritage (e.g. SFBL
+// founded 1992) without fabricating pre-archive season blocks.
+// Optional per tenant — absent file → no heritage line.
+interface HistoryMeta {
+  established?: number;
+  years_in_operation?: number;
+  season_count?: number;
+}
+
+function loadHistoryMeta(tenantId: string): HistoryMeta | null {
+  const file = path.resolve(
+    process.cwd(),
+    `data/${tenantId}/history-meta.json`,
+  );
+  if (!fs.existsSync(file)) return null;
+  try {
+    const raw = JSON.parse(fs.readFileSync(file, "utf8")) as Record<
+      string,
+      unknown
+    >;
+    const num = (v: unknown) =>
+      typeof v === "number" && Number.isFinite(v) ? v : undefined;
+    return {
+      established: num(raw.established),
+      years_in_operation: num(raw.years_in_operation),
+      season_count: num(raw.season_count),
+    };
+  } catch {
+    return null;
+  }
+}
+
 async function loadTeamMeta(tenantId: string): Promise<TeamMeta[]> {
   // Pull the current teams collection so we can match historical
   // team names to active clubs (logos, colors, division). Teams that
@@ -187,6 +221,7 @@ export default async function HistoryPage() {
     );
   }
 
+  const historyMeta = loadHistoryMeta(tenantId);
   const [all, teams] = await Promise.all([
     Promise.resolve(loadHistory(tenantId)),
     loadTeamMeta(tenantId),
@@ -197,7 +232,11 @@ export default async function HistoryPage() {
     const leagueName = await loadLeagueName(tenantId);
     return (
       <main className="container py-10">
-        <Header leagueName={leagueName} earliestYear={null} />
+        <Header
+          leagueName={leagueName}
+          earliestYear={null}
+          meta={historyMeta}
+        />
         <div className="le-history-empty">
           <strong>League history is not available yet.</strong>
           <p>Once past seasons are archived, they'll appear here.</p>
@@ -254,7 +293,11 @@ export default async function HistoryPage() {
 
   return (
     <main className="container py-10">
-      <Header leagueName={leagueName} earliestYear={earliestYear} />
+      <Header
+        leagueName={leagueName}
+        earliestYear={earliestYear}
+        meta={historyMeta}
+      />
       <HistoryView {...props} />
     </main>
   );
@@ -275,17 +318,54 @@ async function loadLeagueName(tenantId: string): Promise<string> {
   }
 }
 
+// 1 → "1st", 2 → "2nd", 35 → "35th", 66 → "66th", 22 → "22nd".
+function ordinal(n: number): string {
+  const v = n % 100;
+  const suffix =
+    v >= 11 && v <= 13
+      ? "th"
+      : n % 10 === 1
+        ? "st"
+        : n % 10 === 2
+          ? "nd"
+          : n % 10 === 3
+            ? "rd"
+            : "th";
+  return `${n}${suffix}`;
+}
+
 function Header({
   leagueName,
   earliestYear,
+  meta,
 }: {
   leagueName: string;
   earliestYear: number | null;
+  meta?: HistoryMeta | null;
 }) {
+  const heritage: string[] = [];
+  if (meta?.established) heritage.push(`Est. ${meta.established}`);
+  if (meta?.years_in_operation)
+    heritage.push(`${ordinal(meta.years_in_operation)} year`);
+  if (meta?.season_count)
+    heritage.push(`${ordinal(meta.season_count)} season`);
   return (
     <header className="le-history-hd">
       <p className="le-history-eyebrow">Archive</p>
       <h1 className="le-history-title">League History</h1>
+      {heritage.length > 0 && (
+        <p
+          className="le-history-eyebrow"
+          style={{
+            color: "var(--brand-primary)",
+            marginTop: 6,
+            fontWeight: 700,
+            letterSpacing: "0.04em",
+          }}
+        >
+          {heritage.join("  ·  ")}
+        </p>
+      )}
       <p className="le-history-sub">
         Every recorded {leagueName} season — champions, standings, and
         records
