@@ -101,14 +101,38 @@ export async function POST(req: Request) {
   }
   const data = leagueSnap.data() ?? {};
   const adminCfg = data.admin ?? {};
-  if (adminCfg.passwordless !== true || typeof adminCfg.password !== "string") {
+  let passwordless = adminCfg.passwordless === true;
+  let storedPassword: string | null =
+    typeof adminCfg.password === "string" ? adminCfg.password : null;
+
+  // Env-var fallback for hardcoded-config tenants (e.g. SFBL): the
+  // tenant declares `admin.passwordless: true` in lib/tenants.ts and
+  // the actual password lives in a Vercel env var
+  // (e.g. SFBL_ADMIN_PASSWORD). This keeps the password OUT of git
+  // history and out of Firestore — and avoids needing an out-of-band
+  // script run for tenants that don't have an admin-editable doc.
+  // LBDC stays on the Firestore path (set above); the env-var check
+  // only fires when Firestore doesn't already carry the password.
+  if (!storedPassword) {
+    const envKey =
+      leagueId.toUpperCase().replace(/[^A-Z0-9]/g, "_") + "_ADMIN_PASSWORD";
+    const envPw = process.env[envKey];
+    if (envPw && envPw.trim()) {
+      storedPassword = envPw;
+      // Treat a configured env var as opting this tenant into the
+      // passwordless gate even if the Firestore flag wasn't flipped.
+      passwordless = true;
+    }
+  }
+
+  if (!passwordless || !storedPassword) {
     return NextResponse.json(
       { error: "Password admin sign-in is not enabled for this league." },
       { status: 403 },
     );
   }
 
-  if (!(await safeEqual(password, String(adminCfg.password)))) {
+  if (!(await safeEqual(password, storedPassword))) {
     return NextResponse.json(
       { error: "Wrong password." },
       { status: 401 },

@@ -258,6 +258,14 @@ const SFBL_TENANT_CONFIG: LeagueConfig = {
     x: "https://x.com/flahardball",
     youtube: "https://www.youtube.com/@southfloridabaseballleague4262",
   },
+  // Passwordless admin sign-in — the SFBL /admin page now shows the
+  // shared-password gate (same UX as LBDC), no magic link required.
+  // The actual password lives in the SFBL_ADMIN_PASSWORD Vercel env
+  // var, NOT in this file (no secrets in git). See
+  // /api/public-admin-claim's env-var fallback. (Adam, 2026-05-18.)
+  admin: {
+    passwordless: true,
+  },
 } as unknown as LeagueConfig;
 
 export async function resolveTenant(parsed: ParsedHost): Promise<ResolvedTenant | null> {
