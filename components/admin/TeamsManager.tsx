@@ -22,7 +22,14 @@ interface TeamRow {
   division: string;
   logo_url: string;
   active: boolean;
+  /** Non-secret marker: does this team have a manager password set?
+   *  The password itself lives privately and is never loaded here. */
+  has_captain_password: boolean;
 }
+
+// Patch shape for saveEdit — TeamRow fields plus the write-only
+// captain_password (set, not displayed).
+type TeamPatch = Partial<TeamRow> & { captain_password?: string };
 
 interface PlayerRow {
   id: string;
@@ -92,6 +99,7 @@ export function TeamsManager({ leagueId, user }: Props) {
               color: String(data.color ?? ""),
               division: String(data.division ?? ""),
               logo_url: String(data.logo_url ?? ""),
+              has_captain_password: data.has_captain_password === true,
               active: data.active !== false,
             };
           })
@@ -296,7 +304,7 @@ export function TeamsManager({ leagueId, user }: Props) {
     }
   }
 
-  async function saveEdit(t: TeamRow, patch: Partial<TeamRow>) {
+  async function saveEdit(t: TeamRow, patch: TeamPatch) {
     const ok = await callApi({
       action: "update",
       teamId: t.id,
@@ -552,6 +560,25 @@ export function TeamsManager({ leagueId, user }: Props) {
   );
 }
 
+// Manager password: <normalized team name> + 2 random digits, e.g.
+// "miamiyankees47". The 2 digits are what make it a real password
+// (the bare team name no longer works once one is set). Admin can
+// edit to anything before saving.
+function generateManagerPassword(teamName: string): string {
+  const digits = String(Math.floor(Math.random() * 90) + 10); // 10–99
+  return `${passwordBase(teamName)}${digits}`;
+}
+
+function passwordBase(teamName: string): string {
+  return teamName.toLowerCase().replace(/[^a-z0-9]/g, "") || "team";
+}
+
+// Stable "shape" preview for the hint text (doesn't re-randomize on
+// every keystroke the way generateManagerPassword would).
+function generatePreviewHint(teamName: string): string {
+  return `${passwordBase(teamName)}##`;
+}
+
 function TeamEditForm({
   team,
   busy,
@@ -561,13 +588,14 @@ function TeamEditForm({
   team: TeamRow;
   busy: boolean;
   onCancel: () => void;
-  onSave: (patch: Partial<TeamRow>) => void;
+  onSave: (patch: TeamPatch) => void;
 }) {
   const [name, setName] = useState(team.name);
   const [abbrev, setAbbrev] = useState(team.abbrev);
   const [color, setColor] = useState(team.color || "#002d72");
   const [division, setDivision] = useState(team.division);
   const [logoUrl, setLogoUrl] = useState(team.logo_url);
+  const [captainPassword, setCaptainPassword] = useState("");
 
   return (
     <div className="px-3 py-3 bg-slate-50 border-t border-slate-200">
@@ -643,6 +671,44 @@ function TeamEditForm({
             className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm font-mono"
           />
         </label>
+        <div className="block sm:col-span-2 rounded-md border border-blue-200 bg-blue-50 p-3">
+          <span className="block text-xs font-semibold text-slate-700 mb-1">
+            Manager password{" "}
+            {team.has_captain_password ? (
+              <span className="text-emerald-700">· 🔒 currently set</span>
+            ) : (
+              <span className="text-slate-500">· not set yet</span>
+            )}
+          </span>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={captainPassword}
+              onChange={(e) => setCaptainPassword(e.target.value)}
+              disabled={busy}
+              placeholder={
+                team.has_captain_password
+                  ? "Type a new password to change it (blank = keep current)"
+                  : "Set a password the manager will type to log in"
+              }
+              className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm font-mono"
+            />
+            <button
+              type="button"
+              onClick={() => setCaptainPassword(generateManagerPassword(name))}
+              disabled={busy}
+              className="rounded-md border border-blue-300 bg-white px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-50 whitespace-nowrap"
+            >
+              Generate
+            </button>
+          </div>
+          <p className="mt-1 text-[11px] text-slate-500">
+            The manager goes to the captain page, picks {name || "this team"},
+            and types this password — no account needed. Click Generate for
+            “{generatePreviewHint(name)}”, or type your own. Leaving it blank
+            keeps the current password.
+          </p>
+        </div>
       </div>
       <div className="mt-3 flex gap-2">
         <button
@@ -654,6 +720,11 @@ function TeamEditForm({
               color,
               division,
               logo_url: logoUrl,
+              // Only send a password when one was typed/generated —
+              // blank means "keep current".
+              ...(captainPassword.trim()
+                ? { captain_password: captainPassword.trim() }
+                : {}),
             })
           }
           disabled={busy}

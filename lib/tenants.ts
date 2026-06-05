@@ -266,6 +266,15 @@ const SFBL_TENANT_CONFIG: LeagueConfig = {
   admin: {
     passwordless: true,
   },
+  // Passwordless captain/manager sign-in — the SFBL captain page
+  // shows a team-picker + password instead of a magic link. Each
+  // team's password is set by the admin in the Teams tab and stored
+  // privately (teams/{id}/_private/auth). Unlike LBDC's lenient
+  // "team name works" model, once a password is set for an SFBL team
+  // it is STRICT (see /api/public-captain-claim). (Adam, 2026-05-18.)
+  captain: {
+    passwordless: true,
+  },
 } as unknown as LeagueConfig;
 
 export async function resolveTenant(parsed: ParsedHost): Promise<ResolvedTenant | null> {

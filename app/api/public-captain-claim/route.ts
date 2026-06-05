@@ -131,8 +131,17 @@ export async function POST(req: Request) {
   // All comparisons use normalize() which strips non-alphanumerics
   // and lowercases so "Black Sox" / "blacksox" / "black-sox" match.
   let teamId: string | null = null;
-  if (explicitTeamId && rawPassword) {
-    // Two-step path. Validate password against the picked team.
+  if (explicitTeamId) {
+    // Two-step path (the picker). Fetch the team once, then decide:
+    //   • If a per-team captain password IS set (admin configured it
+    //     via /api/admin-team → private _private/auth subdoc), it is
+    //     STRICT: ONLY that exact password works. The team name /
+    //     abbrev / id no longer count, and there is NO no-password
+    //     bypass. This is what makes SFBL manager passwords real.
+    //   • If NO password is set, behavior is unchanged (LBDC's
+    //     "trust the URL" model): the team name/abbrev/id work, and
+    //     an empty password is accepted. Opt-in per team — a league
+    //     can roll passwords out gradually.
     const teamSnap = await db
       .doc(`leagues/${leagueId}/teams/${explicitTeamId}`)
       .get();
@@ -143,17 +152,22 @@ export async function POST(req: Request) {
       );
     }
     const td = teamSnap.data() ?? {};
-    const target = normalize(rawPassword);
-    const candidates = teamPasswordCandidates(explicitTeamId, td);
-    if (candidates.some((c) => normalize(c) === target)) {
+    const custom = await resolveCustomPassword(db, leagueId, explicitTeamId, td);
+    if (custom) {
+      if (rawPassword && normalize(rawPassword) === normalize(custom)) {
+        teamId = explicitTeamId;
+      }
+      // else → teamId stays null → "Wrong password" (no fallback).
+    } else if (!rawPassword) {
+      // No password configured + none supplied → trust-the-URL.
       teamId = explicitTeamId;
+    } else {
+      const target = normalize(rawPassword);
+      const candidates = teamPasswordCandidates(explicitTeamId, td);
+      if (candidates.some((c) => normalize(c) === target)) {
+        teamId = explicitTeamId;
+      }
     }
-  } else if (explicitTeamId) {
-    // Privileged "trust the caller" path — no password required.
-    const teamSnap = await db
-      .doc(`leagues/${leagueId}/teams/${explicitTeamId}`)
-      .get();
-    if (teamSnap.exists) teamId = explicitTeamId;
   } else {
     // Legacy single-input search. Scans every team and normalize-
     // compares each candidate string.
@@ -253,4 +267,37 @@ function teamPasswordCandidates(
   const abbrev = String(td.abbrev ?? "");
   const firstWord = name.split(/\s+/)[0] ?? "";
   return [custom, id, name, abbrev, firstWord].filter(Boolean);
+}
+
+// Resolve a team's configured captain password, if any. The
+// authoritative location is the PRIVATE subdoc
+// teams/{id}/_private/auth.captain_password (set by /api/admin-team;
+// not world-readable). Falls back to a legacy public
+// `captain_password` field for any team that set one the old way.
+// Returns "" when no password is configured (→ lenient behavior).
+async function resolveCustomPassword(
+  db: FirebaseFirestore.Firestore,
+  leagueId: string,
+  teamId: string,
+  td: FirebaseFirestore.DocumentData,
+): Promise<string> {
+  // Fast skip: the public doc carries a non-secret marker when a
+  // private password exists, so we only pay the extra read when one
+  // is actually set (or a legacy public field is present).
+  const marker = td.has_captain_password === true;
+  const legacy = String(td.captain_password ?? "").trim();
+  if (marker) {
+    try {
+      const authSnap = await db
+        .doc(`leagues/${leagueId}/teams/${teamId}/_private/auth`)
+        .get();
+      const priv = authSnap.exists
+        ? String(authSnap.data()?.captain_password ?? "").trim()
+        : "";
+      if (priv) return priv;
+    } catch {
+      // fall through to legacy on read failure
+    }
+  }
+  return legacy;
 }

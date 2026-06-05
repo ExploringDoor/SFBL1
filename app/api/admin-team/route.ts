@@ -33,6 +33,11 @@ interface Body {
   color?: unknown;
   division?: unknown;
   logo_url?: unknown;
+  // Per-team captain/manager password. Stored on the PRIVATE
+  // teams/{id}/_private/auth subdoc (the public team doc is
+  // world-readable, so a password there would leak). Empty/omitted
+  // string = leave the existing password unchanged.
+  captain_password?: unknown;
 }
 
 export async function POST(req: Request) {
@@ -172,6 +177,28 @@ export async function POST(req: Request) {
     }
   }
 
+  // Captain/manager password — written to the PRIVATE subdoc (below),
+  // never the public team doc. A non-empty string sets/replaces it
+  // and stamps a non-secret `has_captain_password: true` flag on the
+  // public doc so the admin UI can show "password set" without
+  // reading the secret. Empty/omitted = leave unchanged. Parsed here
+  // (before the empty-update guard) so a password-only edit counts
+  // as a change.
+  let setCaptainPassword: string | null = null;
+  if (typeof body.captain_password === "string") {
+    const pw = body.captain_password.trim();
+    if (pw) {
+      if (pw.length > 128) {
+        return NextResponse.json(
+          { error: "captain_password too long (128 char max)" },
+          { status: 400 },
+        );
+      }
+      setCaptainPassword = pw;
+      update.has_captain_password = true;
+    }
+  }
+
   if (action === "create") {
     if (!update.name) {
       return NextResponse.json(
@@ -210,5 +237,19 @@ export async function POST(req: Request) {
   }
 
   await ref.set(update, { merge: true });
+
+  if (setCaptainPassword !== null) {
+    await db
+      .doc(`leagues/${leagueId}/teams/${teamId}/_private/auth`)
+      .set(
+        {
+          captain_password: setCaptainPassword,
+          updated_at: new Date().toISOString(),
+          updated_by_uid: decoded.uid,
+        },
+        { merge: true },
+      );
+  }
+
   return NextResponse.json({ ok: true, action, teamId });
 }
