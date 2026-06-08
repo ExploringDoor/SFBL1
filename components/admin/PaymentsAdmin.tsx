@@ -1,14 +1,12 @@
 "use client";
 
-// Admin Payments tab — league-wide view of fee collection. Captains
-// track their own team's payments in the captain portal
-// (/api/captain-payment writes /leagues/{id}/payments/{playerId});
-// this rolls them all up for the commissioner: a per-team breakdown
-// + a league total.
+// Admin Payments tab — the LEAGUE's ledger of what each team owes /
+// has paid the league (dues, fees). This is the commissioner's own
+// tracking, fully separate from /api/captain-payment (captains
+// tracking their own players' money — never shown here).
 //
-// Reads are client-side: payments are admin-readable per
-// firestore.rules; players + teams are public. We join on player_id
-// / team_id (names only — no PII pulled here).
+// Reads + writes via /api/admin-team-payment (Admin SDK). Team names
+// come from the public teams collection.
 
 import { useEffect, useState } from "react";
 import type { User } from "firebase/auth";
@@ -20,63 +18,72 @@ interface Props {
   user: User;
 }
 
-interface Pay {
-  player_id: string;
+interface Row {
   team_id: string;
-  amount_paid: number;
-  amount_due: number;
-  paid: boolean;
+  name: string;
+  amount_due: string; // kept as strings for the inputs
+  amount_paid: string;
   note: string;
-}
-
-function statusOf(p: Pay): "paid" | "partial" | "unpaid" {
-  if (p.amount_due <= 0) return p.paid ? "paid" : "unpaid";
-  if (p.amount_paid >= p.amount_due) return "paid";
-  if (p.amount_paid > 0) return "partial";
-  return "unpaid";
 }
 
 const money = (n: number) =>
   n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 
-export function PaymentsAdmin({ leagueId }: Props) {
+function statusOf(due: number, paid: number): "paid" | "partial" | "unpaid" {
+  if (due > 0 && paid >= due) return "paid";
+  if (paid > 0) return "partial";
+  return "unpaid";
+}
+
+export function PaymentsAdmin({ leagueId, user }: Props) {
+  const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
-  const [pays, setPays] = useState<Pay[]>([]);
-  const [playerName, setPlayerName] = useState<Record<string, string>>({});
-  const [teamName, setTeamName] = useState<Record<string, string>>({});
-  const [error, setError] = useState<string | null>(null);
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   async function load() {
     setLoading(true);
-    setError(null);
+    setMsg(null);
     try {
-      const db = getDb();
-      const [paySnap, playerSnap, teamSnap] = await Promise.all([
-        getDocs(collection(db, `leagues/${leagueId}/payments`)),
-        getDocs(collection(db, `leagues/${leagueId}/players`)),
-        getDocs(collection(db, `leagues/${leagueId}/teams`)),
-      ]);
-      const pn: Record<string, string> = {};
-      for (const d of playerSnap.docs) pn[d.id] = String(d.data().name ?? d.id);
-      const tn: Record<string, string> = {};
-      for (const d of teamSnap.docs) tn[d.id] = String(d.data().name ?? d.id);
-      setPlayerName(pn);
-      setTeamName(tn);
-      setPays(
-        paySnap.docs.map((d) => {
-          const x = d.data();
-          return {
-            player_id: String(x.player_id ?? d.id),
-            team_id: String(x.team_id ?? ""),
-            amount_paid: Number(x.amount_paid ?? 0),
-            amount_due: Number(x.amount_due ?? 0),
-            paid: x.paid === true,
-            note: String(x.note ?? ""),
-          };
+      const idToken = await user.getIdToken();
+      const [teamSnap, payRes] = await Promise.all([
+        getDocs(collection(getDb(), `leagues/${leagueId}/teams`)),
+        fetch("/api/admin-team-payment", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({ leagueId, action: "list" }),
         }),
+      ]);
+      const payBody = (await payRes.json().catch(() => ({}))) as {
+        payments?: {
+          team_id: string;
+          amount_due: number;
+          amount_paid: number;
+          note: string;
+        }[];
+      };
+      const payById = new Map(
+        (payBody.payments ?? []).map((p) => [p.team_id, p]),
       );
+      const teamRows: Row[] = teamSnap.docs
+        .filter((d) => d.data().active !== false)
+        .map((d) => {
+          const p = payById.get(d.id);
+          return {
+            team_id: d.id,
+            name: String(d.data().name ?? d.id),
+            amount_due: p?.amount_due ? String(p.amount_due) : "",
+            amount_paid: p?.amount_paid ? String(p.amount_paid) : "",
+            note: p?.note ?? "",
+          };
+        })
+        .sort((a, b) => a.name.localeCompare(b.name));
+      setRows(teamRows);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Load failed");
+      setMsg({ ok: false, text: e instanceof Error ? e.message : "Load failed" });
     } finally {
       setLoading(false);
     }
@@ -87,126 +94,168 @@ export function PaymentsAdmin({ leagueId }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leagueId]);
 
-  if (loading) return <p className="text-sm text-slate-500">Loading…</p>;
-  if (error)
-    return (
-      <p className="rounded bg-red-50 px-2 py-1 text-sm text-red-700">
-        {error}
-      </p>
+  function patch(teamId: string, field: keyof Row, value: string) {
+    setRows((rs) =>
+      rs.map((r) => (r.team_id === teamId ? { ...r, [field]: value } : r)),
     );
-
-  const totalCollected = pays.reduce((a, p) => a + p.amount_paid, 0);
-  const totalDue = pays.reduce((a, p) => a + p.amount_due, 0);
-  const outstanding = Math.max(0, totalDue - totalCollected);
-  const paidCount = pays.filter((p) => statusOf(p) === "paid").length;
-
-  // Group by team.
-  const byTeam = new Map<string, Pay[]>();
-  for (const p of pays) {
-    const arr = byTeam.get(p.team_id) ?? [];
-    arr.push(p);
-    byTeam.set(p.team_id, arr);
   }
-  const teamRows = [...byTeam.entries()].sort((a, b) =>
-    (teamName[a[0]] ?? a[0]).localeCompare(teamName[b[0]] ?? b[0]),
-  );
+
+  async function save(r: Row) {
+    setSavingId(r.team_id);
+    setMsg(null);
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch("/api/admin-team-payment", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          leagueId,
+          action: "save",
+          teamId: r.team_id,
+          amount_due: r.amount_due === "" ? 0 : Number(r.amount_due),
+          amount_paid: r.amount_paid === "" ? 0 : Number(r.amount_paid),
+          note: r.note,
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (res.ok) setMsg({ ok: true, text: `Saved ${r.name}.` });
+      else setMsg({ ok: false, text: data.error ?? `HTTP ${res.status}` });
+    } catch (e) {
+      setMsg({ ok: false, text: e instanceof Error ? e.message : "Save failed" });
+    } finally {
+      setSavingId(null);
+    }
+  }
+
+  if (loading) return <p className="text-sm text-slate-500">Loading…</p>;
+
+  const totDue = rows.reduce((a, r) => a + (Number(r.amount_due) || 0), 0);
+  const totPaid = rows.reduce((a, r) => a + (Number(r.amount_paid) || 0), 0);
+  const outstanding = Math.max(0, totDue - totPaid);
+  const paidTeams = rows.filter(
+    (r) => statusOf(Number(r.amount_due) || 0, Number(r.amount_paid) || 0) === "paid",
+  ).length;
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-600">
-          League-wide fee collection. Captains update these from their
-          portal; this is your read-only roll-up.
-        </p>
-        <button
-          type="button"
-          onClick={load}
-          className="rounded-md border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-        >
-          Refresh
-        </button>
-      </div>
+      <p className="text-sm text-slate-600">
+        Track what each <strong>team</strong> owes and has paid the league.
+        This is your own ledger — captains&rsquo; player payments are not
+        shown here.
+      </p>
 
-      {/* Summary cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <SummaryCard label="Collected" value={money(totalCollected)} tone="emerald" />
-        <SummaryCard label="Outstanding" value={money(outstanding)} tone="amber" />
-        <SummaryCard label="Players paid" value={`${paidCount} / ${pays.length}`} />
-        <SummaryCard label="Total billed" value={money(totalDue)} />
+        <Card label="Collected" value={money(totPaid)} tone="emerald" />
+        <Card label="Outstanding" value={money(outstanding)} tone="amber" />
+        <Card label="Teams paid" value={`${paidTeams} / ${rows.length}`} />
+        <Card label="Total billed" value={money(totDue)} />
       </div>
 
-      {pays.length === 0 ? (
-        <p className="text-sm italic text-slate-500">
-          No payment records yet. They appear once captains start tracking
-          fees in their portal.
+      {msg && (
+        <p
+          className={
+            "rounded-md px-2 py-1 text-sm " +
+            (msg.ok ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700")
+          }
+        >
+          {msg.text}
         </p>
-      ) : (
-        teamRows.map(([teamId, rows]) => {
-          const tCollected = rows.reduce((a, p) => a + p.amount_paid, 0);
-          const tPaid = rows.filter((p) => statusOf(p) === "paid").length;
-          return (
-            <div
-              key={teamId}
-              className="overflow-hidden rounded-md border border-slate-200"
-            >
-              <div className="flex items-center justify-between bg-slate-50 px-3 py-2">
-                <span className="text-sm font-semibold text-slate-900">
-                  {teamName[teamId] ?? teamId}
-                </span>
-                <span className="text-xs text-slate-600">
-                  {tPaid}/{rows.length} paid · {money(tCollected)} collected
-                </span>
-              </div>
-              <table className="w-full text-sm">
-                <tbody>
-                  {rows
-                    .sort((a, b) =>
-                      (playerName[a.player_id] ?? a.player_id).localeCompare(
-                        playerName[b.player_id] ?? b.player_id,
-                      ),
-                    )
-                    .map((p) => {
-                      const st = statusOf(p);
-                      return (
-                        <tr key={p.player_id} className="border-t border-slate-100">
-                          <td className="px-3 py-1.5">
-                            {playerName[p.player_id] ?? p.player_id}
-                          </td>
-                          <td className="px-3 py-1.5 text-right tabular-nums text-slate-600">
-                            {money(p.amount_paid)}
-                            {p.amount_due > 0 ? ` / ${money(p.amount_due)}` : ""}
-                          </td>
-                          <td className="px-3 py-1.5 text-right">
-                            <span
-                              className={
-                                "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase " +
-                                (st === "paid"
-                                  ? "bg-emerald-100 text-emerald-700"
-                                  : st === "partial"
-                                    ? "bg-amber-100 text-amber-700"
-                                    : "bg-slate-100 text-slate-500")
-                              }
-                            >
-                              {st}
-                            </span>
-                          </td>
-                          <td className="px-3 py-1.5 text-xs text-slate-500">
-                            {p.note}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                </tbody>
-              </table>
-            </div>
-          );
-        })
       )}
+
+      <div className="overflow-x-auto rounded-md border border-slate-200">
+        <table className="w-full min-w-[640px] text-sm">
+          <thead>
+            <tr className="bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
+              <th className="px-3 py-2">Team</th>
+              <th className="px-3 py-2 w-28">Paid ($)</th>
+              <th className="px-3 py-2 w-28">Due ($)</th>
+              <th className="px-3 py-2">Note</th>
+              <th className="px-3 py-2 w-20">Status</th>
+              <th className="px-3 py-2 w-20"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => {
+              const st = statusOf(
+                Number(r.amount_due) || 0,
+                Number(r.amount_paid) || 0,
+              );
+              return (
+                <tr key={r.team_id} className="border-t border-slate-100">
+                  <td className="px-3 py-1.5 font-medium text-slate-900">
+                    {r.name}
+                  </td>
+                  <td className="px-3 py-1.5">
+                    <input
+                      type="number"
+                      min={0}
+                      value={r.amount_paid}
+                      onChange={(e) =>
+                        patch(r.team_id, "amount_paid", e.target.value)
+                      }
+                      className="w-24 rounded border border-slate-300 px-2 py-1 text-sm"
+                      placeholder="0"
+                    />
+                  </td>
+                  <td className="px-3 py-1.5">
+                    <input
+                      type="number"
+                      min={0}
+                      value={r.amount_due}
+                      onChange={(e) =>
+                        patch(r.team_id, "amount_due", e.target.value)
+                      }
+                      className="w-24 rounded border border-slate-300 px-2 py-1 text-sm"
+                      placeholder="0"
+                    />
+                  </td>
+                  <td className="px-3 py-1.5">
+                    <input
+                      type="text"
+                      value={r.note}
+                      onChange={(e) => patch(r.team_id, "note", e.target.value)}
+                      className="w-full min-w-[120px] rounded border border-slate-300 px-2 py-1 text-sm"
+                      placeholder="Zelle 5/2, owes balance…"
+                    />
+                  </td>
+                  <td className="px-3 py-1.5">
+                    <span
+                      className={
+                        "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase " +
+                        (st === "paid"
+                          ? "bg-emerald-100 text-emerald-700"
+                          : st === "partial"
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-slate-100 text-slate-500")
+                      }
+                    >
+                      {st}
+                    </span>
+                  </td>
+                  <td className="px-3 py-1.5 text-right">
+                    <button
+                      type="button"
+                      onClick={() => save(r)}
+                      disabled={savingId === r.team_id}
+                      className="rounded-md bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white disabled:opacity-50"
+                    >
+                      {savingId === r.team_id ? "…" : "Save"}
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
 
-function SummaryCard({
+function Card({
   label,
   value,
   tone,
