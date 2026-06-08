@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import type { User } from "firebase/auth";
 import { collection, getDocs } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
+import { ManagerContact } from "@/components/ManagerContact";
 
 interface TeamRow {
   id: string;
@@ -431,6 +432,7 @@ export function TeamsManager({ leagueId, user }: Props) {
         </p>
       ) : (
         <DivisionGroups
+          leagueId={leagueId}
           teams={teams}
           players={players}
           expanded={expanded}
@@ -759,6 +761,7 @@ interface AddPlayerFields {
 }
 
 function DivisionGroups({
+  leagueId,
   teams,
   players,
   expanded,
@@ -777,6 +780,7 @@ function DivisionGroups({
   onUpdatePlayer,
   onRemovePlayer,
 }: {
+  leagueId: string;
   teams: TeamRow[];
   players: PlayerRow[];
   expanded: Set<string>;
@@ -845,6 +849,7 @@ function DivisionGroups({
               {bucketTeams.map((t) => (
                 <TeamRowItem
                   key={t.id}
+                  leagueId={leagueId}
                   team={t}
                   roster={players.filter((p) => p.team_id === t.id)}
                   isExpanded={expanded.has(t.id)}
@@ -879,6 +884,7 @@ function DivisionGroups({
 }
 
 function TeamRowItem({
+  leagueId,
   team: t,
   roster,
   isExpanded,
@@ -897,6 +903,7 @@ function TeamRowItem({
   onUpdatePlayer,
   onRemovePlayer,
 }: {
+  leagueId: string;
   team: TeamRow;
   roster: PlayerRow[];
   isExpanded: boolean;
@@ -985,6 +992,7 @@ function TeamRowItem({
 
       {isExpanded && (
         <div className="border-t border-slate-200 bg-slate-50/50 px-3 py-3 space-y-3">
+          <ManagerContact leagueId={leagueId} teamId={t.id} />
           {roster.length === 0 ? (
             <p className="text-xs text-slate-500 italic">
               No players on this roster yet.

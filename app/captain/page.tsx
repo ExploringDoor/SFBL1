@@ -41,6 +41,7 @@ import { QuickScoreTab } from "@/components/captain/QuickScoreTab";
 import { FirstTimeWelcome } from "@/components/captain/FirstTimeWelcome";
 import { PasswordlessCaptainPicker } from "@/components/captain/PasswordlessCaptainPicker";
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
+import { ManagerContact } from "@/components/ManagerContact";
 import { getDb } from "@/lib/firebase";
 import { useTenant } from "@/lib/tenant-context";
 import {
@@ -699,6 +700,14 @@ function CaptainBody({
         playerCount={roster.length}
         division={team.division}
       />
+
+      <div style={{ margin: "16px 0" }}>
+        <ManagerContact
+          leagueId={leagueId}
+          teamId={teamId}
+          title="Your contact on file"
+        />
+      </div>
 
       {awaitingScore.length > 0 && (
         <AwaitingScoreCard
