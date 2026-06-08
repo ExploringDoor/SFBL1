@@ -250,6 +250,16 @@ const SFBL_TENANT_CONFIG: LeagueConfig = {
     banner_url: "/logos/sfbl/sfbl-widestheader.png",
   },
   billing: { status: "active" },
+  // SFBL standings are POINTS-based: 2 for a win, 1 for a tie, 0 for
+  // a loss (Adam, 2026-05-18). Without this the standings page got a
+  // null scheme — no PTS column and sorted by win% instead of points.
+  // Now both the homepage and /standings show PTS and sort by points
+  // (ties broken by run differential).
+  standings: {
+    scoring: "points",
+    points_per: { win: 2, tie: 1, loss: 0 },
+    tiebreaker: "rd",
+  },
   // SFBL social profiles — rendered as footer icon links
   // (Adam, 2026-05-18).
   social: {

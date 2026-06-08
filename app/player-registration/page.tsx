@@ -106,7 +106,7 @@ function tenantConfig(
     agreeLabel:
       "I have read and agree to the SFBL liability waiver below, including the absolute release for injuries (including fatality), and I am at least 18 years old.",
     successMessage:
-      "Thanks! You're registered. Watch your email for payment + roster confirmation.",
+      "Thanks! You're registered. Watch your email or text for payment + roster confirmation.",
   };
 }
 
