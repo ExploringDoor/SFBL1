@@ -38,7 +38,6 @@ import { TeamChatTab } from "@/components/captain/TeamChatTab";
 import { CaptainsChatTab } from "@/components/captain/CaptainsChatTab";
 import { HelpTab } from "@/components/captain/HelpTab";
 import { QuickScoreTab } from "@/components/captain/QuickScoreTab";
-import { FirstTimeWelcome } from "@/components/captain/FirstTimeWelcome";
 import { PasswordlessCaptainPicker } from "@/components/captain/PasswordlessCaptainPicker";
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
 import { ManagerContact } from "@/components/ManagerContact";
@@ -505,22 +504,28 @@ export default function CaptainHomePage() {
 // mid-session (DVSL v271). DVSL fix: embed the panel in every role
 // surface using a shared component. We use the same shared component
 // (`NotificationsPanel`) as the /profile page does.
-type Tab = { key: string; label: string };
+type Tab = { key: string; label: string; hidden?: boolean };
+// Order per Adam (2026-05-18): Attendance next to My Team; Schedule
+// after Notifications; Payments before Help.
 const TABS: Tab[] = [
   { key: "team", label: "My Team" },
-  { key: "roster", label: "Roster" },
-  { key: "schedule", label: "Schedule" },
-  { key: "scores", label: "Submit Score" },
-  { key: "quickscore", label: "⚡ Quick Score" },
-  { key: "payments", label: "Payments" },
-  { key: "notifications", label: "🔔 Notifications" },
   { key: "attendance", label: "Attendance" },
+  { key: "roster", label: "Roster" },
+  { key: "scores", label: "Submit Score" },
+  { key: "notifications", label: "🔔 Notifications" },
+  { key: "schedule", label: "Schedule" },
   { key: "teamchat", label: "Team Chat" },
   { key: "captchat", label: "Captains Chat" },
+  { key: "payments", label: "Payments" },
   // Announcements tab hidden — body is still a "Coming soon"
   // placeholder. Re-enable once admin-pushed announcements ship.
   // { key: "announcements", label: "Announcements" },
   { key: "help", label: "Help" },
+  // Quick Score is reached from the Submit Score tab (its "⚡ Quick
+  // Score" button → #quickscore), NOT its own tab — it was redundant
+  // with Submit Score. Kept here as a hidden, still-routable entry so
+  // the hash-routing + render path keep working.
+  { key: "quickscore", label: "⚡ Quick Score", hidden: true },
 ];
 
 function useCaptainTab(): [string, (k: string) => void] {
@@ -548,7 +553,7 @@ function CaptainTabNav() {
   const [tab, go] = useCaptainTab();
   return (
     <nav className="cap-tab-nav">
-      {TABS.map((t) => (
+      {TABS.filter((t) => !t.hidden).map((t) => (
         <button
           key={t.key}
           type="button"
@@ -692,7 +697,6 @@ function CaptainBody({
 
   return (
     <>
-      <FirstTimeWelcome teamName={team.name} />
       <CaptainStatStrip
         record={stats.record}
         upcomingCount={upcoming.length}

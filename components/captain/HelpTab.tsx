@@ -17,7 +17,9 @@ interface Props {
   contactEmail?: string;
 }
 
-export function HelpTab({ contactEmail = "adam.miller.22@gmail.com" }: Props) {
+export function HelpTab({
+  contactEmail = "adam.mainlinewebdesign@gmail.com",
+}: Props) {
   return (
     <div className="cap-tab cap-help">
       <div className="cap-section-head">
@@ -32,15 +34,14 @@ export function HelpTab({ contactEmail = "adam.miller.22@gmail.com" }: Props) {
         <summary>1. Logging In</summary>
         <div className="help-body">
           <p>
-            Captains sign in with a <strong>magic link</strong> — no password
-            to remember. Enter your email and we'll send you a one-tap link;
-            click it on this device and you're in.
+            Captains sign in with a <strong>team password</strong> — no
+            account or email needed. Go to the captain page, pick your team
+            from the list, and type the password the commissioner gave you.
           </p>
           <ul>
             <li>
-              <strong>First time?</strong> Use the email the commissioner has
-              on file for you. If your email isn't recognized, ping the
-              commissioner to add you.
+              <strong>First time?</strong> Ask the commissioner for your
+              team&rsquo;s password. Each team has its own.
             </li>
             <li>
               <strong>Stays signed in</strong> — once you log in on a device
