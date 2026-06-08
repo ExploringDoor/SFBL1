@@ -92,6 +92,10 @@ const DEFAULT_LINKS: NavLink[] = [
       { label: "Sponsors", href: "/content/sponsors" },
       { label: "Store", href: "/content/store" },
       { label: "Contact", href: "/content/contact" },
+      // Admin moved here from the header pill (Adam, 2026-05-18) — it
+      // just opens the admin password gate, so it's a discreet entry
+      // point rather than a prominent button.
+      { label: "Admin", href: "/admin" },
     ],
   },
 ];
@@ -404,6 +408,7 @@ function iconFor(href: string): string {
     "/content/store": "🛒",
     "/content/contact": "✉️",
     "/profile": "🙋",
+    "/admin": "◉",
   };
   return ICONS[href] ?? "•";
 }

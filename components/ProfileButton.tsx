@@ -1,20 +1,19 @@
 "use client";
 
 // Header profile chip. States:
-//   - signed out, passwordless tenant (LBDC) → "Captain" + "Admin"
-//     pills linking direct to /captain and /admin (each of which
-//     renders its own password prompt). Users have no "account" to
-//     sign in to here — the team-name / admin-password gates do all
-//     the auth.
-//   - signed out, regular tenant (SFBL)      → "Sign in" pill →
-//     /login (magic link).
-//   - signed in, captain → "Captain" + email + sign-out
-//   - signed in, admin   → "Admin" + email + sign-out
-//   - signed in, other   → email + sign-out
+//   - signed out, passwordless tenant (SFBL/LBDC) → a single "Profile"
+//     button that asks "Captain or Player?" and routes to the right
+//     sign-in (/captain password gate, or /login for players). Admin
+//     is NOT here — it lives in the More nav menu (Adam, 2026-05-18).
+//   - signed out, regular tenant → "Sign in" → /login (magic link).
+//   - signed in, captain (passwordless) → "Captain" + sign-out (no
+//     separate Profile — the captain portal is their one home).
+//   - signed in, player/other → "Profile" + sign-out.
 //
-// Each link is rendered as a separate small pill so the user can tell
-// at a glance what privileges they have in the active league.
+// Each link is a small pill so the user can tell at a glance what
+// they can reach in the active league.
 
+import { useState } from "react";
 import Link from "next/link";
 import { signOut, useLeagueRole, useUser } from "@/lib/auth-client";
 import { useTenant } from "@/lib/tenant-context";
@@ -25,7 +24,6 @@ export function ProfileButton({ tenantId }: { tenantId: string }) {
   const role = useLeagueRole(tenantId);
   const { config } = useTenant();
   const captainPasswordless = config?.captain?.passwordless === true;
-  const adminPasswordless = config?.admin?.passwordless === true;
 
   if (user === undefined) {
     return (
@@ -37,33 +35,10 @@ export function ProfileButton({ tenantId }: { tenantId: string }) {
   }
 
   if (user === null) {
-    // Passwordless tenants — show Captain / Admin pills directly so
-    // visitors can reach the password gates without needing to know
-    // the URLs. Each link renders its own gate (team-name for
-    // /captain, shared-secret for /admin).
-    if (captainPasswordless || adminPasswordless) {
-      return (
-        <div className="flex items-center gap-2">
-          {captainPasswordless && (
-            <Link
-              href="/captain"
-              className="rounded-md bg-brand-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-on-primary hover:opacity-90"
-              title="Captain portal"
-            >
-              ⚾ Captain
-            </Link>
-          )}
-          {adminPasswordless && (
-            <Link
-              href="/admin"
-              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-700 hover:bg-slate-50"
-              title="Admin"
-            >
-              ◉ Admin
-            </Link>
-          )}
-        </div>
-      );
+    // Passwordless tenants: one "Profile" entry → Captain / Player
+    // chooser. (Admin is in the More menu now.)
+    if (captainPasswordless) {
+      return <AccessChooser />;
     }
     return (
       <Link
@@ -75,10 +50,6 @@ export function ProfileButton({ tenantId }: { tenantId: string }) {
     );
   }
 
-  // Every signed-in user gets a Profile link — that's where
-  // notifications + availability + team chat live for non-captains.
-  // Captains also benefit (they can switch to player-mode availability
-  // and notifications without leaving the role they're signed into).
   return (
     <div className="flex items-center gap-2">
       <NotificationBell leagueId={tenantId} />
@@ -91,21 +62,10 @@ export function ProfileButton({ tenantId }: { tenantId: string }) {
           ⚾ Captain
         </Link>
       )}
-      {role === "admin" && (
-        <Link
-          href="/admin"
-          className="rounded-md bg-brand-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-on-primary hover:opacity-90"
-          title="Admin"
-        >
-          ◉ Admin
-        </Link>
-      )}
-      {/* Hide the separate "Profile" link for passwordless captains
-          (Adam, 2026-05-18): they sign in as a team identity, not a
-          personal player, so the player Profile page (availability /
-          account) is empty for them — their one home is the Captain
-          portal. Players and magic-link captains still get Profile
-          (it's their real personal page). */}
+      {/* Hide the separate "Profile" link for passwordless captains —
+          they sign in as a team identity, not a personal player, so
+          the player Profile page is empty for them. Players and
+          magic-link captains still get it. */}
       {!(role === "captain" && captainPasswordless) && (
         <Link
           href="/profile"
@@ -130,6 +90,55 @@ export function ProfileButton({ tenantId }: { tenantId: string }) {
       >
         ✕
       </button>
+    </div>
+  );
+}
+
+// Signed-out entry for passwordless tenants. A "Profile" button that
+// opens a small menu asking whether you're a captain or a player, then
+// sends you to the matching sign-in (Adam, 2026-05-18).
+function AccessChooser() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="rounded-md bg-brand-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-on-primary hover:opacity-90"
+      >
+        👤 Profile
+      </button>
+      {open && (
+        <>
+          {/* Tap-outside backdrop */}
+          <div
+            className="fixed inset-0 z-40"
+            aria-hidden
+            onClick={() => setOpen(false)}
+          />
+          <div className="absolute right-0 top-full z-50 mt-1.5 w-52 rounded-md border border-slate-200 bg-white p-1 shadow-lg">
+            <p className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+              Sign in as…
+            </p>
+            <Link
+              href="/captain"
+              onClick={() => setOpen(false)}
+              className="block rounded px-2 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-100"
+            >
+              ⚾ Captain / Manager
+            </Link>
+            <Link
+              href="/login"
+              onClick={() => setOpen(false)}
+              className="block rounded px-2 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-100"
+            >
+              🙋 Player
+            </Link>
+          </div>
+        </>
+      )}
     </div>
   );
 }
