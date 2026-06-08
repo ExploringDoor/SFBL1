@@ -23,6 +23,7 @@ import { NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { headers } from "next/headers";
 import { parseHost, resolveTenant } from "@/lib/tenants";
+import { sendEmail, notifyAddress, esc } from "@/lib/email/send";
 
 export const runtime = "nodejs";
 
@@ -241,5 +242,65 @@ export async function POST(req: Request) {
       user_agent: h.get("user-agent") ?? null,
     });
 
+  // Best-effort email (no-op unless RESEND_API_KEY/EMAIL_FROM are set):
+  //   1. a confirmation to the registrant (if they gave an email)
+  //   2. a heads-up to the league office (EMAIL_NOTIFY)
+  // Fire-and-forget — never blocks or fails the submission.
+  void sendRegistrationEmails(body.kind, cleaned).catch(() => {});
+
   return NextResponse.json({ ok: true, id: ref.id });
+}
+
+async function sendRegistrationEmails(
+  kind: Kind,
+  data: Record<string, unknown>,
+): Promise<void> {
+  if (kind !== "player_registration" && kind !== "team_registration") return;
+
+  const c = (k: string) =>
+    typeof data[k] === "string" ? (data[k] as string).trim() : "";
+  const who =
+    kind === "player_registration"
+      ? `${c("first_name")} ${c("last_name")}`.trim()
+      : `${c("manager_first_name")} ${c("manager_last_name")}`.trim();
+  const email = c("email");
+  const team = c("team_name");
+  const division = c("division");
+  const label =
+    kind === "player_registration" ? "Player registration" : "Team registration";
+
+  // 1) Confirmation to the registrant.
+  if (email) {
+    await sendEmail({
+      to: email,
+      subject: "We got your SFBL registration",
+      html:
+        `<p>Hi ${esc(who) || "there"},</p>` +
+        `<p>Thanks for registering with the South Florida Baseball League. ` +
+        `We've received your ${esc(label.toLowerCase())} and the league ` +
+        `office will follow up with payment and roster details.</p>` +
+        (division ? `<p><strong>Division:</strong> ${esc(division)}</p>` : "") +
+        (team ? `<p><strong>Team:</strong> ${esc(team)}</p>` : "") +
+        `<p>Questions? Reply to this email or text the league office.</p>` +
+        `<p>— SFBL</p>`,
+      replyTo: notifyAddress() ?? undefined,
+    });
+  }
+
+  // 2) Heads-up to the league office.
+  const notify = notifyAddress();
+  if (notify) {
+    await sendEmail({
+      to: notify,
+      subject: `New ${label}: ${who || "(no name)"}`,
+      html:
+        `<p><strong>${esc(label)}</strong></p>` +
+        `<p>Name: ${esc(who) || "—"}<br/>` +
+        `Email: ${esc(email) || "—"}<br/>` +
+        (division ? `Division: ${esc(division)}<br/>` : "") +
+        (team ? `Team: ${esc(team)}<br/>` : "") +
+        `</p><p>See it in Admin → Form intake.</p>`,
+      replyTo: email || undefined,
+    });
+  }
 }
