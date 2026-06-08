@@ -239,6 +239,9 @@ export default async function RootLayout({
         {leagueAbbrev === "LBDC" && (
           <link rel="icon" type="image/svg+xml" href="/lbdc/favicon.svg" />
         )}
+        {leagueAbbrev === "SFBL" && (
+          <link rel="icon" type="image/svg+xml" href="/sfbl/favicon.svg" />
+        )}
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
         <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
         <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
