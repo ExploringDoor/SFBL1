@@ -100,13 +100,21 @@ export function ProfileButton({ tenantId }: { tenantId: string }) {
           ◉ Admin
         </Link>
       )}
-      <Link
-        href="/profile"
-        className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-700 hover:bg-slate-50"
-        title="Profile (notifications, availability, team chat)"
-      >
-        Profile
-      </Link>
+      {/* Hide the separate "Profile" link for passwordless captains
+          (Adam, 2026-05-18): they sign in as a team identity, not a
+          personal player, so the player Profile page (availability /
+          account) is empty for them — their one home is the Captain
+          portal. Players and magic-link captains still get Profile
+          (it's their real personal page). */}
+      {!(role === "captain" && captainPasswordless) && (
+        <Link
+          href="/profile"
+          className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-700 hover:bg-slate-50"
+          title="Profile (notifications, availability)"
+        >
+          Profile
+        </Link>
+      )}
       <span
         className="hidden text-xs text-slate-600 md:inline"
         title={user.email ?? undefined}
