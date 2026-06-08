@@ -229,6 +229,16 @@ export default async function RootLayout({
             wide banners get distorted into the rounded-square iOS
             tile. Generated alongside the manifest icons by
             scripts/build-pwa-icons.js. */}
+        {/* Per-tenant browser-tab favicon. The PNG icons below are
+            built from the SFBL brand, so every tenant was showing the
+            SFBL icon in the tab. LBDC gets its own letters-only SVG
+            favicon; an SVG `<link rel="icon">` takes priority over the
+            PNGs in modern browsers, so the tab shows "LBDC" while the
+            PNGs stay as the PWA / older-browser fallback. (Adam,
+            2026-05-18.) Add a tenant here as each gets its own mark. */}
+        {leagueAbbrev === "LBDC" && (
+          <link rel="icon" type="image/svg+xml" href="/lbdc/favicon.svg" />
+        )}
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
         <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
         <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
