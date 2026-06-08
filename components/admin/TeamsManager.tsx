@@ -11,7 +11,7 @@
 
 import { useEffect, useState } from "react";
 import type { User } from "firebase/auth";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, where, limit } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { ManagerContact } from "@/components/ManagerContact";
 
@@ -54,6 +54,8 @@ const NO_DIVISION = "—";
 export function TeamsManager({ leagueId, user }: Props) {
   const [teams, setTeams] = useState<TeamRow[]>([]);
   const [players, setPlayers] = useState<PlayerRow[]>([]);
+  // team_id → ISO timestamp of the most recent passwordless captain login.
+  const [lastLogin, setLastLogin] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -126,6 +128,32 @@ export function TeamsManager({ leagueId, user }: Props) {
             return a.name.localeCompare(b.name);
           }),
       );
+
+      // Captain login activity. Every passwordless captain login writes
+      // an audit row { kind:"public_captain_claim", team_id, at }. Read
+      // them (single-field where → no composite index) and keep the
+      // latest timestamp per team so admin can see who's logged in.
+      try {
+        const auditSnap = await getDocs(
+          query(
+            collection(db, `leagues/${leagueId}/audit`),
+            where("kind", "==", "public_captain_claim"),
+            limit(1000),
+          ),
+        );
+        const latest: Record<string, string> = {};
+        for (const d of auditSnap.docs) {
+          const x = d.data();
+          const tid = String(x.team_id ?? "");
+          const at = String(x.at ?? "");
+          if (tid && at && (!latest[tid] || at > latest[tid])) {
+            latest[tid] = at;
+          }
+        }
+        setLastLogin(latest);
+      } catch {
+        /* audit read is best-effort — non-fatal */
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Load failed");
     } finally {
@@ -435,6 +463,7 @@ export function TeamsManager({ leagueId, user }: Props) {
           leagueId={leagueId}
           teams={teams}
           players={players}
+          lastLogin={lastLogin}
           expanded={expanded}
           editing={editing}
           addingPlayerToTeam={addingPlayerToTeam}
@@ -566,6 +595,25 @@ export function TeamsManager({ leagueId, user }: Props) {
 // "miamiyankees47". The 2 digits are what make it a real password
 // (the bare team name no longer works once one is set). Admin can
 // edit to anything before saving.
+// Friendly relative-ish label for a captain's last-login ISO time.
+function fmtLogin(iso: string): string {
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return iso;
+  const diff = Date.now() - t;
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return "just now";
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const d = Math.floor(hr / 24);
+  if (d < 7) return `${d}d ago`;
+  return new Date(t).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 function generateManagerPassword(teamName: string): string {
   const digits = String(Math.floor(Math.random() * 90) + 10); // 10–99
   return `${passwordBase(teamName)}${digits}`;
@@ -764,6 +812,7 @@ function DivisionGroups({
   leagueId,
   teams,
   players,
+  lastLogin,
   expanded,
   editing,
   addingPlayerToTeam,
@@ -783,6 +832,7 @@ function DivisionGroups({
   leagueId: string;
   teams: TeamRow[];
   players: PlayerRow[];
+  lastLogin: Record<string, string>;
   expanded: Set<string>;
   editing: string | null;
   addingPlayerToTeam: string | null;
@@ -851,6 +901,7 @@ function DivisionGroups({
                   key={t.id}
                   leagueId={leagueId}
                   team={t}
+                  lastLogin={lastLogin[t.id]}
                   roster={players.filter((p) => p.team_id === t.id)}
                   isExpanded={expanded.has(t.id)}
                   isEditing={editing === t.id}
@@ -886,6 +937,7 @@ function DivisionGroups({
 function TeamRowItem({
   leagueId,
   team: t,
+  lastLogin,
   roster,
   isExpanded,
   isEditing,
@@ -905,6 +957,7 @@ function TeamRowItem({
 }: {
   leagueId: string;
   team: TeamRow;
+  lastLogin?: string;
   roster: PlayerRow[];
   isExpanded: boolean;
   isEditing: boolean;
@@ -957,6 +1010,21 @@ function TeamRowItem({
             <span className="ml-2 text-xs font-normal text-slate-500">
               ({roster.length} player{roster.length === 1 ? "" : "s"})
             </span>
+            <span
+              className={
+                "ml-2 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold " +
+                (lastLogin
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-slate-100 text-slate-500")
+              }
+              title={
+                lastLogin
+                  ? `Captain last logged in ${fmtLogin(lastLogin)}`
+                  : "No captain login yet"
+              }
+            >
+              {lastLogin ? "✓ logged in" : "no login yet"}
+            </span>
           </div>
           {t.abbrev && (
             <div className="text-xs text-slate-500 truncate">{t.abbrev}</div>
@@ -992,6 +1060,18 @@ function TeamRowItem({
 
       {isExpanded && (
         <div className="border-t border-slate-200 bg-slate-50/50 px-3 py-3 space-y-3">
+          <p className="text-xs text-slate-600">
+            <span className="font-semibold">Captain login:</span>{" "}
+            {lastLogin ? (
+              <span className="text-emerald-700">
+                last logged in {fmtLogin(lastLogin)}
+              </span>
+            ) : (
+              <span className="text-slate-500">
+                this team&rsquo;s captain hasn&rsquo;t logged in yet
+              </span>
+            )}
+          </p>
           <ManagerContact leagueId={leagueId} teamId={t.id} />
           {roster.length === 0 ? (
             <p className="text-xs text-slate-500 italic">
