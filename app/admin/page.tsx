@@ -74,7 +74,8 @@ const TABS: { key: TabKey; label: string; description: string }[] = [
   { key: "branding", label: "Branding", description: "League logo, colors, and theming." },
   { key: "notifications", label: "Notifications", description: "Send push announcements to players." },
   { key: "calendar", label: "Calendar", description: "Subscription URLs (Google / Apple / Outlook) per team or league-wide." },
-  { key: "chat", label: "Chat", description: "Browse and moderate captains-chat or team chats." },
+  // Chat hidden for now (Adam, 2026-05-18). Re-add to re-enable.
+  // { key: "chat", label: "Chat", description: "Browse and moderate captains-chat or team chats." },
   { key: "forms", label: "Form intake", description: "Review player + team registrations, waivers, and umpire evaluations submitted from the public site." },
   { key: "audit", label: "Audit log", description: "Recent admin actions and score changes." },
   // Tools tab (recalc / smoke test / CSV importer) hidden per Adam —

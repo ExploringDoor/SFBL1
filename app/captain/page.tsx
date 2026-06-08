@@ -514,8 +514,12 @@ const TABS: Tab[] = [
   { key: "scores", label: "Submit Score" },
   { key: "notifications", label: "🔔 Notifications" },
   { key: "schedule", label: "Schedule" },
-  { key: "teamchat", label: "Team Chat" },
-  { key: "captchat", label: "Captains Chat" },
+  // Chat hidden for now (Adam, 2026-05-18). Removed from the tab list
+  // entirely (not in the strip AND not reachable via #teamchat /
+  // #captchat). The render branches + imports are kept below so
+  // re-enabling is just restoring these two lines.
+  // { key: "teamchat", label: "Team Chat" },
+  // { key: "captchat", label: "Captains Chat" },
   { key: "payments", label: "Payments" },
   // Announcements tab hidden — body is still a "Coming soon"
   // placeholder. Re-enable once admin-pushed announcements ship.

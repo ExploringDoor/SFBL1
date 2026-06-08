@@ -93,8 +93,11 @@ export const CATEGORY_DISPLAY_ORDER: NotificationCategory[] = [
   "rainouts",
   "schedule",
   "playoffs",
-  "team_chat",
-  "captains_chat",
+  // team_chat + captains_chat hidden from the prefs UI while chat is
+  // hidden site-wide (Adam, 2026-05-18). The categories still exist;
+  // restore these two lines to bring the toggles back.
+  // "team_chat",
+  // "captains_chat",
   "announcements",
   "live",
   "pregame",

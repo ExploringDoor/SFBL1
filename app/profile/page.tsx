@@ -21,7 +21,9 @@ import { InboxPanel } from "@/components/profile/InboxPanel";
 
 const TABS: { key: string; label: string }[] = [
   { key: "avail", label: "📅 Availability" },
-  { key: "teamchat", label: "💬 Team Chat" },
+  // Team Chat hidden for now (Adam, 2026-05-18). The render + panel
+  // are kept below; restore this line to bring the tab back.
+  // { key: "teamchat", label: "💬 Team Chat" },
   { key: "inbox", label: "📨 Inbox" },
   { key: "notif", label: "🔔 Notifications" },
   { key: "account", label: "Account" },
@@ -131,9 +133,8 @@ export default function ProfilePage() {
           }}
         >
           RSVP for games, get push notifications when your team plays,
-          chat with your team, and (if you&rsquo;re a captain) submit
-          scores. Signs you in by emailing a one-tap link — no
-          password needed.
+          and (if you&rsquo;re a captain) submit scores. Signs you in by
+          emailing a one-tap link — no password needed.
         </p>
         <Link
           href="/login"

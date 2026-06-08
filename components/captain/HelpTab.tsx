@@ -233,8 +233,8 @@ export function HelpTab({
             </li>
           </ul>
           <p>
-            <em>Tip:</em> share your team's URL in chat so players bookmark
-            it and update their own availability.
+            <em>Tip:</em> share your team's URL with your players so they
+            bookmark it and update their own availability.
           </p>
         </div>
       </details>
@@ -270,58 +270,7 @@ export function HelpTab({
       </details>
 
       <details>
-        <summary>9. Team Chat</summary>
-        <div className="help-body">
-          <p>
-            The <strong>Team Chat</strong> tab is a group conversation with
-            everyone on your roster. Any player who signed in can read and
-            post. Great for field changes, sub requests, or "who's bringing
-            the cooler."
-          </p>
-          <ul>
-            <li>
-              <strong>Send a message</strong> — type and hit Send (or
-              Cmd/Ctrl+Enter). Players with push notifications turned on get
-              pinged instantly.
-            </li>
-            <li>
-              <strong>Delete a message</strong> — tap the × on any message
-              bubble. As captain you can delete anyone's message in your team
-              chat.
-            </li>
-            <li>
-              <strong>Reset chat</strong> — wipes every message for your
-              team. Double-confirms first. Useful between seasons.
-            </li>
-          </ul>
-        </div>
-      </details>
-
-      <details>
-        <summary>10. Captains Chat</summary>
-        <div className="help-body">
-          <p>
-            The <strong>Captains Chat</strong> tab is a private group chat
-            between every team captain and the commissioner. Players can't
-            see it. Sender labels show team abbreviations so you know who's
-            talking.
-          </p>
-          <ul>
-            <li>
-              <strong>Send</strong> — type and hit Send. Every other captain
-              with notifications on gets a ping.
-            </li>
-            <li>
-              <strong>Delete</strong> — you can delete your own messages.
-              Captains can't delete other captains' messages — only the
-              commissioner can.
-            </li>
-          </ul>
-        </div>
-      </details>
-
-      <details>
-        <summary>11. Push Notifications</summary>
+        <summary>9. Push Notifications</summary>
         <div className="help-body">
           <p>
             Push notifications ping you when something happens — no need to
@@ -335,9 +284,9 @@ export function HelpTab({
             </li>
             <li>
               <strong>Pick categories</strong> — Score updates, Schedule
-              changes, Rainouts, Team Chat, Captains Chat, Pre-game (1-hour
-              heads-up), League Announcements, Photos, Live Games, Playoff
-              updates. Toggle what you want.
+              changes, Rainouts, Pre-game (1-hour heads-up), League
+              Announcements, Photos, Live Games, Playoff updates. Toggle
+              what you want.
             </li>
             <li>
               <strong>Pick teams</strong> — All teams / Just my team / Custom.
