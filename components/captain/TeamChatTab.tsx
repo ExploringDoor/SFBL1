@@ -91,11 +91,18 @@ export function TeamChatTab({
     const path = `leagues/${leagueId}/${collName}`;
     const q =
       collName === "team_messages"
-        ? query(
+        ? // team_messages: filter by team_id ONLY (no orderBy in the
+          // query). A `where(==) + orderBy` on different fields needs a
+          // composite index that was never created, so the live
+          // listener errored out and the team-chat tab showed nothing.
+          // We fetch the team's messages (single-field equality →
+          // auto-indexed) and sort by timestamp in the browser below.
+          // Fine at league scale (a team's season chat is well under
+          // the cap). (Adam: "team chat doesn't work", 2026-05-18.)
+          query(
             collection(db, path),
             where("team_id", "==", teamId),
-            orderBy("timestamp", "asc"),
-            limit(100),
+            limit(300),
           )
         : // captain_chat (Phase C) — no team filter, uses asc + limit(200)
           // matching DVSL's profile.html:4920 "use existing asc index" trick.
@@ -129,6 +136,13 @@ export function TeamChatTab({
               data.timestamp instanceof Timestamp ? data.timestamp : null,
           };
         });
+        // Sort oldest→newest in the browser. team_messages no longer
+        // orders server-side (see the query above); captain_chat is
+        // already ordered, so this is a harmless re-sort for it.
+        msgs.sort(
+          (a, b) =>
+            (a.timestamp?.toMillis() ?? 0) - (b.timestamp?.toMillis() ?? 0),
+        );
         setMessages(msgs);
 
         // Mark "read" — this component is mounted so the user is on

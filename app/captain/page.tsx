@@ -649,8 +649,8 @@ function CaptainBody({
                 href: `/captain/box-score?game=${g.id}`,
               }}
               secondary={{
-                label: "📡 Score Live",
-                href: `/score/${g.id}`,
+                label: "⚡ Quick Score",
+                href: "#quickscore",
               }}
             />
           ))}
@@ -1387,22 +1387,16 @@ function GameDayHero({
 
       <div className="cap-gameday-actions">
         <Link
-          href={`/score/${game.id}`}
+          href={`/captain/box-score?game=${game.id}`}
           className="cap-gameday-btn cap-gameday-btn-primary"
         >
-          📡 Score Live
+          ✏ Box Score
         </Link>
         <Link
           href={`/captain/lineup?game=${game.id}`}
           className="cap-gameday-btn cap-gameday-btn-secondary"
         >
           📋 Submit Lineup
-        </Link>
-        <Link
-          href={`/captain/box-score?game=${game.id}`}
-          className="cap-gameday-btn cap-gameday-btn-secondary"
-        >
-          ✏ Box Score
         </Link>
       </div>
       <style jsx>{`
