@@ -285,6 +285,15 @@ const SFBL_TENANT_CONFIG: LeagueConfig = {
   captain: {
     passwordless: true,
   },
+  // Hide the public, no-login /availability board for SFBL (Adam,
+  // 2026-06). That page lets ANYONE mark any roster player's RSVP — it
+  // was built for LBDC, and SFBL doesn't want it. Hiding the
+  // "Availability" label drops it from BOTH the desktop nav and the
+  // web-app bottom "More" sheet (they share computeNavLinks). The
+  // signed-in per-player Availability tab in /profile is unaffected.
+  nav: {
+    hide: ["availability"],
+  },
 } as unknown as LeagueConfig;
 
 export async function resolveTenant(parsed: ParsedHost): Promise<ResolvedTenant | null> {
