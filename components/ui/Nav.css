@@ -434,10 +434,9 @@ body.dvsl-modal-open .le-mob-menu {
        - The focus ring after click looked like a "small dot
          under MORE" — outline:none kills it for the mouse case
          while :focus-visible preserves it for keyboard.
-       - inline-flex (with white-space:nowrap) keeps the caret
-         pinned next to the label on one line. Block layout
-         caused the caret to wrap below "MORE" when the flex
-         parent shrunk the trigger to text width. */
+       - column flex stacks the red caret directly UNDER the label
+         (Adam, 2026-06); white-space:nowrap keeps the label itself
+         on one line. */
   font-family: inherit;
   font-size: 11.5px;
   font-weight: 600;
@@ -452,8 +451,9 @@ body.dvsl-modal-open .le-mob-menu {
   border-radius: 6px;
   transition: all 0.2s;
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 0;
   white-space: nowrap;
   outline: none;
   -webkit-appearance: none;
@@ -475,13 +475,15 @@ body.dvsl-modal-open .le-mob-menu {
   background: rgba(0, 45, 114, 0.08);
 }
 
-/* Down-caret on dropdown triggers (SFBL / Register / More) so it's
- * obvious they expand. Sits in the trigger's flex gap; flips up when
- * the menu is open. (Adam, 2026-06.) */
+/* Red down-caret UNDER the label on dropdown triggers (SFBL /
+ * Register / More) so it's obvious they expand. Flips up when the
+ * menu is open. (Adam, 2026-06.) */
 .le-nav-caret {
-  font-size: 0.8em;
-  line-height: 1;
-  opacity: 0.65;
+  display: block;
+  margin-top: 1px;
+  font-size: 0.7em;
+  line-height: 0.8;
+  color: #dc2626;
   transition: transform 0.18s ease;
 }
 .le-nav-dropdown.open .le-nav-caret {
