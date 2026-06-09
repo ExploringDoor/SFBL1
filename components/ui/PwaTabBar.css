@@ -9,9 +9,15 @@
 
 #le-tabbar {
   position: fixed !important;
-  left: 50% !important;
+  /* Center WITHOUT a transform: on iOS standalone, `position: fixed`
+   * combined with a transform on the SAME element makes the bar scroll
+   * with the document instead of staying pinned to the viewport — Adam
+   * saw it drift into the middle of the page on scroll (2026-05-18).
+   * left/right:0 + margin:0 auto centers within max-width, no
+   * transform. */
+  left: 0 !important;
+  right: 0 !important;
   bottom: 0 !important;
-  transform: translateX(-50%) !important;
   width: 100% !important;
   max-width: 480px !important;
   /* Fixed visible height + safe-area padding so icons sit visibly
@@ -21,7 +27,7 @@
   padding-left: max(8px, env(safe-area-inset-left)) !important;
   padding-right: max(8px, env(safe-area-inset-right)) !important;
   padding-bottom: calc(env(safe-area-inset-bottom) + 6px) !important;
-  margin: 0 !important;
+  margin: 0 auto !important;
   display: flex !important;
   align-items: stretch !important;
   background: #fff !important;
