@@ -139,7 +139,10 @@ export function StandingsTable({
                 {anyTies && <th>T</th>}
                 {pointsScheme && <th>PTS</th>}
                 <th>PCT</th>
-                <th>GB</th>
+                {/* GP (games played) — replaced GB (games-back), which
+                    is a win%-based metric that's misleading in a
+                    points-sorted league (Adam, 2026-05-18). */}
+                <th>GP</th>
                 {showRunsCols && (
                   <>
                     <th>RS</th>
@@ -187,7 +190,7 @@ export function StandingsTable({
                       </td>
                     )}
                     <td>{formatPct(r.pct)}</td>
-                    <td>{r.gb === 0 ? "-" : r.gb.toFixed(1)}</td>
+                    <td>{r.gp}</td>
                     {showRunsCols && (
                       <>
                         <td>{r.rs}</td>

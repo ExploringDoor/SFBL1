@@ -1,12 +1,15 @@
 "use client";
 
-// Admin Payments tab — the LEAGUE's ledger of what each team owes /
-// has paid the league (dues, fees). This is the commissioner's own
-// tracking, fully separate from /api/captain-payment (captains
-// tracking their own players' money — never shown here).
+// Admin Payments tab — the LEAGUE's ledger of who has paid the
+// league. Adam: it happens both ways, so track BOTH:
+//   - team-level (a team pays as a block)
+//   - player-level (a player pays the league directly)
+// Separate from /api/captain-payment (captains tracking their own
+// players' money) — none of that is shown here.
 //
-// Reads + writes via /api/admin-team-payment (Admin SDK). Team names
-// come from the public teams collection.
+// team-level → team_payments/{teamId}; player-level →
+// league_payments/{playerId}, both via /api/admin-team-payment.
+// Team + player names come from the public collections.
 
 import { useEffect, useState } from "react";
 import type { User } from "firebase/auth";
@@ -18,10 +21,7 @@ interface Props {
   user: User;
 }
 
-interface Row {
-  team_id: string;
-  name: string;
-  amount_due: string; // kept as strings for the inputs
+interface Entry {
   amount_paid: string;
   note: string;
 }
@@ -29,25 +29,27 @@ interface Row {
 const money = (n: number) =>
   n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 
-function statusOf(due: number, paid: number): "paid" | "partial" | "unpaid" {
-  if (due > 0 && paid >= due) return "paid";
-  if (paid > 0) return "partial";
-  return "unpaid";
-}
-
 export function PaymentsAdmin({ leagueId, user }: Props) {
-  const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
-  const [savingId, setSavingId] = useState<string | null>(null);
+  const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
+  const [playersByTeam, setPlayersByTeam] = useState<
+    Record<string, { id: string; name: string }[]>
+  >({});
+  const [teamPay, setTeamPay] = useState<Record<string, Entry>>({});
+  const [playerPay, setPlayerPay] = useState<Record<string, Entry>>({});
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [saving, setSaving] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   async function load() {
     setLoading(true);
     setMsg(null);
     try {
+      const db = getDb();
       const idToken = await user.getIdToken();
-      const [teamSnap, payRes] = await Promise.all([
-        getDocs(collection(getDb(), `leagues/${leagueId}/teams`)),
+      const [teamSnap, playerSnap, payRes] = await Promise.all([
+        getDocs(collection(db, `leagues/${leagueId}/teams`)),
+        getDocs(collection(db, `leagues/${leagueId}/players`)),
         fetch("/api/admin-team-payment", {
           method: "POST",
           headers: {
@@ -57,31 +59,49 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
           body: JSON.stringify({ leagueId, action: "list" }),
         }),
       ]);
-      const payBody = (await payRes.json().catch(() => ({}))) as {
-        payments?: {
-          team_id: string;
-          amount_due: number;
+
+      setTeams(
+        teamSnap.docs
+          .filter((d) => d.data().active !== false)
+          .map((d) => ({ id: d.id, name: String(d.data().name ?? d.id) }))
+          .sort((a, b) => a.name.localeCompare(b.name)),
+      );
+
+      const pbt: Record<string, { id: string; name: string }[]> = {};
+      for (const d of playerSnap.docs) {
+        const x = d.data();
+        if (x.active === false || x.orphan === true) continue;
+        if (x.status && x.status !== "active") continue;
+        const tid = String(x.team_id ?? "");
+        if (!tid) continue;
+        (pbt[tid] ??= []).push({ id: d.id, name: String(x.name ?? d.id) });
+      }
+      for (const arr of Object.values(pbt))
+        arr.sort((a, b) => a.name.localeCompare(b.name));
+      setPlayersByTeam(pbt);
+
+      const body = (await payRes.json().catch(() => ({}))) as {
+        team_payments?: { team_id: string; amount_paid: number; note: string }[];
+        player_payments?: {
+          player_id: string;
           amount_paid: number;
           note: string;
         }[];
       };
-      const payById = new Map(
-        (payBody.payments ?? []).map((p) => [p.team_id, p]),
-      );
-      const teamRows: Row[] = teamSnap.docs
-        .filter((d) => d.data().active !== false)
-        .map((d) => {
-          const p = payById.get(d.id);
-          return {
-            team_id: d.id,
-            name: String(d.data().name ?? d.id),
-            amount_due: p?.amount_due ? String(p.amount_due) : "",
-            amount_paid: p?.amount_paid ? String(p.amount_paid) : "",
-            note: p?.note ?? "",
-          };
-        })
-        .sort((a, b) => a.name.localeCompare(b.name));
-      setRows(teamRows);
+      const tp: Record<string, Entry> = {};
+      for (const p of body.team_payments ?? [])
+        tp[p.team_id] = {
+          amount_paid: p.amount_paid ? String(p.amount_paid) : "",
+          note: p.note ?? "",
+        };
+      setTeamPay(tp);
+      const pp: Record<string, Entry> = {};
+      for (const p of body.player_payments ?? [])
+        pp[p.player_id] = {
+          amount_paid: p.amount_paid ? String(p.amount_paid) : "",
+          note: p.note ?? "",
+        };
+      setPlayerPay(pp);
     } catch (e) {
       setMsg({ ok: false, text: e instanceof Error ? e.message : "Load failed" });
     } finally {
@@ -94,14 +114,13 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leagueId]);
 
-  function patch(teamId: string, field: keyof Row, value: string) {
-    setRows((rs) =>
-      rs.map((r) => (r.team_id === teamId ? { ...r, [field]: value } : r)),
-    );
-  }
-
-  async function save(r: Row) {
-    setSavingId(r.team_id);
+  async function save(
+    target: "team" | "player",
+    id: string,
+    teamId: string,
+    entry: Entry,
+  ) {
+    setSaving(`${target}:${id}`);
     setMsg(null);
     try {
       const idToken = await user.getIdToken();
@@ -114,44 +133,45 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
         body: JSON.stringify({
           leagueId,
           action: "save",
-          teamId: r.team_id,
-          amount_due: r.amount_due === "" ? 0 : Number(r.amount_due),
-          amount_paid: r.amount_paid === "" ? 0 : Number(r.amount_paid),
-          note: r.note,
+          target,
+          ...(target === "team" ? { teamId: id } : { playerId: id, teamId }),
+          amount_paid: entry.amount_paid === "" ? 0 : Number(entry.amount_paid),
+          note: entry.note,
         }),
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
-      if (res.ok) setMsg({ ok: true, text: `Saved ${r.name}.` });
+      if (res.ok) setMsg({ ok: true, text: "Saved." });
       else setMsg({ ok: false, text: data.error ?? `HTTP ${res.status}` });
     } catch (e) {
       setMsg({ ok: false, text: e instanceof Error ? e.message : "Save failed" });
     } finally {
-      setSavingId(null);
+      setSaving(null);
     }
   }
 
   if (loading) return <p className="text-sm text-slate-500">Loading…</p>;
 
-  const totDue = rows.reduce((a, r) => a + (Number(r.amount_due) || 0), 0);
-  const totPaid = rows.reduce((a, r) => a + (Number(r.amount_paid) || 0), 0);
-  const outstanding = Math.max(0, totDue - totPaid);
-  const paidTeams = rows.filter(
-    (r) => statusOf(Number(r.amount_due) || 0, Number(r.amount_paid) || 0) === "paid",
-  ).length;
+  const teamTotal = Object.values(teamPay).reduce(
+    (a, e) => a + (Number(e.amount_paid) || 0),
+    0,
+  );
+  const playerTotal = Object.values(playerPay).reduce(
+    (a, e) => a + (Number(e.amount_paid) || 0),
+    0,
+  );
 
   return (
     <div className="space-y-4">
       <p className="text-sm text-slate-600">
-        Track what each <strong>team</strong> owes and has paid the league.
-        This is your own ledger — captains&rsquo; player payments are not
-        shown here.
+        Track who&rsquo;s paid the <strong>league</strong> — a team paying as a
+        block, or players paying directly (both happen). This is your ledger;
+        captains&rsquo; own player tracking isn&rsquo;t shown here.
       </p>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Card label="Collected" value={money(totPaid)} tone="emerald" />
-        <Card label="Outstanding" value={money(outstanding)} tone="amber" />
-        <Card label="Teams paid" value={`${paidTeams} / ${rows.length}`} />
-        <Card label="Total billed" value={money(totDue)} />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <Card label="Team payments" value={money(teamTotal)} />
+        <Card label="Player payments" value={money(playerTotal)} />
+        <Card label="Total collected" value={money(teamTotal + playerTotal)} tone="emerald" />
       </div>
 
       {msg && (
@@ -165,91 +185,130 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
         </p>
       )}
 
-      <div className="overflow-x-auto rounded-md border border-slate-200">
-        <table className="w-full min-w-[640px] text-sm">
-          <thead>
-            <tr className="bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
-              <th className="px-3 py-2">Team</th>
-              <th className="px-3 py-2 w-28">Paid ($)</th>
-              <th className="px-3 py-2 w-28">Due ($)</th>
-              <th className="px-3 py-2">Note</th>
-              <th className="px-3 py-2 w-20">Status</th>
-              <th className="px-3 py-2 w-20"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => {
-              const st = statusOf(
-                Number(r.amount_due) || 0,
-                Number(r.amount_paid) || 0,
-              );
-              return (
-                <tr key={r.team_id} className="border-t border-slate-100">
-                  <td className="px-3 py-1.5 font-medium text-slate-900">
-                    {r.name}
-                  </td>
-                  <td className="px-3 py-1.5">
-                    <input
-                      type="number"
-                      min={0}
-                      value={r.amount_paid}
-                      onChange={(e) =>
-                        patch(r.team_id, "amount_paid", e.target.value)
-                      }
-                      className="w-24 rounded border border-slate-300 px-2 py-1 text-sm"
-                      placeholder="0"
-                    />
-                  </td>
-                  <td className="px-3 py-1.5">
-                    <input
-                      type="number"
-                      min={0}
-                      value={r.amount_due}
-                      onChange={(e) =>
-                        patch(r.team_id, "amount_due", e.target.value)
-                      }
-                      className="w-24 rounded border border-slate-300 px-2 py-1 text-sm"
-                      placeholder="0"
-                    />
-                  </td>
-                  <td className="px-3 py-1.5">
-                    <input
-                      type="text"
-                      value={r.note}
-                      onChange={(e) => patch(r.team_id, "note", e.target.value)}
-                      className="w-full min-w-[120px] rounded border border-slate-300 px-2 py-1 text-sm"
-                      placeholder="Zelle 5/2, owes balance…"
-                    />
-                  </td>
-                  <td className="px-3 py-1.5">
-                    <span
-                      className={
-                        "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase " +
-                        (st === "paid"
-                          ? "bg-emerald-100 text-emerald-700"
-                          : st === "partial"
-                            ? "bg-amber-100 text-amber-700"
-                            : "bg-slate-100 text-slate-500")
-                      }
-                    >
-                      {st}
-                    </span>
-                  </td>
-                  <td className="px-3 py-1.5 text-right">
-                    <button
-                      type="button"
-                      onClick={() => save(r)}
-                      disabled={savingId === r.team_id}
-                      className="rounded-md bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white disabled:opacity-50"
-                    >
-                      {savingId === r.team_id ? "…" : "Save"}
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      <div className="space-y-2">
+        {teams.map((t) => {
+          const roster = playersByTeam[t.id] ?? [];
+          const tEntry = teamPay[t.id] ?? { amount_paid: "", note: "" };
+          const open = expanded === t.id;
+          const playerPaidCount = roster.filter(
+            (p) => Number(playerPay[p.id]?.amount_paid) > 0,
+          ).length;
+          return (
+            <div key={t.id} className="overflow-hidden rounded-md border border-slate-200">
+              {/* Team-level row */}
+              <div className="flex flex-wrap items-center gap-2 bg-slate-50 px-3 py-2">
+                <button
+                  type="button"
+                  onClick={() => setExpanded(open ? null : t.id)}
+                  className="flex-1 min-w-[150px] text-left text-sm font-semibold text-slate-900"
+                >
+                  {open ? "▾ " : "▸ "}
+                  {t.name}
+                  <span className="ml-2 text-xs font-normal text-slate-500">
+                    {roster.length} players · {playerPaidCount} paid
+                  </span>
+                </button>
+                <label className="flex items-center gap-1 text-xs text-slate-600">
+                  Team paid&nbsp;$
+                  <input
+                    type="number"
+                    min={0}
+                    value={tEntry.amount_paid}
+                    onChange={(e) =>
+                      setTeamPay((m) => ({
+                        ...m,
+                        [t.id]: { ...tEntry, amount_paid: e.target.value },
+                      }))
+                    }
+                    placeholder="0"
+                    className="w-24 rounded border border-slate-300 px-2 py-1 text-sm"
+                  />
+                </label>
+                <input
+                  type="text"
+                  value={tEntry.note}
+                  onChange={(e) =>
+                    setTeamPay((m) => ({
+                      ...m,
+                      [t.id]: { ...tEntry, note: e.target.value },
+                    }))
+                  }
+                  placeholder="note (Zelle 5/2…)"
+                  className="w-40 rounded border border-slate-300 px-2 py-1 text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => save("team", t.id, t.id, tEntry)}
+                  disabled={saving === `team:${t.id}`}
+                  className="rounded-md bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white disabled:opacity-50"
+                >
+                  {saving === `team:${t.id}` ? "…" : "Save"}
+                </button>
+              </div>
+
+              {/* Player-level rows */}
+              {open && (
+                <div className="divide-y divide-slate-100">
+                  {roster.length === 0 ? (
+                    <p className="px-4 py-2 text-xs italic text-slate-500">
+                      No players on this roster.
+                    </p>
+                  ) : (
+                    roster.map((p) => {
+                      const e = playerPay[p.id] ?? { amount_paid: "", note: "" };
+                      return (
+                        <div
+                          key={p.id}
+                          className="flex flex-wrap items-center gap-2 px-4 py-1.5"
+                        >
+                          <span className="flex-1 min-w-[140px] text-sm text-slate-800">
+                            {p.name}
+                          </span>
+                          <label className="flex items-center gap-1 text-xs text-slate-500">
+                            $
+                            <input
+                              type="number"
+                              min={0}
+                              value={e.amount_paid}
+                              onChange={(ev) =>
+                                setPlayerPay((m) => ({
+                                  ...m,
+                                  [p.id]: { ...e, amount_paid: ev.target.value },
+                                }))
+                              }
+                              placeholder="0"
+                              className="w-20 rounded border border-slate-300 px-2 py-1 text-sm"
+                            />
+                          </label>
+                          <input
+                            type="text"
+                            value={e.note}
+                            onChange={(ev) =>
+                              setPlayerPay((m) => ({
+                                ...m,
+                                [p.id]: { ...e, note: ev.target.value },
+                              }))
+                            }
+                            placeholder="note"
+                            className="w-32 rounded border border-slate-300 px-2 py-1 text-sm"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => save("player", p.id, t.id, e)}
+                            disabled={saving === `player:${p.id}`}
+                            className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 disabled:opacity-50"
+                          >
+                            {saving === `player:${p.id}` ? "…" : "Save"}
+                          </button>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -262,20 +321,21 @@ function Card({
 }: {
   label: string;
   value: string;
-  tone?: "emerald" | "amber";
+  tone?: "emerald";
 }) {
-  const color =
-    tone === "emerald"
-      ? "text-emerald-700"
-      : tone === "amber"
-        ? "text-amber-700"
-        : "text-slate-900";
   return (
     <div className="rounded-md border border-slate-200 bg-white p-3">
       <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
         {label}
       </p>
-      <p className={"mt-1 text-lg font-bold " + color}>{value}</p>
+      <p
+        className={
+          "mt-1 text-lg font-bold " +
+          (tone === "emerald" ? "text-emerald-700" : "text-slate-900")
+        }
+      >
+        {value}
+      </p>
     </div>
   );
 }

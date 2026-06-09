@@ -1,19 +1,24 @@
-// /api/admin-team-payment — the LEAGUE's own ledger of what each team
-// owes / has paid the league (dues, fees). Separate from
-// /api/captain-payment, which is captains tracking their own players'
-// money — the league never sees that here.
+// /api/admin-team-payment — the LEAGUE's own ledger of who has paid
+// the league, at BOTH levels (it happens both ways):
+//   - a team paying as a block  → team_payments/{teamId}
+//   - a player paying directly  → league_payments/{playerId}
+// Separate from /api/captain-payment (captains tracking their own
+// players' money) — the league never sees that here.
 //
-// Stored at /leagues/{leagueId}/team_payments/{teamId}:
-//   { amount_due, amount_paid, note, updated_at, updated_by_uid }
+// Docs:
+//   /leagues/{id}/team_payments/{teamId}    { amount_due, amount_paid, note }
+//   /leagues/{id}/league_payments/{playerId}{ team_id, amount_due,
+//                                             amount_paid, note }
 //
 // Body:
 //   POST { leagueId, action: "list" }
-//        → { ok, payments: [{ team_id, amount_due, amount_paid, note }] }
-//   POST { leagueId, action: "save", teamId, amount_due?, amount_paid?, note? }
+//        → { ok, team_payments: [...], player_payments: [...] }
+//   POST { leagueId, action: "save", target: "team"|"player",
+//          teamId|playerId, teamId?(for player), amount_due?,
+//          amount_paid?, note? }
 //        → { ok }
 //
-// Admin-only (verified claim). Reads + writes via the Admin SDK so
-// there's no new client-write rule to add.
+// Admin-only. Reads + writes via the Admin SDK — no client-write rule.
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
@@ -50,7 +55,9 @@ export async function POST(req: Request) {
   let body: {
     leagueId?: unknown;
     action?: unknown;
+    target?: unknown;
     teamId?: unknown;
+    playerId?: unknown;
     amount_due?: unknown;
     amount_paid?: unknown;
     note?: unknown;
@@ -76,10 +83,11 @@ export async function POST(req: Request) {
   const db = getAdminDb();
 
   if (body.action === "list") {
-    const snap = await db
-      .collection(`leagues/${leagueId}/team_payments`)
-      .get();
-    const payments = snap.docs.map((d) => {
+    const [teamSnap, playerSnap] = await Promise.all([
+      db.collection(`leagues/${leagueId}/team_payments`).get(),
+      db.collection(`leagues/${leagueId}/league_payments`).get(),
+    ]);
+    const team_payments = teamSnap.docs.map((d) => {
       const x = d.data();
       return {
         team_id: d.id,
@@ -88,14 +96,20 @@ export async function POST(req: Request) {
         note: String(x.note ?? ""),
       };
     });
-    return NextResponse.json({ ok: true, payments });
+    const player_payments = playerSnap.docs.map((d) => {
+      const x = d.data();
+      return {
+        player_id: d.id,
+        team_id: String(x.team_id ?? ""),
+        amount_due: Number(x.amount_due ?? 0),
+        amount_paid: Number(x.amount_paid ?? 0),
+        note: String(x.note ?? ""),
+      };
+    });
+    return NextResponse.json({ ok: true, team_payments, player_payments });
   }
 
   if (body.action === "save") {
-    const teamId = body.teamId;
-    if (typeof teamId !== "string" || !TEAM_ID_RE.test(teamId)) {
-      return NextResponse.json({ error: "valid teamId required" }, { status: 400 });
-    }
     const update: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
       updated_by_uid: decoded.uid,
@@ -106,6 +120,29 @@ export async function POST(req: Request) {
     if (paid !== undefined) update.amount_paid = paid ?? 0;
     if (typeof body.note === "string") update.note = body.note.trim();
 
+    if (body.target === "player") {
+      const playerId = body.playerId;
+      if (typeof playerId !== "string" || !TEAM_ID_RE.test(playerId)) {
+        return NextResponse.json(
+          { error: "valid playerId required" },
+          { status: 400 },
+        );
+      }
+      if (typeof body.teamId === "string") update.team_id = body.teamId;
+      await db
+        .doc(`leagues/${leagueId}/league_payments/${playerId}`)
+        .set(update, { merge: true });
+      return NextResponse.json({ ok: true });
+    }
+
+    // default: team-level
+    const teamId = body.teamId;
+    if (typeof teamId !== "string" || !TEAM_ID_RE.test(teamId)) {
+      return NextResponse.json(
+        { error: "valid teamId required" },
+        { status: 400 },
+      );
+    }
     await db
       .doc(`leagues/${leagueId}/team_payments/${teamId}`)
       .set(update, { merge: true });
