@@ -22,10 +22,14 @@ function fmtLogin(iso: string): string {
   if (!iso) return "—";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString("en-US", {
+  // Date + exact local time (Adam, 2026-05-18). Local tz = the admin's
+  // browser, so Eastern for SFBL.
+  return d.toLocaleString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
   });
 }
 
@@ -119,7 +123,7 @@ export function CaptainsRoster({
 
       <div className="overflow-hidden rounded-md border border-slate-200">
         {/* header (hidden on mobile) */}
-        <div className="hidden bg-slate-50 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 sm:grid sm:grid-cols-[1.3fr_1.6fr_0.7fr_0.8fr]">
+        <div className="hidden bg-slate-50 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 sm:grid sm:grid-cols-[1.1fr_1.5fr_0.6fr_1.1fr]">
           <span>Team</span>
           <span>Captain · email</span>
           <span>Password</span>
@@ -134,7 +138,7 @@ export function CaptainsRoster({
               <button
                 type="button"
                 onClick={() => setExpanded(open ? null : r.teamId)}
-                className="grid w-full grid-cols-1 gap-1 px-3 py-2 text-left text-sm hover:bg-slate-50 sm:grid-cols-[1.3fr_1.6fr_0.7fr_0.8fr] sm:items-center sm:gap-0"
+                className="grid w-full grid-cols-1 gap-1 px-3 py-2 text-left text-sm hover:bg-slate-50 sm:grid-cols-[1.1fr_1.5fr_0.6fr_1.1fr] sm:items-center sm:gap-0"
               >
                 <span className="font-semibold text-slate-900">
                   {open ? "▾ " : "▸ "}
