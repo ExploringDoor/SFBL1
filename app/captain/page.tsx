@@ -826,9 +826,11 @@ function CaptainBody({
           {roster.length === 0 ? (
             <p style={{ color: "var(--muted)", fontSize: 14 }}>
               No players on roster yet —{" "}
-              <Link href="/captain#roster" style={{ textDecoration: "underline" }}>
+              {/* native <a> for the hash so the tab actually switches
+                  (Next <Link> hash nav doesn't fire hashchange). */}
+              <a href="#roster" style={{ textDecoration: "underline" }}>
                 add some
-              </Link>
+              </a>
               .
             </p>
           ) : (
@@ -854,8 +856,8 @@ function CaptainBody({
                   className="le-cap-roster-row"
                   style={{ justifyContent: "center" }}
                 >
-                  <Link
-                    href="/captain#roster"
+                  <a
+                    href="#roster"
                     style={{
                       fontSize: 12,
                       color: "var(--muted)",
@@ -863,7 +865,7 @@ function CaptainBody({
                     }}
                   >
                     +{roster.length - 12} more · view full roster
-                  </Link>
+                  </a>
                 </li>
               )}
             </ul>
@@ -1161,12 +1163,10 @@ function NextGameSpotlight({
       )}
 
       <div className="cap-next-game-actions">
-        <Link
-          href="/captain#attendance"
-          className="le-cap-btn-secondary"
-        >
+        {/* native <a> hash → fires hashchange so the tab switches */}
+        <a href="#attendance" className="le-cap-btn-secondary">
           📋 Attendance
-        </Link>
+        </a>
         <Link
           href={`/captain/box-score?game=${game.id}`}
           className="le-cap-btn-primary"
@@ -1303,11 +1303,21 @@ function CaptainGameRow({
         <Link href={primary.href} className="le-cap-btn-primary">
           {primary.label}
         </Link>
-        {secondary && (
-          <Link href={secondary.href} className="le-cap-btn-secondary">
-            {secondary.label}
-          </Link>
-        )}
+        {secondary &&
+          (secondary.href.startsWith("#") ? (
+            // Hash targets (e.g. "#quickscore") MUST be a native <a>.
+            // Next's <Link> navigates a hash via history.pushState,
+            // which does NOT fire a `hashchange` event — so the captain
+            // tab router (which listens for hashchange) never switched,
+            // and Quick Score "did nothing". (Adam, 2026-06.)
+            <a href={secondary.href} className="le-cap-btn-secondary">
+              {secondary.label}
+            </a>
+          ) : (
+            <Link href={secondary.href} className="le-cap-btn-secondary">
+              {secondary.label}
+            </Link>
+          ))}
       </div>
     </li>
   );
