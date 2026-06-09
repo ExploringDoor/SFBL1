@@ -156,6 +156,11 @@ export function Nav({
                     }
                   >
                     {link.label}
+                    {/* Down-caret so it's obvious these open a menu
+                        (Adam, 2026-06). Rotates when open. */}
+                    <span className="le-nav-caret" aria-hidden>
+                      ▾
+                    </span>
                   </button>
                   <ul className="le-nav-dropdown-menu">
                     {link.children.map((child) => (

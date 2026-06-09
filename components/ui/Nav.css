@@ -475,6 +475,19 @@ body.dvsl-modal-open .le-mob-menu {
   background: rgba(0, 45, 114, 0.08);
 }
 
+/* Down-caret on dropdown triggers (SFBL / Register / More) so it's
+ * obvious they expand. Sits in the trigger's flex gap; flips up when
+ * the menu is open. (Adam, 2026-06.) */
+.le-nav-caret {
+  font-size: 0.8em;
+  line-height: 1;
+  opacity: 0.65;
+  transition: transform 0.18s ease;
+}
+.le-nav-dropdown.open .le-nav-caret {
+  transform: rotate(180deg);
+}
+
 .le-nav-caret {
   font-size: 9px;
   display: inline-block;
