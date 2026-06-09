@@ -15,7 +15,7 @@
 // so they all run in the browser with the Web SDK.)
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import {
   collection,
   doc,
@@ -38,7 +38,7 @@ import { AttendanceTab } from "@/components/captain/AttendanceTab";
 import { TeamChatTab } from "@/components/captain/TeamChatTab";
 import { CaptainsChatTab } from "@/components/captain/CaptainsChatTab";
 import { HelpTab } from "@/components/captain/HelpTab";
-import { QuickScoreTab } from "@/components/captain/QuickScoreTab";
+import { QuickScoreInline } from "@/components/captain/QuickScoreInline";
 import { PasswordlessCaptainPicker } from "@/components/captain/PasswordlessCaptainPicker";
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
 import { ManagerContact } from "@/components/ManagerContact";
@@ -527,11 +527,9 @@ const TABS: Tab[] = [
   // placeholder. Re-enable once admin-pushed announcements ship.
   // { key: "announcements", label: "Announcements" },
   { key: "help", label: "Help" },
-  // Quick Score is reached from the Submit Score tab (its "⚡ Quick
-  // Score" button → #quickscore), NOT its own tab — it was redundant
-  // with Submit Score. Kept here as a hidden, still-routable entry so
-  // the hash-routing + render path keep working.
-  { key: "quickscore", label: "⚡ Quick Score", hidden: true },
+  // Quick Score is now an inline single-game form INSIDE the Submit
+  // Score tab (each game's "⚡ Quick Score" button expands it) — no
+  // separate tab or all-games view. (Adam, 2026-06.)
 ];
 
 function useCaptainTab(): [string, (k: string) => void] {
@@ -626,52 +624,15 @@ function CaptainBody({
   if (tab === "notifications")
     return <NotificationsPanel leagueId={leagueId} />;
   if (tab === "help") return <HelpTab />;
-  if (tab === "quickscore") {
+  if (tab === "scores")
     return (
-      <QuickScoreTab
+      <SubmitScoreTab
         leagueId={leagueId}
         teamId={teamId}
-        teamNamesById={teamNames}
+        teamNames={teamNames}
+        games={upcoming.concat(recent)}
       />
     );
-  }
-  if (tab === "scores") {
-    return (
-      <div className="cap-tab">
-        <div className="cap-section-head">
-          <h2 className="cap-section-title">Submit Score</h2>
-          <p className="cap-section-sub">
-            Click any game below to enter the full box score (lineup +
-            stats). For just the final score, use{" "}
-            <a
-              href="#quickscore"
-              style={{ color: "var(--brand-primary)", fontWeight: 600 }}
-            >
-              ⚡ Quick Score
-            </a>{" "}
-            instead. Both captains can submit; admin reconciles.
-          </p>
-        </div>
-        <ul className="le-cap-game-list">
-          {upcoming.concat(recent).map((g) => (
-            <CaptainGameRow
-              key={g.id}
-              game={g}
-              myTeamId={teamId}
-              primary={{
-                label: "Box Score",
-                href: `/captain/box-score?game=${g.id}`,
-              }}
-              secondary={{
-                label: "⚡ Quick Score",
-                href: "#quickscore",
-              }}
-            />
-          ))}
-        </ul>
-      </div>
-    );
-  }
   if (tab === "announcements") {
     return (
       <div className="cap-tab">
@@ -1247,6 +1208,78 @@ function CaptainHero({ team, email }: { team: TeamSnap; email: string }) {
   );
 }
 
+// Submit Score tab — each game has a Box Score link (full editor) and
+// a Quick Score button that expands a single-game, score-only form
+// inline, right under that game (Adam, 2026-06). `games` is the
+// captain's scheduled + final games; postponed/rained-out games are
+// NOT here (they weren't played, so there's nothing to score).
+function SubmitScoreTab({
+  leagueId,
+  teamId,
+  teamNames,
+  games,
+}: {
+  leagueId: string;
+  teamId: string;
+  teamNames: Record<string, string>;
+  games: GameSnap[];
+}) {
+  const [openId, setOpenId] = useState<string | null>(null);
+  return (
+    <div className="cap-tab">
+      <div className="cap-section-head">
+        <h2 className="cap-section-title">Submit Score</h2>
+        <p className="cap-section-sub">
+          Tap <strong>Quick Score</strong> on a game for just the final, or{" "}
+          <strong>Box Score</strong> for the full lineup + stats. Both captains
+          can submit; the league office reconciles.
+        </p>
+      </div>
+      {games.length === 0 ? (
+        <p style={{ color: "var(--muted)", fontSize: 14 }}>
+          No games to score right now.
+        </p>
+      ) : (
+        <ul className="le-cap-game-list">
+          {games.map((g) => {
+            const open = openId === g.id;
+            const oppId =
+              g.home_team_id === teamId ? g.away_team_id : g.home_team_id;
+            return (
+              <Fragment key={g.id}>
+                <CaptainGameRow
+                  game={g}
+                  myTeamId={teamId}
+                  teamNames={teamNames}
+                  primary={{
+                    label: "Box Score",
+                    href: `/captain/box-score?game=${g.id}`,
+                  }}
+                  secondary={{
+                    label: open ? "✕ Close" : "⚡ Quick Score",
+                    onClick: () => setOpenId(open ? null : g.id),
+                  }}
+                />
+                {open && (
+                  <li style={{ listStyle: "none" }}>
+                    <QuickScoreInline
+                      leagueId={leagueId}
+                      teamId={teamId}
+                      game={g}
+                      oppName={teamNames[oppId] ?? oppId.toUpperCase()}
+                      onClose={() => setOpenId(null)}
+                    />
+                  </li>
+                )}
+              </Fragment>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function CaptainGameRow({
   game,
   myTeamId,
@@ -1258,7 +1291,7 @@ function CaptainGameRow({
   myTeamId: string;
   teamNames?: Record<string, string>;
   primary: { label: string; href: string };
-  secondary?: { label: string; href: string };
+  secondary?: { label: string; href?: string; onClick?: () => void };
 }) {
   const isHome = game.home_team_id === myTeamId;
   const opponentId = isHome ? game.away_team_id : game.home_team_id;
@@ -1304,17 +1337,26 @@ function CaptainGameRow({
           {primary.label}
         </Link>
         {secondary &&
-          (secondary.href.startsWith("#") ? (
-            // Hash targets (e.g. "#quickscore") MUST be a native <a>.
-            // Next's <Link> navigates a hash via history.pushState,
-            // which does NOT fire a `hashchange` event — so the captain
-            // tab router (which listens for hashchange) never switched,
-            // and Quick Score "did nothing". (Adam, 2026-06.)
+          (secondary.onClick ? (
+            // Button variant — used by Quick Score to toggle an inline
+            // single-game form right here (Adam, 2026-06).
+            <button
+              type="button"
+              onClick={secondary.onClick}
+              className="le-cap-btn-secondary"
+            >
+              {secondary.label}
+            </button>
+          ) : secondary.href?.startsWith("#") ? (
+            // Hash targets MUST be a native <a>: Next's <Link>
+            // navigates a hash via history.pushState, which doesn't
+            // fire `hashchange`, so a hash-based tab router never sees
+            // it.
             <a href={secondary.href} className="le-cap-btn-secondary">
               {secondary.label}
             </a>
           ) : (
-            <Link href={secondary.href} className="le-cap-btn-secondary">
+            <Link href={secondary.href ?? "#"} className="le-cap-btn-secondary">
               {secondary.label}
             </Link>
           ))}

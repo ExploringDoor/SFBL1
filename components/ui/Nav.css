@@ -475,13 +475,13 @@ body.dvsl-modal-open .le-mob-menu {
   background: rgba(0, 45, 114, 0.08);
 }
 
-/* Red down-caret next to the label on dropdown triggers (SFBL /
- * Register / More) so it's obvious they expand. Big enough to read;
- * flips up when the menu is open. (Adam, 2026-06.) */
+/* Bold red chevron next to the label on dropdown triggers (SFBL /
+ * Register / More) so it's obvious they expand. Flips to point up
+ * when the menu is open. (Adam, 2026-06.) */
 .le-nav-caret {
-  font-size: 1.15em;
-  line-height: 1;
-  color: #dc2626;
+  display: inline-block;
+  vertical-align: middle;
+  flex: none;
   transition: transform 0.18s ease;
 }
 .le-nav-dropdown.open .le-nav-caret {

@@ -156,11 +156,25 @@ export function Nav({
                     }
                   >
                     {link.label}
-                    {/* Down-caret so it's obvious these open a menu
-                        (Adam, 2026-06). Rotates when open. */}
-                    <span className="le-nav-caret" aria-hidden>
-                      ▾
-                    </span>
+                    {/* Bold red chevron so it's obvious these open a
+                        menu (Adam, 2026-06). SVG = crisp at any size;
+                        rotates to point up when open. */}
+                    <svg
+                      className="le-nav-caret"
+                      width="15"
+                      height="15"
+                      viewBox="0 0 16 16"
+                      aria-hidden
+                    >
+                      <path
+                        d="M4 6l4 4 4-4"
+                        fill="none"
+                        stroke="#dc2626"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
                   </button>
                   <ul className="le-nav-dropdown-menu">
                     {link.children.map((child) => (
