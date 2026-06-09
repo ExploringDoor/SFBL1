@@ -69,6 +69,11 @@ export interface TickerProps {
   /** Where the left label and right "Full Schedule" link point. */
   homeHref?: string;
   scoresHref?: string;
+  /** Hide the left label cell entirely so the scrolling scores fill
+   *  the full width. SFBL uses this — its wordmark was too big in the
+   *  top-left on mobile/the installed app, and the homepage Hero +
+   *  nav brand already carry the branding. (Adam, 2026-05-18.) */
+  hideLabel?: boolean;
 }
 
 export function Ticker({
@@ -78,39 +83,42 @@ export function Ticker({
   logoUrl,
   homeHref = "/",
   scoresHref = "/scores",
+  hideLabel = false,
 }: TickerProps) {
   return (
     <div id="score-ticker">
-      <Link
-        href={homeHref}
-        className={"st-label" + (logoUrl ? " has-logo" : "")}
-        title="Home"
-        aria-label={tenantShort}
-      >
-        {logoUrl ? (
-          /* Audit M9: above-the-fold ticker logo. width/height stops
-             layout shift once the image lands; loading="eager" +
-             decoding=async keep it in the critical path without
-             blocking. Dimensions sized for the 48px ticker height
-             with proportional width capped by max-width:56px in CSS. */
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img
-            src={logoUrl}
-            alt={tenantShort}
-            className="st-label-img"
-            width={160}
-            height={48}
-            loading="eager"
-            decoding="async"
-          />
-        ) : (
-          <>
-            <span aria-hidden>⬡</span>
-            <span>{tenantShort}</span>
-            <span className="st-label-year">{seasonYear}</span>
-          </>
-        )}
-      </Link>
+      {!hideLabel && (
+        <Link
+          href={homeHref}
+          className={"st-label" + (logoUrl ? " has-logo" : "")}
+          title="Home"
+          aria-label={tenantShort}
+        >
+          {logoUrl ? (
+            /* Audit M9: above-the-fold ticker logo. width/height stops
+               layout shift once the image lands; loading="eager" +
+               decoding=async keep it in the critical path without
+               blocking. Dimensions sized for the 48px ticker height
+               with proportional width capped by max-width:56px in CSS. */
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={logoUrl}
+              alt={tenantShort}
+              className="st-label-img"
+              width={160}
+              height={48}
+              loading="eager"
+              decoding="async"
+            />
+          ) : (
+            <>
+              <span aria-hidden>⬡</span>
+              <span>{tenantShort}</span>
+              <span className="st-label-year">{seasonYear}</span>
+            </>
+          )}
+        </Link>
+      )}
 
       <div className="st-scroll">
         <div className="st-track">

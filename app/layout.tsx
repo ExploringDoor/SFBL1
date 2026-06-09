@@ -272,6 +272,10 @@ export default async function RootLayout({
                 tenantShort={leagueAbbrev ?? leagueName ?? "League"}
                 seasonYear={new Date().getFullYear()}
                 logoUrl={logoUrl}
+                // SFBL: drop the big wordmark in the top-left so the
+                // ticker is all scores (Adam, 2026-05-18). Branding
+                // still lives in the nav + homepage Hero.
+                hideLabel={leagueAbbrev === "SFBL"}
               />
               <TickerScrollHide />
               <TickerInputEnhancer />
