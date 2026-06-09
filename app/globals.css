@@ -1671,6 +1671,26 @@ body {
   overflow: hidden;
 }
 
+/* Mobile: the bell isn't flush-right (the Captain/Profile buttons sit
+ * to its right), so a right:0-anchored 360px dropdown ran off the LEFT
+ * edge of narrow screens — what Adam saw as "cut off" (2026-05-18).
+ * Below the nav breakpoint, detach the panel into a fixed sheet that
+ * spans the content width, so it's always fully on-screen regardless
+ * of where the bell sits. .le-nav has backdrop-filter, making it the
+ * containing block for this fixed child: left/right:0 = the nav's
+ * padding box (viewport minus the nav's side padding), and top:100%
+ * drops it just below the 62px nav. */
+@media (max-width: 900px) {
+  .notif-bell-panel {
+    position: fixed;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    width: auto;
+    max-height: 70vh;
+  }
+}
+
 .notif-bell-head {
   display: flex;
   align-items: center;
