@@ -7,14 +7,17 @@
 // for.
 //
 // Five slots: Home, Scores, Schedule, Standings, More. The "More"
-// slot opens a modal sheet listing every secondary destination
-// (Teams, Players, History, Fields, About, Registration forms,
-// Photos, Rules). Mirrors how DVSL handles overflow without
-// cramming everything into the visible bar.
+// slot opens a modal sheet built from the SAME nav source as the
+// desktop nav (./nav-links), so it lists exactly what desktop's nav
+// does minus the four visible tabs — identical, and impossible to
+// drift. In the installed app this sheet is the ONLY nav (the top
+// hamburger is hidden via body.has-tabbar), per Adam 2026-05-18.
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { DEFAULT_LINKS, computeNavLinks, iconFor } from "./nav-links";
+import type { NavLink } from "./nav-links";
 import "./PwaTabBar.css";
 
 interface Slot {
@@ -33,53 +36,11 @@ const SLOTS: Slot[] = [
   { id: "more", label: "More", icon: "⋯", more: true },
 ];
 
-interface MoreItem {
-  icon: string;
-  label: string;
-  href: string;
-}
-
-interface MoreSection {
-  title: string;
-  items: MoreItem[];
-}
-
-const MORE_SECTIONS: MoreSection[] = [
-  {
-    title: "Browse",
-    items: [
-      { icon: "👥", label: "Teams", href: "/teams" },
-      { icon: "👤", label: "Players", href: "/players" },
-      { icon: "📊", label: "Stat Leaders", href: "/leaders" },
-      { icon: "📜", label: "History", href: "/history" },
-      { icon: "📷", label: "Photos", href: "/photos" },
-      { icon: "🥎", label: "Playoffs", href: "/playoffs" },
-    ],
-  },
-  {
-    title: "League",
-    items: [
-      { icon: "📍", label: "Fields", href: "/fields" },
-      { icon: "📜", label: "Rules", href: "/rules" },
-      { icon: "ℹ️", label: "About SFBL", href: "/sfbl-info" },
-    ],
-  },
-  {
-    title: "Sign Up",
-    items: [
-      { icon: "🧢", label: "Player Registration", href: "/player-registration" },
-      { icon: "🏟️", label: "Team Registration", href: "/team-registration" },
-      { icon: "✍️", label: "Team Waiver", href: "/team-waiver-form" },
-      { icon: "👨‍⚖️", label: "Umpire Evaluation", href: "/umpire-evaluation-form" },
-    ],
-  },
-  {
-    title: "Account",
-    items: [
-      { icon: "🙋", label: "Profile", href: "/profile" },
-    ],
-  },
-];
+// The "More" sheet is built from the SAME nav source as the desktop nav
+// (computeNavLinks, below) so it stays identical to it — no more
+// hand-maintained list drifting out of sync. The four SLOTS above
+// (Home/Scores/Schedule/Standings) are the visible tabs; every other
+// nav destination lands in this sheet. (Adam, 2026-05-18.)
 
 export interface PwaTabBarProps {
   /** Labels to hide from the More sheet — same shape Nav uses. */
@@ -92,20 +53,30 @@ export function PwaTabBar({ hideLabels, tenantShort }: PwaTabBarProps = {}) {
   const pathname = usePathname() ?? "/";
   const [isStandalone, setIsStandalone] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
-  // Apply the per-tenant hide list + the "About SFBL" → "About
-  // <tenantShort>" rename so the More sheet matches the public nav.
-  // A section with all items filtered out drops itself entirely.
-  const hide = new Set((hideLabels ?? []).map((s) => s.toLowerCase()));
-  const filteredSections = MORE_SECTIONS.map((section) => ({
-    ...section,
-    items: section.items
-      .filter((it) => !hide.has(it.label.toLowerCase()))
-      .map((it) =>
-        it.href === "/sfbl-info" && tenantShort
-          ? { ...it, label: `About ${tenantShort}` }
-          : it,
-      ),
-  })).filter((s) => s.items.length > 0);
+  // Build the "More" sheet from the same nav source as the desktop nav,
+  // with the same per-tenant filtering, so the web-app "More" is
+  // identical to desktop. The four visible tabs (Home/Scores/Schedule/
+  // Standings) are excluded so they don't repeat. Remaining single
+  // links collect under "Browse"; each dropdown becomes its own section
+  // (SFBL, Register, More) — same grouping as the desktop nav.
+  const navLinks = computeNavLinks(DEFAULT_LINKS, tenantShort ?? "", hideLabels);
+  const bottomHrefs = new Set(
+    SLOTS.map((s) => s.href).filter((h): h is string => !!h),
+  );
+  const sheetSections: { title: string; items: NavLink[] }[] = [];
+  let singles: NavLink[] = [];
+  for (const link of navLinks) {
+    if (link.children && link.children.length > 0) {
+      if (singles.length) {
+        sheetSections.push({ title: "Browse", items: singles });
+        singles = [];
+      }
+      sheetSections.push({ title: link.label, items: link.children });
+    } else if (!bottomHrefs.has(link.href)) {
+      singles.push(link);
+    }
+  }
+  if (singles.length) sheetSections.push({ title: "Browse", items: singles });
 
   // Detect standalone PWA mode — the manifest's display:standalone
   // makes the OS launch us in a separate window without a browser
@@ -210,7 +181,7 @@ export function PwaTabBar({ hideLabels, tenantShort }: PwaTabBarProps = {}) {
       >
         <div className="le-tabbar-sheet-grab" />
         <div className="le-tabbar-sheet-body">
-          {filteredSections.map((section) => (
+          {sheetSections.map((section) => (
             <div key={section.title} className="le-tabbar-sheet-section">
               <h3>{section.title}</h3>
               <ul>
@@ -218,7 +189,7 @@ export function PwaTabBar({ hideLabels, tenantShort }: PwaTabBarProps = {}) {
                   <li key={it.href}>
                     <Link href={it.href}>
                       <span className="le-tabbar-sheet-icon" aria-hidden>
-                        {it.icon}
+                        {iconFor(it.href)}
                       </span>
                       {it.label}
                     </Link>

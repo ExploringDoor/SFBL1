@@ -14,17 +14,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { DEFAULT_LINKS, computeNavLinks, iconFor } from "./nav-links";
+import type { NavLink } from "./nav-links";
 import "./Nav.css";
 
-export interface NavLink {
-  label: string;
-  href: string;
-  /** When set, this nav item renders as a dropdown menu rather than
-   *  a direct link. The `href` is ignored on desktop (the parent
-   *  becomes a hover-toggle); on mobile the parent renders as a
-   *  section header above the children. */
-  children?: NavLink[];
-}
+// NavLink + DEFAULT_LINKS + computeNavLinks + iconFor moved to
+// ./nav-links so the bottom-tab "More" sheet shares them (2026-05-18).
+// Re-export the type so existing `import { NavLink } from "./Nav"`
+// sites keep working.
+export type { NavLink };
 
 export interface NavProps {
   /** Tenant short name shown as the brand (e.g. "DVSL", "SFBL"). */
@@ -42,62 +40,8 @@ export interface NavProps {
   rightSlot?: React.ReactNode;
 }
 
-const DEFAULT_LINKS: NavLink[] = [
-  { label: "Home", href: "/" },
-  // League-info dropdown — between Home and Scores (Nelson, 2026-05-18).
-  // Labeled "SFBL" for the SFBL tenant; the Nav relabel() swaps it to
-  // the tenant short ("LBDC" etc.) for others. Groups the three
-  // league-identity pages out of the catch-all "More" list.
-  {
-    label: "SFBL",
-    href: "#",
-    children: [
-      { label: "Info", href: "/sfbl-info" },
-      { label: "Rules", href: "/rules" },
-      { label: "Fields", href: "/fields" },
-    ],
-  },
-  { label: "Scores", href: "/scores" },
-  { label: "Schedule", href: "/schedule" },
-  { label: "Standings", href: "/standings" },
-  { label: "Stats", href: "/players" },
-  { label: "Teams", href: "/teams" },
-  // Dedicated Register dropdown so signing up isn't buried in "More"
-  // (Adam, 2026-05-18). Generic — nav.hide still controls which
-  // children show per tenant (LBDC hides Team Registration).
-  {
-    label: "Register",
-    href: "#",
-    children: [
-      { label: "Player Registration", href: "/player-registration" },
-      { label: "Team Registration", href: "/team-registration" },
-      { label: "Team Waiver", href: "/team-waiver-form" },
-    ],
-  },
-  {
-    label: "More",
-    href: "#",
-    children: [
-      { label: "News", href: "/content/news" },
-      { label: "Photos", href: "/photos" },
-      { label: "Team Stats", href: "/leaders" },
-      { label: "Player of the Week", href: "/player-of-the-week" },
-      { label: "Playoffs", href: "/playoffs" },
-      { label: "Tournaments", href: "/tournaments" },
-      { label: "Availability", href: "/availability" },
-      { label: "History", href: "/history" },
-      { label: "Umpire Evaluation", href: "/umpire-evaluation-form" },
-      { label: "Pay Online", href: "/pay-online" },
-      { label: "Sponsors", href: "/content/sponsors" },
-      { label: "Store", href: "/content/store" },
-      { label: "Contact", href: "/content/contact" },
-      // Admin moved here from the header pill (Adam, 2026-05-18) — it
-      // just opens the admin password gate, so it's a discreet entry
-      // point rather than a prominent button.
-      { label: "Admin", href: "/admin" },
-    ],
-  },
-];
+// DEFAULT_LINKS now lives in ./nav-links (shared with the bottom-tab
+// "More" sheet). Imported above.
 
 export function Nav({
   tenantShort,
@@ -106,66 +50,14 @@ export function Nav({
   hideLabels,
   rightSlot,
 }: NavProps) {
-  // Per-tenant nav customization:
-  //   • hide-list (case-insensitive label match)
-  //   • legacy "About SFBL" → "About <tenantShort>" relabel
-  //   • the "SFBL" league-info dropdown is SFBL-ONLY — filtered out
-  //     entirely for every other tenant below (Adam, 2026-05-18:
-  //     SFBL-specific, no LBDC/other-tenant version).
-  // Hide-list match still uses the ORIGINAL label so existing
-  // nav.hide configs remain valid.
-  const hide = new Set((hideLabels ?? []).map((s) => s.toLowerCase()));
-  function relabel(l: NavLink): NavLink {
-    if (l.label === "About SFBL" && tenantShort && tenantShort !== "SFBL") {
-      return { ...l, label: `About ${tenantShort}` };
-    }
-    return l;
-  }
-  const links: NavLink[] = hide.size
-    ? linksProp
-        .map((l) => {
-          if (hide.has(l.label.toLowerCase())) return null;
-          if (l.children && l.children.length > 0) {
-            const kept = l.children
-              .filter((c) => !hide.has(c.label.toLowerCase()))
-              .map(relabel);
-            if (kept.length === 0) return null;
-            return { ...l, children: kept };
-          }
-          return relabel(l);
-        })
-        .filter((l): l is NavLink => l !== null)
-    : linksProp.map((l) => {
-        if (l.children) {
-          return { ...l, children: l.children.map(relabel) };
-        }
-        return relabel(l);
-      });
-  // SFBL-only nav items (Adam, 2026-05-18): the "SFBL" league-info
-  // dropdown and the "Player of the Week" page render ONLY on the
-  // SFBL tenant. For every other tenant they're dropped entirely —
-  // both as top-level entries and as children inside any dropdown
-  // (e.g. "Player of the Week" lives under "More"). No relabeled
-  // versions.
-  const SFBL_ONLY_LABELS = new Set(["SFBL", "Player of the Week"]);
-  const navLinks: NavLink[] =
-    tenantShort === "SFBL"
-      ? links
-      : links
-          .filter((l) => !SFBL_ONLY_LABELS.has(l.label))
-          .map((l) =>
-            l.children
-              ? {
-                  ...l,
-                  children: l.children.filter(
-                    (c) => !SFBL_ONLY_LABELS.has(c.label),
-                  ),
-                }
-              : l,
-          )
-          .filter(
-            (l) => !l.children || l.children.length > 0,
-          );
+  // Per-tenant nav customization (hide-list, "About <tenant>" relabel,
+  // SFBL-only items) — shared with the bottom-tab "More" sheet via
+  // computeNavLinks so the two never drift.
+  const navLinks: NavLink[] = computeNavLinks(
+    linksProp,
+    tenantShort,
+    hideLabels,
+  );
   const pathname = usePathname();
   const [mobOpen, setMobOpen] = useState(false);
   // Track which dropdown (by label) is open. JS-controlled rather than
@@ -383,38 +275,4 @@ function isActive(pathname: string | null, href: string): boolean {
   return pathname === href || pathname.startsWith(href + "/");
 }
 
-// Pick a recognizable emoji icon for each known route. Mirrors the
-// PwaTabBar More sheet so the two menus feel like one design system.
-// Anything unmapped falls back to a neutral dot — better than a
-// missing icon shifting the layout.
-function iconFor(href: string): string {
-  const ICONS: Record<string, string> = {
-    "/": "🏠",
-    "/scores": "⚾",
-    "/schedule": "📅",
-    "/standings": "🏆",
-    "/players": "📊",
-    "/teams": "👥",
-    "/rules": "📜",
-    "/content/news": "📰",
-    "/photos": "📷",
-    "/leaders": "🥇",
-    "/player-of-the-week": "🌟",
-    "/playoffs": "🥎",
-    "/history": "📚",
-    "/fields": "📍",
-    "/sfbl-info": "ℹ️",
-    "/player-registration": "🧢",
-    "/team-registration": "🏟️",
-    "/team-waiver-form": "✍️",
-    "/umpire-evaluation-form": "👨‍⚖️",
-    "/pay-online": "💳",
-    "/content/pay-online": "💳",
-    "/content/sponsors": "🤝",
-    "/content/store": "🛒",
-    "/content/contact": "✉️",
-    "/profile": "🙋",
-    "/admin": "◉",
-  };
-  return ICONS[href] ?? "•";
-}
+// iconFor moved to ./nav-links (shared with PwaTabBar). Imported above.

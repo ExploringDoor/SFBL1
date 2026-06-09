@@ -201,6 +201,16 @@ body.ticker-hidden .le-mob-menu {
   padding: 4px;
 }
 
+/* Installed web app (standalone): the bottom tab bar owns navigation,
+ * so the top hamburger is redundant — hide it entirely. The bottom
+ * "More" sheet (PwaTabBar) carries everything the hamburger did, and
+ * is built from the same nav source as desktop. Regular mobile
+ * browsers (no tab bar, so no body.has-tabbar) keep the hamburger.
+ * (Adam, 2026-05-18.) */
+body.has-tabbar .le-hamburger {
+  display: none !important;
+}
+
 .le-hamburger span {
   display: block;
   width: 22px;
