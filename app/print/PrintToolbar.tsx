@@ -7,6 +7,7 @@
 // so admin can review/re-save without re-rendering.
 
 import { useEffect } from "react";
+import { triggerPrint } from "@/lib/print";
 
 export function PrintToolbar() {
   useEffect(() => {
@@ -21,7 +22,9 @@ export function PrintToolbar() {
 
   return (
     <div className="print-toolbar">
-      <button type="button" onClick={() => window.print()}>
+      {/* triggerPrint() escapes the iOS installed app (where
+          window.print() is a no-op) by re-opening in a browser tab. */}
+      <button type="button" onClick={() => triggerPrint()}>
         Save as PDF / Print
       </button>
       <button
