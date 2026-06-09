@@ -83,6 +83,17 @@ body.ticker-hidden .le-mob-menu {
   text-decoration: none;
 }
 
+/* SFBL brand text: Arial Rounded, bold + italic (Nelson, 2026-05-18).
+ * Falls back to Helvetica Rounded / Arial where Arial Rounded MT Bold
+ * isn't installed; stays bold + italic everywhere. */
+.le-nav-brand--rounded {
+  font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial,
+    sans-serif;
+  font-weight: 700;
+  font-style: italic;
+  letter-spacing: 0.02em;
+}
+
 .le-nav-brand img {
   height: 28px;
   opacity: 0.85;

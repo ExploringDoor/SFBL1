@@ -31,6 +31,7 @@ import {
   formatTime12,
 } from "@/lib/format-time";
 import { RosterTab } from "@/components/captain/RosterTab";
+import { FreeAgentsTab } from "@/components/captain/FreeAgentsTab";
 import { ScheduleTab } from "@/components/captain/ScheduleTab";
 import { PaymentsTab } from "@/components/captain/PaymentsTab";
 import { AttendanceTab } from "@/components/captain/AttendanceTab";
@@ -511,6 +512,7 @@ const TABS: Tab[] = [
   { key: "team", label: "My Team" },
   { key: "attendance", label: "Attendance" },
   { key: "roster", label: "Roster" },
+  { key: "freeagents", label: "Free Agents" },
   { key: "scores", label: "Submit Score" },
   { key: "notifications", label: "🔔 Notifications" },
   { key: "schedule", label: "Schedule" },
@@ -609,6 +611,8 @@ function CaptainBody({
 
   if (tab === "roster")
     return <RosterTab leagueId={leagueId} teamId={teamId} />;
+  if (tab === "freeagents")
+    return <FreeAgentsTab leagueId={leagueId} />;
   if (tab === "schedule")
     return <ScheduleTab leagueId={leagueId} teamId={teamId} />;
   if (tab === "payments")

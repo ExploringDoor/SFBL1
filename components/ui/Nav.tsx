@@ -44,16 +44,10 @@ export interface NavProps {
 
 const DEFAULT_LINKS: NavLink[] = [
   { label: "Home", href: "/" },
-  { label: "Scores", href: "/scores" },
-  { label: "Schedule", href: "/schedule" },
-  { label: "Standings", href: "/standings" },
-  { label: "Stats", href: "/players" },
-  { label: "Teams", href: "/teams" },
-  // League-info dropdown. Labeled "SFBL" for the SFBL tenant; the Nav
-  // relabel() swaps it to the tenant short ("LBDC" etc.) for others,
-  // same pattern as the old "About SFBL" leaf. Groups the three
-  // league-identity pages out of the catch-all "More" list so
-  // they're one obvious click. (Adam, 2026-05-18.)
+  // League-info dropdown — between Home and Scores (Nelson, 2026-05-18).
+  // Labeled "SFBL" for the SFBL tenant; the Nav relabel() swaps it to
+  // the tenant short ("LBDC" etc.) for others. Groups the three
+  // league-identity pages out of the catch-all "More" list.
   {
     label: "SFBL",
     href: "#",
@@ -63,6 +57,11 @@ const DEFAULT_LINKS: NavLink[] = [
       { label: "Fields", href: "/fields" },
     ],
   },
+  { label: "Scores", href: "/scores" },
+  { label: "Schedule", href: "/schedule" },
+  { label: "Standings", href: "/standings" },
+  { label: "Stats", href: "/players" },
+  { label: "Teams", href: "/teams" },
   // Dedicated Register dropdown so signing up isn't buried in "More"
   // (Adam, 2026-05-18). Generic — nav.hide still controls which
   // children show per tenant (LBDC hides Team Registration).
@@ -81,7 +80,7 @@ const DEFAULT_LINKS: NavLink[] = [
     children: [
       { label: "News", href: "/content/news" },
       { label: "Photos", href: "/photos" },
-      { label: "Leaders", href: "/leaders" },
+      { label: "Team Stats", href: "/leaders" },
       { label: "Player of the Week", href: "/player-of-the-week" },
       { label: "Playoffs", href: "/playoffs" },
       { label: "Tournaments", href: "/tournaments" },
@@ -209,7 +208,14 @@ export function Nav({
          *  to text-only branding when no logo is configured. */}
         <Link
           href="/"
-          className={"le-nav-brand" + (logoUrl ? " has-logo" : "")}
+          className={
+            "le-nav-brand" +
+            (logoUrl ? " has-logo" : "") +
+            // SFBL brand text in Arial Rounded, bold + italic
+            // (Nelson, 2026-05-18). Scoped so other tenants keep their
+            // default brand font.
+            (tenantShort === "SFBL" ? " le-nav-brand--rounded" : "")
+          }
           onClick={() => setMobOpen(false)}
           aria-label={tenantShort}
         >
