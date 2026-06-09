@@ -18,6 +18,7 @@ import { doc, setDoc } from "firebase/firestore";
 import { SendPushSection } from "@/components/admin/SendPushSection";
 import { PagesManager } from "@/components/admin/PagesManager";
 import { CaptainClaimsManager } from "@/components/admin/CaptainClaimsManager";
+import { CaptainsRoster } from "@/components/admin/CaptainsRoster";
 import { BulkInviteSection } from "@/components/admin/BulkInviteSection";
 import { BrandingSection } from "@/components/admin/BrandingSection";
 import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
@@ -68,7 +69,7 @@ const TABS: { key: TabKey; label: string; description: string }[] = [
   // { key: "playoffs", label: "Playoffs", description: "Build the playoff bracket — divisions, rounds, matchups, results." },
   { key: "teams", label: "Teams", description: "Roster import, edit team metadata, manage divisions." },
   { key: "signups", label: "Signups", description: "Approve or reject players added by captains (walk-ons)." },
-  { key: "captains", label: "Captains", description: "Grant or revoke captain access to specific teams." },
+  { key: "captains", label: "Captains", description: "Every team's captain: contact, password status, and last login." },
   { key: "payments", label: "Payments", description: "League-wide fee collection — who's paid, per team, with totals." },
   { key: "fields", label: "Fields", description: "How many games each field has hosted this season." },
   { key: "alerts", label: "Alerts", description: "Publish a homepage banner — weather, registration, deadlines." },
@@ -295,8 +296,18 @@ export default function AdminPage() {
         )}
         {activeTab === "captains" && (
           <div className="space-y-4">
-            <CaptainClaimsManager leagueId={tenantId} user={user} />
-            <BulkInviteSection leagueId={tenantId} user={user} />
+            {/* Consolidated roster — every captain in one place. Useful
+                for all tenants. */}
+            <CaptainsRoster leagueId={tenantId} user={user} />
+            {/* Email/magic-link captain claims only apply when captains
+                sign in by email. Passwordless tenants (SFBL) use team
+                passwords, so hide these to avoid confusion. */}
+            {config?.captain?.passwordless !== true && (
+              <>
+                <CaptainClaimsManager leagueId={tenantId} user={user} />
+                <BulkInviteSection leagueId={tenantId} user={user} />
+              </>
+            )}
           </div>
         )}
         {activeTab === "alerts" && (
