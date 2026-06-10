@@ -829,23 +829,22 @@ function RosterTable({
       </div>
     );
   }
-  // Full batting table — columns mirror what LBDC's existing site
-  // shows: # / Player / GP / AB / R / H / 2B / 3B / HR / RBI / BB /
-  // K / SB / TB / AVG / OBP / OPS. We deliberately drop the Pos
-  // column on the full table — players move around, position has
-  // less signal than the stat line. Overflow-x scroll on narrow
-  // viewports so phones can pan instead of squeezing 17 columns.
+  // Batting table — trimmed to the columns the DVSL team page shows
+  // so it fits beside the schedule sidebar (Adam, 2026-06): # / Player
+  // / AB / R / H / 2B / 3B / HR / RBI / BB / AVG / OBP / OPS. Dropped
+  // GP / K / SB / TB (secondary stats the reference doesn't show). Pos
+  // is also dropped on the full table — players move around. Still
+  // overflow-x:auto so it can pan on a phone if it gets tight.
   return (
     <div
       className="rounded-md border border-slate-200 bg-white"
       style={{ overflowX: "auto" }}
     >
-      <table className="s-tbl" style={{ minWidth: 1000 }}>
+      <table className="s-tbl" style={{ minWidth: 700 }}>
         <thead>
           <tr>
             <th className="text-left">#</th>
             <th className="text-left">Player</th>
-            <th>GP</th>
             <th>AB</th>
             <th>R</th>
             <th>H</th>
@@ -854,9 +853,6 @@ function RosterTable({
             <th>HR</th>
             <th>RBI</th>
             <th>BB</th>
-            <th>K</th>
-            <th>SB</th>
-            <th>TB</th>
             <th>AVG</th>
             <th>OBP</th>
             <th>OPS</th>
@@ -873,7 +869,6 @@ function RosterTable({
                   {p.name}
                 </Link>
               </td>
-              <td>{p.gp ?? "—"}</td>
               <td>{p.ab ?? "—"}</td>
               <td>{p.r ?? "—"}</td>
               <td>{p.h ?? "—"}</td>
@@ -882,9 +877,6 @@ function RosterTable({
               <td>{p.hr ?? "—"}</td>
               <td>{p.rbi ?? "—"}</td>
               <td>{p.bb ?? "—"}</td>
-              <td>{p.so ?? "—"}</td>
-              <td>{p.sb ?? "—"}</td>
-              <td>{p.tb ?? "—"}</td>
               <td>{p.avg != null ? formatAvg(p.avg) : "—"}</td>
               <td>{p.obp != null ? formatAvg(p.obp) : "—"}</td>
               <td>{p.ops != null ? formatOps(p.ops) : "—"}</td>
