@@ -606,39 +606,42 @@ export default async function TeamDetailPage({
           );
         })()}
 
-        {/* Roster + pitching tables span full width. The original
-            layout had them in a narrow main column next to the
-            schedule sidebar; once we expanded to LBDC's 15 stat
-            columns the table couldn't fit. We stack: roster on top
-            (full width), then pitching (when there's data), then
-            recent/upcoming as a separate section. */}
-        <div>
-          <h2 className="font-display mb-4" style={{ fontSize: 28 }}>
-            Roster
-          </h2>
-          {roster.length === 0 ? (
-            <p style={{ color: "var(--muted)" }}>No players on roster yet.</p>
-          ) : (
-            <RosterTable roster={roster} hasGames={hasGames} />
-          )}
-        </div>
-
-        {/* Pitching table appears only when at least one player on
-            the roster has thrown a pitch this season. Hidden for
-            position-player-only teams (and pre-launch). */}
-        {roster.some((p) => (p.p_app ?? 0) > 0) && (
-          <div style={{ marginTop: 40 }}>
+        {/* Roster + pitching on the LEFT, schedule/results on the
+            RIGHT — side by side like the DVSL team page (Adam, 2026-06;
+            it was previously full-width with the schedule below). The
+            roster + pitching tables already scroll horizontally
+            (overflow-x:auto), so a wide stat table fits in the narrower
+            column instead of breaking the page. minmax(0,1fr) lets the
+            left column shrink so that overflow can kick in. Collapses
+            to one column on phones (roster, then schedule). */}
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+          {/* LEFT — roster (team stats) + pitching */}
+          <div style={{ minWidth: 0 }}>
             <h2 className="font-display mb-4" style={{ fontSize: 28 }}>
-              Pitching
+              Roster
             </h2>
-            <PitchingTable roster={roster} />
+            {roster.length === 0 ? (
+              <p style={{ color: "var(--muted)" }}>No players on roster yet.</p>
+            ) : (
+              <RosterTable roster={roster} hasGames={hasGames} />
+            )}
+
+            {/* Pitching table appears only when at least one player on
+                the roster has thrown a pitch this season. */}
+            {roster.some((p) => (p.p_app ?? 0) > 0) && (
+              <div style={{ marginTop: 36 }}>
+                <h2 className="font-display mb-4" style={{ fontSize: 28 }}>
+                  Pitching
+                </h2>
+                <div style={{ overflowX: "auto" }}>
+                  <PitchingTable roster={roster} />
+                </div>
+              </div>
+            )}
           </div>
-        )}
 
-        <div className="grid gap-10 lg:grid-cols-[1fr_360px]" style={{ marginTop: 40 }}>
-          <div />
-
-          <aside>
+          {/* RIGHT — schedule sidebar */}
+          <aside style={{ minWidth: 0 }}>
             <h2 className="font-display mb-4" style={{ fontSize: 22 }}>
               Recent Results
             </h2>
