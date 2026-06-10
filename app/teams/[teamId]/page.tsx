@@ -157,6 +157,17 @@ export default async function TeamDetailPage({
   }
   const myRow = standings.find((r) => r.team_id === params.teamId) ?? null;
 
+  // Team-page layout: LBDC keeps its original full-width roster (all
+  // stat columns) with the schedule below; SFBL + other leagues get the
+  // compact, schedule-beside-the-stats layout like the DVSL page (Adam,
+  // 2026-06: "leave LBDC how it was"). LBDC's stat table is too wide for
+  // a sidebar. Matches on the league abbrev so lbdc + lbdc-staging both
+  // count.
+  const compactTeamPage =
+    config?.abbrev !== "LBDC" &&
+    tenantId !== "lbdc" &&
+    tenantId !== "lbdc-staging";
+
   // Standings position WITHIN this team's division. If the league
   // has no division structure, fall back to overall position. Only
   // meaningful when games have actually been played — for fresh
@@ -606,79 +617,117 @@ export default async function TeamDetailPage({
           );
         })()}
 
-        {/* Roster + pitching on the LEFT, schedule/results on the
-            RIGHT — side by side like the DVSL team page (Adam, 2026-06;
-            it was previously full-width with the schedule below). The
-            roster + pitching tables already scroll horizontally
-            (overflow-x:auto), so a wide stat table fits in the narrower
-            column instead of breaking the page. minmax(0,1fr) lets the
-            left column shrink so that overflow can kick in. Collapses
-            to one column on phones (roster, then schedule). */}
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
-          {/* LEFT — roster (team stats) + pitching */}
-          <div style={{ minWidth: 0 }}>
-            <h2 className="font-display mb-4" style={{ fontSize: 28 }}>
-              Roster
-            </h2>
-            {roster.length === 0 ? (
-              <p style={{ color: "var(--muted)" }}>No players on roster yet.</p>
-            ) : (
-              <RosterTable roster={roster} hasGames={hasGames} />
-            )}
-
-            {/* Pitching table appears only when at least one player on
-                the roster has thrown a pitch this season. */}
-            {roster.some((p) => (p.p_app ?? 0) > 0) && (
-              <div style={{ marginTop: 36 }}>
-                <h2 className="font-display mb-4" style={{ fontSize: 28 }}>
-                  Pitching
-                </h2>
-                <div style={{ overflowX: "auto" }}>
-                  <PitchingTable roster={roster} />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* RIGHT — schedule sidebar */}
-          <aside style={{ minWidth: 0 }}>
-            <h2 className="font-display mb-4" style={{ fontSize: 22 }}>
-              Recent Results
-            </h2>
-            <ul style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {recentFinals.length === 0 && (
-                <li style={{ color: "var(--muted)", fontSize: 13 }}>
-                  No games played yet.
-                </li>
-              )}
-              {recentFinals.map((g) => (
-                <GameLine
-                  key={g.id}
-                  myTeamId={params.teamId}
-                  game={g}
-                  teams={teamNames}
+        {(() => {
+          const rosterBlock = (
+            <>
+              <h2 className="font-display mb-4" style={{ fontSize: 28 }}>
+                Roster
+              </h2>
+              {roster.length === 0 ? (
+                <p style={{ color: "var(--muted)" }}>
+                  No players on roster yet.
+                </p>
+              ) : (
+                <RosterTable
+                  roster={roster}
+                  hasGames={hasGames}
+                  compact={compactTeamPage}
                 />
-              ))}
-            </ul>
-            {upcoming.length > 0 && (
-              <>
-                <h2 className="font-display mb-3 mt-6" style={{ fontSize: 22 }}>
-                  Upcoming
-                </h2>
-                <ul style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {upcoming.map((g) => (
-                    <GameLine
-                      key={g.id}
-                      myTeamId={params.teamId}
-                      game={g}
-                      teams={teamNames}
-                    />
-                  ))}
-                </ul>
-              </>
-            )}
-          </aside>
-        </div>
+              )}
+            </>
+          );
+          const pitchingBlock = roster.some((p) => (p.p_app ?? 0) > 0) ? (
+            <>
+              <h2 className="font-display mb-4" style={{ fontSize: 28 }}>
+                Pitching
+              </h2>
+              <div style={{ overflowX: "auto" }}>
+                <PitchingTable roster={roster} />
+              </div>
+            </>
+          ) : null;
+          const scheduleAside = (
+            <>
+              <h2 className="font-display mb-4" style={{ fontSize: 22 }}>
+                Recent Results
+              </h2>
+              <ul style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {recentFinals.length === 0 && (
+                  <li style={{ color: "var(--muted)", fontSize: 13 }}>
+                    No games played yet.
+                  </li>
+                )}
+                {recentFinals.map((g) => (
+                  <GameLine
+                    key={g.id}
+                    myTeamId={params.teamId}
+                    game={g}
+                    teams={teamNames}
+                  />
+                ))}
+              </ul>
+              {upcoming.length > 0 && (
+                <>
+                  <h2
+                    className="font-display mb-3 mt-6"
+                    style={{ fontSize: 22 }}
+                  >
+                    Upcoming
+                  </h2>
+                  <ul
+                    style={{ display: "flex", flexDirection: "column", gap: 8 }}
+                  >
+                    {upcoming.map((g) => (
+                      <GameLine
+                        key={g.id}
+                        myTeamId={params.teamId}
+                        game={g}
+                        teams={teamNames}
+                      />
+                    ))}
+                  </ul>
+                </>
+              )}
+            </>
+          );
+
+          // Compact (SFBL + other leagues): team stats on the LEFT,
+          // schedule beside it on the RIGHT — like the DVSL team page.
+          if (compactTeamPage) {
+            return (
+              <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+                <div style={{ minWidth: 0 }}>
+                  {rosterBlock}
+                  {pitchingBlock && (
+                    <div style={{ minWidth: 0, marginTop: 36 }}>
+                      {pitchingBlock}
+                    </div>
+                  )}
+                </div>
+                <aside style={{ minWidth: 0 }}>{scheduleAside}</aside>
+              </div>
+            );
+          }
+
+          // LBDC (unchanged): full-width roster + pitching, then the
+          // schedule below in a right column. Its 15-stat-column table
+          // is too wide to live beside a sidebar.
+          return (
+            <>
+              <div>{rosterBlock}</div>
+              {pitchingBlock && (
+                <div style={{ marginTop: 40 }}>{pitchingBlock}</div>
+              )}
+              <div
+                className="grid gap-10 lg:grid-cols-[1fr_360px]"
+                style={{ marginTop: 40 }}
+              >
+                <div />
+                <aside>{scheduleAside}</aside>
+              </div>
+            </>
+          );
+        })()}
       </section>
     </main>
   );
@@ -788,9 +837,13 @@ interface RosterPlayer {
 function RosterTable({
   roster,
   hasGames,
+  compact = false,
 }: {
   roster: RosterPlayer[];
   hasGames: boolean;
+  // compact = drop the secondary GP/K/SB/TB columns so the table fits
+  // beside the schedule sidebar. LBDC keeps the full line (compact=false).
+  compact?: boolean;
 }) {
   // Pre-season: bare #/name/pos. The all-em-dash stat table looked
   // broken on launch day, so we hide stat columns until the first
@@ -829,33 +882,47 @@ function RosterTable({
       </div>
     );
   }
-  // Batting table — trimmed to the columns the DVSL team page shows
-  // so it fits beside the schedule sidebar (Adam, 2026-06): # / Player
-  // / AB / R / H / 2B / 3B / HR / RBI / BB / AVG / OBP / OPS. Dropped
-  // GP / K / SB / TB (secondary stats the reference doesn't show). Pos
-  // is also dropped on the full table — players move around. Still
-  // overflow-x:auto so it can pan on a phone if it gets tight.
+  // Batting table. LBDC keeps the full line (GP / K / SB / TB
+  // included); compact tenants (SFBL etc.) drop those four so the
+  // table fits beside the schedule sidebar — matching the DVSL team
+  // page (Adam, 2026-06). Column-driven so both share one render. Pos
+  // is dropped on the full table (players move around). overflow-x:auto
+  // lets a phone pan if it gets tight.
+  const cols: {
+    label: string;
+    extended?: boolean;
+    get: (p: RosterPlayer) => string | number;
+  }[] = [
+    { label: "GP", extended: true, get: (p) => p.gp ?? "—" },
+    { label: "AB", get: (p) => p.ab ?? "—" },
+    { label: "R", get: (p) => p.r ?? "—" },
+    { label: "H", get: (p) => p.h ?? "—" },
+    { label: "2B", get: (p) => p.doubles ?? "—" },
+    { label: "3B", get: (p) => p.triples ?? "—" },
+    { label: "HR", get: (p) => p.hr ?? "—" },
+    { label: "RBI", get: (p) => p.rbi ?? "—" },
+    { label: "BB", get: (p) => p.bb ?? "—" },
+    { label: "K", extended: true, get: (p) => p.so ?? "—" },
+    { label: "SB", extended: true, get: (p) => p.sb ?? "—" },
+    { label: "TB", extended: true, get: (p) => p.tb ?? "—" },
+    { label: "AVG", get: (p) => (p.avg != null ? formatAvg(p.avg) : "—") },
+    { label: "OBP", get: (p) => (p.obp != null ? formatAvg(p.obp) : "—") },
+    { label: "OPS", get: (p) => (p.ops != null ? formatOps(p.ops) : "—") },
+  ];
+  const shown = compact ? cols.filter((c) => !c.extended) : cols;
   return (
     <div
       className="rounded-md border border-slate-200 bg-white"
       style={{ overflowX: "auto" }}
     >
-      <table className="s-tbl" style={{ minWidth: 700 }}>
+      <table className="s-tbl" style={{ minWidth: compact ? 700 : 1000 }}>
         <thead>
           <tr>
             <th className="text-left">#</th>
             <th className="text-left">Player</th>
-            <th>AB</th>
-            <th>R</th>
-            <th>H</th>
-            <th>2B</th>
-            <th>3B</th>
-            <th>HR</th>
-            <th>RBI</th>
-            <th>BB</th>
-            <th>AVG</th>
-            <th>OBP</th>
-            <th>OPS</th>
+            {shown.map((c) => (
+              <th key={c.label}>{c.label}</th>
+            ))}
           </tr>
         </thead>
         <tbody>
@@ -869,17 +936,9 @@ function RosterTable({
                   {p.name}
                 </Link>
               </td>
-              <td>{p.ab ?? "—"}</td>
-              <td>{p.r ?? "—"}</td>
-              <td>{p.h ?? "—"}</td>
-              <td>{p.doubles ?? "—"}</td>
-              <td>{p.triples ?? "—"}</td>
-              <td>{p.hr ?? "—"}</td>
-              <td>{p.rbi ?? "—"}</td>
-              <td>{p.bb ?? "—"}</td>
-              <td>{p.avg != null ? formatAvg(p.avg) : "—"}</td>
-              <td>{p.obp != null ? formatAvg(p.obp) : "—"}</td>
-              <td>{p.ops != null ? formatOps(p.ops) : "—"}</td>
+              {shown.map((c) => (
+                <td key={c.label}>{c.get(p)}</td>
+              ))}
             </tr>
           ))}
         </tbody>
