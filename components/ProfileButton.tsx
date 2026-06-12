@@ -24,6 +24,11 @@ export function ProfileButton({ tenantId }: { tenantId: string }) {
   const role = useLeagueRole(tenantId);
   const { config } = useTenant();
   const captainPasswordless = config?.captain?.passwordless === true;
+  // SFBL is holding off on player profiles (teams poll on WhatsApp), so
+  // there's no player sign-in. Captain + Admin live in the More menu,
+  // so the signed-out top-right chooser is dropped entirely for SFBL
+  // (Adam, 2026-06). Other passwordless tenants keep their chooser.
+  const isSfbl = config?.abbrev === "SFBL" || tenantId === "sfbl";
 
   if (user === undefined) {
     return (
@@ -36,8 +41,11 @@ export function ProfileButton({ tenantId }: { tenantId: string }) {
 
   if (user === null) {
     // Passwordless tenants: one "Profile" entry → Captain / Player
-    // chooser. (Admin is in the More menu now.)
+    // chooser. (Admin is in the More menu now.) SFBL is the exception:
+    // no player logins, and Captain is in the More menu too, so nothing
+    // shows at top-right when signed out.
     if (captainPasswordless) {
+      if (isSfbl) return null;
       return <AccessChooser />;
     }
     return (

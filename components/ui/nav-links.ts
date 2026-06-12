@@ -65,6 +65,11 @@ export const DEFAULT_LINKS: NavLink[] = [
       { label: "Sponsors", href: "/content/sponsors" },
       { label: "Store", href: "/content/store" },
       { label: "Contact", href: "/content/contact" },
+      // Captain portal entry — SFBL-only (filtered out for other
+      // tenants below). SFBL dropped the top-right Captain/Player
+      // chooser, so this is how managers reach their login (Adam,
+      // 2026-06). /captain shows the team-password gate.
+      { label: "Captain", href: "/captain" },
       // Admin moved here from the header pill (Adam, 2026-05-18) — it
       // just opens the admin password gate, so it's a discreet entry
       // point rather than a prominent button.
@@ -112,7 +117,7 @@ export function computeNavLinks(
         }
         return relabel(l);
       });
-  const SFBL_ONLY_LABELS = new Set(["SFBL", "Player of the Week"]);
+  const SFBL_ONLY_LABELS = new Set(["SFBL", "Player of the Week", "Captain"]);
   return tenantShort === "SFBL"
     ? links
     : links
@@ -159,6 +164,7 @@ export function iconFor(href: string): string {
     "/content/store": "🛒",
     "/content/contact": "✉️",
     "/profile": "🙋",
+    "/captain": "⚾",
     "/admin": "◉",
     "/tournaments": "🥎",
     "/availability": "🗓️",
