@@ -101,6 +101,16 @@ const HOST_ALIAS_BASELINE: Record<string, string> = {
   // re-point that domain at one of the existing projects and
   // retire lbdc1.
   "lbdc1.vercel.app": "lbdc-staging",
+  // SFBL's real domain (registered at Hostway). Hardcoded here — like
+  // the Vercel preview URLs above — so SFBL resolves via the reliable
+  // fast-path (hardcoded SFBL_TENANT_CONFIG) instead of a Firestore
+  // /domains lookup, which the comments above note proved fragile.
+  // `new.sfbl.com` is the staging/cutover-test subdomain; the apex +
+  // www are listed now so the eventual DNS cutover needs no code change
+  // (they're inert until DNS actually points at Vercel). (Adam, 2026-06.)
+  "new.sfbl.com": "sfbl",
+  "sfbl.com": "sfbl",
+  "www.sfbl.com": "sfbl",
 };
 const HOST_ALIASES: Record<string, string> = (() => {
   const out: Record<string, string> = { ...HOST_ALIAS_BASELINE };
