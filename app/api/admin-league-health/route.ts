@@ -165,6 +165,33 @@ export async function GET(req: Request) {
     recentByKind[kind] = (recentByKind[kind] ?? 0) + 1;
   }
 
+  // Pending form submissions — registrations + waivers the public site
+  // posted that no one has acted on yet (status missing/"new"). Lives at
+  // /form_submissions/{kind}/items. Surfaced so Nelson sees new ones
+  // even before email notifications are turned on (Adam, 2026-06).
+  const FORM_KINDS = [
+    "player_registration",
+    "team_registration",
+    "team_waiver",
+    "umpire_evaluation",
+  ] as const;
+  const formSnaps = await Promise.all(
+    FORM_KINDS.map((k) =>
+      db.collection(`leagues/${leagueId}/form_submissions/${k}/items`).get(),
+    ),
+  );
+  const pendingForms: Record<string, number> = {};
+  let pendingTotal = 0;
+  FORM_KINDS.forEach((k, i) => {
+    let n = 0;
+    for (const d of formSnaps[i]!.docs) {
+      if (String(d.data().status ?? "new") === "new") n++;
+    }
+    pendingForms[k] = n;
+    pendingTotal += n;
+  });
+  pendingForms.total = pendingTotal;
+
   return NextResponse.json({
     ok: true,
     leagueId,
@@ -186,5 +213,6 @@ export async function GET(req: Request) {
       by_kind: recentByKind,
       total: auditSnap.size,
     },
+    pending_forms: pendingForms,
   });
 }

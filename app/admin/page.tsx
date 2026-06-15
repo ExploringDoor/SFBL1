@@ -236,7 +236,11 @@ export default function AdminPage() {
       <div>
         {activeTab === "health" && (
           <div className="space-y-4">
-            <LeagueHealthDashboard leagueId={tenantId} user={user} />
+            <LeagueHealthDashboard
+              leagueId={tenantId}
+              user={user}
+              onReviewForms={() => setActiveTab("forms")}
+            />
             <section className="rounded-md border border-slate-200 bg-white p-4 space-y-2">
               <p className="font-semibold text-slate-900">PDF exports</p>
               <p className="text-xs text-slate-600">

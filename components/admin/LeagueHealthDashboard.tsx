@@ -39,14 +39,24 @@ interface Health {
     by_kind: Record<string, number>;
     total: number;
   };
+  pending_forms?: {
+    total: number;
+    player_registration?: number;
+    team_registration?: number;
+    team_waiver?: number;
+    umpire_evaluation?: number;
+  };
 }
 
 interface Props {
   leagueId: string;
   user: User;
+  /** Jump to the Form submissions tab — wired from the admin page so
+   *  the "new submissions" callout is actionable. */
+  onReviewForms?: () => void;
 }
 
-export function LeagueHealthDashboard({ leagueId, user }: Props) {
+export function LeagueHealthDashboard({ leagueId, user, onReviewForms }: Props) {
   const [health, setHealth] = useState<Health | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -109,6 +119,34 @@ export function LeagueHealthDashboard({ leagueId, user }: Props) {
         <p className="text-sm text-slate-500">Loading…</p>
       ) : (
         <>
+          {health.pending_forms && health.pending_forms.total > 0 && (
+            <button
+              type="button"
+              onClick={onReviewForms}
+              disabled={!onReviewForms}
+              className="block w-full rounded-md border border-blue-300 bg-blue-50 p-3 text-left hover:bg-blue-100 disabled:cursor-default disabled:hover:bg-blue-50"
+            >
+              <p className="text-sm font-bold text-blue-900">
+                📋 {health.pending_forms.total} new form submission
+                {health.pending_forms.total === 1 ? "" : "s"} to review
+                {onReviewForms && " →"}
+              </p>
+              <p className="mt-0.5 text-xs text-blue-800">
+                {(
+                  [
+                    [health.pending_forms.player_registration, "player registration"],
+                    [health.pending_forms.team_registration, "team registration"],
+                    [health.pending_forms.team_waiver, "team waiver"],
+                    [health.pending_forms.umpire_evaluation, "umpire eval"],
+                  ] as [number | undefined, string][]
+                )
+                  .filter(([n]) => (n ?? 0) > 0)
+                  .map(([n, label]) => `${n} ${label}${n === 1 ? "" : "s"}`)
+                  .join(" · ")}
+                {" — open the Form submissions tab to handle them."}
+              </p>
+            </button>
+          )}
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <Stat
               label="Teams"
