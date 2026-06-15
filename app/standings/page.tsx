@@ -103,6 +103,11 @@ export default async function StandingsPage() {
           teamMeta={teams}
           pointsScheme={scheme}
           variant="full"
+          // SFBL hides the last-5 colored-dot form sparkline (Adam,
+          // 2026-06). Other leagues keep it.
+          showRecentForm={
+            config?.abbrev !== "SFBL" && tenantId !== "sfbl"
+          }
         />
       ) : (
         // Pre-launch / launch-day state: every row is 0-0 and looks

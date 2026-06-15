@@ -41,6 +41,9 @@ export interface StandingsTableProps {
    *  standings page; pass false on the homepage to keep the sidebar
    *  to W L T PTS PCT GB only. */
   showExtras?: boolean;
+  /** Show the last-5 colored-dot form sparkline next to STRK. Default
+   *  true; SFBL turns it off (Adam, 2026-06). */
+  showRecentForm?: boolean;
 }
 
 export function StandingsTable({
@@ -49,6 +52,7 @@ export function StandingsTable({
   pointsScheme = null,
   variant = "full",
   showExtras = true,
+  showRecentForm = true,
 }: StandingsTableProps) {
   const multi = groups.length > 1;
   // Hide T / RS / RA / DIFF columns unless someone actually has data
@@ -205,7 +209,9 @@ export function StandingsTable({
                         <span className={streakClass(r.streak)}>
                           {r.streak ?? "-"}
                         </span>
-                        <RecentFormSparkline recent={r.recent} />
+                        {showRecentForm && (
+                          <RecentFormSparkline recent={r.recent} />
+                        )}
                       </td>
                     )}
                   </tr>
