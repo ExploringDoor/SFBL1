@@ -555,9 +555,17 @@ function useCaptainTab(): [string, (k: string) => void] {
 
 function CaptainTabNav() {
   const [tab, go] = useCaptainTab();
+  const { tenantId } = useTenant();
+  // SFBL hides Attendance + Notifications: teams poll on WhatsApp, and
+  // push notifications aren't enabled. Other leagues keep both tabs.
+  // (Adam, 2026-06.)
+  const isSfbl = tenantId === "sfbl";
+  const tabs = TABS.filter((t) => !t.hidden).filter(
+    (t) => !(isSfbl && (t.key === "attendance" || t.key === "notifications")),
+  );
   return (
     <nav className="cap-tab-nav">
-      {TABS.filter((t) => !t.hidden).map((t) => (
+      {tabs.map((t) => (
         <button
           key={t.key}
           type="button"
@@ -1059,6 +1067,10 @@ function NextGameSpotlight({
   rosterCount: number;
   rsvps: Record<string, "yes" | "maybe" | "no">;
 }) {
+  // SFBL hides attendance/RSVP (no player logins → always empty). Other
+  // leagues keep it. (Adam, 2026-06.)
+  const { tenantId } = useTenant();
+  const isSfbl = tenantId === "sfbl";
   const isHome = game.home_team_id === myTeamId;
   const oppId = isHome ? game.away_team_id : game.home_team_id;
   const oppName = teamNames[oppId] ?? oppId;
@@ -1114,7 +1126,7 @@ function NextGameSpotlight({
         </p>
       </div>
 
-      {rosterCount > 0 && (
+      {rosterCount > 0 && !isSfbl && (
         <div className="cap-next-game-rsvp">
           <RsvpStat label="Yes" count={yes} cls="yes" />
           <RsvpStat label="Maybe" count={maybe} cls="maybe" />
@@ -1124,10 +1136,12 @@ function NextGameSpotlight({
       )}
 
       <div className="cap-next-game-actions">
-        {/* native <a> hash → fires hashchange so the tab switches */}
-        <a href="#attendance" className="le-cap-btn-secondary">
-          📋 Attendance
-        </a>
+        {!isSfbl && (
+          /* native <a> hash → fires hashchange so the tab switches */
+          <a href="#attendance" className="le-cap-btn-secondary">
+            📋 Attendance
+          </a>
+        )}
         <Link
           href={`/captain/box-score?game=${game.id}`}
           className="le-cap-btn-primary"
@@ -1404,6 +1418,9 @@ function GameDayHero({
   rsvps: Record<string, "yes" | "maybe" | "no">;
   rosterCount: number;
 }) {
+  // SFBL hides RSVP totals (no player logins → always empty). (Adam, 2026-06.)
+  const { tenantId } = useTenant();
+  const isSfbl = tenantId === "sfbl";
   const isHome = game.home_team_id === myTeamId;
   const oppId = isHome ? game.away_team_id : game.home_team_id;
   const oppName = teamNames[oppId] ?? oppId;
@@ -1441,22 +1458,24 @@ function GameDayHero({
         </p>
       </header>
 
-      <div className="cap-gameday-rsvp">
-        <span>
-          <strong>{yes}</strong> in
-        </span>
-        <span>
-          <strong>{maybe}</strong> maybe
-        </span>
-        <span>
-          <strong>{no}</strong> out
-        </span>
-        {waiting > 0 && (
-          <span className="cap-gameday-waiting">
-            <strong>{waiting}</strong> haven't responded
+      {!isSfbl && (
+        <div className="cap-gameday-rsvp">
+          <span>
+            <strong>{yes}</strong> in
           </span>
-        )}
-      </div>
+          <span>
+            <strong>{maybe}</strong> maybe
+          </span>
+          <span>
+            <strong>{no}</strong> out
+          </span>
+          {waiting > 0 && (
+            <span className="cap-gameday-waiting">
+              <strong>{waiting}</strong> haven't responded
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="cap-gameday-actions">
         <Link

@@ -1,5 +1,7 @@
 "use client";
 
+import { useTenant } from "@/lib/tenant-context";
+
 // Help tab — verbatim port of DVSL captain.html:1009-1242 (sec-help)
 // with text adjusted for LE-specific UX:
 //   - Login is magic-link (no passwords)
@@ -20,6 +22,11 @@ interface Props {
 export function HelpTab({
   contactEmail = "adam.mainlinewebdesign@gmail.com",
 }: Props) {
+  // SFBL doesn't use attendance (teams poll on WhatsApp) or push
+  // notifications, so those Help sections are hidden for it. Other
+  // leagues see the full guide. (Adam, 2026-06.)
+  const { tenantId } = useTenant();
+  const isSfbl = tenantId === "sfbl";
   return (
     <div className="cap-tab cap-help">
       <div className="cap-section-head">
@@ -50,8 +57,7 @@ export function HelpTab({
             </li>
             <li>
               <strong>iPhone install</strong> — Safari → Share → Add to Home
-              Screen. iPhone push notifications only work once the site is
-              installed (Apple requirement, not ours).
+              Screen so it runs like a real app on your phone.
             </li>
           </ul>
           <p>
@@ -72,8 +78,8 @@ export function HelpTab({
           <ul>
             <li>
               <strong>Add a player</strong> — tap "+ Add Player" and enter
-              name, jersey, position, email, phone. Email and phone are used
-              for notifications if the player opts in.
+              name, jersey, position, email, phone. Email and phone are kept
+              on the roster for your records.
             </li>
             <li>
               <strong>Edit a player</strong> — tap the row to update jersey,
@@ -102,14 +108,10 @@ export function HelpTab({
         <div className="help-body">
           <p>
             The <strong>Schedule</strong> tab shows every game on your
-            schedule. Future games have an Edit button — captains can update
-            date / time / field / status (postponed, cancelled).
+            schedule — dates, times, fields, and status. It's view-only;
+            the commissioner manages the master schedule.
           </p>
           <ul>
-            <li>
-              <strong>Edit a game</strong> — tap Edit, change what you need,
-              hit Save. Updates immediately.
-            </li>
             <li>
               <strong>Subscribe to Calendar</strong> — at the top of the tab,
               the Apple / Google buttons subscribe each player's phone to a
@@ -118,10 +120,9 @@ export function HelpTab({
               once.
             </li>
             <li>
-              <strong>Rainouts &amp; reschedules</strong> — change the date or
-              status here. Subscribed players see the new info on their next
-              calendar refresh, plus a push notification fires for everyone
-              opted in.
+              <strong>Rainouts &amp; reschedules</strong> — handled by the
+              commissioner. Once they update a game, subscribed players see
+              the new info on their next calendar refresh.
             </li>
           </ul>
         </div>
@@ -191,8 +192,8 @@ export function HelpTab({
           <ul>
             <li>
               <strong>Scores must match.</strong> If your final differs from
-              the other captain's, the commissioner gets a push alert and
-              settles it on their end.
+              the other captain's, the commissioner is alerted and settles
+              it on their end.
             </li>
             <li>
               <strong>Each team owns its own batting stats.</strong> Your
@@ -208,6 +209,7 @@ export function HelpTab({
         </div>
       </details>
 
+      {!isSfbl && (
       <details>
         <summary>7. Player Attendance</summary>
         <div className="help-body">
@@ -238,6 +240,7 @@ export function HelpTab({
           </p>
         </div>
       </details>
+      )}
 
       <details>
         <summary>8. Tracking Payments</summary>
@@ -269,6 +272,7 @@ export function HelpTab({
         </div>
       </details>
 
+      {!isSfbl && (
       <details>
         <summary>9. Push Notifications</summary>
         <div className="help-body">
@@ -307,6 +311,7 @@ export function HelpTab({
           </p>
         </div>
       </details>
+      )}
 
       <details>
         <summary>Still Stuck? Contact Adam</summary>
