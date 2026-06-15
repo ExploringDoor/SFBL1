@@ -186,6 +186,11 @@
   border: 1px solid rgba(127, 29, 29, 0.25);
   text-decoration: line-through;
 }
+.le-preview-status[data-kind="bye"] {
+  background: rgba(124, 58, 237, 0.1);
+  color: #6d28d9;
+  border: 1px solid rgba(124, 58, 237, 0.3);
+}
 
 .le-preview-card.muted {
   opacity: 0.55;

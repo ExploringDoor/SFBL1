@@ -45,7 +45,8 @@ export function PreviewCard({
   const timeLabel = formatTimeLabel(date, field);
   const router = useRouter();
   const badge = statusBadge(status);
-  const muted = status === "cancelled" || status === "postponed";
+  const muted =
+    status === "cancelled" || status === "postponed" || status === "bye";
   return (
     <div
       className={
@@ -86,9 +87,10 @@ export function PreviewCard({
 
 function statusBadge(
   status: string | undefined,
-): { kind: "postponed" | "cancelled"; label: string } | null {
+): { kind: "postponed" | "cancelled" | "bye"; label: string } | null {
   if (status === "postponed") return { kind: "postponed", label: "POSTPONED" };
   if (status === "cancelled") return { kind: "cancelled", label: "CANCELLED" };
+  if (status === "bye") return { kind: "bye", label: "BYE" };
   return null;
 }
 

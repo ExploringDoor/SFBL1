@@ -45,7 +45,7 @@ interface Props {
   user: User;
 }
 
-const STATUSES = ["scheduled", "live", "postponed", "cancelled", "final", "approved"];
+const STATUSES = ["scheduled", "live", "postponed", "cancelled", "bye", "final", "approved"];
 
 export function ScheduleEditor({ leagueId, user }: Props) {
   const [games, setGames] = useState<GameRow[]>([]);
@@ -536,6 +536,7 @@ function StatusPill({ status }: { status: string }) {
     approved: "bg-emerald-100 text-emerald-800",
     postponed: "bg-amber-100 text-amber-800",
     cancelled: "bg-slate-200 text-slate-700",
+    bye: "bg-purple-100 text-purple-800",
   };
   return (
     <span
@@ -648,6 +649,9 @@ function GameForm({
               className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
             >
               <option value="">— pick a field —</option>
+              {/* "Field to be determined" — for games whose location
+                  isn't set yet (Adam, 2026-06). Stores "TBD". */}
+              <option value="TBD">Field to be determined</option>
               {fields.map((f) => (
                 <option key={f} value={f}>
                   {f}
@@ -656,7 +660,7 @@ function GameForm({
               {/* If the saved field isn't in the configured list (e.g.
                   imported from an old CSV), surface it so the form
                   doesn't silently drop it on save. */}
-              {field && !fields.includes(field) && (
+              {field && !fields.includes(field) && field !== "TBD" && (
                 <option key="__custom" value={field}>
                   {field} (one-off)
                 </option>

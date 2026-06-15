@@ -41,6 +41,9 @@ const ALLOWED_STATUS = new Set([
   "live",
   "postponed",
   "cancelled",
+  // "bye" — both teams are off this week. Paired like the old SFBL
+  // site ("Team A vs Team B — BYE"). No score; excluded from standings.
+  "bye",
   "final",
   "approved",
 ]);
