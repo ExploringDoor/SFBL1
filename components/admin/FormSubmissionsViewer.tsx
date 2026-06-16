@@ -415,19 +415,29 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
                       <>
                         <SubmissionDetail submission={it} />
                         {kind === "player_registration" && (
-                          <AssignRegistration
-                            leagueId={leagueId}
-                            user={user}
-                            submission={it}
-                            teams={teams}
-                            onAssigned={(playerId, teamId) =>
-                              patchItem(it.id, {
-                                status: "done",
-                                assigned_player_id: playerId,
-                                assigned_team_id: teamId,
-                              })
-                            }
-                          />
+                          <>
+                            <FreeAgentDecision
+                              leagueId={leagueId}
+                              user={user}
+                              submission={it}
+                              onDecided={(status) =>
+                                patchItem(it.id, { free_agent_status: status })
+                              }
+                            />
+                            <AssignRegistration
+                              leagueId={leagueId}
+                              user={user}
+                              submission={it}
+                              teams={teams}
+                              onAssigned={(playerId, teamId) =>
+                                patchItem(it.id, {
+                                  status: "done",
+                                  assigned_player_id: playerId,
+                                  assigned_team_id: teamId,
+                                })
+                              }
+                            />
+                          </>
                         )}
                       </>
                     )}
@@ -571,6 +581,121 @@ function summaryLine(kind: Kind, s: Submission): string {
 // Creates a real roster player (+ private contact incl. DOB) via
 // /api/admin-assign-registration and marks the submission done.
 // Idempotent server-side: once assigned this just shows the link.
+// Approve / reject a registration for the captains' free-agent pool.
+// Approved → shows in /api/free-agents. Hidden until then (Adam,
+// 2026-06). Assigning to a team (below) supersedes this.
+function FreeAgentDecision({
+  leagueId,
+  user,
+  submission,
+  onDecided,
+}: {
+  leagueId: string;
+  user: User;
+  submission: Submission;
+  onDecided: (status: "approved" | "rejected" | "pending") => void;
+}) {
+  const fa = String(submission.free_agent_status ?? "pending");
+  const assigned =
+    typeof submission.assigned_player_id === "string" &&
+    !!submission.assigned_player_id;
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function decide(decision: "approve" | "reject" | "pending") {
+    setBusy(decision);
+    setError(null);
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch("/api/admin-free-agent", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ leagueId, id: submission.id, decision }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+      };
+      if (!res.ok) {
+        setError(data.error ?? `HTTP ${res.status}`);
+        return;
+      }
+      onDecided(
+        decision === "approve"
+          ? "approved"
+          : decision === "reject"
+            ? "rejected"
+            : "pending",
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  const label = assigned
+    ? "On a team"
+    : fa === "approved"
+      ? "✓ In free-agent pool"
+      : fa === "rejected"
+        ? "✕ Rejected"
+        : "⏳ Pending approval";
+  const labelColor = assigned
+    ? "text-slate-500"
+    : fa === "approved"
+      ? "text-emerald-700"
+      : fa === "rejected"
+        ? "text-red-700"
+        : "text-amber-700";
+
+  return (
+    <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 p-3">
+      <p className="text-xs font-semibold text-slate-700">
+        Free-agent pool: <span className={labelColor}>{label}</span>
+      </p>
+      {!assigned && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => decide("approve")}
+            disabled={busy !== null || fa === "approved"}
+            className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+          >
+            {busy === "approve" ? "…" : "✓ Approve as free agent"}
+          </button>
+          <button
+            type="button"
+            onClick={() => decide("reject")}
+            disabled={busy !== null || fa === "rejected"}
+            className="rounded-md border border-red-300 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
+          >
+            {busy === "reject" ? "…" : "✕ Reject"}
+          </button>
+          {fa !== "pending" && (
+            <button
+              type="button"
+              onClick={() => decide("pending")}
+              disabled={busy !== null}
+              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+            >
+              Undo
+            </button>
+          )}
+        </div>
+      )}
+      <p className="mt-2 text-[11px] text-slate-500">
+        Approved players appear in captains&rsquo; <strong>Free Agents</strong>{" "}
+        tab. Or put them straight on a team below.
+      </p>
+      {error && <p className="mt-1 text-xs text-red-700">{error}</p>}
+    </div>
+  );
+}
+
 function AssignRegistration({
   leagueId,
   user,

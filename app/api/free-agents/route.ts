@@ -77,6 +77,9 @@ export async function POST(req: Request) {
         id: d.id,
         assigned: typeof x.assigned_player_id === "string" && !!x.assigned_player_id,
         deleted: x.deleted === true,
+        // Admin must approve a registration before it shows in the pool
+        // (Adam, 2026-06). Missing field = pending = hidden.
+        fa: String(x.free_agent_status ?? "pending"),
         name: `${String(x.first_name ?? "").trim()} ${String(
           x.last_name ?? "",
         ).trim()}`.trim(),
@@ -88,12 +91,14 @@ export async function POST(req: Request) {
         registered_at: String(x.submitted_at ?? ""),
       };
     })
-    // Free agents = registered, not assigned to a roster, not deleted.
-    .filter((p) => !p.assigned && !p.deleted && p.name)
+    // Free agents = registered, admin-approved, not assigned to a
+    // roster, not deleted.
+    .filter((p) => p.fa === "approved" && !p.assigned && !p.deleted && p.name)
     .sort((a, b) => b.registered_at.localeCompare(a.registered_at))
-    .map(({ assigned, deleted, ...p }) => {
+    .map(({ assigned, deleted, fa, ...p }) => {
       void assigned;
       void deleted;
+      void fa;
       return p;
     });
 
