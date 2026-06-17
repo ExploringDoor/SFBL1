@@ -96,6 +96,7 @@ const TABS: { key: TabKey; label: string; description: string }[] = [
 // isn't overwhelming (Adam, 2026-06). Order is Adam's. Content +
 // descriptions still key off activeTab, so only the nav changes.
 const MORE_KEYS: TabKey[] = [
+  "news",
   "photos",
   "sponsors",
   "branding",
@@ -176,7 +177,7 @@ export default function AdminPage() {
           scrolls on phone with the active tab auto-scrolling into
           view. 16 tabs across 5 rows on a phone is unusable; one
           swipeable row is much better. */}
-      <div style={{ position: "relative" }}>
+      <div className="le-admin-tabbar">
         <nav className="le-admin-tabs">
           {TOP_TABS.map((t) => (
             <button
@@ -200,8 +201,11 @@ export default function AdminPage() {
               {t.label}
             </button>
           ))}
-          {/* More ▾ — groups the less-frequent tabs (Photos / Sponsors /
-              Branding / Audit log / Player of the Week / Pages). */}
+        </nav>
+        {/* More ▾ lives OUTSIDE the scrolling nav so (a) it's always
+            visible and (b) its dropdown anchors to the button and isn't
+            clipped by the nav's overflow on mobile. */}
+        <div className="le-admin-more-wrap">
           <button
             type="button"
             onClick={() => setMoreOpen((v) => !v)}
@@ -213,45 +217,53 @@ export default function AdminPage() {
           >
             More ▾
           </button>
-        </nav>
-        {moreOpen && (
-          <>
-            {/* Tap-outside backdrop */}
-            <div
-              className="le-admin-more-backdrop"
-              aria-hidden
-              onClick={() => setMoreOpen(false)}
-            />
-            <div className="le-admin-more-menu" role="menu">
-              {MORE_TABS.map((t) => (
-                <button
-                  key={t.key}
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setActiveTab(t.key);
-                    setMoreOpen(false);
-                  }}
-                  className={
-                    "le-admin-more-item " +
-                    (activeTab === t.key ? "active" : "")
-                  }
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
+          {moreOpen && (
+            <>
+              {/* Tap-outside backdrop */}
+              <div
+                className="le-admin-more-backdrop"
+                aria-hidden
+                onClick={() => setMoreOpen(false)}
+              />
+              <div className="le-admin-more-menu" role="menu">
+                {MORE_TABS.map((t) => (
+                  <button
+                    key={t.key}
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setActiveTab(t.key);
+                      setMoreOpen(false);
+                    }}
+                    className={
+                      "le-admin-more-item " +
+                      (activeTab === t.key ? "active" : "")
+                    }
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
       <style jsx>{`
+        .le-admin-tabbar {
+          display: flex;
+          align-items: flex-start;
+          gap: 4px;
+          border-bottom: 1px solid rgb(226, 232, 240);
+          margin: 0 -4px;
+          padding: 0 4px;
+        }
         .le-admin-tabs {
           display: flex;
           gap: 4px;
           padding: 4px 0;
-          border-bottom: 1px solid rgb(226, 232, 240);
-          margin: 0 -4px;
           flex-wrap: wrap;
+          flex: 1 1 auto;
+          min-width: 0;
         }
         @media (max-width: 640px) {
           .le-admin-tabs {
@@ -289,6 +301,11 @@ export default function AdminPage() {
         }
         .le-admin-tab-active:hover {
           background: rgb(15, 23, 42);
+        }
+        .le-admin-more-wrap {
+          position: relative;
+          flex: 0 0 auto;
+          padding: 4px 0;
         }
         .le-admin-more-backdrop {
           position: fixed;
