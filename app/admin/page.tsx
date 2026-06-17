@@ -92,11 +92,30 @@ const TABS: { key: TabKey; label: string; description: string }[] = [
   // is dev-only. Re-add the entry here if SFBL needs CSV reimports.
 ];
 
+// Less-frequent tabs tucked into a "More ▾" dropdown so the tab strip
+// isn't overwhelming (Adam, 2026-06). Order is Adam's. Content +
+// descriptions still key off activeTab, so only the nav changes.
+const MORE_KEYS: TabKey[] = [
+  "photos",
+  "sponsors",
+  "branding",
+  "audit",
+  "potw",
+  "pages",
+];
+const MORE_SET = new Set<TabKey>(MORE_KEYS);
+const TOP_TABS = TABS.filter((t) => !MORE_SET.has(t.key));
+const MORE_TABS = MORE_KEYS.map((k) => TABS.find((t) => t.key === k)).filter(
+  (t): t is (typeof TABS)[number] => !!t,
+);
+
 export default function AdminPage() {
   const { tenantId, config } = useTenant();
   const user = useUser();
   const role = useLeagueRole(tenantId);
   const [activeTab, setActiveTab] = useState<TabKey>("health");
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreActive = MORE_SET.has(activeTab);
 
   if (user === undefined || role === "loading") {
     return <Shell heading={config?.name ?? "Admin"}>Checking your access…</Shell>;
@@ -157,30 +176,74 @@ export default function AdminPage() {
           scrolls on phone with the active tab auto-scrolling into
           view. 16 tabs across 5 rows on a phone is unusable; one
           swipeable row is much better. */}
-      <nav className="le-admin-tabs">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => setActiveTab(t.key)}
-            ref={(el) => {
-              if (el && activeTab === t.key) {
-                el.scrollIntoView({
-                  behavior: "smooth",
-                  inline: "center",
-                  block: "nearest",
-                });
+      <div style={{ position: "relative" }}>
+        <nav className="le-admin-tabs">
+          {TOP_TABS.map((t) => (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setActiveTab(t.key)}
+              ref={(el) => {
+                if (el && activeTab === t.key) {
+                  el.scrollIntoView({
+                    behavior: "smooth",
+                    inline: "center",
+                    block: "nearest",
+                  });
+                }
+              }}
+              className={
+                "le-admin-tab " +
+                (activeTab === t.key ? "le-admin-tab-active" : "")
               }
-            }}
+            >
+              {t.label}
+            </button>
+          ))}
+          {/* More ▾ — groups the less-frequent tabs (Photos / Sponsors /
+              Branding / Audit log / Player of the Week / Pages). */}
+          <button
+            type="button"
+            onClick={() => setMoreOpen((v) => !v)}
+            aria-haspopup="menu"
+            aria-expanded={moreOpen}
             className={
-              "le-admin-tab " +
-              (activeTab === t.key ? "le-admin-tab-active" : "")
+              "le-admin-tab " + (moreActive ? "le-admin-tab-active" : "")
             }
           >
-            {t.label}
+            More ▾
           </button>
-        ))}
-      </nav>
+        </nav>
+        {moreOpen && (
+          <>
+            {/* Tap-outside backdrop */}
+            <div
+              className="le-admin-more-backdrop"
+              aria-hidden
+              onClick={() => setMoreOpen(false)}
+            />
+            <div className="le-admin-more-menu" role="menu">
+              {MORE_TABS.map((t) => (
+                <button
+                  key={t.key}
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setActiveTab(t.key);
+                    setMoreOpen(false);
+                  }}
+                  className={
+                    "le-admin-more-item " +
+                    (activeTab === t.key ? "active" : "")
+                  }
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
       <style jsx>{`
         .le-admin-tabs {
           display: flex;
@@ -226,6 +289,48 @@ export default function AdminPage() {
         }
         .le-admin-tab-active:hover {
           background: rgb(15, 23, 42);
+        }
+        .le-admin-more-backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 40;
+        }
+        .le-admin-more-menu {
+          position: absolute;
+          right: 0;
+          top: 100%;
+          z-index: 50;
+          margin-top: 4px;
+          min-width: 200px;
+          background: white;
+          border: 1px solid rgb(226, 232, 240);
+          border-radius: 8px;
+          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
+          padding: 4px;
+          display: flex;
+          flex-direction: column;
+        }
+        .le-admin-more-item {
+          padding: 9px 12px;
+          border-radius: 6px;
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: rgb(71, 85, 105);
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          font-family: inherit;
+          text-align: left;
+          white-space: nowrap;
+        }
+        .le-admin-more-item:hover {
+          background: rgb(241, 245, 249);
+        }
+        .le-admin-more-item.active {
+          background: rgb(15, 23, 42);
+          color: white;
         }
       `}</style>
 
