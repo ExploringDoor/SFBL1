@@ -46,6 +46,11 @@ interface Health {
     team_waiver?: number;
     umpire_evaluation?: number;
   };
+  site_visits?: {
+    total: number;
+    today: number;
+    last7: number;
+  };
 }
 
 interface Props {
@@ -177,6 +182,13 @@ export function LeagueHealthDashboard({ leagueId, user, onReviewForms }: Props) 
               value={health.subscribers.devices}
               sub={`${health.subscribers.captain_authed} captain-authed`}
               tone={health.subscribers.devices === 0 ? "warn" : "ok"}
+            />
+            <Stat
+              label="Site visits"
+              value={(health.site_visits?.total ?? 0).toLocaleString()}
+              sub={`${(health.site_visits?.today ?? 0).toLocaleString()} today · ${(
+                health.site_visits?.last7 ?? 0
+              ).toLocaleString()} last 7 days`}
             />
           </div>
 

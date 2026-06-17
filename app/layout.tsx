@@ -6,6 +6,7 @@ import { Nav } from "@/components/ui/Nav";
 import { SiteFooter } from "@/components/ui/SiteFooter";
 import { ProfileButton } from "@/components/ProfileButton";
 import { PwaShell } from "@/components/PwaShell";
+import { ViewTracker } from "@/components/ViewTracker";
 import { PwaTabBar } from "@/components/ui/PwaTabBar";
 import { TickerScrollHide } from "@/components/ui/TickerScrollHide";
 import { TickerInputEnhancer } from "@/components/ui/TickerInputEnhancer";
@@ -265,6 +266,10 @@ export default async function RootLayout({
               of push-enable so PWA install works for users who don't
               opt into pushes. */}
           <PwaShell />
+          {/* Site-visit counter — counts a visit per browser session on
+              public pages (skips admin/captain), read on the admin
+              Health tab. (Adam, 2026-06.) */}
+          {tenantId && <ViewTracker />}
           {tenantId && (
             <>
               <Ticker

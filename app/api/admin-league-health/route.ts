@@ -192,6 +192,32 @@ export async function GET(req: Request) {
   });
   pendingForms.total = pendingTotal;
 
+  // Site visits — the public ViewTracker bumps
+  // analytics/page_views { total, days: { YYYY-MM-DD } }. Surface total,
+  // today, and the 7 most-recent days (Adam, 2026-06).
+  const viewsDoc = await db
+    .doc(`leagues/${leagueId}/analytics/page_views`)
+    .get();
+  const viewsData = viewsDoc.exists ? viewsDoc.data() : null;
+  const days = (viewsData?.days ?? {}) as Record<string, number>;
+  const todayKey = (() => {
+    try {
+      return new Date().toLocaleDateString("en-CA", {
+        timeZone: "America/New_York",
+      });
+    } catch {
+      return new Date().toISOString().slice(0, 10);
+    }
+  })();
+  const recentDayKeys = Object.keys(days).sort().reverse();
+  const siteVisits = {
+    total: typeof viewsData?.total === "number" ? viewsData.total : 0,
+    today: days[todayKey] ?? 0,
+    last7: recentDayKeys
+      .slice(0, 7)
+      .reduce((s, k) => s + (days[k] ?? 0), 0),
+  };
+
   return NextResponse.json({
     ok: true,
     leagueId,
@@ -214,5 +240,6 @@ export async function GET(req: Request) {
       total: auditSnap.size,
     },
     pending_forms: pendingForms,
+    site_visits: siteVisits,
   });
 }
