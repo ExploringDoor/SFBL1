@@ -185,7 +185,9 @@ export async function GET(req: Request) {
   FORM_KINDS.forEach((k, i) => {
     let n = 0;
     for (const d of formSnaps[i]!.docs) {
-      if (String(d.data().status ?? "new") === "new") n++;
+      const x = d.data();
+      if (x.deleted === true) continue; // deleted submissions aren't pending
+      if (String(x.status ?? "new") === "new") n++;
     }
     pendingForms[k] = n;
     pendingTotal += n;
