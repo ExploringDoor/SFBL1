@@ -85,25 +85,19 @@ export async function generateMetadata(): Promise<Metadata> {
     const description = `Schedule, scores, standings, and stats for ${name}${
       abbrev && abbrev !== name ? ` (${abbrev})` : ""
     }. Live ${sport} updates, team rosters, and captain tools.`;
-    const logo = cfg.theme?.logo_url;
-    // OG image priority:
-    //   1. /og-default.png — purpose-built 1200×630 share image
-    //      (banner on navy gradient). Best aspect for FB / iMessage /
-    //      Twitter previews.
-    //   2. Tenant logo_url — fallback for tenants without a custom
-    //      OG image. Aspect ratio may not be ideal but better than
-    //      nothing.
-    // Tenants who want their own per-page OG image override
-    // generateMetadata in their page.tsx (e.g. team / player pages
-    // do this with the team logo).
+    // ONE share image for link previews (iMessage / FB / Twitter): the
+    // purpose-built 1200×630 og-default.png. This used to ALSO include
+    // the tenant logo as a second image, which made iMessage render the
+    // banner twice in the preview card (Adam, 2026-06). Per-page
+    // overrides (team / player pages) still set their own image in
+    // their own generateMetadata.
     const ogImage = [
       {
         url: "/og-default.png",
         width: 1200,
         height: 630,
-        alt: `${name} — South Florida Baseball League`,
+        alt: name,
       },
-      ...(logo ? [{ url: logo, alt: `${name} logo` }] : []),
     ];
 
     return {
