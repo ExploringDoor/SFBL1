@@ -13,13 +13,14 @@ export const runtime = "nodejs";
 
 const AGE_GROUPS = ["7U", "8U", "9U", "10U", "11U", "12U", "13U", "14U"];
 
-// 2024 fee schedule (from COYBL's info sheet). TODO: confirm 2027 amounts
-// with Doug — these belong in tenant config once the registration config
-// shape lands.
-const FEES: Record<string, number> = {
+// 2027 fee schedule (confirmed by Doug 2026-06-18). Belongs in tenant
+// config once the registration config shape lands.
+const FEES: Record<"with_insurance" | "without_insurance", number> = {
   with_insurance: 495,
-  without_insurance: 415,
+  without_insurance: 425,
 };
+// Optional add-on: USSSA membership.
+const USSSA_FEE = 40;
 
 const MAX = 200;
 
@@ -83,12 +84,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unknown league" }, { status: 404 });
   }
 
+  const addUsssa = body.add_usssa === true;
+  const baseFee = FEES[type];
+  const usssaFee = addUsssa ? USSSA_FEE : 0;
+  const total = baseFee + usssaFee;
+
   const doc = {
     status: "pending",
     submitted_at: new Date().toISOString(),
     season: "2027",
     registration_type: type,
-    fee: FEES[type],
+    base_fee: baseFee,
+    add_usssa: addUsssa,
+    usssa_fee: usssaFee,
+    fee: total,
     head_coach: {
       name,
       email,

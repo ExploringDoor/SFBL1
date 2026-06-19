@@ -20,12 +20,14 @@ const TYPES = [
   },
   {
     id: "without_insurance",
-    fee: 415,
+    fee: 425,
     title: "Without Insurance",
     blurb:
       "For teams that carry their own insurance (proof required). Includes Five Tool Youth registration.",
   },
 ] as const;
+
+const USSSA_FEE = 40;
 
 type State = {
   registration_type: "" | "with_insurance" | "without_insurance";
@@ -40,6 +42,7 @@ type State = {
   age_group: string;
   estimated_players: string;
   prior_record: string;
+  add_usssa: boolean;
   ack_safesport: boolean;
   ack_concussion: boolean;
   ack_cardiac: boolean;
@@ -58,6 +61,7 @@ const INITIAL: State = {
   age_group: "",
   estimated_players: "",
   prior_record: "",
+  add_usssa: false,
   ack_safesport: false,
   ack_concussion: false,
   ack_cardiac: false,
@@ -99,6 +103,7 @@ export default function RegisterPage() {
             estimated_players: f.estimated_players,
             prior_record: f.prior_record,
           },
+          add_usssa: f.add_usssa,
           compliance: {
             safesport: f.ack_safesport,
             concussion: f.ack_concussion,
@@ -148,13 +153,33 @@ export default function RegisterPage() {
             }}
           >
             <p style={{ fontWeight: 800, marginBottom: 6 }}>
-              Amount due: ${done.fee.toFixed(0)}.00
+              Amount due: ${done.fee}.00
             </p>
             <p style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.6 }}>
-              Pay by check to <strong>COYBL</strong>, PO Box 1425, Pataskala, OH
-              43062 — or ask a director about electronic payment. Your spot is
-              confirmed once payment is received.
+              Choose how to pay — your spot is confirmed once payment is
+              received:
             </p>
+            <ul
+              style={{
+                color: "var(--muted)",
+                fontSize: 14,
+                lineHeight: 1.7,
+                marginTop: 8,
+                paddingLeft: 18,
+              }}
+            >
+              <li>
+                <strong>Check</strong> to COYBL — 152 Glen Crossing Drive, Etna,
+                OH 43062
+              </li>
+              <li>
+                <strong>Venmo</strong> — @Doug-Hare-2
+              </li>
+              <li>
+                <strong>Card</strong> — pay online below (a 3.25% processing fee
+                applies)
+              </li>
+            </ul>
           </div>
         </div>
       </main>
@@ -261,8 +286,20 @@ export default function RegisterPage() {
           </p>
         </Section>
 
+        {/* Add-ons */}
+        <Section title="4 · Add-Ons">
+          <Check
+            checked={f.add_usssa}
+            onChange={set("add_usssa")}
+            label={`Add USSSA membership (+$${USSSA_FEE})`}
+          />
+          <p style={{ color: "var(--muted)", fontSize: 13, marginTop: 2 }}>
+            Optional — adds USSSA registration for your team.
+          </p>
+        </Section>
+
         {/* Compliance */}
-        <Section title="4 · Required Coach Training">
+        <Section title="5 · Required Coach Training">
           <p style={{ color: "var(--muted)", fontSize: 13.5, marginBottom: 10 }}>
             Head coaches must complete these before the season (federal & Ohio law):
           </p>
