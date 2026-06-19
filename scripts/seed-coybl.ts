@@ -54,7 +54,12 @@ const LEAGUE_CONFIG = {
   },
   // Hide stats-oriented pages/columns; show the Five Tool tournaments link
   // and the pitch-count eligibility tracker.
-  flags: { stats_enabled: false, show_tournaments: true, show_pitch_counts: true },
+  flags: {
+    stats_enabled: false,
+    show_tournaments: true,
+    show_pitch_counts: true,
+    ticker_by_age: true,
+  },
   // Standings: straight W/L (PCT-based default — no points scheme).
 };
 

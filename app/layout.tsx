@@ -3,8 +3,8 @@ import { headers } from "next/headers";
 import { Barlow_Condensed, Inter, Oswald } from "next/font/google";
 import { TenantProvider } from "@/lib/tenant-context";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Ticker } from "@/components/Ticker";
-import { loadTickerGames } from "@/lib/site-data";
+import { Ticker, type AgeTicker, type TickerGame } from "@/components/Ticker";
+import { loadAgeGroupTickers, loadTickerGames } from "@/lib/site-data";
 import "./globals.css";
 
 const inter = Inter({
@@ -64,6 +64,7 @@ export default async function RootLayout({
   let statsEnabled = true;
   let showTournaments = false;
   let showPitchCounts = false;
+  let tickerByAge = false;
   if (configJson) {
     try {
       const cfg = JSON.parse(configJson) as {
@@ -83,12 +84,20 @@ export default async function RootLayout({
       showTournaments = cfg.flags?.show_tournaments === true;
       // Pitch-count eligibility tracker is opt-in per tenant.
       showPitchCounts = cfg.flags?.show_pitch_counts === true;
+      // Big youth leagues use an age-group-tabbed ticker instead of a noisy
+      // league-wide one.
+      tickerByAge = cfg.flags?.ticker_by_age === true;
     } catch {
       /* fall through */
     }
   }
 
-  const tickerGames = tenantId ? await loadTickerGames(tenantId) : [];
+  let tickerGames: TickerGame[] = [];
+  let ageTickers: AgeTicker[] = [];
+  if (tenantId) {
+    if (tickerByAge) ageTickers = await loadAgeGroupTickers(tenantId);
+    else tickerGames = await loadTickerGames(tenantId);
+  }
 
   const themeStyle = [
     themePrimary ? `--brand-primary: ${themePrimary};` : "",
@@ -105,7 +114,12 @@ export default async function RootLayout({
     >
       <body className="site-shell antialiased">
         <TenantProvider tenantId={tenantId} configJson={configJson}>
-          {tenantId && <Ticker games={tickerGames} />}
+          {tenantId && (
+            <Ticker
+              games={tickerByAge ? undefined : tickerGames}
+              byAge={tickerByAge ? ageTickers : undefined}
+            />
+          )}
           {tenantId ? (
             <SiteHeader
               tenantId={tenantId}
