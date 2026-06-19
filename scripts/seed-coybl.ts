@@ -150,6 +150,88 @@ const PITCH_OUTINGS = [
   { team_id: "c12_stix_ackerman",  player_name: "Drew Coleman", date: "2026-06-13", pitches: 55 },
 ];
 
+// COYBL rules (markdown), summarized from the 2026 rule books (7U-8U,
+// 9U-12U, 13U). Rendered by /rules and editable by the commissioner.
+const RULES_MD = `# COYBL League Rules
+
+Rules for the Central Ohio Youth Baseball League. COYBL follows **OHSAA / National Federation (NFHS)** high school rules except where noted below, and rules vary by age group.
+
+## Age Divisions & Eligibility
+
+A player's age on **April 30** sets their division (a player who is 9 on April 30 plays 9U). A **grade exemption** applies (see below), and players may always "play up" in an older division.
+
+| Division | Grade exemption |
+|---|---|
+| 8U | 2nd grade |
+| 9U | 3rd grade |
+| 10U | 4th grade |
+| 11U | 5th grade |
+| 12U | 6th grade |
+| 13U | 7th grade |
+| 14U | 8th grade |
+
+## Pitch Counts (Pitch Smart)
+
+A pitcher may **not return to the mound** once removed. Required rest is based on pitches thrown in a day. If a pitcher crosses a threshold mid-at-bat, they may finish that batter and the coach records the threshold count.
+
+**Daily maximum:** 9U–10U = **75** · 11U–12U = **85** · 13U–14U = **95**.
+
+| Pitches in a day | Rest required |
+|---|---|
+| 1–20 | None |
+| 21–35 | 1 calendar day |
+| 36–50 | 2 calendar days |
+| 51–65 | 3 calendar days |
+| 66 or more | 4 calendar days |
+
+*(7U–8U is coach pitch — no pitching rules.)*
+
+## Game Length
+
+- **9U–12U:** 6 innings (5½ if the home team leads). 2-hour time limit.
+- **13U–14U:** 7 innings (6½ if the home team leads). 2-hour-15-minute limit.
+- Division games cannot end in a tie — play continues until there is a winner.
+
+## Run / Mercy Rules
+
+- 15 runs after 4 innings (3½ if the home team leads)
+- 10 runs after 5 innings
+
+## Rosters & Players
+
+- Maximum **22** players per roster; rosters must be posted online before the first game.
+- A player on two teams may only pitch for their primary team.
+- Coaches must carry rosters and birth certificates at all times.
+
+## Equipment
+
+- **Bats:** USSSA, USA Baseball, or Nations-approved.
+- **Footwear:** rubber spikes recommended; **metal spikes are prohibited**.
+
+## Other Rules
+
+- DH, EH, and roster batting are allowed (you cannot use DH and EH together).
+- Courtesy runners allowed for the pitcher/catcher with 2 outs.
+- **Slug bunting is prohibited at 13U and below** (player safety).
+- A team may start with 8 players (auto-out for the 9th spot); 7 or fewer is a forfeit.
+
+## Safety
+
+- **Lightning:** suspend play when lightning or thunder is detected; wait at least 30 minutes after the last flash/thunder before resuming. No exceptions.
+- **Heat:** monitor the heat index and use caution in dangerous conditions.
+- **Ejections:** an ejected coach sits that game and the next; report ejections within 24 hours.
+
+## Insurance & Registration
+
+- **Option 1 ($495):** team insurance + Five Tool Youth registration.
+- **Option 2 ($425):** team provides its own insurance (proof required) + Five Tool Youth registration.
+- Optional add-on: **USSSA membership (+$40)**.
+
+## League End Date
+
+The regular season ends **June 30** (9U–12U).
+`;
+
 async function run() {
   console.log(`[seed-coybl] writing to ${process.env.FIRESTORE_EMULATOR_HOST} (${projectId})`);
 
@@ -197,6 +279,12 @@ async function run() {
       pitches: o.pitches,
     });
   }
+
+  await db.doc(`leagues/${LEAGUE_ID}/page_content/rules`).set({
+    markdown: RULES_MD,
+    updated_at: new Date().toISOString(),
+    updated_by: "seed",
+  });
 
   console.log(
     `[seed-coybl] done — ${TEAMS.length} teams across 10U/12U, ${GAMES.length} games (stats off, no players/box scores)`,
