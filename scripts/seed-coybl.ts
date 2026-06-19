@@ -138,6 +138,11 @@ const PITCH_OUTINGS = [
   { team_id: "c10_stix_eberhardt", player_name: "Noah Carter",  date: "2026-06-13", pitches: 70 },
   { team_id: "c10_stix_eberhardt", player_name: "Liam Dunn",    date: "2026-06-16", pitches: 45 },
   { team_id: "c10_stix_eberhardt", player_name: "Owen Ford",    date: "2026-06-14", pitches: 12 },
+  // 12U team — uses the 11U-12U ruleset (daily max 85). Cole's 80 is legal
+  // here but would exceed the 10U cap.
+  { team_id: "c12_stix_ackerman",  player_name: "Cole Reyes",   date: "2026-06-16", pitches: 80 },
+  { team_id: "c12_stix_ackerman",  player_name: "Jack Tobin",   date: "2026-06-15", pitches: 33 },
+  { team_id: "c12_stix_ackerman",  player_name: "Drew Coleman", date: "2026-06-13", pitches: 55 },
 ];
 
 async function run() {

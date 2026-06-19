@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { computeEligibility, restDaysFor } from "../../lib/pitchcount/eligibility";
-import { COYBL_9U_10U, rulesetIdForAge } from "../../lib/pitchcount/rulesets";
+import {
+  COYBL_9U_10U,
+  COYBL_11U_12U,
+  COYBL_13U_14U,
+  rulesetIdForAge,
+} from "../../lib/pitchcount/rulesets";
 
 describe("restDaysFor — 9U–10U tiers", () => {
   const cases: Array<[number, number]> = [
@@ -88,12 +93,33 @@ describe("computeEligibility", () => {
 });
 
 describe("rulesetIdForAge", () => {
-  it("maps 9U and 10U to the shared ruleset", () => {
+  it("maps each kid-pitch age pair to its ruleset", () => {
     expect(rulesetIdForAge("9U")).toBe("9U-10U");
     expect(rulesetIdForAge("10U")).toBe("9U-10U");
+    expect(rulesetIdForAge("11U")).toBe("11U-12U");
+    expect(rulesetIdForAge("12U")).toBe("11U-12U");
+    expect(rulesetIdForAge("13U")).toBe("13U-14U");
+    expect(rulesetIdForAge("14U")).toBe("13U-14U");
   });
-  it("returns null for ages without a ruleset yet", () => {
-    expect(rulesetIdForAge("12U")).toBeNull();
+  it("returns null for coach-pitch ages (7U/8U)", () => {
     expect(rulesetIdForAge("7U")).toBeNull();
+    expect(rulesetIdForAge("8U")).toBeNull();
+  });
+});
+
+describe("rulesets — daily max differs, rest tiers identical", () => {
+  it("has the documented per-age daily maxes", () => {
+    expect(COYBL_9U_10U.dailyMax).toBe(75);
+    expect(COYBL_11U_12U.dailyMax).toBe(85);
+    expect(COYBL_13U_14U.dailyMax).toBe(95);
+  });
+  it("uses the same rest tiers across all ages", () => {
+    for (const rs of [COYBL_9U_10U, COYBL_11U_12U, COYBL_13U_14U]) {
+      expect(restDaysFor(20, rs)).toBe(0);
+      expect(restDaysFor(35, rs)).toBe(1);
+      expect(restDaysFor(50, rs)).toBe(2);
+      expect(restDaysFor(65, rs)).toBe(3);
+      expect(restDaysFor(66, rs)).toBe(4);
+    }
   });
 });
