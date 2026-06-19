@@ -40,6 +40,7 @@ type State = {
   zip: string;
   team_name: string;
   age_group: string;
+  gc_link: string;
   estimated_players: string;
   prior_record: string;
   add_usssa: boolean;
@@ -59,6 +60,7 @@ const INITIAL: State = {
   zip: "",
   team_name: "",
   age_group: "",
+  gc_link: "",
   estimated_players: "",
   prior_record: "",
   add_usssa: false,
@@ -124,6 +126,7 @@ export default function RegisterPage() {
           team: {
             name: f.team_name,
             age_group: f.age_group,
+            gamechanger_link: f.gc_link,
             estimated_players: f.estimated_players,
             prior_record: f.prior_record,
           },
@@ -328,6 +331,22 @@ export default function RegisterPage() {
               onChange={set("prior_record")}
             />
           </Grid>
+          <div style={{ marginTop: 14 }}>
+            <Label>GameChanger schedule link *</Label>
+            <input
+              type="url"
+              required
+              value={f.gc_link}
+              onChange={(e) => set("gc_link")(e.target.value)}
+              placeholder="https://gc.com/t/..."
+              style={inputStyle}
+            />
+            <p style={{ color: "var(--muted)", fontSize: 12.5, marginTop: 5 }}>
+              Required. On GameChanger.com → your team → <strong>Tools</strong> →
+              &ldquo;Copy Link.&rdquo; We use this for Power Rankings, division
+              placement, and end-of-season tournament seeding.
+            </p>
+          </div>
           <p style={{ color: "var(--muted)", fontSize: 13, marginTop: 8 }}>
             Teams register by age group. League directors assign divisions after
             registration to level competition.

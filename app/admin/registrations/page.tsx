@@ -16,7 +16,12 @@ interface Registration {
   registration_type?: string;
   fee?: number;
   head_coach?: { name?: string; email?: string; phone?: string };
-  team?: { name?: string; age_group?: string; estimated_players?: number };
+  team?: {
+    name?: string;
+    age_group?: string;
+    estimated_players?: number;
+    gamechanger_link?: string;
+  };
 }
 
 export default function AdminRegistrationsPage() {
@@ -117,7 +122,19 @@ export default function AdminRegistrationsPage() {
               <tbody className="divide-y divide-slate-100">
                 {rows.map((r) => (
                   <tr key={r.id}>
-                    <td className="px-3 py-2 font-semibold">{r.team?.name ?? "—"}</td>
+                    <td className="px-3 py-2 font-semibold">
+                      {r.team?.name ?? "—"}
+                      {r.team?.gamechanger_link && (
+                        <a
+                          href={r.team.gamechanger_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block text-xs font-normal text-blue-600 underline"
+                        >
+                          GameChanger ↗
+                        </a>
+                      )}
+                    </td>
                     <td className="px-3 py-2">{r.team?.age_group ?? "—"}</td>
                     <td className="px-3 py-2">{r.head_coach?.name ?? "—"}</td>
                     <td className="px-3 py-2 text-slate-600">

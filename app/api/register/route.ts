@@ -67,6 +67,9 @@ export async function POST(req: Request) {
   if (!teamName) return bad("Team name is required.");
   if (!ageGroup || !AGE_GROUPS.includes(ageGroup))
     return bad("Please select a valid age group.");
+  const gcLink = clean(team.gamechanger_link, 300);
+  if (!gcLink || !/^https?:\/\//i.test(gcLink))
+    return bad("A GameChanger schedule link (URL) is required.");
 
   const comp = (body.compliance ?? {}) as Record<string, unknown>;
   if (comp.safesport !== true || comp.concussion !== true || comp.cardiac !== true) {
@@ -110,6 +113,7 @@ export async function POST(req: Request) {
     team: {
       name: teamName,
       age_group: ageGroup,
+      gamechanger_link: gcLink,
       estimated_players: estimatedPlayers,
       prior_record: clean(team.prior_record, 40),
     },
