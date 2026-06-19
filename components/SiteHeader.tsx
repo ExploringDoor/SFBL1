@@ -19,6 +19,8 @@ export interface SiteHeaderProps {
   // Youth baseball tenants tracking Pitch Smart eligibility show a Pitch
   // Counts link. Defaults off.
   showPitchCounts?: boolean;
+  // RPI power rankings link. Defaults off.
+  showPowerRankings?: boolean;
 }
 
 const NAV = [
@@ -39,10 +41,12 @@ export function SiteHeader({
   showStats = true,
   showTournaments = false,
   showPitchCounts = false,
+  showPowerRankings = false,
 }: SiteHeaderProps) {
   const brand = leagueAbbrev ?? deriveAbbrev(leagueName);
   let nav = showStats ? [...NAV] : NAV.filter((item) => item.label !== "Stats");
   const extras: { label: string; href: string }[] = [];
+  if (showPowerRankings) extras.push({ label: "Power Rankings", href: "/power-rankings" });
   if (showPitchCounts) extras.push({ label: "Pitch Counts", href: "/eligibility" });
   if (showTournaments) extras.push({ label: "Tournaments", href: "/tournaments" });
   if (extras.length) {

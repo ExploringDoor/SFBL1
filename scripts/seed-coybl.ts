@@ -59,6 +59,7 @@ const LEAGUE_CONFIG = {
     show_tournaments: true,
     show_pitch_counts: true,
     ticker_by_age: true,
+    show_power_rankings: true,
   },
   // Standings: straight W/L (PCT-based default — no points scheme).
 };

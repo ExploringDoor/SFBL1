@@ -64,6 +64,7 @@ export default async function RootLayout({
   let statsEnabled = true;
   let showTournaments = false;
   let showPitchCounts = false;
+  let showPowerRankings = false;
   let tickerByAge = false;
   if (configJson) {
     try {
@@ -84,6 +85,8 @@ export default async function RootLayout({
       showTournaments = cfg.flags?.show_tournaments === true;
       // Pitch-count eligibility tracker is opt-in per tenant.
       showPitchCounts = cfg.flags?.show_pitch_counts === true;
+      // RPI power rankings page is opt-in per tenant.
+      showPowerRankings = cfg.flags?.show_power_rankings === true;
       // Big youth leagues use an age-group-tabbed ticker instead of a noisy
       // league-wide one.
       tickerByAge = cfg.flags?.ticker_by_age === true;
@@ -129,6 +132,7 @@ export default async function RootLayout({
               showStats={statsEnabled}
               showTournaments={showTournaments}
               showPitchCounts={showPitchCounts}
+              showPowerRankings={showPowerRankings}
             />
           ) : null}
           <div className="site-content">{children}</div>
