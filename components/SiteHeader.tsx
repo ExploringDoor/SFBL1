@@ -21,6 +21,8 @@ export interface SiteHeaderProps {
   showPitchCounts?: boolean;
   // RPI power rankings link. Defaults off.
   showPowerRankings?: boolean;
+  // When registration is open, show a prominent "Register" button. Defaults off.
+  registrationOpen?: boolean;
 }
 
 const NAV = [
@@ -42,6 +44,7 @@ export function SiteHeader({
   showTournaments = false,
   showPitchCounts = false,
   showPowerRankings = false,
+  registrationOpen = false,
 }: SiteHeaderProps) {
   const brand = leagueAbbrev ?? deriveAbbrev(leagueName);
   let nav = showStats ? [...NAV] : NAV.filter((item) => item.label !== "Stats");
@@ -89,6 +92,18 @@ export function SiteHeader({
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
+          {registrationOpen && (
+            <Link
+              href="/register"
+              className="hidden items-center rounded-md px-3.5 py-1.5 font-barlow text-xs font-bold uppercase tracking-wider text-white sm:inline-flex"
+              style={{
+                background: "var(--brand-accent, var(--brand-primary))",
+                letterSpacing: "0.08em",
+              }}
+            >
+              Register
+            </Link>
+          )}
           <ProfileButton tenantId={tenantId} />
         </div>
       </div>

@@ -61,6 +61,7 @@ export default async function HomePage() {
         leagueName={leagueName}
         leagueAbbrev={config?.abbrev}
         season={String(new Date().getFullYear())}
+        registrationOpen={config?.flags?.registration_open === true}
       />
 
       <section className="sec">
@@ -211,10 +212,12 @@ function Hero({
   leagueName,
   leagueAbbrev,
   season,
+  registrationOpen = false,
 }: {
   leagueName: string;
   leagueAbbrev?: string;
   season: string;
+  registrationOpen?: boolean;
 }) {
   const big = leagueAbbrev ?? deriveAbbrev(leagueName);
   return (
@@ -227,6 +230,28 @@ function Hero({
           {big} <em>{season}</em>
         </h1>
         <p className="hero-sub">{leagueName}</p>
+        {registrationOpen && (
+          <Link
+            href="/register"
+            className="font-barlow"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              marginTop: 18,
+              padding: "12px 26px",
+              borderRadius: 10,
+              background: "var(--brand-accent, #c8102e)",
+              color: "#fff",
+              fontWeight: 800,
+              fontSize: 15,
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              textDecoration: "none",
+            }}
+          >
+            Register Your Team →
+          </Link>
+        )}
       </div>
     </section>
   );
