@@ -144,7 +144,18 @@ export default async function SchedulePage({
           </h1>
           {config?.name && <p className="sec-eyebrow mt-1">{config.name}</p>}
         </div>
-        <SubscribeCalendar />
+        <div className="flex flex-col items-end gap-2">
+          <SubscribeCalendar />
+          {/* Flat CSV of the whole schedule — opens straight in Excel /
+              Sheets. For the umpire assigner etc. (Adam, 2026-06). */}
+          <a
+            href="/api/schedule.csv"
+            className="font-barlow text-xs font-bold uppercase tracking-wider hover:underline"
+            style={{ color: "var(--brand-primary)" }}
+          >
+            ⬇ Download for Excel (CSV)
+          </a>
+        </div>
       </header>
 
       <ScoresScheduleTabs active="schedule" />
