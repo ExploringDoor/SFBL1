@@ -16,7 +16,7 @@ const TYPES = [
     fee: 495,
     title: "With Team Insurance",
     blurb:
-      "Includes COYBL team insurance, Five Tool Youth registration, and USSSA registration.",
+      "Includes COYBL team insurance and Five Tool Youth registration.",
   },
   {
     id: "without_insurance",
@@ -72,6 +72,30 @@ export default function RegisterPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<{ id: string; fee: number } | null>(null);
+  const [cardLoading, setCardLoading] = useState(false);
+  const [cardErr, setCardErr] = useState<string | null>(null);
+
+  async function payByCard(registrationId: string) {
+    setCardErr(null);
+    setCardLoading(true);
+    try {
+      const res = await fetch("/api/square-checkout", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ registrationId }),
+      });
+      const data = (await res.json()) as { url?: string; error?: string };
+      if (res.ok && data.url) {
+        window.location.href = data.url;
+        return;
+      }
+      setCardErr(data.error ?? "Couldn't start card payment.");
+    } catch {
+      setCardErr("Network error — please try again.");
+    } finally {
+      setCardLoading(false);
+    }
+  }
 
   const set =
     <K extends keyof State>(key: K) =>
@@ -180,6 +204,30 @@ export default function RegisterPage() {
                 applies)
               </li>
             </ul>
+            <button
+              type="button"
+              onClick={() => payByCard(done.id)}
+              disabled={cardLoading}
+              style={{
+                marginTop: 14,
+                padding: "12px 24px",
+                borderRadius: 10,
+                background: "var(--brand-primary)",
+                color: "#fff",
+                fontWeight: 800,
+                fontSize: 15,
+                border: "none",
+                cursor: cardLoading ? "default" : "pointer",
+                opacity: cardLoading ? 0.6 : 1,
+              }}
+            >
+              {cardLoading
+                ? "Starting…"
+                : `Pay by card — $${(done.fee * 1.0325).toFixed(2)}`}
+            </button>
+            {cardErr && (
+              <p style={{ color: "#c8102e", fontSize: 13, marginTop: 8 }}>{cardErr}</p>
+            )}
           </div>
         </div>
       </main>
