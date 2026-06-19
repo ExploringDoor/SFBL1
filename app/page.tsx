@@ -14,6 +14,8 @@ import {
   type DivisionGroup,
   type TeamMeta,
 } from "@/components/StandingsTable";
+import { HomeStandingsTabs } from "@/components/HomeStandingsTabs";
+import { loadStandingsSections } from "@/lib/standings";
 
 export const dynamic = "force-dynamic";
 
@@ -43,8 +45,15 @@ export default async function HomePage() {
 
   if (!tenantId) return <BareApex />;
 
-  const { upcoming, recent, teams, divisionGroups, scheme, leagueName } =
-    await loadHomeData(tenantId, config);
+  const { upcoming, recent, teams, leagueName } = await loadHomeData(
+    tenantId,
+    config,
+  );
+  // Standings for the sidebar — age-grouped (tabbed) when the league has age
+  // groups, flat otherwise. Shares the same loader as the /standings page.
+  const standings = await loadStandingsSections(tenantId, config);
+  const sidebarGrouped =
+    standings.ageSections.length > 0 && standings.ageSections[0]?.ageGroup != null;
 
   return (
     <main>
@@ -139,12 +148,23 @@ export default async function HomePage() {
                   Full →
                 </Link>
               </header>
-              <StandingsTable
-                groups={divisionGroups}
-                teamMeta={teams}
-                pointsScheme={scheme}
-                variant="compact"
-              />
+              {sidebarGrouped ? (
+                <HomeStandingsTabs
+                  sections={standings.ageSections.map((s) => ({
+                    ageGroup: s.ageGroup ?? "",
+                    groups: s.groups,
+                  }))}
+                  teamMeta={standings.teams}
+                  pointsScheme={standings.scheme}
+                />
+              ) : (
+                <StandingsTable
+                  groups={standings.ageSections[0]?.groups ?? []}
+                  teamMeta={standings.teams}
+                  pointsScheme={standings.scheme}
+                  variant="compact"
+                />
+              )}
             </aside>
           </div>
         </div>
