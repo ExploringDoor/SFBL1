@@ -2,6 +2,13 @@
 // for SFBL until historical data lands), points rubric (when league
 // uses points scoring), column legend, then per-division StandingsTable
 // in full mode.
+//
+// Tenants WITHOUT an age-group hierarchy (e.g. SFBL) keep the original
+// behavior exactly: global standings, bucketed by a flat `division`
+// string. Tenants WITH `ageGroup` on their team docs (e.g. COYBL, a
+// youth league) get a two-level Age Group -> Division hierarchy, and
+// each division's standings are computed from that division's games
+// alone (so W/L, GB, and rank are correct per division).
 
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
@@ -19,6 +26,13 @@ import {
 } from "@/components/StandingsTable";
 
 export const dynamic = "force-dynamic";
+
+interface AgeSection {
+  ageGroup: string | null;
+  groups: DivisionGroup[];
+}
+
+type TeamMetaPlus = TeamMeta & { ageGroup?: string };
 
 export default async function StandingsPage() {
   const h = headers();
@@ -41,10 +55,11 @@ export default async function StandingsPage() {
     );
   }
 
-  const { divisionGroups, teams, scheme, leagueName, throughDate, teamCount } =
+  const { ageSections, teams, scheme, leagueName, throughDate, teamCount } =
     await loadStandings(tenantId, config);
 
   const year = String(new Date().getFullYear());
+  const grouped = ageSections.length > 0 && ageSections[0]?.ageGroup != null;
 
   return (
     <main className="container py-10">
@@ -53,9 +68,7 @@ export default async function StandingsPage() {
           <span style={{ color: "var(--text-strong)" }}>Season</span>{" "}
           <span style={{ color: "var(--brand-primary)" }}>Standings</span>
         </h1>
-        {leagueName && (
-          <p className="sec-eyebrow mt-1">{leagueName}</p>
-        )}
+        {leagueName && <p className="sec-eyebrow mt-1">{leagueName}</p>}
       </header>
 
       <div className="year-tabs mb-6">
@@ -127,12 +140,68 @@ export default async function StandingsPage() {
         </span>
       </div>
 
-      <StandingsTable
-        groups={divisionGroups}
-        teamMeta={teams}
-        pointsScheme={scheme}
-        variant="full"
-      />
+      {/* Age-group jump tabs (youth leagues with many age groups). */}
+      {grouped && ageSections.length > 1 && (
+        <nav
+          aria-label="Jump to age group"
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 8,
+            marginBottom: 22,
+          }}
+        >
+          {ageSections.map((s) => (
+            <a
+              key={s.ageGroup}
+              href={`#age-${s.ageGroup}`}
+              style={{
+                display: "inline-block",
+                padding: "6px 14px",
+                borderRadius: 999,
+                border: "1px solid var(--border)",
+                background: "var(--card)",
+                color: "var(--brand-primary)",
+                fontWeight: 800,
+                fontSize: 13,
+                letterSpacing: "0.04em",
+                textDecoration: "none",
+              }}
+            >
+              {s.ageGroup}
+            </a>
+          ))}
+        </nav>
+      )}
+
+      {ageSections.map((section) => (
+        <section
+          key={section.ageGroup ?? "all"}
+          id={section.ageGroup ? `age-${section.ageGroup}` : undefined}
+          style={{ marginBottom: section.ageGroup ? 36 : 0, scrollMarginTop: 16 }}
+        >
+          {section.ageGroup && (
+            <h2
+              className="font-display"
+              style={{
+                fontSize: 30,
+                marginBottom: 14,
+                color: "var(--brand-primary)",
+                borderBottom: "3px solid var(--brand-primary)",
+                paddingBottom: 6,
+              }}
+            >
+              {section.ageGroup}
+            </h2>
+          )}
+          <StandingsTable
+            groups={section.groups}
+            teamMeta={teams}
+            pointsScheme={scheme}
+            variant="full"
+          />
+        </section>
+      ))}
     </main>
   );
 }
@@ -144,7 +213,7 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
     db.collection(`leagues/${tenantId}/teams`).get(),
   ]);
 
-  const teams: Record<string, TeamMeta> = {};
+  const teams: Record<string, TeamMetaPlus> = {};
   for (const d of teamsSnap.docs) {
     const data = d.data();
     teams[d.id] = {
@@ -153,6 +222,7 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
       color: data.color ? String(data.color) : undefined,
       logoUrl: data.logo_url ? String(data.logo_url) : null,
       division: data.division ? String(data.division) : undefined,
+      ageGroup: data.ageGroup ? String(data.ageGroup) : undefined,
     };
   }
 
@@ -168,18 +238,54 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
     };
   });
 
-  let standings: StandingsRow[] = computeStandings(games);
-  const scheme = config?.standings?.points_per ?? null;
-  const usePoints = config?.standings?.scoring === "points" && !!scheme;
-  if (usePoints && scheme) {
-    standings = sortByPoints(
-      standings,
-      scheme,
-      config?.standings?.tiebreaker ?? "rd",
-    );
-  }
+  const usePoints =
+    config?.standings?.scoring === "points" && !!config?.standings?.points_per;
+  const scheme = usePoints ? config!.standings!.points_per! : null;
+  const tiebreaker = config?.standings?.tiebreaker ?? "rd";
 
-  const divisionGroups = groupByDivision(standings, teams);
+  const rank = (subset: GameResult[]): StandingsRow[] => {
+    let rows = computeStandings(subset);
+    if (usePoints && scheme) rows = sortByPoints(rows, scheme, tiebreaker);
+    return rows;
+  };
+
+  const hasAgeGroups = Object.values(teams).some((t) => t.ageGroup);
+
+  let ageSections: AgeSection[];
+
+  if (hasAgeGroups) {
+    // Two-level hierarchy: Age Group -> Division. Each division's standings
+    // are computed from games among that division's teams only.
+    const byAge = new Map<string, Map<string, string[]>>();
+    for (const [id, t] of Object.entries(teams)) {
+      const ageGroup = t.ageGroup ?? "Other";
+      const division = t.division ?? "Division";
+      if (!byAge.has(ageGroup)) byAge.set(ageGroup, new Map());
+      const divMap = byAge.get(ageGroup)!;
+      if (!divMap.has(division)) divMap.set(division, []);
+      divMap.get(division)!.push(id);
+    }
+
+    ageSections = [...byAge.entries()]
+      .sort(([a], [b]) => ageOrder(a) - ageOrder(b))
+      .map(([ageGroup, divMap]) => {
+        const groups: DivisionGroup[] = [...divMap.entries()]
+          .sort(([a], [b]) => divOrder(a) - divOrder(b))
+          .map(([division, ids]) => {
+            const idSet = new Set(ids);
+            const divGames = games.filter(
+              (g) => idSet.has(g.home_team_id) && idSet.has(g.away_team_id),
+            );
+            return { division, rows: rank(divGames) };
+          });
+        return { ageGroup, groups };
+      });
+  } else {
+    // Flat fallback (SFBL behavior, unchanged): global standings bucketed
+    // by a flat division string.
+    const standings = rank(games);
+    ageSections = [{ ageGroup: null, groups: groupByDivision(standings, teams) }];
+  }
 
   // Latest game date — drives "Through Mar 29, 2026" subtitle.
   const finalDates = games
@@ -197,9 +303,9 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
     : "today";
 
   return {
-    divisionGroups,
+    ageSections,
     teams,
-    scheme: usePoints ? scheme : null,
+    scheme,
     leagueName: config?.name ?? null,
     throughDate,
     teamCount: teamsSnap.size,
@@ -221,4 +327,20 @@ function groupByDivision(
   return [...buckets.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([division, rows]) => ({ division, rows }));
+}
+
+// "7U" -> 7, "10U" -> 10, "14U" -> 14. Unknown sorts last.
+function ageOrder(ageGroup: string): number {
+  const m = ageGroup.match(/\d+/);
+  return m ? parseInt(m[0], 10) : 999;
+}
+
+// "Division 1" -> 1, "Division 5A" -> 5.01, "Division 5B" -> 5.02.
+// Keeps numbered tiers in order and A/B splits adjacent. Unknown sorts last.
+function divOrder(division: string): number {
+  const m = division.match(/(\d+)\s*([A-Za-z]?)/);
+  if (!m || m[1] == null) return 999;
+  const n = parseInt(m[1], 10);
+  const sub = m[2] ? (m[2].toUpperCase().charCodeAt(0) - 64) / 100 : 0;
+  return n + sub;
 }

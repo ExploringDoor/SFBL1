@@ -10,6 +10,15 @@ export interface SiteHeaderProps {
   leagueName: string;
   leagueAbbrev?: string;
   logoUrl?: string | null;
+  // Stats-off tenants (e.g. youth leagues that only track scores) hide the
+  // player-stats nav. Defaults to on so existing tenants are unaffected.
+  showStats?: boolean;
+  // Tenants that run tournaments on an external platform show a Tournaments
+  // link. Defaults off so existing tenants are unaffected.
+  showTournaments?: boolean;
+  // Youth baseball tenants tracking Pitch Smart eligibility show a Pitch
+  // Counts link. Defaults off.
+  showPitchCounts?: boolean;
 }
 
 const NAV = [
@@ -27,8 +36,22 @@ export function SiteHeader({
   leagueName,
   leagueAbbrev,
   logoUrl,
+  showStats = true,
+  showTournaments = false,
+  showPitchCounts = false,
 }: SiteHeaderProps) {
   const brand = leagueAbbrev ?? deriveAbbrev(leagueName);
+  let nav = showStats ? [...NAV] : NAV.filter((item) => item.label !== "Stats");
+  const extras: { label: string; href: string }[] = [];
+  if (showPitchCounts) extras.push({ label: "Pitch Counts", href: "/eligibility" });
+  if (showTournaments) extras.push({ label: "Tournaments", href: "/tournaments" });
+  if (extras.length) {
+    const rulesIdx = nav.findIndex((item) => item.label === "Rules");
+    nav =
+      rulesIdx >= 0
+        ? [...nav.slice(0, rulesIdx), ...extras, ...nav.slice(rulesIdx)]
+        : [...nav, ...extras];
+  }
   return (
     <header className="site-header">
       <div className="container flex h-full w-full items-center gap-6">
@@ -49,7 +72,7 @@ export function SiteHeader({
         </Link>
 
         <nav className="hidden flex-1 items-center justify-center gap-6 md:flex">
-          {NAV.map((item) => (
+          {nav.map((item) => (
             <Link
               key={item.href}
               href={item.href}

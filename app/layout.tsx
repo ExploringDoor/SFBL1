@@ -25,10 +25,26 @@ const oswald = Oswald({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "League Platform",
-  description: "Multi-tenant SaaS for amateur sports leagues.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const configJson = headers().get("x-tenant-config-json");
+  let name: string | null = null;
+  if (configJson) {
+    try {
+      name = (JSON.parse(configJson) as { name?: string }).name ?? null;
+    } catch {
+      /* ignore */
+    }
+  }
+  return name
+    ? {
+        title: { default: name, template: `%s · ${name}` },
+        description: `${name} — schedules, standings, scores, and more.`,
+      }
+    : {
+        title: "League Platform",
+        description: "Multi-tenant SaaS for amateur sports leagues.",
+      };
+}
 
 export default async function RootLayout({
   children,
@@ -45,18 +61,28 @@ export default async function RootLayout({
   let logoUrl: string | null = null;
   let themePrimary: string | undefined;
   let themeAccent: string | undefined;
+  let statsEnabled = true;
+  let showTournaments = false;
+  let showPitchCounts = false;
   if (configJson) {
     try {
       const cfg = JSON.parse(configJson) as {
         name?: string;
         abbrev?: string;
         theme?: { primary?: string; accent?: string; logo_url?: string };
+        flags?: Record<string, boolean>;
       };
       leagueName = cfg.name ?? null;
       leagueAbbrev = cfg.abbrev;
       logoUrl = cfg.theme?.logo_url ?? null;
       themePrimary = cfg.theme?.primary;
       themeAccent = cfg.theme?.accent;
+      // Stats-off tenants set flags.stats_enabled = false. Default on.
+      statsEnabled = cfg.flags?.stats_enabled !== false;
+      // Tournaments link is opt-in per tenant.
+      showTournaments = cfg.flags?.show_tournaments === true;
+      // Pitch-count eligibility tracker is opt-in per tenant.
+      showPitchCounts = cfg.flags?.show_pitch_counts === true;
     } catch {
       /* fall through */
     }
@@ -86,6 +112,9 @@ export default async function RootLayout({
               leagueName={leagueName ?? "League"}
               leagueAbbrev={leagueAbbrev}
               logoUrl={logoUrl}
+              showStats={statsEnabled}
+              showTournaments={showTournaments}
+              showPitchCounts={showPitchCounts}
             />
           ) : null}
           <div className="site-content">{children}</div>
