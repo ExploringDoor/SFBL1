@@ -239,14 +239,6 @@ export default function RegisterPage() {
 
   return (
     <main className="container py-10" style={{ maxWidth: 720 }}>
-      <header className="mb-6">
-        <h1 className="font-display" style={{ fontSize: "clamp(36px, 5vw, 52px)" }}>
-          <span style={{ color: "var(--text-strong)" }}>Team</span>{" "}
-          <span style={{ color: "var(--brand-primary)" }}>Registration</span>
-        </h1>
-        <p className="sec-eyebrow mt-1">2027 Spring &amp; Summer Season</p>
-      </header>
-
       <form onSubmit={submit} style={{ display: "grid", gap: 26 }}>
         {/* Registration type */}
         <Section title="1 · Registration Type">
