@@ -4,9 +4,11 @@
 // Square Payment Link, and returns its URL for the browser to redirect to.
 //
 // Square credentials come from env (Vercel), NEVER the repo:
-//   SQUARE_ACCESS_TOKEN, SQUARE_LOCATION_ID, SQUARE_ENV (sandbox|production)
-// When they're absent the endpoint degrades gracefully (503) so the form can
-// fall back to check/Venmo. Money lands in the league's own Square account.
+//   SQUARE_ACCESS_TOKEN          (required)
+//   SQUARE_ENV  sandbox|production (defaults to sandbox)
+//   SQUARE_LOCATION_ID           (optional — auto-detected from the token if unset)
+// When the access token is absent the endpoint degrades gracefully (503) so the
+// form can fall back to check/Venmo. Money lands in the league's own account.
 
 import { NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
@@ -24,8 +26,7 @@ export async function POST(req: Request) {
   }
 
   const token = process.env.SQUARE_ACCESS_TOKEN;
-  const locationId = process.env.SQUARE_LOCATION_ID;
-  if (!token || !locationId) {
+  if (!token) {
     return NextResponse.json(
       { error: "Card payment isn't set up yet — please pay by check or Venmo." },
       { status: 503 },
@@ -64,6 +65,18 @@ export async function POST(req: Request) {
     process.env.SQUARE_ENV === "production"
       ? "https://connect.squareup.com"
       : "https://connect.squareupsandbox.com";
+
+  // Location ID is optional in env — if it's not set we ask Square for the
+  // account's locations and use the first active one (cached). Most leagues
+  // have a single location, so this "just works" from the access token alone.
+  const locationId =
+    process.env.SQUARE_LOCATION_ID ?? (await resolveLocationId(token, base));
+  if (!locationId) {
+    return NextResponse.json(
+      { error: "Couldn't find a Square location for this account." },
+      { status: 502 },
+    );
+  }
 
   let res: Response;
   try {
@@ -114,4 +127,41 @@ export async function POST(req: Request) {
     );
 
   return NextResponse.json({ url, amount_cents: amountCents });
+}
+
+// Resolve a Square location from the access token when SQUARE_LOCATION_ID isn't
+// set. Picks the first ACTIVE location (falls back to the first one) and caches
+// the result per token+base so we only hit /v2/locations once per server boot.
+const locationCache = new Map<string, string>();
+async function resolveLocationId(
+  token: string,
+  base: string,
+): Promise<string | null> {
+  const cacheKey = `${base}:${token.slice(-8)}`;
+  const cached = locationCache.get(cacheKey);
+  if (cached) return cached;
+
+  try {
+    const res = await fetch(`${base}/v2/locations`, {
+      headers: {
+        "Square-Version": SQUARE_VERSION,
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!res.ok) {
+      console.error("[square-checkout] locations lookup failed", res.status);
+      return null;
+    }
+    const json = (await res.json()) as {
+      locations?: { id?: string; status?: string }[];
+    };
+    const locs = json.locations ?? [];
+    const chosen = locs.find((l) => l.status === "ACTIVE") ?? locs[0];
+    const id = chosen?.id ?? null;
+    if (id) locationCache.set(cacheKey, id);
+    return id;
+  } catch (err) {
+    console.error("[square-checkout] locations lookup error", err);
+    return null;
+  }
 }
