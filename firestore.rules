@@ -146,6 +146,15 @@ service cloud.firestore {
         allow write: if isAdmin(leagueId);
       }
 
+      // Pitcher pitch-count outings (COYBL Pitch Smart eligibility).
+      // Public-read so the eligibility tracker + captain tab can show them;
+      // captain writes go through /api/captain-pitch-count (Admin SDK), so
+      // no direct client writes — admin-write only here, like /standings.
+      match /pitch_outings/{id} {
+        allow read: if true;
+        allow write: if isAdmin(leagueId);
+      }
+
       match /recaps/{gameId} {
         allow read: if true;
         allow write: if isAdmin(leagueId);

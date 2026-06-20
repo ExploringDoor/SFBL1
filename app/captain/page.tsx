@@ -38,6 +38,7 @@ import { AttendanceTab } from "@/components/captain/AttendanceTab";
 import { TeamChatTab } from "@/components/captain/TeamChatTab";
 import { CaptainsChatTab } from "@/components/captain/CaptainsChatTab";
 import { HelpTab } from "@/components/captain/HelpTab";
+import { PitchCountsTab } from "@/components/captain/PitchCountsTab";
 import { QuickScoreInline } from "@/components/captain/QuickScoreInline";
 import { PasswordlessCaptainPicker } from "@/components/captain/PasswordlessCaptainPicker";
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
@@ -514,6 +515,7 @@ const TABS: Tab[] = [
   { key: "roster", label: "Roster" },
   { key: "freeagents", label: "Free Agents" },
   { key: "scores", label: "Submit Score" },
+  { key: "pitchcounts", label: "Pitch Counts" },
   { key: "notifications", label: "🔔 Notifications" },
   { key: "schedule", label: "Schedule" },
   // Chat hidden for now (Adam, 2026-05-18). Removed from the tab list
@@ -560,9 +562,11 @@ function CaptainTabNav() {
   // push notifications aren't enabled. Other leagues keep both tabs.
   // (Adam, 2026-06.)
   const isSfbl = tenantId === "sfbl";
-  const tabs = TABS.filter((t) => !t.hidden).filter(
-    (t) => !(isSfbl && (t.key === "attendance" || t.key === "notifications")),
-  );
+  // Pitch Counts is a youth-baseball (Pitch Smart) feature — COYBL only for
+  // now. TODO: switch this hardcoded gate to a config flag (show_pitch_counts).
+  const tabs = TABS.filter((t) => !t.hidden)
+    .filter((t) => !(isSfbl && (t.key === "attendance" || t.key === "notifications")))
+    .filter((t) => !(t.key === "pitchcounts" && tenantId !== "coybl"));
   return (
     <nav className="cap-tab-nav">
       {tabs.map((t) => (
@@ -617,6 +621,8 @@ function CaptainBody({
 
   if (tab === "roster")
     return <RosterTab leagueId={leagueId} teamId={teamId} />;
+  if (tab === "pitchcounts")
+    return <PitchCountsTab leagueId={leagueId} teamId={teamId} />;
   if (tab === "freeagents")
     return <FreeAgentsTab leagueId={leagueId} />;
   if (tab === "schedule")
