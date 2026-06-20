@@ -134,8 +134,8 @@ function TickerItem({ g }: { g: TickerGame }) {
     : g.date
       ? formatTime(g.date)
       : g.status.toUpperCase();
-  const awayLabel = g.away_team.abbrev ?? g.away_team_id.slice(0, 3).toUpperCase();
-  const homeLabel = g.home_team.abbrev ?? g.home_team_id.slice(0, 3).toUpperCase();
+  const awayLabel = displayName(g.away_team.name, g.away_team.abbrev ?? g.away_team_id);
+  const homeLabel = displayName(g.home_team.name, g.home_team.abbrev ?? g.home_team_id);
   const awayWon = isFinal && g.away_score > g.home_score;
   const homeWon = isFinal && g.home_score > g.away_score;
 
@@ -149,15 +149,13 @@ function TickerItem({ g }: { g: TickerGame }) {
         <span className="ti-status">{statusLabel}</span>
       </div>
       <TickerTeamRow
-        abbrev={awayLabel}
-        record={g.away_record}
+        name={awayLabel}
         value={isFinal ? g.away_score : ""}
         winner={awayWon}
         showValue={isFinal}
       />
       <TickerTeamRow
-        abbrev={homeLabel}
-        record={g.home_record}
+        name={homeLabel}
         value={isFinal ? g.home_score : ""}
         winner={homeWon}
         showValue={isFinal}
@@ -167,25 +165,29 @@ function TickerItem({ g }: { g: TickerGame }) {
 }
 
 function TickerTeamRow({
-  abbrev,
-  record,
+  name,
   value,
   winner,
   showValue,
 }: {
-  abbrev: string;
-  record?: string;
+  name: string;
   value: number | string;
   winner: boolean;
   showValue: boolean;
 }) {
   return (
     <div className={"ti-row " + (winner ? "ti-row-win" : "")}>
-      <span className="ti-team">{abbrev}</span>
-      {record && <span className="ti-record">({record})</span>}
+      <span className="ti-team">{name}</span>
       {showValue && <span className="ti-val">{value}</span>}
     </div>
   );
+}
+
+// Ticker display name: full team name minus the "- Coach"/"- Color" suffix
+// (e.g. "Grove City Titans - Lentz" -> "Grove City Titans").
+function displayName(name: string, fallback: string): string {
+  const base = ((name ?? "").split(/\s+[-–—]\s+/)[0] ?? "").trim();
+  return base || fallback;
 }
 
 function formatDateShort(iso: string): string {
