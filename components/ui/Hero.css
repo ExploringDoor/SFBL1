@@ -115,7 +115,9 @@
 }
 
 .le-hero-title em {
-  color: #7dd3fc;
+  /* Theme-driven accent word; falls back to the original sky-blue when a
+     tenant hasn't set --brand-accent (e.g. COYBL = red). */
+  color: var(--brand-accent, #7dd3fc);
   font-style: normal;
   text-shadow:
     0 0 60px rgba(96, 165, 250, 0.4),

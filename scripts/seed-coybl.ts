@@ -44,8 +44,9 @@ const LEAGUE_CONFIG = {
   stat_columns: [],
   pitching: { tracked: false },
   rules_flags: { dropped_third_strike: false, balks: false, infield_fly: false },
-  // Navy + COYBL red.
-  theme: { primary: "#13284a", accent: "#c8102e", logo_url: null },
+  // Navy + COYBL red. `secondary` drives the hero "2026" emphasis (defaults to
+  // a light blue when unset) — set it red so the homepage reads navy + red.
+  theme: { primary: "#13284a", accent: "#c8102e", secondary: "#c8102e", logo_url: null },
   billing: {
     status: "active",
     paid_through: "2027-season",
@@ -61,6 +62,27 @@ const LEAGUE_CONFIG = {
     ticker_by_age: true,
     show_power_rankings: true,
     registration_open: true,
+  },
+  // Trim the platform nav to COYBL's pages. Matched case-insensitively against
+  // the default nav labels (components/ui/nav-links.ts) — drops stats pages
+  // (COYBL is score-only) + platform pages COYBL doesn't use.
+  nav: {
+    hide: [
+      "stats",
+      "team stats",
+      "player of the week",
+      "player registration",
+      "team waiver",
+      "news",
+      "photos",
+      "playoffs",
+      "availability",
+      "history",
+      "umpire evaluation",
+      "pay online",
+      "sponsors",
+      "store",
+    ],
   },
   // Standings: straight W/L (PCT-based default — no points scheme).
   // Tournaments run on Five Tool — list specific events that link out.
