@@ -77,6 +77,13 @@ export function BoxScoreContent(props: BoxScoreContentProps) {
       })
     : null;
 
+  // Only show the inning-by-inning linescore when there's real per-inning data.
+  // Score-only leagues (e.g. COYBL, no box_scores doc) would otherwise render a
+  // misleading all-zero grid next to a non-zero final — the Header shows the
+  // final score on its own.
+  const hasLinescore =
+    (away.linescore?.length ?? 0) > 0 || (home.linescore?.length ?? 0) > 0;
+
   // Preview view (scheduled game): no box score / linescore / recap.
   // Show date · field · two team cards with records.
   if (!isFinal) {
@@ -141,7 +148,7 @@ export function BoxScoreContent(props: BoxScoreContentProps) {
   return (
     <div>
       <Header date={date} field={field} status={status} away={away} home={home} />
-      {isFinal && (
+      {isFinal && hasLinescore && (
         <Linescore innings={innings} away={away} home={home} />
       )}
       {recap && (
