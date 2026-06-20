@@ -6,7 +6,6 @@
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { computeRpi, type RpiGame, type RpiRow } from "@/lib/rpi";
-import type { PublicLeagueConfig } from "@/lib/tenants";
 
 export const dynamic = "force-dynamic";
 
@@ -27,15 +26,6 @@ interface AgeRanking {
 export default async function PowerRankingsPage() {
   const h = headers();
   const tenantId = h.get("x-tenant-id");
-  const config = (() => {
-    const raw = h.get("x-tenant-config-json");
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw) as PublicLeagueConfig;
-    } catch {
-      return null;
-    }
-  })();
 
   if (!tenantId) {
     return (
@@ -49,14 +39,6 @@ export default async function PowerRankingsPage() {
 
   return (
     <main className="container py-10">
-      <header className="mb-4">
-        <h1 className="font-display" style={{ fontSize: "clamp(40px, 6vw, 64px)" }}>
-          <span style={{ color: "var(--text-strong)" }}>Power</span>{" "}
-          <span style={{ color: "var(--brand-primary)" }}>Rankings</span>
-        </h1>
-        {config?.name && <p className="sec-eyebrow mt-1">{config.name}</p>}
-      </header>
-
       <p style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.6, maxWidth: 640, marginBottom: 20 }}>
         Ranked by <strong>RPI</strong> (Ratings Percentage Index), which weighs
         strength of schedule: 25% your win %, 50% your opponents&rsquo; win %,
