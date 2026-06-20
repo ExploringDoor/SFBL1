@@ -55,46 +55,56 @@ function TabbedTicker({ byAge }: { byAge: AgeTicker[] }) {
   return (
     <div className="ticker">
       <div className="ticker-track" style={{ alignItems: "stretch" }}>
-        {/* Age-group tabs — pick one and its ticker shows. */}
+        {/* Age-group dropdown — pick an age and that age's scores show. A
+            select (vs a row of 8 tabs) stays compact and uses the native
+            picker on mobile. */}
         <div
-          role="tablist"
-          aria-label="Scores by age group"
           style={{
             display: "flex",
-            gap: 4,
             alignItems: "center",
+            gap: 6,
             paddingRight: 10,
             marginRight: 6,
             borderRight: "1px solid rgba(255,255,255,0.15)",
             flexShrink: 0,
           }}
         >
-          {byAge.map((a) => {
-            const isActive = a.ageGroup === sel;
-            return (
-              <button
-                key={a.ageGroup}
-                role="tab"
-                aria-selected={isActive}
-                onClick={() => setSel(a.ageGroup)}
-                style={{
-                  appearance: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: "4px 10px",
-                  borderRadius: 6,
-                  fontSize: 12,
-                  fontWeight: 800,
-                  letterSpacing: "0.03em",
-                  background: isActive ? "var(--brand-accent, #c8102e)" : "rgba(255,255,255,0.10)",
-                  color: "#fff",
-                  whiteSpace: "nowrap",
-                }}
-              >
+          <label
+            htmlFor="ticker-age"
+            style={{
+              fontSize: 9.5,
+              fontWeight: 800,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: "rgba(255,255,255,0.55)",
+            }}
+          >
+            Age
+          </label>
+          <select
+            id="ticker-age"
+            value={sel}
+            onChange={(e) => setSel(e.target.value)}
+            aria-label="Choose age group"
+            style={{
+              appearance: "auto",
+              background: "rgba(255,255,255,0.14)",
+              color: "#fff",
+              border: "1px solid rgba(255,255,255,0.30)",
+              borderRadius: 6,
+              padding: "4px 8px",
+              fontSize: 13,
+              fontWeight: 800,
+              letterSpacing: "0.03em",
+              cursor: "pointer",
+            }}
+          >
+            {byAge.map((a) => (
+              <option key={a.ageGroup} value={a.ageGroup} style={{ color: "#13284a" }}>
                 {a.ageGroup}
-              </button>
-            );
-          })}
+              </option>
+            ))}
+          </select>
         </div>
 
         {active.games.length === 0 ? (
