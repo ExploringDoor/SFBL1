@@ -45,10 +45,7 @@ export default async function HomePage() {
 
   if (!tenantId) return <BareApex />;
 
-  const { upcoming, recent, teams, leagueName } = await loadHomeData(
-    tenantId,
-    config,
-  );
+  const { upcoming, recent, teams } = await loadHomeData(tenantId, config);
   // Standings for the sidebar — age-grouped (tabbed) when the league has age
   // groups, flat otherwise. Shares the same loader as the /standings page.
   const standings = await loadStandingsSections(tenantId, config);
@@ -57,13 +54,6 @@ export default async function HomePage() {
 
   return (
     <main>
-      <Hero
-        leagueName={leagueName}
-        leagueAbbrev={config?.abbrev}
-        season={String(new Date().getFullYear())}
-        registrationOpen={config?.flags?.registration_open === true}
-      />
-
       <section className="sec">
         <div className="container">
           <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
@@ -206,64 +196,6 @@ function SectionHead({
       )}
     </header>
   );
-}
-
-function Hero({
-  leagueName,
-  leagueAbbrev,
-  season,
-  registrationOpen = false,
-}: {
-  leagueName: string;
-  leagueAbbrev?: string;
-  season: string;
-  registrationOpen?: boolean;
-}) {
-  const big = leagueAbbrev ?? deriveAbbrev(leagueName);
-  return (
-    <section className="hero">
-      <div className="hero-bg" />
-      <div className="hero-overlay" />
-      <div className="hero-content">
-        <span className="hero-pill">⚾ {season} Regular Season</span>
-        <h1 className="hero-title">
-          {big} <em>{season}</em>
-        </h1>
-        <p className="hero-sub">{leagueName}</p>
-        {registrationOpen && (
-          <Link
-            href="/register"
-            className="font-barlow"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              marginTop: 18,
-              padding: "12px 26px",
-              borderRadius: 10,
-              background: "var(--brand-accent, #c8102e)",
-              color: "#fff",
-              fontWeight: 800,
-              fontSize: 15,
-              textTransform: "uppercase",
-              letterSpacing: "0.06em",
-              textDecoration: "none",
-            }}
-          >
-            Register Your Team →
-          </Link>
-        )}
-      </div>
-    </section>
-  );
-}
-
-function deriveAbbrev(name: string): string {
-  return name
-    .split(/\s+/)
-    .map((w) => w[0] ?? "")
-    .join("")
-    .toUpperCase()
-    .slice(0, 4);
 }
 
 async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null) {
