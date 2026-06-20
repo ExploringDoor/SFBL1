@@ -7,7 +7,8 @@ import { GameCard, type GameCardTeam } from "@/components/GameCard";
 import { computeWeeks, pickActiveWeek } from "@/lib/season-weeks";
 import { computeStandings, type GameResult } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
-import { ScoresScheduleTabs, WeekRow } from "./tabs-and-weeks";
+import { ScoresScheduleTabs, WeekRow, AgeFilterRow } from "./tabs-and-weeks";
+import { buildAgeFilter } from "@/lib/age-filter";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +26,7 @@ interface ScoreGame {
 export default async function ScoresPage({
   searchParams,
 }: {
-  searchParams?: { week?: string };
+  searchParams?: { week?: string; age?: string };
 }) {
   const h = headers();
   const tenantId = h.get("x-tenant-id");
@@ -48,9 +49,16 @@ export default async function ScoresPage({
   }
 
   const { games, teams } = await loadScores(tenantId);
-  const finalGames = games.filter(
+  const allFinal = games.filter(
     (g) => g.status === "final" || g.status === "approved",
   );
+
+  // Age-group filter (COYBL). Scope before computing weeks so the week tabs
+  // only show weeks with games for the selected age.
+  const { selectedAge, ageOptions, ageOf } = buildAgeFilter(teams, searchParams?.age);
+  const finalGames = selectedAge
+    ? allFinal.filter((g) => ageOf(g.home_team_id, g.away_team_id) === selectedAge)
+    : allFinal;
 
   const weeks = computeWeeks(finalGames);
   const activeStart = searchParams?.week ?? pickActiveWeek(weeks);
@@ -77,10 +85,12 @@ export default async function ScoresPage({
         {config?.name && <p className="sec-eyebrow mt-1">{config.name}</p>}
       </header>
 
-      <ScoresScheduleTabs active="scores" />
+      <ScoresScheduleTabs active="scores" age={selectedAge ?? undefined} />
+      <AgeFilterRow ages={ageOptions} basePath="/scores" />
       <WeekRow
         weeks={weeks.map((w) => ({ ...w, active: w.startIso === activeStart }))}
         basePath="/scores"
+        age={selectedAge ?? undefined}
       />
 
       {dayGroups.length === 0 ? (
@@ -128,6 +138,7 @@ interface TeamMeta {
   color?: string;
   logoUrl?: string | null;
   record?: string;
+  ageGroup?: string;
 }
 
 async function loadScores(tenantId: string): Promise<{
@@ -176,6 +187,7 @@ async function loadScores(tenantId: string): Promise<{
       color: data.color ? String(data.color) : undefined,
       logoUrl: data.logo_url ? String(data.logo_url) : null,
       record: recordByTeam.get(d.id),
+      ageGroup: data.ageGroup ? String(data.ageGroup) : undefined,
     };
   }
   return { games, teams };

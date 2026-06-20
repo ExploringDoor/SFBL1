@@ -7,8 +7,9 @@ import { GameCard, type GameCardTeam } from "@/components/GameCard";
 import { computeWeeks, pickActiveWeek } from "@/lib/season-weeks";
 import { computeStandings, type GameResult } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
-import { ScoresScheduleTabs, WeekRow } from "../scores/tabs-and-weeks";
+import { ScoresScheduleTabs, WeekRow, AgeFilterRow } from "../scores/tabs-and-weeks";
 import { SubscribeCalendar } from "@/components/SubscribeCalendar";
+import { buildAgeFilter } from "@/lib/age-filter";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +25,7 @@ interface ScheduleGame {
 export default async function SchedulePage({
   searchParams,
 }: {
-  searchParams?: { week?: string };
+  searchParams?: { week?: string; age?: string };
 }) {
   const h = headers();
   const tenantId = h.get("x-tenant-id");
@@ -47,7 +48,14 @@ export default async function SchedulePage({
   }
 
   const { games, teams } = await loadSchedule(tenantId);
-  const upcoming = games.filter((g) => g.status === "scheduled");
+  const allUpcoming = games.filter((g) => g.status === "scheduled");
+
+  // Age-group filter (COYBL). Scope games to the selected age before computing
+  // weeks, so the week tabs only show weeks that have games for that age.
+  const { selectedAge, ageOptions, ageOf } = buildAgeFilter(teams, searchParams?.age);
+  const upcoming = selectedAge
+    ? allUpcoming.filter((g) => ageOf(g.home_team_id, g.away_team_id) === selectedAge)
+    : allUpcoming;
 
   const weeks = computeWeeks(upcoming);
   const activeStart = searchParams?.week ?? pickActiveWeek(weeks);
@@ -77,10 +85,12 @@ export default async function SchedulePage({
         <SubscribeCalendar />
       </header>
 
-      <ScoresScheduleTabs active="schedule" />
+      <ScoresScheduleTabs active="schedule" age={selectedAge ?? undefined} />
+      <AgeFilterRow ages={ageOptions} basePath="/schedule" />
       <WeekRow
         weeks={weeks.map((w) => ({ ...w, active: w.startIso === activeStart }))}
         basePath="/schedule"
+        age={selectedAge ?? undefined}
       />
 
       {dayGroups.length === 0 ? (
@@ -126,6 +136,7 @@ interface TeamMeta {
   color?: string;
   logoUrl?: string | null;
   record?: string;
+  ageGroup?: string;
 }
 
 async function loadSchedule(tenantId: string): Promise<{
@@ -176,6 +187,7 @@ async function loadSchedule(tenantId: string): Promise<{
       color: data.color ? String(data.color) : undefined,
       logoUrl: data.logo_url ? String(data.logo_url) : null,
       record: recordByTeam.get(d.id),
+      ageGroup: data.ageGroup ? String(data.ageGroup) : undefined,
     };
   }
   return { games, teams };
