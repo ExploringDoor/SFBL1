@@ -100,6 +100,24 @@ const TEAMS: SeedTeam[] = [
   { id: "c12_outlaws",        name: "Westerville Outlaws",         abbrev: "WO",   ageGroup: "12U", division: "Division 3", ageOrder: 12, divOrder: 3, color: "#1b1b1b" },
   { id: "c12_pcp_red",        name: "Plain City Pioneers - Red",   abbrev: "PCP",  ageGroup: "12U", division: "Division 3", ageOrder: 12, divOrder: 3, color: "#9e1b32" },
   { id: "c12_colts_white",    name: "Hilliard Colts White",        abbrev: "HC",   ageGroup: "12U", division: "Division 3", ageOrder: 12, divOrder: 3, color: "#2a2f6b" },
+  // 7U (Coach Pitch) — Division 1
+  { id: "c7_dgs_bauer",       name: "Dublin Green Sox - Bauer",    abbrev: "DGS",  ageGroup: "7U",  division: "Division 1", ageOrder: 7,  divOrder: 1, color: "#0a7d3c" },
+  { id: "c7_gct_lentz",       name: "Grove City Titans - Lentz",   abbrev: "GCT",  ageGroup: "7U",  division: "Division 1", ageOrder: 7,  divOrder: 1, color: "#9e1b32" },
+  // 8U (Coach Pitch) — Division 1
+  { id: "c8_ua_bears",        name: "Upper Arlington Bears - 8U",  abbrev: "UAB",  ageGroup: "8U",  division: "Division 1", ageOrder: 8,  divOrder: 1, color: "#000000" },
+  { id: "c8_outlaws",         name: "Westerville Outlaws - 8U",    abbrev: "WO",   ageGroup: "8U",  division: "Division 1", ageOrder: 8,  divOrder: 1, color: "#1b1b1b" },
+  // 9U — Division 1
+  { id: "c9_stix_hall",       name: "Olentangy Stix - Hall",       abbrev: "STIX", ageGroup: "9U",  division: "Division 1", ageOrder: 9,  divOrder: 1, color: "#1f3a5f" },
+  { id: "c9_naturals_blk",    name: "Naturals - Black",            abbrev: "NAT",  ageGroup: "9U",  division: "Division 1", ageOrder: 9,  divOrder: 1, color: "#e36c0a" },
+  // 11U — Division 1
+  { id: "c11_panthers",       name: "Hilliard Panthers - 11U",     abbrev: "HP",   ageGroup: "11U", division: "Division 1", ageOrder: 11, divOrder: 1, color: "#3a1d6e" },
+  { id: "c11_gahanna",        name: "Gahanna Lions - 11U",         abbrev: "GAH",  ageGroup: "11U", division: "Division 1", ageOrder: 11, divOrder: 1, color: "#1d3f8a" },
+  // 13U — Division 1
+  { id: "c13_sting",          name: "Ohio Sting - 13U",            abbrev: "STG",  ageGroup: "13U", division: "Division 1", ageOrder: 13, divOrder: 1, color: "#111111" },
+  { id: "c13_eagles",         name: "Ohio Select Eagles - 13U",    abbrev: "OSE",  ageGroup: "13U", division: "Division 1", ageOrder: 13, divOrder: 1, color: "#13284a" },
+  // 14U — Division 1
+  { id: "c14_pioneers",       name: "Plain City Pioneers - 14U",   abbrev: "PCP",  ageGroup: "14U", division: "Division 1", ageOrder: 14, divOrder: 1, color: "#9e1b32" },
+  { id: "c14_raptors",        name: "Radnor Raptors - 14U",        abbrev: "RAD",  ageGroup: "14U", division: "Division 1", ageOrder: 14, divOrder: 1, color: "#0a6e6e" },
 ];
 
 // A handful of final + scheduled games within each division so standings
@@ -132,6 +150,13 @@ const GAMES: SeedGame[] = [
   // 12U D3
   { id: "g11", home: "c12_naturals_town", away: "c12_outlaws",       hs: 8,  as: 4, status: "final", date: "2027-05-04T18:00:00-04:00", field: "Field 3" },
   { id: "g12", home: "c12_pcp_red",       away: "c12_colts_white",   hs: 7,  as: 7, status: "final", date: "2027-05-04T18:00:00-04:00", field: "Field 5" },
+  // One game per remaining age group so each ticker tab has content.
+  { id: "g13", home: "c7_dgs_bauer",      away: "c7_gct_lentz",      hs: 9,  as: 7, status: "final", date: "2027-05-05T10:00:00-04:00", field: "Field 8" },
+  { id: "g14", home: "c8_ua_bears",       away: "c8_outlaws",        hs: 6,  as: 5, status: "final", date: "2027-05-05T12:00:00-04:00", field: "Field 9" },
+  { id: "g15", home: "c9_stix_hall",      away: "c9_naturals_blk",   hs: 8,  as: 2, status: "final", date: "2027-05-06T17:30:00-04:00", field: "Field 4" },
+  { id: "g16", home: "c11_panthers",      away: "c11_gahanna",       hs: 3,  as: 4, status: "final", date: "2027-05-06T18:00:00-04:00", field: "Field 2" },
+  { id: "g17", home: "c13_sting",         away: "c13_eagles",        hs: 5,  as: 1, status: "final", date: "2027-05-07T18:00:00-04:00", field: "Field 6" },
+  { id: "g18", home: "c14_pioneers",      away: "c14_raptors",       hs: 2,  as: 0, status: "final", date: "2027-05-07T18:00:00-04:00", field: "Field 7" },
 ];
 
 // Sample pitch outings for one 10U team (uses the 9U-10U ruleset). Dates are
@@ -289,7 +314,7 @@ async function run() {
   });
 
   console.log(
-    `[seed-coybl] done — ${TEAMS.length} teams across 10U/12U, ${GAMES.length} games (stats off, no players/box scores)`,
+    `[seed-coybl] done — ${TEAMS.length} teams across 7U-14U, ${GAMES.length} games (stats off, no players/box scores)`,
   );
 }
 
