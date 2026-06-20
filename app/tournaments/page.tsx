@@ -28,17 +28,9 @@ export default function TournamentsPage() {
   })();
 
   const url = config?.tournaments?.url ?? DEFAULT_TOURNAMENTS_URL;
-  const leagueName = config?.name ?? "the league";
 
   return (
     <main className="container py-10">
-      <header className="mb-6">
-        <h1 className="font-display" style={{ fontSize: "clamp(40px, 6vw, 64px)" }}>
-          <span style={{ color: "var(--text-strong)" }}>Tournaments</span>
-        </h1>
-        <p className="sec-eyebrow mt-1">{leagueName}</p>
-      </header>
-
       {/* Charity-forward callout — COYBL's tournaments benefit Nationwide
           Children's Hospital. */}
       <div

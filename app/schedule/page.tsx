@@ -6,7 +6,6 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { GameCard, type GameCardTeam } from "@/components/GameCard";
 import { computeWeeks, pickActiveWeek } from "@/lib/season-weeks";
 import { computeStandings, type GameResult } from "@/lib/stats/shared";
-import type { PublicLeagueConfig } from "@/lib/tenants";
 import { ScoresScheduleTabs, WeekRow, AgeFilterRow } from "../scores/tabs-and-weeks";
 import { SubscribeCalendar } from "@/components/SubscribeCalendar";
 import { buildAgeFilter } from "@/lib/age-filter";
@@ -29,15 +28,6 @@ export default async function SchedulePage({
 }) {
   const h = headers();
   const tenantId = h.get("x-tenant-id");
-  const config = (() => {
-    const raw = h.get("x-tenant-config-json");
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw) as PublicLeagueConfig;
-    } catch {
-      return null;
-    }
-  })();
 
   if (!tenantId) {
     return (
@@ -74,14 +64,7 @@ export default async function SchedulePage({
 
   return (
     <main className="container py-10">
-      <header className="mb-6 flex items-end justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="font-display" style={{ fontSize: "clamp(40px, 6vw, 64px)" }}>
-            <span style={{ color: "var(--text-strong)" }}>Season</span>{" "}
-            <span style={{ color: "var(--brand-primary)" }}>Schedule</span>
-          </h1>
-          {config?.name && <p className="sec-eyebrow mt-1">{config.name}</p>}
-        </div>
+      <header className="mb-6 flex items-end justify-end gap-4 flex-wrap">
         <SubscribeCalendar />
       </header>
 

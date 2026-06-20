@@ -1,7 +1,6 @@
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { markdownToHtml } from "@/lib/markdown";
-import type { PublicLeagueConfig } from "@/lib/tenants";
 import { EditAffordance } from "./EditAffordance";
 
 export const dynamic = "force-dynamic";
@@ -17,15 +16,6 @@ rules. Markdown is supported (headings, lists, links, tables, bold/italic).
 export default async function RulesPage() {
   const h = headers();
   const tenantId = h.get("x-tenant-id");
-  const config = (() => {
-    const raw = h.get("x-tenant-config-json");
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw) as PublicLeagueConfig;
-    } catch {
-      return null;
-    }
-  })();
 
   if (!tenantId) {
     return (
@@ -48,7 +38,7 @@ export default async function RulesPage() {
   const updatedAt = docSnap.data()?.updated_at as string | undefined;
 
   return (
-    <Shell heading={config?.name ? `${config.name} — Rules` : "Rules"}>
+    <main className="mx-auto max-w-3xl px-6 py-12">
       {updatedAt && (
         <p className="mb-4 text-xs text-slate-500">
           Last updated{" "}
@@ -64,7 +54,7 @@ export default async function RulesPage() {
         dangerouslySetInnerHTML={{ __html: html }}
       />
       <EditAffordance tenantId={tenantId} initialMarkdown={markdown} />
-    </Shell>
+    </main>
   );
 }
 

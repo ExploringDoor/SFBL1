@@ -82,21 +82,6 @@ export default async function EligibilityPage() {
 
   return (
     <main className="container py-10">
-      <header className="mb-6">
-        <h1 className="font-display" style={{ fontSize: "clamp(36px, 5vw, 56px)" }}>
-          <span style={{ color: "var(--text-strong)" }}>Pitcher</span>{" "}
-          <span style={{ color: "var(--brand-primary)" }}>Eligibility</span>
-        </h1>
-        <p className="sec-eyebrow mt-1">
-          Pitch Smart rest tracking · as of{" "}
-          {now.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          })}
-        </p>
-      </header>
-
       {sections.length === 0 ? (
         <p style={{ color: "var(--muted)" }}>
           No pitch counts recorded yet. Coaches enter pitch counts after each

@@ -40,14 +40,6 @@ export default async function StandingsPage() {
 
   return (
     <main className="container py-10">
-      <header className="mb-6">
-        <h1 className="font-display" style={{ fontSize: "clamp(40px, 6vw, 64px)" }}>
-          <span style={{ color: "var(--text-strong)" }}>Season</span>{" "}
-          <span style={{ color: "var(--brand-primary)" }}>Standings</span>
-        </h1>
-        {leagueName && <p className="sec-eyebrow mt-1">{leagueName}</p>}
-      </header>
-
       <div className="year-tabs mb-6">
         <button className="yr-tab active">{year}</button>
       </div>

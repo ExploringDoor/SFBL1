@@ -6,7 +6,6 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { GameCard, type GameCardTeam } from "@/components/GameCard";
 import { computeWeeks, pickActiveWeek } from "@/lib/season-weeks";
 import { computeStandings, type GameResult } from "@/lib/stats/shared";
-import type { PublicLeagueConfig } from "@/lib/tenants";
 import { ScoresScheduleTabs, WeekRow, AgeFilterRow } from "./tabs-and-weeks";
 import { buildAgeFilter } from "@/lib/age-filter";
 
@@ -30,15 +29,6 @@ export default async function ScoresPage({
 }) {
   const h = headers();
   const tenantId = h.get("x-tenant-id");
-  const config = (() => {
-    const raw = h.get("x-tenant-config-json");
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw) as PublicLeagueConfig;
-    } catch {
-      return null;
-    }
-  })();
 
   if (!tenantId) {
     return (
@@ -77,14 +67,6 @@ export default async function ScoresPage({
 
   return (
     <main className="container py-10">
-      <header className="mb-6">
-        <h1 className="font-display" style={{ fontSize: "clamp(40px, 6vw, 64px)" }}>
-          <span style={{ color: "var(--text-strong)" }}>Season</span>{" "}
-          <span style={{ color: "var(--brand-primary)" }}>Scores</span>
-        </h1>
-        {config?.name && <p className="sec-eyebrow mt-1">{config.name}</p>}
-      </header>
-
       <ScoresScheduleTabs active="scores" age={selectedAge ?? undefined} />
       <AgeFilterRow ages={ageOptions} basePath="/scores" />
       <WeekRow
