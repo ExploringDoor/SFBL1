@@ -51,6 +51,18 @@ export interface LeagueStandingsConfig {
   tiebreaker?: "pct" | "rd";
 }
 
+export interface LeagueTournamentEvent {
+  name: string;
+  url?: string; // specific event / registration link
+  when?: string; // freeform date or season label, e.g. "Jun 14–15, 2027"
+  note?: string; // short blurb (charity, age range, etc.)
+}
+
+export interface LeagueTournaments {
+  url?: string; // generic landing page (fallback when no events listed)
+  events?: LeagueTournamentEvent[];
+}
+
 export interface LeagueConfig {
   // Identity
   slug: string;
@@ -79,6 +91,9 @@ export interface LeagueConfig {
 
   // Standings scoring config (optional — defaults to PCT-based)
   standings?: LeagueStandingsConfig;
+
+  // External tournament platform front-door (e.g. COYBL on Five Tool).
+  tournaments?: LeagueTournaments;
 }
 
 // Custom-domain mapping doc at /domains/{hostname}.

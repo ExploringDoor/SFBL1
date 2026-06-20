@@ -37,9 +37,25 @@ export async function middleware(req: NextRequest) {
   // Strip freeform/PII fields (billing.notes, payment dates) before they
   // ride along on every request header. Server components needing full
   // billing detail should re-fetch /leagues/{id} directly.
-  requestHeaders.set("x-tenant-config-json", JSON.stringify(toPublicConfig(tenant.config)));
+  requestHeaders.set(
+    "x-tenant-config-json",
+    asciiSafe(JSON.stringify(toPublicConfig(tenant.config))),
+  );
 
   return NextResponse.next({ request: { headers: requestHeaders } });
+}
+
+// HTTP header values must be Latin1 (ByteString), so any non-ASCII character
+// in the config — em-dashes, accents, smart quotes, common in team/tournament
+// names — would throw when set as a header. Escape every char above 0x7F to a
+// \uXXXX sequence; readers JSON.parse the value, which decodes them back.
+function asciiSafe(s: string): string {
+  let out = "";
+  for (const ch of s) {
+    const code = ch.charCodeAt(0);
+    out += code > 127 ? "\\u" + code.toString(16).padStart(4, "0") : ch;
+  }
+  return out;
 }
 
 export const config = {

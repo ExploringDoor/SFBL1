@@ -63,6 +63,19 @@ const LEAGUE_CONFIG = {
     registration_open: true,
   },
   // Standings: straight W/L (PCT-based default — no points scheme).
+  // Tournaments run on Five Tool — list specific events that link out.
+  // NOTE: event names are from COYBL's charity slate; the urls are PLACEHOLDERS
+  // (generic Five Tool) until Adam supplies each event's real link.
+  tournaments: {
+    url: "https://play.fivetoolyouth.org",
+    events: [
+      { name: "On Our Sleeves — Breaking Stigmas", when: "Spring 2027", note: "Benefits Nationwide Children's (On Our Sleeves)", url: "https://play.fivetoolyouth.org" },
+      { name: "Striking Out Pediatric Cancer", when: "Summer 2027", url: "https://play.fivetoolyouth.org" },
+      { name: "Super Heroes", when: "Summer 2027", url: "https://play.fivetoolyouth.org" },
+      { name: "Bust Out The Bats", when: "Summer 2027", url: "https://play.fivetoolyouth.org" },
+      { name: "Five Tool Ohio State Championships", when: "Summer 2027", url: "https://play.fivetoolyouth.org" },
+    ],
+  },
 };
 
 // Small REAL sample (names pulled from COYBL's live 2026 standings),
