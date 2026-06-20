@@ -3,10 +3,12 @@
 
 import Link from "next/link";
 import { headers } from "next/headers";
+import { notFound } from "next/navigation";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { TeamBadge } from "@/components/TeamBadge";
 import { formatIP } from "@/lib/stats/ip";
 import type { PublicLeagueConfig } from "@/lib/tenants";
+import { statsEnabled } from "@/lib/tenant-flags";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +58,9 @@ export default async function PlayersPage() {
       </main>
     );
   }
+
+  // Stats-off tenants (COYBL) have no stats page — 404 on a direct/stale URL.
+  if (!statsEnabled(config)) notFound();
 
   const db = getAdminDb();
   const [playersSnap, teamsSnap] = await Promise.all([

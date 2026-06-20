@@ -9,6 +9,8 @@ import { Modal } from "@/components/Modal";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { TeamBadge } from "@/components/TeamBadge";
 import { formatIP } from "@/lib/stats/ip";
+import type { PublicLeagueConfig } from "@/lib/tenants";
+import { statsEnabled } from "@/lib/tenant-flags";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +22,18 @@ export default async function PlayerModalRoute({
   const h = headers();
   const tenantId = h.get("x-tenant-id");
   if (!tenantId) return null;
+
+  // Stats-off tenants (COYBL) have no player detail — render nothing.
+  const config = (() => {
+    const raw = h.get("x-tenant-config-json");
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as PublicLeagueConfig;
+    } catch {
+      return null;
+    }
+  })();
+  if (!statsEnabled(config)) return null;
 
   const db = getAdminDb();
   const playerSnap = await db

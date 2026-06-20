@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { getAdminDb } from "@/lib/firebase-admin";
 import type { PublicLeagueConfig } from "@/lib/tenants";
+import { statsEnabled } from "@/lib/tenant-flags";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +31,9 @@ export default async function PlayerDetailPage({
       </Shell>
     );
   }
+
+  // Stats-off tenants (COYBL) have no player pages — 404 on a direct/stale URL.
+  if (!statsEnabled(config)) notFound();
 
   const db = getAdminDb();
   const playerSnap = await db

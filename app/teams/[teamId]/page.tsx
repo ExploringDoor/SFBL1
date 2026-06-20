@@ -14,6 +14,7 @@ import {
   type GameResult,
 } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
+import { statsEnabled } from "@/lib/tenant-flags";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,9 @@ export default async function TeamDetailPage({
       return null;
     }
   })();
+  // Stats-off tenants (COYBL): roster shows no stat columns and player names
+  // don't link to a (404) player page.
+  const showStats = statsEnabled(config);
 
   if (!tenantId) {
     return (
@@ -232,9 +236,13 @@ export default async function TeamDetailPage({
                       <th className="text-left">#</th>
                       <th className="text-left">Player</th>
                       <th className="text-left">Pos</th>
-                      <th>AVG</th>
-                      <th>HR</th>
-                      <th>RBI</th>
+                      {showStats && (
+                        <>
+                          <th>AVG</th>
+                          <th>HR</th>
+                          <th>RBI</th>
+                        </>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
@@ -244,18 +252,26 @@ export default async function TeamDetailPage({
                           <span className="rank">{p.jersey ?? "—"}</span>
                         </td>
                         <td className="text-left">
-                          <Link href={`/players/${p.id}`} style={{ fontWeight: 600 }}>
-                            {p.name}
-                          </Link>
+                          {showStats ? (
+                            <Link href={`/players/${p.id}`} style={{ fontWeight: 600 }}>
+                              {p.name}
+                            </Link>
+                          ) : (
+                            <span style={{ fontWeight: 600 }}>{p.name}</span>
+                          )}
                         </td>
                         <td className="text-left">
                           <span style={{ color: "var(--muted)", fontSize: 12 }}>
                             {p.position ?? "—"}
                           </span>
                         </td>
-                        <td>{p.avg != null ? formatAvg(p.avg) : "—"}</td>
-                        <td>{p.hr ?? "—"}</td>
-                        <td>{p.rbi ?? "—"}</td>
+                        {showStats && (
+                          <>
+                            <td>{p.avg != null ? formatAvg(p.avg) : "—"}</td>
+                            <td>{p.hr ?? "—"}</td>
+                            <td>{p.rbi ?? "—"}</td>
+                          </>
+                        )}
                       </tr>
                     ))}
                   </tbody>
