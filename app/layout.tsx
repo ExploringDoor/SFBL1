@@ -3,6 +3,8 @@ import { headers } from "next/headers";
 import { Barlow_Condensed, Inter, Oswald } from "next/font/google";
 import { TenantProvider } from "@/lib/tenant-context";
 import { SiteHeader } from "@/components/SiteHeader";
+import { PageBanner } from "@/components/PageBanner";
+import { headerImagesFor } from "@/lib/header-images";
 import { Ticker, type AgeTicker, type TickerGame } from "@/components/Ticker";
 import { loadAgeGroupTickers, loadTickerGames } from "@/lib/site-data";
 import "./globals.css";
@@ -56,6 +58,9 @@ export default async function RootLayout({
   const h = headers();
   const tenantId = h.get("x-tenant-id");
   const configJson = h.get("x-tenant-config-json");
+  // Per-page header banner images for this tenant (public/<tenant>/headers/).
+  // Empty for leagues with none; the client PageBanner picks one by route.
+  const headerImages = headerImagesFor(tenantId);
   let leagueName: string | null = null;
   let leagueAbbrev: string | undefined;
   let logoUrl: string | null = null;
@@ -139,6 +144,7 @@ export default async function RootLayout({
               registrationOpen={registrationOpen}
             />
           ) : null}
+          {tenantId && <PageBanner images={headerImages} />}
           <div className="site-content">{children}</div>
           {modal}
         </TenantProvider>
