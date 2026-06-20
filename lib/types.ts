@@ -54,8 +54,11 @@ export interface LeagueStandingsConfig {
 export interface LeagueTournamentEvent {
   name: string;
   url?: string; // specific event / registration link
-  when?: string; // freeform date or season label, e.g. "Jun 14–15, 2027"
-  note?: string; // short blurb (charity, age range, etc.)
+  when?: string; // freeform date(s), e.g. "Jun 14-15, 2027"
+  location?: string; // venue / city, e.g. "Berliner Park, Columbus OH"
+  cost?: string; // freeform fee, e.g. "$595 / team"
+  ages?: string; // eligible age groups, e.g. "8U-14U"
+  note?: string; // short blurb (charity, divisions, etc.)
 }
 
 export interface LeagueTournaments {

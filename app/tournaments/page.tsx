@@ -94,35 +94,30 @@ export default function TournamentsPage() {
                   color: "inherit",
                 }}
               >
-                {ev.when && (
-                  <span
-                    className="font-barlow"
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 800,
-                      letterSpacing: "0.1em",
-                      textTransform: "uppercase",
-                      color: "var(--muted)",
-                    }}
-                  >
-                    {ev.when}
-                  </span>
-                )}
                 <span
                   className="font-display"
-                  style={{ fontSize: 20, lineHeight: 1.15, color: "var(--brand-primary)" }}
+                  style={{ fontSize: 21, lineHeight: 1.15, color: "var(--brand-primary)" }}
                 >
                   {ev.name}
                 </span>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 5, marginTop: 4 }}>
+                  {ev.when && <TournDetail icon="📅" text={ev.when} />}
+                  {ev.location && <TournDetail icon="📍" text={ev.location} />}
+                  {ev.cost && <TournDetail icon="💵" text={ev.cost} />}
+                  {ev.ages && <TournDetail icon="🧢" text={ev.ages} />}
+                </div>
+
                 {ev.note && (
-                  <span style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.5 }}>
+                  <span style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.5, marginTop: 4 }}>
                     {ev.note}
                   </span>
                 )}
+
                 <span
                   className="font-barlow"
                   style={{
-                    marginTop: 6,
+                    marginTop: 8,
                     fontSize: 12.5,
                     fontWeight: 800,
                     letterSpacing: "0.05em",
@@ -173,5 +168,24 @@ export default function TournamentsPage() {
         </>
       )}
     </main>
+  );
+}
+
+function TournDetail({ icon, text }: { icon: string; text: string }) {
+  return (
+    <span
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 7,
+        fontSize: 13.5,
+        color: "var(--text-strong)",
+      }}
+    >
+      <span aria-hidden style={{ fontSize: 13, opacity: 0.85, lineHeight: 1 }}>
+        {icon}
+      </span>
+      <span>{text}</span>
+    </span>
   );
 }
