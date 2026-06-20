@@ -8,6 +8,7 @@ import { headers } from "next/headers";
 import { loadStandingsSections } from "@/lib/standings";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { StandingsTable } from "@/components/StandingsTable";
+import { PageBanner } from "@/components/PageBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +40,9 @@ export default async function StandingsPage() {
   const grouped = ageSections.length > 0 && ageSections[0]?.ageGroup != null;
 
   return (
-    <main className="container py-10">
+    <>
+      <PageBanner page="standings" />
+      <main className="container py-10">
       <header className="mb-6">
         <h1 className="font-display" style={{ fontSize: "clamp(40px, 6vw, 64px)" }}>
           <span style={{ color: "var(--text-strong)" }}>Season</span>{" "}
@@ -172,6 +175,7 @@ export default async function StandingsPage() {
           />
         </section>
       ))}
-    </main>
+      </main>
+    </>
   );
 }
