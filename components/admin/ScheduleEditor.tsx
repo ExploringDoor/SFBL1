@@ -4,7 +4,9 @@
 //
 // Layout:
 //   - Top bar: "+ Add Game" button, "🌧 Rain Out Day" quick action,
-//     date filter (defaults to "upcoming + last 7 days").
+//     and filters — by team name, division, and status. No date cap:
+//     the whole season loads, so filtering by team shows that team's
+//     complete season (results + upcoming).
 //   - List grouped by date. Each game row collapses to an inline
 //     edit form: date/time/teams/field/division/status/scores.
 //   - Delete confirms with a hard prompt.
