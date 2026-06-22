@@ -370,14 +370,15 @@ export default async function TeamDetailPage({
   const myGames = gamesSnap.docs
     .map((d) => ({ id: d.id, ...d.data() }) as Record<string, unknown> & { id: string })
     .filter((g) => g.home_team_id === params.teamId || g.away_team_id === params.teamId);
+  // Full season — every game played + the entire rest of the schedule
+  // (Adam, 2026-06: not just a few recent/upcoming). Results most-recent
+  // first, upcoming soonest first (each leads with what's nearest now).
   const recentFinals = myGames
     .filter((g) => g.status === "final" || g.status === "approved")
-    .sort((a, b) => String(b.date ?? "").localeCompare(String(a.date ?? "")))
-    .slice(0, 6);
+    .sort((a, b) => String(b.date ?? "").localeCompare(String(a.date ?? "")));
   const upcoming = myGames
     .filter((g) => g.status === "scheduled")
-    .sort((a, b) => String(a.date ?? "").localeCompare(String(b.date ?? "")))
-    .slice(0, 4);
+    .sort((a, b) => String(a.date ?? "").localeCompare(String(b.date ?? "")));
 
   return (
     <main>
@@ -649,7 +650,7 @@ export default async function TeamDetailPage({
           const scheduleAside = (
             <>
               <h2 className="font-display mb-4" style={{ fontSize: 22 }}>
-                Recent Results
+                Results
               </h2>
               <ul style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {recentFinals.length === 0 && (
