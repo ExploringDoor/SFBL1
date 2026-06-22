@@ -9,6 +9,7 @@ import { computeStandings, type GameResult } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { ScoresScheduleTabs, WeekRow } from "./tabs-and-weeks";
 import { DivisionFilter } from "@/components/ui/DivisionFilter";
+import { TeamFilter } from "@/components/ui/TeamFilter";
 import { combineDateTime } from "@/lib/format-time";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +29,7 @@ interface ScoreGame {
 export default async function ScoresPage({
   searchParams,
 }: {
-  searchParams?: { week?: string; div?: string };
+  searchParams?: { week?: string; div?: string; team?: string };
 }) {
   const h = headers();
   const tenantId = h.get("x-tenant-id");
@@ -70,12 +71,31 @@ export default async function ScoresPage({
       ? allFinal.filter((g) => g.division === activeDivision)
       : allFinal;
 
+  // Team filter — pick a team to see all the games they played this
+  // season (Adam, 2026-06). Overrides the week view: every final game
+  // for that team, chronologically. Options = every team with a final.
+  const activeTeam = searchParams?.team ?? null;
+  const teamOptions = Array.from(
+    new Set(allFinal.flatMap((g) => [g.away_team_id, g.home_team_id])),
+  )
+    .map((id) => ({ id, name: teams[id]?.name ?? id }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const activeTeamName = activeTeam
+    ? teams[activeTeam]?.name ?? activeTeam
+    : null;
+
   const weeks = computeWeeks(finalGames);
   const activeStart = searchParams?.week ?? pickActiveWeek(weeks);
   const activeWeek = weeks.find((w) => w.startIso === activeStart) ?? null;
-  const activeGames = activeWeek
-    ? finalGames.filter((g) => activeWeek.dates.includes(g.date.slice(0, 10)))
-    : [];
+  const activeGames = activeTeam
+    ? allFinal
+        .filter(
+          (g) => g.away_team_id === activeTeam || g.home_team_id === activeTeam,
+        )
+        .sort((a, b) => a.date.localeCompare(b.date))
+    : activeWeek
+      ? finalGames.filter((g) => activeWeek.dates.includes(g.date.slice(0, 10)))
+      : [];
 
   const byDate = new Map<string, ScoreGame[]>();
   for (const g of activeGames) {
@@ -88,7 +108,9 @@ export default async function ScoresPage({
   // Week summary stats — total games, total runs, biggest blowout,
   // closest game. Surfaces editorial flavor for the active week
   // without making the page noisy when nothing notable happened.
-  const weekSummary = (() => {
+  const weekSummary = activeTeam
+    ? null
+    : (() => {
     if (activeGames.length === 0) return null;
     let totalRuns = 0;
     let biggestMargin = -1;
@@ -170,6 +192,13 @@ export default async function ScoresPage({
           basePath="/scores"
         />
       )}
+      {teamOptions.length > 0 && (
+        <TeamFilter
+          teams={teamOptions}
+          active={activeTeam}
+          basePath="/scores"
+        />
+      )}
 
       {weeks.length === 0 ? (
         // No final games anywhere in the season yet — likely launch
@@ -198,13 +227,29 @@ export default async function ScoresPage({
         </div>
       ) : (
         <>
-          <WeekRow
-            weeks={weeks.map((w) => ({
-              ...w,
-              active: w.startIso === activeStart,
-            }))}
-            basePath="/scores"
-          />
+          {activeTeam ? (
+            <p
+              className="font-barlow mb-2 mt-2"
+              style={{
+                fontSize: 14,
+                fontWeight: 700,
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+                color: "var(--muted)",
+              }}
+            >
+              {activeTeamName} · {activeGames.length} game
+              {activeGames.length === 1 ? "" : "s"} this season
+            </p>
+          ) : (
+            <WeekRow
+              weeks={weeks.map((w) => ({
+                ...w,
+                active: w.startIso === activeStart,
+              }))}
+              basePath="/scores"
+            />
+          )}
 
           {weekSummary && weekSummary.gamesPlayed > 0 && (
             <div className="scores-week-summary">
@@ -251,7 +296,9 @@ export default async function ScoresPage({
 
           {dayGroups.length === 0 ? (
             <p className="mt-6" style={{ color: "var(--muted)" }}>
-              No final games this week — pick a different week above.
+              {activeTeam
+                ? `No final games for ${activeTeamName} yet.`
+                : "No final games this week — pick a different week above."}
             </p>
           ) : (
         <div className="space-y-8 mt-6">
