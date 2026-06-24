@@ -21,6 +21,9 @@ interface TeamCard {
   name: string;
   abbrev?: string;
   division: string | null;
+  ageGroup?: string;
+  ageOrder: number;
+  divOrder: number;
   color?: string;
   logoUrl?: string | null;
   record: string;
@@ -82,6 +85,9 @@ export default async function TeamsPage() {
       name: String(data.name ?? d.id),
       abbrev: data.abbrev ? String(data.abbrev) : undefined,
       division: data.division ? String(data.division) : null,
+      ageGroup: data.ageGroup ? String(data.ageGroup) : undefined,
+      ageOrder: typeof data.ageOrder === "number" ? data.ageOrder : 999,
+      divOrder: typeof data.divOrder === "number" ? data.divOrder : 999,
       color: data.color ? String(data.color) : undefined,
       logoUrl: data.logo_url ? String(data.logo_url) : null,
       record: row ? formatRecord(row.w, row.l, row.t) : "0-0",
@@ -90,26 +96,55 @@ export default async function TeamsPage() {
     };
   });
 
-  // Group by division.
-  const byDivision = new Map<string, TeamCard[]>();
-  for (const t of teams) {
-    const key = t.division ?? "League";
-    if (!byDivision.has(key)) byDivision.set(key, []);
-    byDivision.get(key)!.push(t);
+  // Order teams within a division: by standings position, else name.
+  const teamOrder = (a: TeamCard, b: TeamCard) => {
+    const ai = standings.findIndex((r) => r.team_id === a.id);
+    const bi = standings.findIndex((r) => r.team_id === b.id);
+    if (ai === -1 && bi === -1) return a.name.localeCompare(b.name);
+    if (ai === -1) return 1;
+    if (bi === -1) return -1;
+    return ai - bi;
+  };
+
+  type DivGroup = { division: string; teams: TeamCard[] };
+  const divisionsOf = (list: TeamCard[]): DivGroup[] => {
+    const byDiv = new Map<string, TeamCard[]>();
+    for (const t of list) {
+      const key = t.division ?? "Division";
+      if (!byDiv.has(key)) byDiv.set(key, []);
+      byDiv.get(key)!.push(t);
+    }
+    return [...byDiv.entries()]
+      .sort(
+        ([, a], [, b]) =>
+          (a[0]?.divOrder ?? 999) - (b[0]?.divOrder ?? 999) ||
+          (a[0]?.division ?? "").localeCompare(b[0]?.division ?? ""),
+      )
+      .map(([division, ts]) => ({ division, teams: [...ts].sort(teamOrder) }));
+  };
+
+  // Age-grouped tenants (COYBL) get Age Group -> Division; flat tenants get one
+  // section with their divisions (so SFBL/LBDC render exactly as before).
+  const hasAge = teams.some((t) => t.ageGroup);
+  type AgeSection = { ageGroup: string | null; divisions: DivGroup[] };
+  let sections: AgeSection[];
+  if (hasAge) {
+    const byAge = new Map<string, TeamCard[]>();
+    for (const t of teams) {
+      const ag = t.ageGroup ?? "Other";
+      if (!byAge.has(ag)) byAge.set(ag, []);
+      byAge.get(ag)!.push(t);
+    }
+    sections = [...byAge.entries()]
+      .sort(
+        ([, a], [, b]) =>
+          (a[0]?.ageOrder ?? 999) - (b[0]?.ageOrder ?? 999) ||
+          (a[0]?.ageGroup ?? "").localeCompare(b[0]?.ageGroup ?? ""),
+      )
+      .map(([ageGroup, list]) => ({ ageGroup, divisions: divisionsOf(list) }));
+  } else {
+    sections = [{ ageGroup: null, divisions: divisionsOf(teams) }];
   }
-  for (const [, list] of byDivision) {
-    list.sort((a, b) => {
-      const ai = standings.findIndex((r) => r.team_id === a.id);
-      const bi = standings.findIndex((r) => r.team_id === b.id);
-      if (ai === -1 && bi === -1) return a.name.localeCompare(b.name);
-      if (ai === -1) return 1;
-      if (bi === -1) return -1;
-      return ai - bi;
-    });
-  }
-  const divisions = [...byDivision.entries()].sort(([a], [b]) =>
-    a.localeCompare(b),
-  );
 
   return (
     <main className="container py-10">
@@ -121,76 +156,126 @@ export default async function TeamsPage() {
         {config?.name && <p className="sec-eyebrow mt-1">{config.name}</p>}
       </header>
 
-      <div className="space-y-10">
-        {divisions.map(([division, list]) => (
-          <section key={division}>
-            <h3
-              className="font-barlow mb-4"
+      {hasAge && sections.length > 1 && (
+        <nav
+          aria-label="Jump to age group"
+          style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 22 }}
+        >
+          {sections.map((s) => (
+            <a
+              key={s.ageGroup}
+              href={`#age-${s.ageGroup}`}
               style={{
-                fontSize: 14,
+                display: "inline-block",
+                padding: "6px 14px",
+                borderRadius: 999,
+                border: "1px solid rgba(0,0,0,0.12)",
+                background: "#fff",
+                color: "var(--brand-primary)",
                 fontWeight: 800,
-                textTransform: "uppercase",
-                letterSpacing: "0.18em",
-                color: "var(--muted)",
+                fontSize: 13,
+                letterSpacing: "0.04em",
+                textDecoration: "none",
               }}
             >
-              {division}
-            </h3>
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {list.map((t) => (
-                <Link
-                  key={t.id}
-                  href={`/teams/${t.id}`}
-                  className="block group"
-                  style={{
-                    textAlign: "center",
-                    padding: "8px 4px",
-                  }}
-                >
-                  {/* No card chrome. Logo lives in a fixed-size square
-                      flex-centered container so it can NEVER overflow
-                      and is ALWAYS centered. The square reserves space
-                      regardless of the logo's aspect ratio. */}
-                  <div
+              {s.ageGroup}
+            </a>
+          ))}
+        </nav>
+      )}
+
+      <div className="space-y-10">
+        {sections.map((section) => (
+          <section
+            key={section.ageGroup ?? "all"}
+            id={section.ageGroup ? `age-${section.ageGroup}` : undefined}
+            style={{ scrollMarginTop: 16 }}
+          >
+            {section.ageGroup && (
+              <h2
+                className="font-barlow"
+                style={{
+                  fontSize: 28,
+                  fontWeight: 900,
+                  textTransform: "uppercase",
+                  color: "var(--brand-primary)",
+                  borderBottom: "3px solid var(--brand-primary)",
+                  paddingBottom: 6,
+                  marginBottom: 16,
+                }}
+              >
+                {section.ageGroup}
+              </h2>
+            )}
+            <div className="space-y-8">
+              {section.divisions.map((dg) => (
+                <div key={dg.division}>
+                  <h3
+                    className="font-barlow mb-4"
                     style={{
-                      width: 112,
-                      height: 112,
-                      margin: "0 auto 14px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <TeamBadge
-                      teamId={t.id}
-                      name={t.name}
-                      initials={t.abbrev}
-                      color={t.color}
-                      logoUrl={t.logoUrl}
-                      size="card"
-                    />
-                  </div>
-                  <div
-                    className="font-oswald"
-                    style={{
-                      fontSize: 18,
-                      fontWeight: 700,
+                      fontSize: 14,
+                      fontWeight: 800,
                       textTransform: "uppercase",
-                      lineHeight: 1.1,
-                      color: "var(--text-strong)",
+                      letterSpacing: "0.18em",
+                      color: "var(--muted)",
                     }}
                   >
-                    {t.name}
+                    {dg.division}
+                  </h3>
+                  <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                    {dg.teams.map((t) => (
+                      <Link
+                        key={t.id}
+                        href={`/teams/${t.id}`}
+                        className="block group"
+                        style={{ textAlign: "center", padding: "8px 4px" }}
+                      >
+                        <div
+                          style={{
+                            width: 112,
+                            height: 112,
+                            margin: "0 auto 14px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <TeamBadge
+                            teamId={t.id}
+                            name={t.name}
+                            initials={t.abbrev}
+                            color={t.color}
+                            logoUrl={t.logoUrl}
+                            size="card"
+                          />
+                        </div>
+                        <div
+                          className="font-oswald"
+                          style={{
+                            fontSize: 18,
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            lineHeight: 1.1,
+                            color: "var(--text-strong)",
+                          }}
+                        >
+                          {t.name}
+                        </div>
+                        <div
+                          className="font-barlow"
+                          style={{ fontSize: 13, color: "var(--muted)", marginTop: 8 }}
+                        >
+                          {t.record}
+                          {t.points != null && (
+                            <span style={{ marginLeft: 8, color: "var(--brand-primary)", fontWeight: 800 }}>
+                              {t.points} PTS
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
                   </div>
-                  <div className="font-barlow" style={{ fontSize: 13, color: "var(--muted)", marginTop: 8 }}>
-                    {t.record}
-                    {t.points != null && (
-                      <span style={{ marginLeft: 8, color: "var(--brand-primary)", fontWeight: 800 }}>
-                        {t.points} PTS
-                      </span>
-                    )}
-                  </div>
-                </Link>
+                </div>
               ))}
             </div>
           </section>
