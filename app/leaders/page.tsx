@@ -17,7 +17,10 @@
 
 import Link from "next/link";
 import { headers } from "next/headers";
+import { notFound } from "next/navigation";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { statsEnabled } from "@/lib/tenant-flags";
+import type { PublicLeagueConfig } from "@/lib/tenants";
 import "./leaders.css";
 
 export const dynamic = "force-dynamic";
@@ -39,7 +42,17 @@ interface TeamLite {
 }
 
 export default async function LeadersPage() {
-  const tenantId = headers().get("x-tenant-id");
+  const h = headers();
+  const tenantId = h.get("x-tenant-id");
+  const config = (() => {
+    const raw = h.get("x-tenant-config-json");
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as PublicLeagueConfig;
+    } catch {
+      return null;
+    }
+  })();
   if (!tenantId) {
     return (
       <main className="container py-12">
@@ -47,6 +60,8 @@ export default async function LeadersPage() {
       </main>
     );
   }
+  // Stats-off tenants (e.g. COYBL) have no leaderboards — 404 the direct URL.
+  if (!statsEnabled(config)) notFound();
 
   const db = getAdminDb();
   const [gameSnap, teamSnap, playerSnap] = await Promise.all([

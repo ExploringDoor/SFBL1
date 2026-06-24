@@ -12,6 +12,8 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { statsEnabled } from "@/lib/tenant-flags";
+import type { PublicLeagueConfig } from "@/lib/tenants";
 import { loadPlayerProfileData } from "@/lib/player-profile-data";
 import { PlayerProfileLBDC } from "@/components/ui/PlayerProfileLBDC";
 import { AvatarUpload } from "@/components/ui/AvatarUpload";
@@ -61,7 +63,17 @@ export default async function PlayerDetailPage({
 }: {
   params: { playerId: string };
 }) {
-  const tenantId = headers().get("x-tenant-id");
+  const h = headers();
+  const tenantId = h.get("x-tenant-id");
+  const config = (() => {
+    const raw = h.get("x-tenant-config-json");
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as PublicLeagueConfig;
+    } catch {
+      return null;
+    }
+  })();
   if (!tenantId) {
     return (
       <main className="container py-12">
@@ -69,6 +81,8 @@ export default async function PlayerDetailPage({
       </main>
     );
   }
+  // Stats-off tenants (e.g. COYBL) have no player profiles — 404 the direct URL.
+  if (!statsEnabled(config)) notFound();
 
   const profile = await loadPlayerProfileData(
     getAdminDb(),

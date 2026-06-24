@@ -3,7 +3,9 @@
 
 import Link from "next/link";
 import { headers } from "next/headers";
+import { notFound } from "next/navigation";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { statsEnabled } from "@/lib/tenant-flags";
 import { numericStatsOrEmpty } from "@/lib/safe-stats";
 import { TeamBadge } from "@/components/TeamBadge";
 import { formatIP } from "@/lib/stats/ip";
@@ -63,6 +65,9 @@ export default async function PlayersPage() {
       </main>
     );
   }
+  // Stats-off tenants (e.g. COYBL) have no player stats — 404 the direct URL
+  // so there's no orphan stats surface the nav already hides.
+  if (!statsEnabled(config)) notFound();
 
   const db = getAdminDb();
   // Fetch ALL players, then filter in memory. The earlier
