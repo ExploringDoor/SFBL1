@@ -23,6 +23,7 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { collectLineupErrors } from "@/lib/stats/validate";
 
 export const runtime = "nodejs";
 
@@ -140,6 +141,35 @@ export async function POST(req: Request) {
       );
     }
 
+    // Resolve the lineups this submission would promote into the public
+    // /box_scores doc — exactly the arrays written below — and validate
+    // them BEFORE anything is persisted. A line with H < 2B+3B+HR would
+    // crash recalcLeague (sluggingPct throws) and block stats for the
+    // entire league, so reject the resolution with a per-player pointer
+    // instead and let the admin fix the box score first.
+    const promotedAwayLineup =
+      sub.side === "away" ? sub.lineup ?? [] : sub.away_lineup ?? [];
+    const promotedHomeLineup =
+      sub.side === "home" ? sub.lineup ?? [] : sub.home_lineup ?? [];
+    const lineErrors = [
+      ...collectLineupErrors(promotedAwayLineup, "away"),
+      ...collectLineupErrors(promotedHomeLineup, "home"),
+    ];
+    if (lineErrors.length > 0) {
+      return NextResponse.json(
+        {
+          error:
+            "Submission has inconsistent batting lines that would break " +
+            "stat recalc for the whole league. Fix the box score before " +
+            "resolving:\n" +
+            lineErrors.map((e) => `• ${e}`).join("\n"),
+          game_id: gameId,
+          line_errors: lineErrors,
+        },
+        { status: 400 },
+      );
+    }
+
     // Update game doc.
     await gameSnap.ref.set(
       {
@@ -160,10 +190,8 @@ export async function POST(req: Request) {
         home_team_id: game.home_team_id,
         away_score: awayScore,
         home_score: homeScore,
-        away_lineup:
-          sub.side === "away" ? sub.lineup ?? [] : sub.away_lineup ?? [],
-        home_lineup:
-          sub.side === "home" ? sub.lineup ?? [] : sub.home_lineup ?? [],
+        away_lineup: promotedAwayLineup,
+        home_lineup: promotedHomeLineup,
         away_pitchers: sub.away_pitchers ?? sub.pitchers ?? [],
         home_pitchers: sub.home_pitchers ?? sub.pitchers ?? [],
         score_only: !sub.lineup || sub.lineup.length === 0,

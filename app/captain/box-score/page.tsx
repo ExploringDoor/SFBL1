@@ -1015,6 +1015,32 @@ export default function BoxScoreEditorPage() {
     }
   }
 
+  // The captain can ALSO keep the book for the opposing team (full
+  // batting detail). That lineup rides along in the submission
+  // (opp_lineup), gets promoted to the public box score, and is fed
+  // into recalc — so it must satisfy the same H >= 2B+3B+HR invariant.
+  // The loop above only checks the captain's own side; without this a
+  // bad opposing-side line sails through and later 500s recalcLeague
+  // for the whole league. Skip when the opposing side is Score-Only
+  // (no per-batter stats to check).
+  const oppSideVal: "away" | "home" = isHome ? "away" : "home";
+  if (!scoreOnly[oppSideVal]) {
+    const oppRows = oppSideVal === "away" ? awayLineup : homeLineup;
+    for (const b of oppRows) {
+      if (!b.name) continue;
+      const ab = Number(b.ab) || 0;
+      const h = Number(b.h) || 0;
+      const xb =
+        (Number(b.doubles) || 0) +
+        (Number(b.triples) || 0) +
+        (Number(b.hr) || 0);
+      if (h > ab)
+        validation.push(`${b.name} (${oppSideVal}): H (${h}) > AB (${ab})`);
+      if (xb > h)
+        validation.push(`${b.name} (${oppSideVal}): 2B+3B+HR (${xb}) > H (${h})`);
+    }
+  }
+
   async function submit() {
     if (!tenantId || !teamId || !gameId || !user) return;
     if (validation.length > 0) return;

@@ -76,6 +76,41 @@ describe("recalcLeague — softball", () => {
     expect(p3).toMatchObject({ gp: 2, ab: 8, h: 2 });
   });
 
+  it("skips an inconsistent batting line instead of aborting the whole recalc", async () => {
+    // One bad line (H < 2B+HR) used to make sluggingPct throw inside
+    // aggregateBatting, 500-ing recalc for EVERY player. Now it's
+    // skipped + flagged, and the rest of the league still recalcs.
+    await seedBoxScore("g1", {
+      away_lineup: [
+        { player_id: "good", ab: 4, h: 2, doubles: 1 },
+        { player_id: "bad", ab: 4, h: 1, doubles: 1, hr: 1 }, // H(1) < 2B+HR(2)
+      ],
+      home_lineup: [{ player_id: "good2", ab: 3, h: 1 }],
+    });
+
+    const result = await recalcLeague(db, "sfbl");
+
+    // Completed without throwing; the offending line is flagged with
+    // its exact player + game so the admin can fix that one box score.
+    expect(result.flagged_lines).toHaveLength(1);
+    expect(result.flagged_lines[0]).toMatchObject({
+      player_id: "bad",
+      game_id: "g1",
+    });
+
+    // Clean players still got their stats written.
+    const good = (await db.doc("leagues/sfbl/players/good").get()).data()
+      ?.stats;
+    expect(good).toMatchObject({ gp: 1, h: 2 });
+    const good2 = (await db.doc("leagues/sfbl/players/good2").get()).data()
+      ?.stats;
+    expect(good2).toMatchObject({ gp: 1, h: 1 });
+
+    // The bad line was dropped entirely — no stats doc rolled up for it.
+    const bad = (await db.doc("leagues/sfbl/players/bad").get()).data();
+    expect(bad?.stats?.gp ?? 0).toBe(0);
+  });
+
   it("ignores non-final box scores", async () => {
     await seedBoxScore("draft1", {
       status: "draft",

@@ -34,6 +34,8 @@ import {
   type SoftballPlayerStats,
 } from "./softball";
 
+import { battingLineError } from "./validate";
+
 export type Sport = "softball" | "baseball";
 
 export interface RecalcResult {
@@ -44,6 +46,13 @@ export interface RecalcResult {
   players_written: number; // after dirty-check
   pitchers_written: number;
   duration_ms: number;
+  /** Batting lines skipped because H < 2B+3B+HR. Such a line makes
+   *  sluggingPct throw inside aggregateBatting, which would otherwise
+   *  abort the whole recalc (HTTP 500) and write NObody's stats. We
+   *  skip just the offending line and surface it here with the exact
+   *  player + game so the admin can fix that one box score. Empty on
+   *  clean data. */
+  flagged_lines: Array<{ player_id: string; game_id: string; reason: string }>;
 }
 
 export async function recalcLeague(
@@ -108,6 +117,11 @@ export async function recalcLeague(
   const careerBatting: Array<SoftballBattingLine | BaseballBattingLine> = [];
   const currentPitching: BaseballPitchingLine[] = [];
   const careerPitching: BaseballPitchingLine[] = [];
+  // Inconsistent lines we refused to aggregate (see flagged_lines on
+  // RecalcResult). Write paths validate up front, but data already in
+  // Firestore — or written before this guard existed — can still be
+  // bad, so recalc defends itself here too.
+  const flaggedLines: RecalcResult["flagged_lines"] = [];
 
   for (const doc of boxScores) {
     const data = doc.data();
@@ -117,6 +131,21 @@ export async function recalcLeague(
     const home = (data.home_lineup ?? []) as Array<Record<string, unknown>>;
     for (const line of [...away, ...home]) {
       const bl = toBattingLine(line, sport);
+      // Guard the H >= 2B+3B+HR invariant. Skipping every line that
+      // violates it keeps the per-player AGGREGATE safe too: if every
+      // retained line has H_i >= (2B+3B+HR)_i, then summed H covers
+      // summed extra-base hits, so sluggingPct never goes negative.
+      // One bad line is dropped + flagged (with player + game) instead
+      // of taking down the entire league's recalc.
+      const reason = battingLineError(bl);
+      if (reason) {
+        flaggedLines.push({
+          player_id: bl.player_id || "(unknown)",
+          game_id: doc.id,
+          reason,
+        });
+        continue;
+      }
       careerBatting.push(bl);
       if (isCurrent) currentBatting.push(bl);
     }
@@ -165,6 +194,17 @@ export async function recalcLeague(
     careerPitcherStats,
   );
 
+  if (flaggedLines.length > 0) {
+    console.warn(
+      `[recalcLeague] ${leagueId}: skipped ${flaggedLines.length} ` +
+        `inconsistent batting line(s) (H < 2B+3B+HR) — ` +
+        flaggedLines
+          .map((f) => `player ${f.player_id} in game ${f.game_id}`)
+          .join("; ") +
+        `. Fix those box scores and re-run recalc.`,
+    );
+  }
+
   return {
     league_id: leagueId,
     sport,
@@ -173,6 +213,7 @@ export async function recalcLeague(
     players_written: writes.batter_writes,
     pitchers_written: writes.pitcher_writes,
     duration_ms: Date.now() - startedAt,
+    flagged_lines: flaggedLines,
   };
 }
 

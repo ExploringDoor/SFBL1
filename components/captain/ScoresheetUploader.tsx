@@ -154,6 +154,7 @@ export function ScoresheetUploader({
       const data = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
         parsed?: ParsedBoxScore;
+        warnings?: string[];
         error?: string;
       };
       if (!res.ok || !data.ok || !data.parsed) {
@@ -166,12 +167,21 @@ export function ScoresheetUploader({
       const p = data.parsed;
       const aB = p.awayBatters?.length ?? 0;
       const hB = p.homeBatters?.length ?? 0;
+      // The parser flags (doesn't reject) batting lines where the OCR'd
+      // H is less than 2B+3B+HR — an impossible line that, left in,
+      // would crash the league stat recalc. Append the flags to the
+      // summary so the captain fixes those rows before submitting.
+      const warnNote =
+        data.warnings && data.warnings.length > 0
+          ? ` ⚠️ Check these lines (likely a misread): ${data.warnings.join("; ")}`
+          : "";
       setStage({
         kind: "ok",
         summary:
-          aB + hB > 0
+          (aB + hB > 0
             ? `Parsed: final score ${p.awayScore ?? "?"}–${p.homeScore ?? "?"}, ${aB + hB} batters total. Review below and edit if needed.`
-            : `Parsed final score ${p.awayScore ?? "?"}–${p.homeScore ?? "?"}. No per-batter detail extracted.`,
+            : `Parsed final score ${p.awayScore ?? "?"}–${p.homeScore ?? "?"}. No per-batter detail extracted.`) +
+          warnNote,
       });
       onParsed(p);
     } catch (e) {

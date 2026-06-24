@@ -24,6 +24,7 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { battingLineError } from "@/lib/stats/validate";
 
 export const runtime = "nodejs";
 
@@ -297,6 +298,27 @@ function parseScheduleCsv(text: string): {
     if (row.home_score && !Number.isFinite(hScore)) {
       errors.push({ line: lineNum, message: `home_score "${row.home_score}" isn't a number` });
       continue;
+    }
+
+    // Forward-compatible guard: today this endpoint only imports
+    // schedule rows (no per-batter hit data), but if a CSV ever carries
+    // batting columns (h / hr / 2b / 3b — some box-score exports do),
+    // enforce the same H >= 2B+3B+HR invariant the stat engine relies
+    // on. A violating row would otherwise crash recalcLeague for the
+    // entire league. Inert for schedule CSVs, which have none of these
+    // columns.
+    const hitCols = ["h", "hr", "doubles", "triples", "2b", "3b"];
+    if (hitCols.some((c) => row[c])) {
+      const hitErr = battingLineError({
+        h: row.h,
+        hr: row.hr,
+        doubles: row.doubles ?? row["2b"],
+        triples: row.triples ?? row["3b"],
+      });
+      if (hitErr) {
+        errors.push({ line: lineNum, message: hitErr });
+        continue;
+      }
     }
 
     rows.push({

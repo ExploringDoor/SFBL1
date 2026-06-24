@@ -23,6 +23,7 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth } from "@/lib/firebase-admin";
+import { collectLineupErrors } from "@/lib/stats/validate";
 
 export const runtime = "nodejs";
 // Box-score parsing tops out around 30s for a 9-inning baseball game
@@ -315,9 +316,21 @@ Rules:
         { status: 502 },
       );
     }
+    // Flag (don't reject) batting lines where H < 2B+3B+HR. OCR can
+    // misread a digit, so this is the review flow's job to surface —
+    // not to block. The captain sees the warning on the review screen
+    // and corrects it before submit, which keeps the bad line from
+    // reaching storage and later crashing recalcLeague. This endpoint
+    // never writes Firestore, so flagging is purely advisory.
+    const warnings = [
+      ...collectLineupErrors(parsed?.awayBatters, "away"),
+      ...collectLineupErrors(parsed?.homeBatters, "home"),
+    ];
+
     return NextResponse.json({
       ok: true,
       parsed,
+      warnings,
       gameId: body.gameId,
       meta: { awayTeam, homeTeam, date, week, field },
     });
