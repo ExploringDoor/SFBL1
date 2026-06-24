@@ -53,6 +53,7 @@ export default async function HomePage() {
     upcoming,
     recent,
     teams,
+    teamAge,
     divisionGroups,
     ageGroups,
     scheme,
@@ -183,6 +184,7 @@ export default async function HomePage() {
                       date={g.date}
                       away={teamCardData(g.away_team_id, teams, g.away_score)}
                       home={teamCardData(g.home_team_id, teams, g.home_score)}
+                      ageGroup={teamAge[g.home_team_id] ?? teamAge[g.away_team_id]}
                     />
                   ))}
                 </div>
@@ -206,6 +208,7 @@ export default async function HomePage() {
                       away={previewTeamData(g.away_team_id, teams)}
                       home={previewTeamData(g.home_team_id, teams)}
                       isNext={i === 0}
+                      ageGroup={teamAge[g.home_team_id] ?? teamAge[g.away_team_id]}
                     />
                   ))}
                 </div>
@@ -401,6 +404,7 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
 
   const teams: Record<string, TeamMeta> = {};
   const ageSet = new Set<string>();
+  const teamAge: Record<string, string> = {};
   for (const d of teamsSnap.docs) {
     const data = d.data();
     teams[d.id] = {
@@ -410,7 +414,10 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
       logoUrl: data.logo_url ? String(data.logo_url) : null,
       division: data.division ? String(data.division) : undefined,
     };
-    if (data.ageGroup) ageSet.add(String(data.ageGroup));
+    if (data.ageGroup) {
+      ageSet.add(String(data.ageGroup));
+      teamAge[d.id] = String(data.ageGroup);
+    }
   }
   // Age groups present (COYBL, 7U-14U), ordered numerically. Drives the
   // homepage "browse by age" navigator in place of a cross-age standings
@@ -515,6 +522,7 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
     upcoming,
     recent,
     teams,
+    teamAge,
     divisionGroups,
     ageGroups,
     scheme: usePoints ? scheme : null,

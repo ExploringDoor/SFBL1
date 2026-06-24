@@ -296,6 +296,7 @@ export default async function ScoresPage({
                     away={teamCardData(g.away_team_id, teams, g.away_score)}
                     home={teamCardData(g.home_team_id, teams, g.home_score)}
                     badge={badgeFor(highlights.get(g.id))}
+                    ageGroup={ageOfGame(g) ?? undefined}
                   />
                 ))}
               </div>

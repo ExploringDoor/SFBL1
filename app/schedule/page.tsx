@@ -444,6 +444,10 @@ function DaySection({
                 date={g.date}
                 away={teamGameCardData(g.away_team_id, teams, g.away_score)}
                 home={teamGameCardData(g.home_team_id, teams, g.home_score)}
+                ageGroup={
+                  teams[g.home_team_id]?.ageGroup ??
+                  teams[g.away_team_id]?.ageGroup
+                }
               />
             );
           }
@@ -462,6 +466,10 @@ function DaySection({
               home={teamCardData(g.home_team_id, teams)}
               isNext={isFirstUpcomingDay && idx === 0 && g.status === "scheduled"}
               status={g.status}
+              ageGroup={
+                teams[g.home_team_id]?.ageGroup ??
+                teams[g.away_team_id]?.ageGroup
+              }
             />
           );
         })}

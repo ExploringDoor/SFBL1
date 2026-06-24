@@ -40,6 +40,9 @@ export interface GameCardProps {
    *  Shown alongside the FINAL pill. Used by the scores page to call
    *  out the closest / biggest / highest-scoring game of the week. */
   badge?: { emoji: string; label: string } | null;
+  /** Age group ("9U") for age-grouped tenants — shown as a small pill so
+   *  a mixed feed is readable. Omitted for flat leagues. */
+  ageGroup?: string;
 }
 
 export function GameCard({
@@ -50,6 +53,7 @@ export function GameCard({
   statusLabel = "FINAL",
   headline,
   badge,
+  ageGroup,
 }: GameCardProps) {
   const aWin = away.score > home.score;
   const hWin = home.score > away.score;
@@ -77,6 +81,22 @@ export function GameCard({
     >
       <div className="le-gc-card-hdr">
         <span className="le-gc-card-status">{statusLabel}</span>
+        {ageGroup && (
+          <span
+            style={{
+              display: "inline-block",
+              padding: "1px 8px",
+              borderRadius: 999,
+              background: "rgba(0,45,114,0.10)",
+              color: "var(--brand-primary)",
+              fontSize: 11,
+              fontWeight: 800,
+              letterSpacing: "0.03em",
+            }}
+          >
+            {ageGroup}
+          </span>
+        )}
         {badge && (
           <span
             className="le-gc-card-badge"

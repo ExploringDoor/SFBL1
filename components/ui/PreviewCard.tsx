@@ -31,6 +31,9 @@ export interface PreviewCardProps {
    *  cancelled games on the schedule view. Final games render via
    *  GameCard instead, so we don't expect "final" here. */
   status?: "scheduled" | "postponed" | "cancelled" | "final" | string;
+  /** Age group ("9U") for age-grouped tenants — small pill so a mixed
+   *  feed is readable. Omitted for flat leagues. */
+  ageGroup?: string;
 }
 
 export function PreviewCard({
@@ -41,6 +44,7 @@ export function PreviewCard({
   home,
   isNext = false,
   status,
+  ageGroup,
 }: PreviewCardProps) {
   const timeLabel = formatTimeLabel(date, field);
   const router = useRouter();
@@ -66,6 +70,23 @@ export function PreviewCard({
     >
       <div className="le-preview-time">
         {timeLabel}
+        {ageGroup && (
+          <span
+            style={{
+              display: "inline-block",
+              marginLeft: 8,
+              padding: "1px 8px",
+              borderRadius: 999,
+              background: "rgba(0,45,114,0.10)",
+              color: "var(--brand-primary)",
+              fontSize: 11,
+              fontWeight: 800,
+              letterSpacing: "0.03em",
+            }}
+          >
+            {ageGroup}
+          </span>
+        )}
         {badge && (
           <span
             className="le-preview-status"
