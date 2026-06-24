@@ -39,12 +39,29 @@ export default async function PowerRankingsPage() {
 
   return (
     <main className="container py-10">
-      <p style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.6, maxWidth: 640, marginBottom: 20 }}>
-        Ranked by <strong>RPI</strong> (Ratings Percentage Index), which weighs
-        strength of schedule: 25% your win %, 50% your opponents&rsquo; win %,
-        25% your opponents&rsquo; opponents&rsquo; win %. A strong-schedule team
-        can outrank a team with a flashier record.
-      </p>
+      <header style={{ marginBottom: 18 }}>
+        <p className="sec-eyebrow" style={{ color: "var(--brand-primary)" }}>
+          Strength of Schedule
+        </p>
+        <h1
+          className="font-display"
+          style={{
+            fontSize: "clamp(34px, 5vw, 52px)",
+            lineHeight: 0.97,
+            color: "var(--text-strong)",
+            margin: 0,
+          }}
+        >
+          Power Rankings
+        </h1>
+        <p style={{ marginTop: 10, color: "var(--muted)", fontSize: 14, lineHeight: 1.55, maxWidth: 660 }}>
+          Ranked by <strong>RPI</strong> (Ratings Percentage Index), which
+          rewards <strong>who you beat</strong>, not just how many: 25% your
+          win&nbsp;%, 50% your opponents&rsquo; win&nbsp;%, 25% your
+          opponents&rsquo; opponents&rsquo; win&nbsp;%. A team with a tough
+          schedule can outrank a team with a flashier record.
+        </p>
+      </header>
 
       {sections.length === 0 ? (
         <p style={{ color: "var(--muted)" }}>No ranked games yet.</p>
@@ -98,9 +115,9 @@ export default async function PowerRankingsPage() {
                     <tr>
                       <th>#</th>
                       <th className="text-left">Team</th>
-                      <th>W-L-T</th>
-                      <th>SOS</th>
-                      <th>RPI</th>
+                      <th>Record</th>
+                      <th title="Opponents' winning percentage">Str. of Sched.</th>
+                      <th title="Ratings Percentage Index">Rating</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -114,7 +131,9 @@ export default async function PowerRankingsPage() {
                           {r.w}-{r.l}
                           {r.t ? `-${r.t}` : ""}
                         </td>
-                        <td style={{ color: "var(--muted)" }}>{r.owp.toFixed(3)}</td>
+                        <td style={{ color: "var(--muted)" }}>
+                          {Math.round(r.owp * 100)}%
+                        </td>
                         <td style={{ fontWeight: 800, color: "var(--brand-primary)" }}>
                           {r.rpi.toFixed(3)}
                         </td>

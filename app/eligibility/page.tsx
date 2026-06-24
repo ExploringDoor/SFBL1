@@ -22,6 +22,8 @@ interface TeamRow {
   ageGroup?: string;
 }
 
+type EligRow = { name: string } & ReturnType<typeof computeEligibility>;
+
 export default async function EligibilityPage() {
   const tenantId = headers().get("x-tenant-id");
   if (!tenantId) {
@@ -89,6 +91,12 @@ export default async function EligibilityPage() {
     })
     .filter((s): s is NonNullable<typeof s> => s !== null);
 
+  // Group the team cards by age group (with a jump-nav) so the page reads
+  // like /standings for a multi-age league.
+  const ageList = [...new Set(sections.map((s) => s.team.ageGroup ?? "Other"))].sort(
+    (a, b) => (parseInt(a, 10) || 999) - (parseInt(b, 10) || 999),
+  );
+
   return (
     <main className="container py-10">
       <header style={{ marginBottom: 18 }}>
@@ -121,75 +129,139 @@ export default async function EligibilityPage() {
           after every game, and eligibility updates here automatically.
         </p>
       ) : (
-        <div style={{ display: "grid", gap: 28 }}>
-          {sections.map(({ team, ruleset, rows }) => (
-            <section
-              key={team.id}
-              style={{
-                border: "1px solid var(--border)",
-                borderRadius: 12,
-                overflow: "hidden",
-                background: "var(--card)",
-              }}
+        <>
+          {ageList.length > 1 && (
+            <nav
+              aria-label="Jump to age group"
+              style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 22 }}
             >
-              <div
-                style={{
-                  padding: "14px 18px",
-                  borderBottom: "1px solid var(--border)",
-                  display: "flex",
-                  alignItems: "baseline",
-                  gap: 10,
-                  flexWrap: "wrap",
-                }}
-              >
-                <h2
-                  className="font-display"
-                  style={{ fontSize: 22, color: "var(--brand-primary)" }}
+              {ageList.map((ag) => (
+                <a
+                  key={ag}
+                  href={`#age-${ag}`}
+                  style={{
+                    display: "inline-block",
+                    padding: "6px 14px",
+                    borderRadius: 999,
+                    border: "1px solid var(--border)",
+                    background: "var(--card)",
+                    color: "var(--brand-primary)",
+                    fontWeight: 800,
+                    fontSize: 13,
+                    textDecoration: "none",
+                  }}
                 >
-                  {team.name}
+                  {ag}
+                </a>
+              ))}
+            </nav>
+          )}
+          {ageList.map((ag) => (
+            <div
+              key={ag}
+              id={`age-${ag}`}
+              style={{ marginBottom: 30, scrollMarginTop: 16 }}
+            >
+              {ageList.length > 1 && (
+                <h2
+                  className="font-barlow"
+                  style={{
+                    fontSize: 24,
+                    fontWeight: 900,
+                    textTransform: "uppercase",
+                    color: "var(--brand-primary)",
+                    borderBottom: "3px solid var(--brand-primary)",
+                    paddingBottom: 6,
+                    marginBottom: 14,
+                  }}
+                >
+                  {ag}
                 </h2>
-                {team.ageGroup && (
-                  <span style={{ color: "var(--muted)", fontSize: 13, fontWeight: 700 }}>
-                    {team.ageGroup}
-                  </span>
-                )}
-                <span style={{ marginLeft: "auto", color: "var(--muted)", fontSize: 12 }}>
-                  {ruleSummary(ruleset)}
-                </span>
+              )}
+              <div style={{ display: "grid", gap: 20 }}>
+                {sections
+                  .filter((s) => (s.team.ageGroup ?? "Other") === ag)
+                  .map((s) => (
+                    <TeamPitchSection key={s.team.id} section={s} />
+                  ))}
               </div>
-              <div className="overflow-x-auto">
-                <table className="s-tbl">
-                  <thead>
-                    <tr>
-                      <th className="text-left">Pitcher</th>
-                      <th className="text-left">Status</th>
-                      <th>Next Eligible</th>
-                      <th>Last Outing</th>
-                      <th>Pitches</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((r) => (
-                      <tr key={r.name}>
-                        <td className="text-left" style={{ fontWeight: 700 }}>
-                          {r.name}
-                        </td>
-                        <td className="text-left">
-                          <StatusBadge status={r.status} />
-                        </td>
-                        <td>{r.status === "eligible" ? "—" : fmtDate(r.nextEligibleDate)}</td>
-                        <td>{r.lastOuting ? fmtDate(r.lastOuting.date) : "—"}</td>
-                        <td>{r.lastOuting ? r.pitchesLast : "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
+            </div>
           ))}
-        </div>
+        </>
       )}
     </main>
+  );
+}
+
+function TeamPitchSection({
+  section,
+}: {
+  section: { team: TeamRow; ruleset: PitchCountRuleset; rows: EligRow[] };
+}) {
+  const { team, ruleset, rows } = section;
+  return (
+    <section
+      style={{
+        border: "1px solid var(--border)",
+        borderRadius: 12,
+        overflow: "hidden",
+        background: "var(--card)",
+      }}
+    >
+      <div
+        style={{
+          padding: "14px 18px",
+          borderBottom: "1px solid var(--border)",
+          display: "flex",
+          alignItems: "baseline",
+          gap: 10,
+          flexWrap: "wrap",
+        }}
+      >
+        <h3
+          className="font-display"
+          style={{ fontSize: 22, color: "var(--brand-primary)", margin: 0 }}
+        >
+          {team.name}
+        </h3>
+        {team.ageGroup && (
+          <span style={{ color: "var(--muted)", fontSize: 13, fontWeight: 700 }}>
+            {team.ageGroup}
+          </span>
+        )}
+        <span style={{ marginLeft: "auto", color: "var(--muted)", fontSize: 12 }}>
+          {ruleSummary(ruleset)}
+        </span>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="s-tbl">
+          <thead>
+            <tr>
+              <th className="text-left">Pitcher</th>
+              <th className="text-left">Status</th>
+              <th>Next Eligible</th>
+              <th>Last Outing</th>
+              <th>Pitches</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.name}>
+                <td className="text-left" style={{ fontWeight: 700 }}>
+                  {r.name}
+                </td>
+                <td className="text-left">
+                  <StatusBadge status={r.status} />
+                </td>
+                <td>{r.status === "eligible" ? "—" : fmtDate(r.nextEligibleDate)}</td>
+                <td>{r.lastOuting ? fmtDate(r.lastOuting.date) : "—"}</td>
+                <td>{r.lastOuting ? r.pitchesLast : "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
 
