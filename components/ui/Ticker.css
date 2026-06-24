@@ -103,6 +103,51 @@ body.ticker-hidden #score-ticker {
   }
 }
 
+/* Age-group filter dropdown (COYBL) — a compact pinned control between
+ * the league label and the scrolling scores. Hidden for flat leagues
+ * (the component only renders it when games carry age groups). */
+.st-age-select {
+  flex-shrink: 0;
+  align-self: center;
+  margin: 0 10px;
+  background: rgba(0, 0, 0, 0.25);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 6px;
+  max-width: 120px;
+  cursor: pointer;
+}
+/* The open dropdown list renders on a white menu — keep options dark. */
+.st-age-select option {
+  color: #111111;
+}
+@media (max-width: 700px) {
+  .st-age-select {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    margin: 0 6px;
+  }
+}
+
+/* Empty state when a selected age has no games loaded. */
+.st-empty {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.6);
+  white-space: nowrap;
+}
+
 .st-scroll {
   flex: 1;
   /* Horizontal pan: user drags / swipes / scroll-wheels through the

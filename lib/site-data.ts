@@ -13,6 +13,7 @@ interface TeamMeta {
   color?: string;
   logoUrl?: string | null;
   division?: string | null;
+  ageGroup?: string;
 }
 
 // Closes H10. The layout fires loadTickerGames(tenantId) on EVERY
@@ -78,6 +79,7 @@ export async function loadTickerGames(tenantId: string): Promise<TickerGame[]> {
       color: data.color ? String(data.color) : undefined,
       logoUrl: data.logo_url ? String(data.logo_url) : null,
       division: data.division ? String(data.division) : null,
+      ageGroup: data.ageGroup ? String(data.ageGroup) : undefined,
     };
   }
 
@@ -139,16 +141,46 @@ export async function loadTickerGames(tenantId: string): Promise<TickerGame[]> {
         !isSecondaryDivision(g.home_team_id),
     );
 
-  const finals = all
-    .filter((g) => g.status === "final" || g.status === "approved")
-    .sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""))
-    .slice(0, 4)
-    .reverse();
+  // Age-grouped tenants (COYBL) want every age group represented so the
+  // ticker's per-age filter always has games to show — cap N per age
+  // instead of taking the global most-recent N (which would skew to
+  // whatever age played last). Flat tenants keep the original window.
+  const ageOf = (g: { home_team_id: string; away_team_id: string }): string | null =>
+    teamMeta[g.home_team_id]?.ageGroup ??
+    teamMeta[g.away_team_id]?.ageGroup ??
+    null;
+  const hasAge = Object.values(teamMeta).some((t) => t.ageGroup);
+  function capPerAge<T extends { home_team_id: string; away_team_id: string }>(
+    list: T[],
+    n: number,
+  ): T[] {
+    const seen = new Map<string, number>();
+    const out: T[] = [];
+    for (const g of list) {
+      const a = ageOf(g);
+      if (a) {
+        const c = seen.get(a) ?? 0;
+        if (c >= n) continue;
+        seen.set(a, c + 1);
+      }
+      out.push(g);
+    }
+    return out;
+  }
 
-  const upcoming = all
+  const finalsSorted = all
+    .filter((g) => g.status === "final" || g.status === "approved")
+    .sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
+  const upcomingSorted = all
     .filter((g) => g.status === "scheduled")
-    .sort((a, b) => (a.date ?? "").localeCompare(b.date ?? ""))
-    .slice(0, 8);
+    .sort((a, b) => (a.date ?? "").localeCompare(b.date ?? ""));
+
+  const finals = (hasAge ? capPerAge(finalsSorted, 3) : finalsSorted.slice(0, 4))
+    .slice(0, 40)
+    .reverse();
+  const upcoming = (
+    hasAge ? capPerAge(upcomingSorted, 3) : upcomingSorted.slice(0, 8)
+  ).slice(0, 40);
 
   const result: TickerGame[] = [...finals, ...upcoming].map((g) => ({
     id: g.id,
@@ -162,6 +194,7 @@ export async function loadTickerGames(tenantId: string): Promise<TickerGame[]> {
     home_team: teamMeta[g.home_team_id] ?? { name: g.home_team_id },
     away_record: recordByTeam.get(g.away_team_id),
     home_record: recordByTeam.get(g.home_team_id),
+    ageGroup: ageOf(g) ?? undefined,
   }));
   tickerCache.set(tenantId, {
     games: result,

@@ -18,7 +18,7 @@
 // game list is wide; the user pans manually.
 
 import Link from "next/link";
-import { parseGameDate } from "@/lib/format-time";
+import { TickerTrack } from "./TickerTrack";
 import "./Ticker.css";
 
 export interface TickerGame {
@@ -51,6 +51,9 @@ export interface TickerGame {
   /** "5-2" / "8-3-1" — formatted by the data layer. */
   away_record?: string;
   home_record?: string;
+  /** Age group ("9U") for age-grouped tenants (COYBL). Drives the
+   *  ticker's age-filter dropdown; undefined for flat leagues. */
+  ageGroup?: string;
 }
 
 export interface TickerProps {
@@ -120,133 +123,11 @@ export function Ticker({
         </Link>
       )}
 
-      <div className="st-scroll">
-        <div className="st-track">
-          {games.map((g) => (
-            <TickerTile key={g.id} g={g} />
-          ))}
-        </div>
-      </div>
+      <TickerTrack games={games} />
 
       <Link href={scoresHref} className="st-full">
         Full Schedule »
       </Link>
     </div>
   );
-}
-
-function TickerTile({ g }: { g: TickerGame }) {
-  const done = isDone(g);
-  const aWin = done && (g.away_score ?? 0) > (g.home_score ?? 0);
-  const hWin = done && (g.home_score ?? 0) > (g.away_score ?? 0);
-
-  // Prefer the full team name everywhere — there's enough horizontal
-  // room in the ticker tile and it reads cleaner than 2–3-letter
-  // abbrevs which feel like league shorthand the user has to decode.
-  // Falls back to abbrev or computed initials only if no name.
-  const awayLabel =
-    g.away_team.name ||
-    g.away_team.abbrev ||
-    fallbackAbbrev(g.away_team_id, g.away_team.name);
-  const homeLabel =
-    g.home_team.name ||
-    g.home_team.abbrev ||
-    fallbackAbbrev(g.home_team_id, g.home_team.name);
-
-  // 3-column grid: abbrev | record | score. Each tile renders the
-  // datetime row spanning all 3 columns, then 6 cells (3 per team)
-  // as direct grid children. (Per-team logo column briefly lived
-  // here but Adam asked to drop it on 2026-05-14 — the leftmost
-  // ticker tile's tenant logo is enough visual anchor.)
-  return (
-    <Link href={`/games/${g.id}`} className="st-game">
-      <div className="st-game-inner">
-        <div className={"st-datetime" + (done ? " final" : "")}>
-          {statusLabel(g, done)}
-        </div>
-
-        <span
-          className={
-            "st-abbr" +
-            (aWin ? " winner" : done ? " loser" : " upcoming")
-          }
-        >
-          {awayLabel}
-        </span>
-        <span className="st-rec">
-          {g.away_record ? `(${g.away_record})` : ""}
-        </span>
-        <span
-          className={
-            "st-score" + (done ? (aWin ? " winner" : " loser") : "")
-          }
-        >
-          {done ? g.away_score : ""}
-        </span>
-
-        <span
-          className={
-            "st-abbr" +
-            (hWin ? " winner" : done ? " loser" : " upcoming")
-          }
-        >
-          {homeLabel}
-        </span>
-        <span className="st-rec">
-          {g.home_record ? `(${g.home_record})` : ""}
-        </span>
-        <span
-          className={
-            "st-score" + (done ? (hWin ? " winner" : " loser") : "")
-          }
-        >
-          {done ? g.home_score : ""}
-        </span>
-      </div>
-    </Link>
-  );
-}
-
-function isDone(g: TickerGame): boolean {
-  return (
-    (g.status === "final" || g.status === "approved") &&
-    g.away_score !== null &&
-    g.home_score !== null
-  );
-}
-
-function statusLabel(g: TickerGame, done: boolean): string {
-  if (g.status === "postponed") return "PPD";
-  if (done) return "FINAL";
-  if (g.status === "live") return "🔴 LIVE";
-  if (!g.date) return "TBD";
-  // Audit H1: parseGameDate keeps the calendar day stable for every
-  // viewer. site-data's combineDateTime only inserts a "T" when a
-  // start time exists, so a bare date means start time is TBD —
-  // render just the day, not a bogus UTC-midnight "12:00 AM".
-  const d = parseGameDate(g.date);
-  if (!d) return "TBD";
-  const day = d.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "numeric",
-    day: "numeric",
-  });
-  if (!g.date.includes("T")) return day;
-  const time = d.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-  });
-  return `${day} · ${time}`;
-}
-
-function fallbackAbbrev(id: string, name: string): string {
-  // Prefer the team's name initials over the doc-id slug.
-  const words = name.trim().split(/\s+/).filter(Boolean);
-  if (words.length >= 2) {
-    const a = words[0]?.[0] ?? "";
-    const b = words[1]?.[0] ?? "";
-    const c = words[2]?.[0] ?? "";
-    return (a + b + c).toUpperCase();
-  }
-  return (name.slice(0, 3) || id.slice(0, 3)).toUpperCase();
 }
