@@ -54,6 +54,7 @@ export default async function HomePage() {
     recent,
     teams,
     divisionGroups,
+    ageGroups,
     scheme,
     leagueName,
     seasonStats,
@@ -243,7 +244,67 @@ export default async function HomePage() {
                 year: "numeric",
               })}
             </p>
-            {standingsHasGames(divisionGroups) ? (
+            {ageGroups.length > 0 ? (
+              // Age-grouped tenants (COYBL): a cross-age standings table
+              // would rank 10U teams against 14U. Show an age-group
+              // navigator into the per-age standings instead.
+              <div>
+                <p
+                  style={{
+                    margin: "0 0 12px",
+                    fontSize: 13,
+                    color: "var(--muted)",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Pick an age group to see its standings:
+                </p>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(62px, 1fr))",
+                    gap: 8,
+                  }}
+                >
+                  {ageGroups.map((a) => (
+                    <Link
+                      key={a}
+                      href={`/standings#age-${a}`}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        padding: "12px 8px",
+                        borderRadius: 10,
+                        border: "1px solid rgba(0,0,0,0.12)",
+                        background: "#fff",
+                        color: "var(--brand-primary)",
+                        fontWeight: 900,
+                        fontSize: 16,
+                        letterSpacing: "0.02em",
+                        textDecoration: "none",
+                      }}
+                    >
+                      {a}
+                    </Link>
+                  ))}
+                </div>
+                <Link
+                  href="/standings"
+                  style={{
+                    display: "inline-block",
+                    marginTop: 14,
+                    fontSize: 13,
+                    fontWeight: 800,
+                    letterSpacing: "0.04em",
+                    color: "var(--brand-primary)",
+                    textDecoration: "none",
+                  }}
+                >
+                  Full standings →
+                </Link>
+              </div>
+            ) : standingsHasGames(divisionGroups) ? (
               <StandingsTable
                 groups={divisionGroups}
                 teamMeta={teams}
@@ -328,6 +389,7 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
   ]);
 
   const teams: Record<string, TeamMeta> = {};
+  const ageSet = new Set<string>();
   for (const d of teamsSnap.docs) {
     const data = d.data();
     teams[d.id] = {
@@ -337,7 +399,14 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
       logoUrl: data.logo_url ? String(data.logo_url) : null,
       division: data.division ? String(data.division) : undefined,
     };
+    if (data.ageGroup) ageSet.add(String(data.ageGroup));
   }
+  // Age groups present (COYBL, 7U-14U), ordered numerically. Drives the
+  // homepage "browse by age" navigator in place of a cross-age standings
+  // table that would mix 10U and 14U teams together.
+  const ageGroups = [...ageSet].sort(
+    (a, b) => (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0),
+  );
 
   const allGameItems: ScheduleItem[] = gamesSnap.docs.map((d) => {
     const data = d.data();
@@ -436,6 +505,7 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
     recent,
     teams,
     divisionGroups,
+    ageGroups,
     scheme: usePoints ? scheme : null,
     leagueName: config?.name ?? "League",
     seasonStats,
