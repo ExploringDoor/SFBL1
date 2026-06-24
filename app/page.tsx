@@ -83,6 +83,17 @@ export default async function HomePage() {
         logoUrl={
           config?.theme?.banner_url ?? config?.theme?.logo_url ?? null
         }
+        ctas={
+          config?.flags?.registration_open
+            ? [
+                {
+                  label: "Register Your Team →",
+                  href: "/team-registration",
+                  variant: "primary",
+                },
+              ]
+            : []
+        }
       />
       {/* "PLAYERS — JOIN THE LIST" registration alert now sits
           UNDER the hero — matches LBDC's existing site layout

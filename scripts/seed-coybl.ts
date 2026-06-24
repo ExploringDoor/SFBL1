@@ -88,6 +88,7 @@ const LEAGUE_CONFIG = {
     add: [
       { label: "Pitch Counts", href: "/eligibility" },
       { label: "Power Rankings", href: "/power-rankings" },
+      { label: "Rules", href: "/rules" },
     ],
   },
   // Standings: straight W/L (PCT-based default — no points scheme).
