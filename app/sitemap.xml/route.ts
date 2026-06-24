@@ -42,24 +42,44 @@ export async function GET() {
   type Url = { loc: string; lastmod?: string; changefreq?: string };
   const urls: Url[] = [];
 
-  // Static high-traffic pages — daily refresh hint.
-  for (const p of [
-    "/",
-    "/schedule",
-    "/scores",
-    "/standings",
-    "/teams",
-    "/players",
-    "/photos",
-    "/rules",
-    "/history",
-    "/fields",
-    "/sfbl-info",
-    "/player-registration",
-    "/team-registration",
-    "/team-waiver-form",
-    "/umpire-evaluation-form",
-  ]) {
+  // Static pages — tenant-aware so we don't list routes a tenant hides
+  // (COYBL drops stats/photos/history/etc.) or omit its real pages
+  // (Pitch Counts, Power Rankings, Tournaments). Mirrors the nav config.
+  const cfg = tenant.config;
+  const navHide = new Set(
+    (cfg.nav?.hide ?? [])
+      .filter((s): s is string => typeof s === "string")
+      .map((s) => s.toLowerCase()),
+  );
+  const statsOn = cfg.flags?.stats_enabled !== false;
+  const isSfbl = tenantId === "sfbl";
+
+  const staticPages: string[] = ["/", "/schedule", "/scores", "/standings", "/teams"];
+  if (statsOn) staticPages.push("/players");
+  // Optional pages, each gated by its nav-hide label.
+  const optional: [string, string][] = [
+    ["/photos", "photos"],
+    ["/rules", "rules"],
+    ["/history", "history"],
+    ["/player-registration", "player registration"],
+    ["/team-registration", "team registration"],
+    ["/team-waiver-form", "team waiver"],
+    ["/umpire-evaluation-form", "umpire evaluation"],
+  ];
+  for (const [href, label] of optional) {
+    if (!navHide.has(label)) staticPages.push(href);
+  }
+  // SFBL-only league-info pages.
+  if (isSfbl) staticPages.push("/fields", "/sfbl-info");
+  // Tenant-added nav links (COYBL: /eligibility, /power-rankings, /rules).
+  for (const l of cfg.nav?.add ?? []) {
+    if (l?.href && !staticPages.includes(l.href)) staticPages.push(l.href);
+  }
+  // Tournaments page when the tenant lists events.
+  if ((cfg.tournaments?.events?.length ?? 0) > 0 && !staticPages.includes("/tournaments")) {
+    staticPages.push("/tournaments");
+  }
+  for (const p of staticPages) {
     urls.push({ loc: `${origin}${p}`, lastmod: now, changefreq: "daily" });
   }
 
@@ -73,9 +93,11 @@ export async function GET() {
     });
   }
 
-  // Player pages — skip walk-ons until admin approves (avoids Google
-  // indexing typo'd or rejected entries).
+  // Player pages — skip entirely for stats-off tenants (COYBL has no
+  // public player pages; /players/[id] 404s there). Otherwise skip
+  // walk-ons until admin approves (avoids indexing typo'd entries).
   for (const d of players.docs) {
+    if (!statsOn) break;
     const data = d.data();
     if (data.active === false) continue;
     if (data.walk_on === true) continue;
