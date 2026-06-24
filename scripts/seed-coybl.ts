@@ -83,6 +83,12 @@ const LEAGUE_CONFIG = {
       "sponsors",
       "store",
     ],
+    // COYBL-specific primary nav items (the pitch-count eligibility tracker
+    // + power rankings). Inserted before the Register/More dropdowns.
+    add: [
+      { label: "Pitch Counts", href: "/eligibility" },
+      { label: "Power Rankings", href: "/power-rankings" },
+    ],
   },
   // Standings: straight W/L (PCT-based default — no points scheme).
   // Tournaments run on Five Tool — list specific events that link out.

@@ -119,6 +119,10 @@ export interface LeagueConfig {
   // PublicLeagueConfig so the layout can pass it to <Nav>.
   nav?: {
     hide?: string[];
+    // Extra top-level links to add for this tenant (e.g. COYBL's
+    // "Pitch Counts" + "Power Rankings"). Inserted before the first
+    // dropdown so they read as primary nav, not buried in "More".
+    add?: { label: string; href: string }[];
   };
 
   // Captain UX toggles. `passwordless` skips the sign-in/magic-link

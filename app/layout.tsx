@@ -147,6 +147,7 @@ export default async function RootLayout({
   let themeAccent: string | undefined;
   let themeSecondary: string | undefined;
   let navHideLabels: string[] = [];
+  let navAddLinks: { label: string; href: string }[] = [];
   if (configJson) {
     try {
       const cfg = JSON.parse(configJson) as {
@@ -158,7 +159,7 @@ export default async function RootLayout({
           secondary?: string;
           logo_url?: string;
         };
-        nav?: { hide?: string[] };
+        nav?: { hide?: string[]; add?: { label: string; href: string }[] };
       };
       leagueName = cfg.name ?? null;
       leagueAbbrev = cfg.abbrev;
@@ -173,6 +174,13 @@ export default async function RootLayout({
         navHideLabels = cfg.nav!.hide!
           .filter((s): s is string => typeof s === "string")
           .map((s) => s.toLowerCase());
+      }
+      // Tenant-added nav links (e.g. COYBL "Pitch Counts" + "Power Rankings").
+      if (Array.isArray(cfg.nav?.add)) {
+        navAddLinks = cfg.nav!.add!.filter(
+          (x): x is { label: string; href: string } =>
+            !!x && typeof x.label === "string" && typeof x.href === "string",
+        );
       }
     } catch {
       /* fall through */
@@ -296,6 +304,7 @@ export default async function RootLayout({
               tenantShort={leagueAbbrev ?? leagueName ?? "League"}
               logoUrl={null}
               hideLabels={navHideLabels}
+              addLinks={navAddLinks}
               rightSlot={<ProfileButton tenantId={tenantId} />}
             />
           ) : null}
@@ -312,6 +321,7 @@ export default async function RootLayout({
           {tenantId ? (
             <PwaTabBar
               hideLabels={navHideLabels}
+              addLinks={navAddLinks}
               tenantShort={leagueAbbrev ?? leagueName ?? undefined}
             />
           ) : null}

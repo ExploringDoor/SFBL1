@@ -30,7 +30,7 @@ export interface PublicLeagueConfig {
   // Per-tenant nav customization (label hide list). Mirrored from
   // /leagues/<slug>.nav.hide. The layout reads this off the x-tenant-
   // config-json header and passes it to <Nav> + <PwaTabBar>.
-  nav?: { hide?: string[] };
+  nav?: { hide?: string[]; add?: { label: string; href: string }[] };
   // Captain access UX toggle. See LeagueConfig["captain"].
   captain?: { passwordless?: boolean };
   // Admin access UX toggle. Only the boolean — the actual password

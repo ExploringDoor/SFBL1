@@ -35,6 +35,8 @@ export interface NavProps {
    *  per-tenant customization (e.g. LBDC hides "news"). Matches
    *  both top-level links and More-dropdown children. */
   hideLabels?: string[];
+  /** Extra top-level links to add (per-tenant config.nav.add). */
+  addLinks?: NavLink[];
   /** Right-hand slot — typically the ProfileButton. Falls back to a
    *  "Sign in" link when omitted. */
   rightSlot?: React.ReactNode;
@@ -48,6 +50,7 @@ export function Nav({
   logoUrl,
   links: linksProp = DEFAULT_LINKS,
   hideLabels,
+  addLinks,
   rightSlot,
 }: NavProps) {
   // Per-tenant nav customization (hide-list, "About <tenant>" relabel,
@@ -57,6 +60,7 @@ export function Nav({
     linksProp,
     tenantShort,
     hideLabels,
+    addLinks,
   );
   const pathname = usePathname();
   const [mobOpen, setMobOpen] = useState(false);

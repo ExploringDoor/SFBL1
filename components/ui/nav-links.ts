@@ -89,6 +89,7 @@ export function computeNavLinks(
   linksProp: NavLink[],
   tenantShort: string,
   hideLabels?: string[],
+  addLinks?: NavLink[],
 ): NavLink[] {
   const hide = new Set((hideLabels ?? []).map((s) => s.toLowerCase()));
   function relabel(l: NavLink): NavLink {
@@ -118,21 +119,31 @@ export function computeNavLinks(
         return relabel(l);
       });
   const SFBL_ONLY_LABELS = new Set(["SFBL", "Player of the Week", "Captain"]);
-  return tenantShort === "SFBL"
-    ? links
-    : links
-        .filter((l) => !SFBL_ONLY_LABELS.has(l.label))
-        .map((l) =>
-          l.children
-            ? {
-                ...l,
-                children: l.children.filter(
-                  (c) => !SFBL_ONLY_LABELS.has(c.label),
-                ),
-              }
-            : l,
-        )
-        .filter((l) => !l.children || l.children.length > 0);
+  const result =
+    tenantShort === "SFBL"
+      ? links
+      : links
+          .filter((l) => !SFBL_ONLY_LABELS.has(l.label))
+          .map((l) =>
+            l.children
+              ? {
+                  ...l,
+                  children: l.children.filter(
+                    (c) => !SFBL_ONLY_LABELS.has(c.label),
+                  ),
+                }
+              : l,
+          )
+          .filter((l) => !l.children || l.children.length > 0);
+
+  // Tenant-added links (config.nav.add) — insert before the first
+  // dropdown (Register/More) so they read as primary nav items.
+  if (addLinks && addLinks.length) {
+    const idx = result.findIndex((l) => l.children && l.children.length > 0);
+    const at = idx === -1 ? result.length : idx;
+    return [...result.slice(0, at), ...addLinks, ...result.slice(at)];
+  }
+  return result;
 }
 
 /** Emoji icon for a nav destination — used by the mobile menu tiles
@@ -168,6 +179,8 @@ export function iconFor(href: string): string {
     "/admin": "◉",
     "/tournaments": "🥎",
     "/availability": "🗓️",
+    "/eligibility": "🛡️",
+    "/power-rankings": "📈",
   };
   return ICONS[href] ?? "•";
 }

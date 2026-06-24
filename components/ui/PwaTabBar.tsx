@@ -47,9 +47,15 @@ export interface PwaTabBarProps {
   hideLabels?: string[];
   /** Tenant short name — drives "About <abbrev>" relabel. */
   tenantShort?: string;
+  /** Extra top-level links to add (per-tenant config.nav.add). */
+  addLinks?: NavLink[];
 }
 
-export function PwaTabBar({ hideLabels, tenantShort }: PwaTabBarProps = {}) {
+export function PwaTabBar({
+  hideLabels,
+  tenantShort,
+  addLinks,
+}: PwaTabBarProps = {}) {
   const pathname = usePathname() ?? "/";
   const [isStandalone, setIsStandalone] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -59,7 +65,12 @@ export function PwaTabBar({ hideLabels, tenantShort }: PwaTabBarProps = {}) {
   // Standings) are excluded so they don't repeat. Remaining single
   // links collect under "Browse"; each dropdown becomes its own section
   // (SFBL, Register, More) — same grouping as the desktop nav.
-  const navLinks = computeNavLinks(DEFAULT_LINKS, tenantShort ?? "", hideLabels);
+  const navLinks = computeNavLinks(
+    DEFAULT_LINKS,
+    tenantShort ?? "",
+    hideLabels,
+    addLinks,
+  );
   const bottomHrefs = new Set(
     SLOTS.map((s) => s.href).filter((h): h is string => !!h),
   );
