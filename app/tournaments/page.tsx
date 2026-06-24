@@ -13,8 +13,13 @@
 
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
+import type { PublicLeagueConfig } from "@/lib/tenants";
 
 export const dynamic = "force-dynamic";
+
+type TournamentEvent = NonNullable<
+  NonNullable<PublicLeagueConfig["tournaments"]>["events"]
+>[number];
 
 interface TournamentMeta {
   name: string;
@@ -62,6 +67,160 @@ async function loadTournaments(tenantId: string): Promise<{
   return { meta: metaArr, games };
 }
 
+// Config-driven tournament directory — event cards for leagues that
+// link out to externally-run tournaments (COYBL → Five Tool charity
+// events). Shows date window / venue / ages / cost / charity note and a
+// register button per event.
+function EventsView({
+  events,
+  fallbackUrl,
+  eyebrow,
+}: {
+  events: TournamentEvent[];
+  fallbackUrl?: string;
+  eyebrow?: string;
+}) {
+  return (
+    <main className="container py-10">
+      <header className="mb-8">
+        {eyebrow && (
+          <p className="sec-eyebrow" style={{ color: "var(--brand-primary)" }}>
+            {eyebrow}
+          </p>
+        )}
+        <h1
+          className="font-display"
+          style={{
+            fontSize: "clamp(40px, 6vw, 64px)",
+            lineHeight: 0.95,
+            color: "var(--text-strong)",
+            margin: 0,
+          }}
+        >
+          Tournaments
+        </h1>
+        <p style={{ marginTop: 10, color: "var(--muted)", maxWidth: 680, lineHeight: 1.5 }}>
+          Our teams compete in these tournaments around Central Ohio — tap an
+          event to register or get details.
+        </p>
+      </header>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+          gap: 16,
+        }}
+      >
+        {events.map((e, i) => (
+          <EventCard key={i} e={e} fallbackUrl={fallbackUrl} />
+        ))}
+      </div>
+    </main>
+  );
+}
+
+function EventCard({
+  e,
+  fallbackUrl,
+}: {
+  e: TournamentEvent;
+  fallbackUrl?: string;
+}) {
+  const href = e.url || fallbackUrl || null;
+  const rows: { icon: string; text: string }[] = [];
+  if (e.when) rows.push({ icon: "📅", text: e.when });
+  if (e.location) rows.push({ icon: "📍", text: e.location });
+  if (e.ages) rows.push({ icon: "👤", text: e.ages });
+  if (e.cost) rows.push({ icon: "💵", text: e.cost });
+
+  return (
+    <section
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        background: "white",
+        border: "1px solid rgba(0,0,0,0.08)",
+        borderRadius: 14,
+        padding: "20px 20px 18px",
+        boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+      }}
+    >
+      <h2
+        className="font-display"
+        style={{
+          margin: 0,
+          fontSize: 21,
+          lineHeight: 1.15,
+          color: "var(--text-strong)",
+          letterSpacing: "-0.01em",
+        }}
+      >
+        {e.name}
+      </h2>
+
+      {e.note && (
+        <span
+          style={{
+            display: "inline-block",
+            alignSelf: "flex-start",
+            marginTop: 10,
+            padding: "3px 10px",
+            borderRadius: 999,
+            background: "rgba(200,16,46,0.08)",
+            color: "var(--brand-accent, #c8102e)",
+            fontSize: 11,
+            fontWeight: 800,
+            letterSpacing: "0.04em",
+            textTransform: "uppercase",
+          }}
+        >
+          ❤️ {e.note}
+        </span>
+      )}
+
+      <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 7 }}>
+        {rows.map((r, i) => (
+          <div
+            key={i}
+            style={{ display: "flex", gap: 8, fontSize: 14, color: "var(--text-strong)" }}
+          >
+            <span aria-hidden style={{ width: 18, flexShrink: 0 }}>
+              {r.icon}
+            </span>
+            <span>{r.text}</span>
+          </div>
+        ))}
+      </div>
+
+      {href && (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            marginTop: 18,
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+            padding: "10px 16px",
+            borderRadius: 10,
+            background: "var(--brand-primary)",
+            color: "#fff",
+            fontWeight: 800,
+            fontSize: 14,
+            letterSpacing: "0.02em",
+            textDecoration: "none",
+          }}
+        >
+          Register / Info →
+        </a>
+      )}
+    </section>
+  );
+}
+
 function formatDate(yyyyMmDd: string): string {
   if (!yyyyMmDd) return "";
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(yyyyMmDd);
@@ -77,12 +236,35 @@ function formatDate(yyyyMmDd: string): string {
 }
 
 export default async function TournamentsPage() {
-  const tenantId = headers().get("x-tenant-id");
+  const h = headers();
+  const tenantId = h.get("x-tenant-id");
+  const config = (() => {
+    const raw = h.get("x-tenant-config-json");
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as PublicLeagueConfig;
+    } catch {
+      return null;
+    }
+  })();
   if (!tenantId) {
     return (
       <main className="container py-12">
         <p>Visit a tenant subdomain.</p>
       </main>
+    );
+  }
+
+  // Config-driven event list (e.g. COYBL's Five Tool charity slate).
+  // Takes precedence over the Firestore tournament_games model (LBDC).
+  const events = config?.tournaments?.events ?? [];
+  if (events.length > 0) {
+    return (
+      <EventsView
+        events={events}
+        fallbackUrl={config?.tournaments?.url}
+        eyebrow={config?.name}
+      />
     );
   }
 

@@ -32,6 +32,18 @@ const PREVIEW_TTL_SECONDS = 4 * 60 * 60;
 // by setting LE_PREVIEW_KEY in Vercel any time.
 const PREVIEW_KEY = process.env.LE_PREVIEW_KEY || "lbdc-preview-2026";
 
+// HTTP header values are ByteString (Latin1, 0-255) only. A tenant
+// config containing non-ASCII — e.g. COYBL's tournament names with an
+// em-dash ("On Our Sleeves — Breaking Stigmas") — would throw when set
+// as the x-tenant-config-json header. Escape every non-ASCII char to a
+// \uXXXX sequence; the result is still valid JSON, so JSON.parse on the
+// server side decodes it straight back to the original character.
+function asciiSafeJson(obj: unknown): string {
+  return JSON.stringify(obj).replace(/[\u0080-\uFFFF]/g, (c) =>
+    "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0"),
+  );
+}
+
 export async function middleware(req: NextRequest) {
   const host = req.headers.get("host") ?? "";
   const parsed = parseHost(host);
@@ -78,7 +90,7 @@ export async function middleware(req: NextRequest) {
       headers.set("x-tenant-id", overrideTenant.id);
       headers.set(
         "x-tenant-config-json",
-        JSON.stringify(toPublicConfig(overrideTenant.config)),
+        asciiSafeJson(toPublicConfig(overrideTenant.config)),
       );
       const res = NextResponse.next({ request: { headers } });
       // Persist (or refresh) the cookie only when the query
@@ -127,7 +139,7 @@ export async function middleware(req: NextRequest) {
   // Strip freeform/PII fields (billing.notes, payment dates) before they
   // ride along on every request header. Server components needing full
   // billing detail should re-fetch /leagues/{id} directly.
-  requestHeaders.set("x-tenant-config-json", JSON.stringify(toPublicConfig(tenant.config)));
+  requestHeaders.set("x-tenant-config-json", asciiSafeJson(toPublicConfig(tenant.config)));
   // Forward the path so the layout can SSR per-page chrome (header banner)
   // without a client/server hydration mismatch.
   requestHeaders.set("x-pathname", req.nextUrl.pathname);

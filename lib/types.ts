@@ -125,6 +125,22 @@ export interface LeagueConfig {
     add?: { label: string; href: string }[];
   };
 
+  // Tournaments the league runs or links out to (COYBL's Five Tool
+  // charity slate). Rendered on /tournaments as event cards with a
+  // register link; `url` is the default register/info target.
+  tournaments?: {
+    url?: string;
+    events?: {
+      name: string;
+      when?: string;
+      location?: string;
+      cost?: string;
+      ages?: string;
+      note?: string;
+      url?: string;
+    }[];
+  };
+
   // Captain UX toggles. `passwordless` skips the sign-in/magic-link
   // flow entirely: the captain landing page shows a team picker
   // dropdown and on selection the client gets a Firebase custom

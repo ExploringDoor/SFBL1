@@ -31,6 +31,8 @@ export interface PublicLeagueConfig {
   // /leagues/<slug>.nav.hide. The layout reads this off the x-tenant-
   // config-json header and passes it to <Nav> + <PwaTabBar>.
   nav?: { hide?: string[]; add?: { label: string; href: string }[] };
+  // Tournaments the league runs/links to — rendered on /tournaments.
+  tournaments?: LeagueConfig["tournaments"];
   // Captain access UX toggle. See LeagueConfig["captain"].
   captain?: { passwordless?: boolean };
   // Admin access UX toggle. Only the boolean — the actual password
@@ -58,6 +60,7 @@ export function toPublicConfig(c: LeagueConfig): PublicLeagueConfig {
     sponsors: c.sponsors,
     social: c.social,
     nav: c.nav,
+    tournaments: c.tournaments,
     captain: c.captain,
     // Strip `admin.password` — only forward whether passwordless is
     // enabled. The actual password lives in the source LeagueConfig
