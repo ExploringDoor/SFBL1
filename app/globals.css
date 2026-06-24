@@ -4270,8 +4270,18 @@ body {
   color: var(--muted);
   cursor: pointer;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 15px;
+  line-height: 1;
 }
 .dn-arrow:hover { color: var(--text-strong); border-color: var(--brand-primary); }
+.dn-arrow[aria-disabled="true"] {
+  opacity: 0.3;
+  pointer-events: none;
+}
 .dn-slots {
   display: flex;
   gap: 4px;

@@ -39,11 +39,27 @@ export function WeekRow({
   basePath: string;
 }) {
   if (weeks.length === 0) return null;
+  // Wire the prev/next arrows to the weeks on either side of the active
+  // one (they used to be dead <button>s). Disabled at the ends.
+  const activeIdx = weeks.findIndex((w) => w.active);
+  const prev = activeIdx > 0 ? weeks[activeIdx - 1] : null;
+  const next =
+    activeIdx >= 0 && activeIdx < weeks.length - 1 ? weeks[activeIdx + 1] : null;
   return (
     <div className="dn-row">
-      <button className="dn-arrow" type="button" aria-label="Previous">
-        ‹
-      </button>
+      {prev ? (
+        <Link
+          href={`${basePath}?week=${prev.startIso}`}
+          className="dn-arrow"
+          aria-label={`Previous week (Week ${prev.number})`}
+        >
+          ‹
+        </Link>
+      ) : (
+        <span className="dn-arrow" aria-disabled="true" aria-label="Previous week">
+          ‹
+        </span>
+      )}
       <div className="dn-slots">
         {weeks.map((w) => (
           <Link
@@ -56,9 +72,19 @@ export function WeekRow({
           </Link>
         ))}
       </div>
-      <button className="dn-arrow" type="button" aria-label="Next">
-        ›
-      </button>
+      {next ? (
+        <Link
+          href={`${basePath}?week=${next.startIso}`}
+          className="dn-arrow"
+          aria-label={`Next week (Week ${next.number})`}
+        >
+          ›
+        </Link>
+      ) : (
+        <span className="dn-arrow" aria-disabled="true" aria-label="Next week">
+          ›
+        </span>
+      )}
     </div>
   );
 }
