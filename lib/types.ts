@@ -125,6 +125,10 @@ export interface LeagueConfig {
     add?: { label: string; href: string }[];
   };
 
+  // Short "about / welcome" blurb for first-time visitors, shown on the
+  // home page. Plain text (one short paragraph).
+  about?: string;
+
   // Tournaments the league runs or links out to (COYBL's Five Tool
   // charity slate). Rendered on /tournaments as event cards with a
   // register link; `url` is the default register/info target.

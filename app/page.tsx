@@ -116,6 +116,28 @@ export default async function HomePage() {
           /leagues/<id>/news. */}
       <HomepageNews leagueId={tenantId} />
 
+      {/* "About" intro for first-time visitors — renders only when the
+          tenant config sets `about`. */}
+      {config?.about && (
+        <section className="sec" style={{ paddingBottom: 0 }}>
+          <div style={{ maxWidth: 880, margin: "0 auto", padding: "0 20px" }}>
+            <p className="sec-eyebrow" style={{ color: "var(--brand-primary)" }}>
+              Welcome
+            </p>
+            <p
+              style={{
+                fontSize: 17,
+                lineHeight: 1.65,
+                color: "var(--text-strong)",
+                margin: "6px 0 0",
+              }}
+            >
+              {config.about}
+            </p>
+          </div>
+        </section>
+      )}
+
       {/* Season highlights strip (Games / Runs / Teams / Top team)
           was removed per Adam — too noisy on the homepage, doesn't
           add information beyond what /standings already shows. The
