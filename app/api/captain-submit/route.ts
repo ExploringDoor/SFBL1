@@ -137,37 +137,20 @@ export async function POST(req: Request) {
   // independently. Admin reconciliation overwrites both as needed.
   try {
     if (captainTeamId) {
-      const subId = `${gameId}_${captainTeamId}`;
-      const subSnap = await db
-        .doc(`leagues/${leagueId}/box_score_submissions/${subId}`)
-        .get();
-      if (!subSnap.exists) {
-        return NextResponse.json(
-          { error: "No submission found for this captain" },
-          { status: 404 },
-        );
-      }
-      const sub = subSnap.data() as SubmissionDoc;
-      const side = sub.side;
-      // Side may be missing on legacy docs — derive from game.
+      // Load the game first — needed to derive the captain's side and to
+      // verify their team is actually in it.
       const gameSnap = await db
         .doc(`leagues/${leagueId}/games/${gameId}`)
         .get();
       if (!gameSnap.exists) {
-        return NextResponse.json(
-          { error: "Game not found" },
-          { status: 404 },
-        );
+        return NextResponse.json({ error: "Game not found" }, { status: 404 });
       }
       const game = gameSnap.data() ?? {};
 
       // Defense-in-depth: verify the captain's team is actually IN this
-      // game. The Firestore rules also gate this (via isCaptainOfDocGame
-      // on /box_score_submissions), but we re-check server-side. Without
-      // this, if the rules ever regress, a captain could submit a box
-      // score for a game their team isn't in — derived `side` would
-      // fall through to "away" and pollute the public box-score doc.
-      // Found 2026-05-05 by the DVSL Claude peer review.
+      // game (rules also gate this via isCaptainOfDocGame). Without it a
+      // regressed rule could let a captain pollute another game's box
+      // score. (DVSL peer review, 2026-05-05.)
       if (
         game.home_team_id !== captainTeamId &&
         game.away_team_id !== captainTeamId
@@ -177,11 +160,80 @@ export async function POST(req: Request) {
           { status: 403 },
         );
       }
+      const mySide: "home" | "away" =
+        game.home_team_id === captainTeamId ? "home" : "away";
 
-      const derivedSide =
-        side ??
-        (game.home_team_id === captainTeamId ? "home" : "away");
+      // Quick Score (audit C1, 2026-06): a score-only entry sends the
+      // final score in the request BODY and does NOT write a
+      // box_score_submissions doc. This endpoint previously ONLY read
+      // that doc, so Quick Score silently saved nothing (404) or
+      // re-promoted a stale score while the UI said "submitted". Accept
+      // the body values directly — the verified captain token authorizes
+      // it. Full box scores still come from the submission doc the editor
+      // writes.
+      const b = body as {
+        score_only?: unknown;
+        final_score?: unknown;
+        opp_score_only?: unknown;
+        opp_final_score?: unknown;
+      };
+      let sub: SubmissionDoc;
+      if (b.score_only === true) {
+        const myScore = Number(b.final_score);
+        if (!Number.isFinite(myScore) || myScore < 0) {
+          return NextResponse.json(
+            { error: "final_score must be a number ≥ 0" },
+            { status: 400 },
+          );
+        }
+        let oppScore: number | undefined;
+        if (b.opp_final_score != null && b.opp_final_score !== "") {
+          oppScore = Number(b.opp_final_score);
+          if (!Number.isFinite(oppScore) || oppScore < 0) {
+            return NextResponse.json(
+              { error: "opp_final_score must be a number ≥ 0" },
+              { status: 400 },
+            );
+          }
+        }
+        sub = {
+          game_id: gameId,
+          team_id: captainTeamId,
+          side: mySide,
+          score_only: true,
+          final_score: myScore,
+          opp_score_only: b.opp_score_only === true && oppScore !== undefined,
+          opp_side: mySide === "home" ? "away" : "home",
+          opp_final_score: oppScore,
+        };
+      } else {
+        const subId = `${gameId}_${captainTeamId}`;
+        const subSnap = await db
+          .doc(`leagues/${leagueId}/box_score_submissions/${subId}`)
+          .get();
+        if (!subSnap.exists) {
+          return NextResponse.json(
+            { error: "No submission found for this captain" },
+            { status: 404 },
+          );
+        }
+        sub = subSnap.data() as SubmissionDoc;
+      }
+
+      const derivedSide = sub.side ?? mySide;
       const otherSide = derivedSide === "home" ? "away" : "home";
+
+      // Guard against malformed scores (NaN / negative) reaching the
+      // public box score + standings (audit M3).
+      const myFinalCheck = sub.score_only
+        ? Number(sub.final_score ?? sub.score ?? 0)
+        : Number(sub.score ?? 0);
+      if (!Number.isFinite(myFinalCheck) || myFinalCheck < 0) {
+        return NextResponse.json(
+          { error: "Submitted score is not a valid number" },
+          { status: 400 },
+        );
+      }
 
       // Wrap the read-modify-write of /box_scores AND the /games
       // update in a single transaction. Without this, two captains
@@ -299,6 +351,13 @@ export async function POST(req: Request) {
           gameUpdate.status = "final";
           gameUpdate[`${otherSide}_score`] = otherScore;
         }
+
+        // Stamp the box-score doc's status so stats recalc actually
+        // aggregates it — recalc keeps only final/approved box scores,
+        // and this write previously had NO status, so captain box scores
+        // never reached player stats / leaderboards (audit C2). "final"
+        // once both sides are in; "pending" until then.
+        update.status = goingFinal ? "final" : "pending";
 
         txn.set(boxRef, update, { merge: true });
         txn.set(gameRef, gameUpdate, { merge: true });

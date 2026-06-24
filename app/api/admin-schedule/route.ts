@@ -135,21 +135,35 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    // Generate a unique id. Format `g-NNNN` to match the seeded data.
-    // Find max existing numeric suffix and add 1.
-    const snap = await db.collection(`leagues/${leagueId}/games`).get();
-    let maxNum = 0;
-    for (const d of snap.docs) {
-      const m = d.id.match(/^g-(\d+)$/);
-      if (m) {
-        const n = parseInt(m[1]!, 10);
-        if (n > maxNum) maxNum = n;
+    // Generate a unique id `g-NNNN` (matches seeded data). Use .create()
+    // — which fails if the id already exists — plus a re-scan-on-collision
+    // retry, so two admins (or two tabs) creating a game at the same time
+    // can't compute the same max and silently overwrite each other
+    // (audit M7).
+    const doc = sanitizeGame(game, { isUpdate: false });
+    let newId = "";
+    let created = false;
+    for (let attempt = 0; attempt < 6 && !created; attempt++) {
+      const snap = await db.collection(`leagues/${leagueId}/games`).get();
+      let maxNum = 0;
+      for (const d of snap.docs) {
+        const m = d.id.match(/^g-(\d+)$/);
+        if (m) maxNum = Math.max(maxNum, parseInt(m[1]!, 10));
+      }
+      newId = `g-${String(maxNum + 1).padStart(4, "0")}`;
+      try {
+        await db.doc(`leagues/${leagueId}/games/${newId}`).create(doc);
+        created = true;
+      } catch {
+        // id was taken by a concurrent create — re-scan and try again.
       }
     }
-    const newId = `g-${String(maxNum + 1).padStart(4, "0")}`;
-
-    const doc = sanitizeGame(game, { isUpdate: false });
-    await db.doc(`leagues/${leagueId}/games/${newId}`).set(doc);
+    if (!created) {
+      return NextResponse.json(
+        { error: "Could not allocate a game id; please retry." },
+        { status: 409 },
+      );
+    }
     await writeAudit(db, leagueId, decoded.uid, "schedule_create", newId, doc);
     await syncGcalForGame(db, leagueId, newId, doc);
     return NextResponse.json({ ok: true, gameId: newId, game: doc });
@@ -185,6 +199,22 @@ export async function POST(req: Request) {
     const before = await ref.get();
     if (!before.exists) {
       return NextResponse.json({ error: "Game not found" }, { status: 404 });
+    }
+    // M2: if this update leaves the game final/approved, both scores must
+    // exist afterward (in this patch OR already on the doc) — otherwise
+    // consumers read missing scores as 0 and it counts as a phantom 0–0
+    // tie for both teams.
+    const beforeData = before.data() ?? {};
+    const resultStatus = String(cleaned.status ?? beforeData.status ?? "");
+    if (resultStatus === "final" || resultStatus === "approved") {
+      const aScore = cleaned.away_score ?? beforeData.away_score;
+      const hScore = cleaned.home_score ?? beforeData.home_score;
+      if (!Number.isFinite(Number(aScore)) || !Number.isFinite(Number(hScore))) {
+        return NextResponse.json(
+          { error: "Can't mark a game final without both scores." },
+          { status: 400 },
+        );
+      }
     }
     await ref.set(cleaned, { merge: true });
     await writeAudit(
@@ -237,12 +267,16 @@ export async function POST(req: Request) {
     }
     // Find every game on that date that's still scheduled (don't
     // touch finals/cancelled — those are intentional terminal states).
-    const snap = await db
-      .collection(`leagues/${leagueId}/games`)
-      .where("date", "==", date)
-      .get();
+    // Games store `date` two ways: a bare "YYYY-MM-DD" (ScheduleEditor)
+    // OR a full ISO datetime "...Thh:mm:ssZ" (provisioned/seeded data).
+    // An exact where("date","==","YYYY-MM-DD") silently misses every
+    // ISO-shaped game, so the rainout postponed NOTHING for real data
+    // (audit H1). Load the collection and match on the date PREFIX.
+    const snap = await db.collection(`leagues/${leagueId}/games`).get();
     const targets = snap.docs.filter((d) => {
-      const s = String(d.data().status ?? "scheduled");
+      const data = d.data();
+      if (String(data.date ?? "").slice(0, 10) !== date) return false;
+      const s = String(data.status ?? "scheduled");
       return s === "scheduled";
     });
     if (targets.length === 0) {
@@ -365,6 +399,26 @@ function validateGame(
     return {
       error: `status must be one of ${[...ALLOWED_STATUS].join(", ")}`,
     };
+  }
+  // Reject non-numeric scores — otherwise Number("abc") = NaN is written
+  // and poisons that team's RS/RA/RD and the whole division's standings
+  // math (audit M1).
+  for (const k of ["away_score", "home_score"] as const) {
+    const v = g[k];
+    if (v != null && v !== ("" as never) && !Number.isFinite(Number(v))) {
+      return { error: `${k} must be a number` };
+    }
+  }
+  // A brand-new game created as final/approved must carry both scores —
+  // otherwise consumers read the missing scores as 0 and it counts as a
+  // phantom 0–0 tie for both teams (audit M2). Updates are checked in the
+  // update handler, which can see scores already on the doc.
+  if (!isUpdate && (g.status === "final" || g.status === "approved")) {
+    const okA = g.away_score != null && g.away_score !== ("" as never) && Number.isFinite(Number(g.away_score));
+    const okH = g.home_score != null && g.home_score !== ("" as never) && Number.isFinite(Number(g.home_score));
+    if (!okA || !okH) {
+      return { error: "a final game must include both scores" };
+    }
   }
   return { error: null };
 }
