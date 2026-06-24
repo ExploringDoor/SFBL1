@@ -103,13 +103,19 @@ describe("aggregateBatting", () => {
     expect(result[0]?.avg).toBeCloseTo(0.2, 6);
   });
 
-  it("propagates sluggingPct error on bad data", () => {
-    expect(() =>
-      aggregateBatting([
-        // h=1 but doubles+triples+hr=2 → singles negative → throws
+  it("clamps an inconsistent line instead of throwing (audit H6)", () => {
+    // h=1 but doubles+triples+hr=2 → singles would be negative. The old
+    // code THREW here, which aborted the entire league stats recalc with
+    // a 500 and froze every player's stats. Now it clamps singles to 0
+    // and keeps aggregating so one bad line can't poison the league.
+    let result: ReturnType<typeof aggregateBatting> | undefined;
+    expect(() => {
+      result = aggregateBatting([
         line("p1", { ab: 4, h: 1, doubles: 1, triples: 1 }),
-      ]),
-    ).toThrow(/inconsistent/i);
+      ]);
+    }).not.toThrow();
+    // TB = 0 (clamped singles) + 2*1 + 3*1 = 5; SLG = 5/4 = 1.25.
+    expect(result?.[0]?.slg).toBeCloseTo(1.25, 6);
   });
 });
 

@@ -49,9 +49,11 @@ describe("sluggingPct", () => {
     expect(sluggingPct(4, 1, 1, 1, 10)).toBeCloseTo(1.0, 6);
   });
 
-  it("throws when 2B+3B+HR exceeds H (data inconsistency)", () => {
-    // h=2, but 2B+3B+HR = 3 → singles would be -1 → bug in box score data
-    expect(() => sluggingPct(2, 1, 1, 1, 10)).toThrow(/inconsistent/i);
+  it("clamps an inconsistent line (H < 2B+3B+HR) instead of throwing — audit H6", () => {
+    // h=2 but 2B+3B+HR = 3 → singles would be -1. Throwing here used to
+    // abort the entire league recalc and freeze all stats; now singles
+    // clamps to 0. TB = 0 + 2*1 + 3*1 + 4*1 = 9; SLG = 9/10 = 0.9.
+    expect(sluggingPct(2, 1, 1, 1, 10)).toBeCloseTo(0.9, 6);
   });
 });
 

@@ -185,10 +185,26 @@ function splitDateTime(
   if (Number.isNaN(d.getTime())) {
     return { date: dateRaw.slice(0, 10), time: timeRaw };
   }
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mi = String(d.getMinutes()).padStart(2, "0");
-  return { date: `${yyyy}-${mm}-${dd}`, time: `${hh}:${mi}` };
+  // Combined-ISO games are often stored as UTC ("...Z"). Render in the
+  // league timezone (US Eastern — matches the ICS feed + what the site
+  // shows local viewers); server-local getHours() emits UTC on Vercel and
+  // would put every printed time ~5h off (audit M6). A separately-stored
+  // HH:MM, when present, is the authoritative posted start time.
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(d);
+  const pick = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+  let hh = pick("hour");
+  if (hh === "24") hh = "00"; // some engines emit "24" for midnight
+  const dateOut = `${pick("year")}-${pick("month")}-${pick("day")}`;
+  const timeOut = /^\d{1,2}:\d{2}$/.test(timeRaw)
+    ? timeRaw
+    : `${hh}:${pick("minute")}`;
+  return { date: dateOut, time: timeOut };
 }

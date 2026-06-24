@@ -28,12 +28,19 @@ export function sluggingPct(
   ab: number,
 ): number {
   if (ab === 0) return 0;
-  const singles = h - doubles - triples - hr;
+  let singles = h - doubles - triples - hr;
   if (singles < 0) {
-    throw new Error(
-      `sluggingPct: H (${h}) is less than 2B+3B+HR (${doubles + triples + hr}). ` +
-        `Box score data is inconsistent.`,
+    // Inconsistent line (H < 2B+3B+HR) — bad data, e.g. from a migration
+    // import or a direct Web-SDK write that bypassed the editor's guard.
+    // Do NOT throw: a single bad box-score line used to abort the entire
+    // league stats recalc with a 500 and leave EVERY player's stats
+    // frozen (audit H6). Clamp the bad line and keep going so the rest of
+    // the league still recalculates.
+    console.warn(
+      `sluggingPct: H (${h}) < 2B+3B+HR (${doubles + triples + hr}); ` +
+        `clamping singles to 0 (inconsistent box-score line).`,
     );
+    singles = 0;
   }
   return (singles + 2 * doubles + 3 * triples + 4 * hr) / ab;
 }
