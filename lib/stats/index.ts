@@ -324,10 +324,15 @@ async function writeStats(
   let batterWrites = 0;
   let pitcherWrites = 0;
 
-  // Empty-stat sentinels — for players who appeared career-wide but
-  // not this season (or vice-versa) we still write a zeroed bucket
+  // Empty-stat sentinels — for a player who batted (or pitched) in
+  // ONE bucket but not the other (e.g. appeared career-wide but not
+  // this season) we still write a zeroed bucket for the missing side
   // so the page never reads stale career into a "current season"
-  // slot. emptyBatter/emptyPitcher live in the sport modules.
+  // slot. This only fires for players who ARE batters/pitchers; a
+  // player who never batted in either bucket (e.g. a pure pitcher in
+  // a DH league) gets no batting line written at all — see the
+  // hasBatting/hasPitching gates below. emptyBatter/emptyPitcher live
+  // in the sport modules.
   function zeroBatter(player_id: string): SoftballPlayerStats | BaseballBatterStats {
     if (sport === "baseball") {
       return {
@@ -355,44 +360,61 @@ async function writeStats(
     const prev = existingByPath.get(ref.path);
     const update: Record<string, unknown> = {};
 
-    // Current-season batter (player.stats)
-    const curBat = currentBattersById.get(pid) ?? zeroBatter(pid);
-    if (
-      !prev?.stats ||
-      !areBatterStatsEqual(prev.stats, curBat, sport)
-    ) {
-      update.stats = curBat;
-    }
-    // Career batter (player.career_stats)
-    const carBat = careerBattersById.get(pid) ?? zeroBatter(pid);
-    if (
-      !prev?.career_stats ||
-      !areBatterStatsEqual(prev.career_stats, carBat, sport)
-    ) {
-      update.career_stats = carBat;
+    // Batting slots — only touch them for a player who actually batted
+    // in at least one bucket. A player who never batted (pure pitcher)
+    // shouldn't get a 0-for-0 batting line stamped into their doc; that
+    // would surface a misleading .000 line on the page and double the
+    // write volume on a full recalc. The zeroBatter sentinel still
+    // fires inside this block for someone who batted career-wide but
+    // not THIS season (curBat falls back to zeroBatter) — that's the
+    // stale-current-season case it exists for.
+    const hasBatting =
+      currentBattersById.has(pid) || careerBattersById.has(pid);
+    if (hasBatting) {
+      // Current-season batter (player.stats)
+      const curBat = currentBattersById.get(pid) ?? zeroBatter(pid);
+      if (!prev?.stats || !areBatterStatsEqual(prev.stats, curBat, sport)) {
+        update.stats = curBat;
+      }
+      // Career batter (player.career_stats)
+      const carBat = careerBattersById.get(pid) ?? zeroBatter(pid);
+      if (
+        !prev?.career_stats ||
+        !areBatterStatsEqual(prev.career_stats, carBat, sport)
+      ) {
+        update.career_stats = carBat;
+      }
     }
 
-    // Pitching (baseball only — softball aggregators don't emit it)
+    // Pitching slots (baseball only — softball aggregators don't emit
+    // it). Same rule: only touch them for a player who actually pitched
+    // in at least one bucket, so a pure batter never gets a 0.00-ERA
+    // line stamped on. The zeroPitcher sentinel still fires here for a
+    // player who pitched career-wide but not this season.
     if (sport === "baseball") {
-      const curPit = currentPitchersById.get(pid) ?? zeroPitcher(pid);
-      if (
-        !prev?.pitching ||
-        !pitcherStatsAreEqual(
-          prev.pitching as BaseballPitcherStats,
-          curPit,
-        )
-      ) {
-        update.pitching = curPit;
-      }
-      const carPit = careerPitchersById.get(pid) ?? zeroPitcher(pid);
-      if (
-        !prev?.career_pitching ||
-        !pitcherStatsAreEqual(
-          prev.career_pitching as BaseballPitcherStats,
-          carPit,
-        )
-      ) {
-        update.career_pitching = carPit;
+      const hasPitching =
+        currentPitchersById.has(pid) || careerPitchersById.has(pid);
+      if (hasPitching) {
+        const curPit = currentPitchersById.get(pid) ?? zeroPitcher(pid);
+        if (
+          !prev?.pitching ||
+          !pitcherStatsAreEqual(
+            prev.pitching as BaseballPitcherStats,
+            curPit,
+          )
+        ) {
+          update.pitching = curPit;
+        }
+        const carPit = careerPitchersById.get(pid) ?? zeroPitcher(pid);
+        if (
+          !prev?.career_pitching ||
+          !pitcherStatsAreEqual(
+            prev.career_pitching as BaseballPitcherStats,
+            carPit,
+          )
+        ) {
+          update.career_pitching = carPit;
+        }
       }
     }
 
