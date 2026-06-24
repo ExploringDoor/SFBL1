@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Baseball favicon for COYBL: white ball, red seams + stitches. -->
+  <circle cx="16" cy="16" r="15" fill="#fdfdfd" stroke="#cbd5e1" stroke-width="1"/>
+  <g fill="none" stroke="#c8102e" stroke-linecap="round">
+    <!-- two seams, each bulging toward the center -->
+    <path d="M6.2 5 Q 12.5 16 6.2 27" stroke-width="1.6"/>
+    <path d="M25.8 5 Q 19.5 16 25.8 27" stroke-width="1.6"/>
+    <!-- left-seam stitches (angled dashes) -->
+    <g stroke-width="1.1">
+      <path d="M8.4 8.6 l2.4 -0.4"/>
+      <path d="M9.8 12.2 l2.5 -0.2"/>
+      <path d="M10.2 16 l2.6 0"/>
+      <path d="M9.8 19.8 l2.5 0.2"/>
+      <path d="M8.4 23.4 l2.4 0.4"/>
+    </g>
+    <!-- right-seam stitches -->
+    <g stroke-width="1.1">
+      <path d="M23.6 8.6 l-2.4 -0.4"/>
+      <path d="M22.2 12.2 l-2.5 -0.2"/>
+      <path d="M21.8 16 l-2.6 0"/>
+      <path d="M22.2 19.8 l-2.5 0.2"/>
+      <path d="M23.6 23.4 l-2.4 0.4"/>
+    </g>
+  </g>
+</svg>
