@@ -7,7 +7,11 @@
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { computeEligibility } from "@/lib/pitchcount/eligibility";
-import { PITCH_RULESETS, rulesetIdForAge } from "@/lib/pitchcount/rulesets";
+import {
+  PITCH_RULESETS,
+  COYBL_9U_10U,
+  rulesetIdForAge,
+} from "@/lib/pitchcount/rulesets";
 import type { PitchCountRuleset, PitchOuting } from "@/lib/pitchcount/types";
 
 export const dynamic = "force-dynamic";
@@ -63,6 +67,11 @@ export default async function EligibilityPage() {
   // league's configured timezone once that lands in config.
   const now = new Date();
   const today = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
+  const todayLabel = now.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
 
   const sections = teams
     .map((t) => {
@@ -82,10 +91,34 @@ export default async function EligibilityPage() {
 
   return (
     <main className="container py-10">
+      <header style={{ marginBottom: 18 }}>
+        <p className="sec-eyebrow" style={{ color: "var(--brand-primary)" }}>
+          Pitch Smart
+        </p>
+        <h1
+          className="font-display"
+          style={{
+            fontSize: "clamp(34px, 5vw, 52px)",
+            lineHeight: 0.97,
+            color: "var(--text-strong)",
+            margin: 0,
+          }}
+        >
+          Pitcher Eligibility
+        </h1>
+        <p style={{ marginTop: 10, color: "var(--muted)", maxWidth: 700, lineHeight: 1.5 }}>
+          Who can pitch today, by team — based on USA Baseball{" "}
+          <strong>Pitch Smart</strong> pitch-count limits to protect young arms.
+          Updated after each game; current as of {todayLabel}.
+        </p>
+      </header>
+
+      <RestRules />
+
       {sections.length === 0 ? (
         <p style={{ color: "var(--muted)" }}>
-          No pitch counts recorded yet. Coaches enter pitch counts after each
-          game.
+          No pitch counts recorded yet. Coaches enter each pitcher&rsquo;s count
+          after every game, and eligibility updates here automatically.
         </p>
       ) : (
         <div style={{ display: "grid", gap: 28 }}>
@@ -157,6 +190,69 @@ export default async function EligibilityPage() {
         </div>
       )}
     </main>
+  );
+}
+
+// Plain-English "how rest works" explainer for parents — rendered from
+// the rulesets (not hardcoded) so it can't drift from the engine. All
+// COYBL kid-pitch ages share the same rest tiers; only the daily max
+// differs by age.
+function RestRules() {
+  const tiers = COYBL_9U_10U.tiers;
+  const maxes = Object.values(PITCH_RULESETS);
+  const rangeLabel = (min: number, max: number) =>
+    max === Infinity ? `${min}+` : `${min}–${max}`;
+  const restLabel = (d: number) =>
+    d === 0 ? "can pitch the next day" : `${d} day${d > 1 ? "s" : ""} of rest`;
+  return (
+    <div
+      style={{
+        border: "1px solid var(--border)",
+        borderRadius: 12,
+        background: "var(--card)",
+        padding: "16px 18px",
+        marginBottom: 26,
+      }}
+    >
+      <strong
+        style={{
+          display: "block",
+          fontSize: 14,
+          letterSpacing: "0.04em",
+          textTransform: "uppercase",
+          color: "var(--brand-primary)",
+          marginBottom: 8,
+        }}
+      >
+        How rest works
+      </strong>
+      <p style={{ margin: "0 0 10px", fontSize: 14, color: "var(--text-strong)", lineHeight: 1.5 }}>
+        A pitcher&rsquo;s required days off depend on how many pitches they
+        threw in their last outing:
+      </p>
+      <ul
+        style={{
+          margin: "0 0 12px",
+          padding: 0,
+          listStyle: "none",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))",
+          gap: "4px 18px",
+        }}
+      >
+        {tiers.map((t) => (
+          <li key={t.min} style={{ fontSize: 13.5, color: "var(--text-strong)" }}>
+            <strong>{rangeLabel(t.min, t.max)} pitches</strong> ·{" "}
+            <span style={{ color: "var(--muted)" }}>{restLabel(t.restDays)}</span>
+          </li>
+        ))}
+      </ul>
+      <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>
+        Daily maximum by age group:{" "}
+        {maxes.map((m) => `${m.label} ${m.dailyMax}`).join(" · ")}. (7U–8U is
+        coach-pitch — no pitch-count limits.)
+      </p>
+    </div>
   );
 }
 
