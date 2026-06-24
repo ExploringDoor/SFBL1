@@ -128,6 +128,9 @@ export async function middleware(req: NextRequest) {
   // ride along on every request header. Server components needing full
   // billing detail should re-fetch /leagues/{id} directly.
   requestHeaders.set("x-tenant-config-json", JSON.stringify(toPublicConfig(tenant.config)));
+  // Forward the path so the layout can SSR per-page chrome (header banner)
+  // without a client/server hydration mismatch.
+  requestHeaders.set("x-pathname", req.nextUrl.pathname);
 
   const res = NextResponse.next({ request: { headers: requestHeaders } });
   if (clearPreview) res.cookies.delete(PREVIEW_COOKIE);

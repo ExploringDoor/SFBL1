@@ -8,6 +8,8 @@ import { ProfileButton } from "@/components/ProfileButton";
 import { PwaShell } from "@/components/PwaShell";
 import { ViewTracker } from "@/components/ViewTracker";
 import { PwaTabBar } from "@/components/ui/PwaTabBar";
+import { PageBanner } from "@/components/PageBanner";
+import { headerImagesFor } from "@/lib/header-images";
 import { TickerScrollHide } from "@/components/ui/TickerScrollHide";
 import { TickerInputEnhancer } from "@/components/ui/TickerInputEnhancer";
 import { SwVersionPill } from "@/components/ui/SwVersionPill";
@@ -134,6 +136,9 @@ export default async function RootLayout({
 }) {
   const h = headers();
   const tenantId = h.get("x-tenant-id");
+  // First path segment seeds the header-banner image for SSR (the client
+  // PageBanner then tracks the route for in-app navigation).
+  const bannerSlug = (h.get("x-pathname") ?? "/").split("/")[1] || "home";
   const configJson = h.get("x-tenant-config-json");
   let leagueName: string | null = null;
   let leagueAbbrev: string | undefined;
@@ -294,6 +299,11 @@ export default async function RootLayout({
               rightSlot={<ProfileButton tenantId={tenantId} />}
             />
           ) : null}
+          {/* Per-page header photo (COYBL). Picks the image by route; renders
+              nothing for tenants without public/<tenant>/headers/ images. */}
+          {tenantId && (
+            <PageBanner images={headerImagesFor(tenantId)} initialSlug={bannerSlug} />
+          )}
           <div className="site-content">{children}</div>
           {modal}
           {tenantId ? <SiteFooter /> : null}
