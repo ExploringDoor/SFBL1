@@ -131,11 +131,32 @@ export async function POST(req: Request) {
       );
     }
     const sub = subSnap.data()!;
-    const awayScore = Number(sub.away_score);
-    const homeScore = Number(sub.home_score);
+    // Captain submissions store the OWN-side score in `score`/`final_score`
+    // (keyed by `side`) and the opponent's in `opp_final_score` or the sum
+    // of `opp_linescore`. There is NO away_score/home_score field, so the
+    // old code 400'd "missing scores" for EVERY real submission (audit H5).
+    // Build both sides from the actual shape.
+    const subSide: "home" | "away" = sub.side === "home" ? "home" : "away";
+    const ownScore = Number(sub.score ?? sub.final_score);
+    let oppScore: number;
+    if (sub.opp_final_score != null) {
+      oppScore = Number(sub.opp_final_score);
+    } else if (Array.isArray(sub.opp_linescore) && sub.opp_linescore.length) {
+      oppScore = (sub.opp_linescore as unknown[]).reduce(
+        (acc: number, n) => acc + Number(n || 0),
+        0,
+      );
+    } else {
+      oppScore = NaN;
+    }
+    const awayScore = subSide === "away" ? ownScore : oppScore;
+    const homeScore = subSide === "home" ? ownScore : oppScore;
     if (!Number.isFinite(awayScore) || !Number.isFinite(homeScore)) {
       return NextResponse.json(
-        { error: "Submission missing scores" },
+        {
+          error:
+            "That captain's submission doesn't include both teams' scores.",
+        },
         { status: 400 },
       );
     }
@@ -167,6 +188,8 @@ export async function POST(req: Request) {
         away_pitchers: sub.away_pitchers ?? sub.pitchers ?? [],
         home_pitchers: sub.home_pitchers ?? sub.pitchers ?? [],
         score_only: !sub.lineup || sub.lineup.length === 0,
+        // Stamp status so stats recalc aggregates this box score (audit C2).
+        status: "final",
         resolved_from_side: side,
         resolved_at: new Date().toISOString(),
         resolved_by_uid: decoded.uid,
@@ -207,6 +230,12 @@ export async function POST(req: Request) {
   const written: string[] = [];
 
   for (const u of updates) {
+    if (!u || typeof u !== "object") {
+      // A null/non-object entry would throw on u.gameId before the try
+      // block and 500 the whole batch, losing the other updates (audit L1).
+      errors.push({ gameId: "?", error: "malformed update entry" });
+      continue;
+    }
     if (typeof u.gameId !== "string" || !u.gameId) {
       errors.push({ gameId: String(u.gameId ?? "?"), error: "missing gameId" });
       continue;
@@ -251,8 +280,14 @@ export async function POST(req: Request) {
             home_team_id: beforeData.home_team_id ?? "",
             away_score: aScore,
             home_score: hScore,
-            away_lineup_score_only: true,
-            home_lineup_score_only: true,
+            // The box-score reader (lib/box-score-data) checks
+            // away_score_only/home_score_only — NOT *_lineup_score_only.
+            // The wrong key made finalized games render "no data"/dashes
+            // instead of the score-only placeholder (audit M4/M5). Also
+            // stamp status so stats recalc treats it as final (audit C2).
+            away_score_only: true,
+            home_score_only: true,
+            status: newStatus,
             updated_at: new Date().toISOString(),
             updated_by_uid: decoded.uid,
           },

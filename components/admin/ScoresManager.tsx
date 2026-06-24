@@ -93,8 +93,26 @@ export function ScoresManager({ leagueId, user }: Props) {
         const gameId = String(data.game_id ?? "");
         const side = String(data.side ?? "");
         if (!gameId || (side !== "away" && side !== "home")) continue;
-        const aScore = Number(data.away_score);
-        const hScore = Number(data.home_score);
+        // Submissions store the own-side score in `score`/`final_score`
+        // (keyed by `side`) and the opponent's in `opp_final_score` or the
+        // sum of `opp_linescore` — NOT away_score/home_score. Reading the
+        // phantom fields made every submission NaN→skip, so conflicts were
+        // never detected and the "Use [side]" buttons never rendered
+        // (audit H4).
+        const ownScore = Number(data.score ?? data.final_score);
+        let oppScore = Number(data.opp_final_score);
+        if (
+          !Number.isFinite(oppScore) &&
+          Array.isArray(data.opp_linescore) &&
+          data.opp_linescore.length
+        ) {
+          oppScore = (data.opp_linescore as unknown[]).reduce(
+            (acc: number, n) => acc + Number(n || 0),
+            0,
+          );
+        }
+        const aScore = side === "away" ? ownScore : oppScore;
+        const hScore = side === "home" ? ownScore : oppScore;
         if (!Number.isFinite(aScore) || !Number.isFinite(hScore)) continue;
         const cur = subsByGame.get(gameId) ?? {};
         cur[side] = { score_away: aScore, score_home: hScore };
