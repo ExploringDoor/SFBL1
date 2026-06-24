@@ -11,6 +11,7 @@ import type { PublicLeagueConfig } from "@/lib/tenants";
 import { ScoresScheduleTabs, WeekRow } from "../scores/tabs-and-weeks";
 import { SubscribeCalendar } from "@/components/SubscribeCalendar";
 import { DivisionFilter } from "@/components/ui/DivisionFilter";
+import { AgeFilter } from "@/components/ui/AgeFilter";
 import { combineDateTime } from "@/lib/format-time";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +36,7 @@ interface ScheduleGame {
 export default async function SchedulePage({
   searchParams,
 }: {
-  searchParams?: { week?: string; div?: string };
+  searchParams?: { week?: string; div?: string; age?: string };
 }) {
   const h = headers();
   const tenantId = h.get("x-tenant-id");
@@ -66,12 +67,21 @@ export default async function SchedulePage({
   // (admin work-in-progress not yet published).
   const allUpcoming = games.filter((g) => g.status !== "draft");
 
-  // ── Division filter ─────────────────────────────────────────────
-  // Multi-division leagues (SFBL has 18+, 28+, 35+) want a quick way
-  // to drill into "just my division." Pulled from the games' own
-  // division field — top-level grouping, not the 35+ Am/Nat sub-
-  // division split (which is a teams-only attribute today). URL is
-  // `?div=18%2B` etc. — empty / missing = all divisions.
+  // ── Age / Division filter ───────────────────────────────────────
+  // Age-grouped tenants (COYBL, 7U-14U) filter by age group — the axis
+  // a parent cares about; division is a sub-tier within an age. Flat
+  // multi-division leagues (SFBL 18+/28+/35+) keep the division filter.
+  // Same ?param UX; age comes off the teams map (games store division).
+  const hasAge = Object.values(teams).some((t) => t.ageGroup);
+  const ageOfGame = (g: ScheduleGame): string | null =>
+    teams[g.home_team_id]?.ageGroup ?? teams[g.away_team_id]?.ageGroup ?? null;
+  const allAges = Array.from(
+    new Set(
+      Object.values(teams)
+        .map((t) => t.ageGroup)
+        .filter((a): a is string => !!a),
+    ),
+  ).sort((a, b) => (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0));
   const allDivisions = Array.from(
     new Set(
       allUpcoming
@@ -79,9 +89,13 @@ export default async function SchedulePage({
         .filter((d): d is string => !!d),
     ),
   ).sort();
-  const activeDivision = searchParams?.div ?? null;
-  const upcoming =
-    activeDivision && activeDivision !== "all"
+  const activeAge = hasAge ? searchParams?.age ?? null : null;
+  const activeDivision = !hasAge ? searchParams?.div ?? null : null;
+  const upcoming = hasAge
+    ? activeAge && activeAge !== "all"
+      ? allUpcoming.filter((g) => ageOfGame(g) === activeAge)
+      : allUpcoming
+    : activeDivision && activeDivision !== "all"
       ? allUpcoming.filter((g) => g.division === activeDivision)
       : allUpcoming;
 
@@ -160,13 +174,17 @@ export default async function SchedulePage({
 
       <ScoresScheduleTabs active="schedule" />
 
-      {allDivisions.length > 1 && (
-        <DivisionFilter
-          divisions={allDivisions}
-          active={activeDivision}
-          basePath="/schedule"
-        />
-      )}
+      {hasAge
+        ? allAges.length > 1 && (
+            <AgeFilter ages={allAges} active={activeAge} basePath="/schedule" />
+          )
+        : allDivisions.length > 1 && (
+            <DivisionFilter
+              divisions={allDivisions}
+              active={activeDivision}
+              basePath="/schedule"
+            />
+          )}
 
       {weeks.length === 0 ? (
         // No scheduled games anywhere. Likely launch day before the
@@ -278,6 +296,7 @@ interface TeamMeta {
   color?: string;
   logoUrl?: string | null;
   record?: string;
+  ageGroup?: string;
 }
 
 async function loadSchedule(tenantId: string): Promise<{
@@ -332,6 +351,7 @@ async function loadSchedule(tenantId: string): Promise<{
       color: data.color ? String(data.color) : undefined,
       logoUrl: data.logo_url ? String(data.logo_url) : null,
       record: recordByTeam.get(d.id),
+      ageGroup: data.ageGroup ? String(data.ageGroup) : undefined,
     };
   }
   return { games, teams };

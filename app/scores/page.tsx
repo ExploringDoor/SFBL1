@@ -9,6 +9,7 @@ import { computeStandings, type GameResult } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { ScoresScheduleTabs, WeekRow } from "./tabs-and-weeks";
 import { DivisionFilter } from "@/components/ui/DivisionFilter";
+import { AgeFilter } from "@/components/ui/AgeFilter";
 import { combineDateTime } from "@/lib/format-time";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +29,7 @@ interface ScoreGame {
 export default async function ScoresPage({
   searchParams,
 }: {
-  searchParams?: { week?: string; div?: string };
+  searchParams?: { week?: string; div?: string; age?: string };
 }) {
   const h = headers();
   const tenantId = h.get("x-tenant-id");
@@ -55,8 +56,21 @@ export default async function ScoresPage({
     (g) => g.status === "final" || g.status === "approved",
   );
 
-  // Division filter — same UX as /schedule. Pulled from games' own
-  // division field. URL is `?div=18%2B` etc.; missing = all divisions.
+  // Filter axis: age-grouped tenants (COYBL) filter by age group (the
+  // primary axis a parent cares about — division is a sub-tier within an
+  // age); flat tenants (SFBL) filter by division as before. Same ?param
+  // UX either way. Age is read off the teams map since games store only
+  // division, not age.
+  const hasAge = Object.values(teams).some((t) => t.ageGroup);
+  const ageOfGame = (g: ScoreGame): string | null =>
+    teams[g.home_team_id]?.ageGroup ?? teams[g.away_team_id]?.ageGroup ?? null;
+  const allAges = Array.from(
+    new Set(
+      Object.values(teams)
+        .map((t) => t.ageGroup)
+        .filter((a): a is string => !!a),
+    ),
+  ).sort((a, b) => (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0));
   const allDivisions = Array.from(
     new Set(
       allFinal
@@ -64,9 +78,13 @@ export default async function ScoresPage({
         .filter((d): d is string => !!d),
     ),
   ).sort();
-  const activeDivision = searchParams?.div ?? null;
-  const finalGames =
-    activeDivision && activeDivision !== "all"
+  const activeAge = hasAge ? searchParams?.age ?? null : null;
+  const activeDivision = !hasAge ? searchParams?.div ?? null : null;
+  const finalGames = hasAge
+    ? activeAge && activeAge !== "all"
+      ? allFinal.filter((g) => ageOfGame(g) === activeAge)
+      : allFinal
+    : activeDivision && activeDivision !== "all"
       ? allFinal.filter((g) => g.division === activeDivision)
       : allFinal;
 
@@ -163,13 +181,17 @@ export default async function ScoresPage({
 
       <ScoresScheduleTabs active="scores" />
 
-      {allDivisions.length > 1 && (
-        <DivisionFilter
-          divisions={allDivisions}
-          active={activeDivision}
-          basePath="/scores"
-        />
-      )}
+      {hasAge
+        ? allAges.length > 1 && (
+            <AgeFilter ages={allAges} active={activeAge} basePath="/scores" />
+          )
+        : allDivisions.length > 1 && (
+            <DivisionFilter
+              divisions={allDivisions}
+              active={activeDivision}
+              basePath="/scores"
+            />
+          )}
 
       {weeks.length === 0 ? (
         // No final games anywhere in the season yet — likely launch
@@ -293,6 +315,7 @@ interface TeamMeta {
   color?: string;
   logoUrl?: string | null;
   record?: string;
+  ageGroup?: string;
 }
 
 async function loadScores(tenantId: string): Promise<{
@@ -350,6 +373,7 @@ async function loadScores(tenantId: string): Promise<{
       color: data.color ? String(data.color) : undefined,
       logoUrl: data.logo_url ? String(data.logo_url) : null,
       record: recordByTeam.get(d.id),
+      ageGroup: data.ageGroup ? String(data.ageGroup) : undefined,
     };
   }
   return { games, teams };
