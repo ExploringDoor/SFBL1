@@ -31,9 +31,14 @@ export async function GET() {
   const tenantId = tenant.id;
 
   const db = getAdminDb();
+  const cfg = tenant.config;
+  const statsOn = cfg.flags?.stats_enabled !== false;
+  // Stats-off tenants (COYBL) emit no player URLs, so skip the (potentially
+  // large — LBDC had ~1100 docs) players read entirely instead of fetching
+  // it and discarding every row.
   const [teams, players, games, pages] = await Promise.all([
     db.collection(`leagues/${tenantId}/teams`).get(),
-    db.collection(`leagues/${tenantId}/players`).get(),
+    statsOn ? db.collection(`leagues/${tenantId}/players`).get() : Promise.resolve(null),
     db.collection(`leagues/${tenantId}/games`).get(),
     db.collection(`leagues/${tenantId}/page_content`).get(),
   ]);
@@ -45,13 +50,11 @@ export async function GET() {
   // Static pages — tenant-aware so we don't list routes a tenant hides
   // (COYBL drops stats/photos/history/etc.) or omit its real pages
   // (Pitch Counts, Power Rankings, Tournaments). Mirrors the nav config.
-  const cfg = tenant.config;
   const navHide = new Set(
     (cfg.nav?.hide ?? [])
       .filter((s): s is string => typeof s === "string")
       .map((s) => s.toLowerCase()),
   );
-  const statsOn = cfg.flags?.stats_enabled !== false;
   const isSfbl = tenantId === "sfbl";
 
   const staticPages: string[] = ["/", "/schedule", "/scores", "/standings", "/teams"];
@@ -93,11 +96,10 @@ export async function GET() {
     });
   }
 
-  // Player pages — skip entirely for stats-off tenants (COYBL has no
-  // public player pages; /players/[id] 404s there). Otherwise skip
-  // walk-ons until admin approves (avoids indexing typo'd entries).
-  for (const d of players.docs) {
-    if (!statsOn) break;
+  // Player pages — `players` is null for stats-off tenants (we skipped the
+  // read), so this loop no-ops there. Otherwise skip walk-ons until admin
+  // approves (avoids indexing typo'd entries).
+  for (const d of players?.docs ?? []) {
     const data = d.data();
     if (data.active === false) continue;
     if (data.walk_on === true) continue;

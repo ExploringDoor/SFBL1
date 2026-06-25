@@ -133,6 +133,7 @@ body.ticker-hidden #score-ticker {
     left: 0;
     z-index: 2;
     margin: 0 6px;
+    font-size: 16px; /* iOS-no-zoom — matches AgeFilter; <16px auto-zooms on focus */
   }
 }
 
