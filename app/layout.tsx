@@ -251,7 +251,10 @@ export default async function RootLayout({
           <link rel="icon" type="image/svg+xml" href="/sfbl/favicon.svg" />
         )}
         {leagueAbbrev === "COYBL" && (
-          <link rel="icon" type="image/svg+xml" href="/coybl/favicon.svg" />
+          <>
+            <link rel="icon" type="image/png" sizes="32x32" href="/coybl/favicon-32.png" />
+            <link rel="icon" type="image/png" sizes="16x16" href="/coybl/favicon-16.png" />
+          </>
         )}
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
         <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
