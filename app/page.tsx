@@ -58,7 +58,6 @@ export default async function HomePage() {
     ageGroups,
     scheme,
     leagueName,
-    seasonStats,
   } = await loadHomeData(tenantId, config);
 
   const season = String(new Date().getFullYear());
@@ -310,6 +309,7 @@ export default async function HomePage() {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
+                        minHeight: 44,
                         padding: "12px 8px",
                         borderRadius: 10,
                         border: "1px solid rgba(0,0,0,0.12)",
@@ -510,36 +510,6 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
     (teams[id] as TeamMeta & { record?: string }).record = recordByTeam.get(id);
   }
 
-  // Season-wide stats for the homepage highlights strip. Only counts
-  // final/approved games — scheduled games' 0-0 placeholders would
-  // pollute the totals.
-  const finals = allGameItems.filter(
-    (g) => g.status === "final" || g.status === "approved",
-  );
-  const totalRuns = finals.reduce(
-    (n, g) => n + g.away_score + g.home_score,
-    0,
-  );
-  // Best record: max(W) team, breaking ties by highest pct.
-  let topTeam: { name: string; record: string } | null = null;
-  if (standings.length > 0) {
-    const best = [...standings].sort(
-      (a, b) => b.w - a.w || b.pct - a.pct,
-    )[0]!;
-    if (best.gp > 0) {
-      topTeam = {
-        name: teams[best.team_id]?.name ?? best.team_id,
-        record: formatRecord(best.w, best.l, best.t),
-      };
-    }
-  }
-  const seasonStats = {
-    gamesPlayed: finals.length,
-    totalRuns,
-    teamCount: Object.keys(teams).length,
-    topTeam,
-  };
-
   return {
     upcoming,
     recent,
@@ -549,7 +519,6 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
     ageGroups,
     scheme: usePoints ? scheme : null,
     leagueName: config?.name ?? "League",
-    seasonStats,
   };
 }
 

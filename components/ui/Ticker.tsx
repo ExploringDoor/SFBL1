@@ -101,8 +101,9 @@ export function Ticker({
             /* Audit M9: above-the-fold ticker logo. width/height stops
                layout shift once the image lands; loading="eager" +
                decoding=async keep it in the critical path without
-               blocking. Dimensions sized for the 48px ticker height
-               with proportional width capped by max-width:56px in CSS. */
+               blocking. Sizing is height-driven in CSS (.st-label-img
+               height:110px desktop / 120px mobile, width:auto) — there
+               is no width cap. */
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
               src={logoUrl}

@@ -140,7 +140,10 @@ export default async function EligibilityPage() {
                   key={ag}
                   href={`#age-${ag}`}
                   style={{
-                    display: "inline-block",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    minHeight: 44,
+                    boxSizing: "border-box",
                     padding: "6px 14px",
                     borderRadius: 999,
                     border: "1px solid var(--border)",
