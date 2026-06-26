@@ -196,6 +196,11 @@ export default async function RootLayout({
     themePrimary ? `--brand-primary: ${themePrimary};` : "",
     themeAccent ? `--brand-accent: ${themeAccent};` : "",
     themeSecondary ? `--brand-secondary: ${themeSecondary};` : "",
+    // COYBL: darken muted/secondary text to meet WCAG AA. The :root
+    // default rgba(0,0,0,0.5) (~#808080, ~3.95:1 on white) fails AA for
+    // normal text; ~0.56 (~#707070) clears ~4.9:1. Scoped to COYBL so
+    // SFBL/LBDC keep their existing look.
+    leagueAbbrev === "COYBL" ? "--muted: rgba(0,0,0,0.56);" : "",
   ].join(" ");
 
   return (
