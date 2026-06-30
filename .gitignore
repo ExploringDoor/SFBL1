@@ -71,3 +71,4 @@ coverage/
 # `npx tsx scripts/transform-lbdc.ts`. Never commit.
 data/lbdc/raw/
 data/lbdc/firestore/
+.env*

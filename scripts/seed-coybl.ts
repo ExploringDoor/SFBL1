@@ -7,13 +7,21 @@
 // Usage: `FIRESTORE_EMULATOR_HOST=localhost:8080 GCLOUD_PROJECT=league-platform-5f3c8 tsx scripts/seed-coybl.ts`
 // (with `npm run dev:emulators` already running).
 
-import { initializeApp } from "firebase-admin/app";
+import { initializeApp, cert } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
+import { readFileSync } from "node:fs";
 
-if (!process.env.FIRESTORE_EMULATOR_HOST) {
+// Safety: default to refusing any non-emulator target so nobody seeds prod by
+// accident. A DELIBERATE prod seed must opt in with SEED_ALLOW_PROD=1 AND a
+// service-account path — that combination can only be set on purpose.
+if (
+  !process.env.FIRESTORE_EMULATOR_HOST &&
+  !(process.env.SEED_ALLOW_PROD === "1" && process.env.FIREBASE_SERVICE_ACCOUNT_PATH)
+) {
   console.error(
     "[seed-coybl] FIRESTORE_EMULATOR_HOST not set. Refusing to seed " +
-      "without an explicit emulator target.",
+      "without an explicit emulator target. (For a deliberate prod seed, set " +
+      "SEED_ALLOW_PROD=1 + FIREBASE_SERVICE_ACCOUNT_PATH.)",
   );
   process.exit(1);
 }
@@ -24,7 +32,15 @@ const projectId =
   process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ??
   "league-platform-5f3c8";
 
-initializeApp({ projectId });
+// Emulator needs no credential; a prod seed authenticates with the
+// service-account key at FIREBASE_SERVICE_ACCOUNT_PATH.
+const saPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+if (saPath && !process.env.FIRESTORE_EMULATOR_HOST) {
+  const sa = JSON.parse(readFileSync(saPath, "utf8"));
+  initializeApp({ credential: cert(sa), projectId: sa.project_id });
+} else {
+  initializeApp({ projectId });
+}
 const db = getFirestore();
 
 const LEAGUE_ID = "coybl";
