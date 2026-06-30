@@ -1,26 +1,35 @@
-import fs from "node:fs";
-import path from "node:path";
+// Map of page-slug -> public src for a tenant's header banner image. The
+// image files live at public/<tenant>/headers/<slug>.jpg and are served by
+// the CDN.
+//
+// IMPORTANT: this is a STATIC slug list, not a runtime fs scan. The previous
+// version used fs.readdirSync(public/<tenant>/headers) — which works in local
+// dev but returns nothing on Vercel serverless functions (they don't ship the
+// public/ folder on disk), so every header banner silently disappeared on the
+// deployed site. Driving it from a list keeps SSR identical everywhere.
+//
+// To add/remove a tenant's header banners: drop the <slug>.jpg into
+// public/<tenant>/headers/ and update its entry here.
+const HEADER_SLUGS: Record<string, string[]> = {
+  coybl: [
+    "home",
+    "scores",
+    "schedule",
+    "standings",
+    "teams",
+    "tournaments",
+    "eligibility",
+    "power-rankings",
+    "rules",
+    "team-registration",
+  ],
+};
 
-const EXTS = ["jpg", "jpeg", "png", "webp", "svg"];
-
-// Map of page-slug -> public src for a tenant's header banner images, read from
-// public/<tenant>/headers/<slug>.<ext>. Empty when the tenant has none (so the
-// PageBanner renders nothing for leagues like SFBL). Server-only (uses fs).
 export function headerImagesFor(tenant: string | null): Record<string, string> {
-  if (!tenant || !/^[a-z0-9_-]+$/.test(tenant)) return {};
-  const dir = path.join(process.cwd(), "public", tenant, "headers");
-  let files: string[];
-  try {
-    files = fs.readdirSync(dir);
-  } catch {
-    return {};
-  }
+  if (!tenant) return {};
+  const slugs = HEADER_SLUGS[tenant];
+  if (!slugs) return {};
   const map: Record<string, string> = {};
-  for (const f of files) {
-    const ext = path.extname(f).slice(1).toLowerCase();
-    if (!EXTS.includes(ext)) continue;
-    const slug = path.basename(f, path.extname(f));
-    map[slug] ??= `/${tenant}/headers/${f}`;
-  }
+  for (const slug of slugs) map[slug] = `/${tenant}/headers/${slug}.jpg`;
   return map;
 }
