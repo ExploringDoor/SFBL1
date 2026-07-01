@@ -114,6 +114,7 @@ const LEAGUE_CONFIG = {
       { label: "Pitch Counts", href: "/eligibility" },
       { label: "Power Rankings", href: "/power-rankings" },
       { label: "Rules", href: "/rules" },
+      { label: "Alerts", href: "/alerts" },
     ],
   },
   // Standings: straight W/L (PCT-based default — no points scheme).

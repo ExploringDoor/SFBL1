@@ -44,7 +44,8 @@ export interface LeagueFormProps {
     | "team_registration"
     | "player_registration"
     | "team_waiver"
-    | "umpire_evaluation";
+    | "umpire_evaluation"
+    | "alerts_signup";
   title: string;
   description?: string;
   /** Optional intro paragraph(s) — shown above the form. Each entry
@@ -61,6 +62,9 @@ export interface LeagueFormProps {
   submitLabel?: string;
   /** Confirmation message shown after successful submission. */
   successMessage?: string;
+  /** Small eyebrow label above the title. Defaults to "SFBL" so the
+   *  SFBL forms are unchanged; tenants pass their own (e.g. "COYBL"). */
+  eyebrow?: string;
 }
 
 export function LeagueForm({
@@ -72,6 +76,7 @@ export function LeagueForm({
   waiverText,
   submitLabel = "Submit",
   successMessage = "Thanks! Your submission was received. The league office will be in touch.",
+  eyebrow = "SFBL",
 }: LeagueFormProps) {
   const [data, setData] = useState<Record<string, unknown>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -133,7 +138,7 @@ export function LeagueForm({
   if (done) {
     return (
       <main className="container py-10">
-        <FormHeader title={title} />
+        <FormHeader title={title} eyebrow={eyebrow} />
         <div className="le-form-success">
           <h2>✓ Submission received</h2>
           <p>{successMessage}</p>
@@ -144,7 +149,7 @@ export function LeagueForm({
 
   return (
     <main className="container py-10">
-      <FormHeader title={title} description={description} />
+      <FormHeader title={title} description={description} eyebrow={eyebrow} />
 
       {intro && intro.length > 0 && (
         <div className="le-form-intro">
@@ -200,15 +205,19 @@ export function LeagueForm({
 function FormHeader({
   title,
   description,
+  eyebrow,
 }: {
   title: string;
   description?: string;
+  eyebrow?: string;
 }) {
   return (
     <header className="mb-6">
-      <p className="sec-eyebrow" style={{ color: "var(--brand-primary)" }}>
-        SFBL
-      </p>
+      {eyebrow && (
+        <p className="sec-eyebrow" style={{ color: "var(--brand-primary)" }}>
+          {eyebrow}
+        </p>
+      )}
       <h1
         className="font-display"
         style={{

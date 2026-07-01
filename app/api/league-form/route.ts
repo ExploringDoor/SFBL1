@@ -31,7 +31,8 @@ type Kind =
   | "team_registration"
   | "player_registration"
   | "team_waiver"
-  | "umpire_evaluation";
+  | "umpire_evaluation"
+  | "alerts_signup";
 
 interface SubmissionBody {
   kind: Kind;
@@ -51,6 +52,11 @@ const ALLOWED_FIELDS: Record<Kind, string[]> = {
     "city",
     "team_name",
     "division",
+    // COYBL (youth) fields — age group instead of division, plus the
+    // club/org and the GameChanger schedule link.
+    "age_group",
+    "organization",
+    "gamechanger_link",
     "county",
     "asst_first_name",
     "asst_last_name",
@@ -103,16 +109,25 @@ const ALLOWED_FIELDS: Record<Kind, string[]> = {
     "field_umpire_comments",
     "general_comments",
   ],
+  alerts_signup: [
+    "name",
+    "email",
+    "phone",
+    "age_group",
+    "notify_by",
+    "agreed_to_alerts",
+  ],
 };
 
 const REQUIRED: Record<Kind, string[]> = {
   team_registration: [
+    // division/age_group are validated client-side per tenant (SFBL uses
+    // division, COYBL uses age_group), so they're not server-required here.
     "manager_first_name",
     "manager_last_name",
     "email",
     "phone",
     "team_name",
-    "division",
     "agreed_to_terms",
   ],
   player_registration: [
@@ -140,6 +155,7 @@ const REQUIRED: Record<Kind, string[]> = {
     "visiting_team",
     "home_team",
   ],
+  alerts_signup: ["email", "agreed_to_alerts"],
 };
 
 // In-memory rate limiter — fine for single-instance Vercel/Next dev.

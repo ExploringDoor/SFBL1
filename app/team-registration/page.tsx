@@ -84,25 +84,12 @@ const COYBL_FIELDS: FormField[] = [
   { name: "city", label: "City / Town", type: "text", width: "half" },
   { name: "organization", label: "Club / Organization", type: "text", placeholder: "If your team is part of a club", width: "half" },
   {
-    name: "insurance_option",
-    label: "Registration Option",
-    type: "select",
-    required: true,
-    options: [
-      { value: "option-1", label: "Option 1 — $495 (league provides insurance)" },
-      { value: "option-2", label: "Option 2 — $425 (we provide our own insurance)" },
-    ],
-    width: "half",
-  },
-  {
-    name: "usssa_addon",
-    label: "Add USSSA membership? (+$40)",
-    type: "select",
-    options: [
-      { value: "no", label: "No" },
-      { value: "yes", label: "Yes, add USSSA (+$40)" },
-    ],
-    width: "half",
+    name: "gamechanger_link",
+    label: "GameChanger Schedule Link",
+    type: "text",
+    placeholder: "https://web.gc.com/teams/…",
+    help: "Paste your team's GameChanger schedule link — it feeds standings and power rankings.",
+    width: "full",
   },
   { name: "asst_first_name", label: "Assistant Coach First Name", type: "text", width: "half" },
   { name: "asst_last_name", label: "Assistant Coach Last Name", type: "text", width: "half" },
@@ -125,11 +112,36 @@ function content(tenantId: string) {
       description:
         "Register your team for the Central Ohio Youth Baseball League.",
       intro: [
-        "Registration options: Option 1 is $495 (includes team insurance plus Five Tool Youth registration). Option 2 is $425 (your team provides proof of its own insurance, plus Five Tool Youth registration). USSSA membership is an optional +$40 add-on.",
-        "After you submit, the league will reach out to confirm your age-group placement and walk through payment.",
+        "The team registration fee is $35.",
+        (
+          <>
+            Pay by <strong>Venmo</strong> to{" "}
+            <a
+              href="https://venmo.com/u/Doug-Hare-2"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              @Doug-Hare-2
+            </a>{" "}
+            (scan the code below), or by check to COYBL, 152 Glen Crossing
+            Drive, Pataskala, OH 43062.
+            <br />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/coybl/venmo-qr.png"
+              alt="Venmo QR code — pay @Doug-Hare-2"
+              width={168}
+              height={168}
+              style={{
+                marginTop: 10,
+                borderRadius: 8,
+                border: "1px solid rgba(0,0,0,0.1)",
+              }}
+            />
+          </>
+        ),
       ],
-      successMessage:
-        "Thanks! Your team registration is in. We'll follow up to confirm your age group and payment.",
+      successMessage: "Thanks! Your team registration is in.",
     };
   }
   // SFBL (default).
@@ -165,6 +177,7 @@ export default function TeamRegistrationPage() {
       fields={fields}
       submitLabel="Register Team"
       successMessage={successMessage}
+      eyebrow={tenantId === "coybl" ? "COYBL" : "SFBL"}
     />
   );
 }
