@@ -289,6 +289,35 @@ A pitcher may **not return to the mound** once removed. Required rest is based o
 The regular season ends **June 30** (9U–12U).
 `;
 
+// Contact page — the real 2026 COYBL directors (from coybl.org's
+// "Contact 2026 COYBL Directors" page).
+const CONTACT_MD = `## League Office
+
+Have a question about COYBL — registration, schedules, rules, or tournaments? Reach out to the league office or your age group's director below.
+
+**League President:** Doug Hare — [doughare@coybl.org](mailto:doughare@coybl.org) — 614-778-1391
+
+**Mailing address:** COYBL, 152 Glen Crossing Drive, Pataskala, OH 43062
+
+## 2026 Age Directors
+
+| Age Group | Director | Email | Phone |
+|---|---|---|---|
+| 7U & 8U | Doug Hare | doughare@coybl.org | 614-778-1391 |
+| 9U | Nate Whisner | natewhisner@gmail.com | 740-258-0550 |
+| 10U | Pete Tarnapoll | pete.tarnapoll@gmail.com | 614-563-1905 |
+| 11U | Mark Dountz | mdountz@gmail.com | 614-989-3874 |
+| 12U | Mark Dountz | mdountz@gmail.com | 614-989-3874 |
+| 13U | Nate Whisner | natewhisner@gmail.com | 740-258-0550 |
+| 14U | Pete Tarnapoll | pete.tarnapoll@gmail.com | 614-563-1905 |
+
+## Quick Links
+
+- Register your team → [Team Registration](/team-registration)
+- League rules → [Rules](/rules)
+- Tournaments → [Tournaments](/tournaments)
+`;
+
 async function run() {
   console.log(`[seed-coybl] writing to ${process.env.FIRESTORE_EMULATOR_HOST} (${projectId})`);
 
@@ -369,17 +398,7 @@ async function run() {
   // COYBL's real contact when Doug provides it).
   await db.doc(`leagues/${LEAGUE_ID}/page_content/contact`).set({
     title: "Contact",
-    markdown: [
-      "## Get in touch",
-      "",
-      "Have a question about COYBL — registration, schedules, rules, or tournaments? Start here:",
-      "",
-      "- **Register your team** → [Team Registration](/team-registration)",
-      "- **League rules** → [Rules](/rules)",
-      "- **Tournament schedule** → [Tournaments](/tournaments)",
-      "",
-      "For anything else, contact the league office and we'll be glad to help.",
-    ].join("\n"),
+    markdown: CONTACT_MD,
     updated_at: new Date().toISOString(),
     updated_by: "seed",
   });
