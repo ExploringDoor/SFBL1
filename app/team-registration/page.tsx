@@ -134,25 +134,27 @@ function content(tenantId: string) {
         "Register your team for the Central Ohio Youth Baseball League.",
       intro: [
         "Choose your registration option below: Option 1 is $495 (includes team insurance plus Five Tool Youth registration); Option 2 is $425 (your team provides proof of its own insurance, plus Five Tool Youth registration). USSSA membership is an optional +$35 add-on.",
-        "You can pay by card (Square) at checkout, or by Venmo to skip the card processing fee.",
+        "You can pay by card (Square) at checkout — card payments add a 3.25% processing fee. To skip that fee, pay by Venmo or check instead (details below).",
       ],
       successMessage: "Thanks! Your team registration is in.",
       // Secondary payment option — kept below the form so it doesn't lead
       // the page. Venmo lets teams avoid the card processing fee.
       footer: (
         <div>
-          <p style={{ margin: "0 0 4px", fontWeight: 700 }}>
-            Prefer Venmo? Skip the card fee.
+          <p style={{ margin: "0 0 6px", fontWeight: 700 }}>
+            Skip the 3.25% card fee
           </p>
           <p
             style={{
               margin: "0 0 12px",
               fontSize: 14,
               color: "var(--muted)",
-              maxWidth: 520,
+              maxWidth: 560,
+              lineHeight: 1.55,
             }}
           >
-            Send your $35 to{" "}
+            Card payments (Square) include a 3.25% processing fee. To avoid it,
+            pay by <strong>Venmo</strong> to{" "}
             <a
               href="https://venmo.com/u/Doug-Hare-2"
               target="_blank"
@@ -160,7 +162,8 @@ function content(tenantId: string) {
             >
               @Doug-Hare-2
             </a>{" "}
-            to avoid the card processing fee — scan to pay:
+            (scan below), or by <strong>check</strong> to COYBL, 152 Glen
+            Crossing Drive, Etna, OH 43062.
           </p>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
