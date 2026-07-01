@@ -75,7 +75,7 @@ export default async function RulesPage() {
       (structuredData?.updated_at as string | undefined) ??
       (contentSnap.data()?.updated_at as string | undefined);
     return (
-      <Shell heading={config?.name ? `${config.name} — Rules` : "Rules"}>
+      <Shell heading={config?.flags?.hide_page_titles ? "" : config?.name ? `${config.name} — Rules` : "Rules"}>
         {richUpdatedAt && (
           <p className="mb-4 text-xs text-slate-500">
             Last updated{" "}
@@ -134,9 +134,11 @@ export default async function RulesPage() {
 function Shell({ heading, children }: { heading: string; children: React.ReactNode }) {
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
-      <header className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">{heading}</h1>
-      </header>
+      {heading && (
+        <header className="mb-6">
+          <h1 className="text-3xl font-bold tracking-tight">{heading}</h1>
+        </header>
+      )}
       {children}
     </main>
   );

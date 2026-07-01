@@ -76,25 +76,27 @@ export default async function HomePage() {
           /lbdc/hero.jpg as the wide banner and /lbdc/logo.png as
           the square ticker icon. SFBL has only logo_url today, so
           falls through to it for parity. */}
-      <DvslHero
-        title={`${big} ${season}`}
-        accentWord={season}
-        subtitle={leagueName}
-        logoUrl={
-          config?.theme?.banner_url ?? config?.theme?.logo_url ?? null
-        }
-        ctas={
-          config?.flags?.registration_open
-            ? [
-                {
-                  label: "Register Your Team →",
-                  href: "/team-registration",
-                  variant: "primary",
-                },
-              ]
-            : []
-        }
-      />
+      {!config?.flags?.hide_page_titles && (
+        <DvslHero
+          title={`${big} ${season}`}
+          accentWord={season}
+          subtitle={leagueName}
+          logoUrl={
+            config?.theme?.banner_url ?? config?.theme?.logo_url ?? null
+          }
+          ctas={
+            config?.flags?.registration_open
+              ? [
+                  {
+                    label: "Register Your Team →",
+                    href: "/team-registration",
+                    variant: "primary",
+                  },
+                ]
+              : []
+          }
+        />
+      )}
       {/* "PLAYERS — JOIN THE LIST" registration alert now sits
           UNDER the hero — matches LBDC's existing site layout
           (Adam 2026-05-14). Renders nothing when the tenant

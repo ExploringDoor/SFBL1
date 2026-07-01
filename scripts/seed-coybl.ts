@@ -83,7 +83,13 @@ const LEAGUE_CONFIG = {
     ticker_by_age: true,
     show_power_rankings: true,
     registration_open: true,
+    // Hide the per-page text titles/heros — COYBL's header banner images
+    // already show the league name + page, so the text was redundant.
+    hide_page_titles: true,
   },
+  // No admin password gate for now (preview) — the admin landing page opens
+  // straight through when passwordless is true.
+  admin: { passwordless: true },
   // Trim the platform nav to COYBL's pages. Matched case-insensitively against
   // the default nav labels (components/ui/nav-links.ts) — drops stats pages
   // (COYBL is score-only) + platform pages COYBL doesn't use.
@@ -372,6 +378,25 @@ async function run() {
 
   await db.doc(`leagues/${LEAGUE_ID}/page_content/rules`).set({
     markdown: RULES_MD,
+    updated_at: new Date().toISOString(),
+    updated_by: "seed",
+  });
+
+  // Contact page — points to the real actions. No email/phone yet (add
+  // COYBL's real contact when Doug provides it).
+  await db.doc(`leagues/${LEAGUE_ID}/page_content/contact`).set({
+    title: "Contact",
+    markdown: [
+      "## Get in touch",
+      "",
+      "Have a question about COYBL — registration, schedules, rules, or tournaments? Start here:",
+      "",
+      "- **Register your team** → [Team Registration](/team-registration)",
+      "- **League rules** → [Rules](/rules)",
+      "- **Tournament schedule** → [Tournaments](/tournaments)",
+      "",
+      "For anything else, contact the league office and we'll be glad to help.",
+    ].join("\n"),
     updated_at: new Date().toISOString(),
     updated_by: "seed",
   });

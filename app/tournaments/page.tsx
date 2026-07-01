@@ -79,26 +79,31 @@ function EventsView({
   events: TournamentEvent[];
   fallbackUrl?: string;
   eyebrow?: string;
+  hideTitle?: boolean;
 }) {
   return (
     <main className="container py-10">
       <header className="mb-8">
-        {eyebrow && (
-          <p className="sec-eyebrow" style={{ color: "var(--brand-primary)" }}>
-            {eyebrow}
-          </p>
+        {!hideTitle && (
+          <>
+            {eyebrow && (
+              <p className="sec-eyebrow" style={{ color: "var(--brand-primary)" }}>
+                {eyebrow}
+              </p>
+            )}
+            <h1
+              className="font-display"
+              style={{
+                fontSize: "clamp(40px, 6vw, 64px)",
+                lineHeight: 0.95,
+                color: "var(--text-strong)",
+                margin: 0,
+              }}
+            >
+              Tournaments
+            </h1>
+          </>
         )}
-        <h1
-          className="font-display"
-          style={{
-            fontSize: "clamp(40px, 6vw, 64px)",
-            lineHeight: 0.95,
-            color: "var(--text-strong)",
-            margin: 0,
-          }}
-        >
-          Tournaments
-        </h1>
         <p style={{ marginTop: 10, color: "var(--muted)", maxWidth: 680, lineHeight: 1.5 }}>
           Our teams compete in these tournaments around Central Ohio — tap an
           event to register or get details.
@@ -264,6 +269,7 @@ export default async function TournamentsPage() {
         events={events}
         fallbackUrl={config?.tournaments?.url}
         eyebrow={config?.name}
+        hideTitle={config?.flags?.hide_page_titles}
       />
     );
   }

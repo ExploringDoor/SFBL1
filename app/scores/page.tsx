@@ -171,13 +171,15 @@ export default async function ScoresPage({
 
   return (
     <main className="container py-10">
-      <header className="mb-6">
-        <h1 className="font-display" style={{ fontSize: "clamp(40px, 6vw, 64px)" }}>
-          <span style={{ color: "var(--text-strong)" }}>Season</span>{" "}
-          <span style={{ color: "var(--brand-primary)" }}>Scores</span>
-        </h1>
-        {config?.name && <p className="sec-eyebrow mt-1">{config.name}</p>}
-      </header>
+      {!config?.flags?.hide_page_titles && (
+        <header className="mb-6">
+          <h1 className="font-display" style={{ fontSize: "clamp(40px, 6vw, 64px)" }}>
+            <span style={{ color: "var(--text-strong)" }}>Season</span>{" "}
+            <span style={{ color: "var(--brand-primary)" }}>Scores</span>
+          </h1>
+          {config?.name && <p className="sec-eyebrow mt-1">{config.name}</p>}
+        </header>
+      )}
 
       <ScoresScheduleTabs active="scores" />
 

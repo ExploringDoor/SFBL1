@@ -151,13 +151,17 @@ export default async function SchedulePage({
   return (
     <main className="container py-10">
       <header className="mb-6 flex items-end justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="font-display" style={{ fontSize: "clamp(40px, 6vw, 64px)" }}>
-            <span style={{ color: "var(--text-strong)" }}>Season</span>{" "}
-            <span style={{ color: "var(--brand-primary)" }}>Schedule</span>
-          </h1>
-          {config?.name && <p className="sec-eyebrow mt-1">{config.name}</p>}
-        </div>
+        {!config?.flags?.hide_page_titles ? (
+          <div>
+            <h1 className="font-display" style={{ fontSize: "clamp(40px, 6vw, 64px)" }}>
+              <span style={{ color: "var(--text-strong)" }}>Season</span>{" "}
+              <span style={{ color: "var(--brand-primary)" }}>Schedule</span>
+            </h1>
+            {config?.name && <p className="sec-eyebrow mt-1">{config.name}</p>}
+          </div>
+        ) : (
+          <div />
+        )}
         <div className="flex flex-col items-end gap-2">
           <SubscribeCalendar />
           {/* Flat CSV of the whole schedule — opens straight in Excel /
