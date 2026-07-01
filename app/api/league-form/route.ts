@@ -52,9 +52,12 @@ const ALLOWED_FIELDS: Record<Kind, string[]> = {
     "city",
     "team_name",
     "division",
-    // COYBL (youth) fields — age group instead of division, plus the
-    // club/org and the GameChanger schedule link.
+    // COYBL (youth) fields — age group instead of division, the
+    // registration option ($495/$425) + USSSA add-on, club/org, and the
+    // GameChanger schedule link.
     "age_group",
+    "insurance_option",
+    "usssa_addon",
     "organization",
     "gamechanger_link",
     "county",

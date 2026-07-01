@@ -84,6 +84,27 @@ const COYBL_FIELDS: FormField[] = [
   { name: "city", label: "City / Town", type: "text", width: "half" },
   { name: "organization", label: "Club / Organization", type: "text", placeholder: "If your team is part of a club", width: "half" },
   {
+    name: "insurance_option",
+    label: "Registration Option",
+    type: "select",
+    required: true,
+    options: [
+      { value: "option-1", label: "Option 1 — $495 (league provides insurance)" },
+      { value: "option-2", label: "Option 2 — $425 (we provide our own insurance)" },
+    ],
+    width: "half",
+  },
+  {
+    name: "usssa_addon",
+    label: "Add USSSA membership? (+$40)",
+    type: "select",
+    options: [
+      { value: "no", label: "No" },
+      { value: "yes", label: "Yes, add USSSA (+$40)" },
+    ],
+    width: "half",
+  },
+  {
     name: "gamechanger_link",
     label: "GameChanger Schedule Link",
     type: "text",
@@ -112,7 +133,7 @@ function content(tenantId: string) {
       description:
         "Register your team for the Central Ohio Youth Baseball League.",
       intro: [
-        "The team registration fee is $35.",
+        "Choose your registration option below: Option 1 is $495 (includes team insurance plus Five Tool Youth registration); Option 2 is $425 (your team provides proof of its own insurance, plus Five Tool Youth registration). USSSA membership is an optional +$40 add-on.",
         "You can pay by card (Square) at checkout, or by Venmo to skip the card processing fee.",
       ],
       successMessage: "Thanks! Your team registration is in.",

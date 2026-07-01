@@ -37,7 +37,12 @@
 }
 
 @media (max-width: 700px) {
-  :root { --ticker-height: 84px; }
+  /* The dense, horizontally-scrolling score ticker is unreadable on a
+   * phone (tiny type, cramped cells). Hide it on mobile and collapse its
+   * space so the nav sits at the top — scores live on /scores and the
+   * homepage "Recent Results". Desktop keeps the ticker. */
+  :root { --ticker-height: 0px; }
+  #score-ticker { display: none !important; }
 }
 
 /* html keeps `height: 100%` so its navy background paints the
