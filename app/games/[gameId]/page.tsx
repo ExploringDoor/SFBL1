@@ -9,6 +9,7 @@ import { BoxScoreContent } from "@/components/BoxScoreContent";
 import { RecapEditor } from "@/components/RecapEditor";
 import { LiveScoreBanner } from "@/components/LiveScoreBanner";
 import { loadBoxScoreData } from "@/lib/box-score-data";
+import { getStatsOffRecap } from "@/lib/stats-off-recap";
 import { getAdminDb } from "@/lib/firebase-admin";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { PrintButton } from "./PrintButton";
@@ -108,19 +109,38 @@ export default async function GameDetailPage({
   if (!data) notFound();
 
   const view = searchParams?.tab === "recap" ? "recap" : "box";
+  const isFinal = data.status === "final" || data.status === "approved";
+  // Stats-off leagues (COYBL) have no box score — final games show a
+  // recap-only view with a short AI-generated (or template) recap.
+  const recapOnly = config?.flags?.stats_enabled === false && isFinal;
 
-  // Recap override — admin / captain custom-written recap that
-  // overrides the auto-generated one. Stored at /recaps/{gameId}.
-  // Public-readable; fall back to auto-build when null.
-  const recapSnap = await getAdminDb()
-    .doc(`leagues/${tenantId}/recaps/${params.gameId}`)
-    .get();
-  const recapMarkdown = recapSnap.exists
-    ? (recapSnap.data()?.markdown as string | undefined) ?? null
-    : null;
-  const recapHtml = recapSnap.exists
-    ? (recapSnap.data()?.html as string | undefined) ?? null
-    : null;
+  let recapMarkdown: string | null = null;
+  let recapHtml: string | null = null;
+  if (recapOnly) {
+    const r = await getStatsOffRecap(tenantId, params.gameId, {
+      awayName: data.away.name ?? data.away.team_id,
+      homeName: data.home.name ?? data.home.team_id,
+      awayScore: data.away.score,
+      homeScore: data.home.score,
+      date: data.date,
+      leagueName: config?.name ?? null,
+    });
+    recapMarkdown = r.markdown;
+    recapHtml = r.html;
+  } else {
+    // Recap override — admin / captain custom-written recap that
+    // overrides the auto-generated one. Stored at /recaps/{gameId}.
+    // Public-readable; fall back to auto-build when null.
+    const recapSnap = await getAdminDb()
+      .doc(`leagues/${tenantId}/recaps/${params.gameId}`)
+      .get();
+    recapMarkdown = recapSnap.exists
+      ? (recapSnap.data()?.markdown as string | undefined) ?? null
+      : null;
+    recapHtml = recapSnap.exists
+      ? (recapSnap.data()?.html as string | undefined) ?? null
+      : null;
+  }
 
   return (
     <main className="container py-12">
@@ -155,6 +175,7 @@ export default async function GameDetailPage({
       <BoxScoreContent
         {...data}
         view={view}
+        recapOnly={recapOnly}
         recapOverrideHtml={recapHtml}
         recapEditor={
           <RecapEditor

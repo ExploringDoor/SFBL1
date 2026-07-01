@@ -88,6 +88,11 @@ export interface BoxScoreContentProps {
   /** Optional client-side editor affordance (admin/captain). Server-
    *  rendered slot so BoxScoreContent stays presentational. */
   recapEditor?: React.ReactNode;
+  /** Stats-off leagues (COYBL): no box score exists, so show ONLY the
+   *  recap — the score hero + a short narrative, with no Box Score tab,
+   *  no linescore, and no batting/pitching tables. `recapOverrideHtml`
+   *  carries the recap (AI-generated or template) in this mode. */
+  recapOnly?: boolean;
 }
 
 export function BoxScoreContent(props: BoxScoreContentProps) {
@@ -106,8 +111,33 @@ export function BoxScoreContent(props: BoxScoreContentProps) {
     );
   }
 
-  const aWin = away.score > home.score;
-  const hWin = home.score > away.score;
+  // Stats-off leagues (COYBL): recap-only view — score hero + a short
+  // narrative, no Box Score tab and no linescore/batting/pitching. The
+  // recap HTML (AI or template) arrives via recapOverrideHtml.
+  if (props.recapOnly) {
+    return (
+      <div className="bs-root">
+        <FinalHeader away={away} home={home} date={date} time={time} field={field} />
+        <div className="bs-recap-body">
+          {props.recapEditor && (
+            <div className="bs-recap-edit-slot">{props.recapEditor}</div>
+          )}
+          {props.recapOverrideHtml ? (
+            <div
+              className="bs-recap-override"
+              dangerouslySetInnerHTML={{
+                __html: sanitizeHtml(props.recapOverrideHtml),
+              }}
+            />
+          ) : (
+            <p className="bs-recap-p" style={{ color: "var(--muted)" }}>
+              No recap yet.
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   const recap = buildRecap({
     awayTeamName: away.name,
@@ -129,43 +159,7 @@ export function BoxScoreContent(props: BoxScoreContentProps) {
 
   return (
     <div className="bs-root">
-      {/* HERO: logos + AWAY/HOME labels + big score + FINAL + meta. */}
-      <div className="bs-hero">
-        <TeamBlock team={away} side="Away" winner={aWin} />
-        <div className="bs-score-mid">
-          <div className="bs-score-line">
-            <span className={"bs-score" + (aWin ? "" : " loser")}>
-              {away.score}
-            </span>
-            <span className="bs-dash">–</span>
-            <span className={"bs-score" + (hWin ? "" : " loser")}>
-              {home.score}
-            </span>
-          </div>
-          <span className="bs-final">FINAL</span>
-        </div>
-        <TeamBlock team={home} side="Home" winner={hWin} />
-      </div>
-
-      <div className="bs-meta">
-        {date && (
-          <span>
-            <span aria-hidden>🗓</span>{" "}
-            {/* Audit H1/H5: stable local calendar day. This is the
-                public box score shared in iMessage links — it was
-                showing the prior day for LBDC's Pacific readers. */}
-            {formatGameDate(date, time, {
-              month: "short",
-              day: "numeric",
-            })}
-          </span>
-        )}
-        {field && (
-          <span>
-            <span aria-hidden>📍</span> {field}
-          </span>
-        )}
-      </div>
+      <FinalHeader away={away} home={home} date={date} time={time} field={field} />
 
       {/* Tabs flip between two pre-rendered bodies via client state.
           Initial tab honours ?tab=recap on the URL so deep links still
@@ -251,6 +245,66 @@ export function BoxScoreContent(props: BoxScoreContentProps) {
 }
 
 // ---------- pieces ---------------------------------------------------
+
+// Final-game hero: two team blocks + big centered score + FINAL badge,
+// then the meta row (date · field). Shared by the tabbed box-score view
+// and the recap-only view so both render an identical header.
+function FinalHeader({
+  away,
+  home,
+  date,
+  time,
+  field,
+}: {
+  away: BoxTeam;
+  home: BoxTeam;
+  date: string | null;
+  time: string | null;
+  field: string | null;
+}) {
+  const aWin = away.score > home.score;
+  const hWin = home.score > away.score;
+  return (
+    <>
+      <div className="bs-hero">
+        <TeamBlock team={away} side="Away" winner={aWin} />
+        <div className="bs-score-mid">
+          <div className="bs-score-line">
+            <span className={"bs-score" + (aWin ? "" : " loser")}>
+              {away.score}
+            </span>
+            <span className="bs-dash">–</span>
+            <span className={"bs-score" + (hWin ? "" : " loser")}>
+              {home.score}
+            </span>
+          </div>
+          <span className="bs-final">FINAL</span>
+        </div>
+        <TeamBlock team={home} side="Home" winner={hWin} />
+      </div>
+
+      <div className="bs-meta">
+        {date && (
+          <span>
+            <span aria-hidden>🗓</span>{" "}
+            {/* Audit H1/H5: stable local calendar day. This is the
+                public box score shared in iMessage links — it was
+                showing the prior day for LBDC's Pacific readers. */}
+            {formatGameDate(date, time, {
+              month: "short",
+              day: "numeric",
+            })}
+          </span>
+        )}
+        {field && (
+          <span>
+            <span aria-hidden>📍</span> {field}
+          </span>
+        )}
+      </div>
+    </>
+  );
+}
 
 function TeamBlock({
   team,
