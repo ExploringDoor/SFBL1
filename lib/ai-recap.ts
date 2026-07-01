@@ -49,12 +49,14 @@ export function shortTemplateRecap(i: ShortRecapInput): string {
   const when = i.date
     ? formatGameDate(i.date, null, { month: "long", day: "numeric" })
     : null;
-  const age = i.ageGroup ? `${i.ageGroup} ` : "";
+  const on = when ? ` on ${when}` : "";
 
   if (tie) {
-    return `${i.awayName} and ${i.homeName} battled to a ${i.awayScore}–${i.homeScore} tie${when ? ` on ${when}` : ""} in ${age}action.`;
+    const inAge = i.ageGroup ? ` in ${i.ageGroup} action` : "";
+    return `${i.awayName} and ${i.homeName} battled to a ${i.awayScore}–${i.homeScore} tie${on}${inAge}.`;
   }
 
+  const inAge = i.ageGroup ? ` in ${i.ageGroup} play` : "";
   const margin = hi - lo;
   const verb = margin >= 8 ? "rolled past" : margin >= 4 ? "beat" : "edged";
   const closer =
@@ -63,7 +65,7 @@ export function shortTemplateRecap(i: ShortRecapInput): string {
       : margin === 1
         ? `${winner} held on for a one-run win.`
         : `${loser} kept it close but couldn't complete the comeback.`;
-  return `${winner} ${verb} ${loser} ${hi}–${lo}${when ? ` on ${when}` : ""} in ${age}play. ${closer}`;
+  return `${winner} ${verb} ${loser} ${hi}–${lo}${on}${inAge}. ${closer}`;
 }
 
 /** AI-written short recap. Returns null when unavailable (no key, error,
