@@ -124,10 +124,9 @@ const LEAGUE_CONFIG = {
   tournaments: {
     url: "https://play.fivetoolyouth.org",
     events: [
-      { name: "On Our Sleeves — Breaking Stigmas", when: "Spring 2027 (dates TBD)", location: "Columbus, OH (venue TBD)", cost: "$TBD / team", ages: "8U-14U", note: "Benefits Nationwide Children's (On Our Sleeves)", url: "https://play.fivetoolyouth.org" },
-      { name: "Striking Out Pediatric Cancer", when: "Summer 2027 (dates TBD)", location: "Columbus, OH (venue TBD)", cost: "$TBD / team", ages: "8U-14U", url: "https://play.fivetoolyouth.org" },
-      { name: "Super Heroes", when: "Summer 2027 (dates TBD)", location: "Columbus, OH (venue TBD)", cost: "$TBD / team", ages: "8U-14U", url: "https://play.fivetoolyouth.org" },
-      { name: "Bust Out The Bats", when: "Summer 2027 (dates TBD)", location: "Columbus, OH (venue TBD)", cost: "$TBD / team", ages: "8U-14U", url: "https://play.fivetoolyouth.org" },
+      { name: "Striking Out Pediatric Cancer", when: "Summer 2027 (dates TBD)", location: "Columbus, OH (venue TBD)", cost: "$TBD / team", ages: "8U-14U", note: "Benefits Nationwide Children's Hospital", url: "https://play.fivetoolyouth.org" },
+      { name: "Super Heroes", when: "Summer 2027 (dates TBD)", location: "Columbus, OH (venue TBD)", cost: "$TBD / team", ages: "8U-14U", note: "Benefits Nationwide Children's Hospital", url: "https://play.fivetoolyouth.org" },
+      { name: "Bust Out The Bats", when: "Summer 2027 (dates TBD)", location: "Columbus, OH (venue TBD)", cost: "$TBD / team", ages: "8U-14U", note: "Benefits Nationwide Children's Hospital", url: "https://play.fivetoolyouth.org" },
       { name: "Five Tool Ohio State Championships", when: "Summer 2027 (dates TBD)", location: "Columbus, OH (venue TBD)", cost: "$TBD / team", ages: "8U-14U", url: "https://play.fivetoolyouth.org" },
     ],
   },
