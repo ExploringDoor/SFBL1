@@ -208,6 +208,7 @@ export default async function HomePage() {
                       away={teamCardData(g.away_team_id, teams, g.away_score)}
                       home={teamCardData(g.home_team_id, teams, g.home_score)}
                       ageGroup={teamAge[g.home_team_id] ?? teamAge[g.away_team_id]}
+                      compact={config?.flags?.stats_enabled === false}
                     />
                   ))}
                 </div>

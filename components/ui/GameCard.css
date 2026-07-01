@@ -218,6 +218,35 @@
 
 .le-gc-btn-share { margin-left: auto; }
 
+/* ── Compact card (COYBL / stats-off leagues) ──────────────────────
+ * Header: "Final - <date>" only. Footer: age bracket left, Recap right.
+ * No headline, no badge, no Box Score button. */
+.le-gc-hdr-compact {
+  justify-content: flex-start;
+}
+
+.le-gc-status-compact {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.le-gc-footer-compact {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.le-gc-age {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brand-primary, #002D72);
+}
+
 @media (max-width: 699px) {
   /* Single-column on phones — full card width, so logo + name +
    * score can breathe. Restore desktop-ish sizing instead of the

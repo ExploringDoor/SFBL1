@@ -43,6 +43,13 @@ export interface GameCardProps {
   /** Age group ("9U") for age-grouped tenants — shown as a small pill so
    *  a mixed feed is readable. Omitted for flat leagues. */
   ageGroup?: string;
+  /** Compact/minimal card (COYBL / stats-off leagues). Header shows only
+   *  "Final - <date>"; footer shows the age bracket on the left and a
+   *  single Recap link on the right (no Box Score button, no headline,
+   *  no editorial badge). Stats-off leagues have no box score to open, so
+   *  the extra chrome is dropped. Non-compact leagues (SFBL) render the
+   *  full card exactly as before. */
+  compact?: boolean;
 }
 
 export function GameCard({
@@ -54,6 +61,7 @@ export function GameCard({
   headline,
   badge,
   ageGroup,
+  compact = false,
 }: GameCardProps) {
   const aWin = away.score > home.score;
   const hWin = home.score > away.score;
@@ -79,63 +87,85 @@ export function GameCard({
         }
       }}
     >
-      <div className="le-gc-card-hdr">
-        <span className="le-gc-card-status">{statusLabel}</span>
-        {ageGroup && (
-          <span
-            style={{
-              display: "inline-block",
-              padding: "1px 8px",
-              borderRadius: 999,
-              background: "rgba(0,45,114,0.10)",
-              color: "var(--brand-primary)",
-              fontSize: 11,
-              fontWeight: 800,
-              letterSpacing: "0.03em",
-            }}
-          >
-            {ageGroup}
+      {compact ? (
+        <div className="le-gc-card-hdr le-gc-hdr-compact">
+          <span className="le-gc-status-compact">
+            {(statusLabel === "FINAL" ? "Final" : statusLabel) +
+              (dateLabel ? ` - ${dateLabel}` : "")}
           </span>
-        )}
-        {badge && (
-          <span
-            className="le-gc-card-badge"
-            title={badge.label}
-            aria-label={badge.label}
-          >
-            <span aria-hidden>{badge.emoji}</span>
-            <span className="le-gc-card-badge-text">{badge.label}</span>
-          </span>
-        )}
-        {dateLabel && <span className="le-gc-card-date">{dateLabel}</span>}
-        {computedHeadline && (
-          <span className="le-gc-card-headline">
-            {computedHeadline.toUpperCase()}
-          </span>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="le-gc-card-hdr">
+          <span className="le-gc-card-status">{statusLabel}</span>
+          {ageGroup && (
+            <span
+              style={{
+                display: "inline-block",
+                padding: "1px 8px",
+                borderRadius: 999,
+                background: "rgba(0,45,114,0.10)",
+                color: "var(--brand-primary)",
+                fontSize: 11,
+                fontWeight: 800,
+                letterSpacing: "0.03em",
+              }}
+            >
+              {ageGroup}
+            </span>
+          )}
+          {badge && (
+            <span
+              className="le-gc-card-badge"
+              title={badge.label}
+              aria-label={badge.label}
+            >
+              <span aria-hidden>{badge.emoji}</span>
+              <span className="le-gc-card-badge-text">{badge.label}</span>
+            </span>
+          )}
+          {dateLabel && <span className="le-gc-card-date">{dateLabel}</span>}
+          {computedHeadline && (
+            <span className="le-gc-card-headline">
+              {computedHeadline.toUpperCase()}
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="le-gc-card-body">
         <TeamRow team={away} winner={aWin} />
         <TeamRow team={home} winner={hWin} />
       </div>
 
-      <div className="le-gc-card-footer">
-        <Link
-          href={`/games/${gameId}?tab=recap`}
-          className="le-gc-btn"
-          onClick={(e) => e.stopPropagation()}
-        >
-          Recap
-        </Link>
-        <Link
-          href={`/games/${gameId}`}
-          className="le-gc-btn le-gc-btn-primary le-gc-btn-share"
-          onClick={(e) => e.stopPropagation()}
-        >
-          Box Score
-        </Link>
-      </div>
+      {compact ? (
+        <div className="le-gc-card-footer le-gc-footer-compact">
+          <span className="le-gc-age">{ageGroup ?? ""}</span>
+          <Link
+            href={`/games/${gameId}?tab=recap`}
+            className="le-gc-btn"
+            onClick={(e) => e.stopPropagation()}
+          >
+            Recap
+          </Link>
+        </div>
+      ) : (
+        <div className="le-gc-card-footer">
+          <Link
+            href={`/games/${gameId}?tab=recap`}
+            className="le-gc-btn"
+            onClick={(e) => e.stopPropagation()}
+          >
+            Recap
+          </Link>
+          <Link
+            href={`/games/${gameId}`}
+            className="le-gc-btn le-gc-btn-primary le-gc-btn-share"
+            onClick={(e) => e.stopPropagation()}
+          >
+            Box Score
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

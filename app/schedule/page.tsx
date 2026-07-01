@@ -258,6 +258,7 @@ export default async function SchedulePage({
               list={list}
               teams={teams}
               isFirstUpcomingDay={date === upcomingDayGroups[0]?.[0]}
+              compact={config?.flags?.stats_enabled === false}
             />
           ))}
           {upcomingDayGroups.length > 0 && pastDayGroups.length > 0 && (
@@ -284,6 +285,7 @@ export default async function SchedulePage({
               list={list}
               teams={teams}
               isFirstUpcomingDay={false}
+              compact={config?.flags?.stats_enabled === false}
             />
           ))}
             </div>
@@ -419,11 +421,13 @@ function DaySection({
   list,
   teams,
   isFirstUpcomingDay,
+  compact,
 }: {
   date: string;
   list: ScheduleGame[];
   teams: Record<string, TeamMeta>;
   isFirstUpcomingDay: boolean;
+  compact: boolean;
 }) {
   return (
     <section>
@@ -452,6 +456,7 @@ function DaySection({
                   teams[g.home_team_id]?.ageGroup ??
                   teams[g.away_team_id]?.ageGroup
                 }
+                compact={compact}
               />
             );
           }
