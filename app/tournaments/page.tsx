@@ -75,6 +75,7 @@ function EventsView({
   events,
   fallbackUrl,
   eyebrow,
+  hideTitle,
 }: {
   events: TournamentEvent[];
   fallbackUrl?: string;
