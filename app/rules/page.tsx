@@ -106,7 +106,7 @@ export default async function RulesPage() {
   const updatedAt = data?.updated_at as string | undefined;
 
   return (
-    <Shell heading={config?.name ? `${config.name} — Rules` : "Rules"}>
+    <Shell heading={config?.flags?.hide_page_titles ? "" : config?.name ? `${config.name} — Rules` : "Rules"}>
       {updatedAt && (
         <p className="mb-4 text-xs text-slate-500">
           Last updated{" "}
