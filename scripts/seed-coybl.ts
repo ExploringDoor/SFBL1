@@ -301,15 +301,19 @@ Have a question about COYBL — registration, schedules, rules, or tournaments? 
 
 ## 2026 Age Directors
 
-| Age Group | Director | Email | Phone |
-|---|---|---|---|
-| 7U & 8U | Doug Hare | doughare@coybl.org | 614-778-1391 |
-| 9U | Nate Whisner | natewhisner@gmail.com | 740-258-0550 |
-| 10U | Pete Tarnapoll | pete.tarnapoll@gmail.com | 614-563-1905 |
-| 11U | Mark Dountz | mdountz@gmail.com | 614-989-3874 |
-| 12U | Mark Dountz | mdountz@gmail.com | 614-989-3874 |
-| 13U | Nate Whisner | natewhisner@gmail.com | 740-258-0550 |
-| 14U | Pete Tarnapoll | pete.tarnapoll@gmail.com | 614-563-1905 |
+**7U & 8U — Doug Hare** — doughare@coybl.org — 614-778-1391
+
+**9U — Nate Whisner** — natewhisner@gmail.com — 740-258-0550
+
+**10U — Pete Tarnapoll** — pete.tarnapoll@gmail.com — 614-563-1905
+
+**11U — Mark Dountz** — mdountz@gmail.com — 614-989-3874
+
+**12U — Mark Dountz** — mdountz@gmail.com — 614-989-3874
+
+**13U — Nate Whisner** — natewhisner@gmail.com — 740-258-0550
+
+**14U — Pete Tarnapoll** — pete.tarnapoll@gmail.com — 614-563-1905
 
 ## Quick Links
 

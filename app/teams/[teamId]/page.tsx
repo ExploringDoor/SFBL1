@@ -467,10 +467,18 @@ export default async function TeamDetailPage({
               the page swipe-scroll left/right). min-width:0 on the
               info column so long team names don't push past. */}
           <div
-            className="flex items-center gap-6"
-            style={{ flexWrap: "wrap", minWidth: 0 }}
+            className="flex flex-col sm:flex-row sm:items-center gap-6"
+            style={{ minWidth: 0 }}
           >
-            <div style={{ background: "white", borderRadius: 16, padding: 14, flexShrink: 0 }}>
+            <div
+              style={{
+                background: "white",
+                borderRadius: 16,
+                padding: 14,
+                flexShrink: 0,
+                alignSelf: "flex-start",
+              }}
+            >
               <TeamBadge
                 teamId={params.teamId}
                 name={teamName}

@@ -164,7 +164,10 @@ export default async function TeamsPage() {
         </header>
       )}
 
-      {!config?.flags?.hide_page_titles && hasAge && sections.length > 1 && (
+      {/* Age jump-nav — shown even when the page title is hidden (it's
+          functional, not decorative): with 196 teams the one-per-row
+          mobile grid is a long scroll, so let users jump to their age. */}
+      {hasAge && sections.length > 1 && (
         <nav
           aria-label="Jump to age group"
           style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 22 }}
@@ -174,14 +177,16 @@ export default async function TeamsPage() {
               key={s.ageGroup}
               href={`#age-${s.ageGroup}`}
               style={{
-                display: "inline-block",
-                padding: "6px 14px",
+                display: "inline-flex",
+                alignItems: "center",
+                minHeight: 44,
+                padding: "8px 16px",
                 borderRadius: 999,
                 border: "1px solid rgba(0,0,0,0.12)",
                 background: "#fff",
                 color: "var(--brand-primary)",
                 fontWeight: 800,
-                fontSize: 13,
+                fontSize: 14,
                 letterSpacing: "0.04em",
                 textDecoration: "none",
               }}
