@@ -144,87 +144,50 @@ type SeedTeam = {
   ageOrder: number;
   divOrder: number;
   color?: string;
+  // Exact league record from coybl.org (see note below).
+  w: number;
+  l: number;
+  t: number;
+  record: string;
+  overall: string;
 };
 
-const TEAMS: SeedTeam[] = [
-  // 10U — Division 1
-  { id: "c10_stix_eberhardt", name: "Olentangy Stix - Eberhardt", abbrev: "STIX", ageGroup: "10U", division: "Division 1", ageOrder: 10, divOrder: 1, color: "#1f3a5f" },
-  { id: "c10_dgs_devaney",    name: "Dublin Green Sox - Devaney",  abbrev: "DGS",  ageGroup: "10U", division: "Division 1", ageOrder: 10, divOrder: 1, color: "#0a7d3c" },
-  { id: "c10_ua_bears",       name: "Upper Arlington Bears",       abbrev: "UAB",  ageGroup: "10U", division: "Division 1", ageOrder: 10, divOrder: 1, color: "#000000" },
-  { id: "c10_select_eagles",  name: "Ohio Select Eagles",          abbrev: "OSE",  ageGroup: "10U", division: "Division 1", ageOrder: 10, divOrder: 1, color: "#13284a" },
-  // 10U — Division 2
-  { id: "c10_panthers",       name: "Hilliard Panthers",           abbrev: "HP",   ageGroup: "10U", division: "Division 2", ageOrder: 10, divOrder: 2, color: "#3a1d6e" },
-  { id: "c10_naturals_org",   name: "Naturals Orange",             abbrev: "NAT",  ageGroup: "10U", division: "Division 2", ageOrder: 10, divOrder: 2, color: "#e36c0a" },
-  { id: "c10_radnor",         name: "Radnor Raptors",              abbrev: "RAD",  ageGroup: "10U", division: "Division 2", ageOrder: 10, divOrder: 2, color: "#0a6e6e" },
-  { id: "c10_uc_tigers",      name: "UC Tigers - Eizensmits",      abbrev: "UCT",  ageGroup: "10U", division: "Division 2", ageOrder: 10, divOrder: 2, color: "#f7941e" },
-  // 12U — Division 1
-  { id: "c12_stix_ackerman",  name: "Olentangy Stix - Ackerman",   abbrev: "STIX", ageGroup: "12U", division: "Division 1", ageOrder: 12, divOrder: 1, color: "#1f3a5f" },
-  { id: "c12_gahanna_blue",   name: "Gahanna Lions - Blue",        abbrev: "GAH",  ageGroup: "12U", division: "Division 1", ageOrder: 12, divOrder: 1, color: "#1d3f8a" },
-  { id: "c12_gct_red",        name: "Grove City Titans Red - Ball", abbrev: "GCT", ageGroup: "12U", division: "Division 1", ageOrder: 12, divOrder: 1, color: "#9e1b32" },
-  { id: "c12_ohio_sting",     name: "Ohio Sting",                  abbrev: "STG",  ageGroup: "12U", division: "Division 1", ageOrder: 12, divOrder: 1, color: "#111111" },
-  // 12U — Division 3
-  { id: "c12_naturals_town",  name: "Naturals - Townsend",         abbrev: "NAT",  ageGroup: "12U", division: "Division 3", ageOrder: 12, divOrder: 3, color: "#e36c0a" },
-  { id: "c12_outlaws",        name: "Westerville Outlaws",         abbrev: "WO",   ageGroup: "12U", division: "Division 3", ageOrder: 12, divOrder: 3, color: "#1b1b1b" },
-  { id: "c12_pcp_red",        name: "Plain City Pioneers - Red",   abbrev: "PCP",  ageGroup: "12U", division: "Division 3", ageOrder: 12, divOrder: 3, color: "#9e1b32" },
-  { id: "c12_colts_white",    name: "Hilliard Colts White",        abbrev: "HC",   ageGroup: "12U", division: "Division 3", ageOrder: 12, divOrder: 3, color: "#2a2f6b" },
-  // 7U (Coach Pitch) — Division 1
-  { id: "c7_dgs_bauer",       name: "Dublin Green Sox - Bauer",    abbrev: "DGS",  ageGroup: "7U",  division: "Division 1", ageOrder: 7,  divOrder: 1, color: "#0a7d3c" },
-  { id: "c7_gct_lentz",       name: "Grove City Titans - Lentz",   abbrev: "GCT",  ageGroup: "7U",  division: "Division 1", ageOrder: 7,  divOrder: 1, color: "#9e1b32" },
-  // 8U (Coach Pitch) — Division 1
-  { id: "c8_ua_bears",        name: "Upper Arlington Bears - 8U",  abbrev: "UAB",  ageGroup: "8U",  division: "Division 1", ageOrder: 8,  divOrder: 1, color: "#000000" },
-  { id: "c8_outlaws",         name: "Westerville Outlaws - 8U",    abbrev: "WO",   ageGroup: "8U",  division: "Division 1", ageOrder: 8,  divOrder: 1, color: "#1b1b1b" },
-  // 9U — Division 1
-  { id: "c9_stix_hall",       name: "Olentangy Stix - Hall",       abbrev: "STIX", ageGroup: "9U",  division: "Division 1", ageOrder: 9,  divOrder: 1, color: "#1f3a5f" },
-  { id: "c9_naturals_blk",    name: "Naturals - Black",            abbrev: "NAT",  ageGroup: "9U",  division: "Division 1", ageOrder: 9,  divOrder: 1, color: "#e36c0a" },
-  // 11U — Division 1
-  { id: "c11_panthers",       name: "Hilliard Panthers - 11U",     abbrev: "HP",   ageGroup: "11U", division: "Division 1", ageOrder: 11, divOrder: 1, color: "#3a1d6e" },
-  { id: "c11_gahanna",        name: "Gahanna Lions - 11U",         abbrev: "GAH",  ageGroup: "11U", division: "Division 1", ageOrder: 11, divOrder: 1, color: "#1d3f8a" },
-  // 13U — Division 1
-  { id: "c13_sting",          name: "Ohio Sting - 13U",            abbrev: "STG",  ageGroup: "13U", division: "Division 1", ageOrder: 13, divOrder: 1, color: "#111111" },
-  { id: "c13_eagles",         name: "Ohio Select Eagles - 13U",    abbrev: "OSE",  ageGroup: "13U", division: "Division 1", ageOrder: 13, divOrder: 1, color: "#13284a" },
-  // 14U — Division 1
-  { id: "c14_pioneers",       name: "Plain City Pioneers - 14U",   abbrev: "PCP",  ageGroup: "14U", division: "Division 1", ageOrder: 14, divOrder: 1, color: "#9e1b32" },
-  { id: "c14_raptors",        name: "Radnor Raptors - 14U",        abbrev: "RAD",  ageGroup: "14U", division: "Division 1", ageOrder: 14, divOrder: 1, color: "#0a6e6e" },
-];
-
-// A handful of final + scheduled games within each division so standings
-// compute. Dates are illustrative (2027 season placeholder).
 type SeedGame = {
   id: string;
-  home: string;
-  away: string;
-  hs: number;
-  as: number;
-  status: "final" | "scheduled";
-  date: string;
-  field?: string;
+  date: string | null;
+  away_team_id: string;
+  home_team_id: string;
+  away_score: number;
+  home_score: number;
+  division: string;
+  ageGroup: string;
+  status: string;
 };
 
-const GAMES: SeedGame[] = [
-  // 10U D1
-  { id: "g1", home: "c10_stix_eberhardt", away: "c10_ua_bears",      hs: 8,  as: 3, status: "final", date: "2027-05-01T17:30:00-04:00", field: "Field 4" },
-  { id: "g2", home: "c10_dgs_devaney",    away: "c10_select_eagles", hs: 6,  as: 5, status: "final", date: "2027-05-01T18:00:00-04:00", field: "Field 2" },
-  { id: "g3", home: "c10_stix_eberhardt", away: "c10_dgs_devaney",   hs: 4,  as: 7, status: "final", date: "2027-05-08T17:30:00-04:00", field: "Field 4" },
-  { id: "g4", home: "c10_ua_bears",       away: "c10_select_eagles", hs: 0,  as: 0, status: "scheduled", date: "2027-05-15T17:30:00-04:00", field: "Field 1" },
-  // 10U D2
-  { id: "g5", home: "c10_panthers",       away: "c10_radnor",        hs: 11, as: 1, status: "final", date: "2027-05-02T13:00:00-04:00", field: "Diamond 1" },
-  { id: "g6", home: "c10_naturals_org",   away: "c10_uc_tigers",     hs: 9,  as: 4, status: "final", date: "2027-05-02T15:00:00-04:00", field: "Diamond 2" },
-  { id: "g7", home: "c10_panthers",       away: "c10_naturals_org",  hs: 5,  as: 2, status: "final", date: "2027-05-09T13:00:00-04:00", field: "Diamond 1" },
-  // 12U D1
-  { id: "g8",  home: "c12_stix_ackerman", away: "c12_ohio_sting",    hs: 10, as: 3, status: "final", date: "2027-05-03T18:00:00-04:00", field: "Field 6" },
-  { id: "g9",  home: "c12_gahanna_blue",  away: "c12_gct_red",       hs: 5,  as: 4, status: "final", date: "2027-05-03T18:00:00-04:00", field: "Field 7" },
-  { id: "g10", home: "c12_stix_ackerman", away: "c12_gahanna_blue",  hs: 0,  as: 0, status: "scheduled", date: "2027-05-10T18:00:00-04:00", field: "Field 6" },
-  // 12U D3
-  { id: "g11", home: "c12_naturals_town", away: "c12_outlaws",       hs: 8,  as: 4, status: "final", date: "2027-05-04T18:00:00-04:00", field: "Field 3" },
-  { id: "g12", home: "c12_pcp_red",       away: "c12_colts_white",   hs: 7,  as: 7, status: "final", date: "2027-05-04T18:00:00-04:00", field: "Field 5" },
-  // One game per remaining age group so each ticker tab has content.
-  { id: "g13", home: "c7_dgs_bauer",      away: "c7_gct_lentz",      hs: 9,  as: 7, status: "final", date: "2027-05-05T10:00:00-04:00", field: "Field 8" },
-  { id: "g14", home: "c8_ua_bears",       away: "c8_outlaws",        hs: 6,  as: 5, status: "final", date: "2027-05-05T12:00:00-04:00", field: "Field 9" },
-  { id: "g15", home: "c9_stix_hall",      away: "c9_naturals_blk",   hs: 8,  as: 2, status: "final", date: "2027-05-06T17:30:00-04:00", field: "Field 4" },
-  { id: "g16", home: "c11_panthers",      away: "c11_gahanna",       hs: 3,  as: 4, status: "final", date: "2027-05-06T18:00:00-04:00", field: "Field 2" },
-  { id: "g17", home: "c13_sting",         away: "c13_eagles",        hs: 5,  as: 1, status: "final", date: "2027-05-07T18:00:00-04:00", field: "Field 6" },
-  { id: "g18", home: "c14_pioneers",      away: "c14_raptors",       hs: 2,  as: 0, status: "final", date: "2027-05-07T18:00:00-04:00", field: "Field 7" },
-];
+// Real COYBL 2026 data scraped from coybl.org (SportsEngine): 196 teams
+// across 30 divisions (7U-14U) + 974 played games with final scores.
+// See scripts/coybl-2026-data.json (built from the live standings +
+// schedule pages).
+//
+// IMPORTANT — standings records are STORED, not recomputed. SportsEngine
+// flags which games count toward each team's LEAGUE record, and the
+// age-level schedule mixes in cross-division play, so recomputing W-L
+// from the games does NOT reproduce the site's standings. We therefore
+// store each team's exact league record (w/l) from the standings page,
+// and the stats-off standings UI displays it directly. The games are
+// still seeded for the scores/schedule pages and game recaps.
+const REAL = JSON.parse(
+  readFileSync("scripts/coybl-2026-data.json", "utf8"),
+) as { teams: SeedTeam[]; games: SeedGame[] };
+const TEAMS: SeedTeam[] = REAL.teams;
+const GAMES: SeedGame[] = REAL.games;
+
+// Sample pitch outings below reference the old sample team ids; remap
+// them onto real teams so the eligibility demo still has data.
+const DEMO_PITCH_10U =
+  TEAMS.find((t) => t.ageGroup === "10U")?.id ?? TEAMS[0]?.id ?? "unknown";
+const DEMO_PITCH_12U =
+  TEAMS.find((t) => t.ageGroup === "12U")?.id ?? TEAMS[0]?.id ?? "unknown";
 
 // Sample pitch outings for one 10U team (uses the 9U-10U ruleset). Dates are
 // near "today" so the eligibility view shows a realistic mix of eligible /
@@ -340,34 +303,56 @@ async function run() {
 
   await db.doc(`leagues/${LEAGUE_ID}`).set(LEAGUE_CONFIG);
 
-  for (const t of TEAMS) {
-    await db.doc(`leagues/${LEAGUE_ID}/teams/${t.id}`).set({
-      name: t.name,
-      abbrev: t.abbrev,
-      ageGroup: t.ageGroup,
-      division: t.division,
-      ageOrder: t.ageOrder,
-      divOrder: t.divOrder,
-      color: t.color ?? null,
-      logo_url: null,
-    });
-  }
-
-  for (const g of GAMES) {
-    await db.doc(`leagues/${LEAGUE_ID}/games/${g.id}`).set({
-      home_team_id: g.home,
-      away_team_id: g.away,
-      home_score: g.hs,
-      away_score: g.as,
-      status: g.status,
-      date: g.date,
-      field: g.field ?? null,
-    });
+  // Teams (196) + games (974) are large now — write in batches of 400.
+  {
+    let batch = db.batch();
+    let n = 0;
+    const flush = async () => {
+      if (n) {
+        await batch.commit();
+        batch = db.batch();
+        n = 0;
+      }
+    };
+    for (const t of TEAMS) {
+      batch.set(db.doc(`leagues/${LEAGUE_ID}/teams/${t.id}`), {
+        name: t.name,
+        abbrev: t.abbrev,
+        ageGroup: t.ageGroup,
+        division: t.division,
+        ageOrder: t.ageOrder,
+        divOrder: t.divOrder,
+        color: t.color ?? null,
+        logo_url: null,
+        // Exact league record — the stats-off standings UI shows these
+        // directly (see note on REAL above).
+        w: t.w,
+        l: t.l,
+        t: t.t,
+        record: t.record,
+        overall: t.overall,
+      });
+      if (++n >= 400) await flush();
+    }
+    for (const g of GAMES) {
+      batch.set(db.doc(`leagues/${LEAGUE_ID}/games/${g.id}`), {
+        home_team_id: g.home_team_id,
+        away_team_id: g.away_team_id,
+        home_score: g.home_score,
+        away_score: g.away_score,
+        status: g.status,
+        date: g.date,
+        division: g.division ?? null,
+        field: null,
+      });
+      if (++n >= 400) await flush();
+    }
+    await flush();
   }
 
   for (const o of PITCH_OUTINGS) {
     await db.collection(`leagues/${LEAGUE_ID}/pitch_outings`).add({
-      team_id: o.team_id,
+      team_id: o.team_id.startsWith("c12") ? DEMO_PITCH_12U : DEMO_PITCH_10U,
       player_name: o.player_name,
       date: o.date,
       pitches: o.pitches,

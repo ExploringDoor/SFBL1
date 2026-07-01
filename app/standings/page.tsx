@@ -17,6 +17,7 @@ import {
   type DivisionGroup,
   type TeamMeta,
 } from "@/components/ui/StandingsTable";
+import { buildAgeSections, recordsToStandings } from "@/lib/age-standings";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +51,7 @@ export default async function StandingsPage() {
     throughDate,
     teamCount,
     hasFinalGames,
+    useStoredRecords,
   } = await loadStandings(tenantId, config);
 
   const year = String(new Date().getFullYear());
@@ -179,6 +181,7 @@ export default async function StandingsPage() {
                 teamMeta={teams}
                 pointsScheme={scheme}
                 variant="full"
+                showExtras={!useStoredRecords}
                 showRecentForm={false}
               />
             </section>
@@ -190,6 +193,7 @@ export default async function StandingsPage() {
           teamMeta={teams}
           pointsScheme={scheme}
           variant="full"
+          showExtras={!useStoredRecords}
           showRecentForm={config?.abbrev !== "SFBL" && tenantId !== "sfbl"}
         />
       )}
@@ -247,6 +251,9 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
     string,
     { ageGroup?: string; ageOrder: number; divOrder: number }
   > = {};
+  // Stored league records (stats-off leagues like COYBL): the exact W-L
+  // from the source site, since it can't be recomputed from the games.
+  const records: Record<string, { w: number; l: number; t: number }> = {};
   for (const d of teamsSnap.docs) {
     const data = d.data();
     teams[d.id] = {
@@ -261,6 +268,13 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
       ageOrder: typeof data.ageOrder === "number" ? data.ageOrder : 999,
       divOrder: typeof data.divOrder === "number" ? data.divOrder : 999,
     };
+    if (typeof data.w === "number" && typeof data.l === "number") {
+      records[d.id] = {
+        w: data.w,
+        l: data.l,
+        t: typeof data.t === "number" ? data.t : 0,
+      };
+    }
   }
 
   const games: GameResult[] = gamesSnap.docs.map((d) => {
@@ -275,7 +289,14 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
     };
   });
 
-  let standings: StandingsRow[] = computeStandings(games);
+  // Stats-off leagues (COYBL) display the EXACT stored league records —
+  // the source site flags which games count, so recomputing from the
+  // seeded games (which include cross-division play) would be wrong.
+  const useStoredRecords =
+    config?.flags?.stats_enabled === false && Object.keys(records).length > 0;
+  let standings: StandingsRow[] = useStoredRecords
+    ? recordsToStandings(records)
+    : computeStandings(games);
   const scheme = config?.standings?.points_per ?? null;
   const usePoints = config?.standings?.scoring === "points" && !!scheme;
   if (usePoints && scheme) {
@@ -291,7 +312,7 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
   // tenants (SFBL/LBDC) have no team.ageGroup, so hasAge is false.
   const hasAge = Object.values(teamExtra).some((t) => t.ageGroup);
   const ageSections = hasAge
-    ? ageSectionsFrom(standings, teams, teamExtra)
+    ? buildAgeSections(standings, teams, teamExtra)
     : [];
 
   // Latest game date — drives "Through Mar 29, 2026" subtitle.
@@ -318,48 +339,13 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
     leagueName: config?.name ?? null,
     throughDate,
     teamCount: teamsSnap.size,
-    hasFinalGames: finalDates.length > 0,
+    // With stored records, standings come from the teams (not games), so
+    // "has standings" means teams exist — not that games are final.
+    hasFinalGames: useStoredRecords
+      ? standings.length > 0
+      : finalDates.length > 0,
+    useStoredRecords,
   };
-}
-
-// Build Age Group -> Division sections for age-grouped leagues. Ages sorted by
-// ageOrder (7U->14U), divisions within each by divOrder. Each section's
-// divisionGroups feed a StandingsTable, same shape as the flat path.
-function ageSectionsFrom(
-  rows: StandingsRow[],
-  teamMeta: Record<string, TeamMeta>,
-  teamExtra: Record<string, { ageGroup?: string; ageOrder: number; divOrder: number }>,
-): { ageGroup: string; divisionGroups: DivisionGroup[] }[] {
-  const byAge = new Map<string, StandingsRow[]>();
-  for (const r of rows) {
-    const ag = teamExtra[r.team_id]?.ageGroup ?? "Other";
-    if (!byAge.has(ag)) byAge.set(ag, []);
-    byAge.get(ag)!.push(r);
-  }
-  const ageOrderOf = (ag: string) => {
-    const r = rows.find((x) => (teamExtra[x.team_id]?.ageGroup ?? "Other") === ag);
-    return r ? teamExtra[r.team_id]?.ageOrder ?? 999 : 999;
-  };
-  return [...byAge.entries()]
-    .sort(([a], [b]) => ageOrderOf(a) - ageOrderOf(b) || a.localeCompare(b))
-    .map(([ageGroup, ageRows]) => {
-      const byDiv = new Map<string, StandingsRow[]>();
-      for (const r of ageRows) {
-        const div = teamMeta[r.team_id]?.division ?? "Division";
-        if (!byDiv.has(div)) byDiv.set(div, []);
-        byDiv.get(div)!.push(r);
-      }
-      const divOrderOf = (div: string) => {
-        const r = ageRows.find(
-          (x) => (teamMeta[x.team_id]?.division ?? "Division") === div,
-        );
-        return r ? teamExtra[r.team_id]?.divOrder ?? 999 : 999;
-      };
-      const divisionGroups: DivisionGroup[] = [...byDiv.entries()]
-        .sort(([a], [b]) => divOrderOf(a) - divOrderOf(b) || a.localeCompare(b))
-        .map(([division, rows]) => ({ division, rows }));
-      return { ageGroup, divisionGroups };
-    });
 }
 
 function groupByDivision(

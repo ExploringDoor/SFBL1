@@ -90,7 +90,13 @@ export default async function TeamsPage() {
       divOrder: typeof data.divOrder === "number" ? data.divOrder : 999,
       color: data.color ? String(data.color) : undefined,
       logoUrl: data.logo_url ? String(data.logo_url) : null,
-      record: row ? formatRecord(row.w, row.l, row.t) : "0-0",
+      // Stats-off leagues store the exact league record on the team doc
+      // (see standings page) — prefer it so cards match the standings.
+      record: data.record
+        ? String(data.record)
+        : row
+          ? formatRecord(row.w, row.l, row.t)
+          : "0-0",
       points: row && usePoints && scheme ? computePoints(row, scheme) : null,
       rd: row?.rd ?? 0,
     };

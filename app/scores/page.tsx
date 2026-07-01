@@ -376,7 +376,7 @@ async function loadScores(tenantId: string): Promise<{
       abbrev: data.abbrev ? String(data.abbrev) : undefined,
       color: data.color ? String(data.color) : undefined,
       logoUrl: data.logo_url ? String(data.logo_url) : null,
-      record: recordByTeam.get(d.id),
+      record: data.record ? String(data.record) : recordByTeam.get(d.id),
       ageGroup: data.ageGroup ? String(data.ageGroup) : undefined,
     };
   }
