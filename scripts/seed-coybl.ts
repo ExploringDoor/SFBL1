@@ -63,11 +63,9 @@ const LEAGUE_CONFIG = {
   // Navy + COYBL red. `secondary` drives the hero "2026" emphasis (defaults to
   // a light blue when unset) — set it red so the homepage reads navy + red.
   theme: { primary: "#13284a", accent: "#c8102e", secondary: "#c8102e", logo_url: null },
-  // Home-page intro for first-time visitors — written from the site's own
-  // content (7U-14U, the "compete / improve / succeed" mark, Pitch Smart,
-  // the charity tournaments).
-  about:
-    "The Central Ohio Youth Baseball League is a competitive travel baseball league for players 7U through 14U across the Columbus area. Built on a simple promise — compete, improve, succeed — COYBL pairs real-game standings for every age group with USA Baseball Pitch Smart pitch-count tracking to keep young arms healthy, plus a season of charity tournaments that give back to the community. Follow your team's scores, schedule, and standings right here, and register for the upcoming season.",
+  // No home-page "Welcome" intro — dropped per Adam (2026-06-30); the banner
+  // images already carry the league identity, so `about` is left unset and the
+  // homepage Welcome block renders nothing.
   billing: {
     status: "active",
     paid_through: "2027-season",
