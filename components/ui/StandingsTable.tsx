@@ -87,25 +87,35 @@ export function StandingsTable({
                 const recordStr = anyTies && r.t > 0
                   ? `${r.w}-${r.l}-${r.t}`
                   : `${r.w}-${r.l}`;
+                const isHighlight = r.team_id === highlightTeamId;
                 return (
                   <Link
                     key={r.team_id}
                     href={`/teams/${r.team_id}`}
                     className={"le-compact-row" + (i === 0 ? " leader" : "")}
+                    style={
+                      isHighlight
+                        ? { background: "rgba(0,45,114,0.08)", fontWeight: 700 }
+                        : undefined
+                    }
                   >
                     <span className="le-compact-rank">{i + 1}</span>
                     <span className="le-compact-name">
                       {meta?.name ?? meta?.abbrev ?? r.team_id}
                     </span>
                     <span className="le-compact-rec">{recordStr}</span>
-                    <span
-                      className={
-                        "le-compact-streak " +
-                        (r.streak ? streakClass(r.streak) : "")
-                      }
-                    >
-                      {r.streak ?? "-"}
-                    </span>
+                    {/* Streak needs game-by-game data — hidden for stats-off
+                        leagues (showExtras=false). */}
+                    {showStreak && (
+                      <span
+                        className={
+                          "le-compact-streak " +
+                          (r.streak ? streakClass(r.streak) : "")
+                        }
+                      >
+                        {r.streak ?? "-"}
+                      </span>
+                    )}
                   </Link>
                 );
               })}

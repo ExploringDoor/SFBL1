@@ -599,63 +599,112 @@ export default async function TeamDetailPage({
 
       <section className="container py-10">
         {statsOff ? (
-          <TeamTabs
-            tabs={[
-              {
-                id: "schedule",
-                label: "Schedule",
-                panel: (
-                  <div>
-                    <p className="sec-eyebrow" style={{ marginBottom: 12 }}>
-                      {fullSchedule.length} game
-                      {fullSchedule.length === 1 ? "" : "s"}
-                    </p>
-                    {fullSchedule.length === 0 ? (
-                      <p style={{ color: "var(--muted)" }}>
-                        No games scheduled yet.
-                      </p>
-                    ) : (
-                      <ul
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: 8,
-                          maxWidth: 640,
-                        }}
-                      >
-                        {fullSchedule.map((g) => (
-                          <GameLine
-                            key={g.id}
-                            myTeamId={params.teamId}
-                            game={g}
-                            teams={teamNames}
+          // Schedule | Roster tabs on the left, division standings pinned
+          // to the right so both are visible at once.
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div style={{ minWidth: 0 }}>
+              <TeamTabs
+                tabs={[
+                  {
+                    id: "schedule",
+                    label: "Schedule",
+                    panel: (
+                      <div>
+                        <p className="sec-eyebrow" style={{ marginBottom: 12 }}>
+                          {fullSchedule.length} game
+                          {fullSchedule.length === 1 ? "" : "s"}
+                        </p>
+                        {fullSchedule.length === 0 ? (
+                          <p style={{ color: "var(--muted)" }}>
+                            No games scheduled yet.
+                          </p>
+                        ) : (
+                          <ul
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: 8,
+                            }}
+                          >
+                            {fullSchedule.map((g) => (
+                              <GameLine
+                                key={g.id}
+                                myTeamId={params.teamId}
+                                game={g}
+                                teams={teamNames}
+                              />
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    ),
+                  },
+                  {
+                    id: "roster",
+                    label: "Roster",
+                    panel: (
+                      <div>
+                        {roster.length === 0 ? (
+                          <p style={{ color: "var(--muted)" }}>
+                            No roster posted yet.
+                          </p>
+                        ) : (
+                          <RosterTable
+                            roster={roster}
+                            hasGames={false}
+                            compact
                           />
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                ),
-              },
-              ...(divisionGroup
-                ? [
-                    {
-                      id: "standings",
-                      label: "Standings",
-                      panel: (
-                        <StandingsTable
-                          groups={[divisionGroup]}
-                          teamMeta={divTeamMeta}
-                          variant="full"
-                          showExtras={false}
-                          showRecentForm={false}
-                          highlightTeamId={params.teamId}
-                        />
-                      ),
-                    },
-                  ]
-                : []),
-            ]}
-          />
+                        )}
+                      </div>
+                    ),
+                  },
+                ]}
+              />
+            </div>
+            <aside style={{ minWidth: 0 }}>
+              <p
+                className="font-barlow"
+                style={{
+                  fontSize: 13,
+                  fontWeight: 800,
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                  color: "var(--brand-primary)",
+                  marginBottom: 10,
+                }}
+              >
+                Standings
+              </p>
+              {divisionGroup ? (
+                <StandingsTable
+                  groups={[divisionGroup]}
+                  teamMeta={divTeamMeta}
+                  variant="compact"
+                  showExtras={false}
+                  showRecentForm={false}
+                  highlightTeamId={params.teamId}
+                />
+              ) : (
+                <p style={{ color: "var(--muted)", fontSize: 13 }}>
+                  No division standings.
+                </p>
+              )}
+              <Link
+                href={`/standings#age-${ageGroup}`}
+                style={{
+                  display: "inline-block",
+                  marginTop: 12,
+                  fontSize: 13,
+                  fontWeight: 800,
+                  letterSpacing: "0.04em",
+                  color: "var(--brand-primary)",
+                  textDecoration: "none",
+                }}
+              >
+                Full standings →
+              </Link>
+            </aside>
+          </div>
         ) : (
           <>
         {(aggBatting.gp > 0 || aggPitching.app > 0) && (
