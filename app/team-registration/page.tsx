@@ -96,11 +96,11 @@ const COYBL_FIELDS: FormField[] = [
   },
   {
     name: "usssa_addon",
-    label: "Add USSSA membership? (+$40)",
+    label: "Add USSSA membership? (+$35)",
     type: "select",
     options: [
       { value: "no", label: "No" },
-      { value: "yes", label: "Yes, add USSSA (+$40)" },
+      { value: "yes", label: "Yes, add USSSA (+$35)" },
     ],
     width: "half",
   },
@@ -133,7 +133,7 @@ function content(tenantId: string) {
       description:
         "Register your team for the Central Ohio Youth Baseball League.",
       intro: [
-        "Choose your registration option below: Option 1 is $495 (includes team insurance plus Five Tool Youth registration); Option 2 is $425 (your team provides proof of its own insurance, plus Five Tool Youth registration). USSSA membership is an optional +$40 add-on.",
+        "Choose your registration option below: Option 1 is $495 (includes team insurance plus Five Tool Youth registration); Option 2 is $425 (your team provides proof of its own insurance, plus Five Tool Youth registration). USSSA membership is an optional +$35 add-on.",
         "You can pay by card (Square) at checkout, or by Venmo to skip the card processing fee.",
       ],
       successMessage: "Thanks! Your team registration is in.",

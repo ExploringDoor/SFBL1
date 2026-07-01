@@ -283,7 +283,7 @@ A pitcher may **not return to the mound** once removed. Required rest is based o
 
 - **Option 1 ($495):** team insurance + Five Tool Youth registration.
 - **Option 2 ($425):** team provides its own insurance (proof required) + Five Tool Youth registration.
-- Optional add-on: **USSSA membership (+$40)**.
+- Optional add-on: **USSSA membership (+$35)**.
 
 ## League End Date
 
