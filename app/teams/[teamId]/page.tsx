@@ -19,6 +19,13 @@ import {
 import { formatIP } from "@/lib/stats/ip";
 import { formatGameDate } from "@/lib/format-time";
 import type { PublicLeagueConfig } from "@/lib/tenants";
+import {
+  StandingsTable,
+  type DivisionGroup,
+  type TeamMeta,
+} from "@/components/ui/StandingsTable";
+import { TeamTabs } from "@/components/ui/TeamTabs";
+import { recordsToStandings } from "@/lib/age-standings";
 
 export const dynamic = "force-dynamic";
 
@@ -379,6 +386,57 @@ export default async function TeamDetailPage({
     .sort((a, b) => String(a.date ?? "").localeCompare(String(b.date ?? "")))
     .slice(0, 4);
 
+  // Stats-off leagues (COYBL): the team page is a Schedule | Standings
+  // tabbed view instead of the stats-heavy roster layout.
+  const statsOff = config?.flags?.stats_enabled === false;
+  const ageGroup = t.ageGroup ? String(t.ageGroup) : "";
+
+  // Whole schedule (all this team's games), chronological.
+  const fullSchedule = [...myGames].sort((a, b) =>
+    String(a.date ?? "").localeCompare(String(b.date ?? "")),
+  );
+
+  // This team's DIVISION standings (from stored records). Division names
+  // repeat across ages ("Division 1" exists at every age), so match on
+  // BOTH age group and division.
+  const divTeamMeta: Record<string, TeamMeta> = {};
+  let divisionGroup: DivisionGroup | null = null;
+  if (statsOff && division) {
+    const divRecords: Record<string, { w: number; l: number; t: number }> = {};
+    for (const d of teamsSnap.docs) {
+      const data = d.data();
+      if (String(data.division ?? "") !== division) continue;
+      if (String(data.ageGroup ?? "") !== ageGroup) continue;
+      divTeamMeta[d.id] = {
+        name: String(data.name ?? d.id),
+        abbrev: data.abbrev ? String(data.abbrev) : undefined,
+        color: data.color ? String(data.color) : undefined,
+        logoUrl: data.logo_url ? String(data.logo_url) : null,
+        division,
+      };
+      if (typeof data.w === "number" && typeof data.l === "number") {
+        divRecords[d.id] = {
+          w: data.w,
+          l: data.l,
+          t: typeof data.t === "number" ? data.t : 0,
+        };
+      }
+    }
+    if (Object.keys(divRecords).length > 0) {
+      divisionGroup = {
+        division: ageGroup ? `${ageGroup} — ${division}` : division,
+        rows: recordsToStandings(divRecords),
+      };
+    }
+  }
+  // Stats-off: rank within the division comes from the stored-record
+  // standings, not the games-computed order.
+  if (statsOff && divisionGroup) {
+    const idx = divisionGroup.rows.findIndex((r) => r.team_id === params.teamId);
+    divisionRank =
+      idx >= 0 ? { rank: idx + 1, total: divisionGroup.rows.length } : null;
+  }
+
   return (
     <main>
       {/* Hero band */}
@@ -453,7 +511,11 @@ export default async function TeamDetailPage({
                   }}
                 >
                   <HeroPill
-                    primary={formatRecord(myRow.w, myRow.l, myRow.t)}
+                    primary={
+                      statsOff && t.record
+                        ? String(t.record)
+                        : formatRecord(myRow.w, myRow.l, myRow.t)
+                    }
                     label="Record"
                   />
                   {usePoints && scheme && (
@@ -462,14 +524,15 @@ export default async function TeamDetailPage({
                       label="Points"
                     />
                   )}
-                  <HeroPill
-                    primary={
-                      myRow.rd > 0
-                        ? `+${myRow.rd}`
-                        : String(myRow.rd)
-                    }
-                    label="Run diff"
-                  />
+                  {/* Run diff needs run data — hidden for stats-off leagues. */}
+                  {!statsOff && (
+                    <HeroPill
+                      primary={
+                        myRow.rd > 0 ? `+${myRow.rd}` : String(myRow.rd)
+                      }
+                      label="Run diff"
+                    />
+                  )}
                   {divisionRank && (
                     <HeroPill
                       primary={`${ordinal(divisionRank.rank)}`}
@@ -535,6 +598,66 @@ export default async function TeamDetailPage({
       </section>
 
       <section className="container py-10">
+        {statsOff ? (
+          <TeamTabs
+            tabs={[
+              {
+                id: "schedule",
+                label: "Schedule",
+                panel: (
+                  <div>
+                    <p className="sec-eyebrow" style={{ marginBottom: 12 }}>
+                      {fullSchedule.length} game
+                      {fullSchedule.length === 1 ? "" : "s"}
+                    </p>
+                    {fullSchedule.length === 0 ? (
+                      <p style={{ color: "var(--muted)" }}>
+                        No games scheduled yet.
+                      </p>
+                    ) : (
+                      <ul
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 8,
+                          maxWidth: 640,
+                        }}
+                      >
+                        {fullSchedule.map((g) => (
+                          <GameLine
+                            key={g.id}
+                            myTeamId={params.teamId}
+                            game={g}
+                            teams={teamNames}
+                          />
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ),
+              },
+              ...(divisionGroup
+                ? [
+                    {
+                      id: "standings",
+                      label: "Standings",
+                      panel: (
+                        <StandingsTable
+                          groups={[divisionGroup]}
+                          teamMeta={divTeamMeta}
+                          variant="full"
+                          showExtras={false}
+                          showRecentForm={false}
+                          highlightTeamId={params.teamId}
+                        />
+                      ),
+                    },
+                  ]
+                : []),
+            ]}
+          />
+        ) : (
+          <>
         {(aggBatting.gp > 0 || aggPitching.app > 0) && (
           <div className="mb-8 grid gap-4 sm:grid-cols-2 md:grid-cols-4">
             {aggBatting.gp > 0 && (
@@ -728,6 +851,8 @@ export default async function TeamDetailPage({
             </>
           );
         })()}
+          </>
+        )}
       </section>
     </main>
   );

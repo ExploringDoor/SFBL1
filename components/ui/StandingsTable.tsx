@@ -44,6 +44,9 @@ export interface StandingsTableProps {
   /** Show the last-5 colored-dot form sparkline next to STRK. Default
    *  true; SFBL turns it off (Adam, 2026-06). */
   showRecentForm?: boolean;
+  /** Highlight this team's row (full variant) — used on the team page's
+   *  division-standings tab to mark the team you're viewing. */
+  highlightTeamId?: string;
 }
 
 export function StandingsTable({
@@ -53,6 +56,7 @@ export function StandingsTable({
   variant = "full",
   showExtras = true,
   showRecentForm = true,
+  highlightTeamId,
 }: StandingsTableProps) {
   const multi = groups.length > 1;
   // Hide T / RS / RA / DIFF columns unless someone actually has data
@@ -160,8 +164,17 @@ export function StandingsTable({
             <tbody>
               {rows.map((r, i) => {
                 const meta = teamMeta[r.team_id];
+                const isHighlight = r.team_id === highlightTeamId;
                 return (
-                  <tr key={r.team_id} className={i === 0 ? "leader" : ""}>
+                  <tr
+                    key={r.team_id}
+                    className={i === 0 ? "leader" : ""}
+                    style={
+                      isHighlight
+                        ? { background: "rgba(0,45,114,0.06)", fontWeight: 700 }
+                        : undefined
+                    }
+                  >
                     <td>
                       <span className="le-team-cell">
                         {/* Compact sidebar drops the logo to save space.
