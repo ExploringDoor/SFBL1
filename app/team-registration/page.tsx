@@ -113,9 +113,25 @@ function content(tenantId: string) {
         "Register your team for the Central Ohio Youth Baseball League.",
       intro: [
         "The team registration fee is $35.",
-        (
-          <>
-            Pay by <strong>Venmo</strong> to{" "}
+        "You can pay by card (Square) at checkout, or by Venmo to skip the card processing fee.",
+      ],
+      successMessage: "Thanks! Your team registration is in.",
+      // Secondary payment option — kept below the form so it doesn't lead
+      // the page. Venmo lets teams avoid the card processing fee.
+      footer: (
+        <div>
+          <p style={{ margin: "0 0 4px", fontWeight: 700 }}>
+            Prefer Venmo? Skip the card fee.
+          </p>
+          <p
+            style={{
+              margin: "0 0 12px",
+              fontSize: 14,
+              color: "var(--muted)",
+              maxWidth: 520,
+            }}
+          >
+            Send your $35 to{" "}
             <a
               href="https://venmo.com/u/Doug-Hare-2"
               target="_blank"
@@ -123,25 +139,18 @@ function content(tenantId: string) {
             >
               @Doug-Hare-2
             </a>{" "}
-            (scan the code below), or by check to COYBL, 152 Glen Crossing
-            Drive, Pataskala, OH 43062.
-            <br />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/coybl/venmo-qr.png"
-              alt="Venmo QR code — pay @Doug-Hare-2"
-              width={168}
-              height={168}
-              style={{
-                marginTop: 10,
-                borderRadius: 8,
-                border: "1px solid rgba(0,0,0,0.1)",
-              }}
-            />
-          </>
-        ),
-      ],
-      successMessage: "Thanks! Your team registration is in.",
+            to avoid the card processing fee — scan to pay:
+          </p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/coybl/venmo-qr.png"
+            alt="Venmo QR code — pay @Doug-Hare-2"
+            width={140}
+            height={140}
+            style={{ borderRadius: 8, border: "1px solid rgba(0,0,0,0.1)" }}
+          />
+        </div>
+      ),
     };
   }
   // SFBL (default).
@@ -162,12 +171,14 @@ function content(tenantId: string) {
     ],
     successMessage:
       "Thanks! Your team registration is in. We'll reach out within a couple of days to confirm division placement and walk through payment.",
+    footer: undefined,
   };
 }
 
 export default function TeamRegistrationPage() {
   const tenantId = headers().get("x-tenant-id") ?? "";
-  const { fields, description, intro, successMessage } = content(tenantId);
+  const { fields, description, intro, successMessage, footer } =
+    content(tenantId);
   return (
     <LeagueForm
       kind="team_registration"
@@ -178,6 +189,7 @@ export default function TeamRegistrationPage() {
       submitLabel="Register Team"
       successMessage={successMessage}
       eyebrow={tenantId === "coybl" ? "COYBL" : "SFBL"}
+      footer={footer}
     />
   );
 }

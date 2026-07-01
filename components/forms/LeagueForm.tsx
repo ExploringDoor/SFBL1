@@ -65,6 +65,9 @@ export interface LeagueFormProps {
   /** Small eyebrow label above the title. Defaults to "SFBL" so the
    *  SFBL forms are unchanged; tenants pass their own (e.g. "COYBL"). */
   eyebrow?: string;
+  /** Optional content rendered BELOW the form (e.g. a secondary payment
+   *  option). Kept out of the intro so it doesn't lead the page. */
+  footer?: React.ReactNode;
 }
 
 export function LeagueForm({
@@ -77,6 +80,7 @@ export function LeagueForm({
   submitLabel = "Submit",
   successMessage = "Thanks! Your submission was received. The league office will be in touch.",
   eyebrow = "SFBL",
+  footer,
 }: LeagueFormProps) {
   const [data, setData] = useState<Record<string, unknown>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -198,6 +202,19 @@ export function LeagueForm({
           {submitting ? "Submitting…" : submitLabel}
         </button>
       </form>
+
+      {footer && (
+        <div
+          className="le-form-footer"
+          style={{
+            marginTop: 28,
+            paddingTop: 20,
+            borderTop: "1px solid var(--border)",
+          }}
+        >
+          {footer}
+        </div>
+      )}
     </main>
   );
 }
