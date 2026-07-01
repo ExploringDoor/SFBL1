@@ -144,6 +144,7 @@ type SeedTeam = {
   ageOrder: number;
   divOrder: number;
   color?: string;
+  logo_url?: string;
   // Exact league record from coybl.org (see note below).
   w: number;
   l: number;
@@ -356,7 +357,7 @@ async function run() {
         ageOrder: t.ageOrder,
         divOrder: t.divOrder,
         color: t.color ?? null,
-        logo_url: null,
+        logo_url: t.logo_url ?? null,
         // Exact league record — the stats-off standings UI shows these
         // directly (see note on REAL above).
         w: t.w,
