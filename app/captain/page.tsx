@@ -1090,10 +1090,12 @@ function NextGameSpotlight({
   rosterCount: number;
   rsvps: Record<string, "yes" | "maybe" | "no">;
 }) {
-  // SFBL hides attendance/RSVP (no player logins → always empty). Other
-  // leagues keep it. (Adam, 2026-06.)
+  // SFBL hides attendance/RSVP (no player logins → always empty); COYBL hides
+  // it too (Attendance isn't used in youth baseball — Adam, 2026-07). Other
+  // leagues keep it.
   const { tenantId } = useTenant();
   const isSfbl = tenantId === "sfbl";
+  const hideRsvp = isSfbl || tenantId === "coybl";
   const isHome = game.home_team_id === myTeamId;
   const oppId = isHome ? game.away_team_id : game.home_team_id;
   const oppName = teamNames[oppId] ?? oppId;
@@ -1149,7 +1151,7 @@ function NextGameSpotlight({
         </p>
       </div>
 
-      {rosterCount > 0 && !isSfbl && (
+      {rosterCount > 0 && !hideRsvp && (
         <div className="cap-next-game-rsvp">
           <RsvpStat label="Yes" count={yes} cls="yes" />
           <RsvpStat label="Maybe" count={maybe} cls="maybe" />
@@ -1159,18 +1161,26 @@ function NextGameSpotlight({
       )}
 
       <div className="cap-next-game-actions">
-        {!isSfbl && (
+        {!hideRsvp && (
           /* native <a> hash → fires hashchange so the tab switches */
           <a href="#attendance" className="le-cap-btn-secondary">
             📋 Attendance
           </a>
         )}
-        <Link
-          href={`/captain/box-score?game=${game.id}`}
-          className="le-cap-btn-primary"
-        >
-          ⚾ Submit Score
-        </Link>
+        {tenantId === "coybl" ? (
+          // Score-only league → land on the Submit Score tab (Quick Score),
+          // not the full box-score page.
+          <a href="#scores" className="le-cap-btn-primary">
+            ⚾ Submit Score
+          </a>
+        ) : (
+          <Link
+            href={`/captain/box-score?game=${game.id}`}
+            className="le-cap-btn-primary"
+          >
+            ⚾ Submit Score
+          </Link>
+        )}
       </div>
     </section>
   );
