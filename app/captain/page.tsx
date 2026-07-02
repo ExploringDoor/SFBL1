@@ -39,6 +39,7 @@ import { TeamChatTab } from "@/components/captain/TeamChatTab";
 import { CaptainsChatTab } from "@/components/captain/CaptainsChatTab";
 import { HelpTab } from "@/components/captain/HelpTab";
 import { PitchCountsTab } from "@/components/captain/PitchCountsTab";
+import { TeamLogoTab } from "@/components/captain/TeamLogoTab";
 import { QuickScoreInline } from "@/components/captain/QuickScoreInline";
 import { PasswordlessCaptainPicker } from "@/components/captain/PasswordlessCaptainPicker";
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
@@ -513,6 +514,7 @@ const TABS: Tab[] = [
   { key: "team", label: "My Team" },
   { key: "attendance", label: "Attendance" },
   { key: "roster", label: "Roster" },
+  { key: "logo", label: "Team Logo" },
   { key: "freeagents", label: "Free Agents" },
   { key: "scores", label: "Submit Score" },
   { key: "pitchcounts", label: "Pitch Counts" },
@@ -623,6 +625,8 @@ function CaptainBody({
     return <RosterTab leagueId={leagueId} teamId={teamId} />;
   if (tab === "pitchcounts")
     return <PitchCountsTab leagueId={leagueId} teamId={teamId} />;
+  if (tab === "logo")
+    return <TeamLogoTab leagueId={leagueId} teamId={teamId} />;
   if (tab === "freeagents")
     return <FreeAgentsTab leagueId={leagueId} />;
   if (tab === "schedule")

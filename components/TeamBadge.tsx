@@ -41,18 +41,31 @@ export function TeamBadge({
             : size === "card"
               ? 112
               : 168;
+    // Coach-uploaded logos are stored as data: URLs (see /api/captain-team-logo),
+    // which next/image can't optimize — render those with a plain <img>. Regular
+    // URL/path logos still go through next/image.
+    const isDataUrl = logoUrl.startsWith("data:");
     return (
       <span
         className={`inline-flex flex-shrink-0 items-center justify-center ${SIZE_CLASSES[size]}`}
         title={name}
       >
-        <Image
-          src={logoUrl}
-          alt={name}
-          width={px}
-          height={px}
-          className="h-full w-full object-contain"
-        />
+        {isDataUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={logoUrl}
+            alt={name}
+            className="h-full w-full object-contain"
+          />
+        ) : (
+          <Image
+            src={logoUrl}
+            alt={name}
+            width={px}
+            height={px}
+            className="h-full w-full object-contain"
+          />
+        )}
       </span>
     );
   }
