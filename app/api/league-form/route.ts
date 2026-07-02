@@ -60,6 +60,7 @@ const ALLOWED_FIELDS: Record<Kind, string[]> = {
     "usssa_addon",
     "organization",
     "gamechanger_link",
+    "team_logo",
     "county",
     "asst_first_name",
     "asst_last_name",

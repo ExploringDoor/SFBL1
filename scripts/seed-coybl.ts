@@ -115,6 +115,7 @@ const LEAGUE_CONFIG = {
       { label: "Power Rankings", href: "/power-rankings" },
       { label: "Rules", href: "/rules" },
       { label: "Alerts", href: "/alerts" },
+      { label: "Manager Help", href: "/content/manager-help" },
     ],
   },
   // Standings: straight W/L (PCT-based default — no points scheme).
@@ -323,6 +324,45 @@ Have a question about COYBL — registration, schedules, rules, or tournaments? 
 - Tournaments → [Tournaments](/tournaments)
 `;
 
+// Manager / Coach "how to use the site" help page.
+const MANAGER_HELP_MD = `## Manager & Coach Help
+
+Everything you need to run your team on the COYBL site.
+
+## Getting signed in
+
+Coaches are invited by the league office by email. When you're added, you'll get a one-click sign-in link — no password to remember. Your login is tied to your team, so you only manage your own roster and games.
+
+## Your schedule
+
+Your full schedule lives on your team page (**Teams → your team → Schedule**). Use the **Subscribe** buttons to add it to your phone's calendar so game changes sync automatically.
+
+## Entering scores
+
+After a game, sign in and open your team. On the **Scores** tab, pick the game and enter the final score — the standings update automatically. COYBL is score-only, so there are no box scores or player stats to fill in.
+
+## Pitch counts (Pitch Smart)
+
+On the **Pitch Counts** tab, log each pitcher's name, the date, and pitches thrown. The site calculates the required rest and shows who's eligible for the next game, keeping you compliant with USA Baseball Pitch Smart. Families can see eligibility on the public **Pitch Counts** page.
+
+## Game recaps
+
+Want a writeup for a game? Open it and add a short recap — it shows on the game's **Recap** tab for parents and fans.
+
+## Standings & power rankings
+
+- **Standings** — your division's win-loss record, from game results.
+- **Power Rankings** — league-wide rankings by age group.
+
+## Registering a team
+
+New team? Go to **Register**, and fill out the team form (coach info, age group, GameChanger link, logo, and payment). Questions on placement? Your age-group director is on the [Contact](/content/contact) page.
+
+---
+
+Still stuck? Reach your age-group director on the [Contact](/content/contact) page and we'll help you out.
+`;
+
 async function run() {
   console.log(`[seed-coybl] writing to ${process.env.FIRESTORE_EMULATOR_HOST} (${projectId})`);
 
@@ -404,6 +444,13 @@ async function run() {
   await db.doc(`leagues/${LEAGUE_ID}/page_content/contact`).set({
     title: "Contact",
     markdown: CONTACT_MD,
+    updated_at: new Date().toISOString(),
+    updated_by: "seed",
+  });
+
+  await db.doc(`leagues/${LEAGUE_ID}/page_content/manager-help`).set({
+    title: "Manager & Coach Help",
+    markdown: MANAGER_HELP_MD,
     updated_at: new Date().toISOString(),
     updated_by: "seed",
   });

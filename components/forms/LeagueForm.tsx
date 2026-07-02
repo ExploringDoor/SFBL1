@@ -22,7 +22,8 @@ export type FieldType =
   | "select"
   | "checkbox"
   | "radio"
-  | "rating";
+  | "rating"
+  | "image";
 
 export interface FormField {
   name: string;
@@ -268,6 +269,45 @@ function Field({
   const widthClass =
     field.width === "half" ? "le-form-cell-half" : "le-form-cell-full";
 
+  if (field.type === "image") {
+    const dataUrl = typeof value === "string" ? value : "";
+    return (
+      <div className={`le-form-cell ${widthClass}`}>
+        <label htmlFor={id}>
+          {field.label}
+          {field.required && <em className="le-form-required">*</em>}
+        </label>
+        <input
+          id={id}
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            onChange(field.name, file ? await resizeToDataUrl(file, 320) : "");
+          }}
+        />
+        {dataUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={dataUrl}
+            alt="Logo preview"
+            style={{
+              marginTop: 8,
+              height: 80,
+              width: 80,
+              objectFit: "contain",
+              border: "1px solid var(--border)",
+              borderRadius: 8,
+              background: "#fff",
+              padding: 4,
+            }}
+          />
+        )}
+        {field.help && <small className="le-form-help">{field.help}</small>}
+      </div>
+    );
+  }
+
   if (field.type === "checkbox") {
     return (
       <label className={`le-form-cell ${widthClass} le-form-checkbox`}>
@@ -431,4 +471,35 @@ function autoCompleteFor(name: string, type: FieldType): string | undefined {
   if (name.includes("last_name")) return "family-name";
   if (name === "city") return "address-level2";
   return undefined;
+}
+
+// Client-side image resize → PNG data URL. Keeps uploaded logos small
+// (max `max`px on the long edge) so they fit in a Firestore submission
+// without a Storage bucket. Returns "" on any failure.
+function resizeToDataUrl(file: File, max: number): Promise<string> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onerror = () => resolve("");
+    reader.onload = () => {
+      const img = new window.Image();
+      img.onerror = () => resolve("");
+      img.onload = () => {
+        const scale = Math.min(1, max / Math.max(img.width, img.height));
+        const w = Math.max(1, Math.round(img.width * scale));
+        const h = Math.max(1, Math.round(img.height * scale));
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(String(reader.result));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/png"));
+      };
+      img.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  });
 }

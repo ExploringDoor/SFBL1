@@ -112,6 +112,13 @@ const COYBL_FIELDS: FormField[] = [
     help: "Paste your team's GameChanger schedule link — it feeds standings and power rankings.",
     width: "full",
   },
+  {
+    name: "team_logo",
+    label: "Team Logo (optional)",
+    type: "image",
+    help: "Upload your team's logo (PNG or JPG) — it'll appear on your team page and score cards.",
+    width: "full",
+  },
   { name: "asst_first_name", label: "Assistant Coach First Name", type: "text", width: "half" },
   { name: "asst_last_name", label: "Assistant Coach Last Name", type: "text", width: "half" },
   { name: "asst_phone", label: "Assistant Coach Phone", type: "tel", width: "half" },
