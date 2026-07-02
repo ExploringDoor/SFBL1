@@ -120,7 +120,14 @@ export function PitchCountsTab({
       teamName.set(d.id, String(d.data().name ?? d.id)),
     );
     const gs: GameOpt[] = gamesSnap.docs
-      .map((d) => ({ id: d.id, ...(d.data() as Record<string, unknown>) }))
+      .map((d) => {
+        const x = d.data() as {
+          away_team_id?: string;
+          home_team_id?: string;
+          date?: string;
+        };
+        return { id: d.id, ...x };
+      })
       .filter(
         (g) => g.away_team_id === teamId || g.home_team_id === teamId,
       )
