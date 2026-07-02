@@ -269,9 +269,23 @@ export async function POST(req: Request) {
   // Fire-and-forget — never blocks or fails the submission.
   const origin =
     h.get("origin") ?? (h.get("host") ? `https://${h.get("host")}` : "");
-  void sendRegistrationEmails(tenantId, body.kind, cleaned, origin).catch(
-    () => {},
-  );
+
+  // COYBL: create the coach's login account NOW (awaited) — fire-and-forget
+  // work after the response is killed by the serverless runtime, and account
+  // creation must actually happen. Wrapped so an email/auth hiccup never fails
+  // the registration itself.
+  if (tenantId === "coybl" && body.kind === "team_registration") {
+    try {
+      await createCoachLogin(cleaned, origin);
+    } catch {
+      /* registration still succeeds even if the login email can't be sent */
+    }
+  } else {
+    // Other tenants/kinds: best-effort confirmation email, fire-and-forget.
+    void sendRegistrationEmails(tenantId, body.kind, cleaned, origin).catch(
+      () => {},
+    );
+  }
 
   return NextResponse.json({ ok: true, id: ref.id });
 }
