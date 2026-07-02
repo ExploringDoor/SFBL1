@@ -564,10 +564,23 @@ function CaptainTabNav() {
   // push notifications aren't enabled. Other leagues keep both tabs.
   // (Adam, 2026-06.)
   const isSfbl = tenantId === "sfbl";
+  const isCoybl = tenantId === "coybl";
   // Pitch Counts is a youth-baseball (Pitch Smart) feature — COYBL only for
-  // now. TODO: switch this hardcoded gate to a config flag (show_pitch_counts).
+  // now. TODO: switch these hardcoded gates to config flags.
+  // COYBL is team-based youth baseball: Free Agents (open-player market) and
+  // Payments (per-player season dues) are adult-league features, and per-game
+  // Attendance RSVP isn't used, so hide all three. (Adam, 2026-07.)
   const tabs = TABS.filter((t) => !t.hidden)
     .filter((t) => !(isSfbl && (t.key === "attendance" || t.key === "notifications")))
+    .filter(
+      (t) =>
+        !(
+          isCoybl &&
+          (t.key === "freeagents" ||
+            t.key === "payments" ||
+            t.key === "attendance")
+        ),
+    )
     .filter((t) => !(t.key === "pitchcounts" && tenantId !== "coybl"));
   return (
     <nav className="cap-tab-nav">
