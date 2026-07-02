@@ -325,47 +325,147 @@ Have a question about COYBL — registration, schedules, rules, or tournaments? 
 `;
 
 // Manager / Coach "how to use the site" help page.
-const MANAGER_HELP_MD = `## Manager & Coach Help
+const MANAGER_HELP_MD = `> **In a hurry?** See the [Coach Quick Start](/content/coach-quick-start) for the 60-second version.
 
-Everything you need to run your team on the COYBL site.
+Everything you need to run your team on the COYBL site — signing in, entering scores, logging pitch counts, and more. Every step is shown below.
 
-## Getting signed in
+## 1. Getting signed in
 
-Coaches are invited by the league office by email. When you're added, you'll get a one-click sign-in link — no password to remember. Your login is tied to your team, so you only manage your own roster and games.
+When you register your team, we email you a link to **set your password**. After that, sign in anytime from the **Sign in** link using your **email and password** — from any phone or computer, and it stays signed in until you sign out.
 
-## Your schedule
+![The COYBL sign-in page](/coybl/help/login.png)
 
-Your full schedule lives on your team page (**Teams → your team → Schedule**). Use the **Subscribe** buttons to add it to your phone's calendar so game changes sync automatically.
+- Forgot your password? Tap **Forgot password?** and we'll email you a reset link.
+- Prefer not to keep a password? Tap **Email me a link** for a one-time sign-in link instead.
 
-## Entering scores
+## 2. Your team dashboard
 
-After a game, sign in and open your team. On the **Scores** tab, pick the game and enter the final score — the standings update automatically. COYBL is score-only, so there are no box scores or player stats to fill in.
+Once you sign in you land on your team's portal. The strip up top shows your record, division, next game, and results at a glance, with your next game front and center.
 
-## Pitch counts (Pitch Smart)
+![The coach portal dashboard](/coybl/help/portal-myteam.png)
 
-On the **Pitch Counts** tab, log each pitcher's name, the date, and pitches thrown. The site calculates the required rest and shows who's eligible for the next game, keeping you compliant with USA Baseball Pitch Smart. Families can see eligibility on the public **Pitch Counts** page.
+Use the tabs to get around: **My Team · Roster · Team Logo · Submit Score · Pitch Counts · Notifications · Schedule · Help**.
 
-## Game recaps
+## 3. Entering a score
 
-Want a writeup for a game? Open it and add a short recap — it shows on the game's **Recap** tab for parents and fans.
+After a game, open the **Submit Score** tab and tap **⚡ Quick Score** on the game. Enter your final — **Us** and **Them** — and tap **Submit**. That's it; the standings update automatically. COYBL is score-only, so there's nothing else to fill in.
 
-## Standings & power rankings
+![Entering a final score with Quick Score](/coybl/help/portal-submitscore.png)
 
-- **Standings** — your division's win-loss record, from game results.
-- **Power Rankings** — league-wide rankings by age group.
+Both coaches can submit a score independently. If the two don't match, the league office reconciles it. (There's also a **Box Score** option if you ever want full stats, but Quick Score is all you need.)
+
+## 4. Logging pitch counts (Pitch Smart)
+
+On the **Pitch Counts** tab, log each pitcher's **name, date, and pitches thrown** after a game. The site automatically calculates the required rest and shows who's eligible for the next game — keeping you compliant with USA Baseball Pitch Smart.
+
+![The Pitch Counts entry form](/coybl/help/portal-pitchcounts.png)
+
+Parents and other coaches can see eligibility on the public **Pitch Counts** page.
+
+## 5. Managing your roster
+
+On the **Roster** tab, tap **+ Add Player** to add players (name, number, position, and optional contact info). Tap any player to edit or remove them. If a player registers themselves, they'll show up here for you to approve.
+
+![Adding a player to the roster](/coybl/help/portal-roster.png)
+
+## 6. Uploading your team logo
+
+On the **Team Logo** tab, upload your logo (PNG or JPG). It's resized automatically and appears on your team page, the standings, and score cards. You can also add it during registration.
+
+![Uploading a team logo](/coybl/help/portal-logo.png)
+
+## 7. Your schedule & calendar sync
+
+The **Schedule** tab lists all your games. The league office manages the schedule; use the **Subscribe** buttons (Apple / Google) to add your games to your phone's calendar so any changes sync automatically.
+
+![The schedule tab with calendar subscribe buttons](/coybl/help/portal-schedule.png)
+
+## 8. Notifications
+
+On the **Notifications** tab you can turn on push alerts for score updates, schedule changes, rainouts, and more — and choose which teams you want to hear about. (On iPhone, add the site to your home screen first.)
+
+![Notification preferences](/coybl/help/portal-notifications.png)
+
+## 9. Built-in Help
+
+The **Help** tab inside your portal covers all of this too, so it's always a tap away while you're managing your team.
+
+![The in-app Help tab](/coybl/help/portal-help.png)
+
+## What parents & fans see
+
+Everything you enter feeds the public side of the site automatically — no extra work:
+
+**Team page** — your schedule, roster, logo, and live division standings.
+
+![A public team page](/coybl/help/teampage.png)
+
+**Standings** — updated from game results.
+
+![The standings page](/coybl/help/standings.png)
+
+**Pitch Counts** — pitcher eligibility from the counts you log.
+
+![The public pitcher-eligibility page](/coybl/help/eligibility.png)
+
+**Power Rankings** — strength-of-schedule ratings, computed automatically.
+
+![The power rankings page](/coybl/help/powerrankings.png)
 
 ## Registering a team
 
-New team? Go to **Register**, and fill out the team form (coach info, age group, GameChanger link, logo, and payment). Questions on placement? Your age-group director is on the [Contact](/content/contact) page.
+New team? Use the **Register** link and fill out the team form — coach info, age group, GameChanger link, team logo, and payment. Pay by card (Square) at checkout, or by Venmo/check to skip the card fee.
+
+![The team registration form](/coybl/help/register.png)
+
+## About game recaps
+
+You don't have to write recaps — each game's recap is **generated automatically**. Just submit your score and you're done. (League admins can tweak a recap if they ever want to.)
 
 ---
 
 Still stuck? Reach your age-group director on the [Contact](/content/contact) page and we'll help you out.
 `;
 
+// Short "just the essentials" companion to the full illustrated guide above.
+const COACH_QUICK_MD = `> Want the full walkthrough with screenshots? See [Manager & Coach Help](/content/manager-help).
+
+The five things you'll do on the COYBL site:
+
+## 1. Sign in
+
+Use the **Sign in** link with the **email and password** you set when you registered your team. Forgot it? Tap **Forgot password?**.
+
+## 2. Enter a score
+
+**Submit Score** tab → **⚡ Quick Score** on the game → type **Us** and **Them** → **Submit**. Standings update automatically.
+
+## 3. Log pitch counts
+
+**Pitch Counts** tab → add each pitcher's name, date, and pitches. Rest and eligibility are calculated for you (USA Baseball Pitch Smart).
+
+## 4. Manage your roster
+
+**Roster** tab → **+ Add Player**. Add, edit, or remove players anytime.
+
+## 5. Logo & schedule
+
+Upload your logo on the **Team Logo** tab. Your games live on the **Schedule** tab — tap **Subscribe** to sync them to your phone's calendar.
+
+---
+
+That's it. Recaps are written for you automatically, and everything you enter shows up for parents and fans on the team pages, standings, and pitch-count tracker. Questions? Your age-group director is on the [Contact](/content/contact) page.
+`;
+
 async function run() {
   console.log(`[seed-coybl] writing to ${process.env.FIRESTORE_EMULATOR_HOST} (${projectId})`);
 
+  // PAGES_ONLY: skip the heavy team/game reseed and just (re)write the
+  // page_content docs below. Lets us push help-page copy without a
+  // wipe-and-rewrite window on live team/game data.
+  const pagesOnly = process.env.PAGES_ONLY === "1";
+
+  if (!pagesOnly) {
   // Wipe stale docs so renamed teams don't linger.
   for (const sub of ["teams", "games", "players", "box_scores", "pitch_outings"]) {
     const stale = await db.collection(`leagues/${LEAGUE_ID}/${sub}`).get();
@@ -432,6 +532,7 @@ async function run() {
       pitches: o.pitches,
     });
   }
+  } // end !pagesOnly
 
   await db.doc(`leagues/${LEAGUE_ID}/page_content/rules`).set({
     markdown: RULES_MD,
@@ -451,6 +552,13 @@ async function run() {
   await db.doc(`leagues/${LEAGUE_ID}/page_content/manager-help`).set({
     title: "Manager & Coach Help",
     markdown: MANAGER_HELP_MD,
+    updated_at: new Date().toISOString(),
+    updated_by: "seed",
+  });
+
+  await db.doc(`leagues/${LEAGUE_ID}/page_content/coach-quick-start`).set({
+    title: "Coach Quick Start",
+    markdown: COACH_QUICK_MD,
     updated_at: new Date().toISOString(),
     updated_by: "seed",
   });
