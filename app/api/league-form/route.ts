@@ -20,7 +20,7 @@
 // gets 429. Bots filling all four forms in a tight loop get cut.
 
 import { NextResponse } from "next/server";
-import { getAdminDb } from "@/lib/firebase-admin";
+import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { headers } from "next/headers";
 import { parseHost, resolveTenant } from "@/lib/tenants";
 import { sendEmail, notifyAddress, esc } from "@/lib/email/send";
@@ -264,17 +264,82 @@ export async function POST(req: Request) {
 
   // Best-effort email (no-op unless RESEND_API_KEY/EMAIL_FROM are set):
   //   1. a confirmation to the registrant (if they gave an email)
-  //   2. a heads-up to the league office (EMAIL_NOTIFY)
+  //   2. for COYBL team registration: create the coach's login account +
+  //      email a "set your password" link so they can manage their team.
   // Fire-and-forget — never blocks or fails the submission.
-  void sendRegistrationEmails(body.kind, cleaned).catch(() => {});
+  const origin =
+    h.get("origin") ?? (h.get("host") ? `https://${h.get("host")}` : "");
+  void sendRegistrationEmails(tenantId, body.kind, cleaned, origin).catch(
+    () => {},
+  );
 
   return NextResponse.json({ ok: true, id: ref.id });
 }
 
+// Create (or reuse) the coach's Firebase account for their COYBL team and
+// email a "set your password" link (with the confirmation). The team is
+// placed into a division by a director later; an admin then binds the coach's
+// account to the team (captain claim). Email no-ops unless RESEND is set — but
+// the account + link are still created either way.
+async function createCoachLogin(
+  data: Record<string, unknown>,
+  origin: string,
+): Promise<void> {
+  const c = (k: string) =>
+    typeof data[k] === "string" ? (data[k] as string).trim() : "";
+  const email = c("email");
+  if (!email) return;
+  const who = `${c("manager_first_name")} ${c("manager_last_name")}`.trim();
+  const team = c("team_name");
+
+  const auth = getAdminAuth();
+  try {
+    await auth.getUserByEmail(email);
+  } catch {
+    try {
+      await auth.createUser({ email }); // no password yet — set via the link
+    } catch {
+      return; // invalid email etc.
+    }
+  }
+
+  let link = "";
+  try {
+    link = await auth.generatePasswordResetLink(
+      email,
+      origin ? { url: `${origin}/login` } : undefined,
+    );
+  } catch {
+    return;
+  }
+
+  await sendEmail({
+    to: email,
+    subject: `Welcome to COYBL — set up your ${team || "team"} login`,
+    html:
+      `<p>Hi ${esc(who) || "Coach"},</p>` +
+      `<p>Thanks for registering${team ? ` <strong>${esc(team)}</strong>` : ""} with the Central Ohio Youth Baseball League — we've got your registration.</p>` +
+      `<p>Set your password to access your team portal, where you can enter scores, log pitch counts, upload your team logo, and manage your schedule:</p>` +
+      `<p><a href="${esc(link)}" style="display:inline-block;padding:10px 18px;background:#13284a;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Set your password</a></p>` +
+      `<p style="font-size:13px;color:#555;">Or paste this into your browser:<br>${esc(link)}</p>` +
+      `<p>A league director will confirm your division shortly. Questions? Just reply to this email.</p>` +
+      `<p>— COYBL</p>`,
+    replyTo: notifyAddress() ?? undefined,
+  });
+}
+
 async function sendRegistrationEmails(
+  tenantId: string,
   kind: Kind,
   data: Record<string, unknown>,
+  origin: string,
 ): Promise<void> {
+  // COYBL team registration → create the coach's own-login account and
+  // email a "set your password" link (plus the confirmation) in one go.
+  if (tenantId === "coybl" && kind === "team_registration") {
+    await createCoachLogin(data, origin);
+    return;
+  }
   if (kind !== "player_registration" && kind !== "team_registration") return;
 
   const c = (k: string) =>

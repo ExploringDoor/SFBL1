@@ -5,7 +5,9 @@ import {
   isSignInWithEmailLink,
   onAuthStateChanged,
   sendSignInLinkToEmail,
+  sendPasswordResetEmail,
   signInWithCustomToken,
+  signInWithEmailAndPassword,
   signInWithEmailLink,
   signOut as fbSignOut,
   type User,
@@ -40,6 +42,30 @@ export async function sendMagicLink(
     handleCodeInApp: true,
   });
   window.localStorage.setItem(PENDING_EMAIL_KEY, email);
+}
+
+// Email + password sign-in (coach "own login"). Coaches get an account
+// when they register their team and set a password; after that they sign
+// in here from any device. The session persists like any Firebase login.
+export async function signInWithPassword(
+  email: string,
+  password: string,
+): Promise<User> {
+  const result = await signInWithEmailAndPassword(
+    getFirebaseAuth(),
+    email.trim(),
+    password,
+  );
+  return result.user;
+}
+
+// "Forgot password" — Firebase emails a reset link. (Registration + the
+// initial set-password email go through our own Resend sender; this
+// client-side reset is the self-serve fallback from the login page.)
+export async function sendPasswordReset(email: string): Promise<void> {
+  await sendPasswordResetEmail(getFirebaseAuth(), email.trim(), {
+    url: `${window.location.origin}/login`,
+  });
 }
 
 // Sign the local Firebase Auth instance into the same uid that

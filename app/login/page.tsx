@@ -17,7 +17,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { sendMagicLink, signInWithBridgeToken } from "@/lib/auth-client";
+import {
+  sendMagicLink,
+  signInWithBridgeToken,
+  signInWithPassword,
+  sendPasswordReset,
+} from "@/lib/auth-client";
 import { useTenant } from "@/lib/tenant-context";
 
 // Local-storage key the PWA uses to remember which bridgeId it's
@@ -55,6 +60,48 @@ export default function LoginPage() {
   const [bridgeStatus, setBridgeStatus] = useState<
     "off" | "waiting" | "claimed"
   >("off");
+  // Coaches sign in with email + password ("own login"). Magic-link is
+  // kept as a fallback via the toggle.
+  const [mode, setMode] = useState<"password" | "magic">("password");
+  const [password, setPassword] = useState("");
+  const [pwBusy, setPwBusy] = useState(false);
+  const [resetMsg, setResetMsg] = useState<string | null>(null);
+
+  async function onPasswordSignIn(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setResetMsg(null);
+    setPwBusy(true);
+    try {
+      await signInWithPassword(email, password);
+      router.push("/captain");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Sign-in failed.";
+      // Firebase error codes → friendly copy.
+      setError(
+        /wrong-password|invalid-credential|user-not-found/.test(msg)
+          ? "That email or password didn't match. Try again, or reset your password."
+          : msg.replace(/^Firebase:\s*/, ""),
+      );
+    } finally {
+      setPwBusy(false);
+    }
+  }
+
+  async function onForgotPassword() {
+    setError(null);
+    setResetMsg(null);
+    if (!email.trim()) {
+      setError("Enter your email above first, then tap “Forgot password.”");
+      return;
+    }
+    try {
+      await sendPasswordReset(email);
+      setResetMsg(`Password reset link sent to ${email}. Check your inbox.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't send reset email.");
+    }
+  }
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -199,115 +246,12 @@ export default function LoginPage() {
             margin: 0,
           }}
         >
-          Captains and players sign in by email — no password. Enter
-          your email, we&rsquo;ll send a one-tap link.
+          Coaches sign in with the email and password from their team
+          registration. Prefer a one-time link? You can switch below.
         </p>
       </header>
 
-      {isStandalone && status === "idle" && (
-        <div
-          style={{
-            background: "rgba(0, 45, 114, 0.06)",
-            border: "1px solid rgba(0, 45, 114, 0.18)",
-            borderRadius: 12,
-            padding: "12px 14px",
-            fontSize: 13,
-            lineHeight: 1.5,
-            color: "var(--text-strong)",
-          }}
-        >
-          <strong style={{ fontWeight: 700 }}>iPhone tip:</strong> tapping the
-          email link will open Safari (Apple limitation). Sign in there, then
-          come back to this app — it&rsquo;ll pick up your sign-in
-          automatically.
-        </div>
-      )}
-
-      {status !== "sent" ? (
-        <form
-          onSubmit={onSubmit}
-          style={{
-            background: "white",
-            border: "1px solid rgba(0, 0, 0, 0.07)",
-            borderRadius: 14,
-            padding: "20px 22px",
-            display: "flex",
-            flexDirection: "column",
-            gap: 14,
-          }}
-        >
-          <label
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 6,
-              fontSize: 12,
-              fontWeight: 700,
-              letterSpacing: "0.04em",
-              textTransform: "uppercase",
-              color: "var(--muted)",
-            }}
-          >
-            Email
-            <input
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              style={{
-                fontFamily: "inherit",
-                fontSize: 16,
-                padding: "10px 12px",
-                border: "1px solid rgba(0, 0, 0, 0.15)",
-                borderRadius: 8,
-                background: "white",
-                color: "var(--text-strong)",
-                textTransform: "none",
-                letterSpacing: 0,
-                fontWeight: 400,
-              }}
-            />
-          </label>
-          <button
-            type="submit"
-            disabled={status === "sending"}
-            style={{
-              background: "var(--brand-primary)",
-              color: "white",
-              border: "none",
-              padding: "12px 20px",
-              borderRadius: 10,
-              fontSize: 14,
-              fontWeight: 800,
-              fontFamily: "inherit",
-              letterSpacing: "0.05em",
-              textTransform: "uppercase",
-              cursor: "pointer",
-              opacity: status === "sending" ? 0.7 : 1,
-              transition: "filter 0.15s ease",
-            }}
-          >
-            {status === "sending" ? "Sending…" : "Send sign-in link"}
-          </button>
-          {error && (
-            <p
-              style={{
-                fontSize: 13,
-                color: "#991b1b",
-                background: "rgba(220, 38, 38, 0.08)",
-                border: "1px solid rgba(220, 38, 38, 0.25)",
-                borderRadius: 8,
-                padding: "8px 12px",
-                margin: 0,
-              }}
-            >
-              {error}
-            </p>
-          )}
-        </form>
-      ) : (
+      {status === "sent" ? (
         <section
           style={{
             background: "linear-gradient(135deg, rgba(16,185,129,0.08), rgba(0,45,114,0.06))",
@@ -404,6 +348,299 @@ export default function LoginPage() {
             </p>
           )}
         </section>
+      ) : mode === "password" ? (
+        <form
+          onSubmit={onPasswordSignIn}
+          style={{
+            background: "white",
+            border: "1px solid rgba(0, 0, 0, 0.07)",
+            borderRadius: 14,
+            padding: "20px 22px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 14,
+          }}
+        >
+          <label
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 6,
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
+              color: "var(--muted)",
+            }}
+          >
+            Email
+            <input
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              style={{
+                fontFamily: "inherit",
+                fontSize: 16,
+                padding: "10px 12px",
+                border: "1px solid rgba(0, 0, 0, 0.15)",
+                borderRadius: 8,
+                background: "white",
+                color: "var(--text-strong)",
+                textTransform: "none",
+                letterSpacing: 0,
+                fontWeight: 400,
+              }}
+            />
+          </label>
+          <label
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 6,
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
+              color: "var(--muted)",
+            }}
+          >
+            Password
+            <input
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Your password"
+              style={{
+                fontFamily: "inherit",
+                fontSize: 16,
+                padding: "10px 12px",
+                border: "1px solid rgba(0, 0, 0, 0.15)",
+                borderRadius: 8,
+                background: "white",
+                color: "var(--text-strong)",
+                textTransform: "none",
+                letterSpacing: 0,
+                fontWeight: 400,
+              }}
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={pwBusy}
+            style={{
+              background: "var(--brand-primary)",
+              color: "white",
+              border: "none",
+              padding: "12px 20px",
+              borderRadius: 10,
+              fontSize: 14,
+              fontWeight: 800,
+              fontFamily: "inherit",
+              letterSpacing: "0.05em",
+              textTransform: "uppercase",
+              cursor: "pointer",
+              opacity: pwBusy ? 0.7 : 1,
+            }}
+          >
+            {pwBusy ? "Signing in…" : "Sign in"}
+          </button>
+          <button
+            type="button"
+            onClick={onForgotPassword}
+            style={{
+              background: "none",
+              border: "none",
+              color: "var(--brand-primary)",
+              fontWeight: 700,
+              fontSize: 13,
+              cursor: "pointer",
+              alignSelf: "flex-start",
+              padding: 0,
+            }}
+          >
+            Forgot password?
+          </button>
+          {resetMsg && (
+            <p
+              style={{
+                fontSize: 13,
+                color: "#047857",
+                background: "rgba(16,185,129,0.08)",
+                border: "1px solid rgba(16,185,129,0.25)",
+                borderRadius: 8,
+                padding: "8px 12px",
+                margin: 0,
+              }}
+            >
+              {resetMsg}
+            </p>
+          )}
+          {error && (
+            <p
+              style={{
+                fontSize: 13,
+                color: "#991b1b",
+                background: "rgba(220, 38, 38, 0.08)",
+                border: "1px solid rgba(220, 38, 38, 0.25)",
+                borderRadius: 8,
+                padding: "8px 12px",
+                margin: 0,
+              }}
+            >
+              {error}
+            </p>
+          )}
+          <div style={{ fontSize: 13, color: "var(--muted)", textAlign: "center" }}>
+            Prefer a one-time email link?{" "}
+            <button
+              type="button"
+              onClick={() => {
+                setMode("magic");
+                setError(null);
+                setResetMsg(null);
+              }}
+              style={{
+                background: "none",
+                border: "none",
+                color: "var(--brand-primary)",
+                fontWeight: 700,
+                fontSize: 13,
+                cursor: "pointer",
+                padding: 0,
+              }}
+            >
+              Email me a link
+            </button>
+          </div>
+        </form>
+      ) : (
+        <>
+          {isStandalone && (
+            <div
+              style={{
+                background: "rgba(0, 45, 114, 0.06)",
+                border: "1px solid rgba(0, 45, 114, 0.18)",
+                borderRadius: 12,
+                padding: "12px 14px",
+                fontSize: 13,
+                lineHeight: 1.5,
+                color: "var(--text-strong)",
+                marginBottom: 14,
+              }}
+            >
+              <strong style={{ fontWeight: 700 }}>iPhone tip:</strong> tapping
+              the email link opens Safari (Apple limitation). Sign in there,
+              then come back to this app — it&rsquo;ll pick up automatically.
+            </div>
+          )}
+          <form
+            onSubmit={onSubmit}
+            style={{
+              background: "white",
+              border: "1px solid rgba(0, 0, 0, 0.07)",
+              borderRadius: 14,
+              padding: "20px 22px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 14,
+            }}
+          >
+            <label
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 6,
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+                color: "var(--muted)",
+              }}
+            >
+              Email
+              <input
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                style={{
+                  fontFamily: "inherit",
+                  fontSize: 16,
+                  padding: "10px 12px",
+                  border: "1px solid rgba(0, 0, 0, 0.15)",
+                  borderRadius: 8,
+                  background: "white",
+                  color: "var(--text-strong)",
+                  textTransform: "none",
+                  letterSpacing: 0,
+                  fontWeight: 400,
+                }}
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={status === "sending"}
+              style={{
+                background: "var(--brand-primary)",
+                color: "white",
+                border: "none",
+                padding: "12px 20px",
+                borderRadius: 10,
+                fontSize: 14,
+                fontWeight: 800,
+                fontFamily: "inherit",
+                letterSpacing: "0.05em",
+                textTransform: "uppercase",
+                cursor: "pointer",
+                opacity: status === "sending" ? 0.7 : 1,
+              }}
+            >
+              {status === "sending" ? "Sending…" : "Send sign-in link"}
+            </button>
+            {error && (
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "#991b1b",
+                  background: "rgba(220, 38, 38, 0.08)",
+                  border: "1px solid rgba(220, 38, 38, 0.25)",
+                  borderRadius: 8,
+                  padding: "8px 12px",
+                  margin: 0,
+                }}
+              >
+                {error}
+              </p>
+            )}
+            <div style={{ fontSize: 13, color: "var(--muted)", textAlign: "center" }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("password");
+                  setError(null);
+                }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "var(--brand-primary)",
+                  fontWeight: 700,
+                  fontSize: 13,
+                  cursor: "pointer",
+                  padding: 0,
+                }}
+              >
+                ← Use a password instead
+              </button>
+            </div>
+          </form>
+        </>
       )}
 
       {tenantId && (
