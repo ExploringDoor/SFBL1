@@ -69,28 +69,22 @@ export function PitchCountsTab({
   const [pitches, setPitches] = useState("");
 
   async function loadOutings() {
-    const db = getDb();
-    const snap = await getDocs(
-      query(
-        collection(db, `leagues/${leagueId}/pitch_outings`),
-        where("team_id", "==", teamId),
-      ),
+    // Read via the server (Admin SDK) — the public client read of
+    // /pitch_outings isn't enabled in every environment's rules yet.
+    const res = await fetch(
+      `/api/team-pitch-counts?leagueId=${encodeURIComponent(leagueId)}&teamId=${encodeURIComponent(teamId)}`,
     );
-    const rows: Outing[] = snap.docs
-      .map((d) => {
-        const x = d.data();
-        return {
-          id: d.id,
-          player_name: String(x.player_name ?? ""),
-          date: String(x.date ?? ""),
-          pitches: Number(x.pitches ?? 0),
-        };
-      })
-      .sort(
-        (a, b) =>
-          b.date.localeCompare(a.date) ||
-          a.player_name.localeCompare(b.player_name),
-      );
+    const data = (await res.json().catch(() => ({}))) as {
+      ok?: boolean;
+      outings?: Outing[];
+      error?: string;
+    };
+    if (!res.ok || !data.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
+    const rows: Outing[] = (data.outings ?? []).sort(
+      (a, b) =>
+        b.date.localeCompare(a.date) ||
+        a.player_name.localeCompare(b.player_name),
+    );
     setOutings(rows);
   }
 
