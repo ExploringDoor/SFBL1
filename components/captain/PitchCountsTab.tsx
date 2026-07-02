@@ -1,10 +1,12 @@
 "use client";
 
-// Pitch Counts tab — a captain logs each pitcher's pitches per outing. COYBL
-// is stats-off (no roster), so pitchers are free-text names (a datalist offers
-// previously-entered names for quick re-entry). Reads /pitch_outings directly
-// (public); writes go through /api/captain-pitch-count (team-scoped by claim).
-// These outings feed the public Pitch Smart eligibility tracker.
+// Pitch Counts tab — a captain logs each pitcher's pitches per outing.
+// Coaches pick the game (which fills in the date) and the pitcher from their
+// roster; both fall back to free entry (a manual date / a typed name) so
+// unscheduled outings and off-roster pitchers still work. Reads
+// /pitch_outings, /players and /games directly (all public read); writes go
+// through /api/captain-pitch-count (team-scoped by claim). These outings feed
+// the public Pitch Smart eligibility tracker.
 
 import { useEffect, useMemo, useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
@@ -18,9 +20,29 @@ interface Outing {
   pitches: number;
 }
 
+interface GameOpt {
+  id: string;
+  date: string;
+  label: string;
+}
+
+const CUSTOM = "__custom__";
+const MONTHS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
 function todayLocal(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+// Timezone-safe friendly date for a "YYYY-MM-DD" string ("2026-07-12" → "Jul 12").
+function friendlyDate(iso: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!m) return iso;
+  const mon = MONTHS[Number(m[2]) - 1] ?? m[2];
+  return `${mon} ${Number(m[3])}`;
 }
 
 export function PitchCountsTab({
@@ -32,6 +54,8 @@ export function PitchCountsTab({
 }) {
   const user = useUser();
   const [outings, setOutings] = useState<Outing[]>([]);
+  const [roster, setRoster] = useState<string[]>([]);
+  const [games, setGames] = useState<GameOpt[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -39,35 +63,89 @@ export function PitchCountsTab({
 
   const today = useMemo(todayLocal, []);
   const [name, setName] = useState("");
+  const [customName, setCustomName] = useState(false);
   const [date, setDate] = useState(today);
+  const [customDate, setCustomDate] = useState(false);
   const [pitches, setPitches] = useState("");
+
+  async function loadOutings() {
+    const db = getDb();
+    const snap = await getDocs(
+      query(
+        collection(db, `leagues/${leagueId}/pitch_outings`),
+        where("team_id", "==", teamId),
+      ),
+    );
+    const rows: Outing[] = snap.docs
+      .map((d) => {
+        const x = d.data();
+        return {
+          id: d.id,
+          player_name: String(x.player_name ?? ""),
+          date: String(x.date ?? ""),
+          pitches: Number(x.pitches ?? 0),
+        };
+      })
+      .sort(
+        (a, b) =>
+          b.date.localeCompare(a.date) ||
+          a.player_name.localeCompare(b.player_name),
+      );
+    setOutings(rows);
+  }
+
+  // One-time load of the team's roster + games so the pitcher and game
+  // dropdowns have options. Both collections are public-read.
+  async function loadRefs() {
+    const db = getDb();
+    const [playersSnap, gamesSnap, teamsSnap] = await Promise.all([
+      getDocs(
+        query(
+          collection(db, `leagues/${leagueId}/players`),
+          where("team_id", "==", teamId),
+        ),
+      ),
+      getDocs(collection(db, `leagues/${leagueId}/games`)),
+      getDocs(collection(db, `leagues/${leagueId}/teams`)),
+    ]);
+
+    const names = playersSnap.docs
+      .map((d) => String(d.data().name ?? "").trim())
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
+    setRoster(names);
+
+    const teamName = new Map<string, string>();
+    teamsSnap.docs.forEach((d) =>
+      teamName.set(d.id, String(d.data().name ?? d.id)),
+    );
+    const gs: GameOpt[] = gamesSnap.docs
+      .map((d) => ({ id: d.id, ...(d.data() as Record<string, unknown>) }))
+      .filter(
+        (g) => g.away_team_id === teamId || g.home_team_id === teamId,
+      )
+      .map((g) => {
+        const iso = String(g.date ?? "");
+        const isHome = g.home_team_id === teamId;
+        const oppId = String(isHome ? g.away_team_id : g.home_team_id);
+        const opp = teamName.get(oppId) ?? oppId;
+        return {
+          id: g.id,
+          date: iso,
+          label: `${friendlyDate(iso)} — ${isHome ? "vs" : "@"} ${opp}`,
+        };
+      })
+      .filter((g) => g.date)
+      .sort((a, b) => b.date.localeCompare(a.date));
+    setGames(gs);
+    // Default to the most recent game so the date is pre-filled sensibly.
+    if (gs.length && gs[0]) setDate(gs[0].date);
+  }
 
   async function load() {
     setLoading(true);
     try {
-      const db = getDb();
-      const snap = await getDocs(
-        query(
-          collection(db, `leagues/${leagueId}/pitch_outings`),
-          where("team_id", "==", teamId),
-        ),
-      );
-      const rows: Outing[] = snap.docs
-        .map((d) => {
-          const x = d.data();
-          return {
-            id: d.id,
-            player_name: String(x.player_name ?? ""),
-            date: String(x.date ?? ""),
-            pitches: Number(x.pitches ?? 0),
-          };
-        })
-        .sort(
-          (a, b) =>
-            b.date.localeCompare(a.date) ||
-            a.player_name.localeCompare(b.player_name),
-        );
-      setOutings(rows);
+      await Promise.all([loadOutings(), loadRefs()]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't load pitch counts.");
     } finally {
@@ -80,9 +158,17 @@ export function PitchCountsTab({
   }, [leagueId, teamId, user]);
 
   const knownNames = useMemo(
-    () => Array.from(new Set(outings.map((o) => o.player_name))).sort(),
-    [outings],
+    () =>
+      Array.from(
+        new Set([...roster, ...outings.map((o) => o.player_name)]),
+      ).sort(),
+    [roster, outings],
   );
+
+  // Show the free-text name input when the coach opts into it, or when there
+  // are no roster players to pick from. Same idea for the date vs a game pick.
+  const showNameInput = customName || roster.length === 0;
+  const showDateInput = customDate || games.length === 0;
 
   async function add(e: React.FormEvent) {
     e.preventDefault();
@@ -93,7 +179,7 @@ export function PitchCountsTab({
     }
     const p = Number(pitches);
     if (!name.trim()) {
-      setError("Pitcher name is required.");
+      setError("Pick or enter a pitcher.");
       return;
     }
     if (!Number.isFinite(p) || p < 0) {
@@ -125,9 +211,9 @@ export function PitchCountsTab({
         return;
       }
       setName("");
+      setCustomName(false);
       setPitches("");
-      setDate(today);
-      await load();
+      await loadOutings();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Save failed.");
     } finally {
@@ -154,7 +240,7 @@ export function PitchCountsTab({
         error?: string;
       };
       if (!res.ok || !data.ok) setError(data.error ?? `HTTP ${res.status}`);
-      else await load();
+      else await loadOutings();
     } finally {
       setBusyId(null);
     }
@@ -174,30 +260,81 @@ export function PitchCountsTab({
 
       <form className="cap-inline-form" onSubmit={add}>
         <div className="cap-form-row">
+          {/* Which game — picking one fills in the date. */}
+          <div className="cap-form-col">
+            <label className="cap-form-lbl">Game</label>
+            {games.length > 0 && !showDateInput ? (
+              <select
+                className="cap-form-input"
+                value={
+                  games.find((g) => g.date === date)?.id ?? (customDate ? CUSTOM : "")
+                }
+                onChange={(e) => {
+                  if (e.target.value === CUSTOM) {
+                    setCustomDate(true);
+                    return;
+                  }
+                  const g = games.find((x) => x.id === e.target.value);
+                  if (g) setDate(g.date);
+                }}
+              >
+                {games.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.label}
+                  </option>
+                ))}
+                <option value={CUSTOM}>Other date…</option>
+              </select>
+            ) : (
+              <input
+                className="cap-form-input"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+              />
+            )}
+          </div>
+
+          {/* Pitcher — pick from the roster, or type a name. */}
           <div className="cap-form-col">
             <label className="cap-form-lbl">Pitcher</label>
-            <input
-              className="cap-form-input"
-              list="coybl-pitcher-names"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Pitcher name"
-            />
+            {roster.length > 0 && !showNameInput ? (
+              <select
+                className="cap-form-input"
+                value={roster.includes(name) ? name : ""}
+                onChange={(e) => {
+                  if (e.target.value === CUSTOM) {
+                    setCustomName(true);
+                    setName("");
+                    return;
+                  }
+                  setName(e.target.value);
+                }}
+              >
+                <option value="">Select a pitcher…</option>
+                {roster.map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+                <option value={CUSTOM}>Someone else…</option>
+              </select>
+            ) : (
+              <input
+                className="cap-form-input"
+                list="coybl-pitcher-names"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Pitcher name"
+              />
+            )}
             <datalist id="coybl-pitcher-names">
               {knownNames.map((n) => (
                 <option key={n} value={n} />
               ))}
             </datalist>
           </div>
-          <div className="cap-form-col">
-            <label className="cap-form-lbl">Date</label>
-            <input
-              className="cap-form-input"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
-          </div>
+
           <div className="cap-form-col">
             <label className="cap-form-lbl">Pitches</label>
             <input

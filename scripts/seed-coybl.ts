@@ -356,9 +356,11 @@ Both coaches can submit a score independently. If the two don't match, the leagu
 
 ## 4. Logging pitch counts (Pitch Smart)
 
-On the **Pitch Counts** tab, log each pitcher's **name, date, and pitches thrown** after a game. The site automatically calculates the required rest and shows who's eligible for the next game — keeping you compliant with USA Baseball Pitch Smart.
+On the **Pitch Counts** tab, after a game just **pick the game** (that fills in the date), **pick the pitcher** from your roster, and enter the **pitches thrown**. The site automatically calculates the required rest and shows who's eligible for the next game — keeping you compliant with USA Baseball Pitch Smart. (Pitching in a scrimmage, or a pitcher who isn't on your roster yet? You can still type a date or a name instead.)
 
 ![The Pitch Counts entry form](/coybl/help/portal-pitchcounts.png)
+
+Tip: add your players on the **Roster** tab first, so they show up in the pitcher dropdown.
 
 Parents and other coaches can see eligibility on the public **Pitch Counts** page.
 
@@ -436,7 +438,7 @@ Tap **[Sign in](/login)** (top-right of the site) and use the **email and passwo
 
 ## 3. Log pitch counts
 
-**Pitch Counts** tab → add each pitcher's name, date, and pitches. Rest and eligibility are calculated for you (USA Baseball Pitch Smart).
+**Pitch Counts** tab → pick the game and the pitcher, enter pitches. Rest and eligibility are calculated for you (USA Baseball Pitch Smart).
 
 ## 4. Manage your roster
 
