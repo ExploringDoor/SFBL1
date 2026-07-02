@@ -267,93 +267,55 @@ export async function POST(req: Request) {
   //   2. for COYBL team registration: create the coach's login account +
   //      email a "set your password" link so they can manage their team.
   // Fire-and-forget — never blocks or fails the submission.
-  const origin =
-    h.get("origin") ?? (h.get("host") ? `https://${h.get("host")}` : "");
-
+  //
   // COYBL: create the coach's login account NOW (awaited) — fire-and-forget
   // work after the response is killed by the serverless runtime, and account
   // creation must actually happen. Wrapped so an email/auth hiccup never fails
   // the registration itself.
   if (tenantId === "coybl" && body.kind === "team_registration") {
     try {
-      await createCoachLogin(cleaned, origin);
+      await createCoachLogin(cleaned);
     } catch {
-      /* registration still succeeds even if the login email can't be sent */
+      /* registration still succeeds even if account creation hiccups */
     }
   } else {
     // Other tenants/kinds: best-effort confirmation email, fire-and-forget.
-    void sendRegistrationEmails(tenantId, body.kind, cleaned, origin).catch(
-      () => {},
-    );
+    void sendRegistrationEmails(tenantId, body.kind, cleaned).catch(() => {});
   }
 
   return NextResponse.json({ ok: true, id: ref.id });
 }
 
-// Create (or reuse) the coach's Firebase account for their COYBL team and
-// email a "set your password" link (with the confirmation). The team is
-// placed into a division by a director later; an admin then binds the coach's
-// account to the team (captain claim). Email no-ops unless RESEND is set — but
-// the account + link are still created either way.
-async function createCoachLogin(
-  data: Record<string, unknown>,
-  origin: string,
-): Promise<void> {
-  const c = (k: string) =>
-    typeof data[k] === "string" ? (data[k] as string).trim() : "";
-  const email = c("email");
+// Ensure the coach has a Firebase account for their COYBL team. Created with
+// NO password — the client then triggers Firebase's built-in "set your
+// password" email (same sender SFBL uses → inbox, no Resend/domain needed).
+// The team is placed into a division by a director later, who binds this
+// account to the team (captain claim) via admin tooling.
+async function createCoachLogin(data: Record<string, unknown>): Promise<void> {
+  const email =
+    typeof data.email === "string" ? data.email.trim() : "";
   if (!email) return;
-  const who = `${c("manager_first_name")} ${c("manager_last_name")}`.trim();
-  const team = c("team_name");
-
   const auth = getAdminAuth();
   try {
-    await auth.getUserByEmail(email);
+    await auth.getUserByEmail(email); // already exists — leave it as-is
   } catch {
     try {
-      await auth.createUser({ email }); // no password yet — set via the link
+      await auth.createUser({ email }); // no password; set via the emailed link
     } catch {
-      return; // invalid email etc.
+      /* invalid email, etc. — registration still succeeds */
     }
   }
-
-  let link = "";
-  try {
-    link = await auth.generatePasswordResetLink(
-      email,
-      origin ? { url: `${origin}/login` } : undefined,
-    );
-  } catch {
-    return;
-  }
-
-  await sendEmail({
-    to: email,
-    subject: `Welcome to COYBL — set up your ${team || "team"} login`,
-    html:
-      `<p>Hi ${esc(who) || "Coach"},</p>` +
-      `<p>Thanks for registering${team ? ` <strong>${esc(team)}</strong>` : ""} with the Central Ohio Youth Baseball League — we've got your registration.</p>` +
-      `<p>Set your password to access your team portal, where you can enter scores, log pitch counts, upload your team logo, and manage your schedule:</p>` +
-      `<p><a href="${esc(link)}" style="display:inline-block;padding:10px 18px;background:#13284a;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Set your password</a></p>` +
-      `<p style="font-size:13px;color:#555;">Or paste this into your browser:<br>${esc(link)}</p>` +
-      `<p>A league director will confirm your division shortly. Questions? Just reply to this email.</p>` +
-      `<p>— COYBL</p>`,
-    replyTo: notifyAddress() ?? undefined,
-  });
 }
 
 async function sendRegistrationEmails(
   tenantId: string,
   kind: Kind,
   data: Record<string, unknown>,
-  origin: string,
 ): Promise<void> {
-  // COYBL team registration → create the coach's own-login account and
-  // email a "set your password" link (plus the confirmation) in one go.
-  if (tenantId === "coybl" && kind === "team_registration") {
-    await createCoachLogin(data, origin);
-    return;
-  }
+  // COYBL coach accounts are handled in the POST handler (createCoachLogin +
+  // the client-side Firebase set-password email); this path is for other
+  // tenants' confirmation emails.
+  if (tenantId === "coybl" && kind === "team_registration") return;
   if (kind !== "player_registration" && kind !== "team_registration") return;
 
   const c = (k: string) =>

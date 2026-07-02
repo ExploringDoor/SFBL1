@@ -143,7 +143,8 @@ function content(tenantId: string) {
         "Choose your registration option below: Option 1 is $495 (includes team insurance plus Five Tool Youth registration); Option 2 is $425 (your team provides proof of its own insurance, plus Five Tool Youth registration). USSSA membership is an optional +$35 add-on.",
         "You can pay by card (Square) at checkout — card payments add a 3.25% processing fee. To skip that fee, pay by Venmo or check instead (details below).",
       ],
-      successMessage: "Thanks! Your team registration is in.",
+      successMessage:
+        "Thanks! Your team is registered. Check your email for a link to set your password and sign in to your team portal.",
       // Secondary payment option — kept below the form so it doesn't lead
       // the page. Venmo lets teams avoid the card processing fee.
       footer: (
@@ -223,6 +224,7 @@ export default function TeamRegistrationPage() {
       successMessage={successMessage}
       eyebrow={tenantId === "coybl" ? "COYBL" : "SFBL"}
       footer={footer}
+      sendCoachPasswordSetup={tenantId === "coybl"}
     />
   );
 }

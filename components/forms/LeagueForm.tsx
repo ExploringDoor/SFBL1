@@ -10,6 +10,7 @@
 // passed in as props.
 
 import { useState } from "react";
+import { sendPasswordReset } from "@/lib/auth-client";
 import "./LeagueForm.css";
 
 export type FieldType =
@@ -69,6 +70,11 @@ export interface LeagueFormProps {
   /** Optional content rendered BELOW the form (e.g. a secondary payment
    *  option). Kept out of the intro so it doesn't lead the page. */
   footer?: React.ReactNode;
+  /** COYBL team registration: after a successful submit (which creates the
+   *  coach's account server-side), trigger Firebase's built-in "set your
+   *  password" email to data.email — same email mechanism SFBL uses, so it
+   *  lands in the inbox with no Resend/domain setup. */
+  sendCoachPasswordSetup?: boolean;
 }
 
 export function LeagueForm({
@@ -82,6 +88,7 @@ export function LeagueForm({
   successMessage = "Thanks! Your submission was received. The league office will be in touch.",
   eyebrow = "SFBL",
   footer,
+  sendCoachPasswordSetup = false,
 }: LeagueFormProps) {
   const [data, setData] = useState<Record<string, unknown>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -133,6 +140,16 @@ export function LeagueForm({
         return;
       }
       setDone(true);
+      // COYBL: the account was just created server-side — ask Firebase to
+      // email the "set your password" link (Firebase's own sender, the same
+      // one SFBL uses, so it lands in the inbox).
+      if (
+        sendCoachPasswordSetup &&
+        typeof data.email === "string" &&
+        data.email
+      ) {
+        void sendPasswordReset(String(data.email)).catch(() => {});
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "submission failed");
     } finally {
