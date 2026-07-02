@@ -170,7 +170,9 @@ function content(tenantId: string) {
               @Doug-Hare-2
             </a>{" "}
             (scan below), or by <strong>check</strong> to COYBL, 152 Glen
-            Crossing Drive, Etna, OH 43062.
+            Crossing Drive, Etna, OH 43062. When Venmo asks you to confirm the
+            recipient, the last 4 digits of the phone number are{" "}
+            <strong>1391</strong>.
           </p>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

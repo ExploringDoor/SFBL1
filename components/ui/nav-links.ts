@@ -177,7 +177,7 @@ export function iconFor(href: string): string {
     "/profile": "🙋",
     "/captain": "⚾",
     "/admin": "◉",
-    "/tournaments": "⚾",
+    "/tournaments": "🏆",
     "/availability": "🗓️",
     "/eligibility": "🛡️",
     "/power-rankings": "📈",
