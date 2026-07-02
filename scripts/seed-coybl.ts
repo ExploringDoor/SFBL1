@@ -331,7 +331,7 @@ Everything you need to run your team on the COYBL site — signing in, entering 
 
 ## 1. Getting signed in
 
-When you register your team, we email you a link to **set your password**. After that, sign in anytime from the **Sign in** link using your **email and password** — from any phone or computer, and it stays signed in until you sign out.
+When you register your team, we email you a link to **set your password**. After that, tap **[Sign in](/login)** — the button is in the **top-right corner** of the site (open the menu on a phone) — and sign in with your **email and password**. It works from any phone or computer and stays signed in until you sign out.
 
 ![The COYBL sign-in page](/coybl/help/login.png)
 
@@ -344,7 +344,7 @@ Once you sign in you land on your team's portal. The strip up top shows your rec
 
 ![The coach portal dashboard](/coybl/help/portal-myteam.png)
 
-Use the tabs to get around: **My Team · Roster · Team Logo · Submit Score · Pitch Counts · Notifications · Schedule · Help**.
+Use the tabs to get around: **My Team · Roster · Team Logo · Submit Score · Pitch Counts · Schedule · Help**.
 
 ## 3. Entering a score
 
@@ -380,13 +380,7 @@ The **Schedule** tab lists all your games. The league office manages the schedul
 
 ![The schedule tab with calendar subscribe buttons](/coybl/help/portal-schedule.png)
 
-## 8. Notifications
-
-On the **Notifications** tab you can turn on push alerts for score updates, schedule changes, rainouts, and more — and choose which teams you want to hear about. (On iPhone, add the site to your home screen first.)
-
-![Notification preferences](/coybl/help/portal-notifications.png)
-
-## 9. Built-in Help
+## 8. Built-in Help
 
 The **Help** tab inside your portal covers all of this too, so it's always a tap away while you're managing your team.
 
@@ -434,7 +428,7 @@ The five things you'll do on the COYBL site:
 
 ## 1. Sign in
 
-Use the **Sign in** link with the **email and password** you set when you registered your team. Forgot it? Tap **Forgot password?**.
+Tap **[Sign in](/login)** (top-right of the site) and use the **email and password** you set when you registered your team. Forgot it? Tap **Forgot password?**.
 
 ## 2. Enter a score
 
