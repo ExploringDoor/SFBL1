@@ -49,7 +49,9 @@ const ALLOWED_FIELDS: Record<Kind, string[]> = {
     "manager_last_name",
     "email",
     "phone",
+    "street_address",
     "city",
+    "zip",
     "team_name",
     "division",
     // COYBL (youth) fields — age group instead of division, the

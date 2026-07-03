@@ -81,8 +81,10 @@ const COYBL_FIELDS: FormField[] = [
     options: COYBL_AGE_GROUPS.map((a) => ({ value: a, label: a })),
     width: "half",
   },
+  { name: "street_address", label: "Street Address", type: "text", width: "full" },
   { name: "city", label: "City / Town", type: "text", width: "half" },
-  { name: "organization", label: "Club / Organization", type: "text", placeholder: "If your team is part of a club", width: "half" },
+  { name: "zip", label: "ZIP Code", type: "text", width: "half" },
+  { name: "organization", label: "Club / Organization", type: "text", placeholder: "If your team is part of a club", width: "full" },
   {
     name: "insurance_option",
     label: "Registration Option",
