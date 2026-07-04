@@ -14,6 +14,12 @@ import { combineDateTime } from "@/lib/format-time";
 
 export const dynamic = "force-dynamic";
 
+// Tenant-neutral: the layout's title template appends "· <League>".
+export const metadata = {
+  title: "Scores",
+  description: "Final scores from around the league, week by week.",
+};
+
 interface ScoreGame {
   id: string;
   date: string;
@@ -56,19 +62,28 @@ export default async function ScoresPage({
     (g) => g.status === "final" || g.status === "approved",
   );
 
-  // Division filter — same UX as /schedule. Pulled from games' own
-  // division field. URL is `?div=18%2B` etc.; missing = all divisions.
+  // Division filter — same UX as /schedule. Options come from the
+  // TEAMS' divisions (the same labels standings show), and a game
+  // matches when EITHER team is in the division. The old approach
+  // filtered on the games' free-text division field, which drifted
+  // ("35+" vs "35+ American"/"35+ National") until picking the
+  // standings-advertised label hid most of a season (audit 2026-07);
+  // team divisions can't drift and interleague games show up for
+  // both sides' fans.
   const allDivisions = Array.from(
     new Set(
-      allFinal
-        .map((g) => g.division)
+      Object.values(teams)
+        .map((t) => t.division)
         .filter((d): d is string => !!d),
     ),
   ).sort();
   const activeDivision = searchParams?.div ?? null;
+  const inDivision = (g: ScoreGame) =>
+    teams[g.away_team_id]?.division === activeDivision ||
+    teams[g.home_team_id]?.division === activeDivision;
   const finalGames =
     activeDivision && activeDivision !== "all"
-      ? allFinal.filter((g) => g.division === activeDivision)
+      ? allFinal.filter(inDivision)
       : allFinal;
 
   // Team filter — pick a team to see all the games they played this
@@ -340,6 +355,7 @@ interface TeamMeta {
   color?: string;
   logoUrl?: string | null;
   record?: string;
+  division?: string | null;
 }
 
 async function loadScores(tenantId: string): Promise<{
@@ -397,6 +413,7 @@ async function loadScores(tenantId: string): Promise<{
       color: data.color ? String(data.color) : undefined,
       logoUrl: data.logo_url ? String(data.logo_url) : null,
       record: recordByTeam.get(d.id),
+      division: data.division ? String(data.division) : null,
     };
   }
   return { games, teams };

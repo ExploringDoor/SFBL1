@@ -14,6 +14,7 @@
 // back to a humanized pageId ("about" → "About", "code-of-conduct" →
 // "Code Of Conduct").
 
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
@@ -47,6 +48,30 @@ const RESERVED_SLUGS = new Set([
   "profile",
   "login",
 ]);
+
+// notFound() at metadata time renders the 404 UI with a
+// <meta name="robots" content="noindex"> for missing/invalid pages —
+// search engines treat them as gone. (A loading.tsx boundary streams a
+// 200 shell first, so a true HTTP 404 status isn't possible without
+// dropping the skeletons; verified on Next 14.2.) Mirrors the page's
+// slug validation + doc read.
+export async function generateMetadata({
+  params,
+}: {
+  params: RouteParams;
+}): Promise<Metadata> {
+  const pageId = params.pageId;
+  if (!/^[a-z0-9_-]+$/.test(pageId)) notFound();
+  if (RESERVED_SLUGS.has(pageId)) notFound();
+
+  const tenantId = headers().get("x-tenant-id");
+  if (!tenantId) return {};
+  const docSnap = await getAdminDb()
+    .doc(`leagues/${tenantId}/page_content/${pageId}`)
+    .get();
+  if (!docSnap.exists) notFound();
+  return { title: String(docSnap.data()?.title ?? humanize(pageId)) };
+}
 
 export default async function ContentPage({
   params,

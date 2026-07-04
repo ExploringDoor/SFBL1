@@ -11,6 +11,7 @@
 // PotwClient client component so no sanitizer/data code ships to
 // the browser.
 
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { sanitizeHtml } from "@/lib/markdown";
@@ -19,6 +20,11 @@ import { PotwClient, type PotwCardItem } from "./PotwClient";
 import { SFBL_POTW_HISTORY } from "@/lib/sfbl-potw-history";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Player of the Week",
+  description: "Weekly honorees and past winners.",
+};
 
 interface PotwEntry {
   id: string;

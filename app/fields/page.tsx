@@ -14,11 +14,17 @@
 //       color?: string,          // accent color for the card
 //     }> }
 
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { sanitizeHtml } from "@/lib/markdown";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Fields",
+  description: "Field locations, addresses, and directions.",
+};
 
 interface Field {
   name: string;

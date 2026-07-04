@@ -2,12 +2,18 @@
 // at /admin → Playoffs. Auto-hides when bracket.active is false
 // (e.g. regular season — no playoff data to show).
 
+import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import "./playoffs.css";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Playoffs",
+  description: "Playoff bracket and results.",
+};
 
 interface Match {
   id: string;

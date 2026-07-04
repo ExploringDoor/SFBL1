@@ -7,11 +7,17 @@
 // (Your Team / Visiting / Home) with real roster data. Matches the
 // player-registration pattern.
 
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { LeagueForm, type FormField } from "@/components/forms/LeagueForm";
 import { getAdminDb } from "@/lib/firebase-admin";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Umpire Evaluation",
+  description: "Rate the umpires from a recent game.",
+};
 
 const OTHER = "Other / Not listed";
 

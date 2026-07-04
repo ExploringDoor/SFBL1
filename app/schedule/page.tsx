@@ -15,6 +15,12 @@ import { combineDateTime } from "@/lib/format-time";
 
 export const dynamic = "force-dynamic";
 
+// Tenant-neutral: the layout's title template appends "· <League>".
+export const metadata = {
+  title: "Schedule",
+  description: "Full season schedule — upcoming games and past results.",
+};
+
 interface ScheduleGame {
   id: string;
   date: string;
@@ -67,22 +73,29 @@ export default async function SchedulePage({
   const allUpcoming = games.filter((g) => g.status !== "draft");
 
   // ── Division filter ─────────────────────────────────────────────
-  // Multi-division leagues (SFBL has 18+, 28+, 35+) want a quick way
-  // to drill into "just my division." Pulled from the games' own
-  // division field — top-level grouping, not the 35+ Am/Nat sub-
-  // division split (which is a teams-only attribute today). URL is
-  // `?div=18%2B` etc. — empty / missing = all divisions.
+  // Options come from the TEAMS' divisions (the same labels standings
+  // show), and a game matches when EITHER team is in the division.
+  // The old approach filtered on the games' free-text division field,
+  // which drifted ("35+" vs "35+ American"/"35+ National") until
+  // picking the standings-advertised label hid most of a season
+  // (audit 2026-07); team divisions can't drift and interleague games
+  // show up for both sides' fans. URL is `?div=18%2B` etc. —
+  // empty / missing = all divisions.
   const allDivisions = Array.from(
     new Set(
-      allUpcoming
-        .map((g) => g.division)
+      Object.values(teams)
+        .map((t) => t.division)
         .filter((d): d is string => !!d),
     ),
   ).sort();
   const activeDivision = searchParams?.div ?? null;
   const upcoming =
     activeDivision && activeDivision !== "all"
-      ? allUpcoming.filter((g) => g.division === activeDivision)
+      ? allUpcoming.filter(
+          (g) =>
+            teams[g.away_team_id]?.division === activeDivision ||
+            teams[g.home_team_id]?.division === activeDivision,
+        )
       : allUpcoming;
 
   const weeks = computeWeeks(upcoming);
@@ -154,6 +167,13 @@ export default async function SchedulePage({
             style={{ color: "var(--brand-primary)" }}
           >
             ⬇ Download for Excel (CSV)
+          </a>
+          <a
+            href="/print/schedule"
+            className="font-barlow text-xs font-bold uppercase tracking-wider hover:underline"
+            style={{ color: "var(--brand-primary)" }}
+          >
+            🖨 Print schedule
           </a>
         </div>
       </header>
@@ -278,6 +298,7 @@ interface TeamMeta {
   color?: string;
   logoUrl?: string | null;
   record?: string;
+  division?: string | null;
 }
 
 async function loadSchedule(tenantId: string): Promise<{
@@ -332,6 +353,7 @@ async function loadSchedule(tenantId: string): Promise<{
       color: data.color ? String(data.color) : undefined,
       logoUrl: data.logo_url ? String(data.logo_url) : null,
       record: recordByTeam.get(d.id),
+      division: data.division ? String(data.division) : null,
     };
   }
   return { games, teams };

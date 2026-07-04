@@ -7,11 +7,17 @@
 // roster — managers can pick their team instead of free-typing it
 // (which used to leave admins guessing about spelling).
 
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { LeagueForm, type FormField } from "@/components/forms/LeagueForm";
 import { getAdminDb } from "@/lib/firebase-admin";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Team Waiver",
+  description: "Team waiver and release form.",
+};
 
 const OTHER = "Other / Not listed";
 

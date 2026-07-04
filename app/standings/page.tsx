@@ -20,6 +20,12 @@ import {
 
 export const dynamic = "force-dynamic";
 
+// Tenant-neutral: the layout's title template appends "· <League>".
+export const metadata = {
+  title: "Standings",
+  description: "Current league standings by division.",
+};
+
 export default async function StandingsPage() {
   const h = headers();
   const tenantId = h.get("x-tenant-id");
@@ -158,20 +164,31 @@ export default async function StandingsPage() {
           }}
         >
           View league history →
+        </a>{" "}
+        ·{" "}
+        <a
+          href="/print/standings"
+          style={{
+            color: "var(--brand-primary)",
+            fontWeight: 700,
+            textDecoration: "underline",
+          }}
+        >
+          🖨 Print standings
         </a>
       </p>
     </main>
   );
 }
 
-// "Spring 2026" / "Summer 2026" — picked from the current month so
-// the standings header reads like a real season label.
+// Season header label. Deliberately just "<year> Season": the old
+// month-derived guess ("Summer 2026") invented seasons the league
+// doesn't have — SFBL plays Spring and Fall, and a Spring season
+// running into July rendered as "Summer" (audit 2026-07). The real
+// name belongs on league config (current_season) once the
+// commissioner supplies it; until then say only what we know.
 function seasonLabel(year: string): string {
-  const m = new Date().getMonth();
-  if (m >= 2 && m <= 4) return `Spring ${year}`;
-  if (m >= 5 && m <= 7) return `Summer ${year}`;
-  if (m >= 8 && m <= 10) return `Fall ${year}`;
-  return `Winter ${year}`;
+  return `${year} Season`;
 }
 
 async function loadStandings(tenantId: string, config: PublicLeagueConfig | null) {

@@ -6,6 +6,7 @@
 // inbound links; the heading and link label become "About <league>"
 // based on tenant config.
 
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { markdownToHtml } from "@/lib/markdown";
@@ -13,6 +14,11 @@ import type { PublicLeagueConfig } from "@/lib/tenants";
 import { PageContentEditor } from "@/components/PageContentEditor";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "About the League",
+  description: "League history, format, and contact information.",
+};
 
 export default async function SfblInfoPage() {
   const h = headers();

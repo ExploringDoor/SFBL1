@@ -27,10 +27,12 @@ import { parseHost, resolveTenant, toPublicConfig } from "./lib/tenants";
 const PREVIEW_COOKIE = "le_preview_tenant";
 const PREVIEW_SLUG_RE = /^[a-z][a-z0-9-]+$/;
 const PREVIEW_TTL_SECONDS = 4 * 60 * 60;
-// Env-configurable secret. Hardcoded fallback lets us ship the
-// flow without touching Vercel env on day one — Adam can rotate
-// by setting LE_PREVIEW_KEY in Vercel any time.
-const PREVIEW_KEY = process.env.LE_PREVIEW_KEY || "lbdc-preview-2026";
+// Env-only secret — NO hardcoded fallback. The old committed
+// fallback was the ACTIVE key in production (LE_PREVIEW_KEY was
+// never set), i.e. a secret sitting in git history (audit 2026-07).
+// Empty/unset = preview activation disabled entirely; existing
+// preview cookies still honor their TTL.
+const PREVIEW_KEY = process.env.LE_PREVIEW_KEY || "";
 
 export async function middleware(req: NextRequest) {
   const host = req.headers.get("host") ?? "";
@@ -56,6 +58,10 @@ export async function middleware(req: NextRequest) {
   const queryActivates =
     !!previewQuery &&
     PREVIEW_SLUG_RE.test(previewQuery) &&
+    // PREVIEW_KEY must be non-empty: with the env var unset, an
+    // attacker passing `&_preview_key=` (empty string) would
+    // otherwise compare equal ("" === "") and activate.
+    PREVIEW_KEY !== "" &&
     previewKey === PREVIEW_KEY;
 
   const overrideSlug = clearPreview

@@ -35,6 +35,16 @@ import "./history.css";
 
 export const dynamic = "force-dynamic";
 
+// Tenant-neutral title — the layout template appends the league name.
+export const metadata = { title: "History" };
+
+// ⚠️ DATA CONTRACT — COMPLETED SEASONS ONLY ⚠️
+// `data/{tenantId}/historical-standings.json` must NEVER contain blocks
+// for a season that is still being played. deriveChampions() crowns the
+// top of every playoff block, so a mid-season scrape (partial standings
+// + a single early playoff result) puts fake champions on the live
+// Wall of Champions. This exact bug shipped once (Spring 2026). Only
+// archive a season after its final championship game is recorded.
 function loadHistory(tenantId: string): StandingsBlock[] {
   const file = path.resolve(
     process.cwd(),

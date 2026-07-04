@@ -2,11 +2,17 @@
 // via the admin Photos tab. Each photo has an optional caption and
 // taken_at date.
 
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import "./photos.css";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Photos",
+  description: "League photo gallery.",
+};
 
 export default async function PhotosPage() {
   const tenantId = headers().get("x-tenant-id");

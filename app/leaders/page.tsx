@@ -15,12 +15,18 @@
 // start submitting box scores with batter detail (the AI scoresheet
 // upload feeds into this seamlessly).
 
+import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import "./leaders.css";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Leaders",
+  description: "Statistical leaders across the season.",
+};
 
 interface GameDoc {
   id: string;

@@ -11,10 +11,16 @@
 //   /leagues/<id>/tournament_games/<id>
 //   /leagues/<id>/site_config/tournament_meta = { data: [{name, location}] }
 
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Tournaments",
+  description: "Tournament schedules and locations.",
+};
 
 interface TournamentMeta {
   name: string;

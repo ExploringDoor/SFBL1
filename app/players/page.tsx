@@ -1,6 +1,7 @@
 // DVSL-style stats page: leaderboards (top batters, top pitchers) +
 // full league stats table.
 
+import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
@@ -16,6 +17,11 @@ import {
 import "@/components/ui/SortableStatsTable.css";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Players",
+  description: "Season batting and pitching stats for every player.",
+};
 
 interface PlayerRow {
   id: string;

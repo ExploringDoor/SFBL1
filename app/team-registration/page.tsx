@@ -3,7 +3,13 @@
 // submission lands in /form_submissions/team_registration so league
 // admins can review and follow up about payment.
 
+import type { Metadata } from "next";
 import { LeagueForm, type FormField } from "@/components/forms/LeagueForm";
+
+export const metadata: Metadata = {
+  title: "Team Registration",
+  description: "Register a new team for the upcoming season.",
+};
 
 const FIELDS: FormField[] = [
   { name: "manager_first_name", label: "Manager First Name", type: "text", required: true, width: "half" },

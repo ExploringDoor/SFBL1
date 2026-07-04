@@ -8,12 +8,18 @@
 // Server component — hydrates the Team dropdown with the league's
 // actual teams so admins don't have to fuzzy-match free-text inputs.
 
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { LeagueForm, type FormField } from "@/components/forms/LeagueForm";
 import { getAdminDb } from "@/lib/firebase-admin";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Player Registration",
+  description: "Register to play in the league.",
+};
 
 const POSITIONS = [
   { value: "C", label: "C — Catcher" },

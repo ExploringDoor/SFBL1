@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { markdownToHtml } from "@/lib/markdown";
@@ -6,6 +7,11 @@ import { PageContentEditor } from "@/components/PageContentEditor";
 import { RulesRichView, type RulesSection } from "@/components/RulesRichView";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Rules",
+  description: "Official league rules.",
+};
 
 const DEFAULT_PLACEHOLDER = `# League Rules
 

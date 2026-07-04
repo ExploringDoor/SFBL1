@@ -29,7 +29,12 @@ export async function generateMetadata({
   const snap = await db
     .doc(`leagues/${tenantId}/players/${params.playerId}`)
     .get();
-  if (!snap.exists) return {};
+  // notFound() at metadata time renders the 404 UI with a
+  // <meta name="robots" content="noindex"> — search engines treat the
+  // page as gone. (The loading.tsx boundary streams a 200 shell first,
+  // so a true HTTP 404 status isn't possible without dropping the
+  // loading skeletons; verified on Next 14.2.)
+  if (!snap.exists) notFound();
   const data = snap.data() ?? {};
   const name = String(data.name ?? params.playerId);
   const teamId = String(data.team_id ?? "");

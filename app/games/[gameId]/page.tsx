@@ -29,7 +29,12 @@ export async function generateMetadata({
   const gameSnap = await db
     .doc(`leagues/${tenantId}/games/${params.gameId}`)
     .get();
-  if (!gameSnap.exists) return {};
+  // notFound() at metadata time renders the 404 UI with a
+  // <meta name="robots" content="noindex"> — search engines treat the
+  // page as gone. (The loading.tsx boundary streams a 200 shell first,
+  // so a true HTTP 404 status isn't possible without dropping the
+  // loading skeletons; verified on Next 14.2.)
+  if (!gameSnap.exists) notFound();
   const data = gameSnap.data() ?? {};
   const [awaySnap, homeSnap] = await Promise.all([
     db

@@ -12,6 +12,7 @@
 // We don't redirect /content/pay-online → /pay-online — tenants may
 // still have inbound links pointing there.
 
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { markdownToHtml } from "@/lib/markdown";
@@ -22,6 +23,11 @@ import {
 } from "@/components/PayOnlinePicker";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Pay Online",
+  description: "Pay league fees online.",
+};
 
 interface PaymentDoc {
   data?: PayCategory[];

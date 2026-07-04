@@ -9,11 +9,17 @@
 // games + existing RSVPs. Client component handles the picker UI
 // and POSTs to /api/public-rsvp.
 
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { AvailabilityPicker } from "@/components/AvailabilityPicker";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Availability",
+  description: "Mark your availability for upcoming games.",
+};
 
 interface TeamRow {
   id: string;

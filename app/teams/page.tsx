@@ -1,6 +1,7 @@
 // DVSL-style teams index: grid of team cards organized by division,
 // each card clickable to /teams/[id] (the team's detail page).
 
+import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
@@ -15,6 +16,11 @@ import {
 import type { PublicLeagueConfig } from "@/lib/tenants";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Teams",
+  description: "All teams, rosters, and team pages.",
+};
 
 interface TeamCard {
   id: string;
