@@ -13,7 +13,7 @@ import { TickerInputEnhancer } from "@/components/ui/TickerInputEnhancer";
 import { SwVersionPill } from "@/components/ui/SwVersionPill";
 import { SwNavigateListener } from "@/components/SwNavigateListener";
 import { Ticker } from "@/components/ui/Ticker";
-import { loadTickerGames } from "@/lib/site-data";
+import { loadTickerGames, loadPlayoffsActive } from "@/lib/site-data";
 import "./globals.css";
 
 const inter = Inter({
@@ -175,6 +175,7 @@ export default async function RootLayout({
   }
 
   const tickerGames = tenantId ? await loadTickerGames(tenantId) : [];
+  const playoffsActive = tenantId ? await loadPlayoffsActive(tenantId) : false;
 
   // Tenant overrides become inline custom-properties on <html>. CSS
   // throughout the app uses `var(--brand-primary, fallback)` so any
@@ -291,6 +292,7 @@ export default async function RootLayout({
               tenantShort={leagueAbbrev ?? leagueName ?? "League"}
               logoUrl={null}
               hideLabels={navHideLabels}
+              playoffsActive={playoffsActive}
               rightSlot={<ProfileButton tenantId={tenantId} />}
             />
           ) : null}
@@ -303,6 +305,7 @@ export default async function RootLayout({
             <PwaTabBar
               hideLabels={navHideLabels}
               tenantShort={leagueAbbrev ?? leagueName ?? undefined}
+              playoffsActive={playoffsActive}
             />
           ) : null}
           {/* Service-worker version pill removed — Adam saw it as

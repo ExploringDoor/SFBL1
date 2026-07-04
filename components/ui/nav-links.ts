@@ -78,6 +78,51 @@ export const DEFAULT_LINKS: NavLink[] = [
   },
 ];
 
+/** When the playoff bracket is published (site_config/playoffs.active
+ *  === true), lift "Playoffs" out of whichever dropdown it lives in and
+ *  promote it to a top-level nav item so fans find it during the
+ *  season's highest-traffic month. When !active, returns `links`
+ *  unchanged.
+ *
+ *  Tenant-neutral and pure (returns a new array; no mutation). Must run
+ *  BEFORE computeNavLinks so the hoisted item still gets tenant
+ *  hide-lists + SFBL-only filtering applied to it.
+ *
+ *  The promoted item lands immediately after the "/standings" top-level
+ *  item; if there's no standings item, it's inserted before "More" (or
+ *  appended at the end if there's no "More" either). If no "/playoffs"
+ *  child exists anywhere, returns `links` unchanged.
+ */
+export function hoistPlayoffs(links: NavLink[], active: boolean): NavLink[] {
+  if (!active) return links;
+
+  // Find + extract the "/playoffs" child from whichever top-level item
+  // holds it, rebuilding each parent without it.
+  let playoffs: NavLink | null = null;
+  const stripped: NavLink[] = links.map((l) => {
+    if (!l.children || l.children.length === 0) return l;
+    const idx = l.children.findIndex((c) => c.href === "/playoffs");
+    if (idx === -1) return l;
+    playoffs = l.children[idx]!;
+    return { ...l, children: l.children.filter((_, i) => i !== idx) };
+  });
+  if (!playoffs) return links;
+
+  // Insert after "/standings"; else before "More"; else at the end.
+  const standingsIdx = stripped.findIndex((l) => l.href === "/standings");
+  if (standingsIdx !== -1) {
+    stripped.splice(standingsIdx + 1, 0, playoffs);
+    return stripped;
+  }
+  const moreIdx = stripped.findIndex((l) => l.label === "More");
+  if (moreIdx !== -1) {
+    stripped.splice(moreIdx, 0, playoffs);
+    return stripped;
+  }
+  stripped.push(playoffs);
+  return stripped;
+}
+
 /** Apply per-tenant nav customization to a link list:
  *   • hide-list (case-insensitive label match, top-level + children)
  *   • legacy "About SFBL" → "About <tenantShort>" relabel

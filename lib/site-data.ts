@@ -173,3 +173,27 @@ export async function loadTickerGames(tenantId: string): Promise<TickerGame[]> {
 function formatRecord(w: number, l: number, t: number): string {
   return t > 0 ? `${w}-${l}-${t}` : `${w}-${l}`;
 }
+
+// Whether the playoff bracket is published for this tenant. Drives the
+// nav lifting "Playoffs" out of the "More" dropdown to a top-level item
+// (see components/ui/nav-links.ts hoistPlayoffs). Called from the layout
+// on every request, so — like loadTickerGames — it swallows failures and
+// returns false rather than crashing the whole shell.
+export async function loadPlayoffsActive(tenantId: string): Promise<boolean> {
+  let db;
+  try {
+    db = getAdminDb();
+  } catch (e) {
+    console.error("[site-data] getAdminDb failed:", e);
+    return false;
+  }
+  try {
+    const snap = await db
+      .doc(`leagues/${tenantId}/site_config/playoffs`)
+      .get();
+    return snap.exists && snap.data()?.active === true;
+  } catch (e) {
+    console.error("[site-data] playoffs config read failed:", e);
+    return false;
+  }
+}

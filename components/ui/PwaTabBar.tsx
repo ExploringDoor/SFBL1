@@ -16,7 +16,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { DEFAULT_LINKS, computeNavLinks, iconFor } from "./nav-links";
+import { DEFAULT_LINKS, computeNavLinks, hoistPlayoffs, iconFor } from "./nav-links";
 import type { NavLink } from "./nav-links";
 import "./PwaTabBar.css";
 
@@ -47,9 +47,17 @@ export interface PwaTabBarProps {
   hideLabels?: string[];
   /** Tenant short name — drives "About <abbrev>" relabel. */
   tenantShort?: string;
+  /** When the playoff bracket is published, lift "Playoffs" out of the
+   *  "More" dropdown to a top-level nav item — kept in sync with the
+   *  desktop nav. Off by default. */
+  playoffsActive?: boolean;
 }
 
-export function PwaTabBar({ hideLabels, tenantShort }: PwaTabBarProps = {}) {
+export function PwaTabBar({
+  hideLabels,
+  tenantShort,
+  playoffsActive = false,
+}: PwaTabBarProps = {}) {
   const pathname = usePathname() ?? "/";
   const [isStandalone, setIsStandalone] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -59,7 +67,11 @@ export function PwaTabBar({ hideLabels, tenantShort }: PwaTabBarProps = {}) {
   // Standings) are excluded so they don't repeat. Remaining single
   // links collect under "Browse"; each dropdown becomes its own section
   // (SFBL, Register, More) — same grouping as the desktop nav.
-  const navLinks = computeNavLinks(DEFAULT_LINKS, tenantShort ?? "", hideLabels);
+  const navLinks = computeNavLinks(
+    hoistPlayoffs(DEFAULT_LINKS, playoffsActive),
+    tenantShort ?? "",
+    hideLabels,
+  );
   const bottomHrefs = new Set(
     SLOTS.map((s) => s.href).filter((h): h is string => !!h),
   );

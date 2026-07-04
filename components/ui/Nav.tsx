@@ -14,7 +14,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { DEFAULT_LINKS, computeNavLinks, iconFor } from "./nav-links";
+import { DEFAULT_LINKS, computeNavLinks, hoistPlayoffs, iconFor } from "./nav-links";
 import type { NavLink } from "./nav-links";
 import "./Nav.css";
 
@@ -38,6 +38,9 @@ export interface NavProps {
   /** Right-hand slot — typically the ProfileButton. Falls back to a
    *  "Sign in" link when omitted. */
   rightSlot?: React.ReactNode;
+  /** When the playoff bracket is published, lift "Playoffs" out of the
+   *  "More" dropdown to a top-level nav item. Off by default. */
+  playoffsActive?: boolean;
 }
 
 // DEFAULT_LINKS now lives in ./nav-links (shared with the bottom-tab
@@ -49,12 +52,14 @@ export function Nav({
   links: linksProp = DEFAULT_LINKS,
   hideLabels,
   rightSlot,
+  playoffsActive = false,
 }: NavProps) {
   // Per-tenant nav customization (hide-list, "About <tenant>" relabel,
   // SFBL-only items) — shared with the bottom-tab "More" sheet via
-  // computeNavLinks so the two never drift.
+  // computeNavLinks so the two never drift. hoistPlayoffs runs first so
+  // a promoted "Playoffs" still gets tenant filtering applied.
   const navLinks: NavLink[] = computeNavLinks(
-    linksProp,
+    hoistPlayoffs(linksProp, playoffsActive),
     tenantShort,
     hideLabels,
   );

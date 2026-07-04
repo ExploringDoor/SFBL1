@@ -23,6 +23,13 @@ import { useEffect, useMemo, useState } from "react";
 import type { User } from "firebase/auth";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
+import { useTenant } from "@/lib/tenant-context";
+import {
+  computeStandings,
+  sortByPoints,
+  type GameResult,
+  type StandingsRow,
+} from "@/lib/stats/shared";
 
 interface TeamLite {
   id: string;
@@ -71,8 +78,10 @@ const DEFAULT_BRACKET: Bracket = {
 };
 
 export function PlayoffsManager({ leagueId, user }: Props) {
+  const { config } = useTenant();
   const [bracket, setBracket] = useState<Bracket>(DEFAULT_BRACKET);
   const [teams, setTeams] = useState<TeamLite[]>([]);
+  const [games, setGames] = useState<GameResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -81,9 +90,10 @@ export function PlayoffsManager({ leagueId, user }: Props) {
     let cancelled = false;
     (async () => {
       const db = getDb();
-      const [bracketSnap, teamSnap] = await Promise.all([
+      const [bracketSnap, teamSnap, gameSnap] = await Promise.all([
         getDoc(doc(db, `leagues/${leagueId}/site_config/playoffs`)),
         getDocs(collection(db, `leagues/${leagueId}/teams`)),
+        getDocs(collection(db, `leagues/${leagueId}/games`)),
       ]);
       if (cancelled) return;
       if (bracketSnap.exists()) {
@@ -104,6 +114,19 @@ export function PlayoffsManager({ leagueId, user }: Props) {
             division: String(d.data().division ?? ""),
           }))
           .sort((a, b) => a.name.localeCompare(b.name)),
+      );
+      setGames(
+        gameSnap.docs.map((g) => {
+          const d = g.data();
+          return {
+            home_team_id: String(d.home_team_id ?? ""),
+            away_team_id: String(d.away_team_id ?? ""),
+            home_score: Number(d.home_score ?? 0),
+            away_score: Number(d.away_score ?? 0),
+            status: String(d.status ?? "draft") as GameResult["status"],
+            date: d.date ? String(d.date) : undefined,
+          };
+        }),
       );
       setLoading(false);
     })();
@@ -293,6 +316,97 @@ export function PlayoffsManager({ leagueId, user }: Props) {
             },
       ),
     }));
+  }
+
+  // Pre-fill the whole bracket from the current standings so the admin
+  // doesn't hand-pick every team. Overwrites cur.divisions but leaves
+  // active + title untouched (does NOT auto-publish).
+  function seedFromStandings() {
+    if (bracket.divisions.length > 0) {
+      if (
+        !window.confirm(
+          "Replace the current bracket with fresh seeds from the standings? This overwrites the divisions below.",
+        )
+      )
+        return;
+    }
+
+    // Rank exactly like /standings: points scheme if configured, else PCT/RD.
+    let rows = computeStandings(games);
+    const scheme = config?.standings?.points_per ?? null;
+    const usePoints = config?.standings?.scoring === "points" && !!scheme;
+    rows =
+      usePoints && scheme
+        ? // Pass the tenant's tiebreaker so seeds match /standings exactly
+          // for pct-tiebreak leagues too — not just the "rd" default.
+          sortByPoints(rows, scheme, config?.standings?.tiebreaker ?? "rd")
+        : [...rows].sort((a, b) => b.pct - a.pct || b.rd - a.rd);
+
+    if (rows.length === 0) {
+      setMsg({ ok: true, text: "No finished games to seed from yet." });
+      return;
+    }
+
+    const teamDivisionOf = (teamId: string): string => {
+      const t = teams.find((tt) => tt.id === teamId);
+      return t ? t.division || "—" : "—";
+    };
+
+    // Ordered division labels, excluding the "—" no-division bucket.
+    const divisionLabels = [...teamsByDivision.keys()]
+      .filter((k) => k !== "—")
+      .sort((a, b) => a.localeCompare(b));
+
+    const seededDivisions: Division[] = [];
+    for (const label of divisionLabels) {
+      // ranked keeps standings order = seed order (index 0 => seed 1).
+      const ranked = rows.filter((r) => teamDivisionOf(r.team_id) === label);
+      if (ranked.length < 2) continue; // not enough teams to seed a match
+
+      const matches: Match[] = [];
+      const n = ranked.length;
+      let lo = 0;
+      let hi = n - 1;
+      const mk = (
+        homeRow: StandingsRow,
+        homeSeed: number,
+        awayRow: StandingsRow | null,
+        awaySeed: number,
+      ): Match => ({
+        id: `m_${Math.random().toString(36).slice(2, 8)}`,
+        away_team_id: awayRow ? awayRow.team_id : null,
+        away_seed: awayRow ? awaySeed : null,
+        home_team_id: homeRow.team_id,
+        home_seed: homeSeed,
+        game_id: null,
+        away_score: null,
+        home_score: null,
+        winner_team_id: null,
+        status: "scheduled" as const,
+      });
+
+      if (n % 2 === 1) {
+        // Odd count → top seed gets a bye.
+        matches.push(mk(ranked[0]!, 1, null, 0));
+        lo = 1;
+      }
+      while (lo < hi) {
+        matches.push(mk(ranked[lo]!, lo + 1, ranked[hi]!, hi + 1));
+        lo++;
+        hi--;
+      }
+
+      seededDivisions.push({
+        label,
+        rounds: [{ label: "Round 1", matches }],
+      });
+    }
+
+    setBracket((cur) => ({ ...cur, divisions: seededDivisions }));
+    setMsg({
+      ok: true,
+      text: `Seeded ${seededDivisions.length} divisions from the standings. Review below, then Save.`,
+    });
   }
 
   async function save() {
@@ -640,6 +754,15 @@ export function PlayoffsManager({ leagueId, user }: Props) {
           className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700"
         >
           + Add division
+        </button>
+        <button
+          type="button"
+          onClick={seedFromStandings}
+          disabled={saving}
+          title="Overwrites the divisions below with fresh seeds from the current standings"
+          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700"
+        >
+          ⚡ Seed from standings
         </button>
         <button
           type="button"
