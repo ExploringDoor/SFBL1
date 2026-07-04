@@ -4660,7 +4660,14 @@ body {
 .bs-linescore-wrap {
   border: 1px solid var(--border);
   border-radius: 10px;
-  overflow: hidden;
+  /* Scroll, don't clip: overflow:hidden was cutting off the rightmost
+   * innings + R/H/E on phones with no way to reach them. Same pattern
+   * as .le-s-scroll in StandingsTable.css. Any overflow value other
+   * than visible still clips to the rounded corners, so the radius
+   * keeps working. */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
 .bs-empty-batting {

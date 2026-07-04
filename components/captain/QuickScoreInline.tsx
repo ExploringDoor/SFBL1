@@ -158,6 +158,7 @@ export function QuickScoreInline({
           <span>Us</span>
           <input
             type="number"
+            inputMode="numeric"
             min={0}
             value={us}
             placeholder="0"
@@ -174,6 +175,7 @@ export function QuickScoreInline({
           <span>Them</span>
           <input
             type="number"
+            inputMode="numeric"
             min={0}
             value={them}
             placeholder="0"

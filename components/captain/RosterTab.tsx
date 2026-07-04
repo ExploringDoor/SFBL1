@@ -401,6 +401,7 @@ function AddPlayerForm({
           <label className="cap-form-lbl">#</label>
           <input
             type="number"
+            inputMode="numeric"
             min={0}
             className="cap-form-input"
             value={num}
@@ -596,6 +597,7 @@ function RosterRow({
                   <label className="cap-form-lbl">#</label>
                   <input
                     type="number"
+                    inputMode="numeric"
                     min={0}
                     className="cap-form-input"
                     value={num}

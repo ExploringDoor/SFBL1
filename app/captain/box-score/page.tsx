@@ -1529,6 +1529,7 @@ function LineupStep({
           <span className="bs-step-dummy-lbl">Dummy:</span>
           <input
             type="number"
+            inputMode="numeric"
             min={1}
             max={20}
             value={dummyCount}
@@ -1565,6 +1566,7 @@ function LineupStep({
           />
           <input
             type="text"
+            inputMode="numeric"
             placeholder="#"
             value={customNum}
             onChange={(e) => setCustomNum(e.target.value)}
@@ -2086,6 +2088,7 @@ function LinescoreRow({
           {editable ? (
             <input
               type="number"
+              inputMode="numeric"
               min={0}
               value={n || ""}
               placeholder="-"
@@ -2103,6 +2106,7 @@ function LinescoreRow({
         {editable ? (
           <input
             type="number"
+            inputMode="numeric"
             min={0}
             value={rDisplay || ""}
             placeholder="0"
@@ -2125,6 +2129,7 @@ function LinescoreRow({
         {editable ? (
           <input
             type="number"
+            inputMode="numeric"
             min={0}
             value={e || ""}
             placeholder="0"
@@ -2221,6 +2226,7 @@ function BattingTable({
                     {editable ? (
                       <input
                         type="number"
+                        inputMode="numeric"
                         min={0}
                         value={(b[c.key as keyof BatStats] as number) || ""}
                         placeholder="0"
@@ -2337,6 +2343,7 @@ function PitchingTable({
                     {editable ? (
                       <input
                         type="number"
+                        inputMode="numeric"
                         min={0}
                         value={(p[c.key as keyof PitRow] as number) || ""}
                         placeholder="0"

@@ -490,6 +490,7 @@ export function ScoresManager({ leagueId, user }: Props) {
                     <td className="text-center py-2 px-2">
                       <input
                         type="number"
+                        inputMode="numeric"
                         value={effectiveScore(g, "away")}
                         onChange={(e) => setDraft(g.id, "away", e.target.value)}
                         onKeyDown={(e) => {
@@ -503,6 +504,7 @@ export function ScoresManager({ leagueId, user }: Props) {
                     <td className="text-center py-2 px-2">
                       <input
                         type="number"
+                        inputMode="numeric"
                         value={effectiveScore(g, "home")}
                         onChange={(e) => setDraft(g.id, "home", e.target.value)}
                         onKeyDown={(e) => {

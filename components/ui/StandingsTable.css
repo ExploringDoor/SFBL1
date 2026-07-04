@@ -64,6 +64,33 @@
   scrollbar-width: thin;
 }
 
+/* Sticky team column: while the table scrolls horizontally, the team
+ * cell stays pinned so every stat row keeps its label. Sticky cells
+ * MUST be opaque — the numeric columns slide underneath them — so
+ * each row state gets a solid color equal to what its transparent
+ * background composites to over the white card:
+ *   header  rgba(0,0,0,.02) over #fff → #fafafa
+ *   row     (no tint)                 → #ffffff
+ *   hover   rgba(0,0,0,.03) over #fff → #f7f7f7 */
+.le-s-scroll .le-s-tbl th:first-child,
+.le-s-scroll .le-s-tbl td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+.le-s-scroll .le-s-tbl th:first-child {
+  background: #fafafa;
+}
+
+.le-s-scroll .le-s-tbl td:first-child {
+  background: #ffffff;
+}
+
+.le-s-scroll .le-s-tbl tr:hover td:first-child {
+  background: #f7f7f7;
+}
+
 .le-s-tbl {
   width: 100%;
   border-collapse: collapse;
@@ -350,5 +377,15 @@
   }
   .le-form-spark {
     margin-left: 4px;
+  }
+  /* Cap the sticky team column so a long name can't pin half the
+   * viewport. .le-tname already ellipsizes; min-width:0 lets the
+   * flex row actually shrink it (max-width goes on .le-team-cell
+   * because table layout ignores max-width on the td itself). */
+  .le-s-tbl .le-team-cell {
+    max-width: 160px;
+  }
+  .le-s-tbl .le-tname {
+    min-width: 0;
   }
 }

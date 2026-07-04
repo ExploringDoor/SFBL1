@@ -1,9 +1,12 @@
 // Local scoreboard nav components — Scores|Schedule tabs + week-by-week
 // row. Uses the .tab-row / .dn-row / .dn-slot CSS from globals.css to
-// match DVSL exactly. Pure server components (no interactivity beyond
-// link navigation).
+// match DVSL exactly. Client component: the week row auto-scrolls the
+// active pill into view and the arrows navigate to the adjacent week.
+"use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef } from "react";
 
 export function ScoresScheduleTabs({ active }: { active: "scores" | "schedule" }) {
   return (
@@ -38,13 +41,54 @@ export function WeekRow({
   weeks: WeekItem[];
   basePath: string;
 }) {
+  const router = useRouter();
+  const slotsRef = useRef<HTMLDivElement>(null);
+
+  const activeIdx = weeks.findIndex((w) => w.active);
+  const activeStart = activeIdx >= 0 ? weeks[activeIdx]?.startIso ?? null : null;
+  // Late-season the active pill (e.g. WK 18 of 18) sits far right in the
+  // scroller; without this, phones land showing the first weeks of the
+  // season. Scroll ONLY the pill strip via scrollLeft — scrollIntoView
+  // also scrolls every scrollable ancestor including the window, which
+  // yanked the whole page down/right past the header on load.
+  useEffect(() => {
+    const container = slotsRef.current;
+    const active = container?.querySelector<HTMLElement>(".dn-slot.active");
+    if (!container || !active) return;
+    container.scrollLeft =
+      active.offsetLeft - (container.clientWidth - active.offsetWidth) / 2;
+  }, [activeStart]);
+
+  // Arrow nav: jump to the adjacent week, keeping any other filters
+  // (div, team) already in the URL. Read window.location at click time
+  // so the server-rendered markup stays param-free and hydration-stable.
+  function goToWeek(idx: number) {
+    const target = weeks[idx];
+    if (!target) return;
+    const params = new URLSearchParams(window.location.search);
+    params.set("week", target.startIso);
+    router.push(`${basePath}?${params.toString()}`);
+  }
+
+  const prevDisabled = activeIdx <= 0;
+  const nextDisabled = activeIdx === -1 || activeIdx === weeks.length - 1;
+  const disabledStyle = { opacity: 0.35, cursor: "default" } as const;
+
   if (weeks.length === 0) return null;
   return (
     <div className="dn-row">
-      <button className="dn-arrow" type="button" aria-label="Previous">
+      <button
+        className="dn-arrow"
+        type="button"
+        aria-label="Previous week"
+        disabled={prevDisabled}
+        aria-disabled={prevDisabled}
+        style={prevDisabled ? disabledStyle : undefined}
+        onClick={() => goToWeek(activeIdx - 1)}
+      >
         ‹
       </button>
-      <div className="dn-slots">
+      <div className="dn-slots" ref={slotsRef}>
         {weeks.map((w) => (
           <Link
             key={w.startIso}
@@ -56,7 +100,15 @@ export function WeekRow({
           </Link>
         ))}
       </div>
-      <button className="dn-arrow" type="button" aria-label="Next">
+      <button
+        className="dn-arrow"
+        type="button"
+        aria-label="Next week"
+        disabled={nextDisabled}
+        aria-disabled={nextDisabled}
+        style={nextDisabled ? disabledStyle : undefined}
+        onClick={() => goToWeek(activeIdx + 1)}
+      >
         ›
       </button>
     </div>

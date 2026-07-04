@@ -111,8 +111,53 @@
   color: var(--brand-primary, #002D72);
 }
 
+/* Sticky player column: min-width forces horizontal scroll (always on
+ * phones) and without this the names scroll away, leaving anonymous
+ * stat rows. Sticky cells MUST be opaque — stat columns slide beneath
+ * them — so each state gets the solid equivalent of its transparent
+ * tint over the white/#f8f8f8 base:
+ *   header hover rgba(0,45,114,.08) over #f8f8f8 → #e4e8ed
+ *   row hover    rgba(0,45,114,.04) over #ffffff → #f5f7f9
+ * (The player th has no onClick and never gets .sorted, so those are
+ * all the states this column can take.) */
+.le-stats-tbl thead th.le-stats-th-player,
+.le-stats-tbl td.le-stats-td-player {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+.le-stats-tbl thead th.le-stats-th-player {
+  background: #f8f8f8;
+}
+
+.le-stats-tbl thead th.le-stats-th-player:hover {
+  background: #e4e8ed;
+  /* The header hover scale() makes a pinned cell wobble over the
+   * columns sliding under it — keep the sticky one static. */
+  transform: none;
+}
+
+.le-stats-tbl td.le-stats-td-player {
+  background: #ffffff;
+}
+
+.le-stats-tbl tbody tr:hover td.le-stats-td-player {
+  background: #f5f7f9;
+}
+
 @media (max-width: 700px) {
   .le-stats-tbl { font-size: 13px; min-width: 480px; }
   .le-stats-tbl thead th { font-size: 14px; padding: 10px 8px; }
   .le-stats-tbl td { padding: 9px 8px; font-size: 12px; }
+  /* Cap the sticky player column so a long name can't pin half the
+   * viewport. The cap lives on the link, not the td — table layout
+   * ignores max-width on cells. */
+  .le-stats-tbl td.le-stats-td-player a {
+    display: inline-block;
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: bottom;
+  }
 }
