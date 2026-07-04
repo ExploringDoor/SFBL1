@@ -46,13 +46,27 @@ export function TeamBadge({
         className={`inline-flex flex-shrink-0 items-center justify-center ${SIZE_CLASSES[size]}`}
         title={name}
       >
-        <Image
-          src={logoUrl}
-          alt={name}
-          width={px}
-          height={px}
-          className="h-full w-full object-contain"
-        />
+        {logoUrl.startsWith("/") ? (
+          <Image
+            src={logoUrl}
+            alt={name}
+            width={px}
+            height={px}
+            className="h-full w-full object-contain"
+          />
+        ) : (
+          // Remote logo_url: next/image throws for hosts missing from
+          // next.config remotePatterns (none are configured). Same
+          // guard as GameCard/PreviewCard/StandingsTable/Hero.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={logoUrl}
+            alt={name}
+            width={px}
+            height={px}
+            className="h-full w-full object-contain"
+          />
+        )}
       </span>
     );
   }

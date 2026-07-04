@@ -12,6 +12,7 @@
 // an onClick that pushes the route. Inner Links use stopPropagation
 // so clicking them overrides the card's own navigation.
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import "./GameCard.css";
@@ -125,14 +126,28 @@ function TeamRow({ team, winner }: { team: GameCardTeam; winner: boolean }) {
     <div className="le-gc-team-row">
       <div className="le-gc-logo-wrap">
         {team.logoUrl ? (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img
-            src={team.logoUrl}
-            alt=""
-            className="le-gc-logo-img"
-            loading="lazy"
-            decoding="async"
-          />
+          team.logoUrl.startsWith("/") ? (
+            /* Local /public asset → next/image resizes the 512px PNG
+               down to the 38px it actually renders at. Remote URLs
+               fall through to the raw <img> below — the optimizer
+               throws on hosts not whitelisted in next.config. */
+            <Image
+              src={team.logoUrl}
+              alt=""
+              className="le-gc-logo-img"
+              width={38}
+              height={38}
+            />
+          ) : (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={team.logoUrl}
+              alt=""
+              className="le-gc-logo-img"
+              loading="lazy"
+              decoding="async"
+            />
+          )
         ) : (
           <span
             className="le-gc-logo-dot"

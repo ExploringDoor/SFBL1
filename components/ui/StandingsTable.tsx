@@ -11,6 +11,7 @@
 // The component takes pre-computed rows (server already ran
 // computeStandings + grouped by division). It only renders.
 
+import Image from "next/image";
 import Link from "next/link";
 import {
   computePoints,
@@ -168,13 +169,27 @@ export function StandingsTable({
                             Full standings page keeps it. */}
                         {meta?.logoUrl && (
                           <span className="le-team-logo">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={meta.logoUrl}
-                              alt=""
-                              loading="lazy"
-                              decoding="async"
-                            />
+                            {/* Local /public asset → next/image resizes
+                                the 512px PNG to the 40px box. Remote
+                                URLs keep the raw <img> — the optimizer
+                                throws on hosts not whitelisted in
+                                next.config. */}
+                            {meta.logoUrl.startsWith("/") ? (
+                              <Image
+                                src={meta.logoUrl}
+                                alt=""
+                                width={40}
+                                height={40}
+                              />
+                            ) : (
+                              /* eslint-disable-next-line @next/next/no-img-element */
+                              <img
+                                src={meta.logoUrl}
+                                alt=""
+                                loading="lazy"
+                                decoding="async"
+                              />
+                            )}
                           </span>
                         )}
                         <Link

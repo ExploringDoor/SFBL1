@@ -7,6 +7,7 @@
 // game preview modal. The `isNext` flag marks the next upcoming game
 // in the list with a navy left border.
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import "./PreviewCard.css";
@@ -98,10 +99,16 @@ function Side({ team }: { team: PreviewCardTeam }) {
   return (
     <div className="le-preview-team-row">
       <div className="le-preview-logo">
-        {team.logoUrl && (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img src={team.logoUrl} alt="" loading="lazy" decoding="async" />
-        )}
+        {team.logoUrl &&
+          (team.logoUrl.startsWith("/") ? (
+            /* Local /public asset → next/image resizes to the 44px box.
+               Remote URLs keep the raw <img> — the optimizer throws on
+               hosts not whitelisted in next.config. */
+            <Image src={team.logoUrl} alt="" width={44} height={44} />
+          ) : (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img src={team.logoUrl} alt="" loading="lazy" decoding="async" />
+          ))}
       </div>
       <div>
         <Link
