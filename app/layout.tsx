@@ -300,6 +300,9 @@ export default async function RootLayout({
                 games={tickerGames}
                 tenantShort={leagueAbbrev ?? leagueName ?? "League"}
                 seasonYear={new Date().getFullYear()}
+                // COYBL (youth baseball) shows a baseball in place of the
+                // generic hexagon mark. (Adam, 2026-07.)
+                mark={leagueAbbrev === "COYBL" ? "⚾" : "⬡"}
                 logoUrl={logoUrl}
                 // SFBL: drop the big wordmark in the top-left so the
                 // ticker is all scores (Adam, 2026-05-18). Branding

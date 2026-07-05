@@ -64,6 +64,10 @@ export interface TickerProps {
   tenantShort: string;
   /** Season year shown next to the short name (text mode only). */
   seasonYear: number;
+  /** Small mark before the short name in text mode. Defaults to the
+   *  generic hexagon; sport-specific leagues override it (e.g. COYBL
+   *  uses a baseball). */
+  mark?: string;
   /** Tenant league banner. When provided, replaces the hex+short+year
    *  text in the left label. Most leagues set this to their full
    *  graphical wordmark (e.g. SFBL's "South Florida BASEBALL LEAGUE"
@@ -83,6 +87,7 @@ export function Ticker({
   games,
   tenantShort,
   seasonYear,
+  mark = "⬡",
   logoUrl,
   homeHref = "/",
   scoresHref = "/scores",
@@ -116,7 +121,7 @@ export function Ticker({
             />
           ) : (
             <>
-              <span aria-hidden>⬡</span>
+              <span aria-hidden>{mark}</span>
               <span>{tenantShort}</span>
               <span className="st-label-year">{seasonYear}</span>
             </>
