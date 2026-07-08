@@ -117,6 +117,11 @@ const HOST_ALIAS_BASELINE: Record<string, string> = {
   "new.sfbl.com": "sfbl",
   "sfbl.com": "sfbl",
   "www.sfbl.com": "sfbl",
+  // COYBL's real domain (registered at GoDaddy, nameservers pointed at
+  // Vercel). Apex + www hardcoded on the reliable baseline like SFBL so
+  // the tenant resolves without depending on an env var. (Adam, 2026-07.)
+  "coybl.net": "coybl",
+  "www.coybl.net": "coybl",
 };
 const HOST_ALIASES: Record<string, string> = (() => {
   const out: Record<string, string> = { ...HOST_ALIAS_BASELINE };
