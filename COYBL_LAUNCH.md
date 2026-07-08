@@ -1,25 +1,24 @@
 # COYBL Launch Checklist
 
 Running list of what's left before the COYBL site goes live for Doug Hare.
-Site: https://coybl-preview.vercel.app · Vercel project: `coybl-preview` ·
+Live domain: **https://coybl.net** · Vercel project: `coybl-preview` ·
 Firebase (shared): `sfbl-acf51`.
 
 ## Config switch-ons (no building — just settings)
 
-- [ ] **Verify `coybl.org` in Resend** — add 3 DNS records (SPF / DKIM / DMARC)
-      to coybl.org's DNS. Comes with Doug handing over the domain.
+- [ ] **Verify `coybl.net` in Resend** — add 3 DNS records (SPF / DKIM / DMARC).
+      DNS for coybl.net is now managed IN Vercel (nameservers point there), so
+      **Adam can add these records himself** — no need to involve Doug.
 - [ ] **Set email env vars on the `coybl-preview` Vercel project** — once the
       domain is verified:
       - `RESEND_API_KEY` = key from resend.com
-      - `EMAIL_FROM` = `COYBL <noreply@coybl.org>`
+      - `EMAIL_FROM` = `COYBL <noreply@coybl.net>`
       - `EMAIL_NOTIFY` = league-office inbox that gets a ping on each new registration
       > Until these are set, a coach who registers gets an account created but
-      > no set-password email. Once set, the branded coybl.org email flows
+      > no set-password email. Once set, the branded coybl.net email flows
       > automatically. Isolated to this project — cannot touch SFBL.
 - [ ] **`ANTHROPIC_API_KEY`** on `coybl-preview` — turns on AI game recaps
       (falls back to a template recap without it).
-- [ ] **Point `coybl.org` (or a subdomain) at the `coybl-preview` Vercel project**
-      — Doug controls DNS.
 
 ## Confirm with Doug
 
@@ -31,6 +30,8 @@ Firebase (shared): `sfbl-acf51`.
 
 ## Already done
 
+- [x] **Custom domain LIVE — https://coybl.net** (+ www, http→https redirect,
+      valid auto-renewing SSL). Nameservers point at Vercel; Adam manages DNS.
 - [x] Real data seeded — 196 teams / 30 divisions / 974 games from coybl.org
 - [x] Admin password set (`COYBL_ADMIN_PASSWORD`)
 - [x] Firebase service account wired (`FIREBASE_SERVICE_ACCOUNT_JSON`)
