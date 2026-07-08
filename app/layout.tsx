@@ -93,9 +93,12 @@ export async function generateMetadata(): Promise<Metadata> {
     // banner twice in the preview card (Adam, 2026-06). Per-page
     // overrides (team / player pages) still set their own image in
     // their own generateMetadata.
+    // Per-tenant share image for link previews (iMessage / FB / Twitter).
+    // /og-default.png is SFBL-branded, so tenants with their own need an
+    // override or their previews show SFBL. (Adam, 2026-07.)
     const ogImage = [
       {
-        url: "/og-default.png",
+        url: abbrev === "COYBL" ? "/coybl/og.png" : "/og-default.png",
         width: 1200,
         height: 630,
         alt: name,
