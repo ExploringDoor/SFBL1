@@ -5382,6 +5382,17 @@ select:focus-visible {
     padding: 0 32px;
   }
 }
+/* COYBL leads the home page with News & Events in the top slot; the band
+   gives it the grey content background (matching the sections below) instead
+   of the white banner area. Scoped via the wrapper in app/page.tsx so other
+   tenants are unaffected. */
+.le-home-news-band {
+  background: var(--bg2);
+  padding: 40px 0 16px;
+}
+.le-home-news-band .le-home-news {
+  margin-top: 0;
+}
 .le-home-news-eyebrow {
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 13px;

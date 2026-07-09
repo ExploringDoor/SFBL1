@@ -110,7 +110,9 @@ export default async function HomePage() {
           which renders nothing when the tenant hasn't published a banner
           doc. */}
       {tenantId === "coybl" ? (
-        <HomepageNews leagueId={tenantId} />
+        <div className="le-home-news-band">
+          <HomepageNews leagueId={tenantId} />
+        </div>
       ) : (
         <HomepageBanner leagueId={tenantId} />
       )}
