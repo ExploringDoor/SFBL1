@@ -104,11 +104,16 @@ export default async function HomePage() {
           }
         />
       )}
-      {/* "PLAYERS — JOIN THE LIST" registration alert now sits
-          UNDER the hero — matches LBDC's existing site layout
-          (Adam 2026-05-14). Renders nothing when the tenant
-          hasn't published a banner doc. */}
-      <HomepageBanner leagueId={tenantId} />
+      {/* Top slot under the hero. COYBL leads with the editable News &
+          Events strip (Adam, 2026-07) instead of the alert banner; other
+          tenants keep the alert banner (e.g. LBDC's "JOIN THE LIST"),
+          which renders nothing when the tenant hasn't published a banner
+          doc. */}
+      {tenantId === "coybl" ? (
+        <HomepageNews leagueId={tenantId} />
+      ) : (
+        <HomepageBanner leagueId={tenantId} />
+      )}
       {/* Live games strip — appears below the hero whenever any
           game in the league is in progress. Subscribes via
           onSnapshot so scores update in real time as the field-side
@@ -121,8 +126,9 @@ export default async function HomePage() {
       {/* From-the-commissioner News & Events strip. Renders nothing
           when the league has no posts (no empty state). Pinned
           posts hoist to the top. Admin posts live at
-          /leagues/<id>/news. */}
-      <HomepageNews leagueId={tenantId} />
+          /leagues/<id>/news. (COYBL renders this up top under the
+          hero instead — see above.) */}
+      {tenantId !== "coybl" && <HomepageNews leagueId={tenantId} />}
 
       {/* "About" intro for first-time visitors — renders only when the
           tenant config sets `about`. */}
