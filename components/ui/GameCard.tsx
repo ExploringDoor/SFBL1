@@ -14,6 +14,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { formatGameDate } from "@/lib/format-time";
 import "./GameCard.css";
 
 export interface GameCardTeam {
@@ -65,12 +66,11 @@ export function GameCard({
 }: GameCardProps) {
   const aWin = away.score > home.score;
   const hWin = home.score > away.score;
-  const dateLabel = date
-    ? new Date(date).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      })
-    : null;
+  // TZ-safe: parse as a local calendar day so the date matches on the server
+  // and the client. Naive new Date("YYYY-MM-DD") is UTC-midnight, which shifts
+  // a day in negative-offset zones and causes an SSR/hydration mismatch.
+  const dateLabel =
+    formatGameDate(date, undefined, { month: "short", day: "numeric" }) || null;
   const computedHeadline = headline ?? autoHeadline(away, home, aWin);
   const router = useRouter();
 

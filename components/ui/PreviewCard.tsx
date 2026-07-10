@@ -9,6 +9,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { parseGameDate } from "@/lib/format-time";
 import "./PreviewCard.css";
 
 export interface PreviewCardTeam {
@@ -145,7 +146,10 @@ function formatTimeLabel(
   field: string | null | undefined,
 ): string {
   if (!date) return field ? `TBD · ${field}` : "TBD";
-  const d = new Date(date);
+  // TZ-safe parse so the calendar day matches on server + client (naive
+  // new Date("YYYY-MM-DD") is UTC-midnight → day shift + hydration mismatch).
+  const d = parseGameDate(date);
+  if (!d) return field ? `TBD · ${field}` : "TBD";
   const day = d
     .toLocaleDateString("en-US", { weekday: "short" })
     .toUpperCase();
@@ -153,9 +157,10 @@ function formatTimeLabel(
     month: "numeric",
     day: "numeric",
   });
-  const time = d.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  // Only show a clock when the date actually carries a time component —
+  // otherwise a date-only game would read "12:00 AM".
+  const time = /T\d{2}:\d{2}/.test(date)
+    ? d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+    : "";
   return [`${day} ${md}`, time, field].filter(Boolean).join(" · ");
 }
