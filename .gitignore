@@ -72,3 +72,6 @@ coverage/
 data/lbdc/raw/
 data/lbdc/firestore/
 .env*
+
+# Claude Code transient worktrees
+.claude/worktrees/
