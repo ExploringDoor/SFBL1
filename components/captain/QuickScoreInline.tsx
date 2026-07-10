@@ -7,6 +7,8 @@
 // to away/home based on which side the captain's team is on.
 
 import { useState } from "react";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { getDb } from "@/lib/firebase";
 import { useUser } from "@/lib/auth-client";
 
 interface Game {
@@ -53,24 +55,47 @@ export function QuickScoreInline({
     setSaving(true);
     setError(null);
     try {
-      const idToken = await user.getIdToken();
       // Us = my team's score; map to away/home by which side I'm on.
       const isAway = game.away_team_id === teamId;
+      // 1) Write the captain's own submission lane — the SAME doc the full
+      //    box-score page writes. /api/captain-submit reads THIS doc to
+      //    promote the score; without it the endpoint 404s ("No submission
+      //    found for this captain").
+      await setDoc(
+        doc(
+          getDb(),
+          `leagues/${leagueId}/box_score_submissions/${game.id}_${teamId}`,
+        ),
+        {
+          game_id: game.id,
+          team_id: teamId,
+          side: isAway ? "away" : "home",
+          score_only: true,
+          final_score: u,
+          score: u,
+          lineup: [],
+          pitchers: [],
+          linescore: [],
+          hits: 0,
+          errors: 0,
+          // The opposing team's final, in the same submission. The endpoint
+          // promotes it conditionally and admin reconciles any disagreement.
+          opp_score_only: true,
+          opp_side: isAway ? "home" : "away",
+          opp_final_score: t,
+          submitted_at: serverTimestamp(),
+          submitted_by_uid: user.uid,
+        },
+      );
+      // 2) Promote it to the public box score + standings.
+      const idToken = await user.getIdToken();
       const res = await fetch("/api/captain-submit", {
         method: "POST",
         headers: {
           "content-type": "application/json",
           authorization: `Bearer ${idToken}`,
         },
-        body: JSON.stringify({
-          leagueId,
-          gameId: game.id,
-          score_only: true,
-          final_score: u,
-          opp_score_only: true,
-          opp_side: isAway ? "home" : "away",
-          opp_final_score: t,
-        }),
+        body: JSON.stringify({ leagueId, gameId: game.id }),
       });
       const data = (await res.json().catch(() => ({}))) as {
         ok?: boolean;

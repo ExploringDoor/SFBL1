@@ -23,6 +23,22 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { recalcLeague } from "@/lib/stats";
+
+// Roll up player stats after a score write so /leaders + player pages stay
+// fresh (captain-submit does this; the admin paths previously did not).
+// Non-fatal: the score is already persisted if recalc throws.
+async function safeRecalc(
+  db: ReturnType<typeof getAdminDb>,
+  leagueId: string,
+): Promise<string | undefined> {
+  try {
+    await recalcLeague(db, leagueId);
+    return undefined;
+  } catch (e) {
+    return e instanceof Error ? e.message : "stat recalc failed";
+  }
+}
 import { collectLineupErrors } from "@/lib/stats/validate";
 
 export const runtime = "nodejs";
@@ -215,11 +231,13 @@ export async function POST(req: Request) {
       at: new Date().toISOString(),
     });
 
+    const statsWarning = await safeRecalc(db, leagueId);
     return NextResponse.json({
       ok: true,
       gameId,
       away_score: awayScore,
       home_score: homeScore,
+      ...(statsWarning ? { statsWarning } : {}),
     });
   }
 
@@ -309,9 +327,13 @@ export async function POST(req: Request) {
     });
   }
 
+  // Recompute player stats once after the whole batch (not per game).
+  const statsWarning =
+    written.length > 0 ? await safeRecalc(db, leagueId) : undefined;
   return NextResponse.json({
     ok: errors.length === 0,
     written,
     errors,
+    ...(statsWarning ? { statsWarning } : {}),
   });
 }
