@@ -393,7 +393,7 @@ export default function CaptainHomePage() {
               {user.email}
             </strong>
             , but this account doesn&rsquo;t have captain privileges
-            for SFBL.
+            for {config?.abbrev ?? config?.name ?? "this league"}.
           </p>
           <p
             style={{
@@ -403,18 +403,8 @@ export default function CaptainHomePage() {
               margin: "0 0 22px",
             }}
           >
-            Email{" "}
-            <a
-              href="mailto:playball@sfbl.com"
-              style={{
-                color: "var(--brand-primary)",
-                fontWeight: 600,
-              }}
-            >
-              playball@sfbl.com
-            </a>{" "}
-            to get added as your team&rsquo;s captain. Until then,
-            head back to the public site.
+            Ask your league office to add you as your team&rsquo;s
+            captain. Until then, head back to the public site.
           </p>
           <div
             style={{

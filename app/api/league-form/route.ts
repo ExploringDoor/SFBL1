@@ -284,9 +284,17 @@ export async function POST(req: Request) {
     }
   } else {
     // Other tenants/kinds: best-effort confirmation email, fire-and-forget.
-    void sendRegistrationEmails(tenantId, body.kind, cleaned, origin).catch(
-      () => {},
-    );
+    const cfg = tenant?.config as
+      | { name?: string; abbrev?: string }
+      | undefined;
+    void sendRegistrationEmails(
+      tenantId,
+      body.kind,
+      cleaned,
+      origin,
+      cfg?.name ?? "your league",
+      cfg?.abbrev ?? cfg?.name ?? "the league",
+    ).catch(() => {});
   }
 
   return NextResponse.json({ ok: true, id: ref.id });
@@ -349,6 +357,8 @@ async function sendRegistrationEmails(
   kind: Kind,
   data: Record<string, unknown>,
   origin: string,
+  leagueName: string,
+  leagueAbbrev: string,
 ): Promise<void> {
   // COYBL team registration → create the coach's own-login account and
   // email a "set your password" link (plus the confirmation) in one go.
@@ -374,16 +384,16 @@ async function sendRegistrationEmails(
   if (email) {
     await sendEmail({
       to: email,
-      subject: "We got your SFBL registration",
+      subject: `We got your ${leagueAbbrev} registration`,
       html:
         `<p>Hi ${esc(who) || "there"},</p>` +
-        `<p>Thanks for registering with the South Florida Baseball League. ` +
+        `<p>Thanks for registering with ${esc(leagueName)}. ` +
         `We've received your ${esc(label.toLowerCase())} and the league ` +
         `office will follow up with payment and roster details.</p>` +
         (division ? `<p><strong>Division:</strong> ${esc(division)}</p>` : "") +
         (team ? `<p><strong>Team:</strong> ${esc(team)}</p>` : "") +
         `<p>Questions? Reply to this email or text the league office.</p>` +
-        `<p>— SFBL</p>`,
+        `<p>— ${esc(leagueAbbrev)}</p>`,
       replyTo: notifyAddress() ?? undefined,
     });
   }

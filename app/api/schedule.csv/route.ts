@@ -135,10 +135,18 @@ export async function GET(req: Request) {
   // Leading BOM so Excel reads UTF-8 (accents in names) correctly.
   const csv = "﻿" + header + "\r\n" + body + "\r\n";
 
+  // Per-tenant filename (was hardcoded "sfbl-schedule.csv" for every league).
+  const slug = String(
+    (tenant?.config as { abbrev?: unknown } | null)?.abbrev ?? tenantId,
+  )
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
   return new Response(csv, {
     headers: {
       "content-type": "text/csv; charset=utf-8",
-      "content-disposition": `attachment; filename="sfbl-schedule.csv"`,
+      "content-disposition": `attachment; filename="${slug || "league"}-schedule.csv"`,
       "cache-control": "no-store",
     },
   });
