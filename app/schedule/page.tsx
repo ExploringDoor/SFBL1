@@ -3,6 +3,7 @@
 
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { loadGamesAndTeamsSnaps } from "@/lib/league-cache";
 import { PreviewCard, type PreviewCardTeam } from "@/components/ui/PreviewCard";
 import { GameCard, type GameCardTeam } from "@/components/ui/GameCard";
 import { computeWeeks, pickActiveWeek } from "@/lib/season-weeks";
@@ -19,6 +20,9 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Schedule",
   description: "Full season schedule — upcoming games and past results.",
+  // Self-canonical so the ?week=/?div= filter variants don't compete
+  // as near-duplicates in search (audit 2026-07).
+  alternates: { canonical: "/schedule" },
 };
 
 interface ScheduleGame {
@@ -306,10 +310,7 @@ async function loadSchedule(tenantId: string): Promise<{
   teams: Record<string, TeamMeta>;
 }> {
   const db = getAdminDb();
-  const [gamesSnap, teamsSnap] = await Promise.all([
-    db.collection(`leagues/${tenantId}/games`).get(),
-    db.collection(`leagues/${tenantId}/teams`).get(),
-  ]);
+  const { gamesSnap, teamsSnap } = await loadGamesAndTeamsSnaps(db, tenantId);
 
   const games: ScheduleGame[] = gamesSnap.docs.map((d) => {
     const data = d.data();
@@ -426,9 +427,9 @@ function DaySection({
   return (
     <section>
       <header className="mb-3 flex items-baseline gap-3">
-        <h3 className="font-display" style={{ fontSize: 24 }}>
+        <h2 className="font-display" style={{ fontSize: 24 }}>
           {formatDayHeading(date)}
-        </h3>
+        </h2>
         <span className="text-xs" style={{ color: "var(--muted)" }}>
           {list.length} game{list.length === 1 ? "" : "s"}
         </span>

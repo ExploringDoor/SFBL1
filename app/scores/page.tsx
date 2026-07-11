@@ -3,6 +3,7 @@
 
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { loadGamesAndTeamsSnaps } from "@/lib/league-cache";
 import { GameCard, type GameCardTeam } from "@/components/ui/GameCard";
 import { computeWeeks, pickActiveWeek } from "@/lib/season-weeks";
 import { computeStandings, type GameResult } from "@/lib/stats/shared";
@@ -18,6 +19,9 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Scores",
   description: "Final scores from around the league, week by week.",
+  // Self-canonical so the ?week=/?div=/?team= filter variants don't
+  // compete as near-duplicates in search (audit 2026-07).
+  alternates: { canonical: "/scores" },
 };
 
 interface ScoreGame {
@@ -320,9 +324,9 @@ export default async function ScoresPage({
           {dayGroups.map(([date, list]) => (
             <section key={date}>
               <header className="mb-3 flex items-baseline gap-3">
-                <h3 className="font-display" style={{ fontSize: 24 }}>
+                <h2 className="font-display" style={{ fontSize: 24 }}>
                   {formatDayHeading(date)}
-                </h3>
+                </h2>
                 <span className="text-xs" style={{ color: "var(--muted)" }}>
                   {list.length} game{list.length === 1 ? "" : "s"}
                 </span>
@@ -363,10 +367,7 @@ async function loadScores(tenantId: string): Promise<{
   teams: Record<string, TeamMeta>;
 }> {
   const db = getAdminDb();
-  const [gamesSnap, teamsSnap] = await Promise.all([
-    db.collection(`leagues/${tenantId}/games`).get(),
-    db.collection(`leagues/${tenantId}/teams`).get(),
-  ]);
+  const { gamesSnap, teamsSnap } = await loadGamesAndTeamsSnaps(db, tenantId);
 
   const games: ScoreGame[] = gamesSnap.docs.map((d) => {
     const data = d.data();

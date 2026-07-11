@@ -5,6 +5,7 @@
 // appearances. Returns the props PlayerProfileLBDC consumes.
 
 import type { Firestore } from "firebase-admin/firestore";
+import { loadLeagueBundle } from "@/lib/league-cache";
 import type {
   BattingLine,
   PitchingLine,
@@ -53,12 +54,11 @@ export async function loadPlayerProfileData(
     }
   }
 
-  const [boxesSnap, seasonsSnap, teamsSnap, gamesSnap] = await Promise.all([
-    db.collection(`leagues/${tenantId}/box_scores`).get(),
-    db.collection(`leagues/${tenantId}/seasons`).get(),
-    db.collection(`leagues/${tenantId}/teams`).get(),
-    db.collection(`leagues/${tenantId}/games`).get(),
-  ]);
+  // These four collections are league-wide (identical for every player),
+  // so a crawl of ~400 player pages would otherwise re-read them ~400×.
+  // Share one tenant-keyed, TTL'd read set instead (audit 2026-07).
+  const { boxesSnap, seasonsSnap, teamsSnap, gamesSnap } =
+    await loadLeagueBundle(db, tenantId);
 
   const seasonName: Record<string, string> = {};
   for (const d of seasonsSnap.docs) {
