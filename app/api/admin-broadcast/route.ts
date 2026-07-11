@@ -42,7 +42,7 @@ async function loadContacts(
   leagueId: string,
 ): Promise<Contact[]> {
   const snap = await db
-    .collection(`leagues/${leagueId}/form_submissions/alerts_signup`)
+    .collection(`leagues/${leagueId}/form_submissions/alerts_signup/items`)
     .get()
     .catch(() => null);
   if (!snap) return [];
