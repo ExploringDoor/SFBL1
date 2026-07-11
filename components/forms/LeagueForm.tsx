@@ -77,6 +77,10 @@ export function LeagueForm({
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Name of the field that failed the required-check, so we can flag it
+  // with aria-invalid. Validation stops at the first miss, so at most
+  // one field is marked at a time.
+  const [invalidField, setInvalidField] = useState<string | null>(null);
 
   function update(name: string, value: unknown) {
     setData((d) => ({ ...d, [name]: value }));
@@ -85,6 +89,7 @@ export function LeagueForm({
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setInvalidField(null);
 
     // Client-side required-field check. The <form> uses `noValidate`
     // (so we own the UX and don't inherit the browser's clunky
@@ -106,6 +111,12 @@ export function LeagueForm({
             ? `Please check: ${f.label}`
             : `Please fill in: ${f.label}`,
         );
+        setInvalidField(f.name);
+        // Move focus to the offending field so keyboard/AT users land on
+        // it directly. Ids follow the `lef-${name}` scheme set in Field;
+        // a few control types (checkbox/radio/rating) don't render that
+        // id, so the optional chain simply no-ops for those.
+        document.getElementById(`lef-${f.name}`)?.focus();
         return;
       }
     }
@@ -168,7 +179,13 @@ export function LeagueForm({
 
         <div className="le-form-grid">
           {fields.map((f) => (
-            <Field key={f.name} field={f} value={data[f.name]} onChange={update} />
+            <Field
+              key={f.name}
+              field={f}
+              value={data[f.name]}
+              onChange={update}
+              invalid={f.name === invalidField}
+            />
           ))}
         </div>
 
@@ -183,7 +200,11 @@ export function LeagueForm({
           </div>
         )}
 
-        {error && <p className="le-form-error">{error}</p>}
+        {error && (
+          <p className="le-form-error" role="alert">
+            {error}
+          </p>
+        )}
 
         <button
           type="submit"
@@ -233,12 +254,17 @@ function Field({
   field,
   value,
   onChange,
+  invalid,
 }: {
   field: FormField;
   value: unknown;
   onChange: (name: string, v: unknown) => void;
+  /** Failed the required-check on the last submit — flags the control
+   *  with aria-invalid so screen readers announce it. */
+  invalid?: boolean;
 }) {
   const id = `lef-${field.name}`;
+  const ariaInvalid = invalid || undefined;
   const widthClass =
     field.width === "half" ? "le-form-cell-half" : "le-form-cell-full";
 
@@ -250,6 +276,7 @@ function Field({
           checked={!!value}
           onChange={(e) => onChange(field.name, e.target.checked)}
           required={field.required}
+          aria-invalid={ariaInvalid}
         />
         <span>
           {field.label}
@@ -268,7 +295,7 @@ function Field({
           {field.label}
           {field.required && <em className="le-form-required">*</em>}
         </label>
-        <div className="le-form-rating" role="radiogroup">
+        <div className="le-form-rating" role="radiogroup" aria-invalid={ariaInvalid}>
           {[1, 2, 3, 4, 5].map((n) => (
             <button
               key={n}
@@ -313,6 +340,7 @@ function Field({
           onChange={(e) => onChange(field.name, e.target.value)}
           placeholder={field.placeholder}
           required={field.required}
+          aria-invalid={ariaInvalid}
         />
         {field.help && <small className="le-form-help">{field.help}</small>}
       </div>
@@ -331,6 +359,7 @@ function Field({
           value={typeof value === "string" ? value : ""}
           onChange={(e) => onChange(field.name, e.target.value)}
           required={field.required}
+          aria-invalid={ariaInvalid}
         >
           <option value="">— Select —</option>
           {field.options?.map((o) => (
@@ -346,7 +375,10 @@ function Field({
 
   if (field.type === "radio") {
     return (
-      <fieldset className={`le-form-cell ${widthClass} le-form-radioset`}>
+      <fieldset
+        className={`le-form-cell ${widthClass} le-form-radioset`}
+        aria-invalid={ariaInvalid}
+      >
         <legend>
           {field.label}
           {field.required && <em className="le-form-required">*</em>}
@@ -392,6 +424,7 @@ function Field({
         placeholder={field.placeholder}
         required={field.required}
         autoComplete={autoCompleteFor(field.name, field.type)}
+        aria-invalid={ariaInvalid}
       />
       {field.help && <small className="le-form-help">{field.help}</small>}
     </div>

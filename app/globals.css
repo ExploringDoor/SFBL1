@@ -2,6 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Skip-to-content link (a11y, audit 2026-07). Off-screen until it
+ * receives keyboard focus, then pins to the top-left above everything. */
+.skip-link {
+  position: fixed;
+  top: -60px;
+  left: 8px;
+  z-index: 1000;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: var(--brand-primary, #002d72);
+  color: #fff;
+  font-weight: 700;
+  font-family: var(--font-inter), sans-serif;
+  text-decoration: none;
+  transition: top 0.15s ease;
+}
+.skip-link:focus {
+  top: calc(env(safe-area-inset-top, 0px) + 8px);
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
 /* =============================================================================
  * DVSL-style design tokens. Fonts loaded via next/font in layout.tsx and
  * exposed as CSS variables (--font-barlow, --font-oswald, --font-inter).
@@ -20,7 +42,7 @@
   --red: #c8102e;
   --text-strong: #1a1a1a;
   --text-body: #1a1a1a;
-  --muted: rgba(0, 0, 0, 0.5);
+  --muted: rgba(0, 0, 0, 0.6);
   --muted2: rgba(0, 0, 0, 0.35);
   --border: rgba(0, 0, 0, 0.1);
   --border2: rgba(0, 0, 0, 0.18);

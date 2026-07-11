@@ -236,7 +236,15 @@ export function Nav({
         aria-hidden={!mobOpen}
       />
 
-      <div className={"le-mob-menu" + (mobOpen ? " open" : "")}>
+      {/* When closed, hide the sheet from assistive tech. `inert` would
+          be ideal (drops it from the tab order too) but isn't in the
+          stable @types/react surface under strict mode, so pair this
+          with a `visibility:hidden` closed-state rule in Nav.css to
+          pull the tiles out of the tab order (see flag). */}
+      <div
+        className={"le-mob-menu" + (mobOpen ? " open" : "")}
+        aria-hidden={!mobOpen}
+      >
         {/* Top-level links render as a 2-column grid of icon+label
             cards (DVSL pattern). Sub-pages (children of "More") get
             their own grid below a section header. The flat 26px

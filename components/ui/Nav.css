@@ -298,9 +298,14 @@ body.le-mob-menu-open {
   /* Slide in from the top instead of just appearing — smoother feel. */
   transform: translateY(-8px);
   opacity: 0;
+  /* Remove the closed menu's ~26 links from the keyboard tab order and
+   * accessibility tree — aria-hidden alone (added on the element) left
+   * them focusable, which is an axe violation (audit 2026-07). Delay the
+   * visibility flip until the fade-out finishes so the animation is kept. */
+  visibility: hidden;
   pointer-events: none;
   transition: transform 0.22s cubic-bezier(0.32, 0.72, 0.0, 1),
-    opacity 0.18s ease;
+    opacity 0.18s ease, visibility 0s linear 0.22s;
 }
 
 /* When the PWA tab bar is mounted (body.has-tabbar), the last two
@@ -315,7 +320,12 @@ body.has-tabbar .le-mob-menu {
 .le-mob-menu.open {
   transform: translateY(0);
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
+  /* Show immediately on open (no visibility delay); only the close
+   * transition delays visibility so the fade-out is preserved. */
+  transition: transform 0.22s cubic-bezier(0.32, 0.72, 0.0, 1),
+    opacity 0.18s ease, visibility 0s linear 0s;
 }
 
 /* DVSL-style icon grid. 2-column tiles, ~14px label, brand-tinted

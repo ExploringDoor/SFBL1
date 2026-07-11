@@ -89,11 +89,19 @@ export function WeekRow({
         ‹
       </button>
       <div className="dn-slots" ref={slotsRef}>
-        {weeks.map((w) => (
+        {weeks.map((w, idx) => (
+          // Keep the <a href> for SSR-deterministic markup + no-JS
+          // fallback, but intercept the click so it navigates the same
+          // param-preserving way the arrows do (goToWeek clones the
+          // current search at click time, keeping div/team).
           <Link
             key={w.startIso}
             href={`${basePath}?week=${w.startIso}`}
             className={"dn-slot " + (w.active ? "active" : "")}
+            onClick={(e) => {
+              e.preventDefault();
+              goToWeek(idx);
+            }}
           >
             <span className="wk-label">WK {w.number}</span>
             <span className="wk-date">{w.rangeLabel}</span>

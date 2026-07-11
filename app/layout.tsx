@@ -86,14 +86,15 @@ export async function generateMetadata(): Promise<Metadata> {
       abbrev && abbrev !== name ? ` (${abbrev})` : ""
     }. Live ${sport} updates, team rosters, and captain tools.`;
     // ONE share image for link previews (iMessage / FB / Twitter): the
-    // purpose-built 1200×630 og-default.png. This used to ALSO include
-    // the tenant logo as a second image, which made iMessage render the
-    // banner twice in the preview card (Adam, 2026-06). Per-page
-    // overrides (team / player pages) still set their own image in
-    // their own generateMetadata.
+    // purpose-built 1200×630 og-default.jpg (JPEG — 200 KB vs the old
+    // 1.2 MB PNG; OG cards are opaque so no alpha needed — audit 2026-07).
+    // This used to ALSO include the tenant logo as a second image, which
+    // made iMessage render the banner twice in the preview card (Adam,
+    // 2026-06). Per-page overrides (team / player pages) still set their
+    // own image in their own generateMetadata.
     const ogImage = [
       {
-        url: "/og-default.png",
+        url: "/og-default.jpg",
         width: 1200,
         height: 630,
         alt: name,
@@ -251,6 +252,12 @@ export default async function RootLayout({
         )}
       </head>
       <body className="site-shell antialiased">
+        {/* Skip link — first focusable element, lets keyboard users jump
+            past the ticker + full nav to the page content (WCAG 2.4.1,
+            audit 2026-07). Visually hidden until focused (.skip-link). */}
+        <a href="#main-content" className="skip-link">
+          Skip to content
+        </a>
         <TenantProvider tenantId={tenantId} configJson={configJson}>
           {/* SW NAVIGATE listener — handles push-tap when the PWA is
               already open. Mounted at the layout level so every page
@@ -296,7 +303,7 @@ export default async function RootLayout({
               rightSlot={<ProfileButton tenantId={tenantId} />}
             />
           ) : null}
-          <div className="site-content">{children}</div>
+          <div id="main-content" className="site-content">{children}</div>
           {modal}
           {tenantId ? <SiteFooter /> : null}
           {/* PWA bottom tab bar — gates itself on standalone display

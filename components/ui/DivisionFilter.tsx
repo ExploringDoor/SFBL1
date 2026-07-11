@@ -28,9 +28,14 @@ export function DivisionFilter({ divisions, active, basePath }: Props) {
   const value = active ?? "all";
 
   function go(next: string) {
-    const href =
-      next === "all" ? basePath : `${basePath}?div=${encodeURIComponent(next)}`;
-    router.push(href);
+    // Merge into the existing query (week/team) instead of replacing it,
+    // so changing division keeps the selected week. Read window.location
+    // only inside this click handler to stay SSR/hydration-safe.
+    const p = new URLSearchParams(window.location.search);
+    if (next === "all") p.delete("div");
+    else p.set("div", next);
+    const qs = p.toString();
+    router.push(qs ? `${basePath}?${qs}` : basePath);
   }
 
   return (
