@@ -27,6 +27,7 @@ import { TeamsManager } from "@/components/admin/TeamsManager";
 import { LeagueHealthDashboard } from "@/components/admin/LeagueHealthDashboard";
 import { ScheduleEditor } from "@/components/admin/ScheduleEditor";
 import { AlertsManager } from "@/components/admin/AlertsManager";
+import { BroadcastSection } from "@/components/admin/BroadcastSection";
 import { SignupsReview } from "@/components/admin/SignupsReview";
 import { CalendarFeeds } from "@/components/admin/CalendarFeeds";
 import { ChatModerator } from "@/components/admin/ChatModerator";
@@ -50,6 +51,7 @@ type TabKey =
   | "payments"
   | "fields"
   | "alerts"
+  | "broadcast"
   | "news"
   | "potw"
   | "pages"
@@ -74,6 +76,7 @@ const TABS: { key: TabKey; label: string; description: string }[] = [
   { key: "payments", label: "Payments", description: "League-wide fee collection — who's paid, per team, with totals." },
   { key: "fields", label: "Fields", description: "Add / edit the league's fields (name + address), and see how many games each has hosted." },
   { key: "alerts", label: "Alerts", description: "Publish a homepage banner — weather, registration, deadlines." },
+  { key: "broadcast", label: "Send Message", description: "Email + text your alert sign-up list — rainouts, reminders, deadlines." },
   { key: "news", label: "News", description: "From-the-commissioner news & events shown on the homepage." },
   { key: "potw", label: "Player of Week", description: "Curate the Player of the Week spotlight + archive shown at /player-of-the-week." },
   { key: "pages", label: "Pages", description: "Edit Rules, News, Register, Sponsors, and other content pages." },
@@ -439,6 +442,9 @@ export default function AdminPage() {
         )}
         {activeTab === "alerts" && (
           <AlertsManager leagueId={tenantId} user={user} />
+        )}
+        {activeTab === "broadcast" && (
+          <BroadcastSection leagueId={tenantId} user={user} />
         )}
         {activeTab === "payments" && (
           <PaymentsAdmin leagueId={tenantId} user={user} />
