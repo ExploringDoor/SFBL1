@@ -74,8 +74,10 @@ export async function POST(req: Request) {
   const team_id = typeof body.team_id === "string" ? body.team_id : "";
   const player_id =
     typeof body.player_id === "string" ? body.player_id : "";
+  // Cap the only free-text field a caller controls: player_name is
+  // stored verbatim, so truncate it before it lands in Firestore.
   const player_name =
-    typeof body.player_name === "string" ? body.player_name : "";
+    typeof body.player_name === "string" ? body.player_name.slice(0, 200) : "";
   const game_id = typeof body.game_id === "string" ? body.game_id : "";
   const status = typeof body.status === "string" ? body.status : "";
   if (!team_id || !player_id || !game_id || !player_name) {

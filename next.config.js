@@ -26,6 +26,14 @@ const nextConfig = {
           { key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' },
         ],
       },
+      {
+        source: '/og-default.jpg',
+        headers: [
+          // Same policy as /logos: the fallback OG image can be
+          // overwritten in place, so cache but allow revalidation.
+          { key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' },
+        ],
+      },
     ];
   },
 };

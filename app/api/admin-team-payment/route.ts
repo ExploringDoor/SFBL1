@@ -44,6 +44,7 @@ export async function POST(req: Request) {
   try {
     decoded = await getAdminAuth().verifyIdToken(
       auth.slice("Bearer ".length).trim(),
+      true,
     );
   } catch {
     return NextResponse.json(

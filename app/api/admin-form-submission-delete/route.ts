@@ -40,7 +40,7 @@ export async function POST(req: Request) {
   }
   let decoded;
   try {
-    decoded = await getAdminAuth().verifyIdToken(m[1]!);
+    decoded = await getAdminAuth().verifyIdToken(m[1]!, true);
   } catch {
     return NextResponse.json({ error: "invalid token" }, { status: 401 });
   }

@@ -148,6 +148,27 @@ const rate = new Map<string, { count: number; reset: number }>();
 const RATE_WINDOW_MS = 10 * 60 * 1000;
 const RATE_LIMIT = 5;
 
+// Length caps on stored strings — a bot that passes the allow-list can
+// still stuff megabytes into an accepted field. Name-like fields get a
+// tight cap; everything else a generous one. Non-strings pass through
+// untouched (e.g. agreed_to_terms / free_agent booleans). Mirrors the
+// field-cap in /api/errors-log.
+const NAME_FIELD_MAX = 200;
+const FIELD_MAX = 2000;
+
+function capFields(obj: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (typeof v === "string") {
+      const max = k.includes("name") ? NAME_FIELD_MAX : FIELD_MAX;
+      out[k] = v.length > max ? v.slice(0, max) : v;
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
 function pickAllowed(
   kind: Kind,
   raw: Record<string, unknown>,
@@ -209,7 +230,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "missing data" }, { status: 400 });
   }
 
-  const cleaned = pickAllowed(body.kind, body.data);
+  const cleaned = capFields(pickAllowed(body.kind, body.data));
 
   // Required-field check.
   const missing = REQUIRED[body.kind].filter(
