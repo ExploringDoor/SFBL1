@@ -9,6 +9,8 @@
 import { useEffect, useState } from "react";
 import type { User } from "firebase/auth";
 import { ManagerContact } from "@/components/ManagerContact";
+import { useTenant } from "@/lib/tenant-context";
+import { captainNoun } from "@/lib/tenants";
 
 interface Captain {
   teamId: string;
@@ -44,6 +46,8 @@ export function CaptainsRoster({
   const [error, setError] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
+  const { config } = useTenant();
+  const captain = captainNoun(config);
 
   async function load() {
     setError(null);
@@ -78,7 +82,7 @@ export function CaptainsRoster({
       <p className="rounded bg-red-50 px-2 py-1 text-sm text-red-700">{error}</p>
     );
   if (rows === null)
-    return <p className="text-sm text-slate-500">Loading captains…</p>;
+    return <p className="text-sm text-slate-500">Loading {captain}s…</p>;
 
   const withEmail = rows.filter((r) =>
     r.managers.some((m) => m.email),
@@ -101,7 +105,7 @@ export function CaptainsRoster({
   return (
     <div className="space-y-4">
       <p className="text-sm text-slate-600">
-        Every team&rsquo;s captain in one place — contact on file, whether a
+        Every team&rsquo;s {captain} in one place — contact on file, whether a
         team password is set, and last login. Click a row to edit the contact.
         Passwords are set in the <strong>Teams</strong> tab.
       </p>
@@ -117,7 +121,7 @@ export function CaptainsRoster({
         type="search"
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        placeholder="Search team, captain name, or email…"
+        placeholder={`Search team, ${captain} name, or email…`}
         className="w-full max-w-sm rounded-md border border-slate-300 px-3 py-2 text-sm"
       />
 
@@ -125,7 +129,7 @@ export function CaptainsRoster({
         {/* header (hidden on mobile) */}
         <div className="hidden bg-slate-50 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 sm:grid sm:grid-cols-[1.1fr_1.5fr_0.6fr_1.1fr]">
           <span>Team</span>
-          <span>Captain · email</span>
+          <span>{captain} · email</span>
           <span>Password</span>
           <span>Last login</span>
         </div>
@@ -180,7 +184,7 @@ export function CaptainsRoster({
                   {!r.hasPassword && (
                     <p className="mt-2 text-xs text-amber-700">
                       No team password set yet — set one in the Teams tab so
-                      this captain can log in.
+                      this {captain} can log in.
                     </p>
                   )}
                 </div>
@@ -190,7 +194,7 @@ export function CaptainsRoster({
         })}
         {filtered.length === 0 && (
           <p className="px-3 py-3 text-sm italic text-slate-500">
-            No captains match &ldquo;{q}&rdquo;.
+            No {captain}s match &ldquo;{q}&rdquo;.
           </p>
         )}
       </div>

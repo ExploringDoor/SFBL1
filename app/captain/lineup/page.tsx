@@ -35,6 +35,7 @@ import {
 } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useTenant } from "@/lib/tenant-context";
+import { captainNoun } from "@/lib/tenants";
 import {
   useCaptainTeam,
   useLeagueRole,
@@ -58,7 +59,8 @@ interface LineupEntry {
 export default function LineupEditorPage() {
   const params = useSearchParams();
   const gameId = params.get("game");
-  const { tenantId } = useTenant();
+  const { tenantId, config } = useTenant();
+  const captain = captainNoun(config);
   const user = useUser();
   const role = useLeagueRole(tenantId);
   const { teamId, loading: teamLoading } = useCaptainTeam(tenantId);
@@ -142,7 +144,7 @@ export default function LineupEditorPage() {
   if (!tenantId || !gameId) {
     return (
       <main className="container py-16">
-        <p>Missing game id. Open this page from your captain dashboard.</p>
+        <p>Missing game id. Open this page from your {captain} dashboard.</p>
       </main>
     );
   }
@@ -162,7 +164,7 @@ export default function LineupEditorPage() {
   if (role !== "captain" || !teamId) {
     return (
       <main className="container py-16">
-        <p>You're not a captain in this league.</p>
+        <p>You're not a {captain} in this league.</p>
         <Link href="/captain" className="le-cap-btn-secondary">
           Back to dashboard
         </Link>

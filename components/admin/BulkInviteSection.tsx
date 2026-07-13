@@ -16,6 +16,8 @@ import { useEffect, useMemo, useState } from "react";
 import type { User } from "firebase/auth";
 import { collection, getDocs } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
+import { useTenant } from "@/lib/tenant-context";
+import { captainNoun } from "@/lib/tenants";
 
 interface TeamLite {
   id: string;
@@ -42,6 +44,8 @@ export function BulkInviteSection({ leagueId, user }: Props) {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [teams, setTeams] = useState<TeamLite[]>([]);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const { config } = useTenant();
+  const captain = captainNoun(config);
 
   // Load teams for the dropdown helper that suggests team_ids.
   useEffect(() => {
@@ -160,10 +164,10 @@ export function BulkInviteSection({ leagueId, user }: Props) {
   return (
     <section className="rounded-md border border-slate-200 bg-white p-4 space-y-3">
       <div>
-        <p className="font-semibold text-slate-900">Bulk invite captains</p>
+        <p className="font-semibold text-slate-900">Bulk invite {captain}s</p>
         <p className="text-xs text-slate-600 leading-relaxed mt-1">
-          Generate magic-link sign-ins + captain claims for many captains
-          at once. Paste one captain per line as{" "}
+          Generate magic-link sign-ins + {captain} claims for many {captain}s
+          at once. Paste one {captain} per line as{" "}
           <code className="bg-slate-100 px-1 py-0.5 rounded">email,team_id</code>.
           You'll get a list of sign-in links to email out (or paste into
           your own mail merge).
@@ -204,14 +208,14 @@ export function BulkInviteSection({ leagueId, user }: Props) {
         </div>
         <p className="mt-2 text-[11px] text-slate-500 leading-snug">
           The "# Team Name" suffix is just a hint — the parser
-          ignores everything after a `#`. Type the captain's email
+          ignores everything after a `#`. Type the {captain}'s email
           before each comma.
         </p>
       </details>
 
       <label className="block">
         <span className="block text-xs font-semibold text-slate-700 mb-1">
-          Captains to invite
+          {captain}s to invite
         </span>
         <textarea
           value={text}

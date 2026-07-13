@@ -14,8 +14,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { DEFAULT_LINKS, computeNavLinks, hoistPlayoffs, iconFor } from "./nav-links";
+import {
+  DEFAULT_LINKS,
+  computeNavLinks,
+  hoistPlayoffs,
+  iconFor,
+  relabelCaptainLink,
+} from "./nav-links";
 import type { NavLink } from "./nav-links";
+import { useTenant } from "@/lib/tenant-context";
+import { captainNoun } from "@/lib/tenants";
 import "./Nav.css";
 
 // NavLink + DEFAULT_LINKS + computeNavLinks + iconFor moved to
@@ -58,10 +66,17 @@ export function Nav({
   // SFBL-only items) — shared with the bottom-tab "More" sheet via
   // computeNavLinks so the two never drift. hoistPlayoffs runs first so
   // a promoted "Playoffs" still gets tenant filtering applied.
-  const navLinks: NavLink[] = computeNavLinks(
-    hoistPlayoffs(linksProp, playoffsActive),
-    tenantShort,
-    hideLabels,
+  // relabelCaptainLink runs LAST (after the SFBL-only filter, which
+  // matches the original "Captain" label) to swap the /captain entry's
+  // display text to the tenant's manager noun — SFBL shows "Manager".
+  const { config } = useTenant();
+  const navLinks: NavLink[] = relabelCaptainLink(
+    computeNavLinks(
+      hoistPlayoffs(linksProp, playoffsActive),
+      tenantShort,
+      hideLabels,
+    ),
+    captainNoun(config),
   );
   const pathname = usePathname();
   const [mobOpen, setMobOpen] = useState(false);

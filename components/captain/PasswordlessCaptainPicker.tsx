@@ -15,6 +15,8 @@ import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { getAuth, signInWithCustomToken } from "firebase/auth";
 import { getDb } from "@/lib/firebase";
+import { useTenant } from "@/lib/tenant-context";
+import { captainNoun } from "@/lib/tenants";
 
 interface TeamOption {
   id: string;
@@ -28,6 +30,8 @@ export function PasswordlessCaptainPicker({
 }: {
   leagueId: string;
 }) {
+  const { config } = useTenant();
+  const captain = captainNoun(config);
   const [teams, setTeams] = useState<TeamOption[]>([]);
   const [loadingTeams, setLoadingTeams] = useState(true);
   // Two-step state: until a team is picked, render the team grid.
@@ -271,7 +275,7 @@ export function PasswordlessCaptainPicker({
           margin: "0 0 8px",
         }}
       >
-        Captain sign-in
+        {captain} sign-in
       </h2>
       <p
         style={{

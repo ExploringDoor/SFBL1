@@ -34,6 +34,7 @@ interface ScoreGame {
   away_score: number;
   home_score: number;
   division: string | null;
+  is_playoff: boolean;
 }
 
 export default async function ScoresPage({
@@ -340,6 +341,7 @@ export default async function ScoresPage({
                     away={teamCardData(g.away_team_id, teams, g.away_score)}
                     home={teamCardData(g.home_team_id, teams, g.home_score)}
                     badge={badgeFor(highlights.get(g.id))}
+                    isPlayoff={g.is_playoff}
                   />
                 ))}
               </div>
@@ -389,6 +391,7 @@ async function loadScores(tenantId: string): Promise<{
       away_score: Number(data.away_score ?? 0),
       home_score: Number(data.home_score ?? 0),
       division: data.division ? String(data.division) : null,
+      is_playoff: data.is_playoff === true,
     };
   });
 
@@ -399,6 +402,7 @@ async function loadScores(tenantId: string): Promise<{
     away_score: g.away_score,
     status: g.status as GameResult["status"],
     date: g.date,
+    is_playoff: g.is_playoff,
   }));
   const standings = computeStandings(standingsGames);
   const recordByTeam = new Map(

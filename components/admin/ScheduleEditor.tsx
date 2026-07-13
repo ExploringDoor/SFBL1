@@ -32,6 +32,7 @@ interface GameRow {
   home_team_id: string;
   division: string;
   status: string;
+  is_playoff: boolean;
   away_score: number | null;
   home_score: number | null;
 }
@@ -131,6 +132,7 @@ export function ScheduleEditor({ leagueId, user }: Props) {
               home_team_id: String(data.home_team_id ?? ""),
               division: String(data.division ?? ""),
               status: String(data.status ?? "scheduled"),
+              is_playoff: data.is_playoff === true,
               away_score:
                 data.away_score == null ? null : Number(data.away_score),
               home_score:
@@ -586,6 +588,7 @@ function GameForm({
   const [homeScore, setHomeScore] = useState<string>(
     initial?.home_score == null ? "" : String(initial.home_score),
   );
+  const [isPlayoff, setIsPlayoff] = useState(initial?.is_playoff ?? false);
 
   // Auto-fill division from the picked teams (so admin doesn't have
   // to retype "28+" if both teams are in 28+).
@@ -606,6 +609,7 @@ function GameForm({
       home_team_id: homeId,
       division,
       status,
+      is_playoff: isPlayoff,
       away_score: showScores && awayScore !== "" ? Number(awayScore) : null,
       home_score: showScores && homeScore !== "" ? Number(homeScore) : null,
     };
@@ -763,6 +767,22 @@ function GameForm({
           )}
         </label>
       </div>
+
+      <label className="flex items-center gap-2 select-none">
+        <input
+          type="checkbox"
+          checked={isPlayoff}
+          onChange={(e) => setIsPlayoff(e.target.checked)}
+          disabled={busy}
+          className="h-4 w-4"
+        />
+        <span className="text-sm font-semibold text-slate-800">
+          Playoff game
+        </span>
+        <span className="text-xs text-slate-500">
+          (won&apos;t count toward regular-season standings)
+        </span>
+      </label>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <label className="block">

@@ -40,6 +40,7 @@ interface ScheduleGame {
   division: string | null;
   away_score: number;
   home_score: number;
+  is_playoff: boolean;
 }
 
 export default async function SchedulePage({
@@ -325,6 +326,7 @@ async function loadSchedule(tenantId: string): Promise<{
       division: data.division ? String(data.division) : null,
       away_score: Number(data.away_score ?? 0),
       home_score: Number(data.home_score ?? 0),
+      is_playoff: data.is_playoff === true,
     };
   });
 
@@ -338,6 +340,7 @@ async function loadSchedule(tenantId: string): Promise<{
       away_score: Number(data.away_score ?? 0),
       status: (data.status ?? "draft") as GameResult["status"],
       date: data.date ? String(data.date) : undefined,
+      is_playoff: data.is_playoff === true,
     };
   });
   const standings = computeStandings(standingsGames);
@@ -447,6 +450,7 @@ function DaySection({
                 date={g.date}
                 away={teamGameCardData(g.away_team_id, teams, g.away_score)}
                 home={teamGameCardData(g.home_team_id, teams, g.home_score)}
+                isPlayoff={g.is_playoff}
               />
             );
           }
@@ -465,6 +469,7 @@ function DaySection({
               home={teamCardData(g.home_team_id, teams)}
               isNext={isFirstUpcomingDay && idx === 0 && g.status === "scheduled"}
               status={g.status}
+              isPlayoff={g.is_playoff}
             />
           );
         })}

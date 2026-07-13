@@ -8,6 +8,8 @@
 // Closes audit M10 for the captain surface.
 
 import { useEffect } from "react";
+import { useTenant } from "@/lib/tenant-context";
+import { captainNoun } from "@/lib/tenants";
 
 export default function CaptainError({
   error,
@@ -16,6 +18,8 @@ export default function CaptainError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const { config } = useTenant();
+  const captain = captainNoun(config);
   useEffect(() => {
     fetch("/api/errors-log", {
       method: "POST",
@@ -36,10 +40,10 @@ export default function CaptainError({
     <main className="mx-auto max-w-2xl px-6 py-12">
       <div className="rounded-lg border border-amber-200 bg-amber-50 p-6">
         <h1 className="text-xl font-bold text-amber-900 mb-2">
-          Captain portal hit an error
+          {captain} portal hit an error
         </h1>
         <p className="text-sm text-amber-900/90 leading-relaxed mb-4">
-          Something in the captain dashboard threw an exception.
+          Something in the {captain} dashboard threw an exception.
           Your account and the rest of the site are fine — try
           again, or head back to the public site. If this keeps
           happening, message the commissioner with the ref below.
@@ -56,7 +60,7 @@ export default function CaptainError({
             href="/captain"
             className="rounded-md border border-amber-300 bg-white px-4 py-2 text-sm font-semibold text-amber-900 hover:bg-amber-100"
           >
-            Captain home
+            {captain} home
           </a>
           <a
             href="/"

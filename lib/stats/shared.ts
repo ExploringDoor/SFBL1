@@ -77,6 +77,10 @@ export interface GameResult {
   away_score: number;
   status: GameStatus;
   date?: string; // ISO; required for streak calculation
+  /** Playoff games are NOT regular-season results — computeStandings
+   *  excludes them so a bracket result never inflates a team's W-L
+   *  record (Nelson request, 2026-07). */
+  is_playoff?: boolean;
 }
 
 export interface StandingsRow {
@@ -136,7 +140,10 @@ export function sortByPoints(
 // the games — otherwise leaves streak undefined.
 export function computeStandings(games: GameResult[]): StandingsRow[] {
   const finished = games.filter(
-    (g) => g.status === "final" || g.status === "approved",
+    (g) =>
+      (g.status === "final" || g.status === "approved") &&
+      // Playoff games never count toward the regular-season standings.
+      !g.is_playoff,
   );
 
   // Sort by date for streak calc; preserves stable order otherwise.

@@ -19,6 +19,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { sendMagicLink, signInWithBridgeToken } from "@/lib/auth-client";
 import { useTenant } from "@/lib/tenant-context";
+import { captainNoun } from "@/lib/tenants";
 
 // Local-storage key the PWA uses to remember which bridgeId it's
 // polling for, so a quick reload of /login picks up where it left
@@ -150,6 +151,7 @@ export default function LoginPage() {
 
   const leagueName = config?.name ?? "League";
   const logoUrl = config?.theme?.logo_url ?? null;
+  const captain = captainNoun(config);
 
   return (
     <main
@@ -199,7 +201,7 @@ export default function LoginPage() {
             margin: 0,
           }}
         >
-          Captains and players sign in by email — no password. Enter
+          {captain}s and players sign in by email — no password. Enter
           your email, we&rsquo;ll send a one-tap link.
         </p>
       </header>

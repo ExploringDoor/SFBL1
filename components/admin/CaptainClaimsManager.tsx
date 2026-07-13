@@ -20,6 +20,8 @@ import { useEffect, useMemo, useState } from "react";
 import type { User } from "firebase/auth";
 import { collection, getDocs } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
+import { useTenant } from "@/lib/tenant-context";
+import { captainNoun } from "@/lib/tenants";
 
 interface TeamOpt {
   id: string;
@@ -57,6 +59,8 @@ export function CaptainClaimsManager({ leagueId, user }: Props) {
     null,
   );
   const [result, setResult] = useState<Result | null>(null);
+  const { config } = useTenant();
+  const captain = captainNoun(config);
 
   useEffect(() => {
     let cancelled = false;
@@ -130,7 +134,7 @@ export function CaptainClaimsManager({ leagueId, user }: Props) {
       return;
     }
     if (role === "captain" && !teamId) {
-      setResult({ ok: false, message: "Pick a team for captain grants" });
+      setResult({ ok: false, message: `Pick a team for ${captain} grants` });
       return;
     }
     setBusy(role);
@@ -167,7 +171,7 @@ export function CaptainClaimsManager({ leagueId, user }: Props) {
         message:
           role === "remove"
             ? `Removed all roles for ${email}.`
-            : `Granted ${role}${teamLabel} to ${email}. ${data.note ?? ""}`,
+            : `Granted ${role === "captain" ? captain : role}${teamLabel} to ${email}. ${data.note ?? ""}`,
       });
       // Reset on successful grant so a flurry of captain grants is
       // fast — clear email + picked player, keep teamId so admin can
@@ -189,16 +193,16 @@ export function CaptainClaimsManager({ leagueId, user }: Props) {
 
   return (
     <section className="space-y-3 rounded-md border border-slate-200 bg-white p-4">
-      <p className="font-semibold text-slate-900">Captain &amp; admin claims</p>
+      <p className="font-semibold text-slate-900">{captain} &amp; admin claims</p>
       <p className="text-xs text-slate-600 leading-relaxed">
-        Grant captain access to one of your teams, grant another admin,
+        Grant {captain} access to one of your teams, grant another admin,
         or remove someone's role. The user must have signed in via magic
         link at least once before you can grant them a role.
       </p>
 
       <label className="block">
         <span className="block text-xs font-semibold text-slate-700 mb-1">
-          Team (for captain grants)
+          Team (for {captain} grants)
         </span>
         <select
           value={teamId}
@@ -218,7 +222,7 @@ export function CaptainClaimsManager({ leagueId, user }: Props) {
       {teamId && teamRoster.length > 0 && (
         <label className="block">
           <span className="block text-xs font-semibold text-slate-700 mb-1">
-            Pick the captain
+            Pick the {captain}
           </span>
           <select
             value={pickedPlayerId}
@@ -251,7 +255,7 @@ export function CaptainClaimsManager({ leagueId, user }: Props) {
         if (!showEmailInput) {
           return (
             <p className="text-xs text-slate-600 rounded bg-slate-50 px-3 py-2 border border-slate-200">
-              Will grant captain access to{" "}
+              Will grant {captain} access to{" "}
               <span className="font-semibold">{picked?.name}</span> using{" "}
               <span className="font-mono">{email}</span>.
             </p>
@@ -289,7 +293,7 @@ export function CaptainClaimsManager({ leagueId, user }: Props) {
           disabled={busy !== null || !email.trim() || !teamId}
           className="rounded-md bg-emerald-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
         >
-          {busy === "captain" ? "Granting…" : "Grant captain"}
+          {busy === "captain" ? "Granting…" : `Grant ${captain}`}
         </button>
         <button
           onClick={() => call("admin")}

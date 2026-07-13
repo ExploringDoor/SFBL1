@@ -13,6 +13,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { User } from "firebase/auth";
+import { useTenant } from "@/lib/tenant-context";
+import { captainNoun } from "@/lib/tenants";
 
 interface AuditEntry {
   id: string;
@@ -54,6 +56,14 @@ const KIND_LABELS: Record<string, string> = {
   // their raw key. Add labels here as needed.
 };
 
+// `bulk_invite` is the only audit kind whose display label names the
+// team-manager role, so it renders through the tenant's configured noun
+// (captainNoun). Stored `kind` values are unchanged — display only.
+function kindLabel(kind: string, captain: string): string {
+  if (kind === "bulk_invite") return `Bulk ${captain} invite`;
+  return KIND_LABELS[kind] ?? kind;
+}
+
 export function AuditLogViewer({ leagueId, user }: Props) {
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,6 +71,8 @@ export function AuditLogViewer({ leagueId, user }: Props) {
   const [kindFilter, setKindFilter] = useState<string>("");
   const [clearing, setClearing] = useState(false);
   const [clearMsg, setClearMsg] = useState<string | null>(null);
+  const { config } = useTenant();
+  const captain = captainNoun(config);
 
   const fetchLog = useCallback(async () => {
     setLoading(true);
@@ -156,7 +168,7 @@ export function AuditLogViewer({ leagueId, user }: Props) {
         <div>
           <p className="font-semibold text-slate-900">Audit log</p>
           <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-            Recent admin + captain actions: schedule edits, score
+            Recent admin + {captain} actions: schedule edits, score
             overrides, role grants. Use this to verify "who changed
             that?" without digging into Firestore.
           </p>
@@ -171,7 +183,7 @@ export function AuditLogViewer({ leagueId, user }: Props) {
             <option value="">All actions</option>
             {availableKinds.map((k) => (
               <option key={k} value={k}>
-                {KIND_LABELS[k] ?? k}
+                {kindLabel(k, captain)}
               </option>
             ))}
           </select>
@@ -221,8 +233,8 @@ export function AuditLogViewer({ leagueId, user }: Props) {
       ) : entries.length === 0 ? (
         <p className="text-sm text-slate-500 italic">
           {kindFilter
-            ? `No ${KIND_LABELS[kindFilter] ?? kindFilter} entries yet.`
-            : "No audit entries yet. Captain actions appear here."}
+            ? `No ${kindLabel(kindFilter, captain)} entries yet.`
+            : `No audit entries yet. ${captain} actions appear here.`}
         </p>
       ) : (
         <ul className="divide-y divide-slate-200 border border-slate-200 rounded-md overflow-hidden">
@@ -234,7 +246,7 @@ export function AuditLogViewer({ leagueId, user }: Props) {
               <div className="flex items-baseline justify-between gap-3 flex-wrap">
                 <div className="flex items-baseline gap-2 min-w-0">
                   <span className="font-semibold text-slate-900">
-                    {KIND_LABELS[e.kind] ?? e.kind}
+                    {kindLabel(e.kind, captain)}
                   </span>
                   {e.by_role && (
                     <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-slate-600 font-semibold">

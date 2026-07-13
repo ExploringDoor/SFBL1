@@ -41,6 +41,8 @@ export interface GameCardProps {
    *  Shown alongside the FINAL pill. Used by the scores page to call
    *  out the closest / biggest / highest-scoring game of the week. */
   badge?: { emoji: string; label: string } | null;
+  /** Playoff game — shows a "PLAYOFFS" pill (Nelson, 2026-07). */
+  isPlayoff?: boolean;
 }
 
 export function GameCard({
@@ -51,6 +53,7 @@ export function GameCard({
   statusLabel = "FINAL",
   headline,
   badge,
+  isPlayoff,
 }: GameCardProps) {
   const aWin = away.score > home.score;
   const hWin = home.score > away.score;
@@ -78,6 +81,11 @@ export function GameCard({
     >
       <div className="le-gc-card-hdr">
         <span className="le-gc-card-status">{statusLabel}</span>
+        {isPlayoff && (
+          <span className="le-gc-card-playoff" title="Playoff game">
+            🏆 PLAYOFFS
+          </span>
+        )}
         {badge && (
           <span
             className="le-gc-card-badge"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useTenant } from "@/lib/tenant-context";
+import { captainNoun } from "@/lib/tenants";
 
 // Help tab — verbatim port of DVSL captain.html:1009-1242 (sec-help)
 // with text adjusted for LE-specific UX:
@@ -25,14 +26,15 @@ export function HelpTab({
   // SFBL doesn't use attendance (teams poll on WhatsApp) or push
   // notifications, so those Help sections are hidden for it. Other
   // leagues see the full guide. (Adam, 2026-06.)
-  const { tenantId } = useTenant();
+  const { tenantId, config } = useTenant();
+  const captain = captainNoun(config);
   const isSfbl = tenantId === "sfbl";
   return (
     <div className="cap-tab cap-help">
       <div className="cap-section-head">
         <h2 className="cap-section-title">Help</h2>
         <p className="cap-section-sub">
-          How everything in your captain portal works. Tap a section to
+          How everything in your {captain} portal works. Tap a section to
           expand.
         </p>
       </div>
@@ -41,8 +43,8 @@ export function HelpTab({
         <summary>1. Logging In</summary>
         <div className="help-body">
           <p>
-            Captains sign in with a <strong>team password</strong> — no
-            account or email needed. Go to the captain page, pick your team
+            {captain}s sign in with a <strong>team password</strong> — no
+            account or email needed. Go to the {captain} page, pick your team
             from the list, and type the password the commissioner gave you.
           </p>
           <ul>
@@ -140,7 +142,7 @@ export function HelpTab({
               2B / 3B / HR / RBI / BB / K per player, plus pitcher lines.
               Takes ~5 minutes if you've got a paper scoresheet in front of
               you. The system reconciles your entry with the opposing
-              captain's.
+              {captain}'s.
             </li>
             <li>
               <strong>📝 Score Only</strong> — fastest option. Just enter the
@@ -186,13 +188,13 @@ export function HelpTab({
         <summary>6. Score Discrepancies</summary>
         <div className="help-body">
           <p>
-            Both captains submit independently. Here's how conflicts are
+            Both {captain}s submit independently. Here's how conflicts are
             handled:
           </p>
           <ul>
             <li>
               <strong>Scores must match.</strong> If your final differs from
-              the other captain's, the commissioner is alerted and settles
+              the other {captain}'s, the commissioner is alerted and settles
               it on their end.
             </li>
             <li>
@@ -203,7 +205,7 @@ export function HelpTab({
             </li>
             <li>
               The commissioner can override anything from the admin page if
-              you and the opposing captain can't agree.
+              you and the opposing {captain} can't agree.
             </li>
           </ul>
         </div>
@@ -229,7 +231,7 @@ export function HelpTab({
               already have).
             </li>
             <li>
-              <strong>Captain Edit</strong> — mark availability on behalf of a
+              <strong>{captain} Edit</strong> — mark availability on behalf of a
               player who isn't phone-savvy or forgot. Same effect as the
               player marking themselves.
             </li>
@@ -283,7 +285,7 @@ export function HelpTab({
           <ul>
             <li>
               <strong>Enable</strong> — go to the{" "}
-              <strong>🔔 Notifications</strong> tab in your captain portal.
+              <strong>🔔 Notifications</strong> tab in your {captain} portal.
               Tap "Enable Notifications" and accept the browser prompt.
             </li>
             <li>

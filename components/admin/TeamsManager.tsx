@@ -14,6 +14,8 @@ import type { User } from "firebase/auth";
 import { collection, getDocs, query, where, limit } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { ManagerContact } from "@/components/ManagerContact";
+import { useTenant } from "@/lib/tenant-context";
+import { captainNoun } from "@/lib/tenants";
 
 interface TeamRow {
   id: string;
@@ -646,6 +648,8 @@ function TeamEditForm({
   const [division, setDivision] = useState(team.division);
   const [logoUrl, setLogoUrl] = useState(team.logo_url);
   const [captainPassword, setCaptainPassword] = useState("");
+  const { config } = useTenant();
+  const captain = captainNoun(config);
 
   return (
     <div className="px-3 py-3 bg-slate-50 border-t border-slate-200">
@@ -723,7 +727,7 @@ function TeamEditForm({
         </label>
         <div className="block sm:col-span-2 rounded-md border border-blue-200 bg-blue-50 p-3">
           <span className="block text-xs font-semibold text-slate-700 mb-1">
-            Manager password{" "}
+            {captain} password{" "}
             {team.has_captain_password ? (
               <span className="text-emerald-700">· 🔒 currently set</span>
             ) : (
@@ -739,7 +743,7 @@ function TeamEditForm({
               placeholder={
                 team.has_captain_password
                   ? "Type a new password to change it (blank = keep current)"
-                  : "Set a password the manager will type to log in"
+                  : `Set a password the ${captain} will type to log in`
               }
               className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm font-mono"
             />
@@ -753,7 +757,7 @@ function TeamEditForm({
             </button>
           </div>
           <p className="mt-1 text-[11px] text-slate-500">
-            The manager goes to the captain page, picks {name || "this team"},
+            The {captain} goes to the {captain} page, picks {name || "this team"},
             and types this password — no account needed. Click Generate for
             “{generatePreviewHint(name)}”, or type your own. Leaving it blank
             keeps the current password.
@@ -975,6 +979,8 @@ function TeamRowItem({
   onUpdatePlayer: (playerId: string, patch: AddPlayerFields) => Promise<boolean>;
   onRemovePlayer: (playerId: string, name: string) => Promise<void>;
 }) {
+  const { config } = useTenant();
+  const captain = captainNoun(config);
   return (
     <li className={t.active ? "" : "bg-slate-50 opacity-70"}>
       <div className="flex items-center gap-3 px-3 py-2">
@@ -1019,8 +1025,8 @@ function TeamRowItem({
               }
               title={
                 lastLogin
-                  ? `Captain last logged in ${fmtLogin(lastLogin)}`
-                  : "No captain login yet"
+                  ? `${captain} last logged in ${fmtLogin(lastLogin)}`
+                  : `No ${captain} login yet`
               }
             >
               {lastLogin ? "✓ logged in" : "no login yet"}
@@ -1061,14 +1067,14 @@ function TeamRowItem({
       {isExpanded && (
         <div className="border-t border-slate-200 bg-slate-50/50 px-3 py-3 space-y-3">
           <p className="text-xs text-slate-600">
-            <span className="font-semibold">Captain login:</span>{" "}
+            <span className="font-semibold">{captain} login:</span>{" "}
             {lastLogin ? (
               <span className="text-emerald-700">
                 last logged in {fmtLogin(lastLogin)}
               </span>
             ) : (
               <span className="text-slate-500">
-                this team&rsquo;s captain hasn&rsquo;t logged in yet
+                this team&rsquo;s {captain} hasn&rsquo;t logged in yet
               </span>
             )}
           </p>

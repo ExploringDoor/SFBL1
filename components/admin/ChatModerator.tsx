@@ -18,6 +18,8 @@ import {
   where,
 } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
+import { useTenant } from "@/lib/tenant-context";
+import { captainNoun } from "@/lib/tenants";
 
 interface ChatMsg {
   id: string;
@@ -50,6 +52,8 @@ export function ChatModerator({ leagueId, user }: Props) {
   const [busy, setBusy] = useState<null | string>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const { config } = useTenant();
+  const captain = captainNoun(config);
 
   // Load teams once for the team-chat picker.
   useEffect(() => {
@@ -178,7 +182,7 @@ export function ChatModerator({ leagueId, user }: Props) {
   async function clearAll() {
     const target =
       kind === "captain_chat"
-        ? "EVERY captains-chat message"
+        ? `EVERY ${captain}s-chat message`
         : `every message in ${teams.find((t) => t.id === teamId)?.name ?? teamId}'s team chat`;
     if (
       !window.confirm(
@@ -221,8 +225,8 @@ export function ChatModerator({ leagueId, user }: Props) {
       <div>
         <p className="font-semibold text-slate-900">Chat moderation</p>
         <p className="text-xs text-slate-600 mt-1">
-          Browse and delete messages in the captains chat (league-wide,
-          captains only) or any team's chat. Deletions are audited.
+          Browse and delete messages in the {captain}s chat (league-wide,
+          {captain}s only) or any team's chat. Deletions are audited.
         </p>
       </div>
 
@@ -235,7 +239,7 @@ export function ChatModerator({ leagueId, user }: Props) {
           }}
           className="rounded-md border border-slate-300 px-2 py-1.5 text-xs"
         >
-          <option value="captain_chat">Captains chat (league-wide)</option>
+          <option value="captain_chat">{captain}s chat (league-wide)</option>
           <option value="team_messages">A team's chat</option>
         </select>
         {kind === "team_messages" && (

@@ -5130,6 +5130,22 @@ body {
   border: 1px solid rgba(245, 200, 66, 0.4);
 }
 
+/* Playoff-game pill — distinct from the editorial badge (Nelson, 2026-07). */
+.le-gc-card-playoff {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-barlow, inherit);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--brand-primary, #0a0e1c);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
 .le-gc-card-badge-text {
   /* hide label below 360px so the FINAL pill + date still fit */
 }

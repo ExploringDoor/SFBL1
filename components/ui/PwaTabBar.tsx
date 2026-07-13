@@ -16,8 +16,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { DEFAULT_LINKS, computeNavLinks, hoistPlayoffs, iconFor } from "./nav-links";
+import {
+  DEFAULT_LINKS,
+  computeNavLinks,
+  hoistPlayoffs,
+  iconFor,
+  relabelCaptainLink,
+} from "./nav-links";
 import type { NavLink } from "./nav-links";
+import { useTenant } from "@/lib/tenant-context";
+import { captainNoun } from "@/lib/tenants";
 import "./PwaTabBar.css";
 
 interface Slot {
@@ -67,10 +75,18 @@ export function PwaTabBar({
   // Standings) are excluded so they don't repeat. Remaining single
   // links collect under "Browse"; each dropdown becomes its own section
   // (SFBL, Register, More) — same grouping as the desktop nav.
-  const navLinks = computeNavLinks(
-    hoistPlayoffs(DEFAULT_LINKS, playoffsActive),
-    tenantShort ?? "",
-    hideLabels,
+  // relabelCaptainLink runs LAST (after computeNavLinks' SFBL-only
+  // filter, which matches the original "Captain" label) so the /captain
+  // entry in the "More" sheet shows the tenant's manager noun — kept in
+  // sync with the desktop Nav.
+  const { config } = useTenant();
+  const navLinks = relabelCaptainLink(
+    computeNavLinks(
+      hoistPlayoffs(DEFAULT_LINKS, playoffsActive),
+      tenantShort ?? "",
+      hideLabels,
+    ),
+    captainNoun(config),
   );
   const bottomHrefs = new Set(
     SLOTS.map((s) => s.href).filter((h): h is string => !!h),

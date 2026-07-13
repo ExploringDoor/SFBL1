@@ -7,7 +7,7 @@ import {
   type GameResult,
   type StandingsRow,
 } from "@/lib/stats/shared";
-import type { PublicLeagueConfig } from "@/lib/tenants";
+import { captainNoun, type PublicLeagueConfig } from "@/lib/tenants";
 import { combineDateTime } from "@/lib/format-time";
 import { GameCard, type GameCardTeam } from "@/components/ui/GameCard";
 import { PreviewCard, type PreviewCardTeam } from "@/components/ui/PreviewCard";
@@ -32,6 +32,7 @@ interface ScheduleItem {
   home_team_id: string;
   away_score: number;
   home_score: number;
+  is_playoff: boolean;
 }
 
 export default async function HomePage() {
@@ -48,6 +49,8 @@ export default async function HomePage() {
   })();
 
   if (!tenantId) return <BareApex />;
+
+  const captain = captainNoun(config);
 
   const {
     upcoming,
@@ -130,7 +133,7 @@ export default async function HomePage() {
                 </h2>
                 <p className="le-home-launch-body">
                   Schedule, scores, and standings will appear here once
-                  games are scheduled and played. If you're a captain,{" "}
+                  games are scheduled and played. If you're a {captain},{" "}
                   <a href="/captain">sign in</a> to manage your roster
                   and submit scores.
                 </p>
@@ -357,6 +360,7 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
       away_team_id: String(data.away_team_id ?? ""),
       home_score: Number(data.home_score ?? 0),
       away_score: Number(data.away_score ?? 0),
+      is_playoff: data.is_playoff === true,
     };
   });
 
@@ -367,6 +371,7 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
     away_score: g.away_score,
     status: g.status as GameResult["status"],
     date: g.date,
+    is_playoff: g.is_playoff,
   }));
 
   let standings: StandingsRow[] = computeStandings(allGameResults);

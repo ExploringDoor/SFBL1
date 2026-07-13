@@ -17,6 +17,8 @@ import { useEffect, useState } from "react";
 import type { User } from "firebase/auth";
 import { collection, getDocs } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
+import { useTenant } from "@/lib/tenant-context";
+import { captainNoun } from "@/lib/tenants";
 
 interface PendingPlayer {
   id: string;
@@ -47,6 +49,8 @@ export function SignupsReview({ leagueId, user }: Props) {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const { config } = useTenant();
+  const captain = captainNoun(config);
 
   async function load() {
     setLoading(true);
@@ -150,7 +154,7 @@ export function SignupsReview({ leagueId, user }: Props) {
         <div>
           <p className="font-semibold text-slate-900">Signups review</p>
           <p className="text-xs text-slate-600 mt-1">
-            Players added by captains awaiting your verification. Approve to
+            Players added by {captain}s awaiting your verification. Approve to
             include them on the roster, reject to soft-delete.
           </p>
         </div>
@@ -179,7 +183,7 @@ export function SignupsReview({ leagueId, user }: Props) {
         <p className="text-sm text-slate-500">Loading…</p>
       ) : pending.length === 0 ? (
         <p className="text-sm text-slate-500 italic">
-          No pending signups. Captains haven't added any walk-ons yet, or
+          No pending signups. {captain}s haven't added any walk-ons yet, or
           you've already reviewed them all.
         </p>
       ) : (

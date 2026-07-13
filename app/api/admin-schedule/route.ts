@@ -64,6 +64,7 @@ interface GameInput {
   status?: string;
   away_score?: number | null;
   home_score?: number | null;
+  is_playoff?: boolean;
 }
 
 export async function POST(req: Request) {
@@ -371,7 +372,10 @@ function validateGame(
     ) {
       return { error: "home_team_id is required" };
     }
-    if (g.away_team_id === g.home_team_id) {
+    // Allow the reserved "tbd" placeholder team on BOTH sides so a
+    // playoff game can be scheduled before either team is known
+    // ("TBD vs TBD"); real teams must still differ (Nelson, 2026-07).
+    if (g.away_team_id === g.home_team_id && g.away_team_id !== "tbd") {
       return { error: "Home and away teams must differ" };
     }
   }
@@ -442,6 +446,8 @@ function sanitizeGame(
   if (g.home_score != null && g.home_score !== ("" as never)) {
     out.home_score = Number(g.home_score);
   }
+  // Playoff flag — excluded from regular-season standings (Nelson, 2026-07).
+  if (g.is_playoff != null) out.is_playoff = g.is_playoff === true;
   // For new games, default status to "scheduled" if not set.
   if (!isUpdate && out.status == null) out.status = "scheduled";
   return out;

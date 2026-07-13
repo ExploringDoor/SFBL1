@@ -134,6 +134,7 @@ async function loadTenantBoxAggregates(
       away_score: Number(data.away_score ?? 0),
       status: (data.status ?? "draft") as GameResult["status"],
       date: data.date ? String(data.date) : undefined,
+      is_playoff: data.is_playoff === true,
     };
   });
   const standings = computeStandings(standingsGames);

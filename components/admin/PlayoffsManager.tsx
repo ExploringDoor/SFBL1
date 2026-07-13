@@ -125,6 +125,8 @@ export function PlayoffsManager({ leagueId, user }: Props) {
             away_score: Number(d.away_score ?? 0),
             status: String(d.status ?? "draft") as GameResult["status"],
             date: d.date ? String(d.date) : undefined,
+            // Seed from REGULAR-season standings only (Nelson, 2026-07).
+            is_playoff: d.is_playoff === true,
           };
         }),
       );

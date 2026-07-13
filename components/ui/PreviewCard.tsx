@@ -32,6 +32,8 @@ export interface PreviewCardProps {
    *  cancelled games on the schedule view. Final games render via
    *  GameCard instead, so we don't expect "final" here. */
   status?: "scheduled" | "postponed" | "cancelled" | "final" | string;
+  /** Playoff game — shows a "PLAYOFFS" pill (Nelson, 2026-07). */
+  isPlayoff?: boolean;
 }
 
 export function PreviewCard({
@@ -42,6 +44,7 @@ export function PreviewCard({
   home,
   isNext = false,
   status,
+  isPlayoff,
 }: PreviewCardProps) {
   const timeLabel = formatTimeLabel(date, field);
   const router = useRouter();
@@ -67,6 +70,11 @@ export function PreviewCard({
     >
       <div className="le-preview-time">
         {timeLabel}
+        {isPlayoff && (
+          <span className="le-gc-card-playoff" title="Playoff game">
+            🏆 PLAYOFFS
+          </span>
+        )}
         {badge && (
           <span
             className="le-preview-status"

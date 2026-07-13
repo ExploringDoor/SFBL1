@@ -11,6 +11,8 @@
 // captain on a new device) is low.
 
 import { useEffect, useState } from "react";
+import { useTenant } from "@/lib/tenant-context";
+import { captainNoun } from "@/lib/tenants";
 
 const DISMISSED_KEY = "leagueplatform:cap-welcome-dismissed";
 
@@ -19,6 +21,8 @@ export function FirstTimeWelcome({
 }: {
   teamName: string;
 }) {
+  const { config } = useTenant();
+  const captain = captainNoun(config);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -52,10 +56,10 @@ export function FirstTimeWelcome({
       >
         ×
       </button>
-      <h3>Welcome, captain. 👋</h3>
+      <h3>Welcome, {captain}. 👋</h3>
       <p>
         You're now managing <strong>{teamName}</strong>. Here's what
-        captains do most often:
+        {captain}s do most often:
       </p>
       <ul>
         <li>

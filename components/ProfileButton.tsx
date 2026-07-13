@@ -17,12 +17,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { signOut, useLeagueRole, useUser } from "@/lib/auth-client";
 import { useTenant } from "@/lib/tenant-context";
+import { captainNoun } from "@/lib/tenants";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 export function ProfileButton({ tenantId }: { tenantId: string }) {
   const user = useUser();
   const role = useLeagueRole(tenantId);
   const { config } = useTenant();
+  const captain = captainNoun(config);
   const captainPasswordless = config?.captain?.passwordless === true;
   // SFBL is holding off on player profiles (teams poll on WhatsApp), so
   // there's no player sign-in. Captain + Admin live in the More menu,
@@ -65,9 +67,9 @@ export function ProfileButton({ tenantId }: { tenantId: string }) {
         <Link
           href="/captain"
           className="rounded-md bg-brand-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-on-primary hover:opacity-90"
-          title="Captain portal"
+          title={`${captain} portal`}
         >
-          ⚾ Captain
+          ⚾ {captain}
         </Link>
       )}
       {/* Hide the separate "Profile" link for passwordless captains —
@@ -106,6 +108,8 @@ export function ProfileButton({ tenantId }: { tenantId: string }) {
 // opens a small menu asking whether you're a captain or a player, then
 // sends you to the matching sign-in (Adam, 2026-05-18).
 function AccessChooser() {
+  const { config } = useTenant();
+  const captain = captainNoun(config);
   const [open, setOpen] = useState(false);
   return (
     <div className="relative">
@@ -135,7 +139,7 @@ function AccessChooser() {
               onClick={() => setOpen(false)}
               className="block rounded px-2 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-100"
             >
-              ⚾ Captain / Manager
+              ⚾ {captain}
             </Link>
             <Link
               href="/login"

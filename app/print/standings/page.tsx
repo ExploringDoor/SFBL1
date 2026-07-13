@@ -45,6 +45,8 @@ export default async function PrintStandingsPage() {
     const data = d.data();
     const status = String(data.status ?? "");
     if (status !== "final" && status !== "approved") continue;
+    // Playoff games don't count toward regular-season standings.
+    if (data.is_playoff === true) continue;
     const aId = String(data.away_team_id ?? "");
     const hId = String(data.home_team_id ?? "");
     const aScore = Number(data.away_score);

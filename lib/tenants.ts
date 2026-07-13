@@ -31,8 +31,8 @@ export interface PublicLeagueConfig {
   // /leagues/<slug>.nav.hide. The layout reads this off the x-tenant-
   // config-json header and passes it to <Nav> + <PwaTabBar>.
   nav?: { hide?: string[] };
-  // Captain access UX toggle. See LeagueConfig["captain"].
-  captain?: { passwordless?: boolean };
+  // Captain access UX toggle + display label. See LeagueConfig["captain"].
+  captain?: { passwordless?: boolean; label?: string };
   // Admin access UX toggle. Only the boolean — the actual password
   // lives at LeagueConfig.admin.password and stays server-side via
   // toPublicConfig's explicit field allowlist.
@@ -64,6 +64,16 @@ export function toPublicConfig(c: LeagueConfig): PublicLeagueConfig {
     // and is read server-side via /api/public-admin-claim only.
     admin: c.admin?.passwordless ? { passwordless: true } : undefined,
   };
+}
+
+// Display noun for the team-manager role. SFBL calls them "Managers";
+// everyone else defaults to "Captain". Pass either a LeagueConfig or a
+// PublicLeagueConfig (both carry `captain.label`). Display only — never
+// use this for routes, claims, or identifiers (Nelson, 2026-07).
+export function captainNoun(
+  config: { captain?: { label?: string } } | null | undefined,
+): string {
+  return config?.captain?.label?.trim() || "Captain";
 }
 
 // Apex domains we strip to derive a slug from a subdomain.
@@ -294,6 +304,9 @@ const SFBL_TENANT_CONFIG: LeagueConfig = {
   // it is STRICT (see /api/public-captain-claim). (Adam, 2026-05-18.)
   captain: {
     passwordless: true,
+    // SFBL calls the role "Manager", not "Captain" (Nelson, 2026-07).
+    // Display label only — /captain route + claims are unchanged.
+    label: "Manager",
   },
   // Hide the public, no-login /availability board for SFBL (Adam,
   // 2026-06). That page lets ANYONE mark any roster player's RSVP — it

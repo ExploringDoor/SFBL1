@@ -180,6 +180,31 @@ export function computeNavLinks(
         .filter((l) => !l.children || l.children.length > 0);
 }
 
+/** Relabel the "/captain" nav entry (top-level item or a nested child)
+ *  to the tenant's manager noun — e.g. "Manager" for SFBL, "Captain"
+ *  by default. Pure and config-free: the caller resolves the noun via
+ *  captainNoun(config) and passes it in, so this module stays static.
+ *  The href / route is never touched. Shared by Nav + PwaTabBar so the
+ *  two surfaces keep the same captain label.
+ *
+ *  MUST run AFTER computeNavLinks — that function's SFBL-only filter
+ *  matches the original "Captain" label, so relabeling first would
+ *  break the filter. */
+export function relabelCaptainLink(
+  links: NavLink[],
+  captainNounLabel: string,
+): NavLink[] {
+  const swap = (l: NavLink): NavLink =>
+    l.href === "/captain" ? { ...l, label: captainNounLabel } : l;
+  return links.map((l) => {
+    const top = swap(l);
+    if (top.children && top.children.length > 0) {
+      return { ...top, children: top.children.map(swap) };
+    }
+    return top;
+  });
+}
+
 /** Emoji icon for a nav destination — used by the mobile menu tiles
  *  and the bottom-tab "More" sheet. */
 export function iconFor(href: string): string {

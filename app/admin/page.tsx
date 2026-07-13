@@ -14,6 +14,7 @@ import { useState } from "react";
 import { signOut, useLeagueRole, useUser } from "@/lib/auth-client";
 import { getDb } from "@/lib/firebase";
 import { useTenant } from "@/lib/tenant-context";
+import { captainNoun } from "@/lib/tenants";
 import { doc, setDoc } from "firebase/firestore";
 import { SendPushSection } from "@/components/admin/SendPushSection";
 import { PagesManager } from "@/components/admin/PagesManager";
@@ -110,6 +111,28 @@ const MORE_TABS = MORE_KEYS.map((k) => TABS.find((t) => t.key === k)).filter(
   (t): t is (typeof TABS)[number] => !!t,
 );
 
+// Tabs that name the team-manager role render through the tenant's
+// configured noun (captainNoun): SFBL shows "Manager", the default
+// stays "Captain". The stored TabKey ("captains") and the static TABS
+// text above are unchanged — only the displayed label/description are
+// relabeled here.
+function tabLabel(t: (typeof TABS)[number], captain: string): string {
+  return t.key === "captains" ? `${captain}s` : t.label;
+}
+
+function tabDescription(t: (typeof TABS)[number], captain: string): string {
+  switch (t.key) {
+    case "captains":
+      return `Every team's ${captain}: contact, password status, and last login.`;
+    case "signups":
+      return `Approve or reject players added by ${captain}s (walk-ons).`;
+    case "scores":
+      return `Quick batch score entry + resolve ${captain} submission conflicts.`;
+    default:
+      return t.description;
+  }
+}
+
 export default function AdminPage() {
   const { tenantId, config } = useTenant();
   const user = useUser();
@@ -117,6 +140,7 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("health");
   const [moreOpen, setMoreOpen] = useState(false);
   const moreActive = MORE_SET.has(activeTab);
+  const captain = captainNoun(config);
 
   if (user === undefined || role === "loading") {
     return <Shell heading={config?.name ?? "Admin"}>Checking your access…</Shell>;
@@ -198,7 +222,7 @@ export default function AdminPage() {
                 (activeTab === t.key ? "le-admin-tab-active" : "")
               }
             >
-              {t.label}
+              {tabLabel(t, captain)}
             </button>
           ))}
         </nav>
@@ -240,7 +264,7 @@ export default function AdminPage() {
                       (activeTab === t.key ? "active" : "")
                     }
                   >
-                    {t.label}
+                    {tabLabel(t, captain)}
                   </button>
                 ))}
               </div>
@@ -352,7 +376,10 @@ export default function AdminPage() {
       `}</style>
 
       <p className="text-sm text-slate-500">
-        {TABS.find((t) => t.key === activeTab)?.description}
+        {(() => {
+          const active = TABS.find((t) => t.key === activeTab);
+          return active ? tabDescription(active, captain) : null;
+        })()}
       </p>
 
       <div>

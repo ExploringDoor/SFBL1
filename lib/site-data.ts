@@ -89,6 +89,7 @@ export async function loadTickerGames(tenantId: string): Promise<TickerGame[]> {
       home_score: Number(data.home_score ?? 0),
       away_score: Number(data.away_score ?? 0),
       status: (data.status ?? "draft") as GameResult["status"],
+      is_playoff: data.is_playoff === true,
     });
   }
   const standings = computeStandings(standingsGames);

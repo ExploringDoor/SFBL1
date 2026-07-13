@@ -26,6 +26,8 @@ import {
 } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useUser } from "@/lib/auth-client";
+import { useTenant } from "@/lib/tenant-context";
+import { captainNoun } from "@/lib/tenants";
 import { formatGameDate, formatTime12 } from "@/lib/format-time";
 
 interface PlayerRow {
@@ -72,6 +74,8 @@ function lsKey(leagueId: string, teamId: string): string {
 
 export function AttendanceTab({ leagueId, teamId }: Props) {
   const user = useUser();
+  const { config } = useTenant();
+  const captain = captainNoun(config);
   const [view, setView] = useState<View>("my");
   const [players, setPlayers] = useState<PlayerRow[]>([]);
   const [games, setGames] = useState<GameRow[]>([]);
@@ -416,7 +420,7 @@ export function AttendanceTab({ leagueId, teamId }: Props) {
         <h2 className="cap-section-title">Attendance</h2>
         <p className="cap-section-sub">
           Mark who's playing each week. Pick your own name from the
-          dropdown, or switch to Team or Captain Edit to manage everyone.
+          dropdown, or switch to Team or {captain} Edit to manage everyone.
         </p>
       </div>
 
@@ -449,7 +453,7 @@ export function AttendanceTab({ leagueId, teamId }: Props) {
           }
           onClick={() => setView("edit")}
         >
-          Captain Edit
+          {captain} Edit
         </button>
       </div>
 

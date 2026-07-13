@@ -70,6 +70,7 @@ export default async function TeamsPage() {
       away_score: Number(data.away_score ?? 0),
       status: (data.status ?? "draft") as GameResult["status"],
       date: data.date ? String(data.date) : undefined,
+      is_playoff: data.is_playoff === true,
     };
   });
   let standings: StandingsRow[] = computeStandings(games);
@@ -80,7 +81,11 @@ export default async function TeamsPage() {
   }
   const recordByTeam = new Map(standings.map((r) => [r.team_id, r]));
 
-  const teams: TeamCard[] = teamsSnap.docs.map((d) => {
+  const teams: TeamCard[] = teamsSnap.docs
+    // Skip placeholder teams like "TBD" (used to schedule bracket games
+    // before seeds are known) — they aren't real teams (Nelson, 2026-07).
+    .filter((d) => d.data().placeholder !== true)
+    .map((d) => {
     const data = d.data();
     const row = recordByTeam.get(d.id);
     return {

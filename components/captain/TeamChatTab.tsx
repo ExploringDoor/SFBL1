@@ -35,6 +35,8 @@ import {
 } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useUser } from "@/lib/auth-client";
+import { useTenant } from "@/lib/tenant-context";
+import { captainNoun } from "@/lib/tenants";
 import { getCachedToken } from "@/lib/notifications/fcm-client";
 
 interface ChatMsg {
@@ -78,6 +80,8 @@ export function TeamChatTab({
   collection: collName = "team_messages",
 }: Props) {
   const user = useUser();
+  const { config } = useTenant();
+  const captain = captainNoun(config);
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
@@ -253,7 +257,7 @@ export function TeamChatTab({
     if (!user) return;
     if (
       !window.confirm(
-        `Reset the entire ${collName === "team_messages" ? "Team" : "Captains"} Chat?\n\nThis deletes ALL messages permanently. This cannot be undone.`,
+        `Reset the entire ${collName === "team_messages" ? "Team" : `${captain}s`} Chat?\n\nThis deletes ALL messages permanently. This cannot be undone.`,
       )
     ) {
       return;
@@ -302,7 +306,7 @@ export function TeamChatTab({
     // Captains Chat label format: "<short> (Captain Name)" per DVSL.
     if (collName === "captain_chat") {
       const short = m.team_short || m.team_name || "";
-      const name = m.author_name || m.author_email || "Captain";
+      const name = m.author_name || m.author_email || captain;
       return short ? `${short} — ${name}` : name;
     }
     // Team Chat: prefer the sender's real name. If author_name looks
@@ -344,7 +348,7 @@ export function TeamChatTab({
   const composerLabel =
     collName === "team_messages"
       ? "Send a message to your team"
-      : "Send a message to all captains + commissioner";
+      : `Send a message to all ${captain}s + commissioner`;
 
   // For UI purposes only — server reverifies on every action. Best-
   // effort guess at whether the current user can reset.
@@ -360,12 +364,12 @@ export function TeamChatTab({
     <div className="cap-tab cap-chat-tab">
       <div className="cap-section-head">
         <h2 className="cap-section-title">
-          {collName === "team_messages" ? "Team Chat" : "Captains Chat"}
+          {collName === "team_messages" ? "Team Chat" : `${captain}s Chat`}
         </h2>
         <p className="cap-section-sub">
           {collName === "team_messages"
             ? "Talk to your team. Players with notifications on get a push."
-            : "Captains-only room. Every signed-in captain in the league sees these messages."}
+            : `${captain}s-only room. Every signed-in ${captain} in the league sees these messages.`}
         </p>
       </div>
 

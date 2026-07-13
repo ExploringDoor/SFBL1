@@ -44,6 +44,7 @@ import { NotificationsPanel } from "@/components/notifications/NotificationsPane
 import { ManagerContact } from "@/components/ManagerContact";
 import { getDb } from "@/lib/firebase";
 import { useTenant } from "@/lib/tenant-context";
+import { captainNoun } from "@/lib/tenants";
 import {
   useCaptainTeam,
   useLeagueRole,
@@ -80,6 +81,7 @@ interface GameSnap {
 
 export default function CaptainHomePage() {
   const { tenantId, config } = useTenant();
+  const captain = captainNoun(config);
   const user = useUser();
   const role = useLeagueRole(tenantId);
   const { teamId, loading: teamLoading } = useCaptainTeam(tenantId);
@@ -289,7 +291,7 @@ export default function CaptainHomePage() {
   if (!tenantId) {
     return (
       <main className="container py-16">
-        <p>Captain portal is tenant-scoped. Visit a league subdomain.</p>
+        <p>{captain} portal is tenant-scoped. Visit a league subdomain.</p>
       </main>
     );
   }
@@ -324,7 +326,7 @@ export default function CaptainHomePage() {
               margin: "0 0 8px",
             }}
           >
-            Captain sign-in
+            {captain} sign-in
           </h2>
           <p
             style={{
@@ -376,7 +378,7 @@ export default function CaptainHomePage() {
               margin: "0 0 10px",
             }}
           >
-            No captain access yet
+            No {captain} access yet
           </h2>
           <p
             style={{
@@ -390,7 +392,7 @@ export default function CaptainHomePage() {
             <strong style={{ color: "var(--text-strong)" }}>
               {user.email}
             </strong>
-            , but this account doesn&rsquo;t have captain privileges
+            , but this account doesn&rsquo;t have {captain} privileges
             for SFBL.
           </p>
           <p
@@ -411,7 +413,7 @@ export default function CaptainHomePage() {
             >
               playball@sfbl.com
             </a>{" "}
-            to get added as your team&rsquo;s captain. Until then,
+            to get added as your team&rsquo;s {captain}. Until then,
             head back to the public site.
           </p>
           <div
@@ -1171,6 +1173,8 @@ function RsvpStat({
 }
 
 function CaptainShell({ children }: { children: React.ReactNode }) {
+  const { config } = useTenant();
+  const captain = captainNoun(config);
   return (
     <main className="container py-16">
       <h1
@@ -1182,7 +1186,7 @@ function CaptainShell({ children }: { children: React.ReactNode }) {
           marginBottom: 18,
         }}
       >
-        Captain Portal
+        {captain} Portal
       </h1>
       {children}
     </main>
@@ -1190,6 +1194,8 @@ function CaptainShell({ children }: { children: React.ReactNode }) {
 }
 
 function CaptainHero({ team, email }: { team: TeamSnap; email: string }) {
+  const { config } = useTenant();
+  const captain = captainNoun(config);
   return (
     <section
       className="le-cap-hero"
@@ -1198,7 +1204,7 @@ function CaptainHero({ team, email }: { team: TeamSnap; email: string }) {
       }}
     >
       <div className="le-cap-hero-inner">
-        <p className="le-cap-eyebrow">Captain Portal</p>
+        <p className="le-cap-eyebrow">{captain} Portal</p>
         <div className="le-cap-hero-row">
           <div className="le-cap-hero-logo">
             {team.logoUrl ? (
@@ -1238,6 +1244,8 @@ function SubmitScoreTab({
   teamNames: Record<string, string>;
   games: GameSnap[];
 }) {
+  const { config } = useTenant();
+  const captain = captainNoun(config);
   const [openId, setOpenId] = useState<string | null>(null);
   return (
     <div className="cap-tab">
@@ -1245,7 +1253,7 @@ function SubmitScoreTab({
         <h2 className="cap-section-title">Submit Score</h2>
         <p className="cap-section-sub">
           Tap <strong>Quick Score</strong> on a game for just the final, or{" "}
-          <strong>Box Score</strong> for the full lineup + stats. Both captains
+          <strong>Box Score</strong> for the full lineup + stats. Both {captain}s
           can submit; the league office reconciles.
         </p>
       </div>

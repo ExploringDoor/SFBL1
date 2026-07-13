@@ -11,6 +11,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { User } from "firebase/auth";
+import { useTenant } from "@/lib/tenant-context";
+import { captainNoun } from "@/lib/tenants";
 
 interface Health {
   teams: { active: number; total: number };
@@ -65,6 +67,8 @@ export function LeagueHealthDashboard({ leagueId, user, onReviewForms }: Props) 
   const [health, setHealth] = useState<Health | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { config } = useTenant();
+  const captain = captainNoun(config);
 
   const fetchHealth = useCallback(async () => {
     setLoading(true);
@@ -180,7 +184,7 @@ export function LeagueHealthDashboard({ leagueId, user, onReviewForms }: Props) 
             <Stat
               label="Push subscribers"
               value={health.subscribers.devices}
-              sub={`${health.subscribers.captain_authed} captain-authed`}
+              sub={`${health.subscribers.captain_authed} ${captain}-authed`}
               tone={health.subscribers.devices === 0 ? "warn" : "ok"}
             />
             <Stat
@@ -198,7 +202,7 @@ export function LeagueHealthDashboard({ leagueId, user, onReviewForms }: Props) 
               value={`${health.players.with_email} / ${health.players.active}`}
               hint={
                 health.players.with_email === 0
-                  ? "No emails — captains/players can't sign in via magic link until added."
+                  ? `No emails — ${captain}s/players can't sign in via magic link until added.`
                   : null
               }
             />
@@ -234,7 +238,7 @@ export function LeagueHealthDashboard({ leagueId, user, onReviewForms }: Props) 
               health.players.active === 0
             ) {
               flags.push(
-                "Teams exist but no players. Run roster CSV import or have captains add players.",
+                `Teams exist but no players. Run roster CSV import or have ${captain}s add players.`,
               );
             }
             if (
@@ -242,7 +246,7 @@ export function LeagueHealthDashboard({ leagueId, user, onReviewForms }: Props) 
               health.players.with_email === 0
             ) {
               flags.push(
-                "No players have emails. Captains can't sign in via magic link until you add them.",
+                `No players have emails. ${captain}s can't sign in via magic link until you add them.`,
               );
             }
             if (
@@ -250,7 +254,7 @@ export function LeagueHealthDashboard({ leagueId, user, onReviewForms }: Props) 
               health.players.with_email > 0
             ) {
               flags.push(
-                "No players have signed in yet. Send the captain welcome email (see docs/onboarding-emails.md).",
+                `No players have signed in yet. Send the ${captain} welcome email (see docs/onboarding-emails.md).`,
               );
             }
             if (

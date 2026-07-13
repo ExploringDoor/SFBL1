@@ -130,6 +130,11 @@ export interface LeagueConfig {
   // commissioner. SFBL keeps the magic-link gate.
   captain?: {
     passwordless?: boolean;
+    /** Noun for the team-manager role in the UI. Defaults to "Captain".
+     *  SFBL uses "Manager". Purely a DISPLAY label — the /captain route,
+     *  the `captain:<team>` custom claim, and all identifiers are
+     *  unchanged (Nelson, 2026-07). */
+    label?: string;
   };
   // Admin UX. `passwordless: true` + a `password` enables a single-
   // field "admin sign-in" on /admin: the user types the shared

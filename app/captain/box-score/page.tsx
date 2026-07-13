@@ -35,6 +35,7 @@ import {
 } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useTenant } from "@/lib/tenant-context";
+import { captainNoun } from "@/lib/tenants";
 import {
   useCaptainTeam,
   useLeagueRole,
@@ -222,6 +223,7 @@ export default function BoxScoreEditorPage() {
   const params = useSearchParams();
   const gameId = params.get("game");
   const { tenantId, config } = useTenant();
+  const captain = captainNoun(config);
   const user = useUser();
   const role = useLeagueRole(tenantId);
   const { teamId, loading: teamLoading } = useCaptainTeam(tenantId);
@@ -425,7 +427,7 @@ export default function BoxScoreEditorPage() {
   if (!tenantId || !gameId)
     return (
       <main className="container py-16">
-        <p>Missing game id. Open from your captain dashboard.</p>
+        <p>Missing game id. Open from your {captain} dashboard.</p>
       </main>
     );
   if (user === undefined || role === "loading" || teamLoading)
@@ -442,7 +444,7 @@ export default function BoxScoreEditorPage() {
   if (role !== "captain" || !teamId)
     return (
       <main className="container py-16">
-        <p>Not a captain in this league.</p>
+        <p>Not a {captain} in this league.</p>
         <Link href="/captain" className="le-cap-btn-secondary">
           Back to dashboard
         </Link>

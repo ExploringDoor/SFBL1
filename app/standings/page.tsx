@@ -12,7 +12,7 @@ import {
   type GameResult,
   type StandingsRow,
 } from "@/lib/stats/shared";
-import type { PublicLeagueConfig } from "@/lib/tenants";
+import { captainNoun, type PublicLeagueConfig } from "@/lib/tenants";
 import {
   StandingsTable,
   type DivisionGroup,
@@ -39,6 +39,7 @@ export default async function StandingsPage() {
       return null;
     }
   })();
+  const captain = captainNoun(config);
 
   if (!tenantId) {
     return (
@@ -136,7 +137,7 @@ export default async function StandingsPage() {
             Standings will appear after the first game is final.
           </strong>
           <p style={{ margin: "8px 0 0", fontSize: 14 }}>
-            Captains submit final box scores after games; standings
+            {captain}s submit final box scores after games; standings
             recalculate automatically.
           </p>
         </div>
@@ -199,6 +200,9 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
   const teams: Record<string, TeamMeta> = {};
   for (const d of teamsSnap.docs) {
     const data = d.data();
+    // Skip placeholder teams like "TBD" (bracket scheduling) — never a
+    // standings team (Nelson, 2026-07).
+    if (data.placeholder === true) continue;
     teams[d.id] = {
       name: String(data.name ?? d.id),
       abbrev: data.abbrev ? String(data.abbrev) : undefined,
@@ -217,6 +221,7 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
       away_score: Number(data.away_score ?? 0),
       status: (data.status ?? "draft") as GameResult["status"],
       date: data.date ? String(data.date) : undefined,
+      is_playoff: data.is_playoff === true,
     };
   });
 
@@ -254,7 +259,8 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
     scheme: usePoints ? scheme : null,
     leagueName: config?.name ?? null,
     throughDate,
-    teamCount: teamsSnap.size,
+    teamCount: teamsSnap.docs.filter((d) => d.data().placeholder !== true)
+      .length,
     hasFinalGames: finalDates.length > 0,
   };
 }

@@ -152,6 +152,7 @@ export default async function TeamDetailPage({
       away_score: Number(data.away_score ?? 0),
       status: (data.status ?? "draft") as GameResult["status"],
       date: data.date ? String(data.date) : undefined,
+      is_playoff: data.is_playoff === true,
     };
   });
   let standings = computeStandings(games);
@@ -1130,6 +1131,8 @@ function GameLine({
     game.time ? String(game.time) : null,
     { month: "short", day: "numeric" },
   );
+  // Field/venue the game was (or will be) played at (Nelson, 2026-07).
+  const fieldName = game.field ? String(game.field).trim() : "";
 
   return (
     <li>
@@ -1169,7 +1172,39 @@ function GameLine({
             size="sm"
           />
         )}
-        <span style={{ flex: 1, fontWeight: 600 }}>{opp?.name ?? opponentId}</span>
+        <span
+          style={{
+            flex: 1,
+            minWidth: 0,
+            display: "flex",
+            flexDirection: "column",
+            gap: 1,
+          }}
+        >
+          <span
+            style={{
+              fontWeight: 600,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {opp?.name ?? opponentId}
+          </span>
+          {fieldName && (
+            <span
+              style={{
+                fontSize: 11,
+                color: "var(--muted)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              📍 {fieldName}
+            </span>
+          )}
+        </span>
         <span style={{ fontFamily: "var(--font-barlow)", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
           {isFinal ? `${myScore}–${oppScore}` : dateStr || status}
         </span>
