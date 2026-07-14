@@ -98,6 +98,9 @@ export async function GET(req: Request) {
       position: String(data.position ?? ""),
       email: String(contact.email ?? ""),
       phone: String(contact.phone ?? ""),
+      // DOB for the admin roster's age-eligibility check (Nelson, 2026-07).
+      // Same private-contact source as email/phone; admin-gated route.
+      dob: String(contact.dob ?? ""),
     };
   });
 

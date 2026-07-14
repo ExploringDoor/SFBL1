@@ -14,6 +14,7 @@ import type { User } from "firebase/auth";
 import { collection, getDocs, query, where, limit } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { ManagerContact } from "@/components/ManagerContact";
+import { ageFromDob, divisionMinAge } from "@/lib/age";
 import { useTenant } from "@/lib/tenant-context";
 import { captainNoun } from "@/lib/tenants";
 
@@ -42,6 +43,7 @@ interface PlayerRow {
   position: string;
   email: string;
   phone: string;
+  dob: string;
 }
 
 interface Props {
@@ -1089,6 +1091,7 @@ function TeamRowItem({
                 <RosterRow
                   key={p.id}
                   player={p}
+                  minAge={divisionMinAge(t.division)}
                   busy={busy}
                   onUpdate={(patch) => onUpdatePlayer(p.id, patch)}
                   onRemove={() => onRemovePlayer(p.id, p.name)}
@@ -1137,13 +1140,24 @@ function TeamRowItem({
   );
 }
 
+// "1985-03-15" → "3/15/1985". Returns the input unchanged if it isn't a
+// YYYY-MM-DD date (no Date parsing, so no timezone drift).
+function fmtDobShort(s: string): string {
+  const ymd = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+  if (!ymd) return s;
+  return `${Number(ymd[2])}/${Number(ymd[3])}/${ymd[1]}`;
+}
+
 function RosterRow({
   player,
+  minAge,
   busy,
   onUpdate,
   onRemove,
 }: {
   player: PlayerRow;
+  /** Minimum age this team's division requires, or null if none. */
+  minAge: number | null;
   busy: boolean;
   onUpdate: (patch: AddPlayerFields) => Promise<boolean>;
   onRemove: () => Promise<void>;
@@ -1169,6 +1183,9 @@ function RosterRow({
     if (ok) setEditing(false);
   }
 
+  const age = ageFromDob(player.dob);
+  const underage = minAge != null && age != null && age < minAge;
+
   if (!editing) {
     return (
       <li className="px-3 py-2 flex items-center gap-3 text-xs">
@@ -1183,12 +1200,36 @@ function RosterRow({
                 {player.position}
               </span>
             )}
+            {/* Age-eligibility flag: player is younger than the team's
+                division minimum (Nelson, 2026-07). */}
+            {underage && (
+              <span
+                className="ml-2 rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-700 align-middle"
+                title={`Under the ${minAge}+ division minimum (age ${age})`}
+              >
+                ⚠ UNDER {minAge}
+              </span>
+            )}
           </div>
           <div className="text-slate-500 truncate">
             {player.email || (
               <span className="italic text-slate-400">no email</span>
             )}
             {player.phone ? ` · ${player.phone}` : ""}
+          </div>
+          <div className="text-slate-500">
+            {player.dob ? (
+              <>
+                DOB {fmtDobShort(player.dob)}
+                {age != null && (
+                  <span className={underage ? "text-red-600 font-semibold" : ""}>
+                    {" · "}age {age}
+                  </span>
+                )}
+              </>
+            ) : (
+              <span className="italic text-slate-400">no DOB on file</span>
+            )}
           </div>
         </div>
         <button
