@@ -174,6 +174,7 @@ export default async function HomePage() {
                       date={g.date}
                       away={teamCardData(g.away_team_id, teams, g.away_score)}
                       home={teamCardData(g.home_team_id, teams, g.home_score)}
+                      isPlayoff={g.is_playoff}
                     />
                   ))}
                 </div>
@@ -197,6 +198,7 @@ export default async function HomePage() {
                       away={previewTeamData(g.away_team_id, teams)}
                       home={previewTeamData(g.home_team_id, teams)}
                       isNext={i === 0}
+                      isPlayoff={g.is_playoff}
                     />
                   ))}
                 </div>
