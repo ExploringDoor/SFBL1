@@ -1,7 +1,8 @@
-// Public playoff bracket page. Renders the classic tournament tree the
-// admin builds at /admin → Playoffs. Auto-hides when bracket.active is
-// false (regular season — nothing to show). Game date/field/time come
-// from the linked scheduled game (match.game_id), and each matchup
+// Public playoff bracket page. Renders the Small Town Selects / PA D27
+// style bracket (absolute cards + SVG connectors) the admin builds at
+// /admin → Playoffs. Auto-hides when bracket.active is false (regular
+// season — nothing to show). Game date/field/time + team logos come from
+// the linked scheduled game (match.game_id) / team docs, and each matchup
 // links to that game's preview/recap page.
 
 import type { Metadata } from "next";
@@ -38,7 +39,7 @@ function gameMeta(
 ): BracketGameInfo {
   const dateLabel = formatGameDate(date || null, time || null, {
     weekday: "short",
-    month: "numeric",
+    month: "short",
     day: "numeric",
   });
   let timeLabel = "";
@@ -96,8 +97,11 @@ export default async function PlayoffsPage() {
   }
 
   const teamName: Record<string, string> = {};
+  const teamLogo: Record<string, string | null> = {};
   for (const d of teamsSnap.docs) {
-    teamName[d.id] = String(d.data().name ?? d.id);
+    const data = d.data();
+    teamName[d.id] = String(data.name ?? d.id);
+    teamLogo[d.id] = data.logo_url ? String(data.logo_url) : null;
   }
 
   const gameInfo: Record<string, BracketGameInfo> = {};
@@ -122,6 +126,7 @@ export default async function PlayoffsPage() {
         <PlayoffsBracket
           divisions={bracket.divisions}
           teamName={teamName}
+          teamLogo={teamLogo}
           gameInfo={gameInfo}
         />
       )}

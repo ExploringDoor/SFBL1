@@ -1,11 +1,11 @@
 "use client";
 
-// Classic single-elimination tournament BRACKET (PA D27 style, Nelson
-// request 2026-07): round columns left→right, elbow connectors between
-// them, a matchup card per game (seed · team · score, winner
-// highlighted) with the game's date/field/time in the header, and a
-// CHAMPION card at the end. Division tabs switch between brackets;
-// the whole tree scrolls horizontally on phones.
+// Playoff bracket — faithful port of the Small Town Selects / PA D27
+// engine (Nelson, 2026-07): absolute-positioned cards + SVG connector
+// lines that read like a printed bracket, rich cards (Game N + Winners
+// badge, logo · seed · team · "via Gn" · score, winner in green, footer
+// with date · time · field + Recap/Preview cue), and a gold champion
+// banner. Single-elimination per division; each card links to its game.
 
 import { Fragment, useState } from "react";
 import Link from "next/link";
@@ -31,44 +31,150 @@ export interface BracketDivision {
   rounds: BracketRound[];
 }
 export interface BracketGameInfo {
-  dateLabel: string; // "Sun 7/19"
+  dateLabel: string; // "Sat, Jul 19"
   timeLabel: string; // "9:30 AM"
   field: string | null;
+}
+
+const CARD_W = 210;
+const CARD_H = 132;
+const COL_GAP = 76;
+const ROW_GAP = 26;
+const Y_PAD = 8;
+const SLOT = CARD_H + ROW_GAP;
+
+interface Placed {
+  match: BracketMatch;
+  gameNo: number;
+  round: number;
+  x: number;
+  y: number;
+  isFinal: boolean;
+}
+
+// Lay out one division's rounds as a single-elim tree: round 0 leaves
+// evenly spaced, later-round games centered between their two feeders.
+function layout(rounds: BracketRound[]): {
+  placed: Placed[];
+  paths: string[];
+  width: number;
+  height: number;
+} {
+  const gameNo = new Map<string, number>();
+  let n = 1;
+  rounds.forEach((r) => r.matches.forEach((m) => gameNo.set(m.id, n++)));
+
+  const y = new Map<string, number>();
+  const lastRound = rounds.length - 1;
+
+  rounds.forEach((round, ri) => {
+    round.matches.forEach((m, j) => {
+      if (ri === 0) {
+        y.set(m.id, Y_PAD + j * SLOT);
+        return;
+      }
+      const prev = rounds[ri - 1]?.matches ?? [];
+      const f1 = prev[2 * j];
+      const f2 = prev[2 * j + 1];
+      const y1 = f1 ? y.get(f1.id) : undefined;
+      const y2 = f2 ? y.get(f2.id) : undefined;
+      let yy: number;
+      if (y1 != null && y2 != null) yy = (y1 + y2) / 2;
+      else if (y1 != null) yy = y1;
+      else yy = Y_PAD + j * SLOT;
+      y.set(m.id, yy);
+    });
+    // de-overlap within the column
+    const ys = round.matches
+      .map((m) => ({ id: m.id, v: y.get(m.id) ?? 0 }))
+      .sort((a, b) => a.v - b.v);
+    for (let i = 1; i < ys.length; i++) {
+      const prevItem = ys[i - 1]!;
+      const cur = ys[i]!;
+      const min = prevItem.v + SLOT;
+      if (cur.v < min) {
+        cur.v = min;
+        y.set(cur.id, min);
+      }
+    }
+  });
+
+  const placed: Placed[] = [];
+  rounds.forEach((round, ri) => {
+    round.matches.forEach((m) => {
+      placed.push({
+        match: m,
+        gameNo: gameNo.get(m.id) ?? 0,
+        round: ri,
+        x: ri * (CARD_W + COL_GAP),
+        y: y.get(m.id) ?? Y_PAD,
+        isFinal: ri === lastRound && rounds.length > 1,
+      });
+    });
+  });
+
+  // SVG connector paths: feeder right-mid → consumer left-mid (elbow).
+  const paths: string[] = [];
+  const byId = new Map(placed.map((p) => [p.match.id, p]));
+  rounds.forEach((round, ri) => {
+    if (ri === 0) return;
+    const prev = rounds[ri - 1]?.matches ?? [];
+    round.matches.forEach((m, j) => {
+      const cons = byId.get(m.id);
+      if (!cons) return;
+      [prev[2 * j], prev[2 * j + 1]].forEach((f) => {
+        if (!f) return;
+        const fp = byId.get(f.id);
+        if (!fp) return;
+        const x1 = fp.x + CARD_W;
+        const y1 = fp.y + CARD_H / 2;
+        const x2 = cons.x;
+        const y2 = cons.y + CARD_H / 2;
+        const mx = x1 + (x2 - x1) / 2;
+        paths.push(`M${x1},${y1} H${mx} V${y2} H${x2}`);
+      });
+    });
+  });
+
+  const width = Math.max(...placed.map((p) => p.x + CARD_W), CARD_W);
+  const height = Math.max(...placed.map((p) => p.y + CARD_H), CARD_H) + Y_PAD;
+  return { placed, paths, width, height };
 }
 
 export function PlayoffsBracket({
   divisions,
   teamName,
+  teamLogo,
   gameInfo,
 }: {
   divisions: BracketDivision[];
   teamName: Record<string, string>;
+  teamLogo: Record<string, string | null>;
   gameInfo: Record<string, BracketGameInfo>;
 }) {
   const [active, setActive] = useState(0);
   const div = divisions[Math.min(active, divisions.length - 1)];
   if (!div) return null;
 
-  // Champion = winner of the final round's last decided match.
-  const lastRound = div.rounds[div.rounds.length - 1];
-  const finalMatch = lastRound?.matches[lastRound.matches.length - 1] ?? null;
-  const championId =
-    finalMatch && finalMatch.status === "final"
-      ? finalMatch.winner_team_id
-      : null;
+  const { placed, paths, width, height } = layout(div.rounds);
 
-  const label = (id: string | null) => (id ? teamName[id] ?? id : "TBD");
+  // Champion = winner of the final game (last round's single decided match).
+  const lastRound = div.rounds[div.rounds.length - 1];
+  const finalMatch =
+    div.rounds.length > 1 ? lastRound?.matches[lastRound.matches.length - 1] : null;
+  const championId =
+    finalMatch && finalMatch.status === "final" ? finalMatch.winner_team_id : null;
 
   return (
     <>
       {divisions.length > 1 && (
-        <div className="bkt-tabs" role="tablist">
+        <div className="bk-tabs" role="tablist">
           {divisions.map((d, i) => (
             <button
               key={i}
               role="tab"
               aria-selected={i === active}
-              className={"bkt-tab" + (i === active ? " active" : "")}
+              className={"bk-tab" + (i === active ? " active" : "")}
               onClick={() => setActive(i)}
             >
               {d.label || `Division ${i + 1}`}
@@ -77,61 +183,50 @@ export function PlayoffsBracket({
         </div>
       )}
 
-      <div className="bkt-scroll">
-        <div className="bkt-wrap">
-          {div.rounds.map((round, ri) => (
-            <Fragment key={ri}>
-              <div className="bkt-col">
-                <div className="bkt-col-label">
-                  {round.label || `Round ${ri + 1}`}
-                </div>
-                <div className="bkt-col-body">
-                  {round.matches.map((m) => (
-                    <MatchCard
-                      key={m.id}
-                      match={m}
-                      label={label}
-                      info={m.game_id ? gameInfo[m.game_id] : undefined}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {ri < div.rounds.length - 1 && (
-                <div className="bkt-conn" aria-hidden>
-                  <div className="bkt-conn-body">
-                    {(div.rounds[ri + 1]?.matches ?? []).map((_, i) => (
-                      <div key={i} className="bkt-elbow">
-                        <span className="bkt-elbow-top" />
-                        <span className="bkt-elbow-bot" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </Fragment>
-          ))}
-
-          {championId && (
-            <>
-              <div className="bkt-conn bkt-conn-champ" aria-hidden>
-                <div className="bkt-conn-body">
-                  <div className="bkt-elbow bkt-elbow-flat">
-                    <span className="bkt-elbow-mid" />
-                  </div>
-                </div>
-              </div>
-              <div className="bkt-col bkt-col-champ">
-                <div className="bkt-col-label">Champion</div>
-                <div className="bkt-col-body">
-                  <div className="bkt-champ">
-                    <span className="bkt-champ-trophy">🏆</span>
-                    <span className="bkt-champ-name">{label(championId)}</span>
-                  </div>
-                </div>
-              </div>
-            </>
+      {championId && (
+        <div className="bk-champion">
+          <span className="trophy" aria-hidden>
+            🏆
+          </span>
+          <div className="ct">
+            <div className="lbl">★ Champion ★</div>
+            <div className="team">{teamName[championId] ?? championId}</div>
+          </div>
+          {teamLogo[championId] && (
+            <img
+              className="bk-champ-logo"
+              src={teamLogo[championId] ?? ""}
+              alt=""
+            />
           )}
+        </div>
+      )}
+
+      <div className="bk-scroll">
+        <div
+          className="bk-canvas"
+          style={{ width: `${width}px`, height: `${height}px` }}
+        >
+          <svg width={width} height={height}>
+            {paths.map((d, i) => (
+              <path
+                key={i}
+                d={d}
+                fill="none"
+                stroke="rgba(20,20,30,.4)"
+                strokeWidth={2}
+              />
+            ))}
+          </svg>
+          {placed.map((p) => (
+            <MatchCard
+              key={p.match.id}
+              placed={p}
+              teamName={teamName}
+              teamLogo={teamLogo}
+              info={p.match.game_id ? gameInfo[p.match.game_id] : undefined}
+            />
+          ))}
         </div>
       </div>
     </>
@@ -139,84 +234,116 @@ export function PlayoffsBracket({
 }
 
 function MatchCard({
-  match,
-  label,
+  placed,
+  teamName,
+  teamLogo,
   info,
 }: {
-  match: BracketMatch;
-  label: (id: string | null) => string;
+  placed: Placed;
+  teamName: Record<string, string>;
+  teamLogo: Record<string, string | null>;
   info: BracketGameInfo | undefined;
 }) {
-  const isFinal = match.status === "final";
-  const isLive = match.status === "live";
-  const tbd = !match.away_team_id && !match.home_team_id;
-  const awayWon = match.winner_team_id === match.away_team_id && !!match.winner_team_id;
-  const homeWon = match.winner_team_id === match.home_team_id && !!match.winner_team_id;
-  const showScore = isFinal || isLive || match.away_score != null || match.home_score != null;
+  const { match: m, gameNo, isFinal, x, y } = placed;
+  const played = m.status === "final";
+  const aWin = played && m.winner_team_id === m.away_team_id && !!m.winner_team_id;
+  const hWin = played && m.winner_team_id === m.home_team_id && !!m.winner_team_id;
+  const showScore = played || m.status === "live";
 
-  // Header: FINAL / LIVE / date · time · field (preview).
-  const meta =
-    info &&
-    [info.dateLabel, info.timeLabel, info.field].filter(Boolean).join(" · ");
+  const when = played
+    ? "Final" + (info?.dateLabel ? " · " + info.dateLabel : "")
+    : [info?.dateLabel, info?.timeLabel].filter(Boolean).join(" · ") || "TBD";
+  const field = info?.field ?? null;
 
-  const inner = (
-    <article className={"bkt-match" + (tbd ? " tbd" : "") + (isLive ? " live" : "")}>
-      <div className="bkt-match-hdr">
-        <span className="bkt-match-badge">
-          {isFinal ? "FINAL" : isLive ? "● LIVE" : "GAME"}
+  const card = (
+    <div className={"bk-match acc-" + (isFinal ? "f" : "w")}>
+      <div className="bk-mtop">
+        <span className="g">Game {gameNo}</span>
+        <span className={"tag " + (isFinal ? "f" : "w")}>
+          {isFinal ? "🏆 Final" : "Winners"}
         </span>
-        {meta && <span className="bkt-match-meta">{meta}</span>}
       </div>
-      <TeamRow
-        seed={match.away_seed}
-        name={label(match.away_team_id)}
-        score={match.away_score}
-        won={awayWon}
-        lost={isFinal && !awayWon && !!match.winner_team_id}
+      <Side
+        teamId={m.away_team_id}
+        seed={m.away_seed}
+        score={m.away_score}
+        won={aWin}
         showScore={showScore}
+        teamName={teamName}
+        teamLogo={teamLogo}
       />
-      <TeamRow
-        seed={match.home_seed}
-        name={label(match.home_team_id)}
-        score={match.home_score}
-        won={homeWon}
-        lost={isFinal && !homeWon && !!match.winner_team_id}
+      <Side
+        teamId={m.home_team_id}
+        seed={m.home_seed}
+        score={m.home_score}
+        won={hWin}
         showScore={showScore}
+        teamName={teamName}
+        teamLogo={teamLogo}
       />
-    </article>
+      <div className="bk-mfoot">
+        <div className="bk-when">
+          {played ? (
+            <>
+              <span className="fin">Final</span>
+              {info?.dateLabel ? " · " + info.dateLabel : ""}
+            </>
+          ) : (
+            when
+          )}
+        </div>
+        <div className="bk-frow">
+          <span className="bk-field">{field ? "📍 " + field : ""}</span>
+          <span className="bk-cue">{played ? "Recap ›" : "Preview ›"}</span>
+        </div>
+      </div>
+    </div>
   );
 
-  return match.game_id ? (
-    <Link href={`/games/${match.game_id}`} className="bkt-match-link">
-      {inner}
+  const style = { left: `${x}px`, top: `${y}px` } as const;
+  return m.game_id ? (
+    <Link href={`/games/${m.game_id}`} className="bk-match-pos" style={style}>
+      {card}
     </Link>
   ) : (
-    inner
+    <div className="bk-match-pos" style={style}>
+      {card}
+    </div>
   );
 }
 
-function TeamRow({
+function Side({
+  teamId,
   seed,
-  name,
   score,
   won,
-  lost,
   showScore,
+  teamName,
+  teamLogo,
 }: {
+  teamId: string | null;
   seed: number | null;
-  name: string;
   score: number | null;
   won: boolean;
-  lost: boolean;
   showScore: boolean;
+  teamName: Record<string, string>;
+  teamLogo: Record<string, string | null>;
 }) {
+  const tbd = !teamId;
+  const name = teamId ? teamName[teamId] ?? teamId : "TBD";
+  const logo = teamId ? teamLogo[teamId] : null;
   return (
-    <div className={"bkt-team" + (won ? " won" : "") + (lost ? " lost" : "")}>
-      <span className="bkt-seed">{seed ? seed : ""}</span>
-      <span className="bkt-team-name">{name}</span>
-      {showScore && (
-        <span className="bkt-score">{score != null ? score : "—"}</span>
+    <div className={"bk-side" + (won ? " win" : "") + (tbd ? " tbd" : "")}>
+      {logo ? (
+        <img className="bk-logo" src={logo} alt="" />
+      ) : (
+        <span className="bk-logo bk-logo-blank" aria-hidden />
       )}
+      <span className="nm">
+        {seed ? <span className="bk-seed">{seed}</span> : null}
+        {name}
+      </span>
+      <span className="sc">{showScore && score != null ? score : ""}</span>
     </div>
   );
 }
