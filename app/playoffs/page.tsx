@@ -1,11 +1,19 @@
-// Public playoff bracket page. Renders the bracket admin defined
-// at /admin → Playoffs. Auto-hides when bracket.active is false
-// (e.g. regular season — no playoff data to show).
+// Public playoff bracket page. Renders the classic tournament tree the
+// admin builds at /admin → Playoffs. Auto-hides when bracket.active is
+// false (regular season — nothing to show). Game date/field/time come
+// from the linked scheduled game (match.game_id), and each matchup
+// links to that game's preview/recap page.
 
 import type { Metadata } from "next";
-import Link from "next/link";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { loadGamesAndTeamsSnaps } from "@/lib/league-cache";
+import { formatGameDate, formatTime12 } from "@/lib/format-time";
+import {
+  PlayoffsBracket,
+  type BracketDivision,
+  type BracketGameInfo,
+} from "@/components/ui/PlayoffsBracket";
 import "./playoffs.css";
 
 export const dynamic = "force-dynamic";
@@ -15,33 +23,38 @@ export const metadata: Metadata = {
   description: "Playoff bracket and results.",
 };
 
-interface Match {
-  id: string;
-  away_team_id: string | null;
-  away_seed: number | null;
-  home_team_id: string | null;
-  home_seed: number | null;
-  game_id: string | null;
-  away_score: number | null;
-  home_score: number | null;
-  winner_team_id: string | null;
-  status: "scheduled" | "live" | "final";
-}
-
-interface Round {
-  label: string;
-  matches: Match[];
-}
-
-interface Division {
-  label: string;
-  rounds: Round[];
-}
-
 interface Bracket {
   active: boolean;
   title: string;
-  divisions: Division[];
+  divisions: BracketDivision[];
+}
+
+// "Sun 7/19" + "9:30 AM" for a game's date/time (handles both the
+// separate-time shape and combined-ISO UTC, rendered in league time).
+function gameMeta(
+  date: string,
+  time: string,
+  field: string | null,
+): BracketGameInfo {
+  const dateLabel = formatGameDate(date || null, time || null, {
+    weekday: "short",
+    month: "numeric",
+    day: "numeric",
+  });
+  let timeLabel = "";
+  if (time && /^\d{1,2}:\d{2}/.test(time)) {
+    timeLabel = formatTime12(time);
+  } else if (/T\d{2}:\d{2}/.test(date)) {
+    const d = new Date(date);
+    if (!Number.isNaN(d.getTime())) {
+      timeLabel = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York",
+        hour: "numeric",
+        minute: "2-digit",
+      }).format(d);
+    }
+  }
+  return { dateLabel, timeLabel, field: field || null };
 }
 
 export default async function PlayoffsPage() {
@@ -55,18 +68,17 @@ export default async function PlayoffsPage() {
   }
 
   const db = getAdminDb();
-  const [bracketSnap, teamSnap] = await Promise.all([
+  const [bracketSnap, { gamesSnap, teamsSnap }] = await Promise.all([
     db.doc(`leagues/${tenantId}/site_config/playoffs`).get(),
-    db.collection(`leagues/${tenantId}/teams`).get(),
+    loadGamesAndTeamsSnaps(db, tenantId),
   ]);
 
   const bracket: Bracket | null = bracketSnap.exists
-    ? ((bracketSnap.data() as Partial<Bracket>) ?? null) &&
-      ({
+    ? {
         active: bracketSnap.data()?.active === true,
         title: String(bracketSnap.data()?.title ?? "Playoffs"),
-        divisions: (bracketSnap.data()?.divisions ?? []) as Division[],
-      } as Bracket)
+        divisions: (bracketSnap.data()?.divisions ?? []) as BracketDivision[],
+      }
     : null;
 
   if (!bracket || !bracket.active) {
@@ -74,20 +86,29 @@ export default async function PlayoffsPage() {
       <main className="po-shell">
         <header className="po-header">
           <h1 className="po-title">Playoffs</h1>
-          <p className="po-empty">
-            Playoff bracket isn't published yet. Check back later in the
-            season.
-          </p>
         </header>
+        <p className="po-empty">
+          Playoff bracket isn&apos;t published yet. Check back later in the
+          season.
+        </p>
       </main>
     );
   }
 
-  const teamLabel = (id: string | null): string => {
-    if (!id) return "TBD";
-    const t = teamSnap.docs.find((d) => d.id === id);
-    return t ? String(t.data().name ?? id) : id;
-  };
+  const teamName: Record<string, string> = {};
+  for (const d of teamsSnap.docs) {
+    teamName[d.id] = String(d.data().name ?? d.id);
+  }
+
+  const gameInfo: Record<string, BracketGameInfo> = {};
+  for (const d of gamesSnap.docs) {
+    const data = d.data();
+    gameInfo[d.id] = gameMeta(
+      data.date ? String(data.date) : "",
+      data.time ? String(data.time) : "",
+      data.field ? String(data.field) : null,
+    );
+  }
 
   return (
     <main className="po-shell">
@@ -96,84 +117,14 @@ export default async function PlayoffsPage() {
       </header>
 
       {bracket.divisions.length === 0 ? (
-        <p className="po-empty">No divisions configured.</p>
+        <p className="po-empty">No divisions configured yet.</p>
       ) : (
-        bracket.divisions.map((div, di) => (
-          <section key={di} className="po-division">
-            <h2 className="po-div-label">{div.label || `Division ${di + 1}`}</h2>
-            <div className="po-rounds">
-              {div.rounds.map((round, ri) => (
-                <div key={ri} className="po-round">
-                  <h3 className="po-round-label">{round.label}</h3>
-                  <div className="po-matches">
-                    {round.matches.map((m) => (
-                      <MatchCard
-                        key={m.id}
-                        match={m}
-                        teamLabel={teamLabel}
-                      />
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        ))
+        <PlayoffsBracket
+          divisions={bracket.divisions}
+          teamName={teamName}
+          gameInfo={gameInfo}
+        />
       )}
     </main>
-  );
-}
-
-function MatchCard({
-  match,
-  teamLabel,
-}: {
-  match: Match;
-  teamLabel: (id: string | null) => string;
-}) {
-  const isLive = match.status === "live";
-  const isFinal = match.status === "final";
-  const awayName = teamLabel(match.away_team_id);
-  const homeName = teamLabel(match.home_team_id);
-  const awayWon =
-    match.winner_team_id != null &&
-    match.winner_team_id === match.away_team_id;
-  const homeWon =
-    match.winner_team_id != null &&
-    match.winner_team_id === match.home_team_id;
-
-  const inner = (
-    <article className={`po-match ${isLive ? "po-match-live" : ""} ${isFinal ? "po-match-final" : ""}`}>
-      {isLive && (
-        <span className="po-match-status po-match-status-live">
-          <span className="po-match-dot" />
-          LIVE
-        </span>
-      )}
-      {isFinal && <span className="po-match-status po-match-status-final">FINAL</span>}
-
-      <div className={"po-team " + (awayWon ? "po-team-win" : isFinal ? "po-team-loss" : "")}>
-        <span className="po-seed">{match.away_seed ? `#${match.away_seed}` : ""}</span>
-        <span className="po-team-name">{awayName}</span>
-        {(match.away_score != null || isFinal || isLive) && (
-          <span className="po-score">{match.away_score ?? "—"}</span>
-        )}
-      </div>
-      <div className={"po-team " + (homeWon ? "po-team-win" : isFinal ? "po-team-loss" : "")}>
-        <span className="po-seed">{match.home_seed ? `#${match.home_seed}` : ""}</span>
-        <span className="po-team-name">{homeName}</span>
-        {(match.home_score != null || isFinal || isLive) && (
-          <span className="po-score">{match.home_score ?? "—"}</span>
-        )}
-      </div>
-    </article>
-  );
-
-  return match.game_id ? (
-    <Link href={`/games/${match.game_id}`} className="po-match-link">
-      {inner}
-    </Link>
-  ) : (
-    inner
   );
 }

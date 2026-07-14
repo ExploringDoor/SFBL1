@@ -1,4 +1,5 @@
-/* Playoff bracket page — visual single-elimination tournament. */
+/* Playoff bracket page — classic single-elimination tournament tree
+   (PA D27 style): round columns, elbow connectors, champion card. */
 
 .po-shell {
   max-width: 1400px;
@@ -7,18 +8,18 @@
 }
 
 .po-header {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   padding-bottom: 16px;
-  border-bottom: 2px solid #0f172a;
+  border-bottom: 2px solid var(--brand-primary, #002d72);
 }
 
 .po-title {
   font-family: var(--font-barlow, "Barlow Condensed"), sans-serif;
-  font-size: clamp(32px, 5vw, 48px);
+  font-size: clamp(32px, 5vw, 52px);
   font-weight: 900;
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  color: var(--brand-primary, #0f172a);
+  color: var(--brand-primary, #002d72);
   margin: 0;
 }
 
@@ -30,192 +31,284 @@
   text-align: center;
 }
 
-.po-division {
-  margin-bottom: 48px;
-}
-
-.po-div-label {
-  font-family: var(--font-barlow, "Barlow Condensed"), sans-serif;
-  font-size: 22px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  color: #475569;
-  margin: 0 0 16px;
-}
-
-/* Rounds laid out left-to-right horizontally, scrollable on phone. */
-.po-rounds {
+/* ── DIVISION TABS ── */
+.bkt-tabs {
   display: flex;
-  gap: 24px;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 28px;
+}
+.bkt-tab {
+  appearance: none;
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.12));
+  background: var(--card, #fff);
+  color: var(--muted, #64748b);
+  font-family: var(--font-barlow, "Barlow Condensed"), sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 9px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.bkt-tab:hover {
+  border-color: var(--brand-primary, #002d72);
+  color: var(--brand-primary, #002d72);
+}
+.bkt-tab.active {
+  background: var(--brand-primary, #002d72);
+  border-color: var(--brand-primary, #002d72);
+  color: #fff;
+}
+
+/* ── BRACKET CANVAS (horizontal scroll on phone) ── */
+.bkt-scroll {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 8px;
+  overscroll-behavior-x: contain;
+  padding-bottom: 12px;
+  scrollbar-width: thin;
+}
+.bkt-scroll::-webkit-scrollbar {
+  height: 5px;
+}
+.bkt-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 45, 114, 0.3);
+  border-radius: 3px;
+}
+.bkt-wrap {
+  display: flex;
+  align-items: stretch;
+  min-width: min-content;
+  padding: 8px 0;
 }
 
-.po-round {
-  flex: 0 0 auto;
-  min-width: 240px;
-}
-
-.po-round-label {
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: #94a3b8;
-  margin: 0 0 12px;
-  padding: 8px 12px;
-  background: #f1f5f9;
-  border-radius: 6px;
-  text-align: center;
-}
-
-.po-matches {
+/* ── ROUND COLUMN ── */
+.bkt-col {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  min-width: 210px;
+  flex-shrink: 0;
+}
+.bkt-col-label {
+  font-family: var(--font-barlow, "Barlow Condensed"), sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted, #94a3b8);
+  text-align: center;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  background: rgba(0, 45, 114, 0.05);
+  border-radius: 6px;
+}
+.bkt-col-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   justify-content: space-around;
-  /* Adds vertical breathing room so rounds visually align — round 2
-   * matches sit between round 1 matches. Approximates a real bracket
-   * layout without complex SVG. */
-  height: 100%;
-  min-height: 200px;
+  gap: 16px;
+  min-height: 160px;
 }
 
-.po-match-link {
+/* ── MATCHUP CARD ── */
+.bkt-match-link {
   text-decoration: none;
   color: inherit;
   display: block;
-  transition: transform 0.1s;
+  transition: transform 0.1s ease;
 }
-
-.po-match-link:hover {
+.bkt-match-link:hover {
   transform: translateY(-1px);
 }
-
-.po-match {
-  background: white;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  padding: 12px 14px;
-  position: relative;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+.bkt-match {
+  margin: 0 10px;
+  border: 1px solid var(--border, #cbd5e1);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--card, #fff);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
 }
-
-.po-match-live {
-  border-color: #ef4444;
-  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+.bkt-match.tbd {
+  opacity: 0.55;
+  border-style: dashed;
 }
-
-.po-match-final {
-  border-color: #10b981;
+.bkt-match.live {
+  border-color: #e03c31;
+  box-shadow: 0 0 0 3px rgba(224, 60, 49, 0.12);
 }
-
-.po-match-status {
-  position: absolute;
-  top: -8px;
-  left: 12px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-}
-
-.po-match-status-live {
-  background: #ef4444;
-  color: white;
-}
-
-.po-match-status-final {
-  background: #10b981;
-  color: white;
-}
-
-.po-match-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: white;
-  animation: poDot 1.6s ease-in-out infinite;
-}
-
-@keyframes poDot {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.4;
-  }
-}
-
-.po-team {
+.bkt-match-hdr {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 0;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  justify-content: space-between;
+  gap: 6px;
+  padding: 5px 10px 4px;
+  border-bottom: 1px solid var(--border, rgba(0, 0, 0, 0.06));
+  background: rgba(0, 0, 0, 0.015);
 }
-
-.po-team:last-child {
-  border-bottom: none;
-}
-
-.po-team-win {
+.bkt-match-badge {
+  font-family: var(--font-barlow, "Barlow Condensed"), sans-serif;
+  font-size: 9px;
   font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted, #94a3b8);
 }
-
-.po-team-loss {
-  color: #94a3b8;
+.bkt-match.live .bkt-match-badge {
+  color: #e03c31;
 }
-
-.po-seed {
-  font-size: 10px;
-  font-weight: 700;
-  color: #94a3b8;
-  width: 22px;
-  flex-shrink: 0;
-}
-
-.po-team-name {
-  flex: 1;
-  font-size: 14px;
-  color: inherit;
-  min-width: 0;
+.bkt-match-meta {
+  font-size: 9px;
+  color: var(--muted, #94a3b8);
+  text-align: right;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.po-team-win .po-team-name {
-  color: #0f172a;
+/* ── TEAM ROW ── */
+.bkt-team {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
 }
-
-.po-score {
-  font-family: "SF Mono", Menlo, monospace;
-  font-size: 18px;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
+.bkt-team:last-child {
+  border-bottom: none;
+}
+.bkt-team.won {
+  background: rgba(34, 197, 94, 0.08);
+}
+.bkt-team.lost {
+  opacity: 0.55;
+}
+.bkt-seed {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted, #94a3b8);
+  min-width: 14px;
+  text-align: center;
   flex-shrink: 0;
 }
-
-.po-team-win .po-score {
+.bkt-team-name {
+  flex: 1;
+  font-family: var(--font-barlow, "Barlow Condensed"), sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-strong, #0f172a);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bkt-team.won .bkt-team-name {
+  color: #15803d;
+}
+.bkt-score {
+  font-family: var(--font-barlow, "Barlow Condensed"), sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  min-width: 20px;
+  text-align: right;
+  flex-shrink: 0;
+  color: var(--text-strong, #0f172a);
+}
+.bkt-team.won .bkt-score {
   color: #16a34a;
+}
+
+/* ── CONNECTORS ── */
+.bkt-conn {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-width: 26px;
+  flex-shrink: 0;
+}
+.bkt-conn-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  /* Align with the NEXT column's cards (skip the col-label height). */
+  margin-top: 33px;
+  min-height: 160px;
+}
+.bkt-elbow {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.bkt-elbow-top {
+  flex: 1;
+  border-right: 1.5px solid rgba(0, 45, 114, 0.22);
+  border-bottom: 1.5px solid rgba(0, 45, 114, 0.22);
+  border-radius: 0 0 6px 0;
+}
+.bkt-elbow-bot {
+  flex: 1;
+  border-right: 1.5px solid rgba(0, 45, 114, 0.22);
+  border-top: 1.5px solid rgba(0, 45, 114, 0.22);
+  border-radius: 0 6px 0 0;
+}
+/* Flat connector into the champion card. */
+.bkt-conn-champ .bkt-conn-body {
+  justify-content: center;
+}
+.bkt-elbow-flat {
+  flex: 0 0 auto;
+  justify-content: center;
+}
+.bkt-elbow-mid {
+  width: 26px;
+  height: 1.5px;
+  background: rgba(212, 175, 55, 0.6);
+}
+
+/* ── CHAMPION ── */
+.bkt-col-champ {
+  justify-content: center;
+  min-width: 200px;
+}
+.bkt-champ {
+  margin: 0 10px;
+  border-radius: 10px;
+  padding: 20px 16px;
+  text-align: center;
+  background: linear-gradient(160deg, #fffbe6 0%, #fff 70%);
+  border: 1px solid rgba(212, 175, 55, 0.55);
+  box-shadow: 0 4px 16px rgba(212, 175, 55, 0.18);
+}
+.bkt-champ-trophy {
+  display: block;
+  font-size: 40px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.bkt-champ-name {
+  font-family: var(--font-barlow, "Barlow Condensed"), sans-serif;
+  font-weight: 900;
+  font-size: 20px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--brand-primary, #002d72);
 }
 
 @media (max-width: 700px) {
   .po-shell {
     padding: 20px 14px 60px;
   }
-  .po-rounds {
-    gap: 14px;
+  .bkt-col {
+    min-width: 190px;
   }
-  .po-round {
-    min-width: 220px;
+  .bkt-col-champ {
+    min-width: 180px;
   }
 }
