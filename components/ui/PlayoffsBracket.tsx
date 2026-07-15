@@ -52,6 +52,72 @@ interface Placed {
   isFinal: boolean;
 }
 
+// The seed a match's winner carried (so it advances with its seed shown).
+function winnerSeed(m: BracketMatch | undefined): number | null {
+  if (!m || !m.winner_team_id) return null;
+  return m.winner_team_id === m.away_team_id ? m.away_seed : m.home_seed;
+}
+
+// Complete the tree so it always reads down to the championship: (1) advance
+// each decided game's winner into the next round's open slot, and (2) if the
+// admin only seeded the early rounds, synthesize the remaining rounds as
+// TBD-vs-TBD cards. Match j in round r is fed by matches 2j / 2j+1 of round
+// r-1. Slots the admin filled explicitly (e.g. a #1-seed bye) are preserved;
+// only empty (null) slots get an advancing winner. TBD everywhere undecided.
+function completeBracket(rounds: BracketRound[]): BracketRound[] {
+  // Clone matches so we never mutate the incoming props.
+  const out: BracketRound[] = rounds.map((r) => ({
+    label: r.label,
+    matches: r.matches.map((m) => ({ ...m })),
+  }));
+
+  // Advance winners into slots the admin left open in existing later rounds.
+  for (let ri = 1; ri < out.length; ri++) {
+    const prev = out[ri - 1]?.matches ?? [];
+    out[ri]?.matches.forEach((m, j) => {
+      const fA = prev[2 * j];
+      const fB = prev[2 * j + 1];
+      if (m.away_team_id == null && fA?.winner_team_id) {
+        m.away_team_id = fA.winner_team_id;
+        m.away_seed = winnerSeed(fA);
+      }
+      if (m.home_team_id == null && fB?.winner_team_id) {
+        m.home_team_id = fB.winner_team_id;
+        m.home_seed = winnerSeed(fB);
+      }
+    });
+  }
+
+  // Synthesize the rounds the admin hasn't built yet, halving until one final.
+  let guard = 0;
+  while (out.length > 0 && (out[out.length - 1]?.matches.length ?? 0) > 1) {
+    if (guard++ > 12) break; // paranoia: can't loop past a 4096-team bracket
+    const last = out[out.length - 1]!;
+    const ri = out.length;
+    const next = Math.ceil(last.matches.length / 2);
+    const matches: BracketMatch[] = [];
+    for (let j = 0; j < next; j++) {
+      const fA = last.matches[2 * j];
+      const fB = last.matches[2 * j + 1];
+      matches.push({
+        id: `synth-r${ri}-m${j}`, // deterministic → SSR/CSR hydrate identically
+        away_team_id: fA?.winner_team_id ?? null,
+        away_seed: winnerSeed(fA),
+        home_team_id: fB?.winner_team_id ?? null,
+        home_seed: winnerSeed(fB),
+        game_id: null,
+        away_score: null,
+        home_score: null,
+        winner_team_id: null,
+        status: "scheduled",
+      });
+    }
+    out.push({ label: `Round ${ri + 1}`, matches });
+  }
+
+  return out;
+}
+
 // Lay out one division's rounds as a single-elim tree: round 0 leaves
 // evenly spaced, later-round games centered between their two feeders.
 function layout(rounds: BracketRound[]): {
@@ -156,12 +222,15 @@ export function PlayoffsBracket({
   const div = divisions[Math.min(active, divisions.length - 1)];
   if (!div) return null;
 
-  const { placed, paths, width, height } = layout(div.rounds);
+  // Complete the tree (advance winners + fill missing rounds with TBD) so
+  // every division reads forward to the championship, then lay it out.
+  const rounds = completeBracket(div.rounds);
+  const { placed, paths, width, height } = layout(rounds);
 
   // Champion = winner of the final game (last round's single decided match).
-  const lastRound = div.rounds[div.rounds.length - 1];
+  const lastRound = rounds[rounds.length - 1];
   const finalMatch =
-    div.rounds.length > 1 ? lastRound?.matches[lastRound.matches.length - 1] : null;
+    rounds.length > 1 ? lastRound?.matches[lastRound.matches.length - 1] : null;
   const championId =
     finalMatch && finalMatch.status === "final" ? finalMatch.winner_team_id : null;
 
