@@ -308,6 +308,14 @@ const SFBL_TENANT_CONFIG: LeagueConfig = {
     // Display label only — /captain route + claims are unchanged.
     label: "Manager",
   },
+  // Opt-in: let managers QA every team's roster (name + DOB + age +
+  // an under-division-minimum flag — NO email/phone) to catch age
+  // funny-business. Off by default; DOB is otherwise own-team + admin
+  // only. Powers the "Roster Check" tab in /captain and gates
+  // /api/league-rosters. (Adam/Nelson, 2026-07.)
+  flags: {
+    cross_team_roster_qa: true,
+  },
   // Hide the public, no-login /availability board for SFBL (Adam,
   // 2026-06). That page lets ANYONE mark any roster player's RSVP — it
   // was built for LBDC, and SFBL doesn't want it. Hiding the

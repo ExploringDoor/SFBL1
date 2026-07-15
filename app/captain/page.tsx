@@ -38,6 +38,7 @@ import { AttendanceTab } from "@/components/captain/AttendanceTab";
 import { TeamChatTab } from "@/components/captain/TeamChatTab";
 import { CaptainsChatTab } from "@/components/captain/CaptainsChatTab";
 import { HelpTab } from "@/components/captain/HelpTab";
+import { LeagueRostersTab } from "@/components/captain/LeagueRostersTab";
 import { QuickScoreInline } from "@/components/captain/QuickScoreInline";
 import { PasswordlessCaptainPicker } from "@/components/captain/PasswordlessCaptainPicker";
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
@@ -514,6 +515,9 @@ const TABS: Tab[] = [
   { key: "team", label: "My Team" },
   { key: "attendance", label: "Attendance" },
   { key: "roster", label: "Roster" },
+  // Cross-team roster QA — shown only when the league opts in via the
+  // cross_team_roster_qa flag (filtered in CaptainTabNav).
+  { key: "rostercheck", label: "Roster Check" },
   { key: "freeagents", label: "Free Agents" },
   { key: "scores", label: "Submit Score" },
   { key: "notifications", label: "🔔 Notifications" },
@@ -557,14 +561,18 @@ function useCaptainTab(): [string, (k: string) => void] {
 
 function CaptainTabNav() {
   const [tab, go] = useCaptainTab();
-  const { tenantId } = useTenant();
+  const { tenantId, config } = useTenant();
   // SFBL hides Attendance + Notifications: teams poll on WhatsApp, and
   // push notifications aren't enabled. Other leagues keep both tabs.
   // (Adam, 2026-06.)
   const isSfbl = tenantId === "sfbl";
-  const tabs = TABS.filter((t) => !t.hidden).filter(
-    (t) => !(isSfbl && (t.key === "attendance" || t.key === "notifications")),
-  );
+  const rosterQA = config?.flags?.cross_team_roster_qa === true;
+  const tabs = TABS.filter((t) => !t.hidden)
+    .filter(
+      (t) => !(isSfbl && (t.key === "attendance" || t.key === "notifications")),
+    )
+    // "Roster Check" only when the league opted into cross-team roster QA.
+    .filter((t) => t.key !== "rostercheck" || rosterQA);
   return (
     <nav className="cap-tab-nav">
       {tabs.map((t) => (
@@ -616,9 +624,12 @@ function CaptainBody({
   nextGameRsvps: Record<string, "yes" | "maybe" | "no">;
 }) {
   const [tab] = useCaptainTab();
+  const { config } = useTenant();
 
   if (tab === "roster")
     return <RosterTab leagueId={leagueId} teamId={teamId} />;
+  if (tab === "rostercheck" && config?.flags?.cross_team_roster_qa === true)
+    return <LeagueRostersTab leagueId={leagueId} />;
   if (tab === "freeagents")
     return <FreeAgentsTab leagueId={leagueId} />;
   if (tab === "schedule")

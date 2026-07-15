@@ -573,6 +573,70 @@ body {
   color: var(--brand-primary, #002D72);
 }
 
+/* Roster Check (cross-team QA) */
+.lrq-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.lrq-search {
+  flex: 1;
+  min-width: 220px;
+}
+.lrq-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.lrq-team {
+  margin-bottom: 22px;
+}
+.lrq-team-name {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--brand-primary, #002d72);
+  margin: 0 0 8px;
+}
+.lrq-div {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+.cap-roster-tbl tbody tr.lrq-flagged td {
+  background: rgba(220, 38, 38, 0.06);
+}
+.lrq-badge {
+  display: inline-block;
+  margin-left: 8px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: #b91c1c;
+  background: rgba(220, 38, 38, 0.12);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  border-radius: 5px;
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+
 .cap-roster-claimed {
   width: 60px;
   text-align: center;
