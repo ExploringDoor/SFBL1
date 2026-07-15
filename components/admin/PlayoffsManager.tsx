@@ -398,10 +398,33 @@ export function PlayoffsManager({ leagueId, user }: Props) {
         hi--;
       }
 
-      seededDivisions.push({
-        label,
-        rounds: [{ label: "Round 1", matches }],
-      });
+      // Extend to the full single-elim tree so the whole bracket — down to
+      // the final — exists in the data. That way the admin can manage every
+      // round (link its game, set the winner) and the public page renders the
+      // same structure. Rounds past the first start as TBD-vs-TBD placeholders
+      // the winners advance into.
+      const rounds: Round[] = [{ label: "Round 1", matches }];
+      while ((rounds[rounds.length - 1]?.matches.length ?? 0) > 1) {
+        const prev = rounds[rounds.length - 1]!;
+        const next: Match[] = [];
+        for (let j = 0; j < Math.ceil(prev.matches.length / 2); j++) {
+          next.push({
+            id: `m_${Math.random().toString(36).slice(2, 8)}`,
+            away_team_id: null,
+            away_seed: null,
+            home_team_id: null,
+            home_seed: null,
+            game_id: null,
+            away_score: null,
+            home_score: null,
+            winner_team_id: null,
+            status: "scheduled" as const,
+          });
+        }
+        rounds.push({ label: `Round ${rounds.length + 1}`, matches: next });
+      }
+
+      seededDivisions.push({ label, rounds });
     }
 
     setBracket((cur) => ({ ...cur, divisions: seededDivisions }));
