@@ -114,17 +114,51 @@ export default async function PlayoffsPage() {
     );
   }
 
+  // Bracket matches store no game_id, so link each one to its scheduled
+  // playoff game by the (unordered) team pair. This makes the cards clickable
+  // through to the game preview/recap and fills in the real date/field.
+  // Keyed by the two team ids sorted; a "tbd"/empty side is a wildcard, so a
+  // half-filled matchup (winner vs a #1-seed bye) still resolves. All-TBD and
+  // ambiguous (non-unique) pairs are skipped.
+  const pairKey = (a: string | null, b: string | null) =>
+    [a || "tbd", b || "tbd"].sort().join("__");
+  const bothTbd = (a: string | null, b: string | null) =>
+    (!a || a === "tbd") && (!b || b === "tbd");
+
+  const gameIdByPair = new Map<string, string | null>(); // null = ambiguous
+  for (const d of gamesSnap.docs) {
+    const data = d.data();
+    if (data.is_playoff !== true) continue;
+    const a = data.away_team_id ? String(data.away_team_id) : null;
+    const h = data.home_team_id ? String(data.home_team_id) : null;
+    if (bothTbd(a, h)) continue; // e.g. an unseeded "TBD vs TBD" final
+    const key = pairKey(a, h);
+    gameIdByPair.set(key, gameIdByPair.has(key) ? null : d.id);
+  }
+
+  const linkedDivisions = bracket.divisions.map((div) => ({
+    ...div,
+    rounds: (div.rounds ?? []).map((r) => ({
+      ...r,
+      matches: (r.matches ?? []).map((m) => {
+        if (m.game_id || bothTbd(m.away_team_id, m.home_team_id)) return m;
+        const gid = gameIdByPair.get(pairKey(m.away_team_id, m.home_team_id));
+        return gid ? { ...m, game_id: gid } : m;
+      }),
+    })),
+  }));
+
   return (
     <main className="po-shell">
       <header className="po-header">
         <h1 className="po-title">{bracket.title}</h1>
       </header>
 
-      {bracket.divisions.length === 0 ? (
+      {linkedDivisions.length === 0 ? (
         <p className="po-empty">No divisions configured yet.</p>
       ) : (
         <PlayoffsBracket
-          divisions={bracket.divisions}
+          divisions={linkedDivisions}
           teamName={teamName}
           teamLogo={teamLogo}
           gameInfo={gameInfo}
