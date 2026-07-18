@@ -40,6 +40,7 @@ import { CaptainsChatTab } from "@/components/captain/CaptainsChatTab";
 import { HelpTab } from "@/components/captain/HelpTab";
 import { LeagueRostersTab } from "@/components/captain/LeagueRostersTab";
 import { QuickScoreInline } from "@/components/captain/QuickScoreInline";
+import { GameSummaryInline } from "@/components/captain/GameSummaryInline";
 import { PasswordlessCaptainPicker } from "@/components/captain/PasswordlessCaptainPicker";
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
 import { ManagerContact } from "@/components/ManagerContact";
@@ -1258,6 +1259,11 @@ function SubmitScoreTab({
   const { config } = useTenant();
   const captain = captainNoun(config);
   const [openId, setOpenId] = useState<string | null>(null);
+  // Separate from openId: a game whose summary editor is expanded. Lets a
+  // manager write a recap for a game they scored days ago — the post-score
+  // prompt only appears in the moment, so without this there'd be no way
+  // back in. (Adam, 2026-07.)
+  const [summaryId, setSummaryId] = useState<string | null>(null);
   return (
     <div className="cap-tab">
       <div className="cap-section-head">
@@ -1265,7 +1271,9 @@ function SubmitScoreTab({
         <p className="cap-section-sub">
           Tap <strong>Quick Score</strong> on a game for just the final, or{" "}
           <strong>Box Score</strong> for the full lineup + stats. Both {captain}s
-          can submit; the league office reconciles.
+          can submit; the league office reconciles. Once a game has a score,{" "}
+          <strong>Summary</strong> lets you write a short recap for its game
+          page.
         </p>
       </div>
       {games.length === 0 ? (
@@ -1276,8 +1284,17 @@ function SubmitScoreTab({
         <ul className="le-cap-game-list">
           {games.map((g) => {
             const open = openId === g.id;
+            const sumOpen = summaryId === g.id;
             const oppId =
               g.home_team_id === teamId ? g.away_team_id : g.home_team_id;
+            const oppName = teamNames[oppId] ?? oppId.toUpperCase();
+            // Offer the summary only once there's a result to write about.
+            // Same test CaptainGameRow uses for its W/L badge, so the button
+            // appears exactly on the rows that show a final score. (Scores
+            // themselves can't gate this — GameSnap coerces them to 0, so an
+            // unplayed game reads 0-0 rather than null.)
+            const hasResult =
+              g.status === "final" || g.status === "approved";
             return (
               <Fragment key={g.id}>
                 <CaptainGameRow
@@ -1292,6 +1309,14 @@ function SubmitScoreTab({
                     label: open ? "✕ Close" : "⚡ Quick Score",
                     onClick: () => setOpenId(open ? null : g.id),
                   }}
+                  tertiary={
+                    hasResult
+                      ? {
+                          label: sumOpen ? "✕ Close" : "📝 Summary",
+                          onClick: () => setSummaryId(sumOpen ? null : g.id),
+                        }
+                      : undefined
+                  }
                 />
                 {open && (
                   <li style={{ listStyle: "none" }}>
@@ -1299,9 +1324,30 @@ function SubmitScoreTab({
                       leagueId={leagueId}
                       teamId={teamId}
                       game={g}
-                      oppName={teamNames[oppId] ?? oppId.toUpperCase()}
+                      oppName={oppName}
                       onClose={() => setOpenId(null)}
                     />
+                  </li>
+                )}
+                {sumOpen && (
+                  <li style={{ listStyle: "none" }}>
+                    <div
+                      style={{
+                        border: "1px solid rgba(0, 45, 114, 0.2)",
+                        borderLeft: "4px solid var(--brand-primary, #002d72)",
+                        borderRadius: 10,
+                        background: "rgba(0, 45, 114, 0.03)",
+                        padding: "14px 16px",
+                        margin: "2px 0 10px",
+                      }}
+                    >
+                      <GameSummaryInline
+                        leagueId={leagueId}
+                        gameId={g.id}
+                        oppName={oppName}
+                        onClose={() => setSummaryId(null)}
+                      />
+                    </div>
                   </li>
                 )}
               </Fragment>
@@ -1319,12 +1365,16 @@ function CaptainGameRow({
   teamNames,
   primary,
   secondary,
+  tertiary,
 }: {
   game: GameSnap;
   myTeamId: string;
   teamNames?: Record<string, string>;
   primary: { label: string; href: string };
   secondary?: { label: string; href?: string; onClick?: () => void };
+  /** Optional third action — used by Submit Score to offer a game
+   *  summary on games that have already been played/scored. */
+  tertiary?: { label: string; onClick: () => void };
 }) {
   const isHome = game.home_team_id === myTeamId;
   const opponentId = isHome ? game.away_team_id : game.home_team_id;
@@ -1393,6 +1443,15 @@ function CaptainGameRow({
               {secondary.label}
             </Link>
           ))}
+        {tertiary && (
+          <button
+            type="button"
+            onClick={tertiary.onClick}
+            className="le-cap-btn-secondary"
+          >
+            {tertiary.label}
+          </button>
+        )}
       </div>
     </li>
   );
