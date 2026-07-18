@@ -43,6 +43,8 @@ export function GameSummaryInline({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [posted, setPosted] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const [removed, setRemoved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -105,6 +107,61 @@ export function GameSummaryInline({
     } finally {
       setSaving(false);
     }
+  }
+
+  async function remove() {
+    if (!user) {
+      setError("Not signed in.");
+      return;
+    }
+    if (
+      !window.confirm(
+        "Delete this game summary? The game page will go back to the automatic recap.",
+      )
+    ) {
+      return;
+    }
+    setRemoving(true);
+    setError(null);
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch("/api/game-recap", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ leagueId, gameId, clear: true }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+      };
+      if (!res.ok) {
+        setError(data.error ?? `HTTP ${res.status}`);
+        return;
+      }
+      setRemoved(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Couldn't delete the summary");
+    } finally {
+      setRemoving(false);
+    }
+  }
+
+  if (removed) {
+    return (
+      <p
+        style={{
+          margin: "12px 0 0",
+          fontSize: 13.5,
+          fontWeight: 600,
+          color: "var(--muted)",
+        }}
+      >
+        ✓ Summary deleted — the game page is back to the automatic recap.
+      </p>
+    );
   }
 
   if (posted) {
@@ -182,12 +239,28 @@ export function GameSummaryInline({
         >
           {text.length}/{SUMMARY_MAX}
         </span>
+        {/* Delete only makes sense once something is actually saved. */}
+        {hadExisting && (
+          <button
+            type="button"
+            onClick={remove}
+            disabled={removing || saving}
+            className="le-cap-btn-secondary"
+            style={{
+              marginLeft: "auto",
+              color: "#b91c1c",
+              opacity: removing || saving ? 0.6 : 1,
+            }}
+          >
+            {removing ? "Deleting…" : "Delete"}
+          </button>
+        )}
         {onClose && (
           <button
             type="button"
             onClick={onClose}
             className="le-cap-btn-secondary"
-            style={{ marginLeft: "auto" }}
+            style={{ marginLeft: hadExisting ? undefined : "auto" }}
           >
             Cancel
           </button>
@@ -195,11 +268,12 @@ export function GameSummaryInline({
         <button
           type="button"
           onClick={post}
-          disabled={saving || loading || !text.trim()}
+          disabled={saving || removing || loading || !text.trim()}
           className="le-cap-btn-primary"
           style={{
-            marginLeft: onClose ? undefined : "auto",
-            opacity: saving || loading || !text.trim() ? 0.6 : 1,
+            marginLeft: hadExisting || onClose ? undefined : "auto",
+            opacity:
+              saving || removing || loading || !text.trim() ? 0.6 : 1,
           }}
         >
           {saving
