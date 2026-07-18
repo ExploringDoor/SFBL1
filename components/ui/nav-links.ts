@@ -60,6 +60,11 @@ export const DEFAULT_LINKS: NavLink[] = [
       { label: "Tournaments", href: "/tournaments" },
       { label: "Availability", href: "/availability" },
       { label: "History", href: "/history" },
+      // The league's ORIGINAL website, recovered + preserved (stories,
+      // Players of the Week, franchise histories, championship results,
+      // season stat leaderboards). SFBL-only — it's driven by
+      // public/{tenantId}/old-site-archive.json, which only SFBL has.
+      { label: "Archive", href: "/archive" },
       { label: "Umpire Evaluation", href: "/umpire-evaluation-form" },
       { label: "Pay Online", href: "/pay-online" },
       { label: "Sponsors", href: "/content/sponsors" },
@@ -162,7 +167,12 @@ export function computeNavLinks(
         }
         return relabel(l);
       });
-  const SFBL_ONLY_LABELS = new Set(["SFBL", "Player of the Week", "Captain"]);
+  const SFBL_ONLY_LABELS = new Set([
+    "SFBL",
+    "Player of the Week",
+    "Captain",
+    "Archive",
+  ]);
   return tenantShort === "SFBL"
     ? links
     : links
