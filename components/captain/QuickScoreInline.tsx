@@ -5,6 +5,15 @@
 // 2026-06: no separate all-games view, no box-score page). Score-only
 // submission via /api/captain-submit; admin reconciles. Maps Us/Them
 // to away/home based on which side the captain's team is on.
+//
+// After the score saves, the confirmation offers an OPTIONAL game
+// summary (Nelson, 2026-07: "managers can write a little summary of the
+// game afterwards"). The recap plumbing already existed — /api/game-recap
+// accepts a recap from a captain playing in the game and the public game
+// page renders it in place of the auto-generated one — but the only entry
+// point was an "Edit recap" button buried on the game page, which no
+// manager would ever find. This surfaces it at the one moment they're
+// already thinking about the game. Skippable; never blocks the score.
 
 import { useState } from "react";
 import { useUser } from "@/lib/auth-client";
@@ -34,6 +43,15 @@ export function QuickScoreInline({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Optional post-score game summary (recap override).
+  const [summary, setSummary] = useState("");
+  const [sumSaving, setSumSaving] = useState(false);
+  const [sumSaved, setSumSaved] = useState(false);
+  const [sumError, setSumError] = useState<string | null>(null);
+
+  // /api/game-recap caps the stored markdown at 8KB; keep the box well
+  // under that so a manager never hits a server-side rejection.
+  const SUMMARY_MAX = 4000;
 
   async function submit() {
     if (!user) {
@@ -88,6 +106,50 @@ export function QuickScoreInline({
     }
   }
 
+  async function saveSummary() {
+    if (!user) {
+      setSumError("Not signed in.");
+      return;
+    }
+    const text = summary.trim();
+    if (!text) {
+      setSumError("Write a few words first.");
+      return;
+    }
+    setSumSaving(true);
+    setSumError(null);
+    try {
+      const idToken = await user.getIdToken();
+      // Same endpoint the game page's "Edit recap" uses. It re-checks
+      // that we're a captain in THIS game before storing.
+      const res = await fetch("/api/game-recap", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          leagueId,
+          gameId: game.id,
+          markdown: text,
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+      };
+      if (!res.ok) {
+        setSumError(data.error ?? `HTTP ${res.status}`);
+        return;
+      }
+      setSumSaved(true);
+    } catch (e) {
+      setSumError(e instanceof Error ? e.message : "Couldn't post the summary");
+    } finally {
+      setSumSaving(false);
+    }
+  }
+
   const box: React.CSSProperties = {
     border: "1px solid rgba(0, 45, 114, 0.2)",
     borderLeft: "4px solid var(--brand-primary, #002d72)",
@@ -106,12 +168,118 @@ export function QuickScoreInline({
         <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--muted)" }}>
           The league office will confirm it.
         </p>
+
+        {sumSaved ? (
+          <p
+            style={{
+              margin: "12px 0 0",
+              fontSize: 13.5,
+              fontWeight: 600,
+              color: "#15803d",
+            }}
+          >
+            ✓ Summary posted — it&apos;s on the game page now.
+          </p>
+        ) : (
+          <div
+            style={{
+              marginTop: 12,
+              paddingTop: 12,
+              borderTop: "1px dashed rgba(0,0,0,0.15)",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                color: "var(--text-strong)",
+              }}
+            >
+              Add a game summary{" "}
+              <span style={{ fontWeight: 500, color: "var(--muted)" }}>
+                (optional)
+              </span>
+            </div>
+            <p
+              style={{
+                margin: "3px 0 8px",
+                fontSize: 12.5,
+                lineHeight: 1.5,
+                color: "var(--muted)",
+              }}
+            >
+              A few lines on how it went — big hits, who pitched, the turning
+              point. It shows on the game page in place of the auto-written
+              recap.
+            </p>
+            <textarea
+              value={summary}
+              onChange={(e) => setSummary(e.target.value.slice(0, SUMMARY_MAX))}
+              disabled={sumSaving}
+              rows={4}
+              placeholder={`How did it go vs ${oppName}?`}
+              style={{
+                width: "100%",
+                padding: "9px 11px",
+                border: "1px solid rgba(0,0,0,0.2)",
+                borderRadius: 8,
+                fontSize: 14,
+                lineHeight: 1.5,
+                fontFamily: "inherit",
+                resize: "vertical",
+              }}
+            />
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                marginTop: 8,
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 11,
+                  color: "var(--muted)",
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {summary.length}/{SUMMARY_MAX}
+              </span>
+              <button
+                type="button"
+                onClick={saveSummary}
+                disabled={sumSaving || !summary.trim()}
+                className="le-cap-btn-primary"
+                style={{
+                  marginLeft: "auto",
+                  opacity: sumSaving || !summary.trim() ? 0.6 : 1,
+                }}
+              >
+                {sumSaving ? "Posting…" : "Post summary"}
+              </button>
+            </div>
+            {sumError && (
+              <div
+                style={{
+                  marginTop: 8,
+                  fontSize: 13,
+                  color: "#b91c1c",
+                  fontWeight: 600,
+                }}
+              >
+                {sumError}
+              </div>
+            )}
+          </div>
+        )}
+
         {onClose && (
           <button
             type="button"
             onClick={onClose}
             className="le-cap-btn-secondary"
-            style={{ marginTop: 10 }}
+            style={{ marginTop: 12 }}
           >
             Done
           </button>
