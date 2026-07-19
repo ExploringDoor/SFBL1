@@ -43,6 +43,12 @@ const SECTIONS: { key: string; label: string; blurb: string }[] = [
     label: "Team Pages & Events",
     blurb: "Team pages, tournaments, all-star games and league notices.",
   },
+  {
+    key: "sy_recap",
+    label: "Southern Yankees Recaps",
+    blurb:
+      "Every Southern Yankees game recap recovered from the league's live scoring database — 2004 through 2025, written by the team after each game.",
+  },
 ];
 const LABEL = new Map(SECTIONS.map((s) => [s.key, s.label]));
 const BLURB = new Map(SECTIONS.map((s) => [s.key, s.blurb]));
@@ -184,11 +190,17 @@ export function ArchiveView({ tenantId }: { tenantId: string }) {
                     {d.u ? (
                       <a
                         className="arc-src"
-                        href={`https://web.archive.org/web/2023/${d.u}`}
+                        href={
+                          d.u.startsWith("http")
+                            ? d.u
+                            : `https://web.archive.org/web/2023/${d.u}`
+                        }
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        View archived original ↗
+                        {d.c === "sy_recap"
+                          ? "Read the full recap on BallgameCentral ↗"
+                          : "View archived original ↗"}
                       </a>
                     ) : null}
                   </div>
