@@ -199,7 +199,7 @@ export function ArchiveView({ tenantId }: { tenantId: string }) {
                         rel="noopener noreferrer"
                       >
                         {d.c === "sy_recap"
-                          ? "Read the full recap on BallgameCentral ↗"
+                          ? "View the original box score ↗"
                           : "View archived original ↗"}
                       </a>
                     ) : null}
