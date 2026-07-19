@@ -265,7 +265,7 @@ A pitcher may **not return to the mound** once removed. Required rest is based o
 ## Equipment
 
 - **Bats:** USSSA, USA Baseball, or Nations-approved.
-- **Footwear:** rubber spikes recommended; **metal spikes are prohibited**.
+- **Footwear:** rubber spikes recommended. **Metal (steel) spikes are allowed at 13U and up**; they remain prohibited at 12U and below.
 
 ## Other Rules
 
