@@ -14,6 +14,7 @@
 import { calcPOTG, type POTGBatterLine, type POTGPitcherLine } from "./potg";
 import { formatIP } from "./ip";
 import { formatGameDate } from "@/lib/format-time";
+import type { PlayoffContext } from "@/lib/playoff-context";
 
 export interface RecapInput {
   awayTeamName: string;
@@ -39,6 +40,9 @@ export interface RecapInput {
    *  framing. */
   awayScoreOnly?: boolean;
   homeScoreOnly?: boolean;
+  /** Bracket position, when this is a playoff game. Lets the recap name
+   *  the round and the stakes instead of reading like a June Tuesday. */
+  playoff?: PlayoffContext | null;
 }
 
 export interface RecapOutput {
@@ -119,14 +123,13 @@ export function buildRecap(input: RecapInput): RecapOutput {
   );
   if (pitchPara) sentencesP2.push(pitchPara);
 
-  // If both sides are score-only, the recap is just the opener +
-  // closing line — no player highlights at all. Note it explicitly
-  // so the reader knows individual stats weren't recorded.
+  // Both sides score-only: nothing to highlight, so the recap is the
+  // opener plus whatever context we have. We used to print a "no
+  // individual stats were recorded" disclaimer here; it added nothing
+  // a reader wanted and repeated on every such recap (Adam, 2026-07).
+  // The absence of a stat line speaks for itself.
   if (input.awayScoreOnly && input.homeScoreOnly) {
     sentencesP2.length = 0;
-    sentencesP2.push(
-      "Score-only result — individual stats weren't recorded for either team.",
-    );
   } else if (input.awayScoreOnly) {
     sentencesP2.unshift(
       `${input.awayTeamName} submitted score-only — no individual stats recorded for them.`,
@@ -139,6 +142,17 @@ export function buildRecap(input: RecapInput): RecapOutput {
 
   const inning = inningHighlight(input);
   if (inning) sentencesP2.push(inning);
+
+  // Playoff stakes. Single elimination, so the loser's season is over —
+  // worth saying plainly, and it's the line a regular-season recap can
+  // never earn.
+  if (input.playoff && winnerName) {
+    sentencesP2.push(
+      input.playoff.isFinalRound
+        ? `${winnerName} are ${divisionPhrase(input.playoff)} champions.`
+        : `${winnerName} advance; ${possessive(loserName!)} season is over.`,
+    );
+  }
 
   if (winnerName) {
     const closer = closingLine(winnerName, loserName!, margin);
@@ -159,6 +173,38 @@ export function buildRecap(input: RecapInput): RecapOutput {
 // hammer") here because we have no inning-level data on most games
 // to back that up. The headline stays factual; if the linescore
 // supports a narrative, addLinescoreBeat() adds a sentence after.
+/** Possessive of a team name. Most SFBL names already end in s
+ *  ("Boca Mets"), which takes a bare apostrophe — not "Mets's". */
+function possessive(name: string): string {
+  return /s$/i.test(name) ? `${name}'` : `${name}'s`;
+}
+
+/** "the 35+ National" — the division as it reads mid-sentence. Empty
+ *  when the bracket has no division label (a single-bracket league). */
+function divisionPhrase(p: PlayoffContext): string {
+  const d = p.divisionLabel.trim();
+  return d ? `the ${d}` : "the";
+}
+
+/** Where this game sits, as a phrase for the opener: "the 35+ National
+ *  championship game", "Round 2 of the 35+ National playoffs". Rounds
+ *  the admin already named "Final"/"Championship" are used as written
+ *  rather than being restated. */
+function playoffPhrase(p: PlayoffContext): string {
+  const div = p.divisionLabel.trim();
+  const round = p.roundLabel.trim();
+  const namedFinal = /final|championship|title/i.test(round);
+
+  if (p.isFinalRound && !namedFinal) {
+    return div ? `the ${div} championship game` : "the championship game";
+  }
+  if (namedFinal) {
+    return div ? `the ${div} ${round.toLowerCase()}` : `the ${round.toLowerCase()}`;
+  }
+  if (!round) return div ? `the ${div} playoffs` : "the playoffs";
+  return div ? `${round} of the ${div} playoffs` : `${round} of the playoffs`;
+}
+
 function winnerStyle(margin: number): string {
   if (margin >= 6) return "defeated";
   if (margin >= 3) return "beat";
@@ -175,6 +221,7 @@ function opener(
   margin: number,
 ): string {
   const where = input.field ? ` at ${input.field}` : "";
+  const stakes = input.playoff ? ` in ${playoffPhrase(input.playoff)}` : "";
   // Audit H1: formatGameDate parses date-only strings as a local
   // calendar day, so the recap headline doesn't slip a day for
   // Pacific (LBDC) readers. Recap only shows the day, no time.
@@ -186,7 +233,7 @@ function opener(
   const when = whenStr ? ` on ${whenStr}` : "";
 
   if (winnerName == null) {
-    return `${input.awayTeamName} and ${input.homeTeamName} finished tied ${input.awayScore}–${input.homeScore}${where}${when}.`;
+    return `${input.awayTeamName} and ${input.homeTeamName} finished tied ${input.awayScore}–${input.homeScore}${where}${when}${stakes}.`;
   }
 
   // Factual one-liner. We DO NOT claim "came down to the final at-
@@ -194,7 +241,7 @@ function opener(
   // final score in many cases. If a linescore is present, a separate
   // sentence (linescoreBeat) describes what actually happened.
   const verb = winnerStyle(margin);
-  const base = `${winnerName} ${verb} ${loserName} ${winnerScore}–${loserScore}${where}${when}.`;
+  const base = `${winnerName} ${verb} ${loserName} ${winnerScore}–${loserScore}${where}${when}${stakes}.`;
   const beat = linescoreBeat(input, winnerName, loserName!, margin);
   return beat ? `${base} ${beat}` : base;
 }

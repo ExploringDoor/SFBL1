@@ -16,6 +16,7 @@
 import Link from "next/link";
 import { formatIP } from "@/lib/stats/ip";
 import { buildRecap } from "@/lib/stats/recap";
+import type { PlayoffContext } from "@/lib/playoff-context";
 import { formatGameDate, formatTime12 } from "@/lib/format-time";
 import { sanitizeHtml } from "@/lib/markdown";
 import { BoxScoreTabs } from "@/components/ui/BoxScoreTabs";
@@ -79,6 +80,9 @@ export interface BoxScoreContentProps {
   away: BoxTeam;
   home: BoxTeam;
   playerNames: Record<string, string>;
+  /** Bracket position for a playoff game, so the recap can name the
+   *  round and the stakes. Null for regular-season games. */
+  playoff?: PlayoffContext | null;
   /** Comes from the URL `?tab=recap`. Default = "box". */
   view?: "box" | "recap";
   /** Server-side rendered HTML override from /recaps/{gameId}.markdown.
@@ -125,6 +129,7 @@ export function BoxScoreContent(props: BoxScoreContentProps) {
     playerNames,
     awayScoreOnly: away.score_only,
     homeScoreOnly: home.score_only,
+    playoff: props.playoff ?? null,
   });
 
   return (

@@ -210,7 +210,7 @@ describe("buildRecap — Score-Only mode", () => {
     expect(out.body.join(" ")).toContain("score-only");
   });
 
-  it("both sides score-only: recap notes individual stats not recorded", () => {
+  it("both sides score-only: no stats disclaimer, just the result", () => {
     const out = buildRecap(
       emptyInput({
         awayScore: 5,
@@ -220,10 +220,58 @@ describe("buildRecap — Score-Only mode", () => {
       }),
     );
     expect(out.potg).toBeNull();
-    expect(out.body.join(" ")).toContain("Score-only result");
-    // Should still have a sensible headline.
+    // The old "individual stats weren't recorded" boilerplate repeated on
+    // every score-only recap and told the reader nothing; the missing
+    // stat line already says it.
+    expect(out.body.join(" ")).not.toContain("Score-only result");
+    expect(out.body.join(" ")).not.toContain("weren't recorded");
+    // Should still have a sensible headline and an actual result.
     expect(out.headline).toContain("Yankees");
     expect(out.headline).toContain("Red Sox");
+    expect(out.body.join(" ")).toContain("5–2");
+  });
+
+  it("playoff game: recap names the round and the stakes", () => {
+    const out = buildRecap(
+      emptyInput({
+        awayScore: 16,
+        homeScore: 7,
+        playoff: {
+          divisionLabel: "35+ National",
+          roundLabel: "Round 1",
+          isFinalRound: false,
+        },
+      }),
+    );
+    const text = out.body.join(" ");
+    expect(text).toContain("Round 1 of the 35+ National playoffs");
+    expect(text).toContain("advance");
+    expect(text).toContain("season is over");
+  });
+
+  it("championship game: recap crowns the winner", () => {
+    const out = buildRecap(
+      emptyInput({
+        awayScore: 4,
+        homeScore: 3,
+        playoff: {
+          divisionLabel: "28+",
+          roundLabel: "Round 3",
+          isFinalRound: true,
+        },
+      }),
+    );
+    const text = out.body.join(" ");
+    expect(text).toContain("the 28+ championship game");
+    expect(text).toContain("champions");
+    expect(text).not.toContain("season is over");
+  });
+
+  it("regular-season recap says nothing about playoffs", () => {
+    const out = buildRecap(emptyInput({ awayScore: 6, homeScore: 1 }));
+    const text = out.body.join(" ");
+    expect(text).not.toContain("playoff");
+    expect(text).not.toContain("advance");
   });
 
   it("only the score-only team's batters are excluded — other team's POTG stands", () => {

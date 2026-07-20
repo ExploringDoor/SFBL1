@@ -10,6 +10,7 @@ import type {
   BoxPitcher,
 } from "@/components/BoxScoreContent";
 import { computeStandings, type GameResult } from "./stats/shared";
+import { findPlayoffContext, type PlayoffContext } from "./playoff-context";
 
 // Closes H9. The expensive part of loadBoxScoreData isn't the per-
 // game doc — it's the three tenant-wide reads (teams, players, all
@@ -177,6 +178,26 @@ export async function loadBoxScoreData(
   const game = gameSnap.data() ?? {};
   const homeTeamId = String(game.home_team_id ?? "");
   const awayTeamId = String(game.away_team_id ?? "");
+
+  // Playoff games get their bracket position so the recap can name the
+  // round and the stakes. One extra doc read, and only for playoff games.
+  let playoff: PlayoffContext | null = null;
+  if (game.is_playoff === true) {
+    try {
+      const bracketSnap = await db
+        .doc(`leagues/${tenantId}/site_config/playoffs`)
+        .get();
+      playoff = bracketSnap.exists
+        ? findPlayoffContext(bracketSnap.data(), {
+            gameId,
+            awayTeamId,
+            homeTeamId,
+          })
+        : null;
+    } catch {
+      playoff = null; // A missing/unreadable bracket just costs us the flavor.
+    }
+  }
   const { teamMeta, recordByTeam, playerNames } = tenantAgg;
 
   const box = boxSnap.exists ? (boxSnap.data() as Record<string, unknown>) : null;
@@ -214,5 +235,6 @@ export async function loadBoxScoreData(
     away: buildTeam("away", awayTeamId, Number(game.away_score ?? 0)),
     home: buildTeam("home", homeTeamId, Number(game.home_score ?? 0)),
     playerNames,
+    playoff,
   };
 }
