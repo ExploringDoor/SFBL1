@@ -217,17 +217,20 @@ Rules for the Central Ohio Youth Baseball League. COYBL follows **OHSAA / Nation
 
 ## Age Divisions & Eligibility
 
-A player's age on **April 30** sets their division (a player who is 9 on April 30 plays 9U). A **grade exemption** applies (see below), and players may always "play up" in an older division.
+A player's age on **April 30** sets their division — a player who turns an age *prior to May 1* of the current season has aged out of that division. A **grade exemption** lets a player who has aged out by one year stay in the division, and players may always **play up** in an older division.
 
-| Division | Grade exemption |
-|---|---|
-| 8U | 2nd grade |
-| 9U | 3rd grade |
-| 10U | 4th grade |
-| 11U | 5th grade |
-| 12U | 6th grade |
-| 13U | 7th grade |
-| 14U | 8th grade |
+| Division | Ages out if they turn | Grade exemption | Never eligible if they turn |
+|---|---|---|---|
+| 7U | 8 before May 1 | 1st grade | 9 before May 1 |
+| 8U | 9 before May 1 | 2nd grade | 10 before May 1 |
+| 9U | 10 before May 1 | 3rd grade | 11 before May 1 |
+| 10U | 11 before May 1 | 4th grade | 12 before May 1 |
+| 11U | 12 before May 1 | 5th grade | 13 before May 1 |
+| 12U | 13 before May 1 | 6th grade | 14 before May 1 |
+| 13U | 14 before May 1 | 7th grade | 15 before May 1 |
+| 14U | 15 before May 1 | 8th grade | 16 before May 1 |
+
+**How to read this:** a 9U player who turns 10 before May 1 is not eligible for 9U — *unless* they are in 3rd grade. A player who turns 11 before May 1 is never eligible for 9U, grade exemption or not.
 
 ## Pitch Counts (Pitch Smart)
 
