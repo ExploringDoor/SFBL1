@@ -31,7 +31,12 @@ interface TenantBoxCacheEntry {
   playerNames: Record<string, string>;
   expires_at: number;
 }
-const BOX_TENANT_TTL_MS = 30_000;
+// 10 minutes, raised from 30s alongside the ticker (2026-07 cost fix).
+// These three aggregates feed the season-record badges and player-name
+// lookups only — none of it is time-sensitive. The per-game game +
+// box_score docs below are still read fresh on every request, so a
+// score correction still shows up immediately.
+const BOX_TENANT_TTL_MS = 10 * 60_000;
 const boxTenantCache = new Map<string, TenantBoxCacheEntry>();
 
 // Closes audit M4. The box doc is written by the captain via the

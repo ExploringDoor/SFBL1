@@ -27,15 +27,23 @@ interface TeamMeta {
 // Cache survives per Node process — each Vercel cold-start gets a
 // fresh map, which is fine for a low-tenancy launch.
 //
-// Audit M12: acknowledged as intentional. Every cold start re-reads
-// the full /games + /teams collections; acceptable at 1-2 tenants
-// with the 30s TTL absorbing bursts. Revisit (shared Edge cache /
-// the standings Cloud Function, PLAN.md §10) before scaling tenants.
+// Audit M12 came due (2026-07). The 30s TTL was sized for humans
+// browsing; it was crawlers that showed up. ~9,200 requests/day against
+// ~375 real page views meant almost every request was a cache miss on a
+// cold lambda, re-reading ~205 docs — about 1.9M reads/day and $34/mo,
+// ~96% of it bots. robots.txt now throttles the crawlers; this TTL is
+// the second half of the fix.
+//
+// 10 minutes, not 30 seconds. The ticker shows the last 4 finals and
+// next 8 scheduled games — nothing that needs to be seconds-fresh. A
+// score entered at the field appears within 10 minutes, and the live
+// in-progress banner (HomepageLiveGames) is a separate real-time
+// onSnapshot listener that this TTL doesn't touch.
 interface TickerCacheEntry {
   games: TickerGame[];
   expires_at: number;
 }
-const TICKER_TTL_MS = 30_000;
+const TICKER_TTL_MS = 10 * 60_000;
 const tickerCache = new Map<string, TickerCacheEntry>();
 
 export async function loadTickerGames(tenantId: string): Promise<TickerGame[]> {
@@ -180,7 +188,18 @@ function formatRecord(w: number, l: number, t: number): string {
 // (see components/ui/nav-links.ts hoistPlayoffs). Called from the layout
 // on every request, so — like loadTickerGames — it swallows failures and
 // returns false rather than crashing the whole shell.
+// Cached on the same 10-minute TTL as the ticker: this was an uncached
+// doc read on literally every request to every page, and "is the bracket
+// published" changes about twice a season.
+const playoffsActiveCache = new Map<
+  string,
+  { active: boolean; expires_at: number }
+>();
+
 export async function loadPlayoffsActive(tenantId: string): Promise<boolean> {
+  const cached = playoffsActiveCache.get(tenantId);
+  if (cached && Date.now() < cached.expires_at) return cached.active;
+
   let db;
   try {
     db = getAdminDb();
@@ -192,9 +211,14 @@ export async function loadPlayoffsActive(tenantId: string): Promise<boolean> {
     const snap = await db
       .doc(`leagues/${tenantId}/site_config/playoffs`)
       .get();
-    return snap.exists && snap.data()?.active === true;
+    const active = snap.exists && snap.data()?.active === true;
+    playoffsActiveCache.set(tenantId, {
+      active,
+      expires_at: Date.now() + TICKER_TTL_MS,
+    });
+    return active;
   } catch (e) {
     console.error("[site-data] playoffs config read failed:", e);
-    return false;
+    return false; // Not cached — a transient failure shouldn't stick.
   }
 }
