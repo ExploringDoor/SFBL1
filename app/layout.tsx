@@ -151,6 +151,8 @@ export default async function RootLayout({
   let themeSecondary: string | undefined;
   let navHideLabels: string[] = [];
   let navAddLinks: { label: string; href: string }[] = [];
+  // flags.ticker_scroll — opt-in marquee ticker (Island Fastpitch).
+  let tickerScroll = false;
   if (configJson) {
     try {
       const cfg = JSON.parse(configJson) as {
@@ -163,10 +165,12 @@ export default async function RootLayout({
           logo_url?: string;
         };
         nav?: { hide?: string[]; add?: { label: string; href: string }[] };
+        flags?: Record<string, boolean>;
       };
       leagueName = cfg.name ?? null;
       leagueAbbrev = cfg.abbrev;
       logoUrl = cfg.theme?.logo_url ?? null;
+      tickerScroll = cfg.flags?.ticker_scroll === true;
       themePrimary = cfg.theme?.primary;
       themeAccent = cfg.theme?.accent;
       themeSecondary = cfg.theme?.secondary;
@@ -307,6 +311,9 @@ export default async function RootLayout({
                 // ticker is all scores (Adam, 2026-05-18). Branding
                 // still lives in the nav + homepage Hero.
                 hideLabel={leagueAbbrev === "SFBL"}
+                // Opt-in marquee. Only tenants that set flags.ticker_scroll
+                // get the animated strip; everyone else keeps the manual pan.
+                scroll={tickerScroll}
               />
               <TickerScrollHide />
               <TickerInputEnhancer />

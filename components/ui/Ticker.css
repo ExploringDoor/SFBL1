@@ -408,3 +408,79 @@ body.ticker-force-hide #score-ticker {
  * Drop it for now — iOS PWA's safe-area strip can be revisited when
  * we ship the install prompt. The body keeps a white background and
  * the ticker itself paints its own navy band. */
+
+/* ── MARQUEE MODE (flags.ticker_scroll) ────────────────────────────
+ * OFF by default. Island Fastpitch asked for the LMLL-style scrolling
+ * ticker; every existing tenant keeps the manual pan.
+ *
+ * These two behaviours are mutually exclusive: the default .st-scroll is
+ * overflow-x:auto so the user drags, and you cannot drag a track that is
+ * being animated with translateX. Marquee mode therefore turns panning
+ * OFF and the animation ON.
+ *
+ * DVSL originally killed the marquee because users could not click a
+ * moving tile. Pause-on-hover is what resolves that: the strip stops the
+ * moment the pointer is over it, so tiles stay clickable.
+ */
+.st-scroll--marquee {
+  overflow-x: hidden;
+  touch-action: auto; /* let vertical page scroll through, nothing to pan */
+}
+.st-scroll--marquee::-webkit-scrollbar {
+  display: none;
+}
+
+.st-track--marquee {
+  width: max-content;
+  animation-name: st-marquee;
+  animation-duration: 60s; /* overwritten at runtime, paced by width */
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+
+/* Stop for anyone reaching for a tile, including keyboard users. */
+.st-scroll--marquee:hover .st-track--marquee,
+.st-scroll--marquee:focus-within .st-track--marquee {
+  animation-play-state: paused;
+}
+
+/* The duplicate strip sits inline so -50% is exactly one copy. */
+.st-track-clone {
+  display: flex;
+  align-items: stretch;
+}
+
+@keyframes st-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .st-track--marquee {
+    animation: none;
+  }
+  /* Give panning back, otherwise later games become unreachable. */
+  .st-scroll--marquee {
+    overflow-x: auto;
+  }
+}
+
+/* LIVE indicator — replaces the red-circle emoji. */
+.st-live-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: #ff4438;
+  vertical-align: middle;
+  animation: st-live-pulse 1.6s ease-in-out infinite;
+}
+@keyframes st-live-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .st-live-dot { animation: none; }
+}

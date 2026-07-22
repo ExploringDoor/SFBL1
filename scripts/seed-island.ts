@@ -1,0 +1,289 @@
+// Island Fastpitch tenant seed.
+//
+// Long Island youth fastpitch softball (Mike, Smithtown NY). Signed 7/21/26.
+// Modelled on seed-coybl.ts: STATS OFF (score-only -> standings), so no players
+// and no box scores are written; team records are stored on the team docs and the
+// standings UI reads them directly.
+//
+// Data comes from scripts/data/island-seed.json, which is generated from a full
+// archive of their old Wix site by:
+//     island-fastpitch-site/scrape/scrape_all.py        (archive every page)
+//  -> island-fastpitch-site/scrape/build_seed_data.py   (clean + dedupe teams)
+//  -> island-fastpitch-site/scrape/make_tenant_seed.py  (tenant doc shapes)
+//
+// AXES (decided 7/21/26): ageGroup = the AGE ("12U"), division = the LEAGUE
+// ("Weeknight"). Age is the outer axis because app/page.tsx sorts age groups with
+// parseInt, so a non-numeric value there silently sorts to zero.
+//
+// Usage:
+//   emulator: FIRESTORE_EMULATOR_HOST=localhost:8080 GCLOUD_PROJECT=island-fastpitch tsx scripts/seed-island.ts
+//   prod:     SEED_ALLOW_PROD=1 FIREBASE_SERVICE_ACCOUNT_PATH=<path> tsx scripts/seed-island.ts
+
+import { initializeApp, cert } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+// Refuse to touch anything but an emulator unless a prod seed is opted into
+// explicitly. Same guard as seed-coybl.ts.
+if (
+  !process.env.FIRESTORE_EMULATOR_HOST &&
+  !(process.env.SEED_ALLOW_PROD === "1" && process.env.FIREBASE_SERVICE_ACCOUNT_PATH)
+) {
+  console.error(
+    "[seed-island] FIRESTORE_EMULATOR_HOST not set. Refusing to seed without an " +
+      "explicit emulator target. For a deliberate prod seed set SEED_ALLOW_PROD=1 " +
+      "and FIREBASE_SERVICE_ACCOUNT_PATH.",
+  );
+  process.exit(1);
+}
+
+const LEAGUE_ID = "island";
+
+const saPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+if (saPath && !process.env.FIRESTORE_EMULATOR_HOST) {
+  const sa = JSON.parse(readFileSync(saPath, "utf8"));
+  initializeApp({ credential: cert(sa), projectId: sa.project_id });
+} else {
+  initializeApp({
+    projectId:
+      process.env.GCLOUD_PROJECT ??
+      process.env.FIREBASE_PROJECT_ID ??
+      "island-fastpitch",
+  });
+}
+const db = getFirestore();
+
+// ---------------------------------------------------------------------------
+// Tenant config
+// ---------------------------------------------------------------------------
+const LEAGUE_CONFIG = {
+  slug: LEAGUE_ID,
+  name: "Island Fastpitch",
+  abbrev: "IFP",
+
+  sport: "softball" as const,
+  ruleset: "fastpitch" as const,
+  // Weeknight 12U and up play a single 7 inning game; 10U and 8U play 6.
+  // 7 is the league default; the shorter divisions just end early.
+  innings: 7,
+  linescore_innings: 7,
+
+  // STATS OFF. Island is score-only: coaches report a final, standings recompute.
+  // No individual player stats are published anywhere (youth league).
+  stat_columns: [] as string[],
+  pitching: { tracked: false },
+  rules_flags: {
+    // Their 10U rule reads "a batter is out after their third strike",
+    // i.e. no dropped third strike.
+    dropped_third_strike: false,
+    balks: false,
+    infield_fly: false,
+  },
+
+  // Brand comes from their logo: black ground, chrome wordmark, electric blue
+  // "FASTPITCH", optic-yellow softball. On a light SFBL-style layout the deep
+  // navy carries the chrome and the electric blue reads as the accent.
+  theme: {
+    primary: "#0b2e4f",
+    accent: "#35afea",
+    secondary: "#c8dc2e",
+    logo_url: null as string | null,
+  },
+
+  billing: {
+    status: "active" as const,
+    paid_through: "2027-season",
+    last_payment: null as string | null,
+    notes: "$6,000/yr billed $500/month. Signed 2026-07-21.",
+  },
+
+  flags: {
+    // Score-only league: hide every stats surface.
+    stats_enabled: false,
+    // They run ~30 tournaments a year at $525-$700 per team. Year one is
+    // included free per the signed deal.
+    show_tournaments: true,
+    // No baseball pitch-count mandate in fastpitch.
+    show_pitch_counts: false,
+    registration_open: true,
+    // Mike specifically asked for the LMLL-style scrolling ticker. Island is
+    // the ONLY tenant with this flag; SFBL, LBDC and COYBL keep the manual
+    // pan, so enabling it here cannot change their sites. The marquee pauses
+    // on hover and focus, which is what keeps tiles clickable (the reason
+    // DVSL removed the scroll in the first place).
+    ticker_scroll: true,
+  },
+
+  // Straight win/loss. NOT SFBL's points scheme (2/1/0) — Island's own rules
+  // never mention points, and their standings page is headed "Placing / Team".
+  // Tiebreaker is pct rather than the default rd, because a stats-off league
+  // has no run data and every rd would be zero.
+  standings: {
+    scoring: "pct" as const,
+    tiebreaker: "pct" as const,
+  },
+
+  // Matched case-insensitively against the default nav labels in
+  // components/ui/nav-links.ts.
+  nav: {
+    hide: [
+      "stats",
+      "team stats",
+      "player of the week",
+      "availability",
+      "photos",
+      "news",
+      "sponsors",
+      "store",
+      "pay online",
+      "history",
+      "player registration",
+      "team waiver",
+      // No bracket engine yet, so nothing to show until playoffs are built.
+      "playoffs",
+    ],
+    // Rules, Fields, Tournaments, Scores, Schedule, Standings and Teams are all
+    // already in DEFAULT_LINKS, so they are NOT re-added here.
+    //
+    // "Coach Login" IS added, and deliberately under that label rather than the
+    // default "Captain" link: components/ui/nav-links.ts:121 keeps a hardcoded
+    // SFBL_ONLY_LABELS list (["SFBL","Player of the Week","Captain"]) and strips
+    // those for every tenant whose short name is not "SFBL". Island would
+    // therefore have NO visible route to the captain sign-in, which is the whole
+    // product. Tenant-added links are inserted after that filter runs, so a
+    // differently-labelled link survives — and "Coach Login" is better copy for
+    // this league anyway, since their people are coaches and managers.
+    add: [{ label: "Coach Login", href: "/captain" }],
+  },
+
+  about:
+    "Island Fastpitch runs youth fastpitch softball leagues and tournaments " +
+    "across Long Island, with Spring, Summer and Fall seasons for 8U through 18U.",
+
+  social: {
+    facebook: null as string | null,
+    instagram: null as string | null,
+  },
+
+  // Team-picker + per-team password (the SFBL model). "passwordless" here means
+  // "no emailed magic link", NOT "no password": once the admin sets a team's
+  // password in the Teams tab it is STRICT, and the team name stops working.
+  // See app/api/public-captain-claim/route.ts.
+  captain: { passwordless: true },
+  // Shared admin password lives in the ISLAND_ADMIN_PASSWORD env var, never in
+  // Firestore — firestore.rules makes /leagues/{id} world readable.
+  admin: { passwordless: true },
+};
+
+type SeedTeam = {
+  id: string; name: string; abbrev: string;
+  ageGroup: string; division: string; ageOrder: number; divOrder: number;
+  color: string | null; logo_url: string | null;
+  w: number; l: number; t: number; record: string; overall: string;
+};
+type SeedGame = {
+  id: string; home_team_id: string; away_team_id: string;
+  home_score: number | null; away_score: number | null;
+  status: string; date: string; time: string | null;
+  division: string | null; field: string | null;
+};
+
+type SeedField = { name: string; address: string };
+
+const data = JSON.parse(
+  readFileSync(join(__dirname, "data", "island-seed.json"), "utf8"),
+) as {
+  teams: SeedTeam[];
+  games: SeedGame[];
+  pages: Record<string, string>;
+  fields: SeedField[];
+};
+
+async function run() {
+  const target = process.env.FIRESTORE_EMULATOR_HOST ?? "PRODUCTION";
+  console.log(`[seed-island] target: ${target}`);
+
+  // Wipe stale docs so renamed teams don't linger between reseeds.
+  for (const sub of ["teams", "games", "players", "box_scores"]) {
+    const stale = await db.collection(`leagues/${LEAGUE_ID}/${sub}`).get();
+    if (stale.empty) continue;
+    const batch = db.batch();
+    stale.docs.forEach((d) => batch.delete(d.ref));
+    await batch.commit();
+    console.log(`[seed-island] cleared ${stale.size} stale ${sub}`);
+  }
+
+  await db.doc(`leagues/${LEAGUE_ID}`).set(LEAGUE_CONFIG);
+  console.log("[seed-island] wrote league config");
+
+  let batch = db.batch();
+  let n = 0;
+  const flush = async () => {
+    if (n) { await batch.commit(); batch = db.batch(); n = 0; }
+  };
+
+  for (const t of data.teams) {
+    batch.set(db.doc(`leagues/${LEAGUE_ID}/teams/${t.id}`), {
+      name: t.name,
+      abbrev: t.abbrev,
+      ageGroup: t.ageGroup,
+      division: t.division,
+      ageOrder: t.ageOrder,
+      divOrder: t.divOrder,
+      color: t.color ?? null,
+      logo_url: t.logo_url ?? null,
+      w: t.w, l: t.l, t: t.t,
+      record: t.record,
+      overall: t.overall,
+    });
+    if (++n >= 400) await flush();
+  }
+
+  for (const g of data.games) {
+    batch.set(db.doc(`leagues/${LEAGUE_ID}/games/${g.id}`), {
+      home_team_id: g.home_team_id,
+      away_team_id: g.away_team_id,
+      home_score: g.home_score,
+      away_score: g.away_score,
+      status: g.status,
+      date: g.date,
+      time: g.time ?? null,
+      division: g.division ?? null,
+      field: g.field ?? null,
+    });
+    if (++n >= 400) await flush();
+  }
+  await flush();
+
+  // /fields reads leagues/<id>/site_config/fields and, when that doc is missing,
+  // falls back to a HARDCODED list of South Florida ballparks (app/fields/page.tsx:40).
+  // Without this write Island's fields page would show Boca Raton and Miami.
+  if (data.fields?.length) {
+    await db.doc(`leagues/${LEAGUE_ID}/site_config/fields`).set({
+      data: data.fields,
+      updated_at: new Date().toISOString(),
+      updated_by: "seed",
+    });
+    console.log(`[seed-island] wrote ${data.fields.length} fields`);
+  }
+
+  for (const [key, markdown] of Object.entries(data.pages)) {
+    await db.doc(`leagues/${LEAGUE_ID}/page_content/${key}`).set({
+      title: key.charAt(0).toUpperCase() + key.slice(1),
+      markdown,
+      updated_at: new Date().toISOString(),
+      updated_by: "seed",
+    });
+  }
+
+  console.log(
+    `[seed-island] done — ${data.teams.length} teams, ${data.games.length} games, ` +
+      `${Object.keys(data.pages).length} content pages (stats off)`,
+  );
+}
+
+run().then(() => process.exit(0)).catch((err) => {
+  console.error("[seed-island] failed:", err);
+  process.exit(1);
+});

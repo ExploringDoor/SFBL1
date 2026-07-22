@@ -13,9 +13,13 @@
 //   - Away team:   ABBR (REC) score
 //   - Home team:   ABBR (REC) score
 //
-// The track is NOT animated — DVSL killed the marquee scroll because
-// users couldn't click moving tiles. Overflow horizontally if the
+// The track is NOT animated by default — DVSL killed the marquee scroll
+// because users couldn't click moving tiles. Overflow horizontally if the
 // game list is wide; the user pans manually.
+//
+// Tenants that set flags.ticker_scroll (Island Fastpitch) opt back into a
+// marquee that pauses on hover and focus, which keeps tiles clickable and
+// so answers the original DVSL objection.
 
 import Link from "next/link";
 import { TickerTrack } from "./TickerTrack";
@@ -76,6 +80,9 @@ export interface TickerProps {
   /** Where the left label and right "Full Schedule" link point. */
   homeHref?: string;
   scoresHref?: string;
+  /** Marquee mode (flags.ticker_scroll). OFF for every existing tenant —
+   *  see TickerTrack for why panning and scrolling are mutually exclusive. */
+  scroll?: boolean;
   /** Hide the left label cell entirely so the scrolling scores fill
    *  the full width. SFBL uses this — its wordmark was too big in the
    *  top-left on mobile/the installed app, and the homepage Hero +
@@ -92,6 +99,7 @@ export function Ticker({
   homeHref = "/",
   scoresHref = "/scores",
   hideLabel = false,
+  scroll = false,
 }: TickerProps) {
   return (
     <div id="score-ticker">
@@ -129,7 +137,7 @@ export function Ticker({
         </Link>
       )}
 
-      <TickerTrack games={games} />
+      <TickerTrack games={games} scroll={scroll} />
 
       <Link href={scoresHref} className="st-full">
         Full Schedule »
