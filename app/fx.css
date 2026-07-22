@@ -1,0 +1,243 @@
+/* ============================================================================
+   Motion layer. OPT-IN per tenant via flags.motion_fx, which puts `fx-on` on
+   <html>. Every rule below is scoped under .fx-on, so SFBL, COYBL and LBDC
+   render byte-identical to before until Adam flips the flag for them.
+
+   Two hard rules:
+
+   1. NOTHING here may hide content that JS then has to reveal. If a script
+      fails, a CDN hiccups, or the observer never fires, the page must still
+      read normally. That is why the hidden state keys off [data-fx], an
+      attribute the CLIENT adds — server HTML has no such attribute, so
+      pre-hydration content is fully visible. SiteFX also skips anything
+      already on screen at mount, so nothing flashes out and back.
+
+   2. Transform and opacity only. No animating width/top/box-shadow on scroll —
+      those hit layout and paint every frame and turn a "wow" into jank on the
+      mid-range Android a parent is actually holding at the field.
+
+   prefers-reduced-motion is honoured twice over: globals.css already clamps
+   all durations, and SiteFX bails before tagging anything.
+   ========================================================================= */
+
+/* ---- reveal ------------------------------------------------------------ */
+
+@keyframes fx-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.fx-on [data-fx="rise"] {
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.fx-on [data-fx="rise"][data-fx-in] {
+  animation: fx-rise 0.52s cubic-bezier(0.22, 0.68, 0.35, 1) both;
+  /* --fx-d is the stagger, set per element by SiteFX and capped there so a
+     52-row standings table cannot end up with a 5 second tail. */
+  animation-delay: var(--fx-d, 0ms);
+}
+
+/* Once the animation has run, drop the compositor hint. Leaving will-change
+   on hundreds of cards keeps them on their own layers and eats memory. */
+.fx-on [data-fx="rise"][data-fx-done] {
+  will-change: auto;
+}
+
+/* ---- header banner ----------------------------------------------------- */
+
+/* A slow settle on the page banner: 1.045 -> 1.0 over 8s.
+ *
+ * The direction matters. Zooming IN ends at 1.045, and since the banner is
+ * object-fit:contain inside overflow:hidden, that permanently crops ~4.5% off
+ * the artwork — exactly what Adam rejected when the banners were first cut
+ * ("just make it a tiny bit bigger instead of cutting off things"). Settling
+ * OUT means the resting state is the uncropped frame he approved, and the
+ * motion happens on the way there. */
+@keyframes fx-kenburns {
+  from {
+    transform: scale(1.045);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes fx-sheen {
+  from {
+    transform: translate3d(-120%, 0, 0) skewX(-18deg);
+  }
+  to {
+    transform: translate3d(320%, 0, 0) skewX(-18deg);
+  }
+}
+
+.fx-on [data-fx-banner] {
+  position: relative;
+  overflow: hidden;
+}
+
+.fx-on [data-fx-banner] > img {
+  /* forwards, NOT both. `both` fills BACKWARDS before the animation starts,
+   * pinning the banner at the 1.045 "from" — i.e. cropped — for as long as the
+   * animation has not run. Any environment that defers animations (a
+   * background tab, a throttled renderer) would show a permanently cropped
+   * banner. With `forwards` the un-animated state is the element's own
+   * transform, which is none, so the safe uncropped frame is the default and
+   * the settle is pure gravy. */
+  animation: fx-kenburns 8s ease-out forwards;
+}
+
+.fx-on [data-fx-banner]::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 22%;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.16),
+    transparent
+  );
+  animation: fx-sheen 1.5s ease-out 0.35s both;
+}
+
+/* ---- nav --------------------------------------------------------------- */
+
+.fx-on .le-nav {
+  transition:
+    box-shadow 0.25s ease,
+    background-color 0.25s ease;
+}
+
+.fx-on .le-nav[data-fx-stuck] {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.13);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+}
+
+/* ---- cards ------------------------------------------------------------- */
+
+/* Lift on hover, and only on devices with a real pointer. On touch, :hover
+   sticks after a tap and the card stays raised, which reads as a bug. */
+@media (hover: hover) and (pointer: fine) {
+  .fx-on .le-gc-card,
+  .fx-on .le-div-card {
+    transition:
+      transform 0.22s cubic-bezier(0.22, 0.68, 0.35, 1),
+      box-shadow 0.22s ease;
+  }
+
+  .fx-on .le-gc-card:hover,
+  .fx-on .le-div-card:hover {
+    transform: translate3d(0, -3px, 0);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+  }
+}
+
+/* ---- standings win bar -------------------------------------------------- */
+
+/* A win-percentage wash behind each standings row.
+ *
+ * This was originally a ::before on the <tr>. Do not go back to that: even as
+ * display:block + position:absolute, the pseudo-element still generates an
+ * ANONYMOUS TABLE CELL, which pushed every real <td> one column right of its
+ * header. Measured: td[0] "Force 10U" landed at x=219, exactly where the "W"
+ * header sits. It silently broke the most important table on the site.
+ *
+ * A background gradient on the row generates no box at all. background-size is
+ * animatable and only repaints — no layout — so growing it stays cheap. */
+@keyframes fx-bar {
+  from {
+    background-size: 0% 100%;
+  }
+  to {
+    background-size: calc(var(--fx-pct, 0) * 96%) 100%;
+  }
+}
+
+.fx-on [data-fx-bar] {
+  /* Flat for most of its length, feathering only at the tip.
+   *
+   * This was a full-width fade from 26% to 6% alpha, which INVERTED the
+   * ranking: the fade is spread across each bar's own width, so a long bar
+   * faded more gradually and its visible edge landed earlier than a short
+   * one's. On screen the 10-0 team looked like it had the shortest bar. On a
+   * standings table that is worse than no bar at all. */
+  background-image: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--brand-accent, #35afea) 24%, transparent) 0%,
+    color-mix(in srgb, var(--brand-accent, #35afea) 24%, transparent) 82%,
+    transparent 100%
+  );
+  background-repeat: no-repeat;
+  /* --fx-pct is unitless (0..1), so this resolves to a percentage width.
+   *
+   * The 96 rather than 100 is a design call: a wash running the full width of
+   * the row reads as a filled highlight rather than as a measure.
+   *
+   * (Separately, SiteFX clamps --fx-pct below 1 — see the note there. That is
+   * a workaround for a stall at exactly 1, not a styling choice.) */
+  background-size: calc(var(--fx-pct, 0) * 96%) 100%;
+}
+
+.fx-on [data-fx-bar][data-fx-in] {
+  animation: fx-bar 0.9s cubic-bezier(0.22, 0.68, 0.35, 1) forwards;
+  animation-delay: var(--fx-d, 0ms);
+}
+
+/* ---- big numbers -------------------------------------------------------- */
+
+/* Count-up targets get tabular figures so the width does not jitter while the
+   digits tick. Without this the whole row shifts left and right as it counts. */
+.fx-on [data-fx-count] {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* ---- final-score pop ---------------------------------------------------- */
+
+@keyframes fx-pop {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.13);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.fx-on .le-gc-score-win[data-fx-in] {
+  animation: fx-pop 0.5s cubic-bezier(0.22, 0.68, 0.35, 1) both;
+  animation-delay: var(--fx-d, 0ms);
+  display: inline-block;
+}
+
+/* ---- belt and braces ---------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-on [data-fx="rise"],
+  .fx-on [data-fx="rise"][data-fx-in],
+  .fx-on [data-fx-banner] > img,
+  .fx-on [data-fx-banner]::after,
+  .fx-on [data-fx-bar][data-fx-in],
+  .fx-on .le-gc-score-win[data-fx-in] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  /* The wash still draws, it just does not grow into place. */
+  .fx-on [data-fx-bar] {
+    background-size: calc(var(--fx-pct, 0) * 96%) 100% !important;
+  }
+}

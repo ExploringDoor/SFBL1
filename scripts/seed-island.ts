@@ -123,6 +123,13 @@ const LEAGUE_CONFIG = {
     // NOT hide_page_titles, which would also strip the headings off /rules and
     // /tournaments — neither has a banner to replace them.
     hide_home_hero: true,
+    // Opt-in motion layer: scroll reveals with stagger, count-ups, a slow
+    // push-in on the header banner, hover lift on cards, win-percentage bars
+    // behind standings rows, frosted nav once scrolled. Island only — SFBL,
+    // COYBL and LBDC keep a completely static site until Adam says otherwise.
+    // Honours prefers-reduced-motion. (Adam, 7/22/26: "more animations / cool
+    // things ... someone will be like WOW check this out".)
+    motion_fx: true,
     // Their header art is logo-on-black. PageBanner's default natural-size mode
     // left white gutters at the sides (it uses width:auto under a height cap,
     // so it can only fill the screen when the image ratio happens to exceed

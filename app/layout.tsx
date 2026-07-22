@@ -16,8 +16,10 @@ import { TickerInputEnhancer } from "@/components/ui/TickerInputEnhancer";
 import { SwVersionPill } from "@/components/ui/SwVersionPill";
 import { SwNavigateListener } from "@/components/SwNavigateListener";
 import { Ticker } from "@/components/ui/Ticker";
+import { SiteFX } from "@/components/ui/SiteFX";
 import { loadTickerGames } from "@/lib/site-data";
 import "./globals.css";
+import "./fx.css";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -165,6 +167,9 @@ export default async function RootLayout({
   let tickerScroll = false;
   // flags.banner_full_bleed — edge-to-edge page header banners (Island).
   let bannerFullBleed = false;
+  // flags.motion_fx — opt-in motion layer (scroll reveals, count-ups, banner
+  // push-in). OFF for every existing tenant, so their sites do not move.
+  let motionFx = false;
   if (configJson) {
     try {
       const cfg = JSON.parse(configJson) as {
@@ -186,6 +191,7 @@ export default async function RootLayout({
       logoUrl = cfg.theme?.logo_url ?? null;
       tickerScroll = cfg.flags?.ticker_scroll === true;
       bannerFullBleed = cfg.flags?.banner_full_bleed === true;
+      motionFx = cfg.flags?.motion_fx === true;
       themePrimary = cfg.theme?.primary;
       themeAccent = cfg.theme?.accent;
       themeSecondary = cfg.theme?.secondary;
@@ -238,7 +244,9 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${barlow.variable} ${oswald.variable}`}
+      className={`${inter.variable} ${barlow.variable} ${oswald.variable}${
+        motionFx ? " fx-on" : ""
+      }`}
       style={
         themeStyle ? ({ ...parseStyle(themeStyle) } as React.CSSProperties) : undefined
       }
@@ -346,6 +354,7 @@ export default async function RootLayout({
               />
               <TickerScrollHide />
               <TickerInputEnhancer />
+              {motionFx && <SiteFX />}
             </>
           )}
           {tenantId ? (
