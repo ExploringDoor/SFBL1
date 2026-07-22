@@ -36,7 +36,18 @@ async function loadTeamOptions(tenantId: string | null) {
 }
 
 export default async function UmpireEvaluationPage() {
-  const tenantId = headers().get("x-tenant-id");
+  const h = headers();
+  const tenantId = h.get("x-tenant-id");
+  let abbrev = "";
+  try {
+    const cfg = JSON.parse(h.get("x-tenant-config-json") ?? "{}") as {
+      abbrev?: string;
+      name?: string;
+    };
+    abbrev = cfg.abbrev ?? cfg.name ?? "";
+  } catch {
+    abbrev = "";
+  }
   const teams = await loadTeamOptions(tenantId);
   const teamOptions = [
     ...teams,
@@ -117,6 +128,7 @@ export default async function UmpireEvaluationPage() {
   return (
     <LeagueForm
       kind="umpire_evaluation"
+      eyebrow={abbrev}
       title="Umpire Evaluation"
       description="Use this form to grade the umpires from your most recent game. The league reviews every submission."
       intro={[

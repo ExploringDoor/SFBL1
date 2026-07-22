@@ -177,6 +177,7 @@ export interface LeagueSocial {
   /** X (formerly Twitter). */
   x?: string;
   youtube?: string;
+  tiktok?: string;
 }
 
 export interface LeagueSponsor {

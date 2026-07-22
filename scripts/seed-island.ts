@@ -139,7 +139,6 @@ const LEAGUE_CONFIG = {
       "pay online",
       "history",
       "player registration",
-      "team waiver",
       // No bracket engine yet, so nothing to show until playoffs are built.
       "playoffs",
     ],
@@ -154,16 +153,28 @@ const LEAGUE_CONFIG = {
     // product. Tenant-added links are inserted after that filter runs, so a
     // differently-labelled link survives — and "Coach Login" is better copy for
     // this league anyway, since their people are coaches and managers.
-    add: [{ label: "Coach Login", href: "/captain" }],
+    add: [
+      { label: "Coach Login", href: "/captain" },
+      { label: "Events & Clinics", href: "/content/events-clinics" },
+      { label: "Player Ads", href: "/content/player-ads" },
+    ],
   },
 
   about:
     "Island Fastpitch runs youth fastpitch softball leagues and tournaments " +
     "across Long Island, with Spring, Summer and Fall seasons for 8U through 18U.",
 
+  // Pulled from the footer of every page of their old Wix site. TikTok needed a
+  // new key on LeagueSocial + a glyph in SiteFooter; it renders only when set,
+  // so no other tenant is affected. Their Facebook GROUP
+  // (facebook.com/groups/1576420292574949) is their public "Player Ads" board
+  // where coaches find players, so it is linked from page_content/player-ads
+  // rather than sitting in this icon row.
   social: {
-    facebook: null as string | null,
-    instagram: null as string | null,
+    facebook: "https://www.facebook.com/islandfastpitch",
+    instagram: "https://www.instagram.com/islandfastpitch",
+    youtube: "https://www.youtube.com/@Islandfastpitch",
+    tiktok: "https://www.tiktok.com/@islandfastpitchli",
   },
 
   // Team-picker + per-team password (the SFBL model). "passwordless" here means

@@ -32,7 +32,11 @@ async function loadTeamOptions(tenantId: string | null) {
   }
 }
 
-const WAIVER_TEXT = `On behalf of myself, my team, and every player on our roster, I acknowledge that participation in the South Florida Baseball League involves inherent risks of injury including, but not limited to, permanent disability and death.
+// Default waiver text. Tenants override it with page_content/waiver, because
+// this copy is SFBL-specific in two ways that matter legally: it names the
+// league, and it asserts every participant is 18+. A youth league (Island
+// Fastpitch runs 8U to 18U) cannot use either claim.
+const DEFAULT_WAIVER_TEXT = `On behalf of myself, my team, and every player on our roster, I acknowledge that participation in the South Florida Baseball League involves inherent risks of injury including, but not limited to, permanent disability and death.
 
 We knowingly and freely assume all such risks, both known and unknown, including those arising from the negligence of the league, its officers, agents, employees, other participants, sponsors, or owners and lessors of fields used.
 
@@ -42,9 +46,38 @@ I confirm that every team member is at least 18 years of age and has individuall
 
 I have read this waiver thoroughly, understand its full meaning, and agree to its terms by signing below.`;
 
+async function loadWaiverText(tenantId: string | null): Promise<string> {
+  if (!tenantId) return DEFAULT_WAIVER_TEXT;
+  try {
+    const snap = await getAdminDb()
+      .doc(`leagues/${tenantId}/page_content/waiver`)
+      .get();
+    const md = snap.exists ? String(snap.data()?.markdown ?? "").trim() : "";
+    return md || DEFAULT_WAIVER_TEXT;
+  } catch {
+    return DEFAULT_WAIVER_TEXT;
+  }
+}
+
 export default async function TeamWaiverPage() {
-  const tenantId = headers().get("x-tenant-id");
-  const teams = await loadTeamOptions(tenantId);
+  const h = headers();
+  const tenantId = h.get("x-tenant-id");
+  // Eyebrow + intro copy must name THIS league. LeagueForm used to default the
+  // eyebrow to "SFBL", so every other tenant showed another league's name.
+  let abbrev = "";
+  try {
+    const cfg = JSON.parse(h.get("x-tenant-config-json") ?? "{}") as {
+      abbrev?: string;
+      name?: string;
+    };
+    abbrev = cfg.abbrev ?? cfg.name ?? "";
+  } catch {
+    abbrev = "";
+  }
+  const [teams, waiverText] = await Promise.all([
+    loadTeamOptions(tenantId),
+    loadWaiverText(tenantId),
+  ]);
   const teamOptions = [...teams, { value: OTHER, label: OTHER }];
 
   const FIELDS: FormField[] = [
@@ -101,11 +134,12 @@ export default async function TeamWaiverPage() {
       kind="team_waiver"
       title="Team Waiver Form"
       description="Each team must submit this waiver before the first regular-season game."
+      eyebrow={abbrev}
       intro={[
-        "Read the waiver below carefully. By signing this form, you affirm on behalf of your team that all players have or will sign the SFBL Player Liability Release.",
+        "Read the waiver below carefully. By signing this form, you affirm on behalf of your team that every player has signed, or will sign, the league's player liability release.",
       ]}
       fields={FIELDS}
-      waiverText={WAIVER_TEXT}
+      waiverText={waiverText}
       submitLabel="Sign + Submit Waiver"
       successMessage="Waiver received. Your team is cleared for play once we confirm registration + payment."
     />

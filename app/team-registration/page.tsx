@@ -135,6 +135,33 @@ const COYBL_FIELDS: FormField[] = [
   },
 ];
 
+
+// Neutral field set for tenants without their own block. SFBL_FIELDS cannot be
+// reused: it hardcodes adult divisions (18+/28+/35+), Florida counties
+// (Palm Beach / Broward / Miami-Dade) and SFBL-named consent copy. Division is
+// free text here because age groups differ per league (Island runs 8U to 18U).
+const GENERIC_FIELDS: FormField[] = [
+  { name: "manager_first_name", label: "Manager First Name", type: "text", required: true, width: "half" },
+  { name: "manager_last_name", label: "Manager Last Name", type: "text", required: true, width: "half" },
+  { name: "email", label: "Email Address", type: "email", required: true, width: "half" },
+  { name: "phone", label: "Cell Phone", type: "tel", required: true, width: "half" },
+  { name: "team_name", label: "Team Name", type: "text", required: true, width: "half" },
+  { name: "division", label: "Division / Age Group", type: "text", width: "half" },
+  { name: "city", label: "Town", type: "text", width: "half" },
+  { name: "asst_first_name", label: "Assistant Coach First Name", type: "text", width: "half" },
+  { name: "asst_last_name", label: "Assistant Coach Last Name", type: "text", width: "half" },
+  { name: "asst_phone", label: "Assistant Coach Phone", type: "tel", width: "half" },
+  { name: "notes", label: "Anything else we should know?", type: "textarea", width: "full" },
+  {
+    name: "agreed_to_terms",
+    type: "checkbox",
+    required: true,
+    label:
+      "I confirm that every player on this team will sign the league's liability release before play.",
+    width: "full",
+  },
+];
+
 function content(tenantId: string) {
   if (tenantId === "coybl") {
     return {
@@ -188,7 +215,24 @@ function content(tenantId: string) {
       ),
     };
   }
-  // SFBL (default).
+  // Generic fallback for any tenant without its own block. This used to fall
+  // through to SFBL's config, which meant a new league published SFBL's real
+  // $2,440 fee, $1,200 umpire fees and SFBL's phone number as if they were its
+  // own. Neutral copy is the only safe default.
+  if (tenantId !== "sfbl") {
+    return {
+      fields: GENERIC_FIELDS,
+      description: "Register a team for the upcoming season.",
+      intro: [
+        "Submit this form to register your team. The league office will follow up with fees, payment options and roster details.",
+      ],
+      successMessage:
+        "Thanks! Your team registration is in. The league office will be in touch about fees and rosters.",
+      footer: null,
+    };
+  }
+
+  // SFBL.
   return {
     fields: SFBL_FIELDS,
     description: "Register a new team for the South Florida Baseball League.",
@@ -211,7 +255,18 @@ function content(tenantId: string) {
 }
 
 export default function TeamRegistrationPage() {
-  const tenantId = headers().get("x-tenant-id") ?? "";
+  const h = headers();
+  const tenantId = h.get("x-tenant-id") ?? "";
+  let abbrev = "";
+  try {
+    const cfg = JSON.parse(h.get("x-tenant-config-json") ?? "{}") as {
+      abbrev?: string;
+      name?: string;
+    };
+    abbrev = cfg.abbrev ?? cfg.name ?? "";
+  } catch {
+    abbrev = "";
+  }
   const { fields, description, intro, successMessage, footer } =
     content(tenantId);
   return (
@@ -223,7 +278,7 @@ export default function TeamRegistrationPage() {
       fields={fields}
       submitLabel="Register Team"
       successMessage={successMessage}
-      eyebrow={tenantId === "coybl" ? "COYBL" : "SFBL"}
+      eyebrow={abbrev}
       footer={footer}
     />
   );

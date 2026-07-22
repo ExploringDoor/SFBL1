@@ -42,6 +42,7 @@ export function SiteFooter() {
     { key: "instagram", label: "Instagram", url: social.instagram ?? "" },
     { key: "x", label: "X", url: social.x ?? "" },
     { key: "youtube", label: "YouTube", url: social.youtube ?? "" },
+    { key: "tiktok", label: "TikTok", url: social.tiktok ?? "" },
   ].filter((s) => /^https?:\/\//i.test(s.url));
 
   return (
@@ -154,6 +155,12 @@ function SocialIcon({ platform }: { platform: string }) {
       return (
         <svg {...common}>
           <path d="M18.24 2.25h3.31l-7.23 8.26 8.5 11.24h-6.66l-5.22-6.82-5.97 6.82H1.66l7.73-8.84L1.16 2.25h6.83l4.71 6.23 5.54-6.23zm-1.16 17.52h1.83L7.01 4.13H5.05l12.03 15.64z" />
+        </svg>
+      );
+    case "tiktok":
+      return (
+        <svg {...common}>
+          <path d="M16.6 5.82A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5 2.59 2.59 0 1 1 .76-5.06v-3.1a5.66 5.66 0 0 0-.76-.05 5.68 5.68 0 1 0 5.68 5.68V9.01a7.35 7.35 0 0 0 4.29 1.37V7.3a4.29 4.29 0 0 1-3.23-1.48z" />
         </svg>
       );
     case "youtube":

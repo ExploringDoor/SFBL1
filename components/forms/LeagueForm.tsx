@@ -63,7 +63,9 @@ export interface LeagueFormProps {
   submitLabel?: string;
   /** Confirmation message shown after successful submission. */
   successMessage?: string;
-  /** Small eyebrow label above the title. Defaults to "SFBL" so the
+  /** Small eyebrow label above the title. Pass the tenant's abbrev; it used to
+   *  default to the literal "SFBL", which meant every non-SFBL tenant showed
+   *  another league's name above its own forms. Omit to render no eyebrow.
    *  SFBL forms are unchanged; tenants pass their own (e.g. "COYBL"). */
   eyebrow?: string;
   /** Optional content rendered BELOW the form (e.g. a secondary payment
@@ -80,7 +82,7 @@ export function LeagueForm({
   waiverText,
   submitLabel = "Submit",
   successMessage = "Thanks! Your submission was received. The league office will be in touch.",
-  eyebrow = "SFBL",
+  eyebrow,
   footer,
 }: LeagueFormProps) {
   const [data, setData] = useState<Record<string, unknown>>({});

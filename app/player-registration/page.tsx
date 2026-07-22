@@ -82,7 +82,30 @@ function tenantConfig(
     };
   }
 
-  // SFBL fallback — original prose + Florida-specific UX.
+  // Generic fallback for any tenant without its own block. This previously fell
+  // through to SFBL's config, which for a youth league is actively wrong: adult
+  // divisions (18+/28+/35+), a Florida county dropdown, SFBL's $280 fee and
+  // sfbl.com contact, an SFBL-named liability waiver, and a consent checkbox
+  // asserting "I am at least 18 years old". Island Fastpitch runs 8U to 18U.
+  //
+  // No waiverText here on purpose: omitting it removes the waiver block AND the
+  // agreement checkbox, which is safer than showing another league's release.
+  if (tenantId !== "sfbl") {
+    const leagueName = config?.name ?? "the league";
+    return {
+      title: "Player Registration",
+      description: `Register to play with ${leagueName}.`,
+      intro: [
+        "Submit this form to register. The league office will follow up with fees, payment options and roster details.",
+      ],
+      divisions: [],
+      showCounty: false,
+      successMessage:
+        "Thanks! You're registered. The league office will follow up with payment and roster details.",
+    };
+  }
+
+  // SFBL — adult league, Florida-specific UX.
   return {
     title: "Player Registration",
     description:
@@ -211,6 +234,7 @@ export default async function PlayerRegistrationPage() {
   return (
     <LeagueForm
       kind="player_registration"
+      eyebrow={config?.abbrev ?? config?.name ?? ""}
       title={cfg.title}
       description={cfg.description}
       intro={cfg.intro}
