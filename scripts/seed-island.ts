@@ -113,6 +113,16 @@ const LEAGUE_CONFIG = {
     // on hover and focus, which is what keeps tiles clickable (the reason
     // DVSL removed the scroll in the first place).
     ticker_scroll: true,
+    // The header banner already reads ISLAND FASTPITCH with the tagline, so the
+    // "IFP 2026" text hero underneath was the league name twice in two styles.
+    // NOT hide_page_titles, which would also strip the headings off /rules and
+    // /tournaments — neither has a banner to replace them.
+    hide_home_hero: true,
+    // Their header art is logo-on-black. PageBanner's default natural-size mode
+    // left white gutters at the sides (it uses width:auto under a height cap,
+    // so it can only fill the screen when the image ratio happens to exceed
+    // viewportWidth/maxHeight). Full bleed crops to a strip instead.
+    banner_full_bleed: true,
   },
 
   // Straight win/loss. NOT SFBL's points scheme (2/1/0) — Island's own rules
@@ -141,6 +151,9 @@ const LEAGUE_CONFIG = {
       "player registration",
       // No bracket engine yet, so nothing to show until playoffs are built.
       "playoffs",
+      // The "Info" child of the league dropdown points at /sfbl-info, which is
+      // SFBL's own content. Island's equivalent info lives on the Contact page.
+      "info",
     ],
     // Rules, Fields, Tournaments, Scores, Schedule, Standings and Teams are all
     // already in DEFAULT_LINKS, so they are NOT re-added here.
@@ -160,9 +173,8 @@ const LEAGUE_CONFIG = {
     ],
   },
 
-  about:
-    "Island Fastpitch runs youth fastpitch softball leagues and tournaments " +
-    "across Long Island, with Spring, Summer and Fall seasons for 8U through 18U.",
+  // No `about`: app/page.tsx only renders the homepage "Welcome" block when this
+  // is set, and the header banner already carries the same sentence.
 
   // Pulled from the footer of every page of their old Wix site. TikTok needed a
   // new key on LeagueSocial + a glyph in SiteFooter; it renders only when set,

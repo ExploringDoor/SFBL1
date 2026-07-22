@@ -96,6 +96,13 @@ export function computeNavLinks(
     if (l.label === "About SFBL" && tenantShort && tenantShort !== "SFBL") {
       return { ...l, label: `About ${tenantShort}` };
     }
+    // The league-identity dropdown (Info / Rules / Fields) is labelled "SFBL"
+    // in DEFAULT_LINKS. It MUST be renamed for other tenants, because
+    // SFBL_ONLY_LABELS below deletes anything still called "SFBL" — which was
+    // silently taking Rules and Fields down with it for every non-SFBL tenant.
+    if (l.label === "SFBL" && tenantShort && tenantShort !== "SFBL") {
+      return { ...l, label: tenantShort };
+    }
     return l;
   }
   const links: NavLink[] = hide.size
@@ -107,14 +114,15 @@ export function computeNavLinks(
               .filter((c) => !hide.has(c.label.toLowerCase()))
               .map(relabel);
             if (kept.length === 0) return null;
-            return { ...l, children: kept };
+            // relabel the PARENT too, not just its children.
+            return relabel({ ...l, children: kept });
           }
           return relabel(l);
         })
         .filter((l): l is NavLink => l !== null)
     : linksProp.map((l) => {
         if (l.children) {
-          return { ...l, children: l.children.map(relabel) };
+          return relabel({ ...l, children: l.children.map(relabel) });
         }
         return relabel(l);
       });

@@ -153,6 +153,8 @@ export default async function RootLayout({
   let navAddLinks: { label: string; href: string }[] = [];
   // flags.ticker_scroll — opt-in marquee ticker (Island Fastpitch).
   let tickerScroll = false;
+  // flags.banner_full_bleed — edge-to-edge page header banners (Island).
+  let bannerFullBleed = false;
   if (configJson) {
     try {
       const cfg = JSON.parse(configJson) as {
@@ -171,6 +173,7 @@ export default async function RootLayout({
       leagueAbbrev = cfg.abbrev;
       logoUrl = cfg.theme?.logo_url ?? null;
       tickerScroll = cfg.flags?.ticker_scroll === true;
+      bannerFullBleed = cfg.flags?.banner_full_bleed === true;
       themePrimary = cfg.theme?.primary;
       themeAccent = cfg.theme?.accent;
       themeSecondary = cfg.theme?.secondary;
@@ -337,7 +340,11 @@ export default async function RootLayout({
           {/* Per-page header photo (COYBL). Picks the image by route; renders
               nothing for tenants without public/<tenant>/headers/ images. */}
           {tenantId && (
-            <PageBanner images={headerImagesFor(tenantId)} initialSlug={bannerSlug} />
+            <PageBanner
+              images={headerImagesFor(tenantId)}
+              initialSlug={bannerSlug}
+              fullBleed={bannerFullBleed}
+            />
           )}
           <div className="site-content">{children}</div>
           {modal}

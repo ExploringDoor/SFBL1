@@ -214,7 +214,7 @@ export function BrandingSection({ leagueId, user }: Props) {
             onChange={(e) => setState({ ...state, name: e.target.value })}
             disabled={saving}
             className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-            placeholder="South Florida Baseball League"
+            placeholder="Your league name"
             maxLength={100}
           />
         </label>

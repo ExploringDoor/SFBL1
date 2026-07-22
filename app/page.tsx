@@ -83,7 +83,12 @@ export default async function HomePage() {
           /lbdc/hero.jpg as the wide banner and /lbdc/logo.png as
           the square ticker icon. SFBL has only logo_url today, so
           falls through to it for parity. */}
-      {!config?.flags?.hide_page_titles && (
+      {/* hide_home_hero drops JUST this homepage hero, unlike hide_page_titles
+          which also strips the headings from /rules and /tournaments — pages
+          that have no banner image to replace them. Island Fastpitch's header
+          banner already carries the league name and tagline, so the text hero
+          under it was saying the same thing twice. */}
+      {!config?.flags?.hide_page_titles && !config?.flags?.hide_home_hero && (
         <DvslHero
           title={`${big} ${season}`}
           accentWord={season}

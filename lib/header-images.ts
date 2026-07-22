@@ -11,6 +11,12 @@
 // To add/remove a tenant's header banners: drop the <slug>.jpg into
 // public/<tenant>/headers/ and update its entry here.
 const HEADER_SLUGS: Record<string, string[]> = {
+  // Island Fastpitch. No playoffs banner: the only candidate was a Little
+  // League BASEBALL image (boys in uniform, scoreboard reading "LITTLE LEAGUE")
+  // left over from another build. Wrong sport and wrong league for a girls
+  // fastpitch site. rules / fields / tournaments have no artwork yet either;
+  // a slug with no file simply renders no banner.
+  island: ["home", "scores", "schedule", "standings", "teams"],
   coybl: [
     "home",
     "scores",
