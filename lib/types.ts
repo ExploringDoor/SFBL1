@@ -60,6 +60,13 @@ export interface LeagueStandingsConfig {
   tiebreaker?: "pct" | "rd";
 }
 
+export interface NavAddLink {
+  label: string;
+  href: string;
+  /** Present = render as a dropdown instead of a direct link. */
+  children?: NavAddLink[];
+}
+
 export interface LeagueConfig {
   // Identity
   slug: string;
@@ -122,7 +129,11 @@ export interface LeagueConfig {
     // Extra top-level links to add for this tenant (e.g. COYBL's
     // "Pitch Counts" + "Power Rankings"). Inserted before the first
     // dropdown so they read as primary nav, not buried in "More".
-    add?: { label: string; href: string }[];
+    //
+    // An entry may carry `children`, which makes it a dropdown of its own
+    // (Island's "Information" menu). Use href "#" on a parent — it is ignored
+    // on desktop, where the parent becomes the hover toggle.
+    add?: NavAddLink[];
   };
 
   // Short "about / welcome" blurb for first-time visitors, shown on the

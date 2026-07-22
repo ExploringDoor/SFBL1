@@ -75,9 +75,21 @@ export async function GET() {
   // SFBL-only league-info pages.
   if (isSfbl) staticPages.push("/fields", "/sfbl-info");
   // Tenant-added nav links (COYBL: /eligibility, /power-rankings, /rules).
-  for (const l of cfg.nav?.add ?? []) {
-    if (l?.href && !staticPages.includes(l.href)) staticPages.push(l.href);
-  }
+  // Walk children too. A tenant-added entry can be a dropdown (Island's
+  // "Information" holds /player-ads and /rules), and a top-level-only walk
+  // would quietly drop every page inside it from the sitemap. Parents use
+  // href "#", which is skipped.
+  const addHrefs = (links: Array<{ href?: string; children?: unknown }>) => {
+    for (const l of links) {
+      if (l?.href && l.href !== "#" && !staticPages.includes(l.href)) {
+        staticPages.push(l.href);
+      }
+      if (Array.isArray(l?.children)) {
+        addHrefs(l.children as Array<{ href?: string; children?: unknown }>);
+      }
+    }
+  };
+  addHrefs(cfg.nav?.add ?? []);
   // Tournaments page when the tenant lists events.
   if ((cfg.tournaments?.events?.length ?? 0) > 0 && !staticPages.includes("/tournaments")) {
     staticPages.push("/tournaments");

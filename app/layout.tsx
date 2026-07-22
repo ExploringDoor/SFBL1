@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { Barlow_Condensed, Inter, Oswald } from "next/font/google";
 import { TenantProvider } from "@/lib/tenant-context";
 import { Nav } from "@/components/ui/Nav";
+import type { NavLink } from "@/components/ui/nav-links";
 import { SiteFooter } from "@/components/ui/SiteFooter";
 import { ProfileButton } from "@/components/ProfileButton";
 import { PwaShell } from "@/components/PwaShell";
@@ -150,7 +151,7 @@ export default async function RootLayout({
   let themeAccent: string | undefined;
   let themeSecondary: string | undefined;
   let navHideLabels: string[] = [];
-  let navAddLinks: { label: string; href: string }[] = [];
+  let navAddLinks: NavLink[] = [];
   // flags.ticker_scroll — opt-in marquee ticker (Island Fastpitch).
   let tickerScroll = false;
   // flags.banner_full_bleed — edge-to-edge page header banners (Island).
@@ -166,7 +167,9 @@ export default async function RootLayout({
           secondary?: string;
           logo_url?: string;
         };
-        nav?: { hide?: string[]; add?: { label: string; href: string }[] };
+        // `add` entries may carry `children` (a tenant-defined dropdown), so
+        // this stays loose and `clean` below does the real validation.
+        nav?: { hide?: string[]; add?: unknown[] };
         flags?: Record<string, boolean>;
       };
       leagueName = cfg.name ?? null;
@@ -187,9 +190,23 @@ export default async function RootLayout({
       }
       // Tenant-added nav links (e.g. COYBL "Pitch Counts" + "Power Rankings").
       if (Array.isArray(cfg.nav?.add)) {
-        navAddLinks = cfg.nav!.add!.filter(
-          (x): x is { label: string; href: string } =>
-            !!x && typeof x.label === "string" && typeof x.href === "string",
+        // Keep `children` — an added entry may itself be a dropdown (Island's
+        // "Information" menu). A filter that only widened to {label, href}
+        // would type-check fine and silently flatten the menu to a dead "#".
+        const clean = (x: unknown): NavLink | null => {
+          const l = x as { label?: unknown; href?: unknown; children?: unknown };
+          if (!l || typeof l.label !== "string" || typeof l.href !== "string") {
+            return null;
+          }
+          const kids = Array.isArray(l.children)
+            ? l.children.map(clean).filter((c): c is NavLink => c !== null)
+            : undefined;
+          return kids?.length
+            ? { label: l.label, href: l.href, children: kids }
+            : { label: l.label, href: l.href };
+        };
+        navAddLinks = cfg.nav!.add!.map(clean).filter(
+          (l): l is NavLink => l !== null,
         );
       }
     } catch {

@@ -4,6 +4,7 @@ import type {
   LeagueSocial,
   LeagueSponsor,
   ResolvedTenant,
+  NavAddLink,
 } from "./types";
 
 // What ships to server components via the `x-tenant-config-json` header.
@@ -30,7 +31,7 @@ export interface PublicLeagueConfig {
   // Per-tenant nav customization (label hide list). Mirrored from
   // /leagues/<slug>.nav.hide. The layout reads this off the x-tenant-
   // config-json header and passes it to <Nav> + <PwaTabBar>.
-  nav?: { hide?: string[]; add?: { label: string; href: string }[] };
+  nav?: { hide?: string[]; add?: NavAddLink[] };
   // Short home-page "about" blurb.
   about?: string;
   // Tournaments the league runs/links to — rendered on /tournaments.

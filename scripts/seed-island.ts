@@ -154,6 +154,13 @@ const LEAGUE_CONFIG = {
       // The "Info" child of the league dropdown points at /sfbl-info, which is
       // SFBL's own content. Island's equivalent info lives on the Contact page.
       "info",
+      // Rules and Fields are the other two children of that same league
+      // dropdown. Hiding all three empties it, and computeNavLinks drops a
+      // parent whose children are all hidden — which is how the "IFP" dropdown
+      // disappears. Both pages come back below: Fields as its own top-level
+      // button, Rules inside "Information". (Adam, 7/22/26.)
+      "rules",
+      "fields",
     ],
     // Rules, Fields, Tournaments, Scores, Schedule, Standings and Teams are all
     // already in DEFAULT_LINKS, so they are NOT re-added here.
@@ -167,13 +174,29 @@ const LEAGUE_CONFIG = {
     // differently-labelled link survives — and "Coach Login" is better copy for
     // this league anyway, since their people are coaches and managers.
     add: [
-      { label: "Coach Login", href: "/captain" },
+      { label: "Fields", href: "/fields" },
       { label: "Events & Clinics", href: "/content/events-clinics" },
-      // /player-ads is the real board (post form + approved ads + relayed
-      // contact), NOT the /content/* markdown page. That page still exists and
-      // still holds the link to their Facebook group; the board renders its
-      // body as a note so that community does not get orphaned.
-      { label: "Player Ads", href: "/player-ads" },
+      // "Information" mirrors the tab his Wix site used. Adam's layout, 7/22/26.
+      //
+      // Coach Login lives here rather than at top level. Note it must NOT be
+      // labelled "Captain": components/ui/nav-links.ts keeps a hardcoded
+      // SFBL_ONLY_LABELS list (["SFBL","Player of the Week","Captain"]) that
+      // strips those for any tenant whose short name is not SFBL. Tenant-added
+      // links are inserted AFTER that filter runs, so this survives — but only
+      // under a different label.
+      {
+        label: "Information",
+        href: "#",
+        children: [
+          // /player-ads is the real board (post form + approved ads + relayed
+          // contact), NOT the /content/* markdown page. That page still exists
+          // and still holds the link to their Facebook group; the board renders
+          // its body as a note so that community does not get orphaned.
+          { label: "Player Ads", href: "/player-ads" },
+          { label: "Rules", href: "/rules" },
+          { label: "Coach Login", href: "/captain" },
+        ],
+      },
     ],
   },
 
