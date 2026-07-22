@@ -16,19 +16,10 @@
 
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { sanitizeHtml } from "@/lib/markdown";
+import { FieldsDirectory, type Field } from "@/components/FieldsDirectory";
 
 export const dynamic = "force-dynamic";
 
-interface Field {
-  name: string;
-  location?: string | null;
-  address: string;
-  mapsUrl?: string | null;
-  appleMapsUrl?: string | null;
-  notes?: string[];
-  color?: string | null;
-}
 
 // SFBL field directory — authoritative list supplied by Adam
 // (2026-05-18), alphabetical. SFBL serves from this hardcoded
@@ -122,149 +113,8 @@ export default async function FieldsPage() {
         </p>
       </header>
 
-      <ul
-        style={{
-          listStyle: "none",
-          padding: 0,
-          margin: 0,
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-          gap: 14,
-        }}
-      >
-        {fields.map((f) => {
-          const accent = f.color ?? "var(--brand-primary)";
-          // Build Google Maps deep-link from explicit field, else
-          // synthesize from address (matches old SFBL behaviour).
-          const googleHref =
-            f.mapsUrl ||
-            `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(f.address)}`;
-          const appleHref =
-            f.appleMapsUrl ||
-            `https://maps.apple.com/?q=${encodeURIComponent(f.address)}`;
-          return (
-            <li
-              key={f.name}
-              style={{
-                background: "white",
-                border: "1px solid rgba(0,0,0,0.08)",
-                borderLeft: `4px solid ${accent}`,
-                borderRadius: 12,
-                padding: "16px 18px",
-                display: "flex",
-                flexDirection: "column",
-                gap: 10,
-              }}
-            >
-              <div>
-                <h3
-                  className="font-display"
-                  style={{
-                    margin: 0,
-                    fontSize: 18,
-                    color: "var(--text-strong)",
-                    letterSpacing: "-0.01em",
-                  }}
-                >
-                  {f.name}
-                  {f.location && (
-                    <span
-                      style={{
-                        marginLeft: 8,
-                        fontSize: 13,
-                        color: "var(--muted)",
-                        fontWeight: 500,
-                      }}
-                    >
-                      · {f.location}
-                    </span>
-                  )}
-                </h3>
-                <p
-                  style={{
-                    margin: "4px 0 0",
-                    fontSize: 13,
-                    color: "var(--muted)",
-                    lineHeight: 1.4,
-                  }}
-                >
-                  {f.address}
-                </p>
-              </div>
+      <FieldsDirectory fields={fields} />
 
-              {Array.isArray(f.notes) && f.notes.length > 0 && (
-                <ul
-                  style={{
-                    listStyle: "disc",
-                    paddingLeft: 18,
-                    margin: 0,
-                    color: "var(--text-body)",
-                    fontSize: 13,
-                    lineHeight: 1.55,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 3,
-                  }}
-                >
-                  {f.notes.map((n, i) => (
-                    // LBDC's lbdc_fields rows store inline <b><i>
-                    // markup inside note strings (e.g. parking
-                    // directions, gate hours). Render as sanitized
-                    // HTML so the formatting comes through — without
-                    // this the user sees literal "<b><i>..." text.
-                    // sanitizeHtml uses the same DOMPurify allowlist
-                    // as the rich-text content pipeline.
-                    <li
-                      key={i}
-                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(n) }}
-                    />
-                  ))}
-                </ul>
-              )}
-
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <a
-                  href={googleHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    flex: "1 1 130px",
-                    textAlign: "center",
-                    padding: "8px 12px",
-                    borderRadius: 8,
-                    background: "var(--brand-primary)",
-                    color: "white",
-                    textDecoration: "none",
-                    fontSize: 13,
-                    fontWeight: 700,
-                  }}
-                >
-                  Google Maps
-                </a>
-                <a
-                  href={appleHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    flex: "1 1 130px",
-                    textAlign: "center",
-                    padding: "8px 12px",
-                    borderRadius: 8,
-                    background: "rgba(0,0,0,0.06)",
-                    color: "var(--text-strong)",
-                    textDecoration: "none",
-                    fontSize: 13,
-                    fontWeight: 700,
-                    border: "1px solid rgba(0,0,0,0.1)",
-                  }}
-                >
-                  Apple Maps
-                </a>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
     </main>
   );
 }

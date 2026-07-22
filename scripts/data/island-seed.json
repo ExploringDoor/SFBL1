@@ -1863,5 +1863,283 @@
       "name": "William Kessler Park",
       "address": "525 Sweet Hollow Road, Melville, NY 11747"
     }
-  ]
+  ],
+  "rules": {
+    "divisions": [
+      {
+        "key": "10u",
+        "label": "10U",
+        "sub": "11 inch ball \u00b7 35 ft"
+      },
+      {
+        "key": "12u",
+        "label": "12U",
+        "sub": "12 inch ball \u00b7 40 ft"
+      },
+      {
+        "key": "14u",
+        "label": "14U",
+        "sub": "12 inch ball \u00b7 43 ft"
+      },
+      {
+        "key": "16-18u",
+        "label": "16/18U",
+        "sub": "12 inch ball \u00b7 43 ft"
+      }
+    ],
+    "sections": [
+      {
+        "section": "10U At A Glance",
+        "icon": "clipboard",
+        "divisions": [
+          "10u"
+        ],
+        "kind": "specs",
+        "specs": [
+          {
+            "label": "Pitching mound",
+            "value": "35 ft"
+          },
+          {
+            "label": "Game ball",
+            "value": "11\" USSSA"
+          },
+          {
+            "label": "Weeknight game",
+            "value": "2 hours, finish inning"
+          },
+          {
+            "label": "Weekend doubleheader",
+            "value": "1 hr 20 min per game, finish inning"
+          },
+          {
+            "label": "Umpires",
+            "value": "1 per weeknight game \u00b7 1 per weekend doubleheader"
+          },
+          {
+            "label": "Umpire fee",
+            "value": "$40 single \u00b7 $80 doubleheader, per team"
+          }
+        ]
+      },
+      {
+        "section": "12U At A Glance",
+        "icon": "clipboard",
+        "divisions": [
+          "12u"
+        ],
+        "kind": "specs",
+        "specs": [
+          {
+            "label": "Pitching mound",
+            "value": "40 ft"
+          },
+          {
+            "label": "Game ball",
+            "value": "12\" USSSA"
+          },
+          {
+            "label": "Weeknight game",
+            "value": "2 hours, finish inning"
+          },
+          {
+            "label": "Weekend doubleheader",
+            "value": "1 hr 20 min per game, finish inning"
+          },
+          {
+            "label": "Umpires",
+            "value": "2 per weeknight game \u00b7 2 per weekend doubleheader"
+          },
+          {
+            "label": "Umpire fee",
+            "value": "$80 single \u00b7 $160 doubleheader, per team"
+          }
+        ]
+      },
+      {
+        "section": "14U At A Glance",
+        "icon": "clipboard",
+        "divisions": [
+          "14u"
+        ],
+        "kind": "specs",
+        "specs": [
+          {
+            "label": "Pitching mound",
+            "value": "43 ft"
+          },
+          {
+            "label": "Game ball",
+            "value": "12\" USSSA"
+          },
+          {
+            "label": "Weeknight game",
+            "value": "2 hours, finish inning"
+          },
+          {
+            "label": "Weekend doubleheader",
+            "value": "1 hr 20 min per game, finish inning"
+          },
+          {
+            "label": "Umpires",
+            "value": "2 per weeknight game \u00b7 2 per weekend doubleheader"
+          },
+          {
+            "label": "Umpire fee",
+            "value": "$80 single \u00b7 $160 doubleheader, per team"
+          }
+        ]
+      },
+      {
+        "section": "16/18U At A Glance",
+        "icon": "clipboard",
+        "divisions": [
+          "16-18u"
+        ],
+        "kind": "specs",
+        "specs": [
+          {
+            "label": "Pitching mound",
+            "value": "43 ft"
+          },
+          {
+            "label": "Game ball",
+            "value": "12\" USSSA"
+          },
+          {
+            "label": "Weeknight game",
+            "value": "2 hours, finish inning"
+          },
+          {
+            "label": "Weekend doubleheader",
+            "value": "1 hr 20 min per game, finish inning"
+          },
+          {
+            "label": "Umpires",
+            "value": "2 per weeknight game \u00b7 2 per weekend doubleheader"
+          },
+          {
+            "label": "Umpire fee",
+            "value": "$80 single \u00b7 $160 doubleheader, per team"
+          }
+        ]
+      },
+      {
+        "section": "10U Only",
+        "icon": "star",
+        "divisions": [
+          "10u"
+        ],
+        "items": [
+          "Third strike: a batter is out after their third strike.",
+          "Outfielders: only three outfielders are allowed, not four.",
+          "Umpires: one umpire per doubleheader for weekend games, and one umpire per single game for weeknight games."
+        ]
+      },
+      {
+        "section": "Playing The Game",
+        "icon": "ball",
+        "items": [
+          "Coin flip: the umpire will flip a coin to determine home team and away team while discussing ground rules.",
+          "Batters: a maximum of 11 players can bat. If you want to bat more than 11 players, you must bat all players.",
+          "Runs: teams must have 12 runs after the 4th inning and 10 runs after the 5th inning.",
+          "Warm ups: the field will be open 30 minutes prior to game time for warm-up in the outfield only.",
+          "Bases: all teams are required to have a set of bases to bring to all scheduled games.",
+          "Footwear: no metal cleats or spikes are allowed. Players must wear turf shoes or plastic cleats."
+        ]
+      },
+      {
+        "section": "Official Ball",
+        "icon": "ball",
+        "items": [
+          "12U, 14U, 16U, 18U and 18+ use a 12 inch official USSSA game ball.",
+          "10U uses an 11 inch official USSSA game ball."
+        ]
+      },
+      {
+        "section": "Reporting Scores",
+        "icon": "clipboard",
+        "items": [
+          "Scores must be texted to Kate at 631-455-9258 immediately following the game by both coaches.",
+          "Standings will be updated, and scores will be posted, once we receive them from both managers."
+        ]
+      },
+      {
+        "section": "Schedules And Rainouts",
+        "icon": "calendar",
+        "items": [
+          "Announcements regarding rainouts will be made by Kate via group text.",
+          "Games cancelled by weather will be rescheduled within 48 hours. These games will be posted to the schedule available online.",
+          "Schedules are subject to change at any time. Please check your schedule often for any changes and make-ups that may have been added.",
+          "Any dates that your team is unavailable to play must be given at the time of registration. We will do our best to accommodate each team.",
+          "Please be aware that schedules are final at the time of release. We will not be making mid season changes.",
+          "Field directions can be found under the Fields tab."
+        ]
+      },
+      {
+        "section": "Forfeits",
+        "icon": "warning",
+        "items": [
+          "If your team is unable to make a game and must forfeit, please call Kaitlin at 631-455-9258.",
+          "A forfeit will result in a 7-0 game loss.",
+          "If you forfeit two times in one season, your team will be removed from the roster."
+        ]
+      },
+      {
+        "section": "Rosters",
+        "icon": "roster",
+        "items": [
+          "The roster freeze date will be released at the start of the season. At this time we need all players' birth certificates on file in order for these players to be eligible for playoffs.",
+          "At no time may there be more than 20 players on your active roster.",
+          "You may add or remove players from your roster up until the freeze date. After the roster is frozen, players may not be added.",
+          "Players must have at least 2 plate appearances to play in the playoffs. This includes walks and sacrifices.",
+          "Rosters must be submitted on the Island Fastpitch website as well as on www.USSSA.com."
+        ]
+      },
+      {
+        "section": "Playoffs",
+        "icon": "trophy",
+        "items": [
+          "8 team division: the top 4 teams qualify for the playoffs.",
+          "12 team division: the top 6 teams qualify for the playoffs.",
+          "Player eligibility: a player must have participated in at least two games to qualify for playoffs.",
+          "Rosters must be submitted on the Island Fastpitch website as well as on www.USSSA.com."
+        ]
+      },
+      {
+        "section": "Conduct And Ejections",
+        "icon": "warning",
+        "items": [
+          "Island Fastpitch holds the right to suspend a player, manager, or team depending on the offense at any given time during your season. Reasons may include, but are not limited to, use of profanity, unsportsmanlike behavior, and false information given on registration forms.",
+          "Should a player, manager, or coach be ejected from a game, he or she must leave the field of play immediately or risk the chance of his or her team forfeiting the game.",
+          "Umpires also have the authority to remove anyone from any of the grounds you are scheduled to play at.",
+          "1st offense: the player or coach is ineligible for the next immediate game. Example: if you are ejected from game one of a doubleheader, you are ineligible for game 2 but eligible for your next scheduled game.",
+          "If the ejected player or coach fails to sit the next game, a forfeit win will be awarded to the opposing team. That player or coach must still sit their next game, and the team representative or manager will also sit their next game for failure to comply.",
+          "If the ejection occurs in the final game of the season, the penalty carries over to the playoffs or next season.",
+          "2nd offense: any player or coach ejected a second time will be declared ineligible for the remainder of the season, including playoffs and tournaments.",
+          "In addition to the above suspensions, further disciplinary action may be taken against an ejected player or coach.",
+          "Appeal process: a twenty dollar ($20) money order payable to Island Softball must be included with your written appeal. The fee will be refunded if the ejection is overturned.",
+          "Parents that are unable to conduct themselves in a respectable manner may be asked to leave the field. If a problem persists, the parent may be asked not to return to the field. The umpire onsite, along with the owner or director, have the ability to make such decisions.",
+          "We are looking to create a friendly, competitive atmosphere for all players, coaches, and parents."
+        ]
+      },
+      {
+        "section": "Injuries And Insurance",
+        "icon": "shield",
+        "items": [
+          "Any injuries occurring during the game at the field must be submitted to our office in a written report.",
+          "Please be aware that if you do not purchase team insurance, the league and the field owner are not held responsible in any way."
+        ]
+      },
+      {
+        "section": "USSSA Rules",
+        "icon": "book",
+        "items": [
+          "Island Fastpitch follows USSSA rules.",
+          "You will find links to USSSA information under USSSA in the Information tab."
+        ]
+      }
+    ],
+    "content_updated": "2026-01-05"
+  }
 }

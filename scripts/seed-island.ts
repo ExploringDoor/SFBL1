@@ -214,6 +214,12 @@ type SeedGame = {
 
 type SeedField = { name: string; address: string };
 
+type SeedRules = {
+  divisions: Array<{ key: string; label: string; sub?: string }>;
+  sections: Array<Record<string, unknown>>;
+  content_updated?: string;
+};
+
 const data = JSON.parse(
   readFileSync(join(__dirname, "data", "island-seed.json"), "utf8"),
 ) as {
@@ -221,14 +227,27 @@ const data = JSON.parse(
   games: SeedGame[];
   pages: Record<string, string>;
   fields: SeedField[];
+  rules?: SeedRules;
 };
+
+// Partial seed. A full run WIPES teams/games/players/box_scores before
+// rewriting them, which is the right behaviour for a rebuild but needless risk
+// when all you are changing is one document on a live site. SEED_ONLY limits
+// the run to a comma-separated list of parts.
+//   SEED_ONLY=rules   -> writes site_config/rules only, touches nothing else
+const ONLY = (process.env.SEED_ONLY ?? "")
+  .split(",")
+  .map((s) => s.trim().toLowerCase())
+  .filter(Boolean);
+const wants = (part: string) => ONLY.length === 0 || ONLY.includes(part);
 
 async function run() {
   const target = process.env.FIRESTORE_EMULATOR_HOST ?? "PRODUCTION";
   console.log(`[seed-island] target: ${target}`);
+  if (ONLY.length) console.log(`[seed-island] PARTIAL: ${ONLY.join(", ")}`);
 
   // Wipe stale docs so renamed teams don't linger between reseeds.
-  for (const sub of ["teams", "games", "players", "box_scores"]) {
+  for (const sub of wants("data") ? ["teams", "games", "players", "box_scores"] : []) {
     const stale = await db.collection(`leagues/${LEAGUE_ID}/${sub}`).get();
     if (stale.empty) continue;
     const batch = db.batch();
@@ -237,8 +256,10 @@ async function run() {
     console.log(`[seed-island] cleared ${stale.size} stale ${sub}`);
   }
 
-  await db.doc(`leagues/${LEAGUE_ID}`).set(LEAGUE_CONFIG);
-  console.log("[seed-island] wrote league config");
+  if (wants("config")) {
+    await db.doc(`leagues/${LEAGUE_ID}`).set(LEAGUE_CONFIG);
+    console.log("[seed-island] wrote league config");
+  }
 
   let batch = db.batch();
   let n = 0;
@@ -246,7 +267,7 @@ async function run() {
     if (n) { await batch.commit(); batch = db.batch(); n = 0; }
   };
 
-  for (const t of data.teams) {
+  for (const t of wants("data") ? data.teams : []) {
     batch.set(db.doc(`leagues/${LEAGUE_ID}/teams/${t.id}`), {
       name: t.name,
       abbrev: t.abbrev,
@@ -263,7 +284,7 @@ async function run() {
     if (++n >= 400) await flush();
   }
 
-  for (const g of data.games) {
+  for (const g of wants("data") ? data.games : []) {
     batch.set(db.doc(`leagues/${LEAGUE_ID}/games/${g.id}`), {
       home_team_id: g.home_team_id,
       away_team_id: g.away_team_id,
@@ -282,7 +303,7 @@ async function run() {
   // /fields reads leagues/<id>/site_config/fields and, when that doc is missing,
   // falls back to a HARDCODED list of South Florida ballparks (app/fields/page.tsx:40).
   // Without this write Island's fields page would show Boca Raton and Miami.
-  if (data.fields?.length) {
+  if (wants("fields") && data.fields?.length) {
     await db.doc(`leagues/${LEAGUE_ID}/site_config/fields`).set({
       data: data.fields,
       updated_at: new Date().toISOString(),
@@ -291,7 +312,28 @@ async function run() {
     console.log(`[seed-island] wrote ${data.fields.length} fields`);
   }
 
-  for (const [key, markdown] of Object.entries(data.pages)) {
+  // Structured rules drive the rich /rules view: division tabs, an at-a-glance
+  // spec strip, and per-section cards. app/rules/page.tsx prefers this doc over
+  // page_content/rules, and the top-level `divisions` array is what selects the
+  // generic N-division renderer instead of LBDC's hardcoded two-tab path.
+  //
+  // page_content/rules is still seeded below, as the archival markdown copy and
+  // the fallback if this doc is ever removed.
+  if (wants("rules") && data.rules?.sections?.length) {
+    await db.doc(`leagues/${LEAGUE_ID}/site_config/rules`).set({
+      data: data.rules.sections,
+      divisions: data.rules.divisions,
+      content_updated: data.rules.content_updated ?? null,
+      updated_at: new Date().toISOString(),
+      updated_by: "seed",
+    });
+    console.log(
+      `[seed-island] wrote structured rules — ${data.rules.sections.length} ` +
+        `sections across ${data.rules.divisions.length} divisions`,
+    );
+  }
+
+  for (const [key, markdown] of Object.entries(wants("pages") ? data.pages : {})) {
     await db.doc(`leagues/${LEAGUE_ID}/page_content/${key}`).set({
       title: key.charAt(0).toUpperCase() + key.slice(1),
       markdown,
@@ -301,8 +343,10 @@ async function run() {
   }
 
   console.log(
-    `[seed-island] done — ${data.teams.length} teams, ${data.games.length} games, ` +
-      `${Object.keys(data.pages).length} content pages (stats off)`,
+    ONLY.length
+      ? `[seed-island] done — partial run (${ONLY.join(", ")}), nothing else touched`
+      : `[seed-island] done — ${data.teams.length} teams, ${data.games.length} games, ` +
+          `${Object.keys(data.pages).length} content pages (stats off)`,
   );
 }
 

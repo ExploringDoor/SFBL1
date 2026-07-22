@@ -3,7 +3,11 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { markdownToHtml } from "@/lib/markdown";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { PageContentEditor } from "@/components/PageContentEditor";
-import { RulesRichView, type RulesSection } from "@/components/RulesRichView";
+import {
+  RulesRichView,
+  type RulesSection,
+  type DivisionDef,
+} from "@/components/RulesRichView";
 
 export const dynamic = "force-dynamic";
 
@@ -55,8 +59,23 @@ export default async function RulesPage() {
           (s) =>
             s &&
             typeof s.section === "string" &&
-            Array.isArray(s.items) &&
-            s.items.length > 0,
+            // A section is renderable if it has rule items OR, for the
+            // at-a-glance strip, spec pairs. The original check demanded
+            // items[], which would have silently dropped every specs card.
+            ((Array.isArray(s.items) && s.items.length > 0) ||
+              (s.kind === "specs" &&
+                Array.isArray(s.specs) &&
+                s.specs.length > 0)),
+        )
+      : [];
+
+  // Presence of a top-level `divisions` array selects the generic,
+  // data-driven renderer. LBDC has no such field and keeps the legacy
+  // title-sniffing path below.
+  const divisionDefs =
+    structuredData && Array.isArray(structuredData.divisions)
+      ? (structuredData.divisions as DivisionDef[]).filter(
+          (d) => d && typeof d.key === "string" && typeof d.label === "string",
         )
       : [];
 
@@ -71,11 +90,19 @@ export default async function RulesPage() {
       ...(hasSat ? (["saturday"] as const) : []),
       ...(hasBom ? (["boomers"] as const) : []),
     ];
+    // `content_updated` is the date the LEAGUE last revised its rules (Island's
+    // page is stamped "Updated 1/5/2026"). Prefer it over `updated_at`, which is
+    // just when the seed script last wrote the doc and would tell a coach the
+    // rules changed today when they did not.
     const richUpdatedAt =
+      (structuredData?.content_updated as string | undefined) ??
       (structuredData?.updated_at as string | undefined) ??
       (contentSnap.data()?.updated_at as string | undefined);
     return (
-      <Shell heading={config?.flags?.hide_page_titles ? "" : config?.name ? `${config.name} — Rules` : "Rules"}>
+      <Shell
+        heading={config?.flags?.hide_page_titles ? "" : config?.name ? `${config.name} — Rules` : "Rules"}
+        wide={divisionDefs.length > 0}
+      >
         {richUpdatedAt && (
           <p className="mb-4 text-xs text-slate-500">
             Last updated{" "}
@@ -83,12 +110,14 @@ export default async function RulesPage() {
               year: "numeric",
               month: "long",
               day: "numeric",
+              timeZone: "UTC",
             })}
           </p>
         )}
         <RulesRichView
           sections={sections}
           divisionsAvailable={divisionsAvailable}
+          {...(divisionDefs.length > 0 ? { divisions: divisionDefs } : {})}
         />
       </Shell>
     );
@@ -131,9 +160,21 @@ export default async function RulesPage() {
   );
 }
 
-function Shell({ heading, children }: { heading: string; children: React.ReactNode }) {
+function Shell({
+  heading,
+  children,
+  wide = false,
+}: {
+  heading: string;
+  children: React.ReactNode;
+  /** The rich division view carries tabs and a spec grid, which are cramped in
+   *  the 3xl prose column. Freeform markdown keeps the narrower measure. */
+  wide?: boolean;
+}) {
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12">
+    <main
+      className={`mx-auto px-6 py-12 ${wide ? "max-w-5xl" : "max-w-3xl"}`}
+    >
       {heading && (
         <header className="mb-6">
           <h1 className="text-3xl font-bold tracking-tight">{heading}</h1>

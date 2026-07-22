@@ -19,6 +19,10 @@ import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { markdownToHtml } from "@/lib/markdown";
 import { PageContentEditor } from "@/components/PageContentEditor";
+import {
+  ContentSections,
+  extractLeadingH1,
+} from "@/components/ContentSections";
 
 export const dynamic = "force-dynamic";
 
@@ -76,7 +80,6 @@ export default async function ContentPage({
   if (!docSnap.exists) notFound();
 
   const data = docSnap.data() ?? {};
-  const title = String(data.title ?? humanize(pageId));
   const updatedAt = data.updated_at as string | undefined;
   // Prefer the stored `html` field (RichEditor source-of-truth or
   // markdown→html cache). Fall back to re-rendering markdown for
@@ -84,7 +87,14 @@ export default async function ContentPage({
   const cachedHtml =
     typeof data.html === "string" && data.html ? String(data.html) : "";
   const markdown = String(data.markdown ?? "");
-  const html = cachedHtml || markdownToHtml(markdown);
+  const rawHtml = cachedHtml || markdownToHtml(markdown);
+
+  // The page printed its title twice: once as the route heading and again as
+  // the markdown's own leading "# ...". Lift that H1 out and use it as THE
+  // title — it is also better copy than the stored `title`, which the seed
+  // derives from the slug ("events-clinics" -> "Events-clinics").
+  const { title: h1Title, body: html } = extractLeadingH1(rawHtml);
+  const title = h1Title ?? String(data.title ?? humanize(pageId));
 
   return (
     <Shell heading={title}>
@@ -98,10 +108,7 @@ export default async function ContentPage({
           })}
         </p>
       )}
-      <article
-        className="prose prose-slate max-w-none [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mt-6 [&_h1]:mb-3 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:mt-5 [&_h2]:mb-2 [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-2 [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:my-1 [&_a]:text-blue-600 [&_a]:underline [&_strong]:font-semibold [&_em]:italic [&_code]:rounded [&_code]:bg-slate-100 [&_code]:px-1 [&_blockquote]:border-l-4 [&_blockquote]:border-slate-300 [&_blockquote]:pl-3 [&_blockquote]:text-slate-600 [&_table]:w-full [&_table]:my-4 [&_table]:text-sm [&_th]:text-left [&_th]:font-semibold [&_th]:bg-slate-50 [&_th]:border [&_th]:border-slate-200 [&_th]:px-3 [&_th]:py-2 [&_td]:border [&_td]:border-slate-200 [&_td]:px-3 [&_td]:py-2 [&_img]:rounded-lg [&_img]:border [&_img]:border-slate-200 [&_img]:shadow-sm [&_img]:my-4"
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
+      <ContentSections html={html} />
       <PageContentEditor
         tenantId={tenantId}
         pageId={pageId}
@@ -120,7 +127,7 @@ function Shell({
   children: React.ReactNode;
 }) {
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12">
+    <main className="mx-auto max-w-4xl px-6 py-12">
       <header className="mb-6">
         <h1 className="text-3xl font-bold tracking-tight">{heading}</h1>
       </header>
