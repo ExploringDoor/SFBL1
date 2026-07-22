@@ -23,6 +23,7 @@ import { BulkInviteSection } from "@/components/admin/BulkInviteSection";
 import { BrandingSection } from "@/components/admin/BrandingSection";
 import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
 import { FormSubmissionsViewer } from "@/components/admin/FormSubmissionsViewer";
+import { PlayerAdsManager } from "@/components/admin/PlayerAdsManager";
 import { TeamsManager } from "@/components/admin/TeamsManager";
 import { LeagueHealthDashboard } from "@/components/admin/LeagueHealthDashboard";
 import { ScheduleEditor } from "@/components/admin/ScheduleEditor";
@@ -62,6 +63,7 @@ type TabKey =
   | "calendar"
   | "chat"
   | "forms"
+  | "playerads"
   | "audit";
 
 const TABS: { key: TabKey; label: string; description: string }[] = [
@@ -88,6 +90,7 @@ const TABS: { key: TabKey; label: string; description: string }[] = [
   // Chat hidden for now (Adam, 2026-05-18). Re-add to re-enable.
   // { key: "chat", label: "Chat", description: "Browse and moderate captains-chat or team chats." },
   { key: "forms", label: "Form submissions", description: "Review player + team registrations, waivers, and umpire evaluations submitted from the public site." },
+  { key: "playerads", label: "Player Ads", description: "Approve player ads before they appear on the public board. The ad body is published, so check it for phone numbers and surnames." },
   { key: "audit", label: "Audit log", description: "Recent admin actions and score changes." },
   // Tools tab (recalc / smoke test / CSV importer) hidden per Adam —
   // Recalc is already accessible from the Health tab, CSV import is a
@@ -484,6 +487,9 @@ export default function AdminPage() {
         )}
         {activeTab === "forms" && (
           <FormSubmissionsViewer leagueId={tenantId} user={user} />
+        )}
+        {activeTab === "playerads" && (
+          <PlayerAdsManager leagueId={tenantId} user={user} />
         )}
         {activeTab === "audit" && (
           <AuditLogViewer leagueId={tenantId} user={user} />

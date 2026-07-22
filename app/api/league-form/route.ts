@@ -32,7 +32,8 @@ type Kind =
   | "player_registration"
   | "team_waiver"
   | "umpire_evaluation"
-  | "alerts_signup";
+  | "alerts_signup"
+  | "player_ad";
 
 interface SubmissionBody {
   kind: Kind;
@@ -123,6 +124,24 @@ const ALLOWED_FIELDS: Record<Kind, string[]> = {
     "notify_by",
     "agreed_to_alerts",
   ],
+  // Player Ads — the on-site replacement for Island's Facebook group.
+  // SPLIT BY VISIBILITY, and the split is enforced downstream in
+  // /api/admin-player-ads, which builds the public doc from PUBLIC_AD_FIELDS
+  // only. Nothing here is public until an admin approves it.
+  //   private: contact_name, email, phone  (never copied to the public doc)
+  //   public : posted_by, age_group, position, town, team_name, message
+  player_ad: [
+    "posted_by",
+    "contact_name",
+    "email",
+    "phone",
+    "age_group",
+    "position",
+    "town",
+    "team_name",
+    "message",
+    "agreed_to_terms",
+  ],
 };
 
 const REQUIRED: Record<Kind, string[]> = {
@@ -162,6 +181,14 @@ const REQUIRED: Record<Kind, string[]> = {
     "home_team",
   ],
   alerts_signup: ["email", "agreed_to_alerts"],
+  player_ad: [
+    "posted_by",
+    "contact_name",
+    "email",
+    "age_group",
+    "message",
+    "agreed_to_terms",
+  ],
 };
 
 // In-memory rate limiter — fine for single-instance Vercel/Next dev.

@@ -169,7 +169,11 @@ const LEAGUE_CONFIG = {
     add: [
       { label: "Coach Login", href: "/captain" },
       { label: "Events & Clinics", href: "/content/events-clinics" },
-      { label: "Player Ads", href: "/content/player-ads" },
+      // /player-ads is the real board (post form + approved ads + relayed
+      // contact), NOT the /content/* markdown page. That page still exists and
+      // still holds the link to their Facebook group; the board renders its
+      // body as a note so that community does not get orphaned.
+      { label: "Player Ads", href: "/player-ads" },
     ],
   },
 

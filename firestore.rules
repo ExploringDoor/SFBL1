@@ -196,6 +196,26 @@ service cloud.firestore {
         allow write: if isAdmin(leagueId);
       }
 
+      // /leagues/{leagueId}/player_ads/{adId}
+      // APPROVED player ads only, and only the redacted projection built by
+      // /api/admin-player-ads: age group, position, town, team name, message.
+      //
+      // The submitted ad — including the poster's name, email and phone — stays
+      // in /form_submissions/player_ad, which has no rule here and so falls to
+      // the default deny at the bottom of this file. Admin SDK reads it; nobody
+      // else can. That separation is the whole design: these are 8U-18U
+      // players, so the public document must not CONTAIN contact details
+      // rather than merely decline to display them.
+      //
+      // Write is admin-only, matching photos / page_content. In practice all
+      // mutations go through /api/admin-player-ads, which is what enforces the
+      // field allow-list — a direct admin client write could put anything here,
+      // so approvals must keep going through that route.
+      match /player_ads/{adId} {
+        allow read: if true;
+        allow write: if isAdmin(leagueId);
+      }
+
       // Box scores: admin OR captain of one of the teams in the game.
       match /box_scores/{gameId} {
         allow read: if true;
