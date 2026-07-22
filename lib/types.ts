@@ -19,6 +19,16 @@ export interface LeagueTheme {
    *  banner asset (LBDC's hero.jpg) can set this and keep their
    *  ticker icon small. */
   banner_url?: string;
+  /** 1200x630 share card for link previews (iMessage, Facebook, X).
+   *
+   *  SET THIS FOR EVERY TENANT. The platform default is
+   *  /og-default.png, which is SFBL's own logo — so any league
+   *  without an override texts out a South Florida Baseball League
+   *  card. Adam hit exactly that sending an Island link (2026-07-22).
+   *
+   *  Must be 1200x630 to match the og:image:width/height we declare,
+   *  and should be a path under /public. */
+  og_image_url?: string;
 }
 
 export interface LeagueBilling {

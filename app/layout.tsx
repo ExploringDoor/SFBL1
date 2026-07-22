@@ -80,7 +80,7 @@ export async function generateMetadata(): Promise<Metadata> {
       name?: string;
       abbrev?: string;
       sport?: string;
-      theme?: { logo_url?: string };
+      theme?: { logo_url?: string; og_image_url?: string };
     };
     const name = cfg.name ?? "League";
     const abbrev = cfg.abbrev;
@@ -95,11 +95,20 @@ export async function generateMetadata(): Promise<Metadata> {
     // overrides (team / player pages) still set their own image in
     // their own generateMetadata.
     // Per-tenant share image for link previews (iMessage / FB / Twitter).
-    // /og-default.png is SFBL-branded, so tenants with their own need an
-    // override or their previews show SFBL. (Adam, 2026-07.)
+    //
+    // /og-default.png is literally SFBL's logo, so ANY tenant without an
+    // override texts out a South Florida Baseball League card. Adam hit this
+    // sending an Island link (2026-07-22).
+    //
+    // Now config-driven: set theme.og_image_url and a tenant gets its own card
+    // with no code change. COYBL's hardcoded path stays as a fallback because
+    // its config predates the field and is not worth a reseed.
+    const ogUrl =
+      cfg.theme?.og_image_url ||
+      (abbrev === "COYBL" ? "/coybl/og.png" : "/og-default.png");
     const ogImage = [
       {
-        url: abbrev === "COYBL" ? "/coybl/og.png" : "/og-default.png",
+        url: ogUrl,
         width: 1200,
         height: 630,
         alt: name,

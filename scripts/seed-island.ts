@@ -89,6 +89,11 @@ const LEAGUE_CONFIG = {
     accent: "#35afea",
     secondary: "#c8dc2e",
     logo_url: null as string | null,
+    // Link-preview card for texts / Facebook / X. Without this Island
+    // inherited /og-default.png, which is SFBL's logo — Adam texted an Island
+    // link and got a South Florida Baseball League card (2026-07-22).
+    // Built from the homepage banner, centred on black at 1200x630.
+    og_image_url: "/island/og.png",
   },
 
   billing: {
