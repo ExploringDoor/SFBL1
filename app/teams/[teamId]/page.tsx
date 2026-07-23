@@ -471,6 +471,7 @@ export default async function TeamDetailPage({
             style={{ minWidth: 0 }}
           >
             <div
+              className="le-hero-logo-box"
               style={{
                 background: "white",
                 borderRadius: 16,
