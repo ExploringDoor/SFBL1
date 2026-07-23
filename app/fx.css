@@ -285,6 +285,24 @@
   height: 30px;
 }
 
+/* Upcoming-schedule preview cards and the full standings table each render
+   their OWN logo <img> (not TeamBadge or the game card), so they missed the
+   coin and still showed flat logos. Same circle treatment here.
+   `:has(img)` so the always-present preview wrapper for a logo-less (14U) team
+   stays empty instead of showing a bare navy circle. */
+.fx-on .le-preview-logo:has(img),
+.fx-on .le-s-tbl .le-team-logo:has(img) {
+  border-radius: 50%;
+  background: radial-gradient(125% 125% at 50% 28%, #143a5e 0%, #0a2338 72%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.09);
+  box-sizing: border-box;
+}
+.fx-on .le-preview-logo img,
+.fx-on .le-s-tbl .le-team-logo img {
+  width: 80%;
+  height: 80%;
+}
+
 /* Team-page hero: the logo sat in a white rounded box for contrast on the dark
    hero. With the coin that box is redundant and Adam wants it gone. Scoped to
    Island; other tenants (no coin) keep the white box. !important beats the
