@@ -239,6 +239,42 @@
   display: inline-block;
 }
 
+/* ---- team logo coin ----------------------------------------------------- */
+
+/* The team logos were drawn to sit on a solid black field. Their silver / white
+   / pale-blue art (Phoenix Fire Silver & Gray, Force) washed out on the white
+   cards — Adam: "some look like there is a faded logo". A dark rounded coin
+   gives every logo the dark ground it expects, so the light ones read and the
+   vibrant ones look native. The colour is Island's own deep navy, softer than
+   pure black on a light page.
+
+   Not motion, but gated on .fx-on so it stays Island-only with no extra flag;
+   other tenants render logos flat exactly as before. */
+.fx-on .le-logo-badge {
+  border-radius: 22%;
+  background: radial-gradient(125% 125% at 50% 28%, #143a5e 0%, #0a2338 68%, #071726 100%);
+  box-shadow:
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.09),
+    0 3px 10px rgba(0, 0, 0, 0.18);
+  padding: 9%;
+  box-sizing: border-box;
+}
+
+/* Game / result cards render their own logo, not via TeamBadge. The modifier
+   class is only present when there IS a logo, so the coloured-dot fallback for
+   the 14U teams never gets a coin. Shrink the image inside the coin so it does
+   not touch the rim. */
+.fx-on .le-gc-logo-wrap--img {
+  border-radius: 24%;
+  background: radial-gradient(125% 125% at 50% 28%, #143a5e 0%, #0a2338 72%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.09);
+  box-sizing: border-box;
+}
+.fx-on .le-gc-logo-wrap--img .le-gc-logo-img {
+  width: 30px;
+  height: 30px;
+}
+
 /* ---- belt and braces ---------------------------------------------------- */
 
 @media (prefers-reduced-motion: reduce) {

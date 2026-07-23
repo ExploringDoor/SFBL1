@@ -173,7 +173,11 @@ export function GameCard({
 function TeamRow({ team, winner }: { team: GameCardTeam; winner: boolean }) {
   return (
     <div className="le-gc-team-row">
-      <div className="le-gc-logo-wrap">
+      <div
+        className={
+          "le-gc-logo-wrap" + (team.logoUrl ? " le-gc-logo-wrap--img" : "")
+        }
+      >
         {team.logoUrl ? (
           /* eslint-disable-next-line @next/next/no-img-element */
           <img

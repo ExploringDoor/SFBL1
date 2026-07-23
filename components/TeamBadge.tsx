@@ -47,7 +47,11 @@ export function TeamBadge({
     const isDataUrl = logoUrl.startsWith("data:");
     return (
       <span
-        className={`inline-flex flex-shrink-0 items-center justify-center ${SIZE_CLASSES[size]}`}
+        // le-logo-badge: Island gives logos a dark "coin" backing (see fx.css)
+        // because their art was drawn for a black field and the light ones wash
+        // out on white cards. Inert for other tenants — the class is unstyled
+        // unless <html> carries .fx-on.
+        className={`le-logo-badge inline-flex flex-shrink-0 items-center justify-center ${SIZE_CLASSES[size]}`}
         title={name}
       >
         {isDataUrl ? (
