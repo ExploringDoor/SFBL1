@@ -43,6 +43,22 @@ body.ticker-hidden .le-nav {
   pointer-events: none;
   opacity: 0;
 }
+
+/* flags.sticky_nav (Island): keep the tabs pinned instead of sliding the whole
+ * bar off. Rather than sitting at top:ticker-height and vanishing, the nav
+ * shifts UP by exactly the ticker's height as the ticker leaves, so it rises to
+ * the very top of the viewport and stays there — Home / Scores / … reachable
+ * the whole way down the page.
+ *
+ * translateY(-ticker-height), NOT top:0, on purpose: transform is already in
+ * this element's transition and runs on the compositor, so the rise is smooth
+ * and cheap. On mobile --ticker-height is 0, so this is translateY(0) — the nav
+ * simply stays put. Beats the base rule above on specificity via html.nav-sticky. */
+html.nav-sticky body.ticker-hidden .le-nav {
+  transform: translateY(calc(-1 * var(--ticker-height, 0px)));
+  pointer-events: auto;
+  opacity: 1;
+}
 body.ticker-hidden .le-mob-menu {
   /* Mobile menu was anchored below the nav; with the nav gone, it
    * floats up to fill the space. Hidden when nav is hidden anyway. */

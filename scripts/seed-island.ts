@@ -130,6 +130,11 @@ const LEAGUE_CONFIG = {
     // Honours prefers-reduced-motion. (Adam, 7/22/26: "more animations / cool
     // things ... someone will be like WOW check this out".)
     motion_fx: true,
+    // Keep the top nav (Home / Scores / …) pinned when scrolling rather than
+    // sliding the whole bar off. The ticker still tucks away; the nav rises to
+    // take its place. (Adam, 7/22/26: "when you scroll down I want the tabs at
+    // the top to stay.")
+    sticky_nav: true,
     // Their header art is logo-on-black. PageBanner's default natural-size mode
     // left white gutters at the sides (it uses width:auto under a height cap,
     // so it can only fill the screen when the image ratio happens to exceed

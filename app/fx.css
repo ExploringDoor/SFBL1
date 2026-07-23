@@ -126,17 +126,33 @@
 
 /* ---- cards ------------------------------------------------------------- */
 
-/* Lift on hover, and only on devices with a real pointer. On touch, :hover
-   sticks after a tap and the card stays raised, which reads as a bug. */
+/* Hover only on devices with a real pointer. On touch, :hover sticks after a
+   tap and the card stays raised, which reads as a bug. */
 @media (hover: hover) and (pointer: fine) {
   .fx-on .le-gc-card,
   .fx-on .le-div-card {
     transition:
       transform 0.22s cubic-bezier(0.22, 0.68, 0.35, 1),
+      border-color 0.22s ease,
       box-shadow 0.22s ease;
   }
 
-  .fx-on .le-gc-card:hover,
+  /* Games glow. Adam asked for "a glow around each one, the blue in FASTPITCH"
+     — that blue is --brand-accent (#35afea for Island). The even 0-offset halo
+     wraps the whole card rather than pooling below it, the tight ring sharpens
+     the edge, and the border itself lights up. A faint dark shadow underneath
+     keeps the lift reading as depth, not just colour. */
+  .fx-on .le-gc-card:hover {
+    transform: translate3d(0, -3px, 0);
+    border-color: color-mix(in srgb, var(--brand-accent, #35afea) 60%, transparent);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--brand-accent, #35afea) 45%, transparent),
+      0 0 22px 1px color-mix(in srgb, var(--brand-accent, #35afea) 34%, transparent),
+      0 10px 26px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Standings division cards keep a neutral lift, so the blue glow stays the
+     games' own signature. */
   .fx-on .le-div-card:hover {
     transform: translate3d(0, -3px, 0);
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);

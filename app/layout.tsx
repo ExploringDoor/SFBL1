@@ -170,6 +170,12 @@ export default async function RootLayout({
   // flags.motion_fx — opt-in motion layer (scroll reveals, count-ups, banner
   // push-in). OFF for every existing tenant, so their sites do not move.
   let motionFx = false;
+  // flags.sticky_nav — keep the top nav pinned on scroll instead of sliding
+  // the whole bar off-screen (the default DVSL behaviour). Its own flag rather
+  // than riding on motion_fx, because "hide the top bar while scrolled" was a
+  // deliberate call for the other tenants and enabling motion elsewhere must
+  // not silently reverse it.
+  let stickyNav = false;
   if (configJson) {
     try {
       const cfg = JSON.parse(configJson) as {
@@ -192,6 +198,7 @@ export default async function RootLayout({
       tickerScroll = cfg.flags?.ticker_scroll === true;
       bannerFullBleed = cfg.flags?.banner_full_bleed === true;
       motionFx = cfg.flags?.motion_fx === true;
+      stickyNav = cfg.flags?.sticky_nav === true;
       themePrimary = cfg.theme?.primary;
       themeAccent = cfg.theme?.accent;
       themeSecondary = cfg.theme?.secondary;
@@ -246,7 +253,7 @@ export default async function RootLayout({
       lang="en"
       className={`${inter.variable} ${barlow.variable} ${oswald.variable}${
         motionFx ? " fx-on" : ""
-      }`}
+      }${stickyNav ? " nav-sticky" : ""}`}
       style={
         themeStyle ? ({ ...parseStyle(themeStyle) } as React.CSSProperties) : undefined
       }
