@@ -239,74 +239,20 @@
   display: inline-block;
 }
 
-/* ---- team logo coin ----------------------------------------------------- */
+/* ---- team logos ---------------------------------------------------------- */
 
-/* The team logos were drawn to sit on a solid black field. Their silver / white
-   / pale-blue art (Phoenix Fire Silver & Gray, Force) washed out on the white
-   cards — Adam: "some look like there is a faded logo". A dark rounded coin
-   gives every logo the dark ground it expects, so the light ones read and the
-   vibrant ones look native. The colour is Island's own deep navy, softer than
-   pure black on a light page.
+/* NO coin. The dark circle behind every logo was dropped — Adam preferred the
+   clean transparent look. The few logos that genuinely washed out on white
+   (Phoenix Fire Silver & Gray, Force 10U/12U — chrome/silver art drawn for a
+   black field) instead carry a soft dark drop-shadow baked into the PNG itself
+   (see scripts note / public/island/teams). That defines them on white without
+   a background, and is invisible on the dark team-page hero. The vibrant logos
+   need nothing and stay flat-transparent. */
 
-   Not motion, but gated on .fx-on so it stays Island-only with no extra flag;
-   other tenants render logos flat exactly as before. */
-.fx-on .le-logo-badge {
-  border-radius: 50%; /* circle (Adam) */
-  background: radial-gradient(125% 125% at 50% 28%, #143a5e 0%, #0a2338 68%, #071726 100%);
-  box-shadow:
-    inset 0 0 0 1.5px rgba(255, 255, 255, 0.09),
-    0 3px 10px rgba(0, 0, 0, 0.18);
-  box-sizing: border-box;
-}
-
-/* Inset the logo off the rim by sizing the IMAGE, not padding the badge.
-   `padding: %` resolves against the PARENT'S width, so in a wide flex row (the
-   team-page schedule) a 24px badge picked up 68px of padding and ballooned to
-   136px with a zero-size image — the "schedule looks all blue" bug. An image
-   percentage is relative to the badge itself, so it scales correctly at every
-   size (24 -> 19px, 112 -> 90px, 168 -> 134px). object-contain keeps the logo
-   inside the circle; its transparent corners mean nothing pokes past the rim. */
-.fx-on .le-logo-badge img {
-  width: 80%;
-  height: 80%;
-}
-
-/* Game / result cards render their own logo, not via TeamBadge. The modifier
-   class is only present when there IS a logo, so the coloured-dot fallback for
-   the 14U teams never gets a coin. */
-.fx-on .le-gc-logo-wrap--img {
-  border-radius: 50%; /* circle */
-  background: radial-gradient(125% 125% at 50% 28%, #143a5e 0%, #0a2338 72%);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.09);
-  box-sizing: border-box;
-}
-.fx-on .le-gc-logo-wrap--img .le-gc-logo-img {
-  width: 30px;
-  height: 30px;
-}
-
-/* Upcoming-schedule preview cards and the full standings table each render
-   their OWN logo <img> (not TeamBadge or the game card), so they missed the
-   coin and still showed flat logos. Same circle treatment here.
-   `:has(img)` so the always-present preview wrapper for a logo-less (14U) team
-   stays empty instead of showing a bare navy circle. */
-.fx-on .le-preview-logo:has(img),
-.fx-on .le-s-tbl .le-team-logo:has(img) {
-  border-radius: 50%;
-  background: radial-gradient(125% 125% at 50% 28%, #143a5e 0%, #0a2338 72%);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.09);
-  box-sizing: border-box;
-}
-.fx-on .le-preview-logo img,
-.fx-on .le-s-tbl .le-team-logo img {
-  width: 80%;
-  height: 80%;
-}
-
-/* Team-page hero: the logo sat in a white rounded box for contrast on the dark
-   hero. With the coin that box is redundant and Adam wants it gone. Scoped to
-   Island; other tenants (no coin) keep the white box. !important beats the
-   div's inline background/padding. */
+/* Team-page hero: drop the white box the logo used to sit in — the hero is
+   dark, so a light logo reads directly on it. Scoped to Island; other tenants
+   (no shadow-treated logos) keep the white box. !important beats the div's
+   inline background/padding. */
 .fx-on .le-hero-logo-box {
   background: transparent !important;
   padding: 0 !important;

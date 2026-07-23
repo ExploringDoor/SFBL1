@@ -8,6 +8,7 @@ import { notFound } from "next/navigation";
 import { BoxScoreContent } from "@/components/BoxScoreContent";
 import { RecapEditor } from "@/components/RecapEditor";
 import { LiveScoreBanner } from "@/components/LiveScoreBanner";
+import { GameShareSection } from "@/components/GameShareSection";
 import { loadBoxScoreData } from "@/lib/box-score-data";
 import { getStatsOffRecap } from "@/lib/stats-off-recap";
 import { getAdminDb } from "@/lib/firebase-admin";
@@ -187,6 +188,8 @@ export default async function GameDetailPage({
           />
         }
       />
+
+      <GameShareSection data={data} config={config} />
     </main>
   );
 }

@@ -6,6 +6,7 @@
 import { headers } from "next/headers";
 import { Modal } from "@/components/Modal";
 import { BoxScoreContent } from "@/components/BoxScoreContent";
+import { GameShareSection } from "@/components/GameShareSection";
 import { loadBoxScoreData } from "@/lib/box-score-data";
 import { getStatsOffRecap } from "@/lib/stats-off-recap";
 import type { PublicLeagueConfig } from "@/lib/tenants";
@@ -65,6 +66,7 @@ export default async function GameModalRoute({
         recapOnly={recapOnly}
         recapOverrideHtml={recapHtml}
       />
+      <GameShareSection data={data} config={config} />
     </Modal>
   );
 }

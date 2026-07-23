@@ -5490,3 +5490,45 @@ select:focus-visible {
 .le-home-news-body a { color: var(--brand-primary, #002d6e); text-decoration: underline; }
 .le-home-news-body strong { font-weight: 700; }
 .le-home-news-body em { font-style: italic; }
+
+/* Per-game share card (components/ui/ShareCard.tsx) — the canvas preview +
+   Download/Share buttons on a final game page. */
+.sharecard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sharecard-actions {
+  display: flex;
+  gap: 10px;
+}
+.sharecard-btn {
+  flex: 1 1 auto;
+  padding: 11px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.14));
+  background: #fff;
+  color: var(--text-strong, #1a1a1a);
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, transform 0.08s;
+}
+.sharecard-btn:hover {
+  border-color: var(--brand-primary, #002d6e);
+}
+.sharecard-btn:active {
+  transform: translateY(1px);
+}
+.sharecard-btn.primary {
+  background: var(--brand-primary, #002d6e);
+  border-color: var(--brand-primary, #002d6e);
+  color: #fff;
+}
+.sharecard-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
