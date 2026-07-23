@@ -311,6 +311,27 @@ async function run() {
     if (n) { await batch.commit(); batch = db.batch(); n = 0; }
   };
 
+  // SEED_ONLY=logos — merge just the logo_url onto existing team docs, no wipe.
+  // Lets a logo drop go live without touching games or standings. A full data
+  // reseed also carries these (logo_url is in island-seed.json), so this and a
+  // full run agree. Teams with logo_url null (the 14U squads) are skipped so a
+  // reseed never blanks a logo added another way.
+  if (wants("logos") && !wants("data")) {
+    let updated = 0;
+    for (const t of data.teams) {
+      if (!t.logo_url) continue;
+      batch.set(
+        db.doc(`leagues/${LEAGUE_ID}/teams/${t.id}`),
+        { logo_url: t.logo_url },
+        { merge: true },
+      );
+      updated++;
+      if (++n >= 400) await flush();
+    }
+    await flush();
+    console.log(`[seed-island] merged logo_url onto ${updated} teams`);
+  }
+
   for (const t of wants("data") ? data.teams : []) {
     batch.set(db.doc(`leagues/${LEAGUE_ID}/teams/${t.id}`), {
       name: t.name,
