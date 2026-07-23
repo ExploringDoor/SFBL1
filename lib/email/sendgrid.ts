@@ -82,3 +82,23 @@ export async function sendGridBroadcast(opts: {
   }
   return { ok: true, sent };
 }
+
+/**
+ * Send a single transactional email via SendGrid. Return shape matches
+ * lib/email/send.ts `sendEmail` so it can be a drop-in when SendGrid is the
+ * configured provider. `skipped: true` = SendGrid isn't configured.
+ */
+export async function sendGridOne(opts: {
+  to: string;
+  subject: string;
+  html: string;
+  replyTo?: string;
+}): Promise<{ ok: boolean; skipped?: boolean; error?: string }> {
+  const r = await sendGridBroadcast({
+    recipients: [opts.to],
+    subject: opts.subject,
+    html: opts.html,
+    replyTo: opts.replyTo,
+  });
+  return { ok: r.ok, skipped: r.skipped, error: r.error };
+}

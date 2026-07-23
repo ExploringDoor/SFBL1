@@ -13,6 +13,8 @@
 //   EMAIL_NOTIFY   — league-office inbox that gets a ping on each new
 //                    registration (e.g. playball@sfbl.com)
 
+import { sendGridConfigured, sendGridOne } from "./sendgrid";
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function sendEmail(opts: {
@@ -21,18 +23,22 @@ export async function sendEmail(opts: {
   html: string;
   replyTo?: string;
 }): Promise<{ ok: boolean; skipped?: boolean; error?: string }> {
+  if (!opts.to || !EMAIL_RE.test(opts.to)) {
+    return { ok: false, error: "invalid recipient" };
+  }
+  // Prefer SendGrid when configured (COYBL); other tenants fall back to Resend.
+  if (sendGridConfigured()) {
+    return sendGridOne(opts);
+  }
   const key = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM;
   if (!key || !from) {
     // Not configured — no-op so registration still succeeds.
     console.log(
-      "[email] skipped (RESEND_API_KEY / EMAIL_FROM not set):",
+      "[email] skipped (no email provider configured):",
       opts.subject,
     );
     return { ok: false, skipped: true };
-  }
-  if (!opts.to || !EMAIL_RE.test(opts.to)) {
-    return { ok: false, error: "invalid recipient" };
   }
   try {
     const res = await fetch("https://api.resend.com/emails", {
