@@ -100,7 +100,13 @@ const LEAGUE_CONFIG = {
     status: "active" as const,
     paid_through: "2027-season",
     last_payment: null as string | null,
-    notes: "$6,000/yr billed $500/month. Signed 2026-07-21.",
+    // NO `notes` here on purpose. /leagues/{id} is world-readable (firestore.rules
+    // makes it public so the Edge middleware can resolve the tenant pre-auth), so
+    // anything on this doc is exposed to an unauthenticated Firestore REST read.
+    // The commercial terms ("$6,000/yr billed $500/month, signed 2026-07-21") were
+    // leaking here; they live in the project record instead, not on a public doc.
+    // status + paid_through are non-sensitive and paid_through feeds the internal
+    // platform-overview API. (Audit 2026-07-23.)
   },
 
   flags: {
@@ -211,6 +217,10 @@ const LEAGUE_CONFIG = {
           // its body as a note so that community does not get orphaned.
           { label: "Player Ads", href: "/player-ads" },
           { label: "Rules", href: "/rules" },
+          // Leagues page = fee schedule + season/game format + umpire fees + the
+          // $200 Home Field discount. It was migrated but orphaned (no nav item),
+          // so the pricing was unreachable before Fall registration. (Audit fix.)
+          { label: "Leagues", href: "/content/leagues" },
           { label: "Coach Login", href: "/captain" },
         ],
       },

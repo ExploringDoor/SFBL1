@@ -330,23 +330,49 @@ export default async function TournamentsPage() {
         </header>
         <div
           style={{
-            padding: "32px 24px",
-            background: "rgba(0,0,0,0.03)",
-            border: "1px dashed rgba(0,0,0,0.12)",
-            borderRadius: 12,
+            padding: "44px 28px",
+            background:
+              "linear-gradient(160deg, rgba(0,45,110,0.05), rgba(0,0,0,0.02))",
+            border: "1px solid rgba(0,0,0,0.08)",
+            borderTop: "4px solid var(--brand-primary, #002d6e)",
+            borderRadius: 14,
             textAlign: "center",
             color: "var(--muted)",
-            lineHeight: 1.55,
-            maxWidth: 600,
+            lineHeight: 1.6,
+            maxWidth: 620,
+            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
           }}
         >
-          <div style={{ fontSize: 36, marginBottom: 8 }}>🏆</div>
-          <strong style={{ color: "var(--brand-primary)" }}>
-            No tournaments posted yet
-          </strong>
-          <p style={{ margin: "8px 0 0", fontSize: 14 }}>
-            Tournament schedules and brackets will appear here as the
-            league posts them.
+          {/* SVG trophy, not an emoji (house style). */}
+          <svg
+            width="44"
+            height="44"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="var(--brand-primary, #002d6e)"
+            strokeWidth={1.7}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+            style={{ marginBottom: 12 }}
+          >
+            <path d="M7 4h10v5a5 5 0 01-10 0V4zM7 6H4v2a3 3 0 003 3M17 6h3v2a3 3 0 01-3 3M10 19h4M12 14v5M9 21h6" />
+          </svg>
+          <div
+            className="font-display"
+            style={{
+              fontSize: 26,
+              fontWeight: 900,
+              textTransform: "uppercase",
+              letterSpacing: "0.02em",
+              color: "var(--text-strong)",
+            }}
+          >
+            Tournaments Coming Soon
+          </div>
+          <p style={{ margin: "10px auto 0", fontSize: 15, maxWidth: 460 }}>
+            Our tournament schedule and brackets are on the way. Check back soon,
+            or reach out to the league office for upcoming events.
           </p>
         </div>
       </main>

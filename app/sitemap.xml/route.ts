@@ -142,12 +142,20 @@ export async function GET() {
     });
   }
 
-  // Custom pages — rules render at /rules (already in static list),
-  // others at /content/{id}.
+  // Custom pages render at /content/{id}, EXCEPT those with a dedicated
+  // top-level route (rules -> /rules, fields -> /fields, player-ads ->
+  // /player-ads). Emitting /content/{those} produced duplicate URLs for the
+  // same content with no canonical. Also dedupe against anything already
+  // listed (a nav.add entry like /content/events-clinics was appearing twice).
+  const DEDICATED_ROUTE_SLUGS = new Set(["rules", "fields", "player-ads"]);
+  const seen = new Set(urls.map((u) => u.loc));
   for (const d of pages.docs) {
-    if (d.id === "rules") continue;
+    if (DEDICATED_ROUTE_SLUGS.has(d.id)) continue;
+    const loc = `${origin}/content/${d.id}`;
+    if (seen.has(loc)) continue;
+    seen.add(loc);
     urls.push({
-      loc: `${origin}/content/${d.id}`,
+      loc,
       lastmod:
         typeof d.data().updated_at === "string"
           ? String(d.data().updated_at)

@@ -32,6 +32,11 @@ export function SiteFooter() {
 
   const sponsors = Array.isArray(config.sponsors) ? config.sponsors : [];
   const hasSponsors = sponsors.length > 0;
+  // Hide the "Become a sponsor" footer CTA for tenants that hid Sponsors from
+  // their nav — they have no sponsors page, so the link would soft-404.
+  const hideSponsorCta = (config.nav?.hide ?? []).some(
+    (h) => typeof h === "string" && h.toLowerCase() === "sponsors",
+  );
 
   // Footer social icons — config-driven (per-tenant). Only platforms
   // with a configured URL render. SVG glyphs (no emoji per house
@@ -108,7 +113,13 @@ export function SiteFooter() {
         <nav className="le-footer-links">
           <Link href="/rules">Rules</Link>
           <Link href="/content/contact">Contact</Link>
-          <Link href="/content/sponsors">Become a sponsor</Link>
+          {/* "Become a sponsor" points at /content/sponsors, which only exists
+              if the league authored a sponsors page. A tenant that hides
+              "Sponsors" from its nav (Island) has no such page, so the link was
+              a soft-404 on every page. Gate it on the same nav.hide signal. */}
+          {!hideSponsorCta && (
+            <Link href="/content/sponsors">Become a sponsor</Link>
+          )}
           <Link href="/login">Sign in</Link>
         </nav>
         <div className="le-footer-copy">

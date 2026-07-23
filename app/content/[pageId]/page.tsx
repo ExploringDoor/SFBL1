@@ -50,6 +50,13 @@ const RESERVED_SLUGS = new Set([
   "admin",
   "profile",
   "login",
+  // These have dedicated top-level routes (/fields from site_config/fields,
+  // /player-ads the real board). The page_content/{fields,player-ads} docs
+  // still exist — /fields' fallback and the board's Facebook-group note read
+  // them server-side — but the /content/* twins were stale duplicates that
+  // drifted from the real pages, so block them here. (Audit fix 2026-07-23.)
+  "fields",
+  "player-ads",
 ]);
 
 export default async function ContentPage({
