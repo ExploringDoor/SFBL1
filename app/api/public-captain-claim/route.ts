@@ -16,6 +16,10 @@
 //      Without it the endpoint always returns 403.
 //   2. The teamId must exist in /leagues/<id>/teams.
 //   3. Per-IP rate limit (in-process Map) caps abusive callers.
+//      In-process means per lambda instance, so the real ceiling is
+//      60 x (concurrent instances) — a speed bump, not a lock.
+//   4. Strict tenants (REQUIRE_PASSWORD_TENANTS below) additionally
+//      demand a configured per-team password; no password, no token.
 //
 // Tokens are minted with a synthetic uid `public-captain:<league>:
 // <team>` so multiple visitors who pick the same team share one
@@ -33,6 +37,22 @@ export const runtime = "nodejs";
 const RATE_LIMIT = 60;
 const RATE_WINDOW_MS = 10 * 60 * 1000;
 const ipBuckets = new Map<string, { count: number; resets_at: number }>();
+
+// Tenants where a team MUST have a configured captain password before
+// it can be claimed. Without this, the "no password set" branch below
+// is trust-the-URL: POST {leagueId, teamId} with no password returns a
+// working captain token. That is deliberate on LBDC (every captain is
+// known to the commissioner) but wrong for Island, which shipped Coach
+// Login in the public nav with 0 of 23 teams carrying a password —
+// verified live, an unauthenticated POST minted a captain token for
+// any team.
+//
+// Allowlist rather than a global default so live tenants that depend
+// on the lenient path keep working. A league doc can also opt in with
+// `captain.require_password: true`, so this can move to config later
+// without a code change. Inverting the platform default is the real
+// fix; that needs a per-tenant audit of which teams have passwords.
+const REQUIRE_PASSWORD_TENANTS = new Set(["island"]);
 
 function rateLimit(ip: string): boolean {
   const now = Date.now();
@@ -116,6 +136,12 @@ export async function POST(req: Request) {
     );
   }
 
+  // Strict mode: a configured password is mandatory, so none of the
+  // "no password set" fallbacks below can hand out a token.
+  const requirePassword =
+    REQUIRE_PASSWORD_TENANTS.has(leagueId) ||
+    data.captain?.require_password === true;
+
   // Resolve the team_id. Three input shapes the endpoint accepts:
   //
   //   1. {teamId, teamPassword} — two-step UI: the user picked their
@@ -153,6 +179,17 @@ export async function POST(req: Request) {
     }
     const td = teamSnap.data() ?? {};
     const custom = await resolveCustomPassword(db, leagueId, explicitTeamId, td);
+    if (!custom && requirePassword) {
+      // Fail closed. Distinct from "Wrong password" on purpose: the
+      // coach can't fix this by guessing, so say who can.
+      return NextResponse.json(
+        {
+          error:
+            "This team doesn't have a coach password yet. Contact the league office.",
+        },
+        { status: 403 },
+      );
+    }
     if (custom) {
       if (rawPassword && normalize(rawPassword) === normalize(custom)) {
         teamId = explicitTeamId;
@@ -188,7 +225,20 @@ export async function POST(req: Request) {
       .collection(`leagues/${leagueId}/teams`)
       .get();
     for (const d of teamsSnap.docs) {
-      const candidates = teamPasswordCandidates(d.id, d.data() ?? {});
+      const td = d.data() ?? {};
+      // Strict tenants: match ONLY a configured password. The other
+      // candidates (id / name / abbrev / first word) are printed on
+      // the public teams page, so accepting them here would reopen
+      // the same hole the two-step branch just closed.
+      if (requirePassword) {
+        const custom = await resolveCustomPassword(db, leagueId, d.id, td);
+        if (custom && normalize(custom) === target) {
+          teamId = d.id;
+          break;
+        }
+        continue;
+      }
+      const candidates = teamPasswordCandidates(d.id, td);
       if (candidates.some((c) => normalize(c) === target)) {
         teamId = d.id;
         break;

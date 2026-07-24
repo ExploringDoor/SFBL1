@@ -247,7 +247,12 @@ const LEAGUE_CONFIG = {
   // "no emailed magic link", NOT "no password": once the admin sets a team's
   // password in the Teams tab it is STRICT, and the team name stops working.
   // See app/api/public-captain-claim/route.ts.
-  captain: { passwordless: true },
+  //
+  // require_password closes the other half: with NO password set, the claim
+  // endpoint's default is trust-the-URL, so POST {leagueId, teamId} minted a
+  // working captain token for any of the 23 teams. Verified live before the
+  // fix. A team with no password now returns 403 instead.
+  captain: { passwordless: true, require_password: true },
   // Shared admin password lives in the ISLAND_ADMIN_PASSWORD env var, never in
   // Firestore — firestore.rules makes /leagues/{id} world readable.
   admin: { passwordless: true },

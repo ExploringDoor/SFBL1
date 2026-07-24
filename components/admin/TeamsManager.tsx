@@ -614,8 +614,12 @@ function fmtLogin(iso: string): string {
   });
 }
 
+// The base is the team name, which is public, so the digits are the
+// only secret. Two digits meant 90 possible passwords per team —
+// inside the 60-per-10-min rate limit's reach in well under an hour.
+// Four digits take it to 10,000 and still read cleanly over the phone.
 function generateManagerPassword(teamName: string): string {
-  const digits = String(Math.floor(Math.random() * 90) + 10); // 10–99
+  const digits = String(Math.floor(Math.random() * 9000) + 1000); // 1000–9999
   return `${passwordBase(teamName)}${digits}`;
 }
 
@@ -626,7 +630,7 @@ function passwordBase(teamName: string): string {
 // Stable "shape" preview for the hint text (doesn't re-randomize on
 // every keystroke the way generateManagerPassword would).
 function generatePreviewHint(teamName: string): string {
-  return `${passwordBase(teamName)}##`;
+  return `${passwordBase(teamName)}####`;
 }
 
 function TeamEditForm({
