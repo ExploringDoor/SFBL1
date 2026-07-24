@@ -117,15 +117,50 @@ const LEAGUE_CONFIG = {
       // COYBL has no site_config/fields doc, and /fields used to fall back to
       // SFBL's 26 South Florida parks. Unhide once Doug supplies real fields.
       "fields",
+      // The default league-identity group still contributes a bare "Rules"
+      // link. COYBL's added Rules DROPDOWN below supersedes it. hide only
+      // filters DEFAULT links (computeNavLinks splices nav.add in after), so
+      // this kills the duplicate without touching the dropdown.
+      "rules",
     ],
     // COYBL-specific primary nav items (the pitch-count eligibility tracker
     // + power rankings). Inserted before the Register/More dropdowns.
+    // The Rules and Coaches dropdowns front the content pages transcribed
+    // from COYBL's official PDFs (rulebooks, tournament rules, safety,
+    // umpires, policies). Those live as page_content docs and render at
+    // /content/<id>, so adding a page needs no deploy - but it DOES need an
+    // entry here or nobody can find it.
     add: [
       { label: "Pitch Counts", href: "/eligibility" },
       { label: "Power Rankings", href: "/power-rankings" },
-      { label: "Rules", href: "/rules" },
+      {
+        label: "Rules",
+        href: "/rules",
+        children: [
+          { label: "League Rules", href: "/rules" },
+          { label: "7U & 8U Rules", href: "/content/rules-7u-8u" },
+          { label: "9U-12U Rules", href: "/content/rules-9u-12u" },
+          { label: "13U & 14U Rules", href: "/content/rules-13u-14u" },
+          { label: "Tournament Rules", href: "/content/tournament-rules" },
+          { label: "Bat Rules", href: "/content/bat-rules" },
+          { label: "Approved Baseballs", href: "/content/approved-baseballs" },
+          { label: "Field Dimensions", href: "/content/field-dimensions" },
+        ],
+      },
+      {
+        label: "Coaches",
+        href: "/content/manager-help",
+        children: [
+          { label: "Manager Help", href: "/content/manager-help" },
+          { label: "Coaches Checklist", href: "/content/coach-checklist" },
+          { label: "Player Safety", href: "/content/player-safety" },
+          { label: "Umpires", href: "/content/umpires" },
+          { label: "Season Info", href: "/content/season-info" },
+          { label: "Weather & Rain-Outs", href: "/content/weather" },
+          { label: "Policies & FAQs", href: "/content/policies-faq" },
+        ],
+      },
       { label: "Alerts", href: "/alerts" },
-      { label: "Manager Help", href: "/content/manager-help" },
     ],
   },
   // Standings: straight W/L (PCT-based default — no points scheme).
