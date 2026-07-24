@@ -66,11 +66,15 @@ const LEAGUE_CONFIG = {
   // No home-page "Welcome" intro — dropped per Adam (2026-06-30); the banner
   // images already carry the league identity, so `about` is left unset and the
   // homepage Welcome block renders nothing.
+  // NOTE: the /leagues/{slug} doc is WORLD-READABLE (the public site reads
+  // its own config from it), so nothing commercially sensitive belongs here.
+  // A `notes` field holding the annual contract price and invoice number was
+  // removed before launch. Only `status` and `paid_through` are actually read
+  // (by /api/_platform-overview); keep it to that.
   billing: {
     status: "active",
     paid_through: "2027-season",
     last_payment: null,
-    notes: "$5,000/yr annual — invoice COYBL-2026-001",
   },
   // Hide stats-oriented pages/columns; show the Five Tool tournaments link
   // and the pitch-count eligibility tracker.
@@ -107,6 +111,12 @@ const LEAGUE_CONFIG = {
       "pay online",
       "sponsors",
       "store",
+      // "Info" points at /sfbl-info, which hard-404s for any tenant that has
+      // not authored About content. It was live in COYBL's nav.
+      "info",
+      // COYBL has no site_config/fields doc, and /fields used to fall back to
+      // SFBL's 26 South Florida parks. Unhide once Doug supplies real fields.
+      "fields",
     ],
     // COYBL-specific primary nav items (the pitch-count eligibility tracker
     // + power rankings). Inserted before the Register/More dropdowns.
@@ -191,23 +201,21 @@ const DEMO_PITCH_10U =
 const DEMO_PITCH_12U =
   TEAMS.find((t) => t.ageGroup === "12U")?.id ?? TEAMS[0]?.id ?? "unknown";
 
-// Sample pitch outings for one 10U team (uses the 9U-10U ruleset). Dates are
-// near "today" so the eligibility view shows a realistic mix of eligible /
-// resting. Coaches enter these per game in production.
-const PITCH_OUTINGS = [
-  { team_id: "c10_stix_eberhardt", player_name: "Mason Avery",  date: "2026-06-10", pitches: 22 },
-  { team_id: "c10_stix_eberhardt", player_name: "Mason Avery",  date: "2026-06-17", pitches: 62 },
-  { team_id: "c10_stix_eberhardt", player_name: "Eli Brooks",   date: "2026-06-08", pitches: 41 },
-  { team_id: "c10_stix_eberhardt", player_name: "Eli Brooks",   date: "2026-06-15", pitches: 30 },
-  { team_id: "c10_stix_eberhardt", player_name: "Noah Carter",  date: "2026-06-13", pitches: 70 },
-  { team_id: "c10_stix_eberhardt", player_name: "Liam Dunn",    date: "2026-06-16", pitches: 45 },
-  { team_id: "c10_stix_eberhardt", player_name: "Owen Ford",    date: "2026-06-14", pitches: 12 },
-  // 12U team — uses the 11U-12U ruleset (daily max 85). Cole's 80 is legal
-  // here but would exceed the 10U cap.
-  { team_id: "c12_stix_ackerman",  player_name: "Cole Reyes",   date: "2026-06-16", pitches: 80 },
-  { team_id: "c12_stix_ackerman",  player_name: "Jack Tobin",   date: "2026-06-15", pitches: 33 },
-  { team_id: "c12_stix_ackerman",  player_name: "Drew Coleman", date: "2026-06-13", pitches: 55 },
-];
+// Pitch outings are entered by coaches, per game, in production.
+//
+// This list used to hold ten SAMPLE outings for demo purposes. They were
+// removed (and purged from the live database) before launch because the
+// sample data attached INVENTED CHILDREN ("Mason Avery", "Eli Brooks", ...)
+// to REAL COYBL teams, and /eligibility is a public page. A parent on
+// Olentangy Stix would have seen pitchers who do not exist on their roster.
+// Never seed fabricated minors against real teams. If a demo is needed
+// again, use an obviously fake team id, not a real one.
+const PITCH_OUTINGS: {
+  team_id: string;
+  player_name: string;
+  date: string;
+  pitches: number;
+}[] = [];
 
 // COYBL rules (markdown), summarized from the 2026 rule books (7U-8U,
 // 9U-12U, 13U). Rendered by /rules and editable by the commissioner.

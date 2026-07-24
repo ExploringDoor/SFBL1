@@ -227,7 +227,11 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
     setError(null);
     try {
       const idToken = await user.getIdToken();
-      const params = new URLSearchParams({ leagueId, kind, limit: "100" });
+      // 500 is the server's clamp (app/api/admin-form-submissions). At 100 a
+      // league the size of COYBL (196 teams) silently lost roughly half its
+      // registrations from the director's inbox, with no pagination and no
+      // indication anything was missing.
+      const params = new URLSearchParams({ leagueId, kind, limit: "500" });
       const res = await fetch(
         `/api/admin-form-submissions?${params.toString()}`,
         { headers: { authorization: `Bearer ${idToken}` } },
@@ -264,7 +268,7 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
           const params = new URLSearchParams({
             leagueId,
             kind: t.key,
-            limit: "100",
+            limit: "500",
           });
           const res = await fetch(
             `/api/admin-form-submissions?${params.toString()}`,

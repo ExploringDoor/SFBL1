@@ -5390,6 +5390,65 @@ select:focus-visible {
    gives it the grey content background (matching the sections below) instead
    of the white banner area. Scoped via the wrapper in app/page.tsx so other
    tenants are unaffected. */
+/* Registration CTA band. Shown only when a tenant suppresses the homepage
+   hero, which is where the Register button normally lives. Brand navy so it
+   reads as the primary action directly under the banner. */
+.le-home-reg-cta {
+  background: var(--brand-primary);
+  color: #fff;
+}
+.le-home-reg-cta-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+.le-home-reg-cta-eyebrow {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0;
+  opacity: 0.85;
+}
+.le-home-reg-cta-head {
+  margin: 2px 0 0;
+  font-size: clamp(18px, 2.4vw, 24px);
+  font-weight: 800;
+  line-height: 1.2;
+}
+.le-home-reg-cta-btn {
+  display: inline-block;
+  background: #fff;
+  color: var(--brand-primary);
+  font-weight: 800;
+  font-size: 15px;
+  padding: 12px 22px;
+  border-radius: 8px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.le-home-reg-cta-btn:hover,
+.le-home-reg-cta-btn:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+}
+@media (max-width: 560px) {
+  .le-home-reg-cta-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .le-home-reg-cta-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
 .le-home-news-band {
   background: var(--bg2);
   padding: 40px 0 16px;

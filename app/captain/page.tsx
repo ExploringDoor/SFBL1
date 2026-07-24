@@ -99,95 +99,109 @@ export default function CaptainHomePage() {
     Record<string, "yes" | "maybe" | "no">
   >({});
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!tenantId || !teamId) return;
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const db = getDb();
-      const [teamSnap, rosterSnap, gamesSnap, allTeamsSnap] =
-        await Promise.all([
-          getDoc(doc(db, `leagues/${tenantId}/teams/${teamId}`)),
-          getDocs(
-            query(
-              collection(db, `leagues/${tenantId}/players`),
-              where("team_id", "==", teamId),
+      try {
+        const db = getDb();
+        const [teamSnap, rosterSnap, gamesSnap, allTeamsSnap] =
+          await Promise.all([
+            getDoc(doc(db, `leagues/${tenantId}/teams/${teamId}`)),
+            getDocs(
+              query(
+                collection(db, `leagues/${tenantId}/players`),
+                where("team_id", "==", teamId),
+              ),
             ),
-          ),
-          getDocs(collection(db, `leagues/${tenantId}/games`)),
-          // Pull every team's name once so we can render opponent
-          // names on the spotlight + game rows. Cheap (one collection
-          // read, max ~20 teams per league).
-          getDocs(collection(db, `leagues/${tenantId}/teams`)),
-        ]);
-      if (cancelled) return;
-      const names: Record<string, string> = {};
-      for (const t of allTeamsSnap.docs) {
-        names[t.id] = String(t.data().name ?? t.id);
+            getDocs(collection(db, `leagues/${tenantId}/games`)),
+            // Pull every team's name once so we can render opponent
+            // names on the spotlight + game rows. Cheap (one collection
+            // read, max ~20 teams per league).
+            getDocs(collection(db, `leagues/${tenantId}/teams`)),
+          ]);
+        if (cancelled) return;
+        const names: Record<string, string> = {};
+        for (const t of allTeamsSnap.docs) {
+          names[t.id] = String(t.data().name ?? t.id);
+        }
+        setTeamNames(names);
+        if (teamSnap.exists()) {
+          const d = teamSnap.data();
+          setTeam({
+            id: teamSnap.id,
+            name: String(d.name ?? teamSnap.id),
+            abbrev: d.abbrev ? String(d.abbrev) : undefined,
+            color: d.color ? String(d.color) : undefined,
+            logoUrl: d.logo_url ? String(d.logo_url) : null,
+            division: d.division ? String(d.division) : undefined,
+          });
+        }
+        setRoster(
+          rosterSnap.docs
+            // Same status/orphan filter as the team page + attendance
+            // — LBDC's migration auto-creates `status:"unknown"`
+            // orphans from box-score line resolution that shouldn't
+            // bleed into the captain's roster spotlight.
+            .filter((p) => {
+              const data = p.data();
+              if (data.active === false) return false;
+              if (data.orphan === true) return false;
+              if (data.status && data.status !== "active") return false;
+              return true;
+            })
+            .map((p) => {
+              const data = p.data();
+              return {
+                id: p.id,
+                name: String(data.name ?? p.id),
+                jersey: data.jersey != null ? Number(data.jersey) : null,
+                position: data.position ? String(data.position) : null,
+              };
+            })
+            .sort(
+              (a, b) =>
+                (a.jersey ?? 999) - (b.jersey ?? 999) ||
+                a.name.localeCompare(b.name),
+            ),
+        );
+        setGames(
+          gamesSnap.docs
+            .map((g) => {
+              const data = g.data();
+              return {
+                id: g.id,
+                date: data.date ? String(data.date) : null,
+                time: data.time ? String(data.time) : null,
+                field: data.field ? String(data.field) : null,
+                status: String(data.status ?? "draft"),
+                away_team_id: String(data.away_team_id ?? ""),
+                home_team_id: String(data.home_team_id ?? ""),
+                away_score: Number(data.away_score ?? 0),
+                home_score: Number(data.home_score ?? 0),
+              };
+            })
+            .filter(
+              (g) =>
+                g.away_team_id === teamId || g.home_team_id === teamId,
+            ),
+        );
+      } catch (e) {
+        // Without this, any transient read failure rejected the effect,
+        // setLoading(false) never ran, and the coach sat on a spinner
+        // forever with nothing to act on. Surface it and stop loading.
+        if (!cancelled) {
+          console.error("[captain] failed to load team data:", e);
+          setLoadError(
+            "We could not load your team just now. Check your connection and refresh. If it keeps happening, contact your league office.",
+          );
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setTeamNames(names);
-      if (teamSnap.exists()) {
-        const d = teamSnap.data();
-        setTeam({
-          id: teamSnap.id,
-          name: String(d.name ?? teamSnap.id),
-          abbrev: d.abbrev ? String(d.abbrev) : undefined,
-          color: d.color ? String(d.color) : undefined,
-          logoUrl: d.logo_url ? String(d.logo_url) : null,
-          division: d.division ? String(d.division) : undefined,
-        });
-      }
-      setRoster(
-        rosterSnap.docs
-          // Same status/orphan filter as the team page + attendance
-          // — LBDC's migration auto-creates `status:"unknown"`
-          // orphans from box-score line resolution that shouldn't
-          // bleed into the captain's roster spotlight.
-          .filter((p) => {
-            const data = p.data();
-            if (data.active === false) return false;
-            if (data.orphan === true) return false;
-            if (data.status && data.status !== "active") return false;
-            return true;
-          })
-          .map((p) => {
-            const data = p.data();
-            return {
-              id: p.id,
-              name: String(data.name ?? p.id),
-              jersey: data.jersey != null ? Number(data.jersey) : null,
-              position: data.position ? String(data.position) : null,
-            };
-          })
-          .sort(
-            (a, b) =>
-              (a.jersey ?? 999) - (b.jersey ?? 999) ||
-              a.name.localeCompare(b.name),
-          ),
-      );
-      setGames(
-        gamesSnap.docs
-          .map((g) => {
-            const data = g.data();
-            return {
-              id: g.id,
-              date: data.date ? String(data.date) : null,
-              time: data.time ? String(data.time) : null,
-              field: data.field ? String(data.field) : null,
-              status: String(data.status ?? "draft"),
-              away_team_id: String(data.away_team_id ?? ""),
-              home_team_id: String(data.home_team_id ?? ""),
-              away_score: Number(data.away_score ?? 0),
-              home_score: Number(data.home_score ?? 0),
-            };
-          })
-          .filter(
-            (g) =>
-              g.away_team_id === teamId || g.home_team_id === teamId,
-          ),
-      );
-      setLoading(false);
     })();
     return () => {
       cancelled = true;
@@ -455,6 +469,31 @@ export default function CaptainHomePage() {
     );
   }
 
+  if (loadError) {
+    return (
+      <CaptainShell>
+        <p style={{ color: "var(--red, #c8102e)", fontWeight: 600 }}>
+          {loadError}
+        </p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          style={{
+            marginTop: 12,
+            padding: "10px 18px",
+            borderRadius: 8,
+            border: "1px solid var(--brand-primary)",
+            background: "#fff",
+            color: "var(--brand-primary)",
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          Try again
+        </button>
+      </CaptainShell>
+    );
+  }
   if (loading || !team) return <CaptainShell>Loading your team…</CaptainShell>;
 
   // ── Sort games into upcoming + recent ─────────────────────────

@@ -109,6 +109,32 @@ export default async function HomePage() {
           }
         />
       )}
+      {/* Registration CTA for tenants whose hero is suppressed.
+          The "Register Your Team" button lives INSIDE DvslHero, so a tenant
+          that hides the hero (COYBL hides it because its banner images already
+          carry the league name) silently loses the single most important
+          button on the site - registration_open was a dead flag. Rather than
+          restore the whole text hero and say the league name twice, surface
+          just the CTA. Tenants that render the hero never see this, so SFBL,
+          LBDC and Island are unaffected. */}
+      {config?.flags?.registration_open &&
+        (config?.flags?.hide_page_titles || config?.flags?.hide_home_hero) && (
+          <section className="le-home-reg-cta">
+            <div className="container le-home-reg-cta-inner">
+              <div>
+                <p className="le-home-reg-cta-eyebrow">
+                  {season} Season Registration
+                </p>
+                <p className="le-home-reg-cta-head">
+                  Registration is open. Secure your team&rsquo;s spot.
+                </p>
+              </div>
+              <Link href="/team-registration" className="le-home-reg-cta-btn">
+                Register Your Team
+              </Link>
+            </div>
+          </section>
+        )}
       {/* Top slot under the hero. COYBL leads with the editable News &
           Events strip (Adam, 2026-07) instead of the alert banner; other
           tenants keep the alert banner (e.g. LBDC's "JOIN THE LIST"),

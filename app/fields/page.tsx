@@ -14,6 +14,7 @@
 //       color?: string,          // accent color for the card
 //     }> }
 
+import Link from "next/link";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { FieldsDirectory, type Field } from "@/components/FieldsDirectory";
@@ -58,11 +59,18 @@ const SFBL_FIELDS: Field[] = [
 ];
 
 async function loadFields(tenantId: string): Promise<Field[]> {
+  // SFBL_FIELDS is SFBL's OWN venue list, so it must never be served to
+  // another tenant. COYBL has no site_config/fields doc, and every one of
+  // these fallbacks was handing a COYBL coach 26 South Florida ballparks
+  // as "every park and field the league plays at" - linked from COYBL's
+  // own nav. Other tenants now fall back to empty and render a real
+  // empty state instead.
+  const fallback = tenantId === "sfbl" ? SFBL_FIELDS : [];
   try {
     const snap = await getAdminDb()
       .doc(`leagues/${tenantId}/site_config/fields`)
       .get();
-    if (!snap.exists) return SFBL_FIELDS;
+    if (!snap.exists) return fallback;
     const data = snap.data() ?? {};
     // Either { data: [...] } shape (used by LBDC migration) or a
     // top-level array if a future writer sets the doc directly.
@@ -71,10 +79,10 @@ async function loadFields(tenantId: string): Promise<Field[]> {
       : Array.isArray(data)
         ? (data as unknown as Field[])
         : null;
-    if (!arr || arr.length === 0) return SFBL_FIELDS;
+    if (!arr || arr.length === 0) return fallback;
     return arr;
   } catch {
-    return SFBL_FIELDS;
+    return fallback;
   }
 }
 
@@ -108,13 +116,23 @@ export default async function FieldsPage() {
           Fields
         </h1>
         <p style={{ marginTop: 8, color: "var(--muted)", maxWidth: 680 }}>
-          Every park and field the league plays at. Tap a button to
-          open directions in Google Maps or Apple Maps.
+          {fields.length > 0
+            ? "Every park and field the league plays at. Tap a button to open directions in Google Maps or Apple Maps."
+            : "Field locations are posted here once the league adds them."}
         </p>
       </header>
 
-      <FieldsDirectory fields={fields} />
-
+      {fields.length > 0 ? (
+        <FieldsDirectory fields={fields} />
+      ) : (
+        <p style={{ color: "var(--muted)" }}>
+          No fields have been added yet. Game locations are listed on the{" "}
+          <Link href="/schedule" style={{ color: "var(--brand-primary)" }}>
+            schedule
+          </Link>
+          .
+        </p>
+      )}
     </main>
   );
 }

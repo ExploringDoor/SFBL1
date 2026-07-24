@@ -281,15 +281,34 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
+  // The submission write is the whole point of the request, so it gets real
+  // error handling. Unwrapped, a transient Firestore failure threw out of the
+  // route as a bare 500 and the coach lost a filled-in 17-field registration
+  // with no idea whether it had been recorded.
   const db = getAdminDb();
-  const ref = await db
-    .collection(`leagues/${tenantId}/form_submissions/${body.kind}/items`)
-    .add({
-      ...cleaned,
-      submitted_at: new Date().toISOString(),
-      ip,
-      user_agent: h.get("user-agent") ?? null,
-    });
+  let ref;
+  try {
+    ref = await db
+      .collection(`leagues/${tenantId}/form_submissions/${body.kind}/items`)
+      .add({
+        ...cleaned,
+        submitted_at: new Date().toISOString(),
+        ip,
+        user_agent: h.get("user-agent") ?? null,
+      });
+  } catch (e) {
+    console.error(
+      `[league-form] write FAILED tenant=${tenantId} kind=${body.kind}:`,
+      e instanceof Error ? e.message : e,
+    );
+    return NextResponse.json(
+      {
+        error:
+          "We could not save your submission just now. Please try again in a moment. If it keeps failing, contact the league office so we can take it manually.",
+      },
+      { status: 503 },
+    );
+  }
 
   // Best-effort email (no-op unless RESEND_API_KEY/EMAIL_FROM are set):
   //   1. a confirmation to the registrant (if they gave an email)
@@ -308,6 +327,32 @@ export async function POST(req: Request) {
       await createCoachLogin(cleaned, origin);
     } catch {
       /* registration still succeeds even if the login email can't be sent */
+    }
+    // Tell the league office a team just registered. This branch used to
+    // return without notifying anyone, so the only way the director learned
+    // of a registration was to go look in the admin inbox. Best-effort: a
+    // failed notification must never fail the coach's registration.
+    try {
+      const notify = notifyAddress();
+      if (notify) {
+        const who =
+          `${cleaned.manager_first_name ?? ""} ${cleaned.manager_last_name ?? ""}`.trim();
+        await sendEmail({
+          to: notify,
+          subject: `New COYBL team registration: ${cleaned.team_name || who || "(no name)"}`,
+          html:
+            `<p><strong>Team:</strong> ${esc(cleaned.team_name)}</p>` +
+            `<p><strong>Age group:</strong> ${esc(cleaned.age_group)}</p>` +
+            `<p><strong>Coach:</strong> ${esc(who)}</p>` +
+            `<p><strong>Email:</strong> ${esc(cleaned.email)}</p>` +
+            `<p><strong>Phone:</strong> ${esc(cleaned.phone)}</p>` +
+            `<p><strong>Option:</strong> ${esc(cleaned.insurance_option)}` +
+            `${cleaned.usssa_addon ? " (USSSA add-on)" : ""}</p>` +
+            `<p>View it in the admin Registrations tab.</p>`,
+        });
+      }
+    } catch {
+      /* notification is best-effort */
     }
   } else {
     // Other tenants/kinds: best-effort confirmation email, fire-and-forget.

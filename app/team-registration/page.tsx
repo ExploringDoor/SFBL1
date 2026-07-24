@@ -170,7 +170,12 @@ function content(tenantId: string) {
         "Register your team for the Central Ohio Youth Baseball League.",
       intro: [
         "Choose your registration option below: Option 1 is $495 (includes team insurance plus Five Tool Youth registration); Option 2 is $425 (your team provides proof of its own insurance, plus Five Tool Youth registration). USSSA membership is an optional +$35 add-on.",
-        "You can pay by card (Square) at checkout — card payments add a 3.25% processing fee. To skip that fee, pay by Venmo or check instead (details below).",
+        // NOTE: this used to promise "pay by card (Square) at checkout". There
+        // is no Square checkout in the codebase (no /api/square-checkout, no
+        // Square client anywhere), so every coach was being told about a
+        // payment step that does not exist. Copy now matches what the league
+        // actually does. Restore a card line only when a checkout ships.
+        "Payment is handled separately from this form: pay by Venmo or by check (details below). To pay by card, contact the league office and we will arrange it.",
       ],
       successMessage: "Thanks! Your team registration is in.",
       // Secondary payment option — kept below the form so it doesn't lead
@@ -178,7 +183,7 @@ function content(tenantId: string) {
       footer: (
         <div>
           <p style={{ margin: "0 0 6px", fontWeight: 700 }}>
-            Skip the 3.25% card fee
+            How to pay
           </p>
           <p
             style={{
@@ -189,8 +194,7 @@ function content(tenantId: string) {
               lineHeight: 1.55,
             }}
           >
-            Card payments (Square) include a 3.25% processing fee. To avoid it,
-            pay by <strong>Venmo</strong> to{" "}
+            Pay by <strong>Venmo</strong> to{" "}
             <a
               href="https://venmo.com/u/Doug-Hare-2"
               target="_blank"
@@ -199,9 +203,10 @@ function content(tenantId: string) {
               @Doug-Hare-2
             </a>{" "}
             (scan below), or by <strong>check</strong> to COYBL, 152 Glen
-            Crossing Drive, Etna, OH 43062. When Venmo asks you to confirm the
-            recipient, the last 4 digits of the phone number are{" "}
-            <strong>1391</strong>.
+            Crossing Drive, Pataskala, OH 43062. When Venmo asks you to confirm
+            the recipient, the last 4 digits of the phone number are{" "}
+            <strong>1391</strong>. To pay by card, contact the league office to
+            arrange it.
           </p>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
