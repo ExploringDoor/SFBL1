@@ -36,6 +36,9 @@ export interface PublicLeagueConfig {
   about?: string;
   // Tournaments the league runs/links to — rendered on /tournaments.
   tournaments?: LeagueConfig["tournaments"];
+  // Outside-provider rankings embed. See LeagueConfig["power_rankings"].
+  // Safe to forward: it is just a public embed URL and layout hints.
+  power_rankings?: LeagueConfig["power_rankings"];
   // Captain access UX toggle. See LeagueConfig["captain"].
   captain?: { passwordless?: boolean };
   // Admin access UX toggle. Only the boolean — the actual password
@@ -65,6 +68,7 @@ export function toPublicConfig(c: LeagueConfig): PublicLeagueConfig {
     nav: c.nav,
     about: c.about,
     tournaments: c.tournaments,
+    power_rankings: c.power_rankings,
     captain: c.captain,
     // Strip `admin.password` — only forward whether passwordless is
     // enabled. The actual password lives in the source LeagueConfig

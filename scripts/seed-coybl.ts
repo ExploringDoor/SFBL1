@@ -163,6 +163,23 @@ const LEAGUE_CONFIG = {
       { label: "Alerts", href: "/alerts" },
     ],
   },
+  // Power rankings come from EvenField, an outside provider the league already
+  // partners with. They publish a per-age iframe and update it weekly, so there
+  // is nothing for them to enter on our side. This ALSO turns off the RPI the
+  // platform computes from its own games, which was publishing a second,
+  // contradictory set of "official" rankings for COYBL.
+  power_rankings: {
+    embed_base: "https://evenfield.netlify.app/embed/standings",
+    params: { state: "OH", league: "oh-coybl" },
+    age_param: "ageGroup",
+    ages: ["7U", "8U", "9U", "10U", "11U", "12U", "13U", "14U"],
+    // No postMessage from the provider to auto-size against, so heights are
+    // configured per age and will drift as rosters change.
+    heights: { "7U": 900, "8U": 1800, "9U": 2600, "10U": 2250, "11U": 1800, "12U": 1700, "13U": 950, "14U": 700 },
+    credit: "Rankings provided by EvenField, updated weekly",
+    fallback_url:
+      "https://evenfield.netlify.app/embed/standings?state=OH&ageGroup=10U&league=oh-coybl",
+  },
   // Standings: straight W/L (PCT-based default — no points scheme).
   // Tournaments run on Five Tool — list specific events that link out.
   // NOTE: event names are from COYBL's charity slate; the urls are PLACEHOLDERS

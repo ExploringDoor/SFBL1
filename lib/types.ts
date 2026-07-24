@@ -166,6 +166,28 @@ export interface LeagueConfig {
     }[];
   };
 
+  // Power rankings produced by an OUTSIDE provider and shown as an iframe,
+  // instead of the RPI the platform computes from its own games. COYBL uses
+  // this: EvenField publishes weekly per-age rankings the league recognises,
+  // so computing a second set on-platform would publish two contradictory
+  // official rankings. Unset -> /power-rankings computes its own.
+  power_rankings?: {
+    /** Provider's iframe endpoint. Presence of this switches the page. */
+    embed_base?: string;
+    /** Fixed query params, e.g. { state: "OH", league: "oh-coybl" }. */
+    params?: Record<string, string>;
+    /** Query param carrying the age group. Defaults to "ageGroup". */
+    age_param?: string;
+    /** Age groups offered as tabs, in display order. */
+    ages?: string[];
+    /** Per-age iframe height in px (no postMessage to auto-size against). */
+    heights?: Record<string, number>;
+    /** Attribution line under the frame. */
+    credit?: string;
+    /** Direct link for anyone whose browser blocks the frame. */
+    fallback_url?: string;
+  };
+
   // Captain UX toggles. `passwordless` skips the sign-in/magic-link
   // flow entirely: the captain landing page shows a team picker
   // dropdown and on selection the client gets a Firebase custom
