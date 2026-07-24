@@ -306,16 +306,36 @@ export function BroadcastSection({ leagueId, user }: Props) {
                 </span>
               ) : null}
             </label>
-            <label style={{ display: "flex", gap: 6, fontSize: 14 }}>
+            {/* Texting stays visibly off until Twilio keys are added —
+                otherwise the box looks usable and a send silently reaches
+                nobody. Email being configured hides the global warning. */}
+            <label
+              style={{
+                display: "flex",
+                gap: 6,
+                fontSize: 14,
+                opacity: status && !status.smsConfigured ? 0.55 : 1,
+                cursor:
+                  status && !status.smsConfigured ? "not-allowed" : "pointer",
+              }}
+              title={
+                status && !status.smsConfigured
+                  ? "Texting isn't set up yet — needs a Twilio number."
+                  : undefined
+              }
+            >
               <input
                 type="checkbox"
-                checked={sendSms}
+                checked={sendSms && !!status?.smsConfigured}
+                disabled={!!status && !status.smsConfigured}
                 onChange={(e) => setSendSms(e.target.checked)}
               />
               Text{" "}
               {status ? (
                 <span style={{ color: "var(--muted)" }}>
-                  ({status.counts.sms})
+                  {status.smsConfigured
+                    ? `(${status.counts.sms})`
+                    : "(not set up yet)"}
                 </span>
               ) : null}
             </label>
