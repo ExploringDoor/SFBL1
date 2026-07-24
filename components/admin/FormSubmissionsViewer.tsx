@@ -99,6 +99,11 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterMode>("actionable");
   const [busy, setBusy] = useState<string | null>(null);
+  // Actionable count per FORM, shown as a badge on each tab. Without
+  // it the viewer opens on Player registration, and a league whose
+  // only waiting entry is a Team registration reads as an empty
+  // inbox — the tab strip gives no hint that another form has mail.
+  const [tabCounts, setTabCounts] = useState<Partial<Record<Kind, number>>>({});
   // Teams for the "Assign to team" picker on player_registration
   // rows. Public collection — a plain client read is fine.
   const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
@@ -248,6 +253,52 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
     fetchItems();
   }, [fetchItems]);
 
+  // Tab badges. Four small reads, fired together, and deliberately
+  // silent on failure: a badge that can't load must not blank out the
+  // inbox the admin actually came for.
+  const fetchTabCounts = useCallback(async () => {
+    try {
+      const idToken = await user.getIdToken();
+      const entries = await Promise.all(
+        KIND_TABS.map(async (t) => {
+          const params = new URLSearchParams({
+            leagueId,
+            kind: t.key,
+            limit: "100",
+          });
+          const res = await fetch(
+            `/api/admin-form-submissions?${params.toString()}`,
+            { headers: { authorization: `Bearer ${idToken}` } },
+          );
+          if (!res.ok) return [t.key, 0] as const;
+          const data = (await res.json()) as { items?: Submission[] };
+          const n = (data.items ?? []).filter(
+            (s) => !s.deleted && (s.status ?? "new") !== "done",
+          ).length;
+          return [t.key, n] as const;
+        }),
+      );
+      setTabCounts(Object.fromEntries(entries) as Record<Kind, number>);
+    } catch {
+      // leave the previous badges in place
+    }
+  }, [user, leagueId]);
+
+  useEffect(() => {
+    fetchTabCounts();
+  }, [fetchTabCounts]);
+
+  // Keep the active tab's badge honest after a status change or a
+  // delete, without re-fetching all four.
+  useEffect(() => {
+    setTabCounts((cur) => ({
+      ...cur,
+      [kind]: items.filter(
+        (s) => !s.deleted && (s.status ?? "new") !== "done",
+      ).length,
+    }));
+  }, [items, kind]);
+
   return (
     <section className="space-y-3 rounded-md border border-slate-200 bg-white p-4">
       <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -260,7 +311,10 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
         </div>
         <button
           type="button"
-          onClick={fetchItems}
+          onClick={() => {
+            fetchItems();
+            fetchTabCounts();
+          }}
           disabled={loading}
           className="rounded-md border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
         >
@@ -279,12 +333,26 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
             }}
             className={
               "px-3 py-1.5 text-xs font-semibold rounded-md whitespace-nowrap " +
+              "inline-flex items-center gap-1.5 " +
               (kind === t.key
                 ? "bg-slate-900 text-white"
                 : "bg-slate-100 text-slate-700 hover:bg-slate-200")
             }
           >
             {t.label}
+            {(tabCounts[t.key] ?? 0) > 0 && (
+              <span
+                aria-label={`${tabCounts[t.key]} waiting`}
+                className={
+                  "rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none " +
+                  (kind === t.key
+                    ? "bg-white text-slate-900"
+                    : "bg-blue-600 text-white")
+                }
+              >
+                {tabCounts[t.key]}
+              </span>
+            )}
           </button>
         ))}
       </div>
