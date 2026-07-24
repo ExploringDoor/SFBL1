@@ -23,11 +23,17 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
+/** Where a contact came from. "coaches" = the head coach on a team
+ *  registration (the list that grows on its own as teams sign up);
+ *  "subscribers" = the public Alerts sign-up form. */
+type Source = "coaches" | "subscribers" | "all";
+
 interface Contact {
   email: string | null;
   phone: string | null;
   ageGroup: string | null;
   notifyBy: string;
+  source: "coaches" | "subscribers";
 }
 
 function esc(s: unknown): string {
@@ -41,20 +47,59 @@ async function loadContacts(
   db: ReturnType<typeof getAdminDb>,
   leagueId: string,
 ): Promise<Contact[]> {
-  const snap = await db
+  const out: Contact[] = [];
+
+  // Registered coaches. Every team registration carries the head coach's
+  // email + phone + age group, so this list builds itself as teams sign up —
+  // no contact import needed. They gave these for league business, so they
+  // default to reachable on both channels (Twilio still appends "Reply STOP").
+  const coaches = await db
+    .collection(`leagues/${leagueId}/form_submissions/team_registration/items`)
+    .get()
+    .catch(() => null);
+  for (const d of coaches?.docs ?? []) {
+    const x = d.data();
+    out.push({
+      email: typeof x.email === "string" ? x.email.trim() : null,
+      phone: typeof x.phone === "string" ? x.phone.trim() : null,
+      ageGroup: typeof x.age_group === "string" ? x.age_group : null,
+      notifyBy: "both",
+      source: "coaches",
+    });
+  }
+
+  // Public Alerts sign-ups (parents, fans). The form asks how they want to be
+  // reached, so honor that choice; anything unset stays email-only rather than
+  // texting someone who never asked for texts.
+  const subs = await db
     .collection(`leagues/${leagueId}/form_submissions/alerts_signup/items`)
     .get()
     .catch(() => null);
-  if (!snap) return [];
-  return snap.docs.map((d) => {
+  for (const d of subs?.docs ?? []) {
     const x = d.data();
-    return {
+    out.push({
       email: typeof x.email === "string" ? x.email.trim() : null,
       phone: typeof x.phone === "string" ? x.phone.trim() : null,
       ageGroup: typeof x.age_group === "string" ? x.age_group : null,
       notifyBy: typeof x.notify_by === "string" ? x.notify_by : "email",
-    };
-  });
+      source: "subscribers",
+    });
+  }
+
+  return out;
+}
+
+/** Narrow a loaded contact list to one source. */
+function bySource(contacts: Contact[], source: Source): Contact[] {
+  return source === "all"
+    ? contacts
+    : contacts.filter((c) => c.source === source);
+}
+
+/** Reachable-recipient counts (never the addresses themselves). */
+function countsFor(contacts: Contact[]) {
+  const { emails, phones } = audience(contacts, null);
+  return { total: contacts.length, email: emails.length, sms: phones.length };
 }
 
 function audience(contacts: Contact[], ageGroup?: string | null) {
@@ -111,16 +156,25 @@ export async function GET(req: Request) {
   const gate = await requireAdmin(req, leagueId);
   if (gate instanceof NextResponse) return gate;
 
+  const source = (url.searchParams.get("source") || "all") as Source;
+
   const db = getAdminDb();
-  const contacts = await loadContacts(db, leagueId!);
-  const { emails, phones } = audience(contacts, ageGroup);
+  const all = await loadContacts(db, leagueId!);
+  const selected = bySource(all, source);
+  const { emails, phones } = audience(selected, ageGroup);
   const ageGroups = [
-    ...new Set(contacts.map((c) => c.ageGroup).filter((a): a is string => !!a)),
+    ...new Set(selected.map((c) => c.ageGroup).filter((a): a is string => !!a)),
   ].sort();
   return NextResponse.json({
     emailConfigured: sendGridConfigured(),
     smsConfigured: twilioConfigured(),
-    counts: { total: contacts.length, email: emails.length, sms: phones.length },
+    counts: { total: selected.length, email: emails.length, sms: phones.length },
+    // Per-source totals so the composer can label each audience option.
+    // Counts only — never ship the actual addresses to the browser.
+    sources: {
+      coaches: countsFor(bySource(all, "coaches")),
+      subscribers: countsFor(bySource(all, "subscribers")),
+    },
     ageGroups,
   });
 }
@@ -133,6 +187,7 @@ export async function POST(req: Request) {
     sendEmail?: unknown;
     sendSms?: unknown;
     ageGroup?: unknown;
+    source?: unknown;
     testEmail?: unknown;
     testPhone?: unknown;
   };
@@ -151,6 +206,10 @@ export async function POST(req: Request) {
   const wantSms = body.sendSms === true;
   const ageGroup =
     typeof body.ageGroup === "string" && body.ageGroup ? body.ageGroup : null;
+  const source: Source =
+    body.source === "coaches" || body.source === "subscribers"
+      ? body.source
+      : "all";
   const testEmail =
     typeof body.testEmail === "string" ? body.testEmail.trim() : "";
   const testPhone =
@@ -179,7 +238,7 @@ export async function POST(req: Request) {
     if (testEmail) emails = [testEmail];
     if (testPhone) phones = [testPhone];
   } else {
-    const contacts = await loadContacts(db, leagueId);
+    const contacts = bySource(await loadContacts(db, leagueId), source);
     const aud = audience(contacts, ageGroup);
     if (wantEmail) emails = aud.emails;
     if (wantSms) phones = aud.phones;
@@ -193,9 +252,13 @@ export async function POST(req: Request) {
       `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#1a1a1a">` +
       esc(message).replace(/\n/g, "<br/>") +
       `<hr style="border:none;border-top:1px solid #ddd;margin:20px 0"/>` +
-      `<p style="font-size:12px;color:#777">You're receiving this because you signed up for ${esc(
-        leagueName,
-      )} alerts.</p></div>`;
+      `<p style="font-size:12px;color:#777">${
+        source === "coaches"
+          ? `You're receiving this as a registered ${esc(leagueName)} coach.`
+          : source === "subscribers"
+            ? `You're receiving this because you signed up for ${esc(leagueName)} alerts.`
+            : `You're receiving this because you're on the ${esc(leagueName)} contact list.`
+      }</p></div>`;
     const r = await sendGridBroadcast({
       recipients: emails,
       subject: subject || `${leagueName} update`,
@@ -234,6 +297,7 @@ export async function POST(req: Request) {
           subject,
           channels: { email: wantEmail, sms: wantSms },
           ageGroup,
+          source,
           counts: { email: emails.length, sms: phones.length },
         },
       })

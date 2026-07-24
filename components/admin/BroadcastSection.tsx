@@ -1,9 +1,13 @@
 "use client";
 
-// Admin "Send Message" — email + text blast to the league's Alerts sign-up
-// list. Email via SendGrid, text via Twilio (both server-side, env-gated).
+// Admin "Send Message" — email + text blast to the league's contacts.
+// Email via SendGrid, text via Twilio (both server-side, env-gated).
 // Shows what's wired + a live recipient count, supports a test-send to
 // yourself, then a send to everyone.
+//
+// Two audiences, because they fill up differently: registered coaches come
+// in automatically with every team registration (email + phone), while the
+// Alerts sign-up list is opt-in from the public /alerts page.
 
 import { useCallback, useEffect, useState } from "react";
 import type { User } from "firebase/auth";
@@ -13,15 +17,25 @@ interface Props {
   user: User | null;
 }
 
+interface Counts {
+  total: number;
+  email: number;
+  sms: number;
+}
+
 interface Status {
   emailConfigured: boolean;
   smsConfigured: boolean;
-  counts: { total: number; email: number; sms: number };
+  counts: Counts;
+  sources?: { coaches: Counts; subscribers: Counts };
   ageGroups: string[];
 }
 
+type Source = "all" | "coaches" | "subscribers";
+
 export function BroadcastSection({ leagueId, user }: Props) {
   const [status, setStatus] = useState<Status | null>(null);
+  const [source, setSource] = useState<Source>("all");
   const [ageGroup, setAgeGroup] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
@@ -37,7 +51,7 @@ export function BroadcastSection({ leagueId, user }: Props) {
     if (!user) return;
     try {
       const token = await user.getIdToken();
-      const qs = new URLSearchParams({ leagueId });
+      const qs = new URLSearchParams({ leagueId, source });
       if (ageGroup) qs.set("ageGroup", ageGroup);
       const res = await fetch(`/api/admin-broadcast?${qs.toString()}`, {
         headers: { authorization: `Bearer ${token}` },
@@ -46,7 +60,7 @@ export function BroadcastSection({ leagueId, user }: Props) {
     } catch {
       /* ignore — the form still works, just no live count */
     }
-  }, [leagueId, user, ageGroup]);
+  }, [leagueId, user, ageGroup, source]);
 
   useEffect(() => {
     loadStatus();
@@ -98,6 +112,7 @@ export function BroadcastSection({ leagueId, user }: Props) {
           message,
           sendEmail,
           sendSms,
+          source,
           ageGroup: ageGroup || undefined,
           testEmail: test ? testEmail : undefined,
           testPhone: test ? testPhone : undefined,
@@ -148,8 +163,92 @@ export function BroadcastSection({ leagueId, user }: Props) {
       <div>
         <div style={{ fontSize: 20, fontWeight: 800 }}>Send Message</div>
         <div style={{ color: "var(--muted)", fontSize: 13, marginTop: 2 }}>
-          Email + text your Alerts sign-up list — rainouts, reminders, deadlines.
+          Email + text your coaches and subscribers — rainouts, reminders,
+          deadlines.
         </div>
+      </div>
+
+      <div style={box}>
+        <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>
+          Who gets this
+        </div>
+        <div style={{ display: "grid", gap: 8 }}>
+          {(
+            [
+              {
+                key: "all" as const,
+                label: "Everyone",
+                note: "Registered coaches and alert sign-ups",
+                counts: status?.counts,
+              },
+              {
+                key: "coaches" as const,
+                label: "Registered coaches",
+                note: "Added automatically when a team registers",
+                counts: status?.sources?.coaches,
+              },
+              {
+                key: "subscribers" as const,
+                label: "Alert sign-ups",
+                note: "People who opted in on the Alerts page",
+                counts: status?.sources?.subscribers,
+              },
+            ]
+          ).map((opt) => (
+            <label
+              key={opt.key}
+              style={{
+                display: "flex",
+                gap: 10,
+                alignItems: "flex-start",
+                fontSize: 14,
+                padding: "8px 10px",
+                borderRadius: 8,
+                border:
+                  source === opt.key
+                    ? "1px solid var(--brand-primary)"
+                    : "1px solid var(--border)",
+                background:
+                  source === opt.key ? "rgba(0,45,114,0.04)" : "transparent",
+                cursor: "pointer",
+              }}
+            >
+              <input
+                type="radio"
+                name="broadcast-source"
+                checked={source === opt.key}
+                onChange={() => setSource(opt.key)}
+                style={{ marginTop: 3 }}
+              />
+              <span>
+                <span style={{ fontWeight: 700 }}>{opt.label}</span>
+                {opt.counts && (
+                  <span style={{ color: "var(--muted)" }}>
+                    {" "}
+                    — {opt.counts.email} email
+                    {opt.counts.sms > 0 ? `, ${opt.counts.sms} text` : ""}
+                  </span>
+                )}
+                <span
+                  style={{
+                    display: "block",
+                    fontSize: 12,
+                    color: "var(--muted)",
+                  }}
+                >
+                  {opt.note}
+                </span>
+              </span>
+            </label>
+          ))}
+        </div>
+        {status && status.counts.total === 0 && (
+          <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>
+            No contacts yet. The list fills in on its own — every team that
+            registers adds its head coach, and anyone can opt in from the
+            Alerts page.
+          </div>
+        )}
       </div>
 
       {status && !status.emailConfigured && !status.smsConfigured && (

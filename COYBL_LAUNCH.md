@@ -7,12 +7,14 @@ Live: **https://coybl.net** · Vercel project: `coybl-preview` · Firebase (shar
 
 ## 🔴 Blockers — must be done for a real launch
 
-- [ ] **Coach login email (from coybl.net).** Right now a coach who registers gets
-      an account created but **no email**, so they can't set a password / sign in.
-      Turn it on:
-      - Adam: create a Resend account → API key.
-      - Claude: verify `coybl.net` in Resend (add SPF/DKIM/DMARC — DNS is in Vercel now, self-serve).
-      - Set on `coybl-preview`: `RESEND_API_KEY`, `EMAIL_FROM="COYBL <noreply@coybl.net>"`, `EMAIL_NOTIFY`.
+- [x] **Coach login email (from coybl.net).** DONE 2026-07-23 — live via SendGrid.
+      A coach who registers now gets a "Welcome to COYBL — set up your <team> login"
+      email from `noreply@coybl.net`. Verified end-to-end: (1) admin send-test →
+      `{ok:true, email:{sent:1}}`; (2) real test registration created the account and
+      fired the set-password email (test account/submission cleaned up after).
+      - SendGrid domain auth on `coybl.net` verified (6 DNS records in Vercel).
+      - Envs set on `coybl-preview`: `SENDGRID_API_KEY`, `SENDGRID_FROM="COYBL <noreply@coybl.net>"`.
+      - Code: `lib/email/send.ts` prefers SendGrid when configured → `lib/email/sendgrid.ts`.
 - [ ] **Coach → team connection.** Registration creates the account but does NOT
       link it to a team; a director binds each coach to their team (captain claim)
       in Admin. Decide the flow for ~196 teams: coaches self-register + directors
