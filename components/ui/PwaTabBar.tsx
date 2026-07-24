@@ -16,7 +16,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { DEFAULT_LINKS, computeNavLinks, iconFor } from "./nav-links";
+import { DEFAULT_LINKS, computeNavLinks } from "./nav-links";
+import { NavIcon } from "./NavIcon";
 import type { NavLink } from "./nav-links";
 import "./PwaTabBar.css";
 
@@ -200,7 +201,7 @@ export function PwaTabBar({
                   <li key={it.href}>
                     <Link href={it.href}>
                       <span className="le-tabbar-sheet-icon" aria-hidden>
-                        {iconFor(it.href)}
+                        <NavIcon href={it.href} />
                       </span>
                       {it.label}
                     </Link>

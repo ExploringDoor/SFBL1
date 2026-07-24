@@ -60,8 +60,11 @@ export type GameStatus =
   | "live"
   | "final"
   | "approved"
-  | "ppd"
-  | "rained_out";
+  // The live data, the CSV importer, the league-health check and the UI all
+  // use "postponed". "ppd" / "rained_out" were declared here but written
+  // nowhere, so any future `switch` on those literals would silently miss
+  // every real postponed game.
+  | "postponed";
 
 export interface GameResult {
   home_team_id: string;

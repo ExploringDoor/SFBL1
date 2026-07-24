@@ -2,7 +2,12 @@
 // component (e.g. /teams/[slug] for an unknown team) or for any
 // route that doesn't exist.
 
+import type { Metadata } from "next";
 import Link from "next/link";
+
+// Next returns this body with a 200 in some streaming paths (soft-404), so the
+// robots tag — not the status code — is what actually keeps it out of search.
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default function NotFound() {
   return (
@@ -16,8 +21,11 @@ export default function NotFound() {
         textAlign: "center",
       }}
     >
-      <div style={{ fontSize: 64, lineHeight: 1, marginBottom: 16 }}>
-        ⚾
+      {/* SVG, not an emoji (house style). */}
+      <div style={{ marginBottom: 16, display: "flex", justifyContent: "center" }}>
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M12 2a10 10 0 100 20 10 10 0 000-20zM4.5 7.5c2.6.6 4.6 2.6 5.2 5.2M19.5 7.5c-2.6.6-4.6 2.6-5.2 5.2M7.5 19.5c.6-2.6 2.6-4.6 5.2-5.2" />
+        </svg>
       </div>
       <h1
         style={{

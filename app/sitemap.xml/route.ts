@@ -79,9 +79,18 @@ export async function GET() {
   // "Information" holds /player-ads and /rules), and a top-level-only walk
   // would quietly drop every page inside it from the sitemap. Parents use
   // href "#", which is skipped.
+  // Never sitemap a path robots.txt disallows (Island's nav.add puts
+  // "Coach Login" -> /captain in the nav, which was landing in the sitemap
+  // while robots.txt disallowed it — a contradictory signal to crawlers).
+  const NOINDEX = new Set(["/captain", "/admin", "/profile", "/login"]);
   const addHrefs = (links: Array<{ href?: string; children?: unknown }>) => {
     for (const l of links) {
-      if (l?.href && l.href !== "#" && !staticPages.includes(l.href)) {
+      if (
+        l?.href &&
+        l.href !== "#" &&
+        !NOINDEX.has(l.href) &&
+        !staticPages.includes(l.href)
+      ) {
         staticPages.push(l.href);
       }
       if (Array.isArray(l?.children)) {

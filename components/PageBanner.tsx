@@ -35,9 +35,14 @@ export function PageBanner({
   images,
   initialSlug,
   fullBleed = false,
+  leagueName = "",
 }: {
   images: Record<string, string>;
   initialSlug: string;
+  /** Used to build a real alt. The banner art carries the page + league
+   *  identity, so alt="" would hide the page's own heading from a screen
+   *  reader on full-bleed tenants where the art replaces the <h1>. */
+  leagueName?: string;
   /** Edge-to-edge strip instead of natural size. Off by default so existing
    *  tenants are unchanged. */
   fullBleed?: boolean;
@@ -64,7 +69,9 @@ export function PageBanner({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src}
-          alt=""
+          // The banner art carries the page + league identity (it IS the page
+          // heading for full-bleed tenants), so it needs a real alt, not "".
+          alt={bannerAlt(slug, leagueName)}
           style={{
             display: "block",
             width: "100%",
@@ -84,7 +91,7 @@ export function PageBanner({
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
-        alt=""
+        alt={bannerAlt(slug, leagueName)}
         style={{
           display: "inline-block",
           maxWidth: "100%",
@@ -96,4 +103,12 @@ export function PageBanner({
       />
     </div>
   );
+}
+
+/** "Island Fastpitch" on home, "Standings — Island Fastpitch" elsewhere. */
+function bannerAlt(slug: string, leagueName: string): string {
+  const league = leagueName.trim();
+  if (slug === "home" || !slug) return league;
+  const page = slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  return league ? `${page}, ${league}` : page;
 }

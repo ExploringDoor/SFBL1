@@ -7,6 +7,7 @@
 // based on tenant config.
 
 import { headers } from "next/headers";
+import { notFound } from "next/navigation";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { markdownToHtml } from "@/lib/markdown";
 import type { PublicLeagueConfig } from "@/lib/tenants";
@@ -58,6 +59,14 @@ export default async function SfblInfoPage() {
   // that path live so the public site doesn't go blank if the doc
   // ever gets deleted.
   const isSfbl = tenantId === "sfbl" || abbrev === "SFBL";
+
+  // No About content authored and not SFBL (which has hardcoded fallback prose)?
+  // Then this page does not exist for this tenant. It used to render an
+  // admin-facing "This page hasn't been written yet — sign in as a league
+  // administrator" placeholder to the PUBLIC, which is both unpolished and a
+  // dead end. Same rule the /content/[pageId] route already follows: admins
+  // create pages from /admin, not by visiting the bare URL.
+  if (!html && !isSfbl) notFound();
 
   return (
     <main className="container py-10" style={{ maxWidth: 760 }}>

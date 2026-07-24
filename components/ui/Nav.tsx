@@ -14,7 +14,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { DEFAULT_LINKS, computeNavLinks, iconFor } from "./nav-links";
+import { DEFAULT_LINKS, computeNavLinks } from "./nav-links";
+import { NavIcon } from "./NavIcon";
 import type { NavLink } from "./nav-links";
 import "./Nav.css";
 
@@ -255,7 +256,7 @@ export function Nav({
                       onClick={() => setMobOpen(false)}
                     >
                       <span className="le-mob-tile-icon" aria-hidden>
-                        {iconFor(child.href)}
+                        <NavIcon href={child.href} />
                       </span>
                       <span className="le-mob-tile-label">
                         {child.label}
@@ -280,7 +281,7 @@ export function Nav({
                 onClick={() => setMobOpen(false)}
               >
                 <span className="le-mob-tile-icon" aria-hidden>
-                  {iconFor(link.href)}
+                  <NavIcon href={link.href} />
                 </span>
                 <span className="le-mob-tile-label">{link.label}</span>
               </Link>

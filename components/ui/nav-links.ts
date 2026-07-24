@@ -154,41 +154,5 @@ export function computeNavLinks(
   return result;
 }
 
-/** Emoji icon for a nav destination — used by the mobile menu tiles
- *  and the bottom-tab "More" sheet. */
-export function iconFor(href: string): string {
-  const ICONS: Record<string, string> = {
-    "/": "🏠",
-    "/scores": "⚾",
-    "/schedule": "📅",
-    "/standings": "🏆",
-    "/players": "📊",
-    "/teams": "👥",
-    "/rules": "📜",
-    "/content/news": "📰",
-    "/photos": "📷",
-    "/leaders": "🥇",
-    "/player-of-the-week": "🌟",
-    "/playoffs": "⚾",
-    "/history": "📚",
-    "/fields": "📍",
-    "/sfbl-info": "ℹ️",
-    "/player-registration": "🧢",
-    "/team-registration": "🏟️",
-    "/team-waiver-form": "✍️",
-    "/umpire-evaluation-form": "👨‍⚖️",
-    "/pay-online": "💳",
-    "/content/pay-online": "💳",
-    "/content/sponsors": "🤝",
-    "/content/store": "🛒",
-    "/content/contact": "✉️",
-    "/profile": "🙋",
-    "/captain": "⚾",
-    "/admin": "◉",
-    "/tournaments": "🏆",
-    "/availability": "🗓️",
-    "/eligibility": "🛡️",
-    "/power-rankings": "📈",
-  };
-  return ICONS[href] ?? "•";
-}
+// Nav icons live in ./NavIcon.tsx as SVG now (house style: no emoji in the UI).
+

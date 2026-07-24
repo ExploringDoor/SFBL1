@@ -67,7 +67,7 @@ export function ProfileButton({ tenantId }: { tenantId: string }) {
           className="rounded-md bg-brand-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-on-primary hover:opacity-90"
           title="Captain portal"
         >
-          ⚾ Captain
+          {<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{display:"inline-block",verticalAlign:"-2px",marginRight:5}}><path d="M12 3l7 3v6c0 4.5-3 7.8-7 9-4-1.2-7-4.5-7-9V6l7-3z"/></svg>}Captain
         </Link>
       )}
       {/* Hide the separate "Profile" link for passwordless captains —
@@ -96,7 +96,7 @@ export function ProfileButton({ tenantId }: { tenantId: string }) {
         aria-label="Sign out"
         title="Sign out"
       >
-        ✕
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" aria-hidden><path d="M6 6l12 12M18 6L6 18" /></svg>
       </button>
     </div>
   );
@@ -116,7 +116,7 @@ function AccessChooser() {
         aria-expanded={open}
         className="rounded-md bg-brand-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-on-primary hover:opacity-90"
       >
-        👤 Profile
+        {<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{display:"inline-block",verticalAlign:"-2px",marginRight:5}}><path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>}Profile
       </button>
       {open && (
         <>
@@ -135,14 +135,14 @@ function AccessChooser() {
               onClick={() => setOpen(false)}
               className="block rounded px-2 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-100"
             >
-              ⚾ Captain / Manager
+              {<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{display:"inline-block",verticalAlign:"-2px",marginRight:5}}><path d="M12 3l7 3v6c0 4.5-3 7.8-7 9-4-1.2-7-4.5-7-9V6l7-3z"/></svg>}Captain / Manager
             </Link>
             <Link
               href="/login"
               onClick={() => setOpen(false)}
               className="block rounded px-2 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-100"
             >
-              🙋 Player
+              {<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{display:"inline-block",verticalAlign:"-2px",marginRight:5}}><path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>}Player
             </Link>
           </div>
         </>

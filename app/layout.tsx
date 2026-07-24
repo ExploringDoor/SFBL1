@@ -83,13 +83,21 @@ export async function generateMetadata(): Promise<Metadata> {
       abbrev?: string;
       sport?: string;
       theme?: { logo_url?: string; og_image_url?: string };
+      flags?: Record<string, boolean>;
     };
     const name = cfg.name ?? "League";
     const abbrev = cfg.abbrev;
     const sport = cfg.sport === "softball" ? "softball" : "baseball";
-    const description = `Schedule, scores, standings, and stats for ${name}${
-      abbrev && abbrev !== name ? ` (${abbrev})` : ""
-    }. Live ${sport} updates, team rosters, and captain tools.`;
+    // Stats-off leagues (Island) publish no player stats — saying "stats" in
+    // the meta description advertises something the site doesn't have.
+    const statsOff = cfg.flags?.stats_enabled === false;
+    const description = statsOff
+      ? `Schedule, scores, and standings for ${name}${
+          abbrev && abbrev !== name ? ` (${abbrev})` : ""
+        }. Live ${sport} updates, team pages, and coach tools.`
+      : `Schedule, scores, standings, and stats for ${name}${
+          abbrev && abbrev !== name ? ` (${abbrev})` : ""
+        }. Live ${sport} updates, team rosters, and captain tools.`;
     // ONE share image for link previews (iMessage / FB / Twitter): the
     // purpose-built 1200×630 og-default.png. This used to ALSO include
     // the tenant logo as a second image, which made iMessage render the
@@ -386,6 +394,7 @@ export default async function RootLayout({
               images={headerImagesFor(tenantId)}
               initialSlug={bannerSlug}
               fullBleed={bannerFullBleed}
+              leagueName={leagueName ?? ""}
             />
           )}
           <div className="site-content">{children}</div>

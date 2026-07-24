@@ -96,11 +96,13 @@ describe("computeStandings", () => {
     expect(computeStandings([])).toEqual([]);
   });
 
-  it("ignores draft / postponed / rained-out games", () => {
+  // "postponed" is the value the live data, the CSV importer and the UI all
+  // use. This previously asserted "ppd" / "rained_out", which no game has ever
+  // been written with — so it was passing without covering the real case.
+  it("ignores draft / postponed games", () => {
     const games: GameResult[] = [
       game("a", "b", 5, 3, "draft"),
-      game("a", "b", 5, 3, "ppd"),
-      game("a", "b", 5, 3, "rained_out"),
+      game("a", "b", 5, 3, "postponed"),
     ];
     expect(computeStandings(games)).toEqual([]);
   });
