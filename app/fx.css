@@ -250,10 +250,13 @@
    need nothing and stay flat-transparent. */
 
 /* Team-page hero: drop the white box the logo used to sit in — the hero is
-   dark, so a light logo reads directly on it. Scoped to Island; other tenants
-   (no shadow-treated logos) keep the white box. !important beats the div's
-   inline background/padding. */
-.fx-on .le-hero-logo-box {
+   dark, so a light logo reads directly on it. ISLAND ONLY: its logos carry a
+   baked drop-shadow so they read on the dark hero without the box. Other
+   tenants (COYBL's plain logos, e.g.) would wash out with no box, so they
+   keep it. Previously scoped to `.fx-on`, which meant this fired on any
+   tenant with motion_fx on — it now requires the Island tenant class too.
+   !important beats the div's inline background/padding. */
+.fx-on.tenant-island .le-hero-logo-box {
   background: transparent !important;
   padding: 0 !important;
 }

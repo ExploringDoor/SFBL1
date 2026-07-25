@@ -261,7 +261,9 @@ export default async function RootLayout({
       lang="en"
       className={`${inter.variable} ${barlow.variable} ${oswald.variable}${
         motionFx ? " fx-on" : ""
-      }${stickyNav ? " nav-sticky" : ""}`}
+      }${stickyNav ? " nav-sticky" : ""}${
+        tenantId ? ` tenant-${tenantId}` : ""
+      }`}
       style={
         themeStyle ? ({ ...parseStyle(themeStyle) } as React.CSSProperties) : undefined
       }

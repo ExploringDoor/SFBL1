@@ -88,6 +88,15 @@ const LEAGUE_CONFIG = {
     // Hide the per-page text titles/heros — COYBL's header banner images
     // already show the league name + page, so the text was redundant.
     hide_page_titles: true,
+    // Visual polish ported from Island. motion_fx = scroll reveals + win
+    // bars + banner settle (COYBL has 196 teams / 974 games, so the cards
+    // and standings the reveals target actually exist). sticky_nav pins the
+    // top nav so Rules / Scores / … stay reachable down a long page.
+    // NOT banner_full_bleed (hardcodes a black ground that fights COYBL's
+    // white-lettered banners) and NOT ticker_scroll (COYBL runs the tabbed
+    // ticker_by_age above, not the marquee).
+    motion_fx: true,
+    sticky_nav: true,
   },
   // No admin password gate for now (preview) — the admin landing page opens
   // straight through when passwordless is true.
