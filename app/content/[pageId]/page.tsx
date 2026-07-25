@@ -23,6 +23,7 @@ import {
   ContentSections,
   extractLeadingH1,
 } from "@/components/ContentSections";
+import type { PublicLeagueConfig } from "@/lib/tenants";
 
 export const dynamic = "force-dynamic";
 
@@ -72,13 +73,26 @@ export default async function ContentPage({
   const tenantId = h.get("x-tenant-id");
   if (!tenantId) {
     return (
-      <Shell heading="Page">
+      <Shell eyebrow="League" heading="Page">
         <p className="text-slate-700">
           Pages are tenant-scoped. Visit a tenant subdomain.
         </p>
       </Shell>
     );
   }
+
+  const config = (() => {
+    const raw = h.get("x-tenant-config-json");
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as PublicLeagueConfig;
+    } catch {
+      return null;
+    }
+  })();
+  // Eyebrow above the page title, matching the Fields / Player Ads header
+  // treatment. Falls back to a neutral word when config or abbrev is absent.
+  const eyebrow = config?.abbrev ?? "League";
 
   const db = getAdminDb();
   const docSnap = await db
@@ -104,17 +118,7 @@ export default async function ContentPage({
   const title = h1Title ?? String(data.title ?? humanize(pageId));
 
   return (
-    <Shell heading={title}>
-      {updatedAt && (
-        <p className="mb-4 text-xs text-slate-500">
-          Last updated{" "}
-          {new Date(updatedAt).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
-        </p>
-      )}
+    <Shell eyebrow={eyebrow} heading={title} updatedAt={updatedAt}>
       <ContentSections html={html} />
       <PageContentEditor
         tenantId={tenantId}
@@ -127,16 +131,43 @@ export default async function ContentPage({
 }
 
 function Shell({
+  eyebrow = "League",
   heading,
+  updatedAt,
   children,
 }: {
+  eyebrow?: string;
   heading: string;
+  updatedAt?: string;
   children: React.ReactNode;
 }) {
   return (
-    <main className="mx-auto max-w-4xl px-6 py-12">
-      <header className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">{heading}</h1>
+    <main className="mx-auto max-w-4xl px-6 py-10">
+      <header style={{ marginBottom: 22 }}>
+        <p className="sec-eyebrow" style={{ color: "var(--brand-primary)" }}>
+          {eyebrow}
+        </p>
+        <h1
+          className="font-display"
+          style={{
+            fontSize: "clamp(38px, 6vw, 60px)",
+            lineHeight: 0.95,
+            color: "var(--text-strong)",
+            margin: 0,
+          }}
+        >
+          {heading}
+        </h1>
+        {updatedAt && (
+          <p style={{ marginTop: 8, fontSize: 12, color: "var(--muted)" }}>
+            Last updated{" "}
+            {new Date(updatedAt).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </p>
+        )}
       </header>
       {children}
     </main>
