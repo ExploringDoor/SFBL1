@@ -193,13 +193,20 @@ const LEAGUE_CONFIG = {
   // Tournaments run on Five Tool — list specific events that link out.
   // NOTE: event names are from COYBL's charity slate; the urls are PLACEHOLDERS
   // (generic Five Tool) until Adam supplies each event's real link.
+  // COYBL's OWN charity tournaments, run through Five Tool Youth. url is the
+  // director-filtered event feed (director=11) from the old site, NOT Five
+  // Tool's generic homepage. intro carries the charity framing. 2027 dates,
+  // venues and per-team prices come from Doug; the placeholder "TBD" clutter
+  // was dropped so the cards read as "coming soon" rather than unfinished.
   tournaments: {
-    url: "https://play.fivetoolyouth.org",
+    url: "https://play.fivetoolyouth.org/events?director=11",
+    intro:
+      "These are COYBL's own charity tournaments, run through Five Tool Youth. All proceeds go to the Nationwide Children's Hospital Foundation, which the league has supported for years. Spots fill quickly, so register early.",
     events: [
-      { name: "Striking Out Pediatric Cancer", when: "Summer 2027 (dates TBD)", location: "Columbus, OH (venue TBD)", cost: "$TBD / team", ages: "8U-14U", note: "Benefits Nationwide Children's Hospital", url: "https://play.fivetoolyouth.org" },
-      { name: "Super Heroes", when: "Summer 2027 (dates TBD)", location: "Columbus, OH (venue TBD)", cost: "$TBD / team", ages: "8U-14U", note: "Benefits Nationwide Children's Hospital", url: "https://play.fivetoolyouth.org" },
-      { name: "Bust Out The Bats", when: "Summer 2027 (dates TBD)", location: "Columbus, OH (venue TBD)", cost: "$TBD / team", ages: "8U-14U", note: "Benefits Nationwide Children's Hospital", url: "https://play.fivetoolyouth.org" },
-      { name: "Five Tool Ohio State Championships", when: "Summer 2027 (dates TBD)", location: "Columbus, OH (venue TBD)", cost: "$TBD / team", ages: "8U-14U", url: "https://play.fivetoolyouth.org" },
+      { name: "Striking Out Pediatric Cancer", when: "Summer 2027 (dates coming soon)", ages: "7U-14U", note: "Benefits Nationwide Children's Hospital", url: "https://play.fivetoolyouth.org/events?director=11" },
+      { name: "Super Heroes", when: "Summer 2027 (dates coming soon)", ages: "7U-14U", note: "Benefits Nationwide Children's Hospital", url: "https://play.fivetoolyouth.org/events?director=11" },
+      { name: "Bust Out The Bats", when: "Summer 2027 (dates coming soon)", ages: "7U-14U", note: "Benefits Nationwide Children's Hospital", url: "https://play.fivetoolyouth.org/events?director=11" },
+      { name: "Five Tool Ohio State Championships", when: "Summer 2027 (dates coming soon)", ages: "7U-14U", url: "https://play.fivetoolyouth.org/events?director=11" },
     ],
   },
 };

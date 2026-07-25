@@ -17,9 +17,12 @@ const FIELDS: FormField[] = [
   { name: "email", label: "Email Address", type: "email", required: true, width: "half" },
   {
     name: "phone",
-    label: "Cell Phone (for text alerts)",
+    label: "Cell Phone",
     type: "tel",
-    help: "Optional — add your cell if you'd like text alerts.",
+    // Text alerts aren't sending yet (no SMS provider wired). Collect the
+    // cell now so signups are included the moment texts launch, but don't
+    // promise a text we can't send.
+    help: "Optional. Text alerts are coming soon; add your cell to be included when they launch.",
     width: "half",
   },
   {
@@ -32,21 +35,14 @@ const FIELDS: FormField[] = [
     ],
     width: "half",
   },
-  {
-    name: "notify_by",
-    label: "How should we reach you?",
-    type: "select",
-    options: [
-      { value: "email", label: "Email" },
-      { value: "text", label: "Text" },
-      { value: "both", label: "Email and Text" },
-    ],
-    width: "half",
-  },
+  // notify_by (Email / Text / Both) was removed: SMS isn't wired, so offering
+  // "Text" collected a preference we couldn't honor. Alerts go by email; the
+  // broadcast code defaults an unset notify_by to email. Re-add this when
+  // Twilio is configured.
   {
     name: "agreed_to_alerts",
     label:
-      "I agree to receive COYBL alerts at the contact info above. Message/data rates may apply for texts; reply STOP to opt out.",
+      "I agree to receive COYBL email alerts at the address above.",
     type: "checkbox",
     required: true,
     width: "full",
@@ -61,9 +57,9 @@ export default function AlertsSignupPage() {
       kind="alerts_signup"
       title="League Alerts Signup"
       eyebrow={eyebrow}
-      description="Get COYBL updates — rainouts, schedule changes, and league news — by email or text."
+      description="Get COYBL email updates: rainouts, schedule changes, and league news."
       intro={[
-        "Leave your email (and cell phone if you'd like texts) and we'll keep you posted on rainouts, schedule changes, and league news.",
+        "Leave your email and we'll keep you posted on rainouts, schedule changes, and league news. Text alerts are coming soon; add your cell to be included when they launch.",
       ]}
       fields={FIELDS}
       submitLabel="Sign Me Up"

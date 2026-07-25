@@ -21,6 +21,11 @@ import { buildAgeSections, recordsToStandings } from "@/lib/age-standings";
 
 export const dynamic = "force-dynamic";
 
+// Per-page title -> "Standings · <abbrev>" via the layout template (was just
+// the bare league name on every page).
+export const metadata = { title: "Standings" };
+
+
 export default async function StandingsPage() {
   const h = headers();
   const tenantId = h.get("x-tenant-id");

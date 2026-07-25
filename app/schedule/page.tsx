@@ -16,6 +16,11 @@ import { combineDateTime } from "@/lib/format-time";
 
 export const dynamic = "force-dynamic";
 
+// Per-page title -> "Schedule · <abbrev>" via the layout template (was just
+// the bare league name on every page).
+export const metadata = { title: "Schedule" };
+
+
 interface ScheduleGame {
   id: string;
   date: string;

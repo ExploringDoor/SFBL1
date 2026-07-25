@@ -16,6 +16,11 @@ import type { PitchCountRuleset, PitchOuting } from "@/lib/pitchcount/types";
 
 export const dynamic = "force-dynamic";
 
+// Per-page title -> "Pitch Counts · <abbrev>" via the layout template (was just
+// the bare league name on every page).
+export const metadata = { title: "Pitch Counts" };
+
+
 interface TeamRow {
   id: string;
   name: string;

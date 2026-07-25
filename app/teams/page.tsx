@@ -16,6 +16,11 @@ import type { PublicLeagueConfig } from "@/lib/tenants";
 
 export const dynamic = "force-dynamic";
 
+// Per-page title -> "Teams · <abbrev>" via the layout template (was just
+// the bare league name on every page).
+export const metadata = { title: "Teams" };
+
+
 interface TeamCard {
   id: string;
   name: string;

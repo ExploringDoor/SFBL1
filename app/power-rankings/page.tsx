@@ -26,6 +26,11 @@ import { computeRpi, type RpiGame, type RpiRow } from "@/lib/rpi";
 
 export const dynamic = "force-dynamic";
 
+// Per-page title -> "Power Rankings · <abbrev>" via the layout template (was just
+// the bare league name on every page).
+export const metadata = { title: "Power Rankings" };
+
+
 /** Outside-provider rankings embed, from tenant config. */
 interface PowerRankingsEmbed {
   /** Base URL of the provider's iframe endpoint. */

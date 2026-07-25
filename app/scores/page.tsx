@@ -14,6 +14,11 @@ import { combineDateTime } from "@/lib/format-time";
 
 export const dynamic = "force-dynamic";
 
+// Per-page title -> "Scores · <abbrev>" via the layout template (was just
+// the bare league name on every page).
+export const metadata = { title: "Scores" };
+
+
 interface ScoreGame {
   id: string;
   date: string;

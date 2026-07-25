@@ -69,9 +69,20 @@ export const viewport: Viewport = {
 // override these for richer previews on specific pages.
 export async function generateMetadata(): Promise<Metadata> {
   const h = headers();
+  // metadataBase resolves relative og:image/twitter:image URLs (e.g.
+  // "/coybl/og.png") to ABSOLUTE ones. Without it Next warns and falls back to
+  // localhost, so a link shared from coybl.net previews with a broken/blank
+  // image. Derive it from the actual request host (middleware sets
+  // x-tenant-host) so every tenant's card points at its own domain.
+  const host = h.get("x-tenant-host") || h.get("host") || "";
+  const isLocal = host.startsWith("localhost") || host.startsWith("127.");
+  const metadataBase = host
+    ? new URL(`${isLocal ? "http" : "https"}://${host}`)
+    : undefined;
   const configJson = h.get("x-tenant-config-json");
   if (!configJson) {
     return {
+      metadataBase,
       title: "LeagueEngine",
       description:
         "Multi-tenant platform for amateur sports leagues — schedules, standings, stats, and captain tools.",
@@ -126,6 +137,7 @@ export async function generateMetadata(): Promise<Metadata> {
     ];
 
     return {
+      metadataBase,
       title: { default: name, template: `%s · ${abbrev ?? name}` },
       description,
       openGraph: {

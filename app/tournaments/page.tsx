@@ -17,6 +17,11 @@ import type { PublicLeagueConfig } from "@/lib/tenants";
 
 export const dynamic = "force-dynamic";
 
+// Per-page title -> "Tournaments · <abbrev>" via the layout template (was just
+// the bare league name on every page).
+export const metadata = { title: "Tournaments" };
+
+
 type TournamentEvent = NonNullable<
   NonNullable<PublicLeagueConfig["tournaments"]>["events"]
 >[number];
@@ -74,11 +79,13 @@ async function loadTournaments(tenantId: string): Promise<{
 function EventsView({
   events,
   fallbackUrl,
+  intro,
   eyebrow,
   hideTitle,
 }: {
   events: TournamentEvent[];
   fallbackUrl?: string;
+  intro?: string;
   eyebrow?: string;
   hideTitle?: boolean;
 }) {
@@ -106,8 +113,8 @@ function EventsView({
           </>
         )}
         <p style={{ marginTop: 10, color: "var(--muted)", maxWidth: 680, lineHeight: 1.5 }}>
-          Our teams compete in these tournaments around Central Ohio — tap an
-          event to register or get details.
+          {intro ??
+            "Tap an event to register or get details."}
         </p>
       </header>
 
@@ -269,6 +276,7 @@ export default async function TournamentsPage() {
       <EventsView
         events={events}
         fallbackUrl={config?.tournaments?.url}
+        intro={config?.tournaments?.intro}
         eyebrow={config?.name}
         hideTitle={config?.flags?.hide_page_titles}
       />

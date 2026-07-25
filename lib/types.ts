@@ -155,6 +155,10 @@ export interface LeagueConfig {
   // register link; `url` is the default register/info target.
   tournaments?: {
     url?: string;
+    /** Lead paragraph for /tournaments. For COYBL these are the league's OWN
+     *  charity events (proceeds to Nationwide Children's), not "tournaments
+     *  our teams compete in", so the framing has to come from config. */
+    intro?: string;
     events?: {
       name: string;
       when?: string;
