@@ -24,6 +24,25 @@ import { getDb } from "@/lib/firebase";
 interface TeamOpt {
   id: string;
   name: string;
+  ageGroup?: string;
+  division?: string;
+}
+
+// Youth leagues reuse the same club name across age groups (COYBL has 34
+// names shared by 2+ teams, one by 5), so a name-only dropdown makes it
+// impossible to bind a coach to the RIGHT team. Sort by age then division
+// then name so the list is browseable, and label each option with its age
+// and division.
+function ageNum(a?: string): number {
+  const m = /(\d+)/.exec(a ?? "");
+  return m ? parseInt(m[1]!, 10) : 999;
+}
+function teamSortKey(t: TeamOpt): [number, string, string] {
+  return [ageNum(t.ageGroup), t.division ?? "", t.name];
+}
+function teamLabel(t: TeamOpt): string {
+  const bits = [t.ageGroup, t.division].filter(Boolean).join(" · ");
+  return bits ? `${t.name} — ${bits}` : t.name;
 }
 
 interface PlayerOpt {
@@ -76,8 +95,20 @@ export function CaptainClaimsManager({ leagueId, user }: Props) {
       if (cancelled) return;
       setTeams(
         teamSnap.docs
-          .map((d) => ({ id: d.id, name: String(d.data().name ?? d.id) }))
-          .sort((a, b) => a.name.localeCompare(b.name)),
+          .map((d) => {
+            const x = d.data();
+            return {
+              id: d.id,
+              name: String(x.name ?? d.id),
+              ageGroup: x.ageGroup ? String(x.ageGroup) : undefined,
+              division: x.division ? String(x.division) : undefined,
+            };
+          })
+          .sort((a, b) => {
+            const [aa, ad, an] = teamSortKey(a);
+            const [ba, bd, bn] = teamSortKey(b);
+            return aa - ba || ad.localeCompare(bd) || an.localeCompare(bn);
+          }),
       );
       const contactsBody = (await contactsRes.json().catch(() => ({}))) as {
         players?: PlayerOpt[];
@@ -158,16 +189,17 @@ export function CaptainClaimsManager({ leagueId, user }: Props) {
         setResult({ ok: false, message: data.error ?? `HTTP ${res.status}` });
         return;
       }
-      const teamLabel =
+      const boundTeam = teams.find((t) => t.id === teamId);
+      const teamSuffix =
         role === "captain"
-          ? ` (${teams.find((t) => t.id === teamId)?.name ?? teamId})`
+          ? ` (${boundTeam ? teamLabel(boundTeam) : teamId})`
           : "";
       setResult({
         ok: true,
         message:
           role === "remove"
             ? `Removed all roles for ${email}.`
-            : `Granted ${role}${teamLabel} to ${email}. ${data.note ?? ""}`,
+            : `Granted ${role}${teamSuffix} to ${email}. ${data.note ?? ""}`,
       });
       // Reset on successful grant so a flurry of captain grants is
       // fast — clear email + picked player, keep teamId so admin can
@@ -209,7 +241,7 @@ export function CaptainClaimsManager({ leagueId, user }: Props) {
           <option value="">— select team —</option>
           {teams.map((t) => (
             <option key={t.id} value={t.id}>
-              {t.name}
+              {teamLabel(t)}
             </option>
           ))}
         </select>
