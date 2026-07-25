@@ -207,14 +207,25 @@ function SectionIcon({ kind }: { kind: IconKey }) {
 // One scoped stylesheet for the whole renderer. Hover is shadow + border +
 // icon-fill only — deliberately NOT transform, which the scroll-reveal
 // animation (fill: both) would override on the very same <section> nodes.
+//
+// !important is load-bearing, not lazy: the base card/badge/chip colours are set
+// as INLINE style props (React), which outrank any selector, so a plain :hover
+// rule computes but never paints. !important is the one thing that beats inline.
+//
+// The card glow deliberately matches the game-card hover (fx.css): a tight
+// accent ring + soft accent halo in --brand-accent, so "hover = the FASTPITCH
+// blue glow" reads the same everywhere Adam asked for it.
 const CARD_CSS = `
 .le-content-card{transition:box-shadow .22s ease,border-color .22s ease}
 .le-content-card .le-content-badge{transition:background-color .22s ease,color .22s ease,border-color .22s ease}
 @media (hover:hover) and (pointer:fine){
-  .le-content-card:hover{box-shadow:0 14px 34px rgba(0,0,0,.12);border-color:color-mix(in srgb, var(--brand-accent,#35afea) 45%, rgba(0,0,0,.08))}
-  .le-content-card:hover .le-content-badge{background:var(--brand-primary,#002d6e);color:#fff;border-color:var(--brand-primary,#002d6e)}
+  .le-content-card:hover{
+    border-color:color-mix(in srgb, var(--brand-accent,#35afea) 60%, transparent) !important;
+    box-shadow:0 0 0 1px color-mix(in srgb, var(--brand-accent,#35afea) 40%, transparent),0 0 20px 1px color-mix(in srgb, var(--brand-accent,#35afea) 28%, transparent),0 10px 26px rgba(0,0,0,.10) !important;
+  }
+  .le-content-card:hover .le-content-badge{background:var(--brand-primary,#002d6e) !important;color:#fff !important;border-color:var(--brand-primary,#002d6e) !important}
   .le-content-jump{transition:background-color .18s ease,color .18s ease,border-color .18s ease}
-  .le-content-jump:hover{background:var(--brand-primary,#002d6e);color:#fff;border-color:var(--brand-primary,#002d6e)}
+  .le-content-jump:hover{background:var(--brand-primary,#002d6e) !important;color:#fff !important;border-color:var(--brand-primary,#002d6e) !important}
 }`;
 
 export function ContentSections({ html }: { html: string }) {
