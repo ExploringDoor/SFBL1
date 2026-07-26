@@ -58,14 +58,10 @@ const SFBL_FIELDS: FormField[] = [
   },
 ];
 
-// "9U (Modified Rules)" is a real registration choice: 9U runs a regular and a
-// modified-rules track, and Doug wants coaches to pick it at sign-up (it used
-// to be decided by a post-registration poll). It is a submitted value the
-// director reads, not a standings/division key, so the readable label is fine.
-// GameChanger instructions, verbatim from Doug. Shown at the top of the COYBL
+// GameChanger instructions, from Doug. Shown at the top of the COYBL
 // registration form; the required gamechanger_link field collects the link.
-// NOTE: Doug's copy says "2026 season / 2026 team"; the fee copy elsewhere on
-// this page references the 2027 season. Left as Doug wrote it, flagged to Adam.
+// Season year is 2027 (Doug's draft said 2026; Adam confirmed 2027 so it
+// matches the fee copy below).
 function GameChangerInfo() {
   return (
     <div
@@ -83,8 +79,8 @@ function GameChangerInfo() {
         GAMECHANGER: IMPORTANT INFO
       </p>
       <p style={{ margin: "0 0 8px" }}>
-        Coaches, before you register for the 2026 season, make sure you have
-        GameChanger set up for your 2026 team.
+        Coaches, before you register for the 2027 season, make sure you have
+        GameChanger set up for your 2027 team.
       </p>
       <p style={{ margin: "0 0 8px", fontWeight: 700 }}>
         Please use the same name to register with COYBL as your GameChanger
@@ -96,7 +92,7 @@ function GameChangerInfo() {
         with similar strength. It powers the Power Rankings for each COYBL age
         division, plus end of season tournament seeding and awards. The
         GameChanger schedule link below is a required entry to complete
-        registration. If you have not set up your 2026 GameChanger team yet,
+        registration. If you have not set up your 2027 GameChanger team yet,
         please do so first.
       </p>
       <p style={{ margin: "0 0 6px", fontWeight: 700 }}>
@@ -115,7 +111,7 @@ function GameChangerInfo() {
           </a>{" "}
           on a computer (not the phone app).
         </li>
-        <li>Select your 2026 COYBL team.</li>
+        <li>Select your 2027 COYBL team.</li>
         <li>At the top, click &lsquo;Tools&rsquo;.</li>
         <li>
           At the bottom right of the &lsquo;Tools&rsquo; page, click the blue
@@ -131,6 +127,10 @@ function GameChangerInfo() {
   );
 }
 
+// "9U (Modified Rules)" is a real registration choice: 9U runs a regular and a
+// modified-rules track, and Doug wants coaches to pick it at sign-up (it used
+// to be decided by a post-registration poll). It is a submitted value the
+// director reads, not a standings/division key, so the readable label is fine.
 const COYBL_AGE_GROUPS = [
   "7U",
   "8U",
