@@ -58,7 +58,90 @@ const SFBL_FIELDS: FormField[] = [
   },
 ];
 
-const COYBL_AGE_GROUPS = ["7U", "8U", "9U", "10U", "11U", "12U", "13U", "14U"];
+// "9U (Modified Rules)" is a real registration choice: 9U runs a regular and a
+// modified-rules track, and Doug wants coaches to pick it at sign-up (it used
+// to be decided by a post-registration poll). It is a submitted value the
+// director reads, not a standings/division key, so the readable label is fine.
+// GameChanger instructions, verbatim from Doug. Shown at the top of the COYBL
+// registration form; the required gamechanger_link field collects the link.
+// NOTE: Doug's copy says "2026 season / 2026 team"; the fee copy elsewhere on
+// this page references the 2027 season. Left as Doug wrote it, flagged to Adam.
+function GameChangerInfo() {
+  return (
+    <div
+      style={{
+        border: "1px solid var(--border)",
+        borderLeft: "4px solid var(--brand-accent, #c8102e)",
+        borderRadius: 10,
+        padding: "16px 18px",
+        background: "rgba(200,16,46,0.04)",
+        lineHeight: 1.55,
+        fontSize: 14,
+      }}
+    >
+      <p style={{ margin: "0 0 8px", fontWeight: 800, letterSpacing: "0.02em" }}>
+        GAMECHANGER: IMPORTANT INFO
+      </p>
+      <p style={{ margin: "0 0 8px" }}>
+        Coaches, before you register for the 2026 season, make sure you have
+        GameChanger set up for your 2026 team.
+      </p>
+      <p style={{ margin: "0 0 8px", fontWeight: 700 }}>
+        Please use the same name to register with COYBL as your GameChanger
+        team name.
+      </p>
+      <p style={{ margin: "0 0 8px" }}>
+        We use GameChanger data to rank teams to help with divisional placement,
+        and so you can gauge which teams you could play for non divisional games
+        with similar strength. It powers the Power Rankings for each COYBL age
+        division, plus end of season tournament seeding and awards. The
+        GameChanger schedule link below is a required entry to complete
+        registration. If you have not set up your 2026 GameChanger team yet,
+        please do so first.
+      </p>
+      <p style={{ margin: "0 0 6px", fontWeight: 700 }}>
+        How to get your GameChanger schedule link:
+      </p>
+      <ol style={{ margin: "0 0 4px", paddingLeft: 20 }}>
+        <li>
+          Go to{" "}
+          <a
+            href="https://gc.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "var(--brand-primary)", fontWeight: 700 }}
+          >
+            GameChanger.com
+          </a>{" "}
+          on a computer (not the phone app).
+        </li>
+        <li>Select your 2026 COYBL team.</li>
+        <li>At the top, click &lsquo;Tools&rsquo;.</li>
+        <li>
+          At the bottom right of the &lsquo;Tools&rsquo; page, click the blue
+          &lsquo;Copy Link&rsquo; to copy your team&rsquo;s GameChanger schedule
+          link.
+        </li>
+        <li>
+          Paste that link in the &lsquo;GameChanger Schedule Link&rsquo; field
+          below.
+        </li>
+      </ol>
+    </div>
+  );
+}
+
+const COYBL_AGE_GROUPS = [
+  "7U",
+  "8U",
+  "9U",
+  "9U (Modified Rules)",
+  "10U",
+  "11U",
+  "12U",
+  "13U",
+  "14U",
+];
 
 const COYBL_FIELDS: FormField[] = [
   { name: "manager_first_name", label: "Coach / Manager First Name", type: "text", required: true, width: "half" },
@@ -81,10 +164,10 @@ const COYBL_FIELDS: FormField[] = [
     options: COYBL_AGE_GROUPS.map((a) => ({ value: a, label: a })),
     width: "half",
   },
-  { name: "street_address", label: "Street Address", type: "text", width: "full" },
-  { name: "city", label: "City / Town", type: "text", width: "half" },
-  { name: "zip", label: "ZIP Code", type: "text", width: "half" },
-  { name: "organization", label: "Club / Organization", type: "text", placeholder: "If your team is part of a club", width: "full" },
+  { name: "street_address", label: "Street Address", type: "text", required: true, width: "full" },
+  { name: "city", label: "City / Town", type: "text", required: true, width: "half" },
+  { name: "zip", label: "ZIP Code", type: "text", required: true, width: "half" },
+  { name: "organization", label: "Club / Organization", type: "text", required: true, placeholder: "If your team is part of a club", width: "full" },
   {
     name: "insurance_option",
     label: "Registration Option",
@@ -98,11 +181,12 @@ const COYBL_FIELDS: FormField[] = [
   },
   {
     name: "usssa_addon",
-    label: "Add USSSA membership? (+$35)",
+    label: "Add USSSA membership? (+$50)",
     type: "select",
+    required: true,
     options: [
       { value: "no", label: "No" },
-      { value: "yes", label: "Yes, add USSSA (+$35)" },
+      { value: "yes", label: "Yes, add USSSA (+$50)" },
     ],
     width: "half",
   },
@@ -110,21 +194,19 @@ const COYBL_FIELDS: FormField[] = [
     name: "gamechanger_link",
     label: "GameChanger Schedule Link",
     type: "text",
+    required: true,
     placeholder: "https://web.gc.com/teams/…",
-    help: "Paste your team's GameChanger schedule link — it feeds standings and power rankings.",
+    help: "Required. Follow the GameChanger steps above to copy your team's schedule link, then paste it here.",
     width: "full",
   },
-  {
-    name: "team_logo",
-    label: "Team Logo (optional)",
-    type: "image",
-    help: "Upload your team's logo (PNG or JPG) — it'll appear on your team page and score cards.",
-    width: "full",
-  },
-  { name: "asst_first_name", label: "Assistant Coach First Name", type: "text", width: "half" },
-  { name: "asst_last_name", label: "Assistant Coach Last Name", type: "text", width: "half" },
-  { name: "asst_phone", label: "Assistant Coach Phone", type: "tel", width: "half" },
-  { name: "notes", label: "Anything else we should know?", type: "textarea", width: "full" },
+  { name: "asst_first_name", label: "Assistant Coach First Name", type: "text", required: true, width: "half" },
+  { name: "asst_last_name", label: "Assistant Coach Last Name", type: "text", required: true, width: "half" },
+  { name: "asst_phone", label: "Assistant Coach Phone", type: "tel", required: true, width: "half" },
+  // team_logo (optional) and notes (optional) intentionally left NOT required:
+  // requiring a file upload would block a team that has no logo file ready,
+  // and "anything else?" is a genuine catch-all. Flagged to Adam/Doug.
+  { name: "team_logo", label: "Team Logo (optional)", type: "image", help: "Optional. PNG or JPG — appears on your team page and score cards.", width: "full" },
+  { name: "notes", label: "Anything else we should know? (optional)", type: "textarea", width: "full" },
   {
     name: "agreed_to_terms",
     label:
@@ -169,13 +251,16 @@ function content(tenantId: string) {
       description:
         "Register your team for the Central Ohio Youth Baseball League.",
       intro: [
-        "Choose your registration option below: Option 1 is $495 (includes team insurance plus Five Tool Youth registration); Option 2 is $425 (your team provides proof of its own insurance, plus Five Tool Youth registration). USSSA membership is an optional +$35 add-on.",
+        "Choose your registration option below: Option 1 is $495 (includes team insurance plus Five Tool Youth registration); Option 2 is $425 (your team provides proof of its own insurance, plus Five Tool Youth registration). USSSA membership is an optional +$50 add-on.",
         // NOTE: this used to promise "pay by card (Square) at checkout". There
         // is no Square checkout in the codebase (no /api/square-checkout, no
         // Square client anywhere), so every coach was being told about a
         // payment step that does not exist. Copy now matches what the league
         // actually does. Restore a card line only when a checkout ships.
         "Payment is handled separately from this form: pay by Venmo or by check (details below). To pay by card, contact the league office and we will arrange it.",
+        // GameChanger info (Doug's copy). Rich node so the numbered steps
+        // render as a real list; the required gamechanger_link field is below.
+        <GameChangerInfo key="gc" />,
       ],
       successMessage: "Thanks! Your team registration is in.",
       // Secondary payment option — kept below the form so it doesn't lead

@@ -308,7 +308,7 @@ A player's age on **April 30** sets their division — a player who turns an age
 
 **How to read this:** a 9U player who turns 10 before May 1 is not eligible for 9U — *unless* they are in 3rd grade. A player who turns 11 before May 1 is never eligible for 9U, grade exemption or not.
 
-## Pitch Counts (Pitch Smart)
+## 9U Modified Rules\n\n9U runs two tracks, **Regular** and **Modified**, and teams choose their track when they register. The Modified track is a gentler ruleset for 9U teams still developing after coach pitch.\n\nThe specific rule differences for the 9U Modified track are set by the league office and will be posted here before the season. If your team registered for 9U Modified and you have questions in the meantime, contact your 9U age group director on the Contact page.\n\n## Pitch Counts (Pitch Smart)
 
 A pitcher may **not return to the mound** once removed. Required rest is based on pitches thrown in a day. If a pitcher crosses a threshold mid-at-bat, they may finish that batter and the coach records the threshold count.
 
@@ -363,7 +363,7 @@ A pitcher may **not return to the mound** once removed. Required rest is based o
 
 - **Option 1 ($495):** team insurance + Five Tool Youth registration.
 - **Option 2 ($425):** team provides its own insurance (proof required) + Five Tool Youth registration.
-- Optional add-on: **USSSA membership (+$35)**.
+- Optional add-on: **USSSA membership (+$50)**.
 
 ## League End Date
 

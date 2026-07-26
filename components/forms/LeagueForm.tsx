@@ -9,7 +9,7 @@
 // pattern, and CSS. Per-form differences (fields, copy, kind) are
 // passed in as props.
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import "./LeagueForm.css";
 
 export type FieldType =
@@ -161,9 +161,16 @@ export function LeagueForm({
 
       {intro && intro.length > 0 && (
         <div className="le-form-intro">
-          {intro.map((p, i) => (
-            <p key={i}>{p}</p>
-          ))}
+          {intro.map((p, i) =>
+            // String items get a <p>; a rich node (e.g. the COYBL GameChanger
+            // block, which contains a list) renders as-is so it isn't nested
+            // inside a <p> (invalid HTML / hydration error).
+            typeof p === "string" ? (
+              <p key={i}>{p}</p>
+            ) : (
+              <Fragment key={i}>{p}</Fragment>
+            ),
+          )}
         </div>
       )}
 
