@@ -303,6 +303,52 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
     }));
   }, [items, kind]);
 
+  // Export the loaded submissions for the active kind to a CSV the director
+  // can open in Excel/Sheets (e.g. to sort 196 team registrations into
+  // divisions). Client-side from the already-fetched `items` — no new
+  // endpoint. Columns are derived from the data so it works for any form
+  // kind; the logo blob + internal/honeypot fields are dropped.
+  function exportCsv() {
+    if (items.length === 0) return;
+    const BLOCK = new Set(["id", "team_logo", "ip", "user_agent", "website"]);
+    const keys = new Set<string>();
+    for (const r of items) {
+      for (const k of Object.keys(r)) if (!BLOCK.has(k)) keys.add(k);
+    }
+    // submitted_at + status lead; the rest alphabetical for a stable layout.
+    const cols = [
+      "submitted_at",
+      "status",
+      ...[...keys]
+        .filter((k) => k !== "submitted_at" && k !== "status")
+        .sort(),
+    ];
+    const esc = (v: unknown): string => {
+      if (v == null) return "";
+      const s = (typeof v === "object" ? JSON.stringify(v) : String(v))
+        .replace(/\r?\n/g, " ")
+        .trim();
+      return `"${s.replace(/"/g, '""')}"`;
+    };
+    const lines = [
+      cols.map(esc).join(","),
+      ...items.map((r) => cols.map((k) => esc(r[k])).join(",")),
+    ];
+    // Leading BOM so Excel reads UTF-8 (accented names) correctly.
+    const csv = "﻿" + lines.join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${leagueId}-${kind}-${new Date()
+      .toISOString()
+      .slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <section className="space-y-3 rounded-md border border-slate-200 bg-white p-4">
       <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -313,17 +359,28 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
             payment, grant roster access, or assign a team.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            fetchItems();
-            fetchTabCounts();
-          }}
-          disabled={loading}
-          className="rounded-md border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-        >
-          {loading ? "…" : "Refresh"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={exportCsv}
+            disabled={loading || items.length === 0}
+            title="Download these submissions as a CSV (opens in Excel or Google Sheets)"
+            className="rounded-md border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          >
+            Export CSV{items.length ? ` (${items.length})` : ""}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              fetchItems();
+              fetchTabCounts();
+            }}
+            disabled={loading}
+            className="rounded-md border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          >
+            {loading ? "…" : "Refresh"}
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-1 overflow-x-auto pb-1">
