@@ -185,7 +185,9 @@ const REQUIRED: Record<Kind, string[]> = {
     "posted_by",
     "contact_name",
     "email",
-    "age_group",
+    // age_group is NOT server-required: umpire posts (COYBL's umpire board
+    // reuses this kind) legitimately have no age group. Tenants that want it
+    // (Island's free-agent form) still require it client-side.
     "message",
     "agreed_to_terms",
   ],
