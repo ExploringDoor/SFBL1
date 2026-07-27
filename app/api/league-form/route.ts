@@ -195,7 +195,12 @@ const REQUIRED: Record<Kind, string[]> = {
 // On production with multiple regions, swap to Redis or Edge Config.
 const rate = new Map<string, { count: number; reset: number }>();
 const RATE_WINDOW_MS = 10 * 60 * 1000;
-const RATE_LIMIT = 5;
+// Only SUCCESSFUL submissions count toward this (see below), so it is a cap on
+// real saved registrations per IP per window, not on attempts. That matters at
+// launch: 196 teams register in a burst, coaches retry after validation errors,
+// and families / facilities / a director doing several teams can share one IP.
+// The old value of 5 counted rejected attempts too and locked such users out.
+const RATE_LIMIT = 20;
 
 function pickAllowed(
   kind: Kind,
@@ -228,17 +233,16 @@ export async function POST(req: Request) {
   const ip =
     h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   const now = Date.now();
+  // CHECK ONLY here — do not increment. A rejected attempt (missing field,
+  // honeypot, bad JSON) must not burn a legitimate coach's budget, so the
+  // counter is bumped only after a real save succeeds (see recordSubmission
+  // below). Otherwise a coach who mistypes a few times gets a 429.
   const entry = rate.get(ip);
-  if (entry && now < entry.reset) {
-    if (entry.count >= RATE_LIMIT) {
-      return NextResponse.json(
-        { error: "Too many submissions. Try again in a few minutes." },
-        { status: 429 },
-      );
-    }
-    entry.count++;
-  } else {
-    rate.set(ip, { count: 1, reset: now + RATE_WINDOW_MS });
+  if (entry && now < entry.reset && entry.count >= RATE_LIMIT) {
+    return NextResponse.json(
+      { error: "Too many submissions. Try again in a few minutes." },
+      { status: 429 },
+    );
   }
 
   let body: SubmissionBody;
@@ -296,6 +300,12 @@ export async function POST(req: Request) {
         ip,
         user_agent: h.get("user-agent") ?? null,
       });
+    // Count this SUCCESSFUL save against the per-IP rate budget (the check at
+    // the top of the handler only reads it). Rejected attempts never reach
+    // here, so they don't count.
+    const cur = rate.get(ip);
+    if (cur && now < cur.reset) cur.count++;
+    else rate.set(ip, { count: 1, reset: now + RATE_WINDOW_MS });
   } catch (e) {
     console.error(
       `[league-form] write FAILED tenant=${tenantId} kind=${body.kind}:`,
