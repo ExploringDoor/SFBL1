@@ -65,6 +65,9 @@ const LEAGUE_CONFIG = {
   // buttons, headings); accent + secondary = red for highlights and the hero
   // emphasis word. Matches COYBL's dark/red banner art.
   theme: { primary: "#1a1a1a", accent: "#c8102e", secondary: "#c8102e", logo_url: null },
+  // Branded season year (ticker + homepage). COYBL registers 2027 during 2026,
+  // so this is set explicitly rather than derived from the clock.
+  season_year: 2027,
   // No home-page "Welcome" intro — dropped per Adam (2026-06-30); the banner
   // images already carry the league identity, so `about` is left unset and the
   // homepage Welcome block renders nothing.
@@ -144,20 +147,11 @@ const LEAGUE_CONFIG = {
     add: [
       { label: "Pitch Counts", href: "/eligibility" },
       { label: "Power Rankings", href: "/power-rankings" },
-      {
-        label: "Rules",
-        href: "/rules",
-        children: [
-          { label: "League Rules", href: "/rules" },
-          { label: "7U & 8U Rules", href: "/content/rules-7u-8u" },
-          { label: "9U-12U Rules", href: "/content/rules-9u-12u" },
-          { label: "13U & 14U Rules", href: "/content/rules-13u-14u" },
-          { label: "Tournament Rules", href: "/content/tournament-rules" },
-          { label: "Bat Rules", href: "/content/bat-rules" },
-          { label: "Approved Baseballs", href: "/content/approved-baseballs" },
-          { label: "Field Dimensions", href: "/content/field-dimensions" },
-        ],
-      },
+      // Rules is ONE page now (/rules) with all sections (League Rules + each
+      // age rulebook + tournament/bat/baseballs/field) and a "Jump To" button
+      // row at the top, rendered via ContentSections. The old per-page docs
+      // (page_content/rules-*) still exist but are no longer linked.
+      { label: "Rules", href: "/rules" },
       {
         label: "Coaches",
         href: "/content/manager-help",

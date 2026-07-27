@@ -183,6 +183,9 @@ export default async function RootLayout({
   let themeSecondary: string | undefined;
   let navHideLabels: string[] = [];
   let navAddLinks: NavLink[] = [];
+  // Branded season year for the ticker (config.season_year); falls back to the
+  // calendar year. COYBL registers the 2027 season during 2026.
+  let seasonYear = new Date().getFullYear();
   // flags.ticker_scroll — opt-in marquee ticker (Island Fastpitch).
   let tickerScroll = false;
   // flags.banner_full_bleed — edge-to-edge page header banners (Island).
@@ -211,9 +214,11 @@ export default async function RootLayout({
         // this stays loose and `clean` below does the real validation.
         nav?: { hide?: string[]; add?: unknown[] };
         flags?: Record<string, boolean>;
+        season_year?: number;
       };
       leagueName = cfg.name ?? null;
       leagueAbbrev = cfg.abbrev;
+      if (typeof cfg.season_year === "number") seasonYear = cfg.season_year;
       logoUrl = cfg.theme?.logo_url ?? null;
       tickerScroll = cfg.flags?.ticker_scroll === true;
       bannerFullBleed = cfg.flags?.banner_full_bleed === true;
@@ -368,7 +373,7 @@ export default async function RootLayout({
               <Ticker
                 games={tickerGames}
                 tenantShort={leagueAbbrev ?? leagueName ?? "League"}
-                seasonYear={new Date().getFullYear()}
+                seasonYear={seasonYear}
                 // COYBL (youth baseball) shows a baseball in place of the
                 // generic hexagon mark. (Adam, 2026-07.)
                 mark={leagueAbbrev === "COYBL" ? "⚾" : "⬡"}

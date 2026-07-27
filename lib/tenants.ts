@@ -36,6 +36,8 @@ export interface PublicLeagueConfig {
   about?: string;
   // Tournaments the league runs/links to — rendered on /tournaments.
   tournaments?: LeagueConfig["tournaments"];
+  // Branded season year (e.g. 2027). See LeagueConfig["season_year"].
+  season_year?: number;
   // Outside-provider rankings embed. See LeagueConfig["power_rankings"].
   // Safe to forward: it is just a public embed URL and layout hints.
   power_rankings?: LeagueConfig["power_rankings"];
@@ -68,6 +70,7 @@ export function toPublicConfig(c: LeagueConfig): PublicLeagueConfig {
     nav: c.nav,
     about: c.about,
     tournaments: c.tournaments,
+    season_year: c.season_year,
     power_rankings: c.power_rankings,
     captain: c.captain,
     // Strip `admin.password` — only forward whether passwordless is

@@ -170,6 +170,12 @@ export interface LeagueConfig {
     }[];
   };
 
+  // The season year shown in branding (ticker "COYBL 2027", the homepage
+  // hero + registration CTA). Youth leagues open registration in the prior
+  // calendar year, so the branded season is NOT `new Date().getFullYear()`.
+  // Unset -> falls back to the current calendar year.
+  season_year?: number;
+
   // Power rankings produced by an OUTSIDE provider and shown as an iframe,
   // instead of the RPI the platform computes from its own games. COYBL uses
   // this: EvenField publishes weekly per-age rankings the league recognises,

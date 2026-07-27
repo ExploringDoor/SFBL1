@@ -4,6 +4,10 @@ import { markdownToHtml } from "@/lib/markdown";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { PageContentEditor } from "@/components/PageContentEditor";
 import {
+  ContentSections,
+  extractLeadingH1,
+} from "@/components/ContentSections";
+import {
   RulesRichView,
   type RulesSection,
   type DivisionDef,
@@ -134,6 +138,17 @@ export default async function RulesPage() {
   const html = cachedHtml || markdownToHtml(markdown);
   const updatedAt = data?.updated_at as string | undefined;
 
+  // COYBL keeps all of its rules on one page (League Rules + each age rulebook
+  // + tournament, bat, baseballs, field dimensions), each as a top-level ##
+  // section. ContentSections renders those as cards with a "Jump To" button
+  // row at the top, which is the single-page-with-buttons layout Adam asked
+  // for. Other tenants keep the plain prose article, so their rules pages are
+  // unchanged.
+  const sectioned = tenantId === "coybl";
+  const { body: sectionedBody } = sectioned
+    ? extractLeadingH1(html)
+    : { body: html };
+
   return (
     <Shell heading={config?.flags?.hide_page_titles ? "" : config?.name ? `${config.name} — Rules` : "Rules"}>
       {updatedAt && (
@@ -146,10 +161,14 @@ export default async function RulesPage() {
           })}
         </p>
       )}
-      <article
-        className="prose prose-slate max-w-none [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mt-6 [&_h1]:mb-3 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:mt-5 [&_h2]:mb-2 [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-2 [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:my-1 [&_a]:text-blue-600 [&_a]:underline [&_strong]:font-semibold [&_em]:italic [&_code]:rounded [&_code]:bg-slate-100 [&_code]:px-1 [&_blockquote]:border-l-4 [&_blockquote]:border-slate-300 [&_blockquote]:pl-3 [&_blockquote]:text-slate-600 [&_table]:w-full [&_table]:my-4 [&_table]:text-sm [&_th]:text-left [&_th]:font-semibold [&_th]:bg-slate-50 [&_th]:border [&_th]:border-slate-200 [&_th]:px-3 [&_th]:py-2 [&_td]:border [&_td]:border-slate-200 [&_td]:px-3 [&_td]:py-2"
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
+      {sectioned ? (
+        <ContentSections html={sectionedBody} />
+      ) : (
+        <article
+          className="prose prose-slate max-w-none [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mt-6 [&_h1]:mb-3 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:mt-5 [&_h2]:mb-2 [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-2 [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:my-1 [&_a]:text-blue-600 [&_a]:underline [&_strong]:font-semibold [&_em]:italic [&_code]:rounded [&_code]:bg-slate-100 [&_code]:px-1 [&_blockquote]:border-l-4 [&_blockquote]:border-slate-300 [&_blockquote]:pl-3 [&_blockquote]:text-slate-600 [&_table]:w-full [&_table]:my-4 [&_table]:text-sm [&_th]:text-left [&_th]:font-semibold [&_th]:bg-slate-50 [&_th]:border [&_th]:border-slate-200 [&_th]:px-3 [&_th]:py-2 [&_td]:border [&_td]:border-slate-200 [&_td]:px-3 [&_td]:py-2"
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      )}
       <PageContentEditor
         tenantId={tenantId}
         pageId="rules"

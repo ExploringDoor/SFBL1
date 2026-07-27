@@ -67,7 +67,9 @@ export default async function HomePage() {
     leagueName,
   } = await loadHomeData(tenantId, config);
 
-  const season = String(new Date().getFullYear());
+  // Branded season year (config.season_year), falling back to the calendar
+  // year. COYBL opens 2027 registration during 2026, so the clock is wrong.
+  const season = String(config?.season_year ?? new Date().getFullYear());
   const big = config?.abbrev ?? deriveAbbrev(leagueName);
 
   return (
