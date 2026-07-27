@@ -9,8 +9,11 @@
 // Renders nothing unless the game is final with real scores. Team logos are the
 // same-origin /island/teams/*.png paths, so the canvas isn't tainted.
 
+import Link from "next/link";
 import { headers } from "next/headers";
 import ShareCard from "@/components/ui/ShareCard";
+import { ShareGraphicReveal } from "@/components/ShareGraphicReveal";
+import { initialsFromName } from "@/lib/team-initials";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 
 interface ShareTeam {
@@ -46,6 +49,57 @@ export function GameShareSection({
   const h = headers();
   const words = (config?.name ?? "League").trim().split(/\s+/);
   const theme = config?.theme;
+  // Stats-off (COYBL): hide the graphic behind a "Share Graphic" button and
+  // pair it with "View Standings", matching the LMLL modal. Other tenants keep
+  // the graphic inline (Island's Mike wanted one-tap).
+  const compact = config?.flags?.stats_enabled === false;
+
+  const card = (
+    <ShareCard
+      game={{
+        home: {
+          name: data.home.name,
+          // Badge from the name — COYBL's scraped abbrev is unreliable
+          // (holds the record for some teams). See lib/team-initials.
+          abbrev: initialsFromName(data.home.name),
+          color: data.home.color,
+          logo_url: data.home.logoUrl,
+        },
+        away: {
+          name: data.away.name,
+          abbrev: initialsFromName(data.away.name),
+          color: data.away.color,
+          logo_url: data.away.logoUrl,
+        },
+        home_score: data.home.score,
+        away_score: data.away.score,
+        date: data.date,
+        division: null,
+        field: data.field,
+      }}
+      brand={{
+        line1: (words[0] ?? config?.abbrev ?? "").toUpperCase(),
+        line2: words.slice(1).join(" ").toUpperCase(),
+        primary: theme?.primary ?? "#0b2e4f",
+        accent: theme?.accent ?? "#35afea",
+        highlight: theme?.secondary ?? theme?.accent ?? "#c8dc2e",
+        logoUrl: theme?.logo_url ?? null,
+        siteUrl: h.get("x-forwarded-host") ?? h.get("host") ?? "",
+        footerName: config?.name ?? "",
+      }}
+    />
+  );
+
+  if (compact) {
+    return (
+      <section className="no-print rc-actions" style={{ marginTop: 24 }}>
+        <ShareGraphicReveal>{card}</ShareGraphicReveal>
+        <Link href="/standings" className="rc-action rc-action-secondary">
+          View Standings →
+        </Link>
+      </section>
+    );
+  }
 
   return (
     <section className="no-print" style={{ marginTop: 32 }}>
@@ -55,39 +109,7 @@ export function GameShareSection({
       >
         Share this final
       </p>
-      <div style={{ maxWidth: 420 }}>
-        <ShareCard
-          game={{
-            home: {
-              name: data.home.name,
-              abbrev: data.home.abbrev,
-              color: data.home.color,
-              logo_url: data.home.logoUrl,
-            },
-            away: {
-              name: data.away.name,
-              abbrev: data.away.abbrev,
-              color: data.away.color,
-              logo_url: data.away.logoUrl,
-            },
-            home_score: data.home.score,
-            away_score: data.away.score,
-            date: data.date,
-            division: null,
-            field: data.field,
-          }}
-          brand={{
-            line1: (words[0] ?? config?.abbrev ?? "").toUpperCase(),
-            line2: words.slice(1).join(" ").toUpperCase(),
-            primary: theme?.primary ?? "#0b2e4f",
-            accent: theme?.accent ?? "#35afea",
-            highlight: theme?.secondary ?? theme?.accent ?? "#c8dc2e",
-            logoUrl: theme?.logo_url ?? null,
-            siteUrl: h.get("x-forwarded-host") ?? h.get("host") ?? "",
-            footerName: config?.name ?? "",
-          }}
-        />
-      </div>
+      <div style={{ maxWidth: 420 }}>{card}</div>
     </section>
   );
 }

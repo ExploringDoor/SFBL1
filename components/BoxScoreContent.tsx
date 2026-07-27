@@ -16,6 +16,7 @@
 import Link from "next/link";
 import { formatIP } from "@/lib/stats/ip";
 import { buildRecap } from "@/lib/stats/recap";
+import { initialsFromName } from "@/lib/team-initials";
 import { formatGameDate, formatTime12 } from "@/lib/format-time";
 import { sanitizeHtml } from "@/lib/markdown";
 import { BoxScoreTabs } from "@/components/ui/BoxScoreTabs";
@@ -75,6 +76,10 @@ export interface BoxScoreContentProps {
   time: string | null;
   field: string | null;
   status: string;
+  /** Age group + division for the modal header band. Not rendered by
+   *  BoxScoreContent itself; the modal route reads them for the band. */
+  ageGroup?: string | null;
+  division?: string | null;
   innings: number;
   away: BoxTeam;
   home: BoxTeam;
@@ -117,7 +122,7 @@ export function BoxScoreContent(props: BoxScoreContentProps) {
   if (props.recapOnly) {
     return (
       <div className="bs-root">
-        <RecapScoreRows away={away} home={home} date={date} time={time} />
+        <RecapScoreRows away={away} home={home} />
         <div className="bs-recap-body">
           {props.recapEditor && (
             <div className="bs-recap-edit-slot">{props.recapEditor}</div>
@@ -254,31 +259,11 @@ export function BoxScoreContent(props: BoxScoreContentProps) {
 // layout Adam wanted, matching the LMLL game modal, instead of FinalHeader's
 // side-by-side blocks. Scoped to the recap-only path so box-score tenants
 // (SFBL/Island/LBDC) keep FinalHeader unchanged.
-function RecapScoreRows({
-  away,
-  home,
-  date,
-  time,
-}: {
-  away: BoxTeam;
-  home: BoxTeam;
-  date: string | null;
-  time: string | null;
-}) {
+function RecapScoreRows({ away, home }: { away: BoxTeam; home: BoxTeam }) {
   const aWin = away.score > home.score;
   const hWin = home.score > away.score;
-  const dateLabel = date
-    ? formatGameDate(date, time, {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-      })
-    : null;
   return (
     <div className="rc-head">
-      <div className="rc-status">
-        FINAL{dateLabel ? ` · ${dateLabel}` : ""}
-      </div>
       <RecapRow team={away} winner={aWin} />
       <RecapRow team={home} winner={hWin} />
     </div>
@@ -286,7 +271,9 @@ function RecapScoreRows({
 }
 
 function RecapRow({ team, winner }: { team: BoxTeam; winner: boolean }) {
-  const initials = (team.abbrev ?? team.name.slice(0, 3)).toUpperCase();
+  // Badge from the NAME, not team.abbrev — COYBL's scraped abbrev is unreliable
+  // (some hold the record, e.g. "0-4-0"). See lib/team-initials.
+  const initials = initialsFromName(team.name);
   return (
     <Link
       href={`/teams/${team.team_id}`}

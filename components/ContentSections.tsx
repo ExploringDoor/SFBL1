@@ -224,8 +224,12 @@ const CARD_CSS = `
     box-shadow:0 0 0 1px color-mix(in srgb, var(--brand-accent,#35afea) 40%, transparent),0 0 20px 1px color-mix(in srgb, var(--brand-accent,#35afea) 28%, transparent),0 10px 26px rgba(0,0,0,.10) !important;
   }
   .le-content-card:hover .le-content-badge{background:var(--brand-primary,#002d6e) !important;color:#fff !important;border-color:var(--brand-primary,#002d6e) !important}
-  .le-content-jump{transition:background-color .18s ease,color .18s ease,border-color .18s ease}
-  .le-content-jump:hover{background:var(--brand-primary,#002d6e) !important;color:#fff !important;border-color:var(--brand-primary,#002d6e) !important}
+}
+.le-content-jump{transition:transform .16s cubic-bezier(.32,.72,0,1),background-color .16s ease,color .16s ease,border-color .16s ease,box-shadow .16s ease}
+.le-jump-ico{display:inline-flex;color:var(--brand-accent,#c8102e)}
+@media (hover:hover) and (pointer:fine){
+  .le-content-jump:hover{background:var(--brand-primary,#1a1a1a) !important;color:#fff !important;border-color:var(--brand-primary,#1a1a1a) !important;transform:translateY(-2px);box-shadow:0 8px 20px color-mix(in srgb, var(--brand-primary,#1a1a1a) 22%, transparent) !important}
+  .le-content-jump:hover .le-jump-ico{color:#fff}
 }`;
 
 export function ContentSections({ html }: { html: string }) {
@@ -280,26 +284,26 @@ export function ContentSections({ html }: { html: string }) {
       {sections.length > 2 && (
         <div
           style={{
-            background: "white",
-            border: "1px solid rgba(0,0,0,0.08)",
-            borderRadius: 14,
-            padding: "14px 18px",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+            background: "var(--bg2, #f7f8fa)",
+            border: "1px solid var(--border, #eceef1)",
+            borderRadius: 18,
+            padding: "18px 20px",
           }}
         >
           <div
             style={{
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: "0.16em",
+              fontFamily: "var(--font-barlow), sans-serif",
+              fontSize: 12,
+              fontWeight: 800,
+              letterSpacing: "0.14em",
               color: "var(--muted)",
               textTransform: "uppercase",
-              marginBottom: 10,
+              marginBottom: 12,
             }}
           >
-            Jump To
+            Jump to a section
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 9 }}>
             {sections.map((s) => (
               <a
                 key={s.heading}
@@ -308,19 +312,20 @@ export function ContentSections({ html }: { html: string }) {
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: 7,
-                  padding: "6px 14px",
-                  background: "rgba(0,45,110,0.05)",
-                  border: "1px solid rgba(0,45,110,0.18)",
+                  gap: 8,
+                  padding: "9px 16px",
+                  background: "#fff",
+                  border: "1.5px solid var(--border, #e5e7eb)",
                   borderRadius: 999,
-                  color: "var(--brand-primary, #002d6e)",
-                  fontSize: 13,
+                  color: "var(--text-strong, #111)",
+                  fontSize: 13.5,
                   fontWeight: 700,
                   textDecoration: "none",
                   whiteSpace: "nowrap",
+                  boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
                 }}
               >
-                <span aria-hidden style={{ display: "inline-flex", opacity: 0.85 }}>
+                <span aria-hidden className="le-jump-ico">
                   <SectionIcon kind={iconFor(s.heading)} />
                 </span>
                 {s.heading}

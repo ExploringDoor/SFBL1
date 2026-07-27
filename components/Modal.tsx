@@ -12,7 +12,19 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
-export function Modal({ children, title }: { children: React.ReactNode; title?: string }) {
+export function Modal({
+  children,
+  title,
+  band,
+}: {
+  children: React.ReactNode;
+  title?: string;
+  /** Optional colored header band (COYBL: division + date + FINAL pill),
+   *  rendered edge-to-edge at the top with the close button inside it. When
+   *  omitted, the plain white card + floating close button is used (every
+   *  other tenant), so their modals are unchanged. */
+  band?: React.ReactNode;
+}) {
   const router = useRouter();
   const dialogRef = useRef<HTMLDivElement>(null);
 
@@ -122,19 +134,40 @@ export function Modal({ children, title }: { children: React.ReactNode; title?: 
     >
       <div
         ref={dialogRef}
-        className="relative my-8 w-full max-w-3xl rounded-lg bg-white shadow-2xl"
+        className="relative my-8 w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl"
         onClick={onContentClick}
       >
-        <button
-          ref={closeBtnRef}
-          type="button"
-          onClick={() => router.back()}
-          aria-label="Close"
-          className="absolute right-3 top-3 rounded-md bg-slate-100 px-2 py-1 text-sm text-slate-600 hover:bg-slate-200"
+        {band ? (
+          <div className="le-modal-band">
+            <div className="le-modal-band-inner">{band}</div>
+            <button
+              ref={closeBtnRef}
+              type="button"
+              onClick={() => router.back()}
+              aria-label="Close"
+              className="le-modal-band-close"
+            >
+              ✕
+            </button>
+          </div>
+        ) : (
+          <button
+            ref={closeBtnRef}
+            type="button"
+            onClick={() => router.back()}
+            aria-label="Close"
+            className="absolute right-3 top-3 z-10 rounded-md bg-slate-100 px-2 py-1 text-sm text-slate-600 hover:bg-slate-200"
+          >
+            ✕
+          </button>
+        )}
+        <div
+          className={
+            "max-h-[90vh] overflow-y-auto " + (band ? "px-6 pb-6 pt-5" : "p-6")
+          }
         >
-          ✕
-        </button>
-        <div className="max-h-[90vh] overflow-y-auto p-6">{children}</div>
+          {children}
+        </div>
       </div>
     </div>
   );

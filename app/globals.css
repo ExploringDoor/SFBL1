@@ -4694,6 +4694,101 @@ body {
 }
 
 /* Recap tab body */
+/* Modal colored header band (COYBL game modal): division + date + FINAL pill,
+   edge to edge, with the close button inside. Brand primary ground (black for
+   COYBL) + accent FINAL pill (red), matching the LMLL modal treatment. */
+.le-modal-band {
+  position: relative;
+  background: linear-gradient(
+    135deg,
+    var(--brand-primary, #13284a),
+    color-mix(in srgb, var(--brand-primary, #13284a) 82%, #000)
+  );
+  color: #fff;
+  padding: 20px 56px 20px 24px;
+}
+.le-modal-band-eyebrow {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+.le-modal-band-final {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 5px 15px;
+  border-radius: 999px;
+  background: var(--brand-accent, #c8102e);
+  color: #fff;
+  font-family: var(--font-barlow), sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.09em;
+}
+.le-modal-band-close {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.le-modal-band-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Game-modal action buttons (COYBL): "Share Graphic" (filled) + "View
+   Standings" (outline), matching the LMLL modal. */
+.rc-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.rc-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 12px;
+  font-family: var(--font-barlow), sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.rc-action:hover {
+  transform: translateY(-1px);
+}
+.rc-action-primary {
+  background: var(--brand-primary, #1a1a1a);
+  color: #fff;
+}
+.rc-action-primary:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}
+.rc-action-secondary {
+  background: #fff;
+  color: var(--brand-primary, #1a1a1a);
+  border: 1px solid var(--border, #e2e8f0);
+}
+
 /* Recap-view score rows (stats-off leagues / COYBL). Clean stacked team rows,
    winner tinted in the brand accent, matching the game modal Adam liked. */
 .rc-head {

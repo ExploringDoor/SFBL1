@@ -9,6 +9,7 @@ import { BoxScoreContent } from "@/components/BoxScoreContent";
 import { GameShareSection } from "@/components/GameShareSection";
 import { loadBoxScoreData } from "@/lib/box-score-data";
 import { getStatsOffRecap } from "@/lib/stats-off-recap";
+import { formatGameDate } from "@/lib/format-time";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 
 export const dynamic = "force-dynamic";
@@ -58,8 +59,31 @@ export default async function GameModalRoute({
     recapHtml = r.html;
   }
 
+  // COYBL (recap-only) gets the LMLL-style colored header band: division +
+  // date on top, a FINAL pill below, close button inside. Other tenants keep
+  // the plain modal (no band passed).
+  const dateLabel = data.date
+    ? formatGameDate(data.date, data.time, {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      })
+    : null;
+  const bandContext =
+    [data.ageGroup, data.division].filter(Boolean).join(" · ") +
+    (dateLabel ? `${data.ageGroup || data.division ? " · " : ""}${dateLabel}` : "");
+  const band = recapOnly ? (
+    <>
+      <div className="le-modal-band-eyebrow">{bandContext || "Final"}</div>
+      {isFinal && <span className="le-modal-band-final">FINAL</span>}
+    </>
+  ) : undefined;
+
   return (
-    <Modal title={recapOnly || view === "recap" ? "Recap" : "Box Score"}>
+    <Modal
+      title={recapOnly || view === "recap" ? "Recap" : "Box Score"}
+      band={band}
+    >
       <BoxScoreContent
         {...data}
         view={view}

@@ -209,6 +209,9 @@ export async function loadBoxScoreData(
     time: game.time ? String(game.time) : null,
     field: game.field ? String(game.field) : null,
     status: String(game.status ?? "draft"),
+    // Age group + division for the modal's header band ("10U · Division 1").
+    ageGroup: game.ageGroup ? String(game.ageGroup) : null,
+    division: game.division ? String(game.division) : null,
     innings,
     away: buildTeam("away", awayTeamId, Number(game.away_score ?? 0)),
     home: buildTeam("home", homeTeamId, Number(game.home_score ?? 0)),

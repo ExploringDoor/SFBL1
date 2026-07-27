@@ -136,6 +136,10 @@ const LEAGUE_CONFIG = {
       // filters DEFAULT links (computeNavLinks splices nav.add in after), so
       // this kills the duplicate without touching the dropdown.
       "rules",
+      // The default "More" dropdown (Tournaments/Contact/Admin for COYBL) is
+      // hidden; COYBL builds its own below so Tournaments can be a top-level
+      // headline and Alerts can live inside More (Adam, 2026-07).
+      "more",
     ],
     // COYBL-specific primary nav items (the pitch-count eligibility tracker
     // + power rankings). Inserted before the Register/More dropdowns.
@@ -147,6 +151,7 @@ const LEAGUE_CONFIG = {
     add: [
       { label: "Pitch Counts", href: "/eligibility" },
       { label: "Power Rankings", href: "/power-rankings" },
+      { label: "Tournaments", href: "/tournaments" },
       // Rules is ONE page now (/rules) with all sections (League Rules + each
       // age rulebook + tournament/bat/baseballs/field) and a "Jump To" button
       // row at the top, rendered via ContentSections. The old per-page docs
@@ -168,7 +173,17 @@ const LEAGUE_CONFIG = {
           { label: "Policies & FAQs", href: "/content/policies-faq" },
         ],
       },
-      { label: "Alerts", href: "/alerts" },
+      // COYBL-owned More: Alerts tucked here (was a top-level headline),
+      // alongside Contact + the discreet Admin entry.
+      {
+        label: "More",
+        href: "#",
+        children: [
+          { label: "Alerts", href: "/alerts" },
+          { label: "Contact", href: "/content/contact" },
+          { label: "Admin", href: "/admin" },
+        ],
+      },
     ],
   },
   // Power rankings come from EvenField, an outside provider the league already
