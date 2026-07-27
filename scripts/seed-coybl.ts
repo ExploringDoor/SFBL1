@@ -160,6 +160,9 @@ const LEAGUE_CONFIG = {
           { label: "Coaches Checklist", href: "/content/coach-checklist" },
           { label: "Player Safety", href: "/content/player-safety" },
           { label: "Umpires", href: "/content/umpires" },
+          // The moderated board doubles as the umpire "looking for work" board
+          // (umpire post types added in app/player-ads/page.tsx for COYBL).
+          { label: "Umpire Board", href: "/player-ads" },
           { label: "Season Info", href: "/content/season-info" },
           { label: "Weather & Rain-Outs", href: "/content/weather" },
           { label: "Policies & FAQs", href: "/content/policies-faq" },

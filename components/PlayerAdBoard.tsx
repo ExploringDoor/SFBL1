@@ -25,17 +25,46 @@ export interface PlayerAd {
   created_at?: string;
 }
 
-type Filter = "all" | "coach" | "player";
+// Post roles. "teamSide" true = a team/coach posting (brand-primary accent);
+// false = an individual available (brand-accent). umpire/team_ump were added
+// so the same moderated board doubles as the umpire "looking for work" board.
+interface RoleInfo {
+  label: string;
+  teamSide: boolean;
+}
+const ROLE: Record<string, RoleInfo> = {
+  coach: { label: "Team seeking players", teamSide: true },
+  player: { label: "Player seeking a team", teamSide: false },
+  umpire: { label: "Umpire available", teamSide: false },
+  team_ump: { label: "Team seeking an umpire", teamSide: true },
+};
+function roleOf(postedBy?: string): RoleInfo {
+  return (
+    ROLE[postedBy ?? ""] ?? { label: "Player seeking a team", teamSide: false }
+  );
+}
 
-const FILTERS: Array<{ key: Filter; label: string }> = [
-  { key: "all", label: "All ads" },
+const ALL_FILTERS: Array<{ key: string; label: string }> = [
+  { key: "all", label: "All" },
   { key: "coach", label: "Teams seeking players" },
   { key: "player", label: "Players seeking teams" },
+  { key: "umpire", label: "Umpires available" },
+  { key: "team_ump", label: "Teams seeking umpires" },
 ];
 
 export function PlayerAdBoard({ ads }: { ads: PlayerAd[] }) {
-  const [filter, setFilter] = useState<Filter>("all");
+  const [filter, setFilter] = useState<string>("all");
   const [openAd, setOpenAd] = useState<PlayerAd | null>(null);
+
+  // Only offer a filter tab for a role that actually has ads, so tenants
+  // without umpire posts (e.g. Island) never see empty umpire tabs.
+  const FILTERS = useMemo(
+    () =>
+      ALL_FILTERS.filter(
+        (f) => f.key === "all" || ads.some((a) => a.posted_by === f.key),
+      ),
+    [ads],
+  );
 
   const shown = useMemo(
     () => (filter === "all" ? ads : ads.filter((a) => a.posted_by === filter)),
@@ -109,16 +138,26 @@ export function PlayerAdBoard({ ads }: { ads: PlayerAd[] }) {
         }}
       >
         {shown.map((ad) => {
-          const isCoach = ad.posted_by === "coach";
+          const role = roleOf(ad.posted_by);
+          const accentColor = role.teamSide
+            ? "var(--brand-primary, #002d6e)"
+            : "var(--brand-accent, #35afea)";
+          const isUmpire = ad.posted_by === "umpire";
+          const title =
+            isUmpire
+              ? [ad.town, "Umpire"].filter(Boolean).join(" · ") ||
+                "Umpire available"
+              : [ad.age_group, role.teamSide ? ad.team_name : ad.position]
+                  .filter(Boolean)
+                  .join(" · ") ||
+                (ad.posted_by === "team_ump" ? "Umpire needed" : "Player ad");
           return (
             <li
               key={ad.id}
               style={{
                 background: "white",
                 border: "1px solid rgba(0,0,0,0.08)",
-                borderTop: `4px solid ${
-                  isCoach ? "var(--brand-primary, #002d6e)" : "var(--brand-accent, #35afea)"
-                }`,
+                borderTop: `4px solid ${accentColor}`,
                 borderRadius: 12,
                 padding: "16px 18px",
                 display: "flex",
@@ -132,26 +171,22 @@ export function PlayerAdBoard({ ads }: { ads: PlayerAd[] }) {
                   fontWeight: 800,
                   letterSpacing: "0.12em",
                   textTransform: "uppercase",
-                  color: isCoach
-                    ? "var(--brand-primary, #002d6e)"
-                    : "var(--brand-accent, #35afea)",
+                  color: accentColor,
                 }}
               >
-                {isCoach ? "Team seeking players" : "Player seeking a team"}
+                {role.label}
               </div>
 
               <div
                 className="font-display"
                 style={{ fontSize: 18, color: "var(--text-strong)", lineHeight: 1.2 }}
               >
-                {[ad.age_group, isCoach ? ad.team_name : ad.position]
-                  .filter(Boolean)
-                  .join(" · ") || "Player ad"}
+                {title}
               </div>
 
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {[
-                  !isCoach && ad.position ? null : ad.position,
+                  isUmpire || role.teamSide ? null : ad.position,
                   ad.town,
                 ]
                   .filter(Boolean)

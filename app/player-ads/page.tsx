@@ -171,6 +171,41 @@ export default async function PlayerAdsPage() {
 
   const [ads, note] = await Promise.all([loadAds(tenantId), loadNote(tenantId)]);
 
+  // COYBL: this board doubles as the umpire "looking for work" board the old
+  // site had. Add umpire post types, use COYBL's age groups, and make age
+  // optional (umpires have none). Other tenants keep the free-agent-only form.
+  const isCoybl = tenantId === "coybl";
+  const fields: FormField[] = isCoybl
+    ? FIELDS.map((f) => {
+        if (f.name === "posted_by") {
+          return {
+            ...f,
+            options: [
+              { value: "coach", label: "A coach with roster spots to fill" },
+              { value: "player", label: "A player or parent looking for a team" },
+              { value: "umpire", label: "An umpire available to work games" },
+              { value: "team_ump", label: "A team looking for an umpire" },
+            ],
+          };
+        }
+        if (f.name === "age_group") {
+          return {
+            ...f,
+            required: false,
+            help: "Leave blank if you're an umpire.",
+            options: ["7U", "8U", "9U", "10U", "11U", "12U", "13U", "14U"].map(
+              (a) => ({ value: a, label: a }),
+            ),
+          };
+        }
+        return f;
+      })
+    : FIELDS;
+  const pageTitle = isCoybl ? "Umpire & Free Agent Board" : "Player Ads";
+  const pageIntro = isCoybl
+    ? "Umpires looking for games, teams that need an umpire, and coaches or players looking to connect all post here. Browse the board or add your own below. Your contact details are never shown publicly; responses reach you through the league office."
+    : "Where coaches seeking players and parents and players in search of teams can post. Browse the board, or post your own below. Contact details are never shown publicly, responses come to you through the league.";
+
   return (
     <main className="container py-10">
       <header style={{ marginBottom: 22 }}>
@@ -186,13 +221,10 @@ export default async function PlayerAdsPage() {
             margin: 0,
           }}
         >
-          Player Ads
+          {pageTitle}
         </h1>
         <p style={{ marginTop: 10, color: "var(--muted)", maxWidth: 680 }}>
-          Where coaches seeking players and parents and players in search of
-          teams can post. Browse the board, or post your own below. Contact
-          details are never shown publicly, responses come to you through the
-          league.
+          {pageIntro}
         </p>
       </header>
 
@@ -215,9 +247,9 @@ export default async function PlayerAdsPage() {
       <div style={{ marginTop: 40 }}>
         <LeagueForm
           kind="player_ad"
-          title="Post an Ad"
-          description="Ads are reviewed by the league office before they appear on the board."
-          fields={FIELDS}
+          title="Post to the Board"
+          description="Posts are reviewed by the league office before they appear on the board."
+          fields={fields}
           submitLabel="Post My Ad"
           successMessage="Got it. Your ad goes up once the league office approves it."
         />
