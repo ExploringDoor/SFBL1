@@ -698,6 +698,131 @@ body {
 }
 
 /* Schedule list ─────────────────────────────────────────────────── */
+/* Captain "Add a game" (Doug's model: home team posts the divisional game). */
+.cap-add-game-btn {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1.5px solid var(--brand-primary, #1a1a1a);
+  background: var(--brand-primary, #1a1a1a);
+  color: #fff;
+  font-weight: 800;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.cap-add-game-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+}
+.cap-add-ok {
+  margin: 0 0 16px;
+  color: var(--green, #16a34a);
+  font-weight: 600;
+  font-size: 14px;
+}
+.cap-add-game {
+  border: 1px solid var(--border, #e5e7eb);
+  border-left: 4px solid var(--brand-accent, #c8102e);
+  border-radius: 14px;
+  padding: 18px 18px 16px;
+  margin-bottom: 22px;
+  background: var(--bg2, #f8fafc);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.cap-add-game-title {
+  margin: 0;
+  font-family: var(--font-barlow), sans-serif;
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: 0.01em;
+  color: var(--text-strong, #111);
+}
+.cap-add-game-help {
+  margin: -4px 0 2px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.cap-add-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+}
+.cap-add-field > span {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-strong, #111);
+}
+.cap-add-field select,
+.cap-add-field input {
+  padding: 9px 11px;
+  border-radius: 8px;
+  border: 1px solid var(--border, #d1d5db);
+  font-size: 14px;
+  background: #fff;
+}
+.cap-add-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.cap-add-homeaway {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 14px;
+}
+.cap-add-homeaway > span {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-strong, #111);
+}
+.cap-add-homeaway label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.cap-add-err {
+  margin: 0;
+  color: var(--red, #c8102e);
+  font-size: 13px;
+  font-weight: 600;
+}
+.cap-add-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+.cap-add-save {
+  padding: 11px 22px;
+  border-radius: 10px;
+  border: none;
+  background: var(--brand-primary, #1a1a1a);
+  color: #fff;
+  font-weight: 800;
+  font-size: 14.5px;
+  cursor: pointer;
+}
+.cap-add-save:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.cap-add-cancel {
+  padding: 11px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--border, #d1d5db);
+  background: #fff;
+  color: var(--text-strong, #111);
+  font-weight: 700;
+  font-size: 14.5px;
+  cursor: pointer;
+}
+
 .cap-game-list {
   list-style: none;
   margin: 0;

@@ -16,8 +16,16 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
+import { useUser } from "@/lib/auth-client";
 import { SubscribeCalendar } from "@/components/SubscribeCalendar";
 import { combineDateTime, formatTime12 } from "@/lib/format-time";
+
+interface TeamOpt {
+  id: string;
+  name: string;
+  ageGroup?: string;
+  division?: string;
+}
 
 interface GameRow {
   id: string;
@@ -41,10 +49,31 @@ interface ScheduleTabProps {
 }
 
 export function ScheduleTab({ leagueId, teamId }: ScheduleTabProps) {
+  const user = useUser();
   const [games, setGames] = useState<GameRow[]>([]);
   const [teamNames, setTeamNames] = useState<Record<string, string>>({});
+  const [teamList, setTeamList] = useState<TeamOpt[]>([]);
+  const [myAgeGroup, setMyAgeGroup] = useState<string | undefined>();
   const [fields, setFields] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  // "Add a game" form (Doug's model: the home team posts the divisional game,
+  // so it only ever gets entered once — no duplication).
+  const [showAdd, setShowAdd] = useState(false);
+  const [oppId, setOppId] = useState("");
+  const [weAreHome, setWeAreHome] = useState(true);
+  const [addDate, setAddDate] = useState("");
+  const [addTime, setAddTime] = useState("");
+  const [addField, setAddField] = useState("");
+  const [addBusy, setAddBusy] = useState(false);
+  const [addErr, setAddErr] = useState<string | null>(null);
+  const [addOk, setAddOk] = useState(false);
+
+  // Only COYBL runs the "home team posts the game" model. Other tenants had
+  // captain schedule-editing deliberately removed (admin-only), so keep the
+  // add-game affordance off for them.
+  const canAddGame = leagueId === "coybl";
 
   useEffect(() => {
     let cancelled = false;
@@ -63,9 +92,22 @@ export function ScheduleTab({ leagueId, teamId }: ScheduleTabProps) {
       ]);
       if (cancelled) return;
       const names: Record<string, string> = {};
+      const list: TeamOpt[] = [];
       for (const d of teamsSnap.docs) {
-        names[d.id] = String(d.data().name ?? d.id);
+        const x = d.data();
+        names[d.id] = String(x.name ?? d.id);
+        if (x.active !== false) {
+          list.push({
+            id: d.id,
+            name: String(x.name ?? d.id),
+            ageGroup: x.ageGroup ? String(x.ageGroup) : undefined,
+            division: x.division ? String(x.division) : undefined,
+          });
+        }
       }
+      list.sort((a, b) => a.name.localeCompare(b.name));
+      setTeamList(list);
+      setMyAgeGroup(list.find((t) => t.id === teamId)?.ageGroup);
       const myGames = gamesSnap.docs
         .map((d) => {
           const data = d.data();
@@ -116,7 +158,70 @@ export function ScheduleTab({ leagueId, teamId }: ScheduleTabProps) {
     return () => {
       cancelled = true;
     };
-  }, [leagueId, teamId]);
+  }, [leagueId, teamId, reloadKey]);
+
+  // Opponents = every other active team in MY age group (196 teams flat is
+  // unusable; a captain only schedules within their bracket). Falls back to
+  // all other teams if this team has no ageGroup.
+  const opponents = teamList.filter(
+    (t) =>
+      t.id !== teamId && (!myAgeGroup || t.ageGroup === myAgeGroup),
+  );
+
+  async function submitNewGame() {
+    if (!user) return;
+    setAddErr(null);
+    setAddOk(false);
+    if (!oppId) {
+      setAddErr("Pick the other team.");
+      return;
+    }
+    if (!addDate) {
+      setAddErr("Pick a date.");
+      return;
+    }
+    setAddBusy(true);
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch("/api/captain-schedule", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          leagueId,
+          action: "create",
+          game: {
+            home_team_id: weAreHome ? teamId : oppId,
+            away_team_id: weAreHome ? oppId : teamId,
+            date: addDate,
+            time: addTime || undefined,
+            field: addField || undefined,
+          },
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+      };
+      if (!res.ok) {
+        setAddErr(data.error ?? `Couldn't add the game (HTTP ${res.status}).`);
+        return;
+      }
+      // Reset the form + reload the list.
+      setAddOk(true);
+      setOppId("");
+      setAddDate("");
+      setAddTime("");
+      setAddField("");
+      setShowAdd(false);
+      setReloadKey((k) => k + 1);
+    } catch (e) {
+      setAddErr(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setAddBusy(false);
+    }
+  }
 
   const upcoming = games.filter((g) => g.status === "scheduled");
   const past = games
@@ -136,7 +241,7 @@ export function ScheduleTab({ leagueId, teamId }: ScheduleTabProps) {
 
       <div
         style={{
-          marginBottom: 22,
+          marginBottom: 18,
           display: "flex",
           gap: 10,
           flexWrap: "wrap",
@@ -144,7 +249,139 @@ export function ScheduleTab({ leagueId, teamId }: ScheduleTabProps) {
         }}
       >
         <SubscribeCalendar teamId={teamId} />
+        {canAddGame && !showAdd && (
+          <button
+            type="button"
+            onClick={() => {
+              setShowAdd(true);
+              setAddOk(false);
+            }}
+            className="cap-add-game-btn"
+          >
+            + Add a game
+          </button>
+        )}
       </div>
+
+      {canAddGame && addOk && !showAdd && (
+        <p className="cap-add-ok">Game added. It's in your Upcoming list.</p>
+      )}
+
+      {canAddGame && showAdd && (
+        <div className="cap-add-game">
+          <p className="cap-add-game-title">Add a game</p>
+          <p className="cap-add-game-help">
+            The <strong>home team</strong> posts each divisional game so it only
+            gets entered once. Enter it here, then the winning team fills in the
+            score after the game.
+          </p>
+
+          <label className="cap-add-field">
+            <span>Opponent</span>
+            <select
+              value={oppId}
+              onChange={(e) => setOppId(e.target.value)}
+            >
+              <option value="">— select team —</option>
+              {opponents.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                  {t.division ? ` (${t.division})` : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <div className="cap-add-homeaway">
+            <span>We are the</span>
+            <label>
+              <input
+                type="radio"
+                name="cap-homeaway"
+                checked={weAreHome}
+                onChange={() => setWeAreHome(true)}
+              />
+              Home team
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="cap-homeaway"
+                checked={!weAreHome}
+                onChange={() => setWeAreHome(false)}
+              />
+              Away team
+            </label>
+          </div>
+
+          <div className="cap-add-row">
+            <label className="cap-add-field">
+              <span>Date</span>
+              <input
+                type="date"
+                value={addDate}
+                onChange={(e) => setAddDate(e.target.value)}
+              />
+            </label>
+            <label className="cap-add-field">
+              <span>Time (optional)</span>
+              <input
+                type="time"
+                value={addTime}
+                onChange={(e) => setAddTime(e.target.value)}
+              />
+            </label>
+          </div>
+
+          <label className="cap-add-field">
+            <span>Field (optional)</span>
+            {fields.length > 0 ? (
+              <select
+                value={addField}
+                onChange={(e) => setAddField(e.target.value)}
+              >
+                <option value="">— select field —</option>
+                {fields.map((f) => (
+                  <option key={f} value={f}>
+                    {f}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                value={addField}
+                placeholder="Field / location"
+                onChange={(e) => setAddField(e.target.value)}
+              />
+            )}
+          </label>
+
+          {addErr && <p className="cap-add-err">{addErr}</p>}
+
+          <div className="cap-add-actions">
+            <button
+              type="button"
+              disabled={addBusy}
+              onClick={submitNewGame}
+              className="cap-add-save"
+            >
+              {addBusy ? "Adding…" : "Add game"}
+            </button>
+            <button
+              type="button"
+              disabled={addBusy}
+              onClick={() => {
+                setShowAdd(false);
+                setAddErr(null);
+              }}
+              className="cap-add-cancel"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <p style={{ color: "var(--muted)", fontSize: 13 }}>
