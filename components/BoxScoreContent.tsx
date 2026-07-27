@@ -117,7 +117,7 @@ export function BoxScoreContent(props: BoxScoreContentProps) {
   if (props.recapOnly) {
     return (
       <div className="bs-root">
-        <FinalHeader away={away} home={home} date={date} time={time} field={field} />
+        <RecapScoreRows away={away} home={home} date={date} time={time} />
         <div className="bs-recap-body">
           {props.recapEditor && (
             <div className="bs-recap-edit-slot">{props.recapEditor}</div>
@@ -249,6 +249,71 @@ export function BoxScoreContent(props: BoxScoreContentProps) {
 // Final-game hero: two team blocks + big centered score + FINAL badge,
 // then the meta row (date · field). Shared by the tabbed box-score view
 // and the recap-only view so both render an identical header.
+// Recap-view score header for stats-off leagues (COYBL). Two stacked, full-
+// width team rows (logo · name · score) with the winner tinted — the clean
+// layout Adam wanted, matching the LMLL game modal, instead of FinalHeader's
+// side-by-side blocks. Scoped to the recap-only path so box-score tenants
+// (SFBL/Island/LBDC) keep FinalHeader unchanged.
+function RecapScoreRows({
+  away,
+  home,
+  date,
+  time,
+}: {
+  away: BoxTeam;
+  home: BoxTeam;
+  date: string | null;
+  time: string | null;
+}) {
+  const aWin = away.score > home.score;
+  const hWin = home.score > away.score;
+  const dateLabel = date
+    ? formatGameDate(date, time, {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      })
+    : null;
+  return (
+    <div className="rc-head">
+      <div className="rc-status">
+        FINAL{dateLabel ? ` · ${dateLabel}` : ""}
+      </div>
+      <RecapRow team={away} winner={aWin} />
+      <RecapRow team={home} winner={hWin} />
+    </div>
+  );
+}
+
+function RecapRow({ team, winner }: { team: BoxTeam; winner: boolean }) {
+  const initials = (team.abbrev ?? team.name.slice(0, 3)).toUpperCase();
+  return (
+    <Link
+      href={`/teams/${team.team_id}`}
+      className={"rc-row " + (winner ? "rc-win" : "rc-lose")}
+    >
+      <span className="rc-logo">
+        {team.logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={team.logoUrl} alt="" />
+        ) : (
+          <span
+            className="rc-initials"
+            style={{ background: team.color ?? "#94a3b8" }}
+          >
+            {initials}
+          </span>
+        )}
+      </span>
+      <span className="rc-name">
+        {team.name}
+        {team.record ? <span className="rc-rec"> ({team.record})</span> : null}
+      </span>
+      <span className="rc-score">{team.score}</span>
+    </Link>
+  );
+}
+
 function FinalHeader({
   away,
   home,

@@ -4694,6 +4694,102 @@ body {
 }
 
 /* Recap tab body */
+/* Recap-view score rows (stats-off leagues / COYBL). Clean stacked team rows,
+   winner tinted in the brand accent, matching the game modal Adam liked. */
+.rc-head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.rc-status {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.rc-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  text-decoration: none;
+  transition: transform 0.12s ease;
+}
+.rc-row:hover {
+  transform: translateY(-1px);
+}
+.rc-win {
+  background: color-mix(in srgb, var(--brand-accent, #c8102e) 8%, #fff);
+}
+.rc-lose {
+  background: #f3f4f6;
+}
+.rc-logo {
+  width: 46px;
+  height: 46px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.rc-logo img {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  border-radius: 50%;
+}
+.rc-initials {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-family: var(--font-barlow), sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+.rc-name {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-strong, #111);
+}
+.rc-win .rc-name {
+  color: var(--brand-accent, #c8102e);
+}
+.rc-lose .rc-name {
+  color: #334155;
+}
+.rc-rec {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.rc-score {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 32px;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--text-strong, #111);
+}
+.rc-lose .rc-score {
+  color: #64748b;
+}
+@media (max-width: 480px) {
+  .rc-row { padding: 12px 13px; gap: 11px; }
+  .rc-name { font-size: 16px; }
+  .rc-score { font-size: 25px; }
+  .rc-logo, .rc-logo img, .rc-initials { width: 40px; height: 40px; }
+}
+
 .bs-recap-body {
   padding: 18px 4px 8px;
 }
