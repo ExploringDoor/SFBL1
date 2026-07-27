@@ -60,9 +60,11 @@ const LEAGUE_CONFIG = {
   stat_columns: [],
   pitching: { tracked: false },
   rules_flags: { dropped_third_strike: false, balks: false, infield_fly: false },
-  // Navy + COYBL red. `secondary` drives the hero "2026" emphasis (defaults to
-  // a light blue when unset) — set it red so the homepage reads navy + red.
-  theme: { primary: "#13284a", accent: "#c8102e", secondary: "#c8102e", logo_url: null },
+  // Black + COYBL red (Adam, 2026-07: "get rid of the blue, more red and
+  // black"). primary=black drives the structural chrome (nav, ticker, hero,
+  // buttons, headings); accent + secondary = red for highlights and the hero
+  // emphasis word. Matches COYBL's dark/red banner art.
+  theme: { primary: "#1a1a1a", accent: "#c8102e", secondary: "#c8102e", logo_url: null },
   // No home-page "Welcome" intro — dropped per Adam (2026-06-30); the banner
   // images already carry the league identity, so `about` is left unset and the
   // homepage Welcome block renders nothing.
