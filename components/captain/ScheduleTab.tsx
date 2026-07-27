@@ -70,10 +70,12 @@ export function ScheduleTab({ leagueId, teamId }: ScheduleTabProps) {
   const [addErr, setAddErr] = useState<string | null>(null);
   const [addOk, setAddOk] = useState(false);
 
-  // Only COYBL runs the "home team posts the game" model. Other tenants had
-  // captain schedule-editing deliberately removed (admin-only), so keep the
-  // add-game affordance off for them.
-  const canAddGame = leagueId === "coybl";
+  // Captain "Add a game" is OFF. Doug chose option 2 (2026-07-27): the office
+  // loads the full schedule before the season and coaches only enter scores +
+  // pitch counts. Home-coaches-post-their-own-games was option 1, which he
+  // declined. The form + API are kept intact — flip this back to
+  // `leagueId === "coybl"` if COYBL ever reverts to home teams posting games.
+  const canAddGame = false;
 
   useEffect(() => {
     let cancelled = false;
