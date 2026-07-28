@@ -53,7 +53,7 @@ export function shortTemplateRecap(i: ShortRecapInput): string {
 
   if (tie) {
     const inAge = i.ageGroup ? ` in ${i.ageGroup} action` : "";
-    return `${i.awayName} and ${i.homeName} battled to a ${i.awayScore}–${i.homeScore} tie${on}${inAge}.`;
+    return `${i.awayName} and ${i.homeName} battled to a ${i.awayScore} to ${i.homeScore} tie${on}${inAge}.`;
   }
 
   const inAge = i.ageGroup ? ` in ${i.ageGroup} play` : "";
@@ -61,11 +61,11 @@ export function shortTemplateRecap(i: ShortRecapInput): string {
   const verb = margin >= 8 ? "rolled past" : margin >= 4 ? "beat" : "edged";
   const closer =
     margin >= 8
-      ? `A dominant, all-around effort from ${winner}.`
+      ? `A dominant, complete effort from ${winner}.`
       : margin === 1
-        ? `${winner} held on for a one-run win.`
+        ? `${winner} held on to win by one.`
         : `${loser} kept it close but couldn't complete the comeback.`;
-  return `${winner} ${verb} ${loser} ${hi}–${lo}${on}${inAge}. ${closer}`;
+  return `${winner} ${verb} ${loser} ${hi} to ${lo}${on}${inAge}. ${closer}`;
 }
 
 /** AI-written short recap. Returns null when unavailable (no key, error,
@@ -79,7 +79,7 @@ export async function generateAiRecap(
   const { tie, winner, loser, hi, lo } = winnerLoser(i);
   const result = tie
     ? `${i.awayName} ${i.awayScore}, ${i.homeName} ${i.homeScore} (final was a tie)`
-    : `${winner} defeated ${loser} ${hi}–${lo}`;
+    : `${winner} defeated ${loser} ${hi} to ${lo}`;
   const when = i.date
     ? formatGameDate(i.date, null, {
         weekday: "long",
@@ -96,7 +96,8 @@ export async function generateAiRecap(
     ``,
     `Requirements:`,
     `- 2 to 3 sentences, under 55 words total.`,
-    `- Use ONLY the facts above (team names, final score, date, age group). Do NOT invent player names, innings, hits, plays, or any statistics — none are available.`,
+    `- Use ONLY the facts above (team names, final score, date, age group). Do NOT invent player names, innings, hits, plays, or any statistics. None are available.`,
+    `- Write scores as digits joined by the word "to", for example 12 to 5. Never use a hyphen, en-dash, or em-dash anywhere in the recap.`,
     `- Warm, family-friendly, encouraging tone appropriate for a kids' league.`,
     `- Output the paragraph only: no headline, no markdown, no quotation marks.`,
   ].join("\n");

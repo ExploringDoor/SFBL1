@@ -24,7 +24,18 @@ import { computeStandings, type GameResult } from "./stats/shared";
 interface TenantBoxCacheEntry {
   teamMeta: Record<
     string,
-    { name: string; abbrev?: string; color?: string; logoUrl?: string | null }
+    {
+      name: string;
+      abbrev?: string;
+      color?: string;
+      logoUrl?: string | null;
+      // Stored season record string (e.g. "6-2"), scraped/seeded on the
+      // team doc. Preferred over the live computed record so the box-score
+      // popup matches the game cards on Scores/Schedule, which do the same
+      // (app/scores/page.tsx: `data.record ? stored : live`). Absent on
+      // tenants that don't seed it → falls back to computeStandings below.
+      record?: string;
+    }
   >;
   recordByTeam: Map<string, string>;
   playerNames: Record<string, string>;
@@ -114,7 +125,18 @@ async function loadTenantBoxAggregates(
   ]);
   const teamMeta: Record<
     string,
-    { name: string; abbrev?: string; color?: string; logoUrl?: string | null }
+    {
+      name: string;
+      abbrev?: string;
+      color?: string;
+      logoUrl?: string | null;
+      // Stored season record string (e.g. "6-2"), scraped/seeded on the
+      // team doc. Preferred over the live computed record so the box-score
+      // popup matches the game cards on Scores/Schedule, which do the same
+      // (app/scores/page.tsx: `data.record ? stored : live`). Absent on
+      // tenants that don't seed it → falls back to computeStandings below.
+      record?: string;
+    }
   > = {};
   for (const d of teamsSnap.docs) {
     const data = d.data();
@@ -123,6 +145,7 @@ async function loadTenantBoxAggregates(
       abbrev: data.abbrev ? String(data.abbrev) : undefined,
       color: data.color ? String(data.color) : undefined,
       logoUrl: data.logo_url ? String(data.logo_url) : null,
+      record: data.record ? String(data.record) : undefined,
     };
   }
   const standingsGames: GameResult[] = allGamesSnap.docs.map((d) => {
@@ -193,7 +216,9 @@ export async function loadBoxScoreData(
       color: m.color,
       logoUrl: m.logoUrl,
       score,
-      record: recordByTeam.get(teamId),
+      // Prefer the stored record (matches Scores/Schedule cards); fall
+      // back to the live computed record when the team has none stored.
+      record: m.record ?? recordByTeam.get(teamId),
       linescore: linescore[side],
       hits: hits[side],
       errors: errors[side],
