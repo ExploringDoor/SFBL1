@@ -154,3 +154,34 @@ html.tenant-island .sec,
 html.tenant-island .le-home-news-band {
   background: transparent;
 }
+
+/* ---- form controls ------------------------------------------------------
+ * Inputs and selects paint white via the UA stylesheet, not a CSS rule we can
+ * grep, so they were missed by the restore list and rendered light-on-white —
+ * the /scores Age Group select looked like an empty white pill. */
+html.tenant-island select,
+html.tenant-island option,
+html.tenant-island input,
+html.tenant-island textarea {
+  --text-strong: #1a1a1a;
+  --text-body: #1a1a1a;
+  --muted: rgba(0, 0, 0, 0.56);
+  color: #1a1a1a;
+}
+
+/* ---- brand-navy text on a dark page ------------------------------------
+ * --brand-primary is Island's navy. It reads fine as TEXT on white cards (and
+ * the restore list above keeps it there), but page-level headings that use it
+ * vanish: on the navy /scores variant the title's second word "Scores" and the
+ * week-summary numbers were navy-on-navy, i.e. invisible.
+ *
+ * Repoint those to --brand-accent (#35afea), which holds up on both the black
+ * and the navy background. The [style*=...] pair catches the inline React
+ * usages (app/scores/page.tsx sets color: var(--brand-primary) inline); the
+ * :not() keeps card interiors on their original navy. */
+html.tenant-island .scores-week-summary-num,
+html.tenant-island .le-home-stat-val,
+html.tenant-island [style*="color: var(--brand-primary)"]:not(.le-gc-card *):not(.le-div-card *):not(.le-content-card *),
+html.tenant-island [style*="color:var(--brand-primary)"]:not(.le-gc-card *):not(.le-div-card *):not(.le-content-card *) {
+  color: var(--brand-accent, #35afea) !important;
+}
