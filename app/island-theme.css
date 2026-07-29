@@ -185,3 +185,42 @@ html.tenant-island [style*="color: var(--brand-primary)"]:not(.le-gc-card *):not
 html.tenant-island [style*="color:var(--brand-primary)"]:not(.le-gc-card *):not(.le-div-card *):not(.le-content-card *) {
   color: var(--brand-accent, #35afea) !important;
 }
+
+
+/* ---- restore list, part 2 ----------------------------------------------
+ * The generated list above was built from app/globals.css, components/ui/*.css
+ * and components/*.css — it MISSED every nested stylesheet: components/forms,
+ * components/admin, and the per-route css under app/{history,leaders,photos,
+ * playoffs,print,score}. The visible symptom was the team registration form:
+ * .le-form paints white, so with light tokens every field LABEL and help line
+ * rendered white-on-white and the form looked like a card of blank inputs.
+ * These are those surfaces. */
+html.tenant-island .ld-card,
+html.tenant-island .le-champ-badge,
+html.tenant-island .le-champ-logo,
+html.tenant-island .le-form,
+html.tenant-island .le-form-cell textarea,
+html.tenant-island .le-hist-card,
+html.tenant-island .le-hist-picker select,
+html.tenant-island .le-hist-search,
+html.tenant-island .le-hist-tab.active,
+html.tenant-island .le-hist-tbl-wrap,
+html.tenant-island .le-lb-logo,
+html.tenant-island .le-photo,
+html.tenant-island .le-tbl-logo,
+html.tenant-island .po-match,
+html.tenant-island .po-match-dot,
+html.tenant-island .print-page,
+html.tenant-island .print-toolbar button.secondary,
+html.tenant-island .rt-color-input,
+html.tenant-island .rt-content,
+html.tenant-island .rt-select,
+html.tenant-island .rt-wrap {
+  --text-strong: #1a1a1a;
+  --text-body: #1a1a1a;
+  --muted: rgba(0, 0, 0, 0.56);
+  --muted2: rgba(0, 0, 0, 0.35);
+  --border: rgba(0, 0, 0, 0.10);
+  --border2: rgba(0, 0, 0, 0.18);
+  color: #1a1a1a;
+}
