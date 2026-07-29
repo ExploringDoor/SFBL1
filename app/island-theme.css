@@ -334,17 +334,35 @@ html.tenant-island .le-hamburger span {
   background: #ffffff !important;
 }
 
-/* The mobile menu sheet is a near-white gradient, but it was NOT in the
- * generated restore list (that caught .le-mob-tile, not the sheet itself), so
- * text sitting directly on the sheet rather than inside a tile — the
- * "Information" / "Register" section headings — took the light tokens and went
- * white-on-white. Keep the sheet light, like the desktop dropdown panels, and
- * put the dark tokens back on it. */
+/* The mobile menu sheet goes BLACK to match the rest of the site (Adam,
+ * 2026-07-29), not light like the desktop dropdown panels.
+ *
+ * Two things have to move together. The sheet's own gradient is near-white, and
+ * .le-mob-tile paints `background: white` while taking its text colour from
+ * var(--text-strong) — and .le-mob-tile is in the restore list above, so it
+ * would otherwise force dark text back on. So the tiles become translucent
+ * white-on-black cards AND get the light tokens re-set locally.
+ *
+ * Nav.css marks .le-mob-tile's colour !important, hence the !important here to
+ * beat it on an equally specific-or-better selector. */
 html.tenant-island .le-mob-menu {
-  --text-strong: #1a1a1a;
-  --text-body: #1a1a1a;
-  --muted: rgba(0, 0, 0, 0.56);
-  --muted2: rgba(0, 0, 0, 0.35);
-  --border: rgba(0, 0, 0, 0.10);
-  color: #1a1a1a;
+  background: #000 !important;
+  --text-strong: #ffffff;
+  --text-body: rgba(255, 255, 255, 0.90);
+  --muted: rgba(255, 255, 255, 0.62);
+  --muted2: rgba(255, 255, 255, 0.42);
+  --border: rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.90);
+}
+html.tenant-island .le-mob-tile {
+  --text-strong: #ffffff;
+  --text-body: rgba(255, 255, 255, 0.92);
+  --muted: rgba(255, 255, 255, 0.62);
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+html.tenant-island .le-mob-tile:active {
+  background: rgba(255, 255, 255, 0.15) !important;
 }
