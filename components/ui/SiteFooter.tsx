@@ -38,6 +38,20 @@ export function SiteFooter() {
     (h) => typeof h === "string" && h.toLowerCase() === "sponsors",
   );
 
+  // Footer "Powered by" credit. Adam's web-design business gets the backlink on
+  // his own sites; every other tenant keeps the platform brand. Per-tenant map,
+  // so adding a site later is one line.
+  const CREDITS: Record<string, { label: string; url: string }> = {
+    island: {
+      label: "Mainline Web Design",
+      url: "https://mainline-webdesign.com/",
+    },
+  };
+  const credit = CREDITS[tenantId] ?? {
+    label: "LeagueEngine",
+    url: "https://leagueengine.com",
+  };
+
   // Footer social icons — config-driven (per-tenant). Only platforms
   // with a configured URL render. SVG glyphs (no emoji per house
   // style); each opens in a new tab, rel=noopener for safety.
@@ -125,11 +139,11 @@ export function SiteFooter() {
         <div className="le-footer-copy">
           © {new Date().getFullYear()} {config.name}. Powered by{" "}
           <a
-            href="https://leagueengine.com"
+            href={credit.url}
             target="_blank"
             rel="noopener noreferrer"
           >
-            LeagueEngine
+            {credit.label}
           </a>
           .
         </div>

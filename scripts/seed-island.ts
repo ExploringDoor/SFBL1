@@ -88,7 +88,11 @@ const LEAGUE_CONFIG = {
     primary: "#0b2e4f",
     accent: "#35afea",
     secondary: "#c8dc2e",
-    logo_url: null as string | null,
+    // Ticker "corner stamp" logo (the dark left label where IFP + year sat).
+    // Transparent PNG knocked out from Mike's black-background logo. Ticker
+    // only — layout.tsx passes logoUrl={null} to the Nav, whose white bar
+    // would swallow the logo's white "ISLAND" lettering. (Adam, 2026-07-29.)
+    logo_url: "/island/logo.png" as string | null,
     // Link-preview card for texts / Facebook / X. Without this Island
     // inherited /og-default.png, which is SFBL's logo — Adam texted an Island
     // link and got a South Florida Baseball League card (2026-07-22).
