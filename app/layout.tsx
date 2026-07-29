@@ -392,7 +392,10 @@ export default async function RootLayout({
                 // SFBL: drop the big wordmark in the top-left so the
                 // ticker is all scores (Adam, 2026-05-18). Branding
                 // still lives in the nav + homepage Hero.
-                hideLabel={leagueAbbrev === "SFBL"}
+                // Island: the logo moved into the nav beside "Home", so drop the
+                // ticker's left tile entirely rather than fall back to its
+                // "IFP 2026" text, which would duplicate the branding again.
+                hideLabel={leagueAbbrev === "SFBL" || tenantId === "island"}
                 // Opt-in marquee. Only tenants that set flags.ticker_scroll
                 // get the animated strip; everyone else keeps the manual pan.
                 scroll={tickerScroll}
@@ -403,15 +406,17 @@ export default async function RootLayout({
             </>
           )}
           {tenantId ? (
-            // Nav brand intentionally rendered as the tenant short
-            // text (no logoUrl passed) so the league banner doesn't
-            // show up twice in the top stack — the ticker already
-            // shows it on its leftmost tile, and the homepage Hero
-            // shows it full-width. Three identical banners felt
-            // redundant; Adam called this out 2026-05-14.
+            // Nav brand is normally the tenant short TEXT, not the logo, so the
+            // league banner doesn't appear three times in the top stack (ticker
+            // tile + nav + homepage hero). Adam called that out 2026-05-14.
+            //
+            // Island is the exception as of 2026-07-29: he wanted the logo in
+            // the nav beside "Home" instead of the "IFP" text, and the ticker's
+            // own logo tile removed (hideLabel below), so the mark still shows
+            // exactly once in the top stack.
             <Nav
               tenantShort={leagueAbbrev ?? leagueName ?? "League"}
-              logoUrl={null}
+              logoUrl={tenantId === "island" ? logoUrl : null}
               hideLabels={navHideLabels}
               addLinks={navAddLinks}
               rightSlot={<ProfileButton tenantId={tenantId} />}

@@ -125,7 +125,13 @@ export default async function HomePage() {
             <div className="container le-home-reg-cta-inner">
               <div>
                 <p className="le-home-reg-cta-eyebrow">
-                  {season} Season Registration
+                  {/* Island is registering specifically for the Fall season, so
+                      name it — "2026 Season Registration" read as vague when
+                      Fall is the only thing open. Other tenants keep the
+                      generic label. */}
+                  {tenantId === "island"
+                    ? `${season} Fall Season`
+                    : `${season} Season Registration`}
                 </p>
                 <p className="le-home-reg-cta-head">
                   Registration is open. Secure your team&rsquo;s spot.
