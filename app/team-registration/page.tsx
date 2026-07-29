@@ -222,6 +222,78 @@ const COYBL_FIELDS: FormField[] = [
 // reused: it hardcodes adult divisions (18+/28+/35+), Florida counties
 // (Palm Beach / Broward / Miami-Dade) and SFBL-named consent copy. Division is
 // free text here because age groups differ per league (Island runs 8U to 18U).
+// Island Fastpitch (youth girls fastpitch, 8U-16/18U). Previously fell through
+// to GENERIC_FIELDS, which said only "the upcoming season" and collected no
+// GameChanger link or logo.
+//
+// Age and league are two separate axes at Island: every age group runs both a
+// weeknight and a weekend league (Mike, 2026-07-29). `age_group` carries the
+// age and `division` carries which league — both are already whitelisted in
+// app/api/league-form/route.ts, so no backend change was needed.
+const ISLAND_FIELDS: FormField[] = [
+  { name: "manager_first_name", label: "Coach / Manager First Name", type: "text", required: true, width: "half" },
+  { name: "manager_last_name", label: "Coach / Manager Last Name", type: "text", required: true, width: "half" },
+  { name: "email", label: "Email Address", type: "email", required: true, width: "half" },
+  { name: "phone", label: "Cell Phone", type: "tel", required: true, width: "half" },
+  { name: "team_name", label: "Team Name", type: "text", required: true, width: "half" },
+  {
+    name: "age_group",
+    label: "Age Group",
+    type: "select",
+    required: true,
+    width: "half",
+    options: [
+      { value: "8U", label: "8U" },
+      { value: "10U", label: "10U" },
+      { value: "12U", label: "12U" },
+      { value: "14U", label: "14U" },
+      { value: "16/18U", label: "16/18U" },
+    ],
+  },
+  {
+    name: "division",
+    label: "Which league?",
+    type: "select",
+    required: true,
+    width: "half",
+    options: [
+      { value: "weekend", label: "Weekend (Saturdays and Sundays)" },
+      { value: "weeknight", label: "Weeknight" },
+      { value: "sunday-night", label: "Sunday Night" },
+    ],
+  },
+  { name: "city", label: "Town", type: "text", width: "half" },
+  {
+    name: "gamechanger_link",
+    label: "GameChanger Team Link",
+    type: "text",
+    width: "full",
+    placeholder: "https://web.gc.com/teams/...",
+    help:
+      "Paste your team's GameChanger link. The league uses it to pull your schedule and scores. Open your team in GameChanger, tap Share, and copy the link. Leave blank if your team is not set up yet and send it to the league office later.",
+  },
+  {
+    name: "team_logo",
+    label: "Team Logo (optional)",
+    type: "image",
+    width: "full",
+    help:
+      "Upload a PNG or JPG and it appears next to your team on the scores, schedule and standings pages. A square image with a transparent background looks best. You can also add or change this later from your coach login.",
+  },
+  { name: "asst_first_name", label: "Assistant Coach First Name", type: "text", width: "half" },
+  { name: "asst_last_name", label: "Assistant Coach Last Name", type: "text", width: "half" },
+  { name: "asst_phone", label: "Assistant Coach Phone", type: "tel", width: "half" },
+  { name: "notes", label: "Anything else we should know?", type: "textarea", width: "full" },
+  {
+    name: "agreed_to_terms",
+    type: "checkbox",
+    required: true,
+    label:
+      "I confirm that every player on this team will sign the league's liability release before play.",
+    width: "full",
+  },
+];
+
 const GENERIC_FIELDS: FormField[] = [
   { name: "manager_first_name", label: "Manager First Name", type: "text", required: true, width: "half" },
   { name: "manager_last_name", label: "Manager Last Name", type: "text", required: true, width: "half" },
@@ -303,6 +375,24 @@ function content(tenantId: string) {
           />
         </div>
       ),
+    };
+  }
+  if (tenantId === "island") {
+    return {
+      fields: ISLAND_FIELDS,
+      description:
+        "Register your team for the Island Fastpitch Fall 2026 season.",
+      intro: [
+        "Fall 2026 registration is open for 8U, 10U, 12U, 14U and 16/18U. Weekend leagues open September 12 and 13; weeknight leagues open September 14.",
+        // Fees confirmed by Mike 2026-07-29: $795 flat, 8U $500, umpires paid
+        // at the field. Kept in the intro so nobody registers without seeing
+        // the number, since payment is handled off-site.
+        "League fees are $795 per team ($500 for 8U Weekend), plus umpire fees paid at the field. Teams using their own home field for at least half their games may qualify for a $200 discount. Fees must be paid in full before the season begins.",
+        "Submit this form and the league office will follow up about payment and rosters. Rosters must be on USSSA.",
+      ],
+      successMessage:
+        "Thanks! Your team is registered for Fall 2026. The league office will be in touch about fees and rosters.",
+      footer: null,
     };
   }
   // Generic fallback for any tenant without its own block. This used to fall

@@ -140,3 +140,17 @@ html.tenant-island [style*="background: rgb(255"] {
 html.tenant-island[data-page="scores"] {
   --bg: #0b2e4f;
 }
+
+/* ---- page-level --bg2 bands ---------------------------------------------
+ * .sec and .le-home-news-band fill full-width page bands with --bg2 (#f5f5f5).
+ * On home that is a 1589x1070 light slab covering the whole content area, so
+ * the page still read as light grey while the flipped tokens made its headings
+ * white-on-white — invisible. Let the dark page show through instead.
+ *
+ * --bg2 itself stays light on purpose: it also fills table headers and card
+ * internals (.linescore-tbl th, .bat-tbl th, .modal-av, .cap-add-game), which
+ * live inside white cards and must keep their dark text. */
+html.tenant-island .sec,
+html.tenant-island .le-home-news-band {
+  background: transparent;
+}
