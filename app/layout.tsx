@@ -416,7 +416,11 @@ export default async function RootLayout({
             // exactly once in the top stack.
             <Nav
               tenantShort={leagueAbbrev ?? leagueName ?? "League"}
-              logoUrl={tenantId === "island" ? logoUrl : null}
+              // Island uses a dedicated nav mark (Adam's "Logo small", alpha-
+              // cropped) rather than theme.logo_url, so the nav can carry a
+              // tighter lockup than the wide banner logo without affecting
+              // anything else that reads the theme value.
+              logoUrl={tenantId === "island" ? "/island/logo-nav.png" : null}
               hideLabels={navHideLabels}
               addLinks={navAddLinks}
               rightSlot={<ProfileButton tenantId={tenantId} />}

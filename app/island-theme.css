@@ -157,8 +157,13 @@ html.tenant-island .le-home-news-band {
 /* ---- form controls ------------------------------------------------------
  * Inputs and selects paint white via the UA stylesheet, not a CSS rule we can
  * grep, so they were missed by the restore list and rendered light-on-white —
- * the /scores Age Group select looked like an empty white pill. */
-html.tenant-island select,
+ * the /scores Age Group select looked like an empty white pill.
+ *
+ * :not(.st-age-select) matters: the ticker's own age filter is deliberately a
+ * DARK control (Ticker.css gives it a translucent black fill and white text),
+ * so the blanket dark-text rule made its "ALL AGES" label near-black on the
+ * black ticker. It is handled on its own below. */
+html.tenant-island select:not(.st-age-select),
 html.tenant-island option,
 html.tenant-island input,
 html.tenant-island textarea {
@@ -166,6 +171,19 @@ html.tenant-island textarea {
   --text-body: #1a1a1a;
   --muted: rgba(0, 0, 0, 0.56);
   color: #1a1a1a;
+}
+
+/* Ticker age filter: a light control on the black bar. The fill is lifted from
+ * rgba(0,0,0,0.25) — invisible now the ticker is pure black — to a translucent
+ * white so it reads as a button. The open dropdown list stays dark-on-white. */
+html.tenant-island .st-age-select {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+  border-color: rgba(255, 255, 255, 0.38) !important;
+}
+html.tenant-island .st-age-select option {
+  color: #111111 !important;
+  background: #ffffff !important;
 }
 
 /* ---- brand-navy text on a dark page ------------------------------------
