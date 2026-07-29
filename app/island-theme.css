@@ -326,3 +326,25 @@ html.tenant-island .le-nav-dropdown-trigger[aria-expanded="true"] {
 html.tenant-island .le-nav-brand.has-logo img {
   height: 54px !important;
 }
+
+/* ---- mobile nav ---------------------------------------------------------
+ * Hamburger bars are #1a1a1a in Nav.css, which is invisible on the black bar.
+ * White so they read at a glance (Adam, 2026-07-29). */
+html.tenant-island .le-hamburger span {
+  background: #ffffff !important;
+}
+
+/* The mobile menu sheet is a near-white gradient, but it was NOT in the
+ * generated restore list (that caught .le-mob-tile, not the sheet itself), so
+ * text sitting directly on the sheet rather than inside a tile — the
+ * "Information" / "Register" section headings — took the light tokens and went
+ * white-on-white. Keep the sheet light, like the desktop dropdown panels, and
+ * put the dark tokens back on it. */
+html.tenant-island .le-mob-menu {
+  --text-strong: #1a1a1a;
+  --text-body: #1a1a1a;
+  --muted: rgba(0, 0, 0, 0.56);
+  --muted2: rgba(0, 0, 0, 0.35);
+  --border: rgba(0, 0, 0, 0.10);
+  color: #1a1a1a;
+}
