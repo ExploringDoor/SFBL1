@@ -494,3 +494,15 @@ body.ticker-force-hide #score-ticker {
 .tenant-island .st-label-img {
   height: calc(var(--ticker-height, 72px) - 12px);
 }
+
+/* Island's logo was drawn for a BLACK field — its navy pitcher figure vanished
+ * on the navy ticker. Paint Island's ticker (and its logo label, which the
+ * mobile rule above forces back to --brand-primary) pure black, matching the
+ * logo's origin so its feathered edges blend seamlessly, and flowing into the
+ * black hero banner below. Island only. (Adam, 2026-07-29.) */
+.tenant-island #score-ticker {
+  background: #000;
+}
+.tenant-island .st-label {
+  background: #000 !important;
+}
