@@ -484,3 +484,13 @@ body.ticker-force-hide #score-ticker {
 @media (prefers-reduced-motion: reduce) {
   .st-live-dot { animation: none; }
 }
+
+/* Island's ticker mark is a full lockup (pitcher + ISLAND + Fastpitch), drawn
+ * for a black field. The shared 110px corner-stamp (.st-label-img) bled its
+ * bottom onto the white nav below and sliced the white "ISLAND" lettering in
+ * half. Keep Island's logo INSIDE the dark bar so the whole mark stays on navy.
+ * More specific than the base + mobile .st-label-img rules, so it wins without
+ * !important. (Adam, 2026-07-29.) */
+.tenant-island .st-label-img {
+  height: calc(var(--ticker-height, 72px) - 12px);
+}
