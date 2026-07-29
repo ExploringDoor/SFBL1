@@ -1,0 +1,142 @@
+/* =============================================================================
+ * ISLAND FASTPITCH — dark page theme (Adam/Mike, 2026-07-29)
+ *
+ * Mike wanted the page background dark instead of white, but liked the white
+ * score boxes. So this darkens the PAGE and leaves every white card white.
+ *
+ * Strategy — token flip, then restore:
+ *   1. Flip the colour TOKENS at the tenant root, so every element that reads
+ *      var(--text-strong) / var(--text-body) / var(--muted) turns light. Page
+ *      headings, eyebrows, week tabs, day headers etc. all use those tokens, so
+ *      they become readable on black without naming each one.
+ *   2. RESTORE the light-surface tokens on anything that paints white, so card
+ *      interiors keep their dark text.
+ *
+ * Why this direction: if a page-level element is missed it inherits light
+ * tokens and stays READABLE on black. The dangerous direction is a missed
+ * white surface (light text on white), so the restore list below is generated
+ * from EVERY white-background selector in the stylesheets, plus Tailwind
+ * bg-white and [style*=...] matches for anonymous inline-styled divs.
+ *
+ * --bg2 (#f5f5f5) is deliberately NOT flipped: it fills card sub-headers and
+ * table stripes INSIDE white cards, so darkening it would break them.
+ *
+ * Everything is scoped to .tenant-island. No other league is affected.
+ *
+ * The [data-page="scores"] block at the bottom is a deliberate A/B: the scores
+ * page renders navy instead of black so Mike can pick. Delete that one block
+ * to go all-black, or move its colour up into the root block to go all-navy.
+ * ============================================================================= */
+
+html.tenant-island {
+  --bg: #000000;
+  --text-strong: #ffffff;
+  --text-body: rgba(255, 255, 255, 0.90);
+  --muted: rgba(255, 255, 255, 0.64);
+  --muted2: rgba(255, 255, 255, 0.44);
+  --border: rgba(255, 255, 255, 0.16);
+  --border2: rgba(255, 255, 255, 0.26);
+  background: var(--bg);
+}
+
+html.tenant-island body {
+  background: var(--bg);
+  color: var(--text-body);
+}
+
+/* ---- restore dark-on-light inside white surfaces ------------------------- */
+html.tenant-island #le-tabbar,
+html.tenant-island .avail-edit-row,
+html.tenant-island .bs-cap-final-input,
+html.tenant-island .bs-cap-ls-wrap,
+html.tenant-island .bs-cap-num,
+html.tenant-island .bs-cap-select,
+html.tenant-island .bs-cap-table-wrap,
+html.tenant-island .bs-cap-text,
+html.tenant-island .bs-empty-batting,
+html.tenant-island .bs-pitcher-select,
+html.tenant-island .bs-step-dummy,
+html.tenant-island .bs-step-wrap,
+html.tenant-island .cap-add-cancel,
+html.tenant-island .cap-add-field input,
+html.tenant-island .cap-btn-danger,
+html.tenant-island .cap-btn-warn,
+html.tenant-island .cap-form-input,
+html.tenant-island .cap-game-link,
+html.tenant-island .cap-help details,
+html.tenant-island .cap-next-game,
+html.tenant-island .cap-pending-card,
+html.tenant-island .cap-pending-row,
+html.tenant-island .cap-roster-tbl-wrap,
+html.tenant-island .cap-tab-nav,
+html.tenant-island .chat-msg.theirs .chat-bubble,
+html.tenant-island .gc-card,
+html.tenant-island .inbox-filter-btn,
+html.tenant-island .inbox-item,
+html.tenant-island .le-bench-row,
+html.tenant-island .le-bs-num,
+html.tenant-island .le-bs-select,
+html.tenant-island .le-bs-table-wrap,
+html.tenant-island .le-cal-btn,
+html.tenant-island .le-cal-btn-google .le-cal-icon,
+html.tenant-island .le-cal-copy,
+html.tenant-island .le-cap-btn-secondary,
+html.tenant-island .le-cap-game-row,
+html.tenant-island .le-cap-hero-logo,
+html.tenant-island .le-cap-roster,
+html.tenant-island .le-div-card,
+html.tenant-island .le-gc-btn,
+html.tenant-island .le-gc-card,
+html.tenant-island .le-home-news-card,
+html.tenant-island .le-home-reg-cta-btn,
+html.tenant-island .le-ldr-card,
+html.tenant-island .le-lineup-actions button,
+html.tenant-island .le-lineup-row,
+html.tenant-island .le-mob-tile,
+html.tenant-island .le-nav-dropdown-menu,
+html.tenant-island .le-preview-card,
+html.tenant-island .le-prof-lbdc,
+html.tenant-island .le-skeleton-table,
+html.tenant-island .le-stats-tbl-wrap,
+html.tenant-island .le-tabbar-sheet,
+html.tenant-island .lp-add-input,
+html.tenant-island .lp-add-num,
+html.tenant-island .lp-card,
+html.tenant-island .lp-card-delete,
+html.tenant-island .lp-chip,
+html.tenant-island .modal-bar,
+html.tenant-island .modal-bg,
+html.tenant-island .modal-box,
+html.tenant-island .notif-bell-btn,
+html.tenant-island .notif-bell-panel,
+html.tenant-island .pwa-ios-tip,
+html.tenant-island .rc-action-secondary,
+html.tenant-island .recap-editor,
+html.tenant-island .recap-save-btn,
+html.tenant-island .sharecard-btn,
+html.tenant-island .le-nav,
+html.tenant-island .le-content-card,
+html.tenant-island .le-content-jump,
+html.tenant-island .le-jump-ico,
+html.tenant-island .bg-white,
+html.tenant-island table,
+html.tenant-island thead,
+html.tenant-island tbody,
+html.tenant-island [style*="background: white"],
+html.tenant-island [style*="background:white"],
+html.tenant-island [style*="background: #fff"],
+html.tenant-island [style*="background:#fff"],
+html.tenant-island [style*="background: rgb(255"] {
+  --text-strong: #1a1a1a;
+  --text-body: #1a1a1a;
+  --muted: rgba(0, 0, 0, 0.56);
+  --muted2: rgba(0, 0, 0, 0.35);
+  --border: rgba(0, 0, 0, 0.10);
+  --border2: rgba(0, 0, 0, 0.18);
+  color: #1a1a1a;
+}
+
+/* ---- A/B: scores page in navy instead of black --------------------------- */
+html.tenant-island[data-page="scores"] {
+  --bg: #0b2e4f;
+}

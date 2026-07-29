@@ -17,9 +17,11 @@ import { SwVersionPill } from "@/components/ui/SwVersionPill";
 import { SwNavigateListener } from "@/components/SwNavigateListener";
 import { Ticker } from "@/components/ui/Ticker";
 import { SiteFX } from "@/components/ui/SiteFX";
+import { PageSlug } from "@/components/ui/PageSlug";
 import { loadTickerGames } from "@/lib/site-data";
 import "./globals.css";
 import "./fx.css";
+import "./island-theme.css";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -276,6 +278,11 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
+      // First path segment, so CSS can style one page differently (Island's
+      // navy scores page). SSR value avoids a first-paint flash; <PageSlug />
+      // keeps it correct after client-side navigation, where this would
+      // otherwise stay stuck on the page that was server-rendered.
+      data-page={bannerSlug}
       className={`${inter.variable} ${barlow.variable} ${oswald.variable}${
         motionFx ? " fx-on" : ""
       }${stickyNav ? " nav-sticky" : ""}${
@@ -354,6 +361,10 @@ export default async function RootLayout({
         )}
       </head>
       <body className="site-shell antialiased">
+        {/* Keeps <html data-page> correct after client-side navigation. Mounted
+            at body level, not inside the ticker block below, so it runs on
+            every page regardless of tenant chrome. */}
+        <PageSlug />
         <TenantProvider tenantId={tenantId} configJson={configJson}>
           {/* SW NAVIGATE listener — handles push-tap when the PWA is
               already open. Mounted at the layout level so every page
