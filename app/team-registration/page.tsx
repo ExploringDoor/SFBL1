@@ -267,10 +267,15 @@ const ISLAND_FIELDS: FormField[] = [
     name: "gamechanger_link",
     label: "GameChanger Team Link",
     type: "text",
+    // Required per Adam 2026-07-29. Enforced client-side, like COYBL's
+    // GameChanger link and the division/age_group fields: the server's REQUIRED
+    // map is shared by every tenant, so adding it there would reject SFBL and
+    // the generic leagues, which don't collect this at all.
+    required: true,
     width: "full",
     placeholder: "https://web.gc.com/teams/...",
     help:
-      "Paste your team's GameChanger link. The league uses it to pull your schedule and scores. Open your team in GameChanger, tap Share, and copy the link. Leave blank if your team is not set up yet and send it to the league office later.",
+      "Paste your team's GameChanger link. Open your team in GameChanger, tap Share, and copy the link. Please make sure your player names in GameChanger match your roster on this site exactly, so that if we pull stats over, they line up perfectly.",
   },
   {
     name: "team_logo",
