@@ -26,6 +26,14 @@ export interface GeneratorTeam {
   /** Free-text organisation/club. Teams sharing one never play each other.
    *  Blank or missing means "no club", and those teams can play anyone. */
   organization?: string | null;
+  /** Dates this team cannot play, YYYY-MM-DD. Distinct from the league-wide
+   *  off days: "Riverhead is away the weekend of the 20th" only blocks that
+   *  team, and the rest of the division plays as normal. */
+  unavailable?: string[];
+  /** This team's home field. Games are nudged towards it, and the team is
+   *  made the home side when a game lands there. Ties into a home-field
+   *  discount, where a club is expected to host a share of its games. */
+  homeField?: string | null;
 }
 
 /** A field and the start times available ON THAT FIELD. Times are per field,
@@ -282,6 +290,20 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
   const pairKey = (a: string, b: string) => [a, b].sort().join("|");
   const usedDates: string[] = [];
 
+  // Running fairness counters. These are what stop one team being home seven
+  // times out of ten, or always drawing the 9am slot.
+  const homeCount = new Map<string, number>();
+  const timeCount = new Map<string, Map<string, number>>(); // team -> time -> n
+  const bump = (m: Map<string, number>, k: string) => m.set(k, (m.get(k) ?? 0) + 1);
+  const timesFor = (id: string) => {
+    let m = timeCount.get(id);
+    if (!m) timeCount.set(id, (m = new Map()));
+    return m;
+  };
+  const unavailableOn = (id: string, date: string) =>
+    (byId.get(id)?.unavailable ?? []).includes(date);
+  const homeFieldOf = (id: string) => String(byId.get(id)?.homeField ?? "").trim();
+
   let roundCursor = 0;
   let weekNo = 0;
 
@@ -299,25 +321,55 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
         runs.push(f.times.map((time) => ({ date, field: f.name, time })));
       }
     }
-    // Next free index within each run.
-    const used = runs.map(() => 0);
-    // Round-robin across runs rather than filling one field before touching
-    // the next. Without this a Saturday/Sunday division stacked every game on
-    // Saturday, and a two-field night left the second field empty.
-    let runCursor = 0;
-    const takeSlots = (n: number) => {
-      // A block of 2+ has to come from ONE run (same date, same field,
-      // consecutive times). A single game can come from anywhere.
-      for (let tried = 0; tried < runs.length; tried++) {
-        const r = (runCursor + tried) % runs.length;
-        if (runs[r]!.length - used[r]! >= n) {
-          const out = runs[r]!.slice(used[r]!, used[r]! + n);
-          used[r] = used[r]! + n;
-          runCursor = (r + 1) % runs.length;
-          return out;
+    // Which slots are still free, per run, and how many games each run has
+    // taken — used to spread across days and fields rather than filling one
+    // first. Tracked slot by slot rather than as a "next free index": a single
+    // game must be able to take the LATE slot while the early one is still
+    // open, otherwise a team can never be moved off the 9am it always draws.
+    const free = runs.map((r) => r.map(() => true));
+    const load = runs.map(() => 0);
+
+    /**
+     * Choose the best free slots for one matchup, rather than taking the next
+     * in line. Lower score wins. This is where fairness lives:
+     *
+     *   - a team never plays on a date it said it is unavailable (hard block)
+     *   - the slot time each team has had least is preferred, so nobody owns
+     *     the 9am game all season
+     *   - a team's home field pulls its games towards that field
+     *   - lightly-loaded runs are preferred, which keeps the spread across
+     *     days and fields that the round-robin cursor used to give
+     */
+    const takeSlots = (n: number, a: string, b: string) => {
+      let best: { r: number; i: number; score: number } | null = null;
+      for (let r = 0; r < runs.length; r++) {
+        // Every start position whose next n slots are all still free. For a
+        // single game that is any free slot; for a block it must be n in a row
+        // on the one field, which is what a doubleheader is.
+        for (let i = 0; i + n <= runs[r]!.length; i++) {
+          let ok = true;
+          for (let k = 0; k < n; k++) if (!free[r]![i + k]) { ok = false; break; }
+          if (!ok) continue;
+          const window = runs[r]!.slice(i, i + n);
+          // Hard block: either team unavailable on that date.
+          if (
+            window.some((s) => unavailableOn(a, s.date) || unavailableOn(b, s.date))
+          ) {
+            continue;
+          }
+          let score = load[r]! * 2; // spread across days and fields
+          for (const s of window) {
+            score += (timesFor(a).get(s.time) ?? 0) + (timesFor(b).get(s.time) ?? 0);
+            if (homeFieldOf(a) === s.field || homeFieldOf(b) === s.field) score -= 3;
+          }
+          if (best === null || score < best.score) best = { r, i, score };
         }
       }
-      return null;
+      if (best === null) return null;
+      const { r, i } = best;
+      for (let k = 0; k < n; k++) free[r]![i + k] = false;
+      load[r] = load[r]! + 1;
+      return runs[r]!.slice(i, i + n);
     };
 
     // This week's matchups.
@@ -331,18 +383,37 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
     }
     roundCursor += roundsPerWeek;
 
-    for (const { a, b, cycle } of weekMatchups) {
-      const picked = takeSlots(gamesPerMatchup);
+    for (const { a, b } of weekMatchups) {
+      const picked = takeSlots(gamesPerMatchup, a, b);
       if (!picked) {
         unscheduled.push({ a: nameOf(a), b: nameOf(b) });
         continue;
       }
       for (let g = 0; g < gamesPerMatchup; g++) {
         const s = picked[g]!;
-        // Flip home/away on later passes, and between halves of a
-        // doubleheader, so neither side is home twice.
-        const flip = (cycle + g) % 2 === 1;
-        const [away, home] = flip ? [b, a] : [a, b];
+        // Who is home. Priority:
+        //   1. whoever's home field this is
+        //   2. otherwise whoever has been home less so far, which is what
+        //      keeps the season from ending 7 home / 3 away
+        //   3. within a doubleheader, alternate so neither hosts both
+        let home: string;
+        let away: string;
+        const aHome = homeFieldOf(a) === s.field;
+        const bHome = homeFieldOf(b) === s.field;
+        if (aHome !== bHome) {
+          [home, away] = aHome ? [a, b] : [b, a];
+        } else if (g % 2 === 1) {
+          // second half of a block: flip whatever the first half did
+          const prev = games[games.length - 1]!;
+          [home, away] = [prev.away_team_id, prev.home_team_id];
+        } else {
+          const ha = homeCount.get(a) ?? 0;
+          const hb = homeCount.get(b) ?? 0;
+          [home, away] = ha <= hb ? [a, b] : [b, a];
+        }
+        bump(homeCount, home);
+        bump(timesFor(a), s.time);
+        bump(timesFor(b), s.time);
         games.push({
           date: s.date,
           time: s.time,

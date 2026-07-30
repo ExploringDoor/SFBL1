@@ -158,6 +158,117 @@ describe("calendar: days, end date, off dates", () => {
   });
 });
 
+describe("fairness and constraints", () => {
+  const twoFields = [
+    { name: "F1", times: ["09:00", "10:30"] },
+    { name: "F2", times: ["09:00", "10:30"] },
+  ];
+
+  it("keeps home and away close to even for every team", () => {
+    const teams = Array.from({ length: 8 }, (_, i) => team(`t${i}`));
+    const res = generateSchedule({
+      teams,
+      startDate: "2026-09-12",
+      weeks: 7,
+      fields: twoFields,
+    });
+    const home = new Map<string, number>();
+    const away = new Map<string, number>();
+    res.games.forEach((g) => {
+      home.set(g.home_team_id, (home.get(g.home_team_id) ?? 0) + 1);
+      away.set(g.away_team_id, (away.get(g.away_team_id) ?? 0) + 1);
+    });
+    for (const t of teams) {
+      const h = home.get(t.id) ?? 0;
+      const a = away.get(t.id) ?? 0;
+      // Never lopsided: at most one game apart over a full round robin.
+      expect(Math.abs(h - a)).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it("spreads start times so nobody owns the early slot", () => {
+    const teams = Array.from({ length: 6 }, (_, i) => team(`t${i}`));
+    const res = generateSchedule({
+      teams,
+      startDate: "2026-09-12",
+      weeks: 5,
+      fields: twoFields,
+    });
+    for (const t of teams) {
+      const mine = res.games.filter(
+        (g) => g.home_team_id === t.id || g.away_team_id === t.id,
+      );
+      const early = mine.filter((g) => g.time === "09:00").length;
+      const late = mine.filter((g) => g.time === "10:30").length;
+      // Should not be stuck with the same slot every single week.
+      if (mine.length >= 4) {
+        expect(early).toBeGreaterThan(0);
+        expect(late).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("never schedules a team on a date it said it is unavailable", () => {
+    const teams = [
+      { id: "a", name: "a", unavailable: ["2026-09-19", "2026-09-26"] },
+      { id: "b", name: "b" },
+      { id: "c", name: "c" },
+      { id: "d", name: "d" },
+    ];
+    const res = generateSchedule({
+      teams,
+      startDate: "2026-09-12",
+      weeks: 6,
+      fields: twoFields,
+    });
+    res.games
+      .filter((g) => g.home_team_id === "a" || g.away_team_id === "a")
+      .forEach((g) => {
+        expect(["2026-09-19", "2026-09-26"]).not.toContain(g.date);
+      });
+    // The other teams still play on those dates.
+    expect(res.games.some((g) => g.date === "2026-09-19")).toBe(true);
+  });
+
+  it("puts a team at its own home field and makes it the home side", () => {
+    const teams = [
+      { id: "a", name: "a", homeField: "F2" },
+      { id: "b", name: "b" },
+      { id: "c", name: "c" },
+      { id: "d", name: "d" },
+    ];
+    const res = generateSchedule({
+      teams,
+      startDate: "2026-09-12",
+      weeks: 6,
+      fields: twoFields,
+    });
+    const aGames = res.games.filter(
+      (g) => g.home_team_id === "a" || g.away_team_id === "a",
+    );
+    const atHomeField = aGames.filter((g) => g.field === "F2");
+    expect(atHomeField.length).toBeGreaterThan(0);
+    // Whenever the game is at F2, team a is the home side.
+    atHomeField.forEach((g) => expect(g.home_team_id).toBe("a"));
+  });
+
+  it("reports a matchup it cannot place because of unavailability", () => {
+    // Both teams unavailable on the only playable date.
+    const teams = [
+      { id: "a", name: "a", unavailable: ["2026-09-12"] },
+      { id: "b", name: "b" },
+    ];
+    const res = generateSchedule({
+      teams,
+      startDate: "2026-09-12",
+      weeks: 1,
+      fields: [{ name: "F1", times: ["09:00"] }],
+    });
+    expect(res.games).toHaveLength(0);
+    expect(res.unscheduled).toHaveLength(1);
+  });
+});
+
 describe("generateSchedule", () => {
   const base = {
     startDate: "2026-09-12",
