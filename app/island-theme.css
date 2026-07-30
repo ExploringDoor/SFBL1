@@ -366,3 +366,24 @@ html.tenant-island .le-mob-tile {
 html.tenant-island .le-mob-tile:active {
   background: rgba(255, 255, 255, 0.15) !important;
 }
+
+/* ---- inline background: var(--card) ------------------------------------
+ * --card is still #ffffff (white cards are the whole point), but the generated
+ * restore list only caught inline styles written as a literal white
+ * ("background: white", "#fff", "rgb(255..."). Several components set
+ * `background: var(--card)` inline instead — the team page's schedule rows and
+ * stat panels among them — so those stayed white while their text took the
+ * light tokens. On /teams/<id> that made every game row look blank: you could
+ * see the W/L letter and the opponent crest, and nothing else. */
+html.tenant-island [style*="background: var(--card)"],
+html.tenant-island [style*="background:var(--card)"],
+html.tenant-island [style*="background: var(--card2"],
+html.tenant-island [style*="background:var(--card2"] {
+  --text-strong: #1a1a1a;
+  --text-body: #1a1a1a;
+  --muted: rgba(0, 0, 0, 0.56);
+  --muted2: rgba(0, 0, 0, 0.35);
+  --border: rgba(0, 0, 0, 0.10);
+  --border2: rgba(0, 0, 0, 0.18);
+  color: #1a1a1a;
+}
