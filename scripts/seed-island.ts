@@ -225,6 +225,11 @@ const LEAGUE_CONFIG = {
           // $200 Home Field discount. It was migrated but orphaned (no nav item),
           // so the pricing was unreachable before Fall registration. (Audit fix.)
           { label: "Leagues", href: "/content/leagues" },
+          // USSSA Summer League standings (app/summer-league). Island's own
+          // database only holds the league games it runs directly; the Summer
+          // League is sanctioned through USSSA, so that page renders a snapshot
+          // of their event standings. (Adam, 2026-07-29.)
+          { label: "Summer League", href: "/summer-league" },
           { label: "Coach Login", href: "/captain" },
         ],
       },
