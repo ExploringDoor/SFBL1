@@ -135,15 +135,15 @@ describe("generateSchedule", () => {
         (g.home_team_id === teamId || g.away_team_id === teamId),
     );
 
-  it("single format gives each team one game a week", () => {
+  it("defaults to one game a team a week", () => {
     const teams = Array.from({ length: 8 }, (_, i) => team(`t${i}`));
-    const res = generateSchedule({ ...base, teams, weeks: 7, weeklyFormat: "single" });
+    const res = generateSchedule({ ...base, teams, weeks: 7, gamesPerWeek: 1 });
     for (const t of teams) {
       expect(gamesPerTeamInWeek(res.games, 1, t.id)).toHaveLength(1);
     }
   });
 
-  it("doubleheader gives each team two games a week against the same opponent", () => {
+  it("two games vs the same opponent land back to back on one field", () => {
     const teams = Array.from({ length: 6 }, (_, i) => team(`t${i}`));
     const res = generateSchedule({
       ...base,
@@ -151,7 +151,7 @@ describe("generateSchedule", () => {
       weeks: 5,
       fields: ["F1", "F2", "F3"],
       times: ["09:00", "10:30"],
-      weeklyFormat: "doubleheader",
+      gamesPerWeek: 2, weeklyPairing: "same-opponent",
     });
     for (const t of teams) {
       const wk1 = gamesPerTeamInWeek(res.games, 1, t.id);
@@ -166,19 +166,19 @@ describe("generateSchedule", () => {
     }
   });
 
-  it("doubleheader alternates home and away across the two games", () => {
+  it("alternates home and away across a same-opponent block", () => {
     const teams = ["a", "b"].map((id) => team(id));
     const res = generateSchedule({
       ...base,
       teams,
       weeks: 1,
-      weeklyFormat: "doubleheader",
+      gamesPerWeek: 2, weeklyPairing: "same-opponent",
     });
     expect(res.games).toHaveLength(2);
     expect(res.games[0]!.home_team_id).toBe(res.games[1]!.away_team_id);
   });
 
-  it("two-opponents gives each team two games a week against different teams", () => {
+  it("two games vs different opponents uses two rounds in the week", () => {
     const teams = Array.from({ length: 8 }, (_, i) => team(`t${i}`));
     const res = generateSchedule({
       ...base,
@@ -186,7 +186,7 @@ describe("generateSchedule", () => {
       weeks: 3,
       fields: ["F1", "F2", "F3", "F4"],
       times: ["17:30", "19:00"],
-      weeklyFormat: "two-opponents",
+      gamesPerWeek: 2, weeklyPairing: "different-opponents",
     });
     for (const t of teams) {
       const wk1 = gamesPerTeamInWeek(res.games, 1, t.id);
@@ -195,6 +195,30 @@ describe("generateSchedule", () => {
         g.home_team_id === t.id ? g.away_team_id : g.home_team_id,
       );
       expect(opponents[0]).not.toBe(opponents[1]);
+    }
+  });
+
+  it("handles three games a week, not just one or two", () => {
+    // Nothing in here is hard-coded to 1 or 2 games. If a division ever plays
+    // a three-game set, the same inputs cover it.
+    const teams = Array.from({ length: 4 }, (_, i) => team(`t${i}`));
+    const res = generateSchedule({
+      ...base,
+      teams,
+      weeks: 3,
+      fields: ["F1", "F2"],
+      times: ["09:00", "10:30", "12:00"],
+      gamesPerWeek: 3,
+      weeklyPairing: "same-opponent",
+    });
+    for (const t of teams) {
+      const wk1 = gamesPerTeamInWeek(res.games, 1, t.id);
+      expect(wk1).toHaveLength(3);
+      const opponents = new Set(
+        wk1.map((g) => (g.home_team_id === t.id ? g.away_team_id : g.home_team_id)),
+      );
+      expect(opponents.size).toBe(1); // all three vs the same opponent
+      expect(new Set(wk1.map((g: any) => g.field)).size).toBe(1); // one field
     }
   });
 

@@ -45,20 +45,24 @@ export interface GeneratorOptions {
   /** Written onto each game so standings group correctly. */
   division?: string;
   /**
-   * How many games each team plays in a week, and against whom.
-   *
-   *   "single"        one game a week. Island's weeknight leagues.
-   *   "doubleheader"  two games a week against the SAME opponent, back to
-   *                   back on one field. Island's weekend leagues run this
-   *                   way (their rules set a 1hr25 doubleheader), and it is
-   *                   how the Summer League schedule on USSSA is laid out.
-   *   "two-opponents" two games a week against DIFFERENT opponents, i.e. two
-   *                   rounds of the rotation packed into one week.
-   *
-   * Defaults to "single". This is an input, not a rule: how often teams meet
-   * in a week is Mike's call, not the generator's.
+   * How many games each team plays per week. Default 1, which is the standard,
+   * but nothing here assumes it: a weeknight division might run two, and a
+   * weekend division might run three. Mike's formats change season to season,
+   * so this is a number he sets, not a rule baked into the code.
    */
-  weeklyFormat?: "single" | "doubleheader" | "two-opponents";
+  gamesPerWeek?: number;
+  /**
+   * When gamesPerWeek is 2 or more, are those games against the SAME opponent
+   * (a doubleheader: back to back on one field, home/away alternating) or
+   * against DIFFERENT opponents (that many rounds of the rotation packed into
+   * the week)?
+   *
+   * Defaults to "same-opponent" because that is how Island's weekend
+   * doubleheaders and the USSSA Summer League currently run, but it is
+   * deliberately a choice — do not assume a doubleheader always means the
+   * same opponent. Ignored when gamesPerWeek is 1.
+   */
+  weeklyPairing?: "same-opponent" | "different-opponents";
 }
 
 export interface GeneratedGame {
@@ -176,9 +180,12 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
   // weeks outlast the rotation the rounds repeat, with home/away flipped on
   // each pass, which is how a league gets "play everyone twice" out of the
   // same inputs.
-  const format = opts.weeklyFormat ?? "single";
-  const roundsPerWeek = format === "two-opponents" ? 2 : 1;
-  const gamesPerMatchup = format === "doubleheader" ? 2 : 1;
+  const gamesPerWeek = Math.max(1, Math.floor(opts.gamesPerWeek ?? 1));
+  const sameOpponent = (opts.weeklyPairing ?? "same-opponent") === "same-opponent";
+  // Different opponents => pull that many rounds of the rotation into the week,
+  // one game each. Same opponent => one round, played that many times.
+  const roundsPerWeek = sameOpponent ? 1 : gamesPerWeek;
+  const gamesPerMatchup = sameOpponent ? gamesPerWeek : 1;
 
   const weeks = Math.max(1, Math.floor(opts.weeks));
   const games: GeneratedGame[] = [];
@@ -202,15 +209,14 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
     // Expand to games: a doubleheader is the same pairing twice.
     let slot = 0;
     for (const { a, b, cycle } of weekMatchups) {
-      // Keep a doubleheader together: if the pair would straddle two fields,
-      // push it to the start of the next field so both games share one field
-      // at consecutive times, which is how a real doubleheader is played.
-      if (
-        gamesPerMatchup === 2 &&
-        opts.times.length >= 2 &&
-        slot % opts.times.length === opts.times.length - 1
-      ) {
-        slot += 1;
+      // Keep a same-opponent block together: if it would straddle two fields,
+      // jump to the start of the next field so all of its games share one
+      // field at consecutive times, which is how a doubleheader is played.
+      if (gamesPerMatchup > 1 && opts.times.length >= gamesPerMatchup) {
+        const posInField = slot % opts.times.length;
+        if (posInField + gamesPerMatchup > opts.times.length) {
+          slot += opts.times.length - posInField;
+        }
       }
       if (slot + gamesPerMatchup > slotsPerWeek) {
         unscheduled.push({ a: nameOf(a), b: nameOf(b) });
