@@ -387,3 +387,38 @@ html.tenant-island [style*="background:var(--card2"] {
   --border2: rgba(0, 0, 0, 0.18);
   color: #1a1a1a;
 }
+
+/* ---- the admin stays LIGHT ----------------------------------------------
+ * The dark theme is Mike's branding for the public site. The admin is Adam's
+ * working tool, and it is built almost entirely from Tailwind light-mode
+ * classes (slate-500 text, slate-200 borders, white panels) that were designed
+ * against a white page. On black those read as grey-on-black — legible by the
+ * numbers, muddy in practice, and chasing each one with an override would be
+ * endless.
+ *
+ * One rule instead: put the admin page back on a light background and restore
+ * the dark text tokens. The ticker and nav above it stay black, so the league's
+ * branding is still there, but everything you actually work in is readable.
+ *
+ * Beats the root block on specificity (adds [data-page]), and PageSlug keeps
+ * that attribute correct when navigating in and out of /admin. */
+html.tenant-island[data-page="admin"] {
+  --bg: #f4f6f9;
+  --bg2: #ffffff;
+  --text-strong: #1a1a1a;
+  --text-body: #1a1a1a;
+  --muted: rgba(0, 0, 0, 0.56);
+  --muted2: rgba(0, 0, 0, 0.35);
+  --border: rgba(0, 0, 0, 0.10);
+  --border2: rgba(0, 0, 0, 0.18);
+  background: var(--bg);
+}
+html.tenant-island[data-page="admin"] body {
+  background: var(--bg);
+  color: var(--text-body);
+}
+/* The generator and dispute cards use var(--card); keep them white on the
+   light page so they still read as panels rather than blending in. */
+html.tenant-island[data-page="admin"] {
+  --card: #ffffff;
+}
