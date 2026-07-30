@@ -5744,6 +5744,8 @@ select:focus-visible {
   font-weight: 800;
   font-size: 15px;
   padding: 12px 22px;
+  /* Red box around the CTA so it pops off the dark band. */
+  border: 3px solid var(--brand-accent);
   border-radius: 8px;
   text-decoration: none;
   white-space: nowrap;
@@ -5752,7 +5754,7 @@ select:focus-visible {
 .le-home-reg-cta-btn:hover,
 .le-home-reg-cta-btn:focus-visible {
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 6px 18px rgba(200, 16, 46, 0.35);
 }
 @media (max-width: 560px) {
   .le-home-reg-cta-inner {
