@@ -1,28 +1,24 @@
 // Round-robin schedule generator.
 //
-// Mike's ask (via Adam, 2026-07-29): "tell the computer how many weeks and how
-// many fields and times, and which teams not to play each other." So the inputs
-// are weeks / fields / times / teams, and the output is a list of games ready to
-// write straight into /leagues/<id>/games.
+// Inputs are the ones a league director actually thinks in: which teams, which
+// days of the week, from when to when, which dates are off, which fields and
+// what times each field runs, how many games a team plays in a week, and which
+// matchups must never happen.
 //
-// Deliberately pure — no Firestore, no React, no Date.now(). Everything is
-// derived from the arguments so the same inputs always produce the same
-// schedule, which is what makes the admin preview trustworthy: what you see in
-// the preview is exactly what gets written.
+// Deliberately pure — no Firestore, no React, no clock. Everything derives from
+// the arguments, so the same inputs always produce the same schedule. That is
+// what makes the admin preview trustworthy: what is on screen is exactly what
+// gets written.
 //
-// Two rules drive the pairing:
+// Structure:
+//   1. Build the real calendar first (days of week, blackouts, end date), so a
+//      "week" is a set of actual dates rather than an index. Off days and off
+//      weeks fall out of this naturally instead of being special cases.
+//   2. Pair the teams with the circle method, so everyone meets everyone.
+//   3. Drop matchups that are blocked, by organisation or by hand.
+//   4. Drop the pairings into the calendar's slots.
 //
-//   1. Everyone plays everyone at least once. Standard circle method: fix one
-//      team and rotate the rest, which yields n-1 rounds covering every pair
-//      exactly once (a BYE team is added when the count is odd).
-//
-//   2. Teams in the same organization never play each other. Phoenix Fire runs
-//      Steel / Silver / Gray / Black, Brentwood runs A / B, and Mike does not
-//      want those meeting in league play. Same-org pairs are dropped rather than
-//      re-paired: re-pairing would either break rule 1 for somebody else or
-//      quietly give one team extra games. Dropping means those two simply have
-//      no game that round, which is the honest outcome, and the caller is told
-//      how many were skipped so the admin can see it.
+// Anything that cannot be placed is reported, never silently dropped.
 
 export interface GeneratorTeam {
   id: string;
@@ -33,7 +29,7 @@ export interface GeneratorTeam {
 }
 
 /** A field and the start times available ON THAT FIELD. Times are per field,
- *  not global: Lasorda might run 5:30 and 7:00 while Sprofera only has 5:30,
+ *  not global: one park might run 5:30 and 7:00 while another only has 5:30,
  *  and a shared time list would invent slots that do not exist. */
 export interface GeneratorField {
   name: string;
@@ -43,39 +39,42 @@ export interface GeneratorField {
 
 export interface GeneratorOptions {
   teams: GeneratorTeam[];
-  /** First game date, YYYY-MM-DD. Every later week is +7 days from this. */
+  /** Season start, YYYY-MM-DD. The first game lands on or after this. */
   startDate: string;
-  /** How many weeks of games to lay out. */
-  weeks: number;
+  /** Last possible date, YYYY-MM-DD. When set it beats `weeks`. */
+  endDate?: string;
+  /** How many weeks of games, when no endDate is given. */
+  weeks?: number;
+  /**
+   * Which weekdays games are played on. 0 = Sunday .. 6 = Saturday.
+   * A weeknight division might be [2] (Tuesdays); a weekend division playing
+   * Saturday and Sunday is [6, 0]. Defaults to the weekday of startDate.
+   */
+  daysOfWeek?: number[];
+  /**
+   * Dates with no games: holiday weekends, field closures, tournament weekends.
+   * A blacked-out date is removed from the calendar, so the season stretches by
+   * a week rather than losing those games.
+   */
+  blackoutDates?: string[];
   /** Fields, each with its own available start times. */
   fields: GeneratorField[];
   /**
-   * Matchups Mike has blocked by hand, as pairs of team ids. These two never
-   * play each other, whatever their organizations say. Separate from the
-   * organization rule on purpose: that one is structural (one club, four
-   * squads), this one is a judgement call he makes team by team.
-   * Order within a pair does not matter.
+   * Matchups blocked by hand, as pairs of team ids. These two never play each
+   * other. Order within a pair does not matter.
    */
   blockedPairs?: [string, string][];
   /** Written onto each game so standings group correctly. */
   division?: string;
   /**
-   * How many games each team plays per week. Default 1, which is the standard,
-   * but nothing here assumes it: a weeknight division might run two, and a
-   * weekend division might run three. Mike's formats change season to season,
-   * so this is a number he sets, not a rule baked into the code.
+   * How many games each team plays per week. Default 1. Nothing assumes 1: a
+   * weeknight division might run two, a weekend division three.
    */
   gamesPerWeek?: number;
   /**
-   * When gamesPerWeek is 2 or more, are those games against the SAME opponent
-   * (a doubleheader: back to back on one field, home/away alternating) or
-   * against DIFFERENT opponents (that many rounds of the rotation packed into
-   * the week)?
-   *
-   * Defaults to "same-opponent" because that is how Island's weekend
-   * doubleheaders and the USSSA Summer League currently run, but it is
-   * deliberately a choice — do not assume a doubleheader always means the
-   * same opponent. Ignored when gamesPerWeek is 1.
+   * When gamesPerWeek is 2+, are those against the SAME opponent (a
+   * doubleheader: back to back on one field, home/away alternating) or
+   * DIFFERENT opponents (that many rounds packed into the week)?
    */
   weeklyPairing?: "same-opponent" | "different-opponents";
 }
@@ -93,11 +92,13 @@ export interface GeneratedGame {
 
 export interface GeneratorResult {
   games: GeneratedGame[];
+  /** Dates the schedule actually uses, in order. */
+  dates: string[];
   /** Pairs skipped because both teams belong to one organisation. */
   skippedSameOrg: { a: string; b: string; organization: string }[];
   /** Pairs skipped because the admin blocked that specific matchup. */
   skippedBlocked: { a: string; b: string }[];
-  /** Pairs with no slot left (more matchups than fields x times x weeks). */
+  /** Pairs with no slot left (more matchups than the calendar can hold). */
   unscheduled: { a: string; b: string }[];
   /** True once every allowed pair has been scheduled at least once. */
   everyPairPlayed: boolean;
@@ -120,14 +121,11 @@ export function roundRobinRounds(teamIds: string[]): [string, string][][] {
 
   for (let r = 0; r < n - 1; r++) {
     const round: [string, string][] = [];
-    // Fixed team meets the head of the rotating list.
     round.push([fixed, rotating[0]!]);
-    // Remaining teams pair from the outside in.
     for (let i = 1; i < rotating.length - i; i++) {
       round.push([rotating[i]!, rotating[rotating.length - i]!]);
     }
     rounds.push(round.filter(([a, b]) => a !== BYE && b !== BYE));
-    // Rotate: last element moves to the front of the rotating group.
     rotating = [rotating[rotating.length - 1]!, ...rotating.slice(0, -1)];
   }
   return rounds;
@@ -141,6 +139,65 @@ export function addDays(isoDate: string, days: number): string {
   return new Date(t).toISOString().slice(0, 10);
 }
 
+/** 0 = Sunday .. 6 = Saturday, for a YYYY-MM-DD date. */
+export function weekdayOf(isoDate: string): number {
+  const [y, m, d] = isoDate.split("-").map(Number);
+  return new Date(Date.UTC(y!, (m ?? 1) - 1, d ?? 1, 12, 0, 0)).getUTCDay();
+}
+
+export const DAY_NAMES = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+
+/**
+ * The season calendar: an array of weeks, each week an array of dates.
+ * A week is a 7-day window from startDate. Dates that are not on a chosen
+ * weekday, are blacked out, or fall past endDate are excluded — so a fully
+ * blacked-out week comes back empty and simply holds no games.
+ */
+export function buildCalendar(opts: {
+  startDate: string;
+  endDate?: string;
+  weeks?: number;
+  daysOfWeek?: number[];
+  blackoutDates?: string[];
+}): string[][] {
+  const days =
+    opts.daysOfWeek && opts.daysOfWeek.length > 0
+      ? [...new Set(opts.daysOfWeek)].sort((a, b) => a - b)
+      : [weekdayOf(opts.startDate)];
+  const blackout = new Set(opts.blackoutDates ?? []);
+  // Hard ceiling so a bad endDate cannot spin forever.
+  const maxWeeks = opts.endDate ? 104 : Math.max(1, Math.floor(opts.weeks ?? 1));
+
+  const calendar: string[][] = [];
+  for (let w = 0; w < maxWeeks; w++) {
+    const weekStart = addDays(opts.startDate, w * 7);
+    if (opts.endDate && weekStart > opts.endDate) break;
+    const dates: string[] = [];
+    for (let d = 0; d < 7; d++) {
+      const date = addDays(weekStart, d);
+      if (opts.endDate && date > opts.endDate) continue;
+      if (date < opts.startDate) continue;
+      if (!days.includes(weekdayOf(date))) continue;
+      if (blackout.has(date)) continue;
+      dates.push(date);
+    }
+    calendar.push(dates);
+  }
+  // Trailing empty weeks add nothing.
+  while (calendar.length > 0 && calendar[calendar.length - 1]!.length === 0) {
+    calendar.pop();
+  }
+  return calendar;
+}
+
 function orgOf(t: GeneratorTeam): string {
   return String(t.organization ?? "").trim().toLowerCase();
 }
@@ -151,54 +208,41 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
   const byId = new Map(teams.map((t) => [t.id, t]));
   const nameOf = (id: string) => byId.get(id)?.name ?? id;
 
-  if (teams.length < 2) {
-    return {
-      games: [],
-      skippedSameOrg: [],
-      skippedBlocked: [],
-      unscheduled: [],
-      everyPairPlayed: false,
-      warnings: ["Need at least two teams to build a schedule."],
-    };
+  const empty = (msg: string): GeneratorResult => ({
+    games: [],
+    dates: [],
+    skippedSameOrg: [],
+    skippedBlocked: [],
+    unscheduled: [],
+    everyPairPlayed: false,
+    warnings: [msg],
+  });
+
+  if (teams.length < 2) return empty("Need at least two teams to build a schedule.");
+
+  const validFields = opts.fields
+    .map((f) => ({
+      name: String(f?.name ?? "").trim(),
+      times: (f?.times ?? []).map((t) => String(t).trim()).filter(Boolean),
+    }))
+    .filter((f) => f.name && f.times.length > 0);
+  if (validFields.length === 0) {
+    return empty("Add at least one field with at least one start time.");
   }
 
-  // Flatten the per-field times into the week's slots, field by field, so the
-  // games of a same-opponent block land on one field at consecutive times.
-  // fieldStart marks where each field's run begins, which is what lets a block
-  // jump forward rather than straddle two fields.
-  const slots: { field: string; time: string }[] = [];
-  const fieldStarts: number[] = [];
-  for (const f of opts.fields) {
-    const name = String(f?.name ?? "").trim();
-    const times = (f?.times ?? []).filter((t) => String(t).trim());
-    if (!name || times.length === 0) continue;
-    fieldStarts.push(slots.length);
-    for (const time of times) slots.push({ field: name, time });
+  // ---- 1. the calendar ---------------------------------------------------
+  const calendar = buildCalendar(opts);
+  const usableWeeks = calendar.filter((w) => w.length > 0).length;
+  if (usableWeeks === 0) {
+    return empty(
+      "No playable dates. Check the start and end dates, the days of the week, and the off dates.",
+    );
   }
-  const slotsPerWeek = slots.length;
-  if (slotsPerWeek === 0) {
-    return {
-      games: [],
-      skippedSameOrg: [],
-      skippedBlocked: [],
-      unscheduled: [],
-      everyPairPlayed: false,
-      warnings: ["Add at least one field with at least one start time."],
-    };
-  }
-  /** How many slots remain on the field that slot `i` sits on. */
-  const slotsLeftOnField = (i: number) => {
-    const start = fieldStarts.filter((s) => s <= i).pop() ?? 0;
-    const next = fieldStarts.find((s) => s > i) ?? slots.length;
-    return next - i;
-  };
-  const startOfNextField = (i: number) =>
-    fieldStarts.find((s) => s > i) ?? slots.length;
 
-  // ---- 1. every pair, in round-robin order -------------------------------
+  // ---- 2. every pair, in round-robin order -------------------------------
   const rounds = roundRobinRounds(teams.map((t) => t.id));
 
-  // ---- 2. drop same-organisation and hand-blocked pairings ---------------
+  // ---- 3. drop blocked and same-organisation pairings --------------------
   const skippedSameOrg: GeneratorResult["skippedSameOrg"] = [];
   const skippedBlocked: GeneratorResult["skippedBlocked"] = [];
   const blocked = new Set(
@@ -226,74 +270,95 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
     }),
   );
 
-  // ---- 3. lay the rounds out over the requested weeks --------------------
-  // How many games a team plays in a week comes from weeklyFormat. When the
-  // weeks outlast the rotation the rounds repeat, with home/away flipped on
-  // each pass, which is how a league gets "play everyone twice" out of the
-  // same inputs.
+  // ---- 4. drop the pairings into the calendar ----------------------------
   const gamesPerWeek = Math.max(1, Math.floor(opts.gamesPerWeek ?? 1));
   const sameOpponent = (opts.weeklyPairing ?? "same-opponent") === "same-opponent";
-  // Different opponents => pull that many rounds of the rotation into the week,
-  // one game each. Same opponent => one round, played that many times.
   const roundsPerWeek = sameOpponent ? 1 : gamesPerWeek;
   const gamesPerMatchup = sameOpponent ? gamesPerWeek : 1;
 
-  const weeks = Math.max(1, Math.floor(opts.weeks));
   const games: GeneratedGame[] = [];
   const unscheduled: GeneratorResult["unscheduled"] = [];
   const playedPairs = new Set<string>();
   const pairKey = (a: string, b: string) => [a, b].sort().join("|");
+  const usedDates: string[] = [];
 
-  for (let w = 0; w < weeks; w++) {
-    const date = addDays(opts.startDate, w * 7);
+  let roundCursor = 0;
+  let weekNo = 0;
 
-    // Collect this week's matchups (one round, or two for "two-opponents").
+  for (const weekDates of calendar) {
+    if (weekDates.length === 0) continue; // an off week
+    weekNo += 1;
+    weekDates.forEach((d) => usedDates.push(d));
+
+    // Slots for this week, grouped into "runs" — one run per date+field, its
+    // times in order. A run is the unit a same-opponent block has to fit
+    // inside, since a doubleheader is played on one field back to back.
+    const runs: { date: string; field: string; time: string }[][] = [];
+    for (const date of weekDates) {
+      for (const f of validFields) {
+        runs.push(f.times.map((time) => ({ date, field: f.name, time })));
+      }
+    }
+    // Next free index within each run.
+    const used = runs.map(() => 0);
+    // Round-robin across runs rather than filling one field before touching
+    // the next. Without this a Saturday/Sunday division stacked every game on
+    // Saturday, and a two-field night left the second field empty.
+    let runCursor = 0;
+    const takeSlots = (n: number) => {
+      // A block of 2+ has to come from ONE run (same date, same field,
+      // consecutive times). A single game can come from anywhere.
+      for (let tried = 0; tried < runs.length; tried++) {
+        const r = (runCursor + tried) % runs.length;
+        if (runs[r]!.length - used[r]! >= n) {
+          const out = runs[r]!.slice(used[r]!, used[r]! + n);
+          used[r] = used[r]! + n;
+          runCursor = (r + 1) % runs.length;
+          return out;
+        }
+      }
+      return null;
+    };
+
+    // This week's matchups.
     const weekMatchups: { a: string; b: string; cycle: number }[] = [];
     for (let r = 0; r < roundsPerWeek; r++) {
-      const idx = w * roundsPerWeek + r;
+      const idx = roundCursor + r;
       const cycle = Math.floor(idx / playable.length);
       (playable[idx % playable.length] ?? []).forEach(([a, b]) =>
         weekMatchups.push({ a, b, cycle }),
       );
     }
+    roundCursor += roundsPerWeek;
 
-    // Expand to games: a doubleheader is the same pairing twice.
-    let slot = 0;
     for (const { a, b, cycle } of weekMatchups) {
-      // Keep a same-opponent block together: if it would straddle two fields,
-      // jump to the start of the next field so all of its games share one
-      // field at consecutive times, which is how a doubleheader is played.
-      if (gamesPerMatchup > 1 && slotsLeftOnField(slot) < gamesPerMatchup) {
-        slot = startOfNextField(slot);
-      }
-      if (slot + gamesPerMatchup > slotsPerWeek) {
+      const picked = takeSlots(gamesPerMatchup);
+      if (!picked) {
         unscheduled.push({ a: nameOf(a), b: nameOf(b) });
         continue;
       }
       for (let g = 0; g < gamesPerMatchup; g++) {
-        const i = slot + g;
-        const { field, time } = slots[i]!;
-        // Flip home/away on the second pass, and between the two halves of a
-        // doubleheader so neither team is home for both.
+        const s = picked[g]!;
+        // Flip home/away on later passes, and between halves of a
+        // doubleheader, so neither side is home twice.
         const flip = (cycle + g) % 2 === 1;
         const [away, home] = flip ? [b, a] : [a, b];
         games.push({
-          date,
-          time,
-          field,
+          date: s.date,
+          time: s.time,
+          field: s.field,
           away_team_id: away,
           home_team_id: home,
           ...(opts.division ? { division: opts.division } : {}),
-          week: w + 1,
+          week: weekNo,
           status: "scheduled",
         });
       }
       playedPairs.add(pairKey(a, b));
-      slot += gamesPerMatchup;
     }
   }
 
-  // ---- 4. tell the admin what the inputs could not fit -------------------
+  // ---- 5. report what the inputs could not fit ---------------------------
   const allowedPairs = new Set<string>();
   playable.forEach((round) =>
     round.forEach(([a, b]) => allowedPairs.add(pairKey(a, b))),
@@ -301,20 +366,17 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
   const everyPairPlayed = [...allowedPairs].every((k) => playedPairs.has(k));
 
   const weeksForFullRotation = Math.ceil(playable.length / roundsPerWeek);
-  if (weeks < weeksForFullRotation) {
+  if (usableWeeks < weeksForFullRotation) {
     warnings.push(
-      `${weeks} week${weeks === 1 ? "" : "s"} is not enough for everyone to ` +
-        `play everyone once. That needs ${weeksForFullRotation} weeks at this ` +
-        `format. Teams that have not met yet are listed below.`,
+      `${usableWeeks} playable week${usableWeeks === 1 ? "" : "s"} is not enough ` +
+        `for everyone to play everyone once. That needs ${weeksForFullRotation} ` +
+        `at this format. Extend the end date, or add game days.`,
     );
   }
   if (unscheduled.length > 0) {
     warnings.push(
-      `${unscheduled.length} matchup${unscheduled.length === 1 ? "" : "s"} had ` +
-        `no slot. There ${slotsPerWeek === 1 ? "is" : "are"} ${slotsPerWeek} ` +
-        `slot${slotsPerWeek === 1 ? "" : "s"} a week across ` +
-        `${opts.fields.length} field${opts.fields.length === 1 ? "" : "s"}. ` +
-        `Add a field, or another start time on a field.`,
+      `${unscheduled.length} matchup${unscheduled.length === 1 ? "" : "s"} had no ` +
+        `slot. Add a field, another start time, or another day of the week.`,
     );
   }
   if (skippedSameOrg.length > 0) {
@@ -332,6 +394,7 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
 
   return {
     games,
+    dates: usedDates,
     skippedSameOrg,
     skippedBlocked,
     unscheduled,

@@ -3,6 +3,8 @@ import {
   generateSchedule,
   roundRobinRounds,
   addDays,
+  weekdayOf,
+  buildCalendar,
   type GeneratorTeam,
 } from "../lib/schedule-generator";
 
@@ -51,6 +53,108 @@ describe("addDays", () => {
   it("rolls over month and year ends", () => {
     expect(addDays("2026-08-29", 7)).toBe("2026-09-05");
     expect(addDays("2026-12-28", 7)).toBe("2027-01-04");
+  });
+});
+
+describe("calendar: days, end date, off dates", () => {
+  const teams4 = ["a", "b", "c", "d"].map((id) => team(id));
+  const oneField = [{ name: "F1", times: ["17:30", "19:00"] }];
+
+  it("puts every game on the chosen weekday", () => {
+    // 2026-09-14 is a Monday.
+    const res = generateSchedule({
+      teams: teams4,
+      startDate: "2026-09-14",
+      weeks: 3,
+      daysOfWeek: [1], // Monday
+      fields: oneField,
+    });
+    expect(res.games.length).toBeGreaterThan(0);
+    res.games.forEach((g) => expect(weekdayOf(g.date)).toBe(1));
+  });
+
+  it("supports a weekend division playing Saturday and Sunday", () => {
+    const res = generateSchedule({
+      teams: teams4,
+      startDate: "2026-09-12", // a Saturday
+      weeks: 2,
+      daysOfWeek: [6, 0], // Sat + Sun
+      fields: oneField,
+    });
+    const days = new Set(res.games.map((g) => weekdayOf(g.date)));
+    expect([...days].sort()).toEqual([0, 6]);
+  });
+
+  it("stops at the end date instead of running on", () => {
+    const res = generateSchedule({
+      teams: teams4,
+      startDate: "2026-09-14",
+      endDate: "2026-09-28",
+      daysOfWeek: [1],
+      fields: oneField,
+    });
+    expect(res.games.length).toBeGreaterThan(0);
+    res.games.forEach((g) => expect(g.date <= "2026-09-28").toBe(true));
+    expect(new Set(res.games.map((g) => g.date)).size).toBe(3); // 14th, 21st, 28th
+  });
+
+  it("skips an off day entirely", () => {
+    const res = generateSchedule({
+      teams: teams4,
+      startDate: "2026-09-14",
+      weeks: 4,
+      daysOfWeek: [1],
+      blackoutDates: ["2026-09-21"], // holiday Monday
+      fields: oneField,
+    });
+    expect(res.games.some((g) => g.date === "2026-09-21")).toBe(false);
+    expect(res.games.some((g) => g.date === "2026-09-28")).toBe(true);
+  });
+
+  it("an off week pushes the season out rather than losing those games", () => {
+    const withoutOff = generateSchedule({
+      teams: teams4,
+      startDate: "2026-09-14",
+      endDate: "2026-10-12",
+      daysOfWeek: [1],
+      fields: oneField,
+    });
+    const withOff = generateSchedule({
+      teams: teams4,
+      startDate: "2026-09-14",
+      endDate: "2026-10-12",
+      daysOfWeek: [1],
+      blackoutDates: ["2026-09-28"],
+      fields: oneField,
+    });
+    // The blacked-out Monday is gone, and the games that would have been there
+    // are played on the later dates instead of vanishing.
+    expect(withOff.games.some((g) => g.date === "2026-09-28")).toBe(false);
+    expect(withOff.games.some((g) => g.date === "2026-10-12")).toBe(true);
+    expect(withoutOff.games.length).toBeGreaterThan(withOff.games.length - 1);
+  });
+
+  it("says so when the dates leave nothing playable", () => {
+    const res = generateSchedule({
+      teams: teams4,
+      startDate: "2026-09-14",
+      weeks: 2,
+      daysOfWeek: [1],
+      blackoutDates: ["2026-09-14", "2026-09-21"],
+      fields: oneField,
+    });
+    expect(res.games).toHaveLength(0);
+    expect(res.warnings.join(" ")).toMatch(/no playable dates/i);
+  });
+
+  it("defaults the game day to the weekday of the start date", () => {
+    const res = generateSchedule({
+      teams: teams4,
+      startDate: "2026-09-16", // Wednesday
+      weeks: 2,
+      fields: oneField,
+    });
+    res.games.forEach((g) => expect(weekdayOf(g.date)).toBe(3));
   });
 });
 
