@@ -4,6 +4,7 @@
 // in full mode.
 
 import { headers } from "next/headers";
+import Link from "next/link";
 import { getAdminDb } from "@/lib/firebase-admin";
 import {
   computeStandings,
@@ -103,6 +104,35 @@ export default async function StandingsPage() {
             ? `Through ${throughDate} · ${teamCount} teams`
             : `${teamCount} team${teamCount === 1 ? "" : "s"} · season starts soon`}
         </p>
+
+        {/* Island's Summer League runs through USSSA, so its standings live on
+            their own page rather than in this table. The nav carries it under
+            Information, but that is two clicks deep and easy to miss — someone
+            already looking at standings is exactly who wants it. */}
+        {tenantId === "island" && (
+          <Link
+            href="/summer-league"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              marginTop: 14,
+              padding: "9px 16px",
+              borderRadius: 999,
+              fontSize: 14,
+              fontWeight: 700,
+              textDecoration: "none",
+              color: "var(--brand-accent, #35afea)",
+              border:
+                "1px solid color-mix(in srgb, var(--brand-accent, #35afea) 45%, transparent)",
+              background:
+                "color-mix(in srgb, var(--brand-accent, #35afea) 12%, transparent)",
+            }}
+          >
+            Summer League standings (USSSA)
+            <span aria-hidden>→</span>
+          </Link>
+        )}
       </header>
 
       {!hasFinalGames ? (

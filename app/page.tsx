@@ -368,6 +368,27 @@ export default async function HomePage() {
                 final.
               </p>
             )}
+            {/* Island's Summer League is a separate USSSA event, so its
+                standings are not in the table above. Surface it here rather
+                than leaving it only in the Information dropdown. */}
+            {tenantId === "island" && (
+              <Link
+                href="/summer-league"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 7,
+                  marginTop: 14,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  textDecoration: "none",
+                  color: "var(--brand-accent, #35afea)",
+                }}
+              >
+                Summer League standings (USSSA)
+                <span aria-hidden>→</span>
+              </Link>
+            )}
           </aside>
         </div>
       </section>
