@@ -69,6 +69,30 @@ const BTN: React.CSSProperties = {
   cursor: "pointer",
 };
 
+// One tap for the times a league actually uses, with a picker for anything
+// else. Typing "17:30, 19:00" into a text box was the old way.
+const COMMON_TIMES = [
+  "09:00",
+  "10:30",
+  "12:00",
+  "13:30",
+  "15:00",
+  "16:30",
+  "17:30",
+  "18:00",
+  "19:00",
+  "19:30",
+];
+
+/** 24h "17:30" -> "5:30 PM", which is how a coach reads a schedule. */
+function pretty(t: string): string {
+  const [h, m] = t.split(":").map(Number);
+  if (h == null || m == null) return t;
+  const ampm = h >= 12 ? "PM" : "AM";
+  const hr = h % 12 === 0 ? 12 : h % 12;
+  return `${hr}:${String(m).padStart(2, "0")} ${ampm}`;
+}
+
 function chip(on: boolean): React.CSSProperties {
   return {
     padding: "7px 12px",
@@ -111,9 +135,11 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
   );
 
   // --- where -------------------------------------------------------------
-  const [fields, setFields] = useState<{ name: string; times: string }[]>([
-    { name: "", times: "17:30" },
+  // Times are held as a real list, not a comma string the admin has to type.
+  const [fields, setFields] = useState<{ name: string; times: string[] }[]>([
+    { name: "", times: ["17:30"] },
   ]);
+  const [lastBatch, setLastBatch] = useState<string | null>(null);
 
   // --- blocked pairs -----------------------------------------------------
   const [blocked, setBlocked] = useState<[string, string][]>([]);
@@ -253,10 +279,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
     setError(null);
     setDone(null);
     const genFields: GeneratorField[] = fields
-      .map((f) => ({
-        name: f.name.trim(),
-        times: f.times.split(",").map((t) => t.trim()).filter(Boolean),
-      }))
+      .map((f) => ({ name: f.name.trim(), times: [...f.times].sort() }))
       .filter((f) => f.name && f.times.length > 0);
 
     if (!startDate) return setError("Pick the first game date.");
@@ -294,6 +317,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
     try {
       const data = await post({ action: "create_games", games: result.games });
       setDone(`Created ${data.created} games. They are live on the schedule now.`);
+      if (typeof data.batch === "string") setLastBatch(data.batch);
       setResult(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to create games");
@@ -560,16 +584,6 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
                 }}
               />
             )}
-            <input
-              placeholder="17:30, 19:00"
-              style={{ ...INPUT, flex: 1, minWidth: 140 }}
-              value={f.times}
-              onChange={(e) => {
-                const v = e.target.value;
-                setFields((cur) => cur.map((x, ix) => (ix === i ? { ...x, times: v } : x)));
-                reset();
-              }}
-            />
             <button
               type="button"
               style={BTN}
@@ -578,14 +592,68 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
                 reset();
               }}
             >
-              Remove
+              Remove field
             </button>
+
+            {/* Times: tap the common ones, or add any time with the picker.
+                No comma-separated typing. */}
+            <div style={{ width: "100%", marginTop: 4 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+                {COMMON_TIMES.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => {
+                      setFields((cur) =>
+                        cur.map((x, ix) =>
+                          ix === i
+                            ? {
+                                ...x,
+                                times: x.times.includes(t)
+                                  ? x.times.filter((y) => y !== t)
+                                  : [...x.times, t].sort(),
+                              }
+                            : x,
+                        ),
+                      );
+                      reset();
+                    }}
+                    style={{ ...chip(f.times.includes(t)), padding: "5px 10px", fontSize: 12 }}
+                  >
+                    {pretty(t)}
+                  </button>
+                ))}
+                <input
+                  type="time"
+                  aria-label="Add another time"
+                  style={{ ...INPUT, width: 120, padding: "5px 8px" }}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (!v) return;
+                    setFields((cur) =>
+                      cur.map((x, ix) =>
+                        ix === i && !x.times.includes(v)
+                          ? { ...x, times: [...x.times, v].sort() }
+                          : x,
+                      ),
+                    );
+                    reset();
+                  }}
+                />
+              </div>
+              {f.times.length > 0 && (
+                <p style={{ fontSize: 12, color: "var(--muted)", margin: "6px 0 0" }}>
+                  {f.times.length} game{f.times.length === 1 ? "" : "s"} a day here:{" "}
+                  {f.times.map(pretty).join(", ")}
+                </p>
+              )}
+            </div>
           </div>
         ))}
         <button
           type="button"
           style={BTN}
-          onClick={() => setFields((cur) => [...cur, { name: "", times: "17:30" }])}
+          onClick={() => setFields((cur) => [...cur, { name: "", times: ["17:30"] }])}
         >
           + Add field
         </button>
@@ -689,15 +757,120 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
       </div>
 
       {error && <p style={{ color: "var(--red, #c8102e)", fontWeight: 600 }}>{error}</p>}
-      {done && <p style={{ color: "var(--green, #22c55e)", fontWeight: 700 }}>{done}</p>}
+      {done && (
+        <div style={{ marginBottom: 12 }}>
+          <p style={{ color: "var(--green, #22c55e)", fontWeight: 700, margin: "0 0 8px" }}>
+            {done}
+          </p>
+          {lastBatch && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={async () => {
+                if (
+                  !window.confirm(
+                    "Undo this generation?\n\nIt removes only the games that run created. " +
+                      "Anything you added by hand stays, and it refuses if any of them " +
+                      "already have scores.",
+                  )
+                )
+                  return;
+                setBusy(true);
+                setError(null);
+                try {
+                  const d = await post({ action: "undo_batch", batch: lastBatch });
+                  setDone(`Removed ${d.deleted} games. You can build again.`);
+                  setLastBatch(null);
+                } catch (e) {
+                  setError(e instanceof Error ? e.message : "Undo failed");
+                } finally {
+                  setBusy(false);
+                }
+              }}
+              style={{ ...BTN, borderColor: "rgba(200,16,46,0.4)", color: "var(--red, #c8102e)" }}
+            >
+              Undo this generation
+            </button>
+          )}
+        </div>
+      )}
 
       {/* ---- preview ----------------------------------------------------- */}
       {result && (
         <div style={CARD}>
-          <p style={{ fontWeight: 800, margin: "0 0 8px" }}>
-            Preview · {result.games.length} games
-            {result.everyPairPlayed && " · everyone plays everyone"}
-          </p>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 8 }}>
+            <p style={{ fontWeight: 800, margin: 0 }}>
+              Preview · {result.games.length} games
+              {result.everyPairPlayed && " · everyone plays everyone"}
+            </p>
+            <button
+              type="button"
+              style={{ ...BTN, marginLeft: "auto" }}
+              onClick={() => {
+                // Straight CSV so it opens in Excel or Google Sheets, and can
+                // be printed or emailed to coaches before it goes live.
+                const rows = [
+                  ["Week", "Date", "Day", "Time", "Field", "Away", "Home"],
+                  ...result.games.map((g) => [
+                    String(g.week),
+                    g.date,
+                    DAY_NAMES[weekdayOf(g.date)] ?? "",
+                    pretty(g.time),
+                    g.field,
+                    nameOf(g.away_team_id),
+                    nameOf(g.home_team_id),
+                  ]),
+                ];
+                const csv = rows
+                  .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
+                  .join("\n");
+                const url = URL.createObjectURL(
+                  new Blob([csv], { type: "text/csv;charset=utf-8;" }),
+                );
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `schedule-${ageGroup || division || "all"}-${startDate}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+            >
+              Download CSV
+            </button>
+          </div>
+
+          {/* Fairness at a glance: how many home games each team ends up with.
+              Catches a lopsided draw before it goes live. */}
+          {(() => {
+            const home = new Map<string, number>();
+            const total = new Map<string, number>();
+            result.games.forEach((g) => {
+              home.set(g.home_team_id, (home.get(g.home_team_id) ?? 0) + 1);
+              total.set(g.home_team_id, (total.get(g.home_team_id) ?? 0) + 1);
+              total.set(g.away_team_id, (total.get(g.away_team_id) ?? 0) + 1);
+            });
+            const rows = [...total.entries()].sort((a, b) => b[1] - a[1]);
+            if (rows.length === 0) return null;
+            return (
+              <details style={{ marginBottom: 10 }}>
+                <summary style={{ cursor: "pointer", fontSize: 13, fontWeight: 700 }}>
+                  Games per team ({rows.length} teams)
+                </summary>
+                <div style={{ fontSize: 13, marginTop: 8 }}>
+                  {rows.map(([id, n]) => (
+                    <div
+                      key={id}
+                      style={{ display: "flex", gap: 10, padding: "3px 0", color: "var(--text-body)" }}
+                    >
+                      <span style={{ flex: 1 }}>{nameOf(id)}</span>
+                      <span style={{ color: "var(--muted)" }}>
+                        {n} games · {home.get(id) ?? 0} home · {n - (home.get(id) ?? 0)} away
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            );
+          })()}
 
           {result.warnings.map((w, i) => (
             <p

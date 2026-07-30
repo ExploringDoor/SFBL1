@@ -181,8 +181,56 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, created: clean.length, batch: now });
   }
 
+  // ---- undo the last generated batch ------------------------------------
+  // Every generated game carries `generated_batch`, so an undo can remove
+  // exactly one run and never touch a hand-added game. Refuses once any game
+  // in the batch has been played, since deleting those would take real results
+  // with them.
+  if (body.action === "undo_batch") {
+    const batch = typeof (body as { batch?: unknown }).batch === "string"
+      ? (body as { batch: string }).batch
+      : "";
+    if (!batch) {
+      return NextResponse.json({ error: "batch required" }, { status: 400 });
+    }
+    const snap = await db
+      .collection(`leagues/${leagueId}/games`)
+      .where("generated_batch", "==", batch)
+      .get();
+    if (snap.empty) {
+      return NextResponse.json({ error: "nothing found for that batch" }, { status: 404 });
+    }
+    const played = snap.docs.filter((d) => {
+      const s = String(d.data().status ?? "");
+      return s === "final" || s === "approved" || d.data().home_score != null;
+    });
+    if (played.length > 0) {
+      return NextResponse.json(
+        {
+          error:
+            `${played.length} of these games already have results. Delete those ` +
+            `by hand in the Schedule tab if you really mean to.`,
+        },
+        { status: 409 },
+      );
+    }
+    for (let i = 0; i < snap.docs.length; i += BATCH_LIMIT) {
+      const wb = db.batch();
+      snap.docs.slice(i, i + BATCH_LIMIT).forEach((d) => wb.delete(d.ref));
+      await wb.commit();
+    }
+    await db.collection(`leagues/${leagueId}/audit`).add({
+      kind: "schedule_generation_undone",
+      at: now,
+      by_uid: decoded.uid,
+      count: snap.size,
+      batch,
+    });
+    return NextResponse.json({ ok: true, deleted: snap.size });
+  }
+
   return NextResponse.json(
-    { error: "action must be save_rules | create_games" },
+    { error: "action must be save_rules | create_games | undo_batch" },
     { status: 400 },
   );
 }
