@@ -56,6 +56,10 @@ interface Division {
 interface Bracket {
   active: boolean;
   title: string;
+  /** Elimination format. Single is the default because that is what almost
+   *  every season runs; double is here because Mike occasionally switches.
+   *  Stored on the bracket so it travels with the playoff, not the league. */
+  format: "single" | "double";
   divisions: Division[];
 }
 
@@ -67,6 +71,7 @@ interface Props {
 const DEFAULT_BRACKET: Bracket = {
   active: false,
   title: "Playoffs",
+  format: "single",
   divisions: [],
 };
 
@@ -91,6 +96,8 @@ export function PlayoffsManager({ leagueId, user }: Props) {
         setBracket({
           active: d.active === true,
           title: String(d.title ?? "Playoffs"),
+          // Older brackets predate the setting; single is the safe default.
+          format: d.format === "double" ? "double" : "single",
           divisions: Array.isArray(d.divisions)
             ? (d.divisions as Division[])
             : [],
@@ -374,6 +381,27 @@ export function PlayoffsManager({ leagueId, user }: Props) {
             disabled={saving}
             className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Format
+          </span>
+          <select
+            value={bracket.format}
+            onChange={(e) =>
+              update({ format: e.target.value === "double" ? "double" : "single" })
+            }
+            disabled={saving}
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          >
+            <option value="single">Single elimination (lose once, you are out)</option>
+            <option value="double">Double elimination (lose twice, you are out)</option>
+          </select>
+          <span className="mt-1 block text-xs text-slate-500">
+            {bracket.format === "double"
+              ? "Add a losers bracket round for teams knocked out of the winners side."
+              : "The usual format. Switch to double only when the league is running it."}
+          </span>
         </label>
         <label className="flex items-center gap-3 select-none">
           <input

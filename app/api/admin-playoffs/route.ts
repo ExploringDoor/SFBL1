@@ -4,6 +4,7 @@
 //   {
 //     active: boolean,         // public /playoffs page hides itself when false
 //     title: string,           // e.g. "2026 Spring Playoffs"
+//     format: "single" | "double",  // elimination format; single by default
 //     divisions: [
 //       {
 //         label: "18+",
@@ -44,6 +45,7 @@ export const runtime = "nodejs";
 interface BracketDoc {
   active: boolean;
   title: string;
+  format: "single" | "double";
   divisions: {
     label: string;
     rounds: {
@@ -117,6 +119,9 @@ export async function POST(req: Request) {
   const cleaned: BracketDoc = {
     active: raw.active === true,
     title: typeof raw.title === "string" ? raw.title.trim() : "Playoffs",
+    // Single unless explicitly set to double. Without this the sanitizer would
+    // drop the field and the admin's choice would silently not persist.
+    format: raw.format === "double" ? "double" : "single",
     divisions: [],
   };
   if (Array.isArray(raw.divisions)) {

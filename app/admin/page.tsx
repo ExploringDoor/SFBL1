@@ -28,6 +28,7 @@ import { TeamsManager } from "@/components/admin/TeamsManager";
 import { LeagueHealthDashboard } from "@/components/admin/LeagueHealthDashboard";
 import { ScheduleEditor } from "@/components/admin/ScheduleEditor";
 import { ScheduleGenerator } from "@/components/admin/ScheduleGenerator";
+import { ScoreDisputes } from "@/components/admin/ScoreDisputes";
 import { AlertsManager } from "@/components/admin/AlertsManager";
 import { BroadcastSection } from "@/components/admin/BroadcastSection";
 import { SignupsReview } from "@/components/admin/SignupsReview";
@@ -48,6 +49,7 @@ type TabKey =
   | "scores"
   | "schedule"
   | "schedule-gen"
+  | "score-disputes"
   | "teams"
   | "signups"
   | "captains"
@@ -73,6 +75,7 @@ const TABS: { key: TabKey; label: string; description: string }[] = [
   { key: "scores", label: "Scores", description: "Quick batch score entry + resolve captain submission conflicts." },
   { key: "schedule", label: "Schedule", description: "Add games, reschedule, mark a date rained out, edit scores." },
   { key: "schedule-gen", label: "Build Schedule", description: "Generate a whole season: weeks, fields, times, and matchups that must not happen." },
+  { key: "score-disputes", label: "Score Disputes", description: "Games where the two teams reported different scores. Your call is final." },
   // Playoffs tab hidden per Adam — no bracket workflow until later.
   // { key: "playoffs", label: "Playoffs", description: "Build the playoff bracket — divisions, rounds, matchups, results." },
   { key: "teams", label: "Teams", description: "Roster import, edit team metadata, manage divisions." },
@@ -425,6 +428,9 @@ export default function AdminPage() {
         )}
         {activeTab === "schedule-gen" && (
           <ScheduleGenerator leagueId={tenantId} user={user} />
+        )}
+        {activeTab === "score-disputes" && (
+          <ScoreDisputes leagueId={tenantId} user={user} />
         )}
         {/* Playoffs render block removed (see TABS list comment). */}
         {activeTab === "teams" && (
