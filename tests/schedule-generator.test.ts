@@ -57,8 +57,10 @@ describe("addDays", () => {
 describe("generateSchedule", () => {
   const base = {
     startDate: "2026-09-12",
-    fields: ["Field 1", "Field 2"],
-    times: ["17:30", "19:00"],
+    fields: [
+      { name: "Field 1", times: ["17:30", "19:00"] },
+      { name: "Field 2", times: ["17:30", "19:00"] },
+    ],
   };
 
   it("lets everyone play everyone at least once when given enough weeks", () => {
@@ -111,8 +113,10 @@ describe("generateSchedule", () => {
       ...base,
       teams,
       weeks: 7,
-      fields: ["F1", "F2"],
-      times: ["17:30", "19:00"],
+      fields: [
+        { name: "F1", times: ["17:30", "19:00"] },
+        { name: "F2", times: ["17:30", "19:00"] },
+      ],
     });
     const seen = new Set<string>();
     res.games.forEach((g) => {
@@ -149,8 +153,11 @@ describe("generateSchedule", () => {
       ...base,
       teams,
       weeks: 5,
-      fields: ["F1", "F2", "F3"],
-      times: ["09:00", "10:30"],
+      fields: [
+        { name: "F1", times: ["09:00", "10:30"] },
+        { name: "F2", times: ["09:00", "10:30"] },
+        { name: "F3", times: ["09:00", "10:30"] },
+      ],
       gamesPerWeek: 2, weeklyPairing: "same-opponent",
     });
     for (const t of teams) {
@@ -184,8 +191,12 @@ describe("generateSchedule", () => {
       ...base,
       teams,
       weeks: 3,
-      fields: ["F1", "F2", "F3", "F4"],
-      times: ["17:30", "19:00"],
+      fields: [
+        { name: "F1", times: ["17:30", "19:00"] },
+        { name: "F2", times: ["17:30", "19:00"] },
+        { name: "F3", times: ["17:30", "19:00"] },
+        { name: "F4", times: ["17:30", "19:00"] },
+      ],
       gamesPerWeek: 2, weeklyPairing: "different-opponents",
     });
     for (const t of teams) {
@@ -206,8 +217,10 @@ describe("generateSchedule", () => {
       ...base,
       teams,
       weeks: 3,
-      fields: ["F1", "F2"],
-      times: ["09:00", "10:30", "12:00"],
+      fields: [
+        { name: "F1", times: ["09:00", "10:30", "12:00"] },
+        { name: "F2", times: ["09:00", "10:30", "12:00"] },
+      ],
       gamesPerWeek: 3,
       weeklyPairing: "same-opponent",
     });
@@ -222,6 +235,92 @@ describe("generateSchedule", () => {
     }
   });
 
+  it("only uses the times that a given field actually has", () => {
+    // Lasorda runs two starts, Sprofera only one. A shared time list would
+    // invent a 19:00 slot at Sprofera that does not exist.
+    const teams = Array.from({ length: 6 }, (_, i) => team(`t${i}`));
+    const res = generateSchedule({
+      ...base,
+      teams,
+      weeks: 5,
+      fields: [
+        { name: "Lasorda", times: ["17:30", "19:00"] },
+        { name: "Sprofera", times: ["17:30"] },
+      ],
+    });
+    const sprofera = res.games.filter((g) => g.field === "Sprofera");
+    expect(sprofera.length).toBeGreaterThan(0);
+    sprofera.forEach((g) => expect(g.time).toBe("17:30"));
+    // 3 slots a week total, so a 6-team round (3 games) fits exactly.
+    expect(res.games.filter((g) => g.week === 1)).toHaveLength(3);
+  });
+
+  it("keeps a same-opponent block off a field that cannot fit it", () => {
+    // The one-slot field can never host a two-game block; it should be skipped
+    // for those rather than splitting the pair across two fields.
+    const teams = Array.from({ length: 4 }, (_, i) => team(`t${i}`));
+    const res = generateSchedule({
+      ...base,
+      teams,
+      weeks: 3,
+      fields: [
+        { name: "Short", times: ["09:00"] },
+        { name: "Long", times: ["09:00", "10:30"] },
+        { name: "Long2", times: ["09:00", "10:30"] },
+      ],
+      gamesPerWeek: 2,
+      weeklyPairing: "same-opponent",
+    });
+    // Group week-1 games by matchup; each pair must sit on a single field.
+    const byPair = new Map<string, Set<string>>();
+    res.games
+      .filter((g) => g.week === 1)
+      .forEach((g) => {
+        const k = [g.home_team_id, g.away_team_id].sort().join("|");
+        const s = byPair.get(k) ?? new Set<string>();
+        s.add(g.field);
+        byPair.set(k, s);
+      });
+    byPair.forEach((fields) => expect(fields.size).toBe(1));
+  });
+
+  it("never schedules a matchup the admin blocked by hand", () => {
+    const teams = ["a", "b", "c", "d"].map((id) => team(id));
+    const res = generateSchedule({
+      ...base,
+      teams,
+      weeks: 6,
+      blockedPairs: [["a", "b"]],
+    });
+    const met = res.games.some(
+      (g) =>
+        [g.home_team_id, g.away_team_id].sort().join("|") === "a|b",
+    );
+    expect(met).toBe(false);
+    expect(res.skippedBlocked).toHaveLength(1);
+    expect(res.warnings.join(" ")).toMatch(/blocked/i);
+    // The other pairs still get played.
+    const pairs = new Set(
+      res.games.map((g) => [g.home_team_id, g.away_team_id].sort().join("|")),
+    );
+    expect(pairs.has("c|d")).toBe(true);
+  });
+
+  it("blocks a pair regardless of the order it was given in", () => {
+    const teams = ["a", "b", "c", "d"].map((id) => team(id));
+    const res = generateSchedule({
+      ...base,
+      teams,
+      weeks: 6,
+      blockedPairs: [["b", "a"]], // reversed
+    });
+    expect(
+      res.games.some(
+        (g) => [g.home_team_id, g.away_team_id].sort().join("|") === "a|b",
+      ),
+    ).toBe(false);
+  });
+
   it("reports matchups it could not fit instead of dropping them silently", () => {
     const teams = Array.from({ length: 8 }, (_, i) => team(`t${i}`));
     // 4 games a round but only 1 slot a week.
@@ -229,8 +328,7 @@ describe("generateSchedule", () => {
       ...base,
       teams,
       weeks: 7,
-      fields: ["Only Field"],
-      times: ["17:30"],
+      fields: [{ name: "Only Field", times: ["17:30"] }],
     });
     expect(res.unscheduled.length).toBeGreaterThan(0);
     expect(res.everyPairPlayed).toBe(false);

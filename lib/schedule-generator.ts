@@ -32,16 +32,31 @@ export interface GeneratorTeam {
   organization?: string | null;
 }
 
+/** A field and the start times available ON THAT FIELD. Times are per field,
+ *  not global: Lasorda might run 5:30 and 7:00 while Sprofera only has 5:30,
+ *  and a shared time list would invent slots that do not exist. */
+export interface GeneratorField {
+  name: string;
+  /** Start times on this field, 24h HH:MM, e.g. ["17:30", "19:00"]. */
+  times: string[];
+}
+
 export interface GeneratorOptions {
   teams: GeneratorTeam[];
   /** First game date, YYYY-MM-DD. Every later week is +7 days from this. */
   startDate: string;
   /** How many weeks of games to lay out. */
   weeks: number;
-  /** Field names to spread games across, e.g. ["Lasorda Field 5", "Sprofera F8"]. */
-  fields: string[];
-  /** Start times in 24h HH:MM, e.g. ["17:30", "19:00"]. */
-  times: string[];
+  /** Fields, each with its own available start times. */
+  fields: GeneratorField[];
+  /**
+   * Matchups Mike has blocked by hand, as pairs of team ids. These two never
+   * play each other, whatever their organizations say. Separate from the
+   * organization rule on purpose: that one is structural (one club, four
+   * squads), this one is a judgement call he makes team by team.
+   * Order within a pair does not matter.
+   */
+  blockedPairs?: [string, string][];
   /** Written onto each game so standings group correctly. */
   division?: string;
   /**
@@ -80,6 +95,8 @@ export interface GeneratorResult {
   games: GeneratedGame[];
   /** Pairs skipped because both teams belong to one organisation. */
   skippedSameOrg: { a: string; b: string; organization: string }[];
+  /** Pairs skipped because the admin blocked that specific matchup. */
+  skippedBlocked: { a: string; b: string }[];
   /** Pairs with no slot left (more matchups than fields x times x weeks). */
   unscheduled: { a: string; b: string }[];
   /** True once every allowed pair has been scheduled at least once. */
@@ -138,29 +155,63 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
     return {
       games: [],
       skippedSameOrg: [],
+      skippedBlocked: [],
       unscheduled: [],
       everyPairPlayed: false,
       warnings: ["Need at least two teams to build a schedule."],
     };
   }
-  const slotsPerWeek = opts.fields.length * opts.times.length;
+
+  // Flatten the per-field times into the week's slots, field by field, so the
+  // games of a same-opponent block land on one field at consecutive times.
+  // fieldStart marks where each field's run begins, which is what lets a block
+  // jump forward rather than straddle two fields.
+  const slots: { field: string; time: string }[] = [];
+  const fieldStarts: number[] = [];
+  for (const f of opts.fields) {
+    const name = String(f?.name ?? "").trim();
+    const times = (f?.times ?? []).filter((t) => String(t).trim());
+    if (!name || times.length === 0) continue;
+    fieldStarts.push(slots.length);
+    for (const time of times) slots.push({ field: name, time });
+  }
+  const slotsPerWeek = slots.length;
   if (slotsPerWeek === 0) {
     return {
       games: [],
       skippedSameOrg: [],
+      skippedBlocked: [],
       unscheduled: [],
       everyPairPlayed: false,
-      warnings: ["Add at least one field and one start time."],
+      warnings: ["Add at least one field with at least one start time."],
     };
   }
+  /** How many slots remain on the field that slot `i` sits on. */
+  const slotsLeftOnField = (i: number) => {
+    const start = fieldStarts.filter((s) => s <= i).pop() ?? 0;
+    const next = fieldStarts.find((s) => s > i) ?? slots.length;
+    return next - i;
+  };
+  const startOfNextField = (i: number) =>
+    fieldStarts.find((s) => s > i) ?? slots.length;
 
   // ---- 1. every pair, in round-robin order -------------------------------
   const rounds = roundRobinRounds(teams.map((t) => t.id));
 
-  // ---- 2. drop same-organisation pairings --------------------------------
+  // ---- 2. drop same-organisation and hand-blocked pairings ---------------
   const skippedSameOrg: GeneratorResult["skippedSameOrg"] = [];
+  const skippedBlocked: GeneratorResult["skippedBlocked"] = [];
+  const blocked = new Set(
+    (opts.blockedPairs ?? [])
+      .filter((p) => Array.isArray(p) && p[0] && p[1])
+      .map(([a, b]) => [a, b].sort().join("|")),
+  );
   const playable = rounds.map((round) =>
     round.filter(([a, b]) => {
+      if (blocked.has([a, b].sort().join("|"))) {
+        skippedBlocked.push({ a: nameOf(a), b: nameOf(b) });
+        return false;
+      }
       const oa = orgOf(byId.get(a)!);
       const ob = orgOf(byId.get(b)!);
       if (oa && ob && oa === ob) {
@@ -212,11 +263,8 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
       // Keep a same-opponent block together: if it would straddle two fields,
       // jump to the start of the next field so all of its games share one
       // field at consecutive times, which is how a doubleheader is played.
-      if (gamesPerMatchup > 1 && opts.times.length >= gamesPerMatchup) {
-        const posInField = slot % opts.times.length;
-        if (posInField + gamesPerMatchup > opts.times.length) {
-          slot += opts.times.length - posInField;
-        }
+      if (gamesPerMatchup > 1 && slotsLeftOnField(slot) < gamesPerMatchup) {
+        slot = startOfNextField(slot);
       }
       if (slot + gamesPerMatchup > slotsPerWeek) {
         unscheduled.push({ a: nameOf(a), b: nameOf(b) });
@@ -224,11 +272,7 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
       }
       for (let g = 0; g < gamesPerMatchup; g++) {
         const i = slot + g;
-        // Field-major: consecutive slots share a field and step through the
-        // times, so the two halves of a doubleheader land back to back.
-        const time = opts.times[i % opts.times.length]!;
-        const field =
-          opts.fields[Math.floor(i / opts.times.length) % opts.fields.length]!;
+        const { field, time } = slots[i]!;
         // Flip home/away on the second pass, and between the two halves of a
         // doubleheader so neither team is home for both.
         const flip = (cycle + g) % 2 === 1;
@@ -267,10 +311,10 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
   if (unscheduled.length > 0) {
     warnings.push(
       `${unscheduled.length} matchup${unscheduled.length === 1 ? "" : "s"} had ` +
-        `no slot. There are ${slotsPerWeek} slots a week ` +
-        `(${opts.fields.length} field${opts.fields.length === 1 ? "" : "s"} x ` +
-        `${opts.times.length} time${opts.times.length === 1 ? "" : "s"}). ` +
-        `Add a field or a start time.`,
+        `no slot. There ${slotsPerWeek === 1 ? "is" : "are"} ${slotsPerWeek} ` +
+        `slot${slotsPerWeek === 1 ? "" : "s"} a week across ` +
+        `${opts.fields.length} field${opts.fields.length === 1 ? "" : "s"}. ` +
+        `Add a field, or another start time on a field.`,
     );
   }
   if (skippedSameOrg.length > 0) {
@@ -279,6 +323,19 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
         `skipped because both teams are in the same organization.`,
     );
   }
+  if (skippedBlocked.length > 0) {
+    warnings.push(
+      `${skippedBlocked.length} matchup${skippedBlocked.length === 1 ? "" : "s"} ` +
+        `skipped because you blocked those teams from playing each other.`,
+    );
+  }
 
-  return { games, skippedSameOrg, unscheduled, everyPairPlayed, warnings };
+  return {
+    games,
+    skippedSameOrg,
+    skippedBlocked,
+    unscheduled,
+    everyPairPlayed,
+    warnings,
+  };
 }
