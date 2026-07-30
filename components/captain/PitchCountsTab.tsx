@@ -69,10 +69,15 @@ export function PitchCountsTab({
   const [pitches, setPitches] = useState("");
 
   async function loadOutings() {
-    // Read via the server (Admin SDK) — the public client read of
-    // /pitch_outings isn't enabled in every environment's rules yet.
+    // Read via the server (Admin SDK). The endpoint is auth-gated because
+    // the outings carry minors' names, so send the captain's ID token
+    // (same token used for the writes below). If auth hasn't resolved yet,
+    // skip — the load effect re-runs when `user` changes.
+    if (!user) return;
+    const idToken = await user.getIdToken();
     const res = await fetch(
       `/api/team-pitch-counts?leagueId=${encodeURIComponent(leagueId)}&teamId=${encodeURIComponent(teamId)}`,
+      { headers: { authorization: `Bearer ${idToken}` } },
     );
     const data = (await res.json().catch(() => ({}))) as {
       ok?: boolean;

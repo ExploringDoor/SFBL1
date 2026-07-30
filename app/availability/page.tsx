@@ -10,7 +10,10 @@
 // and POSTs to /api/public-rsvp.
 
 import { headers } from "next/headers";
+import { notFound } from "next/navigation";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { statsEnabled } from "@/lib/tenant-flags";
+import type { PublicLeagueConfig } from "@/lib/tenants";
 import { AvailabilityPicker } from "@/components/AvailabilityPicker";
 
 export const dynamic = "force-dynamic";
@@ -129,7 +132,8 @@ async function loadData(tenantId: string): Promise<{
 }
 
 export default async function AvailabilityPage() {
-  const tenantId = headers().get("x-tenant-id");
+  const h = headers();
+  const tenantId = h.get("x-tenant-id");
   if (!tenantId) {
     return (
       <main className="container py-12">
@@ -137,6 +141,22 @@ export default async function AvailabilityPage() {
       </main>
     );
   }
+
+  // This board lists EVERY rostered player's name on a no-login page. For
+  // stats-off youth leagues (COYBL 7U-14U, Island 8U-18U) those are minors'
+  // names, so 404 the direct URL — the same gate /players and /leaders use.
+  // Stats-on adult leagues (LBDC, which asked for this board; SFBL) still
+  // render. Nav-hiding alone did not stop direct-URL access.
+  const config = (() => {
+    const raw = h.get("x-tenant-config-json");
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as PublicLeagueConfig;
+    } catch {
+      return null;
+    }
+  })();
+  if (!statsEnabled(config)) notFound();
 
   const { teams, players, games, rsvps } = await loadData(tenantId);
 

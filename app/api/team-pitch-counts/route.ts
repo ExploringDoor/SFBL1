@@ -1,12 +1,15 @@
-// GET /api/team-pitch-counts?leagueId=&teamId= — returns a team's pitch
-// outings, read server-side with the Admin SDK. The public client read of
-// /pitch_outings depends on a firestore rule (allow read: if true) that isn't
-// deployed to every environment yet; reading here keeps the coach portal's
-// pitch list working regardless. Data is non-sensitive (it's the same info
-// shown on the public /eligibility page).
+// GET /api/team-pitch-counts?leagueId=&teamId= — a team's pitch outings,
+// read server-side with the Admin SDK. Used by the captain portal's Pitch
+// Counts tab.
+//
+// AUTH: these outings carry minors' full names (COYBL is 7U-14U, Island
+// 8U-18U), so this endpoint is NOT public. It requires a Firebase ID token
+// for an admin of the league OR the captain of THIS team — the same gate as
+// /api/team-roster. (This route was previously unauthenticated, which let
+// anyone enumerate a youth team's roster of pitcher names; audit fix.)
 
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminDb } from "@/lib/firebase-admin";
+import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +20,29 @@ export async function GET(req: NextRequest) {
   if (!/^[a-z0-9_-]+$/i.test(leagueId) || !teamId) {
     return NextResponse.json({ error: "missing params" }, { status: 400 });
   }
+
+  // Admin of the league, or captain of this specific team, only.
+  const authHdr = req.headers.get("authorization");
+  if (!authHdr?.startsWith("Bearer ")) {
+    return NextResponse.json({ error: "Missing bearer token" }, { status: 401 });
+  }
+  const idToken = authHdr.slice("Bearer ".length).trim();
+  let decoded;
+  try {
+    decoded = await getAdminAuth().verifyIdToken(idToken);
+  } catch {
+    return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+  }
+  const claim = (decoded.leagues as Record<string, string> | undefined)?.[
+    leagueId
+  ];
+  if (claim !== "admin" && claim !== `captain:${teamId}`) {
+    return NextResponse.json(
+      { error: "Not admin or captain of this team" },
+      { status: 403 },
+    );
+  }
+
   try {
     const db = getAdminDb();
     const snap = await db
