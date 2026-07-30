@@ -5800,6 +5800,49 @@ select:focus-visible {
     animation: none;
   }
 }
+
+/* Island: same bold fly-in / stomp entrance as COYBL, glowing in Island's
+   electric blue (accent #35afea) instead of red. Scoped to .tenant-island. */
+.tenant-island .le-home-reg-cta-btn {
+  box-shadow: 0 0 26px 5px rgba(53, 175, 234, 0.82);
+  transform-origin: center bottom;
+  animation: island-reg-stomp 1.05s cubic-bezier(0.22, 1, 0.36, 1) 0.2s backwards;
+}
+.tenant-island .le-home-reg-cta-btn:hover,
+.tenant-island .le-home-reg-cta-btn:focus-visible {
+  box-shadow: 0 0 40px 10px rgba(53, 175, 234, 1);
+}
+@keyframes island-reg-stomp {
+  0% {
+    opacity: 0;
+    transform: translateY(-260px) scale(0.9);
+    animation-timing-function: cubic-bezier(0.55, 0, 0.85, 0.25);
+  }
+  48% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    animation-timing-function: ease-out;
+  }
+  64% {
+    transform: translateY(0) scale(1.2, 0.8);
+    box-shadow: 0 0 60px 22px rgba(53, 175, 234, 1);
+  }
+  80% {
+    transform: translateY(0) scale(0.95, 1.07);
+  }
+  92% {
+    transform: translateY(0) scale(1.02, 0.98);
+  }
+  100% {
+    transform: translateY(0) scale(1, 1);
+    box-shadow: 0 0 26px 5px rgba(53, 175, 234, 0.82);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tenant-island .le-home-reg-cta-btn {
+    animation: none;
+  }
+}
 @media (max-width: 560px) {
   .le-home-reg-cta-inner {
     flex-direction: column;
