@@ -1,5 +1,6 @@
 {
   "_comment": "Snapshot of the USSSA standings for Island Fastpitch's Summer League (USSSA eventID 416133, Jun 12 - Aug 15 2026). Read off the public Game Center pages on 2026-07-29 while the season was still running, so records are mid-season. The season ends Aug 15; re-read the same pages then and replace this file with the final numbers. 10U is absent on purpose: USSSA returns 'The schedule is not released by the director' for that division, so there is nothing to show yet.",
+  "_team_id_comment": "team_id links a USSSA entry to a team in leagues/island/teams so the name becomes a link to that team's page. Only set where the match is unambiguous. Deliberately NOT set for: 'Phoenix Fire 14U Steel' and 'Phoenix Fire 14U Silver' (Island's Steel and Silver are 12U squads, a different team); 'Force' in the 14U Nassau pool (Island has both Force 10U and Force 12U and there is no way to tell which, if either, this is); and every club that does not play in Island's own league (Rebels, Panthers, Surge, Thunder, Riptides, Heat, Chiefs, Lady Nightmare). A wrong link sends a parent to the wrong team, so unmatched is the safe default.",
   "source_url": "https://usssa.com/fastpitch/event_gameCenter/?divisionID=2747761",
   "event_name": "Island Fastpitch Summer League",
   "event_dates": "June 12 - August 15, 2026",
@@ -13,9 +14,9 @@
       "teams": [
         { "rank": 1, "cls": "14B", "name": "LI Rebels 14u Elderbaum/Paz", "record": "4-1-0", "avg_allow": "6.40", "avg_diff": "5.80", "points": 375 },
         { "rank": 2, "cls": "13B", "name": "Phoenix Fire 14U Steel", "record": "4-1-0", "avg_allow": "8.00", "avg_diff": "2.40", "points": 460 },
-        { "rank": 3, "cls": "14C", "name": "Waves 14U", "record": "3-2-0", "avg_allow": "7.80", "avg_diff": "0.20", "points": 430 },
+        { "rank": 3, "cls": "14C", "name": "Waves 14U", "record": "3-2-0", "avg_allow": "7.80", "avg_diff": "0.20", "points": 430, "team_id": "riverhead-waves-14u" },
         { "rank": 4, "cls": "14C", "name": "LI Panthers 14u", "record": "3-2-0", "avg_allow": "6.80", "avg_diff": "1.40", "points": 210 },
-        { "rank": 5, "cls": "14C", "name": "Five Star Long Island Lady Legends", "record": "2-3-0", "avg_allow": "11.40", "avg_diff": "-2.60", "points": 175 },
+        { "rank": 5, "cls": "14C", "name": "Five Star Long Island Lady Legends", "record": "2-3-0", "avg_allow": "11.40", "avg_diff": "-2.60", "points": 175, "team_id": "5-star-lady-legends-14u" },
         { "rank": 6, "cls": "14B", "name": "Phoenix Fire 14U Silver", "record": "2-4-0", "avg_allow": "9.17", "avg_diff": "0.33", "points": 175 },
         { "rank": 7, "cls": "14C", "name": "NY Lady Nightmare / Ducks 14u", "record": "0-5-0", "avg_allow": "12.60", "avg_diff": "-7.60", "points": 30 }
       ]
@@ -27,7 +28,7 @@
       "teams": [
         { "rank": 1, "cls": "12A", "name": "LI Surge 12u", "record": "5-1-0", "avg_allow": "6.33", "avg_diff": "4.17", "points": 765 },
         { "rank": 2, "cls": "12A", "name": "Long Island Thunder 2013 12U Black", "record": "4-1-1", "avg_allow": "4.50", "avg_diff": "2.50", "points": 890 },
-        { "rank": 3, "cls": "14C", "name": "Lady Greendogs 14U", "record": "3-2-1", "avg_allow": "6.83", "avg_diff": "1.33", "points": 255 },
+        { "rank": 3, "cls": "14C", "name": "Lady Greendogs 14U", "record": "3-2-1", "avg_allow": "6.83", "avg_diff": "1.33", "points": 255, "team_id": "farmingdale-greendogs-14u" },
         { "rank": 4, "cls": "14C", "name": "Force", "record": "1-3-2", "avg_allow": "6.00", "avg_diff": "-1.67", "points": 635 },
         { "rank": 5, "cls": "14B", "name": "South Shore Chiefs", "record": "1-4-1", "avg_allow": "7.17", "avg_diff": "-2.00", "points": 10 },
         { "rank": 6, "cls": "12C", "name": "Long Island Thunder 2013 12U Green", "record": "1-4-1", "avg_allow": "8.50", "avg_diff": "-4.33", "points": 605 }
@@ -39,10 +40,10 @@
       "pool": "Pool A",
       "teams": [
         { "rank": 1, "cls": "12B", "name": "Hub44 Riptides", "record": "9-3-0", "avg_allow": "2.00", "avg_diff": "3.75", "points": 660 },
-        { "rank": 2, "cls": "12B", "name": "Phoenix Fire 12U Steel", "record": "8-4-0", "avg_allow": "3.67", "avg_diff": "1.25", "points": 510 },
-        { "rank": 3, "cls": "12B", "name": "Long Island Rage 12U Goldberg", "record": "8-4-0", "avg_allow": "4.50", "avg_diff": "2.92", "points": 250 },
+        { "rank": 2, "cls": "12B", "name": "Phoenix Fire 12U Steel", "record": "8-4-0", "avg_allow": "3.67", "avg_diff": "1.25", "points": 510, "team_id": "phoenix-fire-steel-12u" },
+        { "rank": 3, "cls": "12B", "name": "Long Island Rage 12U Goldberg", "record": "8-4-0", "avg_allow": "4.50", "avg_diff": "2.92", "points": 250, "team_id": "rage-goldberg-12u" },
         { "rank": 4, "cls": "12B", "name": "LI Rebels 12u", "record": "4-7-1", "avg_allow": "8.83", "avg_diff": "-2.75", "points": 65 },
-        { "rank": 5, "cls": "12B", "name": "Phoenix Fire 12U Silver", "record": "4-7-1", "avg_allow": "6.50", "avg_diff": "-1.58", "points": 205 },
+        { "rank": 5, "cls": "12B", "name": "Phoenix Fire 12U Silver", "record": "4-7-1", "avg_allow": "6.50", "avg_diff": "-1.58", "points": 205, "team_id": "phoenix-fire-silver-12u" },
         { "rank": 6, "cls": "12C", "name": "LI Heat 12u Black", "record": "2-10-0", "avg_allow": "8.33", "avg_diff": "-3.58", "points": 160 }
       ]
     },
@@ -51,13 +52,13 @@
       "age": "12U",
       "pool": "Pool B",
       "teams": [
-        { "rank": 1, "cls": "12C", "name": "Waves 12U", "record": "9-1-0", "avg_allow": "6.60", "avg_diff": "6.30", "points": 170 },
-        { "rank": 2, "cls": "12C", "name": "Force", "record": "6-2-0", "avg_allow": "5.50", "avg_diff": "3.75", "points": 160 },
-        { "rank": 3, "cls": "12C", "name": "Phoenix Fire 12u Gray", "record": "7-5-0", "avg_allow": "7.42", "avg_diff": "1.00", "points": 300 },
+        { "rank": 1, "cls": "12C", "name": "Waves 12U", "record": "9-1-0", "avg_allow": "6.60", "avg_diff": "6.30", "points": 170, "team_id": "riverhead-waves-12u" },
+        { "rank": 2, "cls": "12C", "name": "Force", "record": "6-2-0", "avg_allow": "5.50", "avg_diff": "3.75", "points": 160, "team_id": "force-12u" },
+        { "rank": 3, "cls": "12C", "name": "Phoenix Fire 12u Gray", "record": "7-5-0", "avg_allow": "7.42", "avg_diff": "1.00", "points": 300, "team_id": "phoenix-fire-gray-12u" },
         { "rank": 4, "cls": "12C", "name": "Chiefs Fastpitch Hilliard", "record": "4-4-0", "avg_allow": "9.00", "avg_diff": "-1.00", "points": 120 },
         { "rank": 5, "cls": "12C", "name": "LI Panthers 12U", "record": "4-6-0", "avg_allow": "10.60", "avg_diff": "-1.50", "points": 80 },
-        { "rank": 6, "cls": "12B", "name": "Phoenix Fire 12U Black", "record": "2-6-0", "avg_allow": "11.88", "avg_diff": "-2.25", "points": 0 },
-        { "rank": 7, "cls": "12B", "name": "Brentwood Lady Warriors", "record": "0-8-0", "avg_allow": "17.13", "avg_diff": "-8.00", "points": 0 }
+        { "rank": 6, "cls": "12B", "name": "Phoenix Fire 12U Black", "record": "2-6-0", "avg_allow": "11.88", "avg_diff": "-2.25", "points": 0, "team_id": "phoenix-fire-black-12u" },
+        { "rank": 7, "cls": "12B", "name": "Brentwood Lady Warriors", "record": "0-8-0", "avg_allow": "17.13", "avg_diff": "-8.00", "points": 0, "team_id": "brentwood-lady-warriors-12u" }
       ]
     }
   ]

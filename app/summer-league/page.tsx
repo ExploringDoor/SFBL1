@@ -15,6 +15,7 @@
 
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
+import Link from "next/link";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import data from "./summer-usssa-2026.json";
 
@@ -178,7 +179,24 @@ export default function SummerLeaguePage() {
                         {t.rank}
                       </td>
                       <td style={{ padding: "11px 14px", fontWeight: 700 }}>
-                        {t.name}{" "}
+                        {/* Teams that also play in Island's own league link to
+                            their team page. Clubs from outside the league (and
+                            the few ambiguous names, see _team_id_comment in the
+                            JSON) render as plain text. */}
+                        {"team_id" in t && t.team_id ? (
+                          <Link
+                            href={`/teams/${t.team_id}`}
+                            style={{
+                              color: "var(--brand-primary, #002d6e)",
+                              textDecoration: "underline",
+                              textUnderlineOffset: 2,
+                            }}
+                          >
+                            {t.name}
+                          </Link>
+                        ) : (
+                          t.name
+                        )}{" "}
                         {/* USSSA's own class tag (12B, 14C...). Kept because it
                             explains why a 12U-class team appears in a 14U pool. */}
                         <span
@@ -261,8 +279,9 @@ export default function SummerLeaguePage() {
         >
           USSSA event page
         </a>{" "}
-        on {captured}. 10U is not listed because USSSA has not released its
-        schedule yet.
+        on {captured}. Underlined teams also play in the Island Fastpitch
+        league, so their names link to their team page here. 10U is not listed
+        because USSSA has not released its schedule yet.
       </p>
     </main>
   );
