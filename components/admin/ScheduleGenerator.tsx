@@ -143,6 +143,11 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
 
   // --- blocked pairs -----------------------------------------------------
   const [blocked, setBlocked] = useState<[string, string][]>([]);
+  // Per-team scheduling settings: club, home field, dates they cannot play.
+  const [teamCfg, setTeamCfg] = useState<
+    Record<string, { organization?: string; homeField?: string; unavailable?: string[] }>
+  >({});
+  const [newUnavail, setNewUnavail] = useState<Record<string, string>>({});
   const [pendingTeam, setPendingTeam] = useState<string | null>(null);
   const [rulesSaved, setRulesSaved] = useState(false);
 
@@ -181,6 +186,8 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
               .sort((a: string, b: string) => a.localeCompare(b)),
           );
         }
+        const ts = rulesSnap.exists() ? rulesSnap.data()?.team_settings : null;
+        if (ts && typeof ts === "object") setTeamCfg(ts as typeof teamCfg);
         const bp = rulesSnap.exists() ? rulesSnap.data()?.blocked_pairs : null;
         if (Array.isArray(bp)) {
           setBlocked(
@@ -266,7 +273,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
     setBusy(true);
     setError(null);
     try {
-      await post({ action: "save_rules", blockedPairs: blocked });
+      await post({ action: "save_rules", blockedPairs: blocked, teamSettings: teamCfg });
       setRulesSaved(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to save");
@@ -289,7 +296,13 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
 
     setResult(
       generateSchedule({
-        teams: [...picked].map((id) => ({ id, name: nameOf(id) })),
+        teams: [...picked].map((id) => ({
+          id,
+          name: nameOf(id),
+          organization: teamCfg[id]?.organization ?? null,
+          homeField: teamCfg[id]?.homeField ?? null,
+          unavailable: teamCfg[id]?.unavailable ?? [],
+        })),
         startDate,
         ...(useEndDate ? { endDate } : { weeks }),
         daysOfWeek: days.length ? days : undefined,
@@ -732,6 +745,119 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
         <button type="button" onClick={saveRules} disabled={busy} style={BTN}>
           {rulesSaved ? "Saved" : "Save these rules"}
         </button>
+      </div>
+
+      {/* ---- 5. PER-TEAM SETTINGS ---------------------------------------- */}
+      <div style={CARD}>
+        <p style={{ fontWeight: 800, margin: "0 0 4px" }}>5. Per-team settings</p>
+        <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 12px" }}>
+          Optional. A club name stops that club&rsquo;s own teams being drawn against
+          each other, without listing every pair by hand. A home field pulls a
+          team&rsquo;s games there and makes them the home side. Dates a team cannot play
+          are skipped for them only, and the rest of the division still plays.
+          Saved with the rules above.
+        </p>
+
+        <details>
+          <summary style={{ cursor: "pointer", fontWeight: 700, fontSize: 13, marginBottom: 8 }}>
+            Set up teams ({Object.keys(teamCfg).length} configured)
+          </summary>
+
+          <div style={{ marginTop: 10 }}>
+            {shown.map((t) => {
+              const cfg = teamCfg[t.id] ?? {};
+              const un = cfg.unavailable ?? [];
+              const patch = (p: Partial<typeof cfg>) => {
+                setTeamCfg((cur) => ({ ...cur, [t.id]: { ...(cur[t.id] ?? {}), ...p } }));
+                setRulesSaved(false);
+                reset();
+              };
+              return (
+                <div
+                  key={t.id}
+                  style={{
+                    padding: "10px 0",
+                    borderBottom: "1px solid rgba(0,0,0,0.06)",
+                  }}
+                >
+                  <p style={{ fontWeight: 700, fontSize: 14, margin: "0 0 6px" }}>{t.name}</p>
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
+                    <div style={{ minWidth: 190 }}>
+                      <label style={LABEL}>Club / organization</label>
+                      <input
+                        placeholder="e.g. Phoenix Fire"
+                        style={INPUT}
+                        value={cfg.organization ?? ""}
+                        onChange={(e) => patch({ organization: e.target.value })}
+                      />
+                    </div>
+                    <div style={{ minWidth: 220 }}>
+                      <label style={LABEL}>Home field</label>
+                      <select
+                        style={INPUT}
+                        value={cfg.homeField ?? ""}
+                        onChange={(e) => patch({ homeField: e.target.value })}
+                      >
+                        <option value="">— None —</option>
+                        {leagueFields.map((n) => (
+                          <option key={n} value={n}>{n}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div style={{ minWidth: 200 }}>
+                      <label style={LABEL}>Cannot play on</label>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <input
+                          type="date"
+                          style={{ ...INPUT, width: 150 }}
+                          value={newUnavail[t.id] ?? ""}
+                          onChange={(e) =>
+                            setNewUnavail((c) => ({ ...c, [t.id]: e.target.value }))
+                          }
+                        />
+                        <button
+                          type="button"
+                          style={BTN}
+                          onClick={() => {
+                            const d = newUnavail[t.id];
+                            if (!d) return;
+                            if (!un.includes(d)) patch({ unavailable: [...un, d].sort() });
+                            setNewUnavail((c) => ({ ...c, [t.id]: "" }));
+                          }}
+                        >
+                          Add
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  {un.length > 0 && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {un.map((d) => (
+                        <button
+                          key={d}
+                          type="button"
+                          onClick={() =>
+                            patch({ unavailable: un.filter((x) => x !== d) })
+                          }
+                          style={{
+                            ...chip(false),
+                            padding: "4px 10px",
+                            fontSize: 12,
+                            border: "1px solid rgba(200,16,46,0.4)",
+                            color: "var(--red, #c8102e)",
+                          }}
+                          title="Remove"
+                        >
+                          {d} ✕
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </details>
       </div>
 
       {/* ---- build ------------------------------------------------------- */}

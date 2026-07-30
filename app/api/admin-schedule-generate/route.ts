@@ -91,11 +91,53 @@ export async function POST(req: Request) {
       seen.add(key);
       pairs.push([a, b]);
     }
+    // Per-team scheduling settings, kept here rather than on the team doc:
+    // they are scheduling concerns, they change season to season, and keeping
+    // them beside the blocked pairs means the generator reads one document.
+    const rawTs = (body as { teamSettings?: unknown }).teamSettings;
+    const teamSettings: Record<
+      string,
+      { organization?: string; homeField?: string; unavailable?: string[] }
+    > = {};
+    if (rawTs && typeof rawTs === "object") {
+      for (const [teamId, v] of Object.entries(rawTs as Record<string, unknown>)) {
+        if (!TEAM_ID_RE.test(teamId) || !v || typeof v !== "object") continue;
+        const s = v as Record<string, unknown>;
+        const org = typeof s.organization === "string" ? s.organization.trim().slice(0, 80) : "";
+        const hf = typeof s.homeField === "string" ? s.homeField.trim().slice(0, 120) : "";
+        const un = Array.isArray(s.unavailable)
+          ? [
+              ...new Set(
+                s.unavailable
+                  .map((d) => String(d))
+                  .filter((d) => DATE_RE.test(d)),
+              ),
+            ].sort()
+          : [];
+        // Skip teams with nothing set, so the doc stays readable.
+        if (!org && !hf && un.length === 0) continue;
+        teamSettings[teamId] = {
+          ...(org ? { organization: org } : {}),
+          ...(hf ? { homeField: hf } : {}),
+          ...(un.length ? { unavailable: un } : {}),
+        };
+      }
+    }
+
     await db.doc(`leagues/${leagueId}/site_config/schedule_rules`).set(
-      { blocked_pairs: pairs, updated_at: now, updated_by: decoded.uid },
+      {
+        blocked_pairs: pairs,
+        team_settings: teamSettings,
+        updated_at: now,
+        updated_by: decoded.uid,
+      },
       { merge: true },
     );
-    return NextResponse.json({ ok: true, saved: pairs.length });
+    return NextResponse.json({
+      ok: true,
+      saved: pairs.length,
+      teamsConfigured: Object.keys(teamSettings).length,
+    });
   }
 
   // ---- bulk-create a generated schedule ---------------------------------
