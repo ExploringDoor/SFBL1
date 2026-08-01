@@ -23,6 +23,7 @@
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { sendEmail, notifyAddress, esc } from "@/lib/email/send";
+import { invalidateGeneratedRecap } from "@/lib/stats-off-recap";
 
 export const runtime = "nodejs";
 
@@ -191,6 +192,17 @@ export async function POST(req: Request) {
       otherSide,
     };
   });
+
+  // The score on this game just changed, so any machine-written recap now
+  // narrates the wrong result. Drop it (manual overrides are preserved) and
+  // it regenerates from the current score on the next view.
+  if (
+    outcome.kind === "published" ||
+    outcome.kind === "agreed" ||
+    outcome.kind === "office"
+  ) {
+    await invalidateGeneratedRecap(leagueId, gameId);
+  }
 
   // ---- dispute side effects: admin inbox + email ------------------------
   if (outcome.kind === "disputed") {

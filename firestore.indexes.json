@@ -1,5 +1,5 @@
 {
-  "_comment": "Firestore auto-creates single-field indexes for every queried field. Most queries here are single-field (notification_tokens.where('leagueId'), audit.where('at'), games.where('status')). A compound query — `.where(...).orderBy(...)` on different fields, or two `.where(...)` filters — needs an explicit composite index or Firestore throws FAILED_PRECONDITION at runtime. Declare it below and run `firebase deploy --only firestore:indexes`. CURRENT ENTRIES: (1) pending_nav[auth_uid,leagueId] — audit M5: app/api/check-pending-nav does .where('auth_uid','==',uid).where('leagueId','==',leagueId); without this index that route 500s.",
+  "_comment": "Firestore auto-creates single-field indexes for every queried field. Most queries here are single-field (notification_tokens.where('leagueId'), audit.where('at'), games.where('status')). A compound query — `.where(...).orderBy(...)` on different fields, or two `.where(...)` filters — needs an explicit composite index or Firestore throws FAILED_PRECONDITION at runtime. Declare it below and run `firebase deploy --only firestore:indexes`. CURRENT ENTRIES: (1) pending_nav[auth_uid,leagueId] — audit M5: app/api/check-pending-nav does .where('auth_uid','==',uid).where('leagueId','==',leagueId); without this index that route 500s. (2) audit[kind,at] — app/api/admin-audit-log filters .where('kind','==',k).orderBy('at','desc'); equality on one field plus orderBy on another needs this composite, so the ?kind= filter 500s without it.",
   "indexes": [
     {
       "collectionGroup": "pending_nav",
@@ -7,6 +7,14 @@
       "fields": [
         { "fieldPath": "auth_uid", "order": "ASCENDING" },
         { "fieldPath": "leagueId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "audit",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "kind", "order": "ASCENDING" },
+        { "fieldPath": "at", "order": "DESCENDING" }
       ]
     }
   ],

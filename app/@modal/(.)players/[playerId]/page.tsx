@@ -10,6 +10,8 @@ import { headers } from "next/headers";
 import { Modal } from "@/components/Modal";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { loadPlayerProfileData } from "@/lib/player-profile-data";
+import { statsEnabled } from "@/lib/tenant-flags";
+import type { PublicLeagueConfig } from "@/lib/tenants";
 import { PlayerProfileLBDC } from "@/components/ui/PlayerProfileLBDC";
 
 export const dynamic = "force-dynamic";
@@ -19,8 +21,23 @@ export default async function PlayerModalRoute({
 }: {
   params: { playerId: string };
 }) {
-  const tenantId = headers().get("x-tenant-id");
+  const h = headers();
+  const tenantId = h.get("x-tenant-id");
   if (!tenantId) return null;
+
+  // Match the full page's gate (app/players/[playerId]/page.tsx). Stats-off
+  // youth tenants have no player stats to show, and rendering this anyway
+  // would scan every box score in the league to build an empty profile.
+  const config = (() => {
+    const raw = h.get("x-tenant-config-json");
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as PublicLeagueConfig;
+    } catch {
+      return null;
+    }
+  })();
+  if (!statsEnabled(config)) return null;
 
   const profile = await loadPlayerProfileData(
     getAdminDb(),

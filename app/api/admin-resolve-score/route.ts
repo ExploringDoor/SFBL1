@@ -9,6 +9,7 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { invalidateGeneratedRecap } from "@/lib/stats-off-recap";
 
 export const runtime = "nodejs";
 
@@ -108,6 +109,12 @@ export async function POST(req: Request) {
     home_score: home,
     away_score: away,
   });
+
+  // The office just changed the official score, so a cached machine-written
+  // recap is now narrating the losing report (the exact case this matters:
+  // the page says 9 to 3 while the recap still says 10 to 2). Manual
+  // overrides are preserved.
+  await invalidateGeneratedRecap(leagueId, gameId);
 
   return NextResponse.json({ ok: true, resolved: true });
 }

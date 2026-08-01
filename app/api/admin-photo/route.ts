@@ -17,7 +17,12 @@ import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 
 export const runtime = "nodejs";
 
-const MAX_DATA_URL = 2_200_000; // ~1.5 MB original after base64 inflate
+// Photos are stored as base64 data URLs on a Firestore document, and a
+// document is hard-capped at 1,048,576 bytes. The previous 2_200_000 limit
+// was over DOUBLE that ceiling, so anything above ~1 MB passed this check
+// and then failed the write with an opaque "entity too large". Keep the cap
+// below the document limit, with headroom for the doc's other fields.
+const MAX_DATA_URL = 900_000;
 
 export async function POST(req: Request) {
   const authHdr = req.headers.get("authorization");

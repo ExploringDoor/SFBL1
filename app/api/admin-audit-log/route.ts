@@ -77,10 +77,13 @@ export async function GET(req: Request) {
     .collection(`leagues/${leagueId}/audit`)
     .orderBy("at", "desc") as FirebaseFirestore.Query;
   if (kindFilter) {
-    // `where + orderBy` on different fields requires a composite
-    // index when both are inequality/range — `kind` here is
-    // equality, so Firestore composes the two single-field indexes
-    // and serves the query without a new declared composite.
+    // `where` on one field + `orderBy` on a DIFFERENT field needs a
+    // declared composite index — this is true for equality filters too,
+    // not just inequality/range. (An earlier comment here claimed
+    // Firestore composes two single-field indexes for this; it does not,
+    // and this path threw FAILED_PRECONDITION.) The required index is
+    // audit[kind ASC, at DESC], declared in firestore.indexes.json; it
+    // must be deployed with `firebase deploy --only firestore:indexes`.
     query = db
       .collection(`leagues/${leagueId}/audit`)
       .where("kind", "==", kindFilter)

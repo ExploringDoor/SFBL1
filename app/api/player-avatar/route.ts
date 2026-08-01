@@ -16,11 +16,18 @@ import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 
 export const runtime = "nodejs";
 
-// Cap the data URL string at ~1 MB encoded (≈750 KB pre-base64).
-// Profile pics shouldn't be huge — the avatar circle is at most 120px.
-// We do not down-sample server-side; client crops + resizes before
-// upload (avoids paying the bandwidth cost of a 5 MB iPhone shot).
-const MAX_DATA_URL = 1_500_000;
+// Cap the data URL string. Profile pics shouldn't be huge — the avatar
+// circle is at most 120px. We do not down-sample server-side; the client
+// crops + resizes before upload (avoids paying the bandwidth cost of a
+// 5 MB iPhone shot).
+//
+// The ceiling is NOT arbitrary: the photo is stored as a base64 data URL
+// ON the player document, and a Firestore document is hard-capped at
+// 1,048,576 bytes. The previous 1_500_000 limit sat ABOVE that ceiling, so
+// a ~1.2 MB photo passed this check and then failed the Firestore write
+// with an opaque "entity too large". Stay under the doc limit with room
+// for the rest of the player fields.
+const MAX_DATA_URL = 900_000;
 
 export async function POST(req: Request) {
   const authHdr = req.headers.get("authorization");

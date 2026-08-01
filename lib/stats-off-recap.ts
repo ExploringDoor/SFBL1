@@ -27,6 +27,34 @@ export interface ResolvedRecap {
   source: "override" | "ai" | "template";
 }
 
+/**
+ * Drop a cached, machine-written recap so it regenerates from the current
+ * score. Call this whenever a game's score changes.
+ *
+ * The recap text bakes the score into its prose ("rolled past X 10 to 2"),
+ * and getStatsOffRecap() reuses an existing doc forever, so without this a
+ * corrected score leaves the old narrative on the page — the game shows
+ * 9 to 3 while the recap still says 10 to 2.
+ *
+ * A human-written override (source:"override") is NEVER deleted; an admin's
+ * words outrank a regenerated sentence. Best-effort: a failure here must not
+ * fail the score write that triggered it.
+ */
+export async function invalidateGeneratedRecap(
+  tenantId: string,
+  gameId: string,
+): Promise<void> {
+  try {
+    const ref = getAdminDb().doc(`leagues/${tenantId}/recaps/${gameId}`);
+    const snap = await ref.get();
+    if (!snap.exists) return;
+    if ((snap.data() ?? {}).source === "override") return;
+    await ref.delete();
+  } catch {
+    /* best-effort cache bust */
+  }
+}
+
 export async function getStatsOffRecap(
   tenantId: string,
   gameId: string,

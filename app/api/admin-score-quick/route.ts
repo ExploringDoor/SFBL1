@@ -24,6 +24,7 @@
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { recalcLeague } from "@/lib/stats";
+import { invalidateGeneratedRecap } from "@/lib/stats-off-recap";
 
 // Roll up player stats after a score write so /leaders + player pages stay
 // fresh (captain-submit does this; the admin paths previously did not).
@@ -231,6 +232,10 @@ export async function POST(req: Request) {
       at: new Date().toISOString(),
     });
 
+    // Score changed — drop any machine-written recap so it regenerates
+    // from the new score (manual overrides are kept).
+    await invalidateGeneratedRecap(leagueId, gameId);
+
     const statsWarning = await safeRecalc(db, leagueId);
     return NextResponse.json({
       ok: true,
@@ -306,6 +311,8 @@ export async function POST(req: Request) {
         );
       }
       written.push(u.gameId);
+      // Score changed — bust the cached machine-written recap.
+      await invalidateGeneratedRecap(leagueId, u.gameId);
     } catch (e) {
       errors.push({
         gameId: u.gameId,
