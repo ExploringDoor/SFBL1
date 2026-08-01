@@ -1,0 +1,113 @@
+{
+  "league": {
+    "slug": "helena",
+    "name": "Helena Softball Association",
+    "abbrev": "HSA",
+    "sport": "softball",
+    "innings": 7,
+    "ruleset": "slowpitch",
+    "linescore_innings": 7,
+    "stat_columns": [],
+    "pitching": {
+      "tracked": false
+    },
+    "rules_flags": {
+      "dropped_third_strike": false,
+      "balks": false,
+      "infield_fly": false
+    },
+    "flags": {
+      "stats_enabled": false
+    },
+    "theme": {
+      "primary": "#124734",
+      "accent": "#b4622d",
+      "secondary": "#e0a83c",
+      "logo_url": "/helena/logo.png",
+      "banner_url": "/helena/banner.png",
+      "og_image_url": "/helena/og.png"
+    },
+    "billing": {
+      "status": "trial",
+      "paid_through": null,
+      "last_payment": null,
+      "notes": "Prospect — migrated off LeagueLineup for the pitch"
+    },
+    "fields": [
+      "Batch 1",
+      "Batch 2",
+      "Batch 3",
+      "Batch 4",
+      "Boulder",
+      "CENT 1",
+      "CENT 2",
+      "CENT 3"
+    ],
+    "captain": {
+      "passwordless": true
+    },
+    "standings": {
+      "scoring": "pct",
+      "tiebreaker": "rd"
+    },
+    "about": "Adult slowpitch softball for Lewis & Clark, Jefferson, and Broadwater Counties. Men's, women's, and coed leagues play Monday through Friday nights at the Batch and Centennial complexes in Helena.",
+    "nav": {
+      "hide": [
+        "SFBL",
+        "Contact",
+        "Stats",
+        "Team Stats",
+        "Player of the Week",
+        "Availability",
+        "Photos",
+        "Tournaments",
+        "History",
+        "Pay Online",
+        "Store",
+        "News",
+        "Player Registration",
+        "Team Registration",
+        "Team Waiver",
+        "Register",
+        "Umpire Evaluation"
+      ],
+      "add": [
+        {
+          "label": "League",
+          "href": "#",
+          "children": [
+            {
+              "label": "League Info",
+              "href": "/content/hsa-info"
+            },
+            {
+              "label": "Forms & Documents",
+              "href": "/content/forms"
+            },
+            {
+              "label": "Our Sponsors",
+              "href": "/content/sponsors"
+            },
+            {
+              "label": "Rainout Alerts",
+              "href": "/alerts"
+            },
+            {
+              "label": "Fields",
+              "href": "/fields"
+            },
+            {
+              "label": "Contact",
+              "href": "/content/contact"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "teams_csv": "./teams.csv",
+  "schedule_csv": "./schedule.csv",
+  "admins": [
+    "adam.miller.22@gmail.com"
+  ]
+}
