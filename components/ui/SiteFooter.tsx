@@ -34,9 +34,15 @@ export function SiteFooter() {
   const hasSponsors = sponsors.length > 0;
   // Hide the "Become a sponsor" footer CTA for tenants that hid Sponsors from
   // their nav — they have no sponsors page, so the link would soft-404.
-  const hideSponsorCta = (config.nav?.hide ?? []).some(
-    (h) => typeof h === "string" && h.toLowerCase() === "sponsors",
-  );
+  const navHides = (label: string): boolean =>
+    (config.nav?.hide ?? []).some(
+      (h) => typeof h === "string" && h.toLowerCase() === label,
+    );
+  const hideSponsorCta = navHides("sponsors");
+  // Same reasoning for Rules: a tenant that hid Rules from its nav has no
+  // rules page (HSA hands its rules out on paper at registration), so the
+  // footer link would soft-404 on every page.
+  const hideRules = navHides("rules") || navHides("sfbl");
 
   // Footer "Powered by" credit. Adam's web-design business gets the backlink on
   // his own sites; every other tenant keeps the platform brand. Per-tenant map,
@@ -125,7 +131,7 @@ export function SiteFooter() {
           ) : null}
         </div>
         <nav className="le-footer-links">
-          <Link href="/rules">Rules</Link>
+          {!hideRules && <Link href="/rules">Rules</Link>}
           <Link href="/content/contact">Contact</Link>
           {/* "Become a sponsor" points at /content/sponsors, which only exists
               if the league authored a sponsors page. A tenant that hides
@@ -146,6 +152,17 @@ export function SiteFooter() {
             {credit.label}
           </a>
           .
+          {/* Licence credits for third-party artwork. Some tenants' team
+              mascots come from CC BY sources, and CC BY REQUIRES visible
+              attribution — it is a condition of the licence, not a courtesy,
+              and these are commercial sites. Set league.attribution to the
+              credit line; tenants without one render nothing. */}
+          {typeof config.attribution === "string" && config.attribution ? (
+            <span className="le-footer-attribution">
+              {" "}
+              {config.attribution}
+            </span>
+          ) : null}
         </div>
       </div>
     </footer>

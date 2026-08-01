@@ -17,7 +17,13 @@
 //
 // CSV formats:
 //   teams.csv:
-//     id,name,abbrev,division,color,logo_url
+//     id,name,abbrev,division,color,logo_url[,w,l,t]
+//     (w/l/t are OPTIONAL and only for stats-off tenants whose source
+//      site publishes official records that can't be recomputed from
+//      the games — e.g. leagues with crossover games that count in no
+//      division's standings. /standings reads these when the tenant sets
+//      flags.stats_enabled=false. Omit them for normal tenants and let
+//      standings compute from final scores.)
 //
 //   players.csv:
 //     team_id,name,jersey,position,email,phone
@@ -316,9 +322,29 @@ function stageTeams(): StageResult {
       continue;
     }
     if (r.id) seenIds.add(r.id);
+    // Optional official record. Only written when the CSV carries all
+    // three columns as numbers — a partial or non-numeric record would
+    // make /standings silently disagree with the league's own table.
+    const record: Record<string, number> = {};
+    for (const k of ["w", "l", "t"] as const) {
+      const raw = (r as Record<string, string | undefined>)[k];
+      if (raw == null || raw === "") continue;
+      if (!/^\d+$/.test(raw)) {
+        errors.push(`[teams row ${i + 2}] ${k} "${raw}" must be a whole number`);
+        continue;
+      }
+      record[k] = Number(raw);
+    }
+    const hasRecord = ["w", "l", "t"].every((k) => k in record);
+    if (Object.keys(record).length && !hasRecord) {
+      errors.push(
+        `[teams row ${i + 2}] partial record — supply w, l and t together, or none`,
+      );
+    }
     writes.push({
       path: `leagues/${leagueId}/teams/${r.id}`,
       data: {
+        ...(hasRecord ? record : {}),
         // cleanName normalizes Unicode separators (NBSP, narrow NBSP,
         // ideographic space, etc.) so a Word-pasted "Miami Yankees"
         // (with NBSP between words) doesn't end up looking distinct
@@ -551,6 +577,14 @@ function stageSchedule(): StageResult {
       path: `leagues/${leagueId}/games/${r.id}`,
       data: {
         date: dateIso,
+        // Keep the wall-clock start time as its own field. combineDateTime()
+        // treats `time` as authoritative precisely so a game doesn't drift
+        // across timezones — `date` alone is an instant computed in whatever
+        // TZ the importer ran in, so a 6:15 PM game imported on an Eastern
+        // laptop renders as a different hour for a Mountain-time league.
+        // Every renderer (home, scores, schedule, print, ICS, reminders)
+        // already reads this field; only the importer wasn't writing it.
+        ...(/^\d{1,2}:\d{2}$/.test(timeRaw) ? { time: timeRaw } : {}),
         away_team_id: r.away_team_id,
         home_team_id: r.home_team_id,
         ...(r.field ? { field: r.field } : {}),
@@ -578,6 +612,15 @@ function stageSchedule(): StageResult {
         path: `leagues/${leagueId}/box_scores/${r.id}`,
         data: {
           status,
+          // Team ids belong on the box score, not just the game. The team
+          // page decides which side of a box score is "us" with
+          //   isAway = String(b.away_team_id ?? "") === teamId
+          // and with these absent that is false for EVERY game, so it reads
+          // the home side every time and silently drops a team's entire away
+          // record from its roster stats. Nothing errors — the columns just
+          // come back empty. (JFK: every pitcher showed em-dashes.)
+          away_team_id: r.away_team_id,
+          home_team_id: r.home_team_id,
           away_score: awayScoreNum,
           home_score: homeScoreNum,
           away_score_only: true,

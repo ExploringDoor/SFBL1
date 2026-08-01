@@ -49,13 +49,20 @@ export function GET() {
   const shortName = cfg.abbrev ?? cfg.short ?? tenantId ?? "League";
   const themeColor = cfg.theme?.primary ?? "#0a0e1c";
 
-  // Per-tenant home-screen icons. COYBL ships its own crest tiles under
-  // /coybl/; everyone else uses the shared SFBL-built /icons/ set.
-  const isCoybl = tenantId === "coybl";
-  const iconBase = isCoybl ? "/coybl" : "/icons";
-  const maskableSrc = isCoybl
-    ? "/coybl/icon-512-maskable.png"
-    : "/icons/icon-maskable-512.png";
+  // Per-tenant home-screen icons. A tenant with its own tile set gets one
+  // line here; everyone else falls back to the shared /icons/ set — which is
+  // built from SFBL's logo, so an unlisted tenant installs a South Florida
+  // Baseball League icon onto the user's home screen. Add each new tenant.
+  const ICON_SETS: Record<string, { base: string; maskable: string }> = {
+    coybl: { base: "/coybl", maskable: "/coybl/icon-512-maskable.png" },
+    helena: { base: "/helena", maskable: "/helena/icon-512-maskable.png" },
+  };
+  const iconSet = ICON_SETS[tenantId ?? ""] ?? {
+    base: "/icons",
+    maskable: "/icons/icon-maskable-512.png",
+  };
+  const iconBase = iconSet.base;
+  const maskableSrc = iconSet.maskable;
 
   const manifest = {
     name,

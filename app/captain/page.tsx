@@ -59,6 +59,11 @@ interface TeamSnap {
   color?: string;
   logoUrl?: string | null;
   division?: string;
+  /** League-official W-L-T, when the tenant stores it on the team doc
+   *  (stats-off leagues whose source site is the authority on records). */
+  w?: number;
+  l?: number;
+  t?: number;
 }
 
 interface PlayerSnap {
@@ -138,6 +143,10 @@ export default function CaptainHomePage() {
             color: d.color ? String(d.color) : undefined,
             logoUrl: d.logo_url ? String(d.logo_url) : null,
             division: d.division ? String(d.division) : undefined,
+            // League-official record, when the tenant stores one. See (2).
+            w: typeof d.w === "number" ? d.w : undefined,
+            l: typeof d.l === "number" ? d.l : undefined,
+            t: typeof d.t === "number" ? d.t : undefined,
           });
         }
         setRoster(
@@ -717,7 +726,15 @@ function CaptainBody({
   // Computes record + division-position-style stats from existing
   // state — no new fetches beyond what page mount + nextGameRsvps
   // already populated.
-  const stats = computeTeamStats(recent, teamId);
+  // `recent` is a capped slice of the team's games, so tallying it produced a
+  // record that disagreed with /standings for the same team (Motherlode read
+  // 4-1-1 on the dashboard against an official 9-1-1). Prefer the record
+  // stored on the team doc whenever the league keeps one; fall back to the
+  // tally for tenants that compute from box scores.
+  const stats =
+    typeof team.w === "number" && typeof team.l === "number"
+      ? { record: { w: team.w, l: team.l, t: team.t ?? 0 } }
+      : computeTeamStats(recent, teamId);
   const nextGame = upcoming[0] ?? null;
 
   // Past games where my team played but the score isn't final yet.

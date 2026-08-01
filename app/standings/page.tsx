@@ -18,7 +18,11 @@ import {
   type DivisionGroup,
   type TeamMeta,
 } from "@/components/ui/StandingsTable";
-import { buildAgeSections, recordsToStandings } from "@/lib/age-standings";
+import {
+  buildAgeSections,
+  recordsToStandings,
+  useStoredRecords,
+} from "@/lib/age-standings";
 
 export const dynamic = "force-dynamic";
 
@@ -57,7 +61,7 @@ export default async function StandingsPage() {
     throughDate,
     teamCount,
     hasFinalGames,
-    useStoredRecords,
+    storedRecordsMode,
   } = await loadStandings(tenantId, config);
 
   const year = String(new Date().getFullYear());
@@ -216,7 +220,7 @@ export default async function StandingsPage() {
                 teamMeta={teams}
                 pointsScheme={scheme}
                 variant="full"
-                showExtras={!useStoredRecords}
+                showExtras={!storedRecordsMode}
                 showRecentForm={false}
               />
             </section>
@@ -228,7 +232,7 @@ export default async function StandingsPage() {
           teamMeta={teams}
           pointsScheme={scheme}
           variant="full"
-          showExtras={!useStoredRecords}
+          showExtras={!storedRecordsMode}
           showRecentForm={config?.abbrev !== "SFBL" && tenantId !== "sfbl"}
         />
       )}
@@ -327,9 +331,8 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
   // Stats-off leagues (COYBL) display the EXACT stored league records —
   // the source site flags which games count, so recomputing from the
   // seeded games (which include cross-division play) would be wrong.
-  const useStoredRecords =
-    config?.flags?.stats_enabled === false && Object.keys(records).length > 0;
-  let standings: StandingsRow[] = useStoredRecords
+  const storedRecordsMode = useStoredRecords(config, records);
+  let standings: StandingsRow[] = storedRecordsMode
     ? recordsToStandings(records)
     : computeStandings(games);
   const scheme = config?.standings?.points_per ?? null;
@@ -376,10 +379,10 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
     teamCount: teamsSnap.size,
     // With stored records, standings come from the teams (not games), so
     // "has standings" means teams exist — not that games are final.
-    hasFinalGames: useStoredRecords
+    hasFinalGames: storedRecordsMode
       ? standings.length > 0
       : finalDates.length > 0,
-    useStoredRecords,
+    storedRecordsMode,
   };
 }
 

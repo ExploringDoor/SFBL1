@@ -77,9 +77,10 @@ export function Hero({
             className="le-hero-logo"
             width={600}
             height={180}
-            // @ts-expect-error fetchPriority is valid HTML attr but
-            // not yet typed in React 18.
-            fetchpriority="high"
+            // React needs the camelCase prop name; lowercase "fetchpriority"
+            // is dropped with an Invalid DOM property warning, so the hint
+            // never reached the browser on any tenant with a banner image.
+            fetchPriority="high"
             decoding="async"
           />
         </h1>

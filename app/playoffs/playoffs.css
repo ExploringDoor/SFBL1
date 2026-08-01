@@ -219,3 +219,13 @@
     min-width: 220px;
   }
 }
+
+/* Caveat line under the bracket title (e.g. "seeded from standings, not the
+   official draw"). Reads as a note, not a headline. */
+.po-note {
+  margin: 6px 0 0;
+  max-width: 68ch;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-muted, #5b6670);
+}

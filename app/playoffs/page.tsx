@@ -35,6 +35,9 @@ interface Division {
 interface Bracket {
   active: boolean;
   title: string;
+  /** Optional caveat under the title — e.g. a bracket seeded from standings
+   *  as a preview, which must not read as the league's official draw. */
+  note?: string;
   divisions: Division[];
 }
 
@@ -59,6 +62,7 @@ export default async function PlayoffsPage() {
       ({
         active: bracketSnap.data()?.active === true,
         title: String(bracketSnap.data()?.title ?? "Playoffs"),
+        note: bracketSnap.data()?.note ? String(bracketSnap.data()?.note) : undefined,
         divisions: (bracketSnap.data()?.divisions ?? []) as Division[],
       } as Bracket)
     : null;
@@ -87,6 +91,7 @@ export default async function PlayoffsPage() {
     <main className="po-shell">
       <header className="po-header">
         <h1 className="po-title">{bracket.title}</h1>
+        {bracket.note && <p className="po-note">{bracket.note}</p>}
       </header>
 
       {bracket.divisions.length === 0 ? (
