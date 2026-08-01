@@ -58,6 +58,7 @@ export function PitchCountsTab({
   const [games, setGames] = useState<GameOpt[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -179,6 +180,7 @@ export function PitchCountsTab({
   async function add(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setNotice(null);
     if (!user) {
       setError("Please sign in again.");
       return;
@@ -211,11 +213,13 @@ export function PitchCountsTab({
       const data = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
         error?: string;
+        warning?: string | null;
       };
       if (!res.ok || !data.ok) {
         setError(data.error ?? `HTTP ${res.status}`);
         return;
       }
+      setNotice(data.warning ?? null);
       setName("");
       setCustomName(false);
       setPitches("");
@@ -263,6 +267,8 @@ export function PitchCountsTab({
       </div>
 
       {error && <div className="cap-error-banner">{error}</div>}
+      {/* Saved, but over the age group's daily pitch limit. */}
+      {notice && <div className="cap-warn-banner">{notice}</div>}
 
       <form className="cap-inline-form" onSubmit={add}>
         <div className="cap-form-row">

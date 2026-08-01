@@ -5996,3 +5996,33 @@ select:focus-visible {
   opacity: 0.55;
   cursor: default;
 }
+
+/* Pitcher eligibility: a day total that went over the age group's daily
+   pitch cap. The outing is still recorded (the board must show what
+   actually happened); this just flags it for league follow-up. */
+.pc-over-max {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(200, 16, 46, 0.12);
+  color: #b91c1c;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* Captain portal: saved-but-worth-flagging notice (amber, not an error).
+   Used when a pitch-count entry pushes a pitcher over the daily limit. */
+.cap-warn-banner {
+  background: rgba(180, 83, 9, 0.08);
+  border: 1px solid rgba(180, 83, 9, 0.3);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #7c2d12;
+  margin-bottom: 14px;
+}

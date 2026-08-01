@@ -142,3 +142,28 @@ export function formatGameDate(
     opts ?? { weekday: "short", month: "short", day: "numeric" },
   );
 }
+
+// The league's wall-clock calendar day, e.g. "2026-07-31".
+//
+// Why this exists: server components run on Vercel in UTC, so a bare
+// `new Date()` there is already "tomorrow" after ~8 PM Eastern. Anything
+// that asks "is it past date X yet?" — most importantly pitcher-eligibility
+// rest windows — must ask in the LEAGUE's timezone, not the server's, or it
+// clears a resting pitcher up to a day early during evening games.
+//
+// en-CA formats as YYYY-MM-DD, which is exactly the key format used for
+// game dates and pitch outings.
+//
+// All current tenants play in US Eastern. TODO: read this off the league
+// config once a `timezone` field lands there.
+export const DEFAULT_LEAGUE_TZ = "America/New_York";
+
+export function leagueToday(timeZone: string = DEFAULT_LEAGUE_TZ): string {
+  try {
+    return new Date().toLocaleDateString("en-CA", { timeZone });
+  } catch {
+    // Unknown timezone string — fall back to the server's local day rather
+    // than throwing on a page render.
+    return new Date().toLocaleDateString("en-CA");
+  }
+}

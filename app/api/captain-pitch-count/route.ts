@@ -9,6 +9,7 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { PITCH_RULESETS, rulesetIdForAge } from "@/lib/pitchcount/rulesets";
 
 export const runtime = "nodejs";
 
@@ -97,5 +98,37 @@ export async function POST(req: Request) {
     updated_at: new Date().toISOString(),
     created_by_uid: decoded.uid,
   });
-  return NextResponse.json({ ok: true, id: ref.id });
+
+  // Tell the coach immediately if this pitcher is now over the age group's
+  // daily cap for that date. We record the outing either way — the log must
+  // reflect what actually happened — but a silent accept is how an over-limit
+  // day goes unnoticed. Totals are per DAY, so include any earlier outing.
+  let warning: string | null = null;
+  try {
+    const teamSnap = await db.doc(`leagues/${leagueId}/teams/${teamId}`).get();
+    const ageGroup = teamSnap.exists ? String(teamSnap.data()?.ageGroup ?? "") : "";
+    const rulesetId = ageGroup ? rulesetIdForAge(ageGroup) : null;
+    const ruleset = rulesetId ? PITCH_RULESETS[rulesetId] : null;
+    if (ruleset) {
+      const daySnap = await db
+        .collection(`leagues/${leagueId}/pitch_outings`)
+        .where("team_id", "==", teamId)
+        .where("player_name", "==", playerName)
+        .where("date", "==", date)
+        .get();
+      const dayTotal = daySnap.docs.reduce(
+        (sum, d) => sum + (Number(d.data().pitches) || 0),
+        0,
+      );
+      if (dayTotal > ruleset.dailyMax) {
+        warning =
+          `${playerName} is now at ${dayTotal} pitches for ${date}, over the ` +
+          `${ruleset.dailyMax} pitch daily limit for ${ruleset.label}. The entry was saved.`;
+      }
+    }
+  } catch {
+    /* the warning is best-effort; never fail a save over it */
+  }
+
+  return NextResponse.json({ ok: true, id: ref.id, warning });
 }

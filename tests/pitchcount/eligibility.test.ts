@@ -81,6 +81,54 @@ describe("computeEligibility", () => {
     expect(r.status).toBe("eligible");
   });
 
+  // Safety-critical: Pitch Smart rest is based on pitches thrown IN A DAY,
+  // so two appearances on one day must be summed before the tier lookup.
+  it("sums two outings on the SAME day (doubleheader / relief stint)", () => {
+    const r = computeEligibility(
+      [
+        { date: "2026-06-09", pitches: 40 },
+        { date: "2026-06-09", pitches: 40 },
+      ],
+      COYBL_9U_10U,
+      "2026-06-11",
+    );
+    expect(r.pitchesLast).toBe(80); // not 40
+    expect(r.restDaysRequired).toBe(4); // 80 → 66+ tier, not 40 → 2 days
+    expect(r.nextEligibleDate).toBe("2026-06-14");
+    expect(r.status).toBe("resting"); // would have been "eligible" pre-fix
+  });
+
+  it("an earlier heavy day still governs if its rest window is longer", () => {
+    // Threw 70 on the 9th (4 rest → eligible 06-14), then — against the
+    // rules — threw 10 on the 10th (0 rest → eligible 06-11). The longer
+    // pending window must win, otherwise the pitcher is cleared early.
+    const r = computeEligibility(
+      [
+        { date: "2026-06-09", pitches: 70 },
+        { date: "2026-06-10", pitches: 10 },
+      ],
+      COYBL_9U_10U,
+      "2026-06-11",
+    );
+    expect(r.nextEligibleDate).toBe("2026-06-14");
+    expect(r.status).toBe("resting");
+  });
+
+  it("flags a day total over the age group's daily max", () => {
+    const over = computeEligibility(
+      [{ date: "2026-06-09", pitches: 90 }], // 10U cap is 75
+      COYBL_9U_10U,
+      "2026-06-09",
+    );
+    expect(over.dailyMaxExceeded).toBe(true);
+    const under = computeEligibility(
+      [{ date: "2026-06-09", pitches: 70 }],
+      COYBL_9U_10U,
+      "2026-06-09",
+    );
+    expect(under.dailyMaxExceeded).toBe(false);
+  });
+
   it("handles full-timestamp outing dates (day-only math)", () => {
     const r = computeEligibility(
       [{ date: "2026-06-09T18:30:00-04:00", pitches: 30 }], // 1 rest → 06-11

@@ -45,20 +45,53 @@ export function computeEligibility(
     };
   }
 
-  const sorted = [...outings].sort((a, b) =>
-    dayOf(a.date).localeCompare(dayOf(b.date)),
-  );
-  const last = sorted[sorted.length - 1]!;
-  const restDays = restDaysFor(last.pitches, ruleset);
-  const nextEligibleDate = addDays(dayOf(last.date), restDays + 1);
+  // Pitch Smart rest tiers are defined on pitches thrown IN A DAY (see
+  // RestTier.min/max), so a pitcher who appears twice in one day — a
+  // doubleheader, or a start plus a relief stint — must be judged on that
+  // DAY'S TOTAL. Summing first is the safety-critical step: 40 + 40 in one
+  // day is a 4-rest-day 80, not two 2-rest-day 40s.
+  const byDay = new Map<string, number>();
+  for (const o of outings) {
+    const day = dayOf(o.date);
+    const p = Number(o.pitches);
+    byDay.set(day, (byDay.get(day) ?? 0) + (Number.isFinite(p) ? p : 0));
+  }
+
+  // Every day imposes its own rest window. Take the LATEST window that is
+  // still pending, not simply the most recent day: if a pitcher threw 70 on
+  // Monday (4 days rest) and then — against the rules — threw 10 on Tuesday,
+  // Monday's window still governs. Using only the last day would clear them
+  // early, which is the failure this feature exists to prevent.
+  let governingDay = "";
+  let governingPitches = 0;
+  let governingRest = 0;
+  let nextEligibleDate = "";
+  for (const [day, pitches] of byDay) {
+    const rest = restDaysFor(pitches, ruleset);
+    const eligibleOn = addDays(day, rest + 1);
+    // Ties resolve to the later day so the reported outing is the recent one.
+    if (
+      eligibleOn > nextEligibleDate ||
+      (eligibleOn === nextEligibleDate && day > governingDay)
+    ) {
+      nextEligibleDate = eligibleOn;
+      governingDay = day;
+      governingPitches = pitches;
+      governingRest = rest;
+    }
+  }
+
   const status = dayOf(asOf) >= nextEligibleDate ? "eligible" : "resting";
 
   return {
     status,
     nextEligibleDate,
-    lastOuting: last,
-    restDaysRequired: restDays,
-    pitchesLast: last.pitches,
+    // The day that governs rest, carrying that day's TOTAL pitches (which is
+    // what the eligibility board should show — not one appearance of several).
+    lastOuting: { date: governingDay, pitches: governingPitches },
+    restDaysRequired: governingRest,
+    pitchesLast: governingPitches,
+    dailyMaxExceeded: governingPitches > ruleset.dailyMax,
   };
 }
 

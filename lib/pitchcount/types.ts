@@ -42,4 +42,11 @@ export interface EligibilityResult {
   restDaysRequired: number;
   /** Pitches thrown in that last outing. */
   pitchesLast: number;
+  /**
+   * True when the governing day's TOTAL exceeded the age group's daily max
+   * (e.g. 90 pitches at 10U, where the cap is 75). The outing is still
+   * recorded — the board must show what actually happened — but it is
+   * flagged so the league can follow up.
+   */
+  dailyMaxExceeded?: boolean;
 }

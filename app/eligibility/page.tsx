@@ -7,6 +7,7 @@
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { computeEligibility } from "@/lib/pitchcount/eligibility";
+import { leagueToday, DEFAULT_LEAGUE_TZ } from "@/lib/format-time";
 import {
   PITCH_RULESETS,
   COYBL_9U_10U,
@@ -69,15 +70,16 @@ export default async function EligibilityPage() {
     pm.get(player)!.push({ date, pitches });
   }
 
-  // Local calendar date (NOT UTC) — an evening check must not roll "today"
-  // forward and mark a resting pitcher eligible early. TODO: use the
-  // league's configured timezone once that lands in config.
-  const now = new Date();
-  const today = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
-  const todayLabel = now.toLocaleDateString("en-US", {
+  // The LEAGUE's calendar date, not the server's. This page renders on
+  // Vercel in UTC, so a bare `new Date()` here is already tomorrow after
+  // ~8 PM Eastern, which would mark a still-resting pitcher eligible a day
+  // early — during exactly the evening games this board is consulted for.
+  const today = leagueToday();
+  const todayLabel = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
+    timeZone: DEFAULT_LEAGUE_TZ,
   });
 
   const sections = teams
@@ -263,7 +265,19 @@ function TeamPitchSection({
                 </td>
                 <td>{r.status === "eligible" ? "—" : fmtDate(r.nextEligibleDate)}</td>
                 <td>{r.lastOuting ? fmtDate(r.lastOuting.date) : "—"}</td>
-                <td>{r.lastOuting ? r.pitchesLast : "—"}</td>
+                {/* Day TOTAL, not one appearance. Flagged when it went over
+                    the age group's daily cap so the league can follow up. */}
+                <td>
+                  {r.lastOuting ? r.pitchesLast : "—"}
+                  {r.dailyMaxExceeded && (
+                    <span
+                      className="pc-over-max"
+                      title={`Over the ${ruleset.dailyMax} pitch daily limit for ${ruleset.label}`}
+                    >
+                      over limit
+                    </span>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -367,8 +381,4 @@ function fmtDate(iso: string | null): string {
     month: "short",
     day: "numeric",
   });
-}
-
-function pad2(n: number): string {
-  return String(n).padStart(2, "0");
 }
