@@ -1,0 +1,1997 @@
+[
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "7U - Division 1",
+  "standings": [
+   {
+    "team": "UAJBA - CAREY",
+    "w": 7,
+    "l": 1,
+    "t": 0,
+    "g": 8,
+    "pct": ".875",
+    "p": 14
+   },
+   {
+    "team": "OHIO THUNDER - ARDO",
+    "w": 6,
+    "l": 2,
+    "t": 0,
+    "g": 8,
+    "pct": ".750",
+    "p": 12
+   },
+   {
+    "team": "DUBLIN GREEN SOX - BAKER",
+    "w": 3,
+    "l": 3,
+    "t": 0,
+    "g": 6,
+    "pct": ".500",
+    "p": 6
+   },
+   {
+    "team": "HILLIARD COLTS RED",
+    "w": 2,
+    "l": 7,
+    "t": 0,
+    "g": 9,
+    "pct": ".222",
+    "p": 4
+   },
+   {
+    "team": "BJE - LEMLE",
+    "w": 1,
+    "l": 6,
+    "t": 0,
+    "g": 7,
+    "pct": ".143",
+    "p": 2
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "7U - Division 2",
+  "standings": [
+   {
+    "team": "WORTHINGTON NATIONALS",
+    "w": 7,
+    "l": 1,
+    "t": 0,
+    "g": 8,
+    "pct": ".875",
+    "p": 14
+   },
+   {
+    "team": "OLENTANGY STIX",
+    "w": 7,
+    "l": 3,
+    "t": 0,
+    "g": 10,
+    "pct": ".700",
+    "p": 14
+   },
+   {
+    "team": "OLENTANGY BASEBALL CLUB",
+    "w": 6,
+    "l": 3,
+    "t": 0,
+    "g": 9,
+    "pct": ".667",
+    "p": 12
+   },
+   {
+    "team": "DUBLIN GREEN SOX - PLACE",
+    "w": 4,
+    "l": 6,
+    "t": 0,
+    "g": 10,
+    "pct": ".400",
+    "p": 8
+   },
+   {
+    "team": "BJE - PEREZ",
+    "w": 3,
+    "l": 8,
+    "t": 0,
+    "g": 11,
+    "pct": ".273",
+    "p": 6
+   },
+   {
+    "team": "UAJBA - SMILTH - McBRIDE",
+    "w": 2,
+    "l": 8,
+    "t": 0,
+    "g": 10,
+    "pct": ".200",
+    "p": 4
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "8U - Division 1",
+  "standings": [
+   {
+    "team": "MID OHO BULLETS",
+    "w": 9,
+    "l": 0,
+    "t": 0,
+    "g": 9,
+    "pct": "1.000",
+    "p": 18
+   },
+   {
+    "team": "OLENTANGY STIX - McCLAIN",
+    "w": 9,
+    "l": 3,
+    "t": 0,
+    "g": 12,
+    "pct": ".750",
+    "p": 18
+   },
+   {
+    "team": "GAHANNA LIONS",
+    "w": 8,
+    "l": 4,
+    "t": 0,
+    "g": 12,
+    "pct": ".667",
+    "p": 16
+   },
+   {
+    "team": "UAJBA GOLD",
+    "w": 3,
+    "l": 3,
+    "t": 0,
+    "g": 6,
+    "pct": ".500",
+    "p": 6
+   },
+   {
+    "team": "NEW ALBANY GOLD 8U",
+    "w": 3,
+    "l": 9,
+    "t": 0,
+    "g": 12,
+    "pct": ".250",
+    "p": 6
+   },
+   {
+    "team": "OHIO THUNDER",
+    "w": 1,
+    "l": 7,
+    "t": 0,
+    "g": 8,
+    "pct": ".125",
+    "p": 2
+   },
+   {
+    "team": "HILLIARD COLTS RED",
+    "w": 0,
+    "l": 7,
+    "t": 0,
+    "g": 7,
+    "pct": ".000",
+    "p": 0
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "8U - Division 2",
+  "standings": [
+   {
+    "team": "DUBLIN GREEN SOX - TOLLISON",
+    "w": 9,
+    "l": 0,
+    "t": 0,
+    "g": 9,
+    "pct": "1.000",
+    "p": 18
+   },
+   {
+    "team": "WORTHINGTON NATIONALS - RED",
+    "w": 8,
+    "l": 2,
+    "t": 0,
+    "g": 10,
+    "pct": ".800",
+    "p": 16
+   },
+   {
+    "team": "UAJBA - GRIFFIN",
+    "w": 5,
+    "l": 5,
+    "t": 0,
+    "g": 10,
+    "pct": ".500",
+    "p": 10
+   },
+   {
+    "team": "BJE SMITH",
+    "w": 4,
+    "l": 5,
+    "t": 0,
+    "g": 9,
+    "pct": ".444",
+    "p": 8
+   },
+   {
+    "team": "OLENTANGY BASEBALL CLUB",
+    "w": 1,
+    "l": 8,
+    "t": 0,
+    "g": 9,
+    "pct": ".111",
+    "p": 2
+   },
+   {
+    "team": "OLENTANGY STIX - BUCK",
+    "w": 1,
+    "l": 8,
+    "t": 0,
+    "g": 9,
+    "pct": ".111",
+    "p": 2
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "8U - Division 3",
+  "standings": [
+   {
+    "team": "EASTSIDE WARRIORS",
+    "w": 8,
+    "l": 2,
+    "t": 0,
+    "g": 10,
+    "pct": ".800",
+    "p": 16
+   },
+   {
+    "team": "HILLIARD PANTHERS",
+    "w": 9,
+    "l": 3,
+    "t": 0,
+    "g": 12,
+    "pct": ".750",
+    "p": 18
+   },
+   {
+    "team": "UC TIGERS",
+    "w": 6,
+    "l": 4,
+    "t": 0,
+    "g": 10,
+    "pct": ".600",
+    "p": 12
+   },
+   {
+    "team": "DUBLIN GREEN SOX - NOLAND",
+    "w": 5,
+    "l": 6,
+    "t": 0,
+    "g": 11,
+    "pct": ".455",
+    "p": 10
+   },
+   {
+    "team": "BO JACKSON ELITE-HEGENDERFER",
+    "w": 4,
+    "l": 9,
+    "t": 0,
+    "g": 13,
+    "pct": ".308",
+    "p": 8
+   },
+   {
+    "team": "WORTHINGTON NATIONALS - BLUE",
+    "w": 1,
+    "l": 9,
+    "t": 0,
+    "g": 10,
+    "pct": ".100",
+    "p": 2
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "8U - Division 4",
+  "standings": [
+   {
+    "team": "BLOOM CARROLL BULLDOGS",
+    "w": 11,
+    "l": 1,
+    "t": 0,
+    "g": 12,
+    "pct": ".917",
+    "p": 22
+   },
+   {
+    "team": "OHIO STING BASEBALL CLUB",
+    "w": 9,
+    "l": 3,
+    "t": 0,
+    "g": 12,
+    "pct": ".750",
+    "p": 18
+   },
+   {
+    "team": "AC ACES",
+    "w": 10,
+    "l": 4,
+    "t": 0,
+    "g": 14,
+    "pct": ".714",
+    "p": 20
+   },
+   {
+    "team": "CW INDIANS SELECT",
+    "w": 6,
+    "l": 7,
+    "t": 0,
+    "g": 13,
+    "pct": ".462",
+    "p": 12
+   },
+   {
+    "team": "MIDWEST MARLINS",
+    "w": 3,
+    "l": 9,
+    "t": 0,
+    "g": 12,
+    "pct": ".250",
+    "p": 6
+   },
+   {
+    "team": "BJE - LIVELY",
+    "w": 2,
+    "l": 8,
+    "t": 0,
+    "g": 10,
+    "pct": ".200",
+    "p": 4
+   },
+   {
+    "team": "WARHHAWKS - BARNUM",
+    "w": 1,
+    "l": 10,
+    "t": 0,
+    "g": 11,
+    "pct": ".091",
+    "p": 2
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "9U - Division 1",
+  "standings": [
+   {
+    "team": "BLOOM CARROLL BULLDOGS CHILL",
+    "w": 10,
+    "l": 0,
+    "t": 0,
+    "g": 10,
+    "pct": "1.000",
+    "p": 20
+   },
+   {
+    "team": "CW INDIANS SELECT",
+    "w": 7,
+    "l": 3,
+    "t": 0,
+    "g": 10,
+    "pct": ".700",
+    "p": 14
+   },
+   {
+    "team": "AC ACES",
+    "w": 6,
+    "l": 4,
+    "t": 0,
+    "g": 10,
+    "pct": ".600",
+    "p": 12
+   },
+   {
+    "team": "MIDWEST MARLINS",
+    "w": 3,
+    "l": 7,
+    "t": 0,
+    "g": 10,
+    "pct": ".300",
+    "p": 6
+   },
+   {
+    "team": "BALTIMORE BOMBERS",
+    "w": 2,
+    "l": 8,
+    "t": 0,
+    "g": 10,
+    "pct": ".200",
+    "p": 4
+   },
+   {
+    "team": "HOCKING VALLEY THUNDER",
+    "w": 2,
+    "l": 8,
+    "t": 0,
+    "g": 10,
+    "pct": ".200",
+    "p": 4
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "9U - Division 2",
+  "standings": [
+   {
+    "team": "OHIO BUILT BASEBALL",
+    "w": 8,
+    "l": 1,
+    "t": 0,
+    "g": 9,
+    "pct": ".889",
+    "p": 16
+   },
+   {
+    "team": "EASTSIDE WARRIORS",
+    "w": 7,
+    "l": 3,
+    "t": 0,
+    "g": 10,
+    "pct": ".700",
+    "p": 14
+   },
+   {
+    "team": "PICKERINGTON XPLOSION",
+    "w": 7,
+    "l": 3,
+    "t": 0,
+    "g": 10,
+    "pct": ".700",
+    "p": 14
+   },
+   {
+    "team": "GAHANNA LIONS",
+    "w": 4,
+    "l": 5,
+    "t": 0,
+    "g": 9,
+    "pct": ".444",
+    "p": 8
+   },
+   {
+    "team": "NEW ALBANY MAROON",
+    "w": 1,
+    "l": 8,
+    "t": 0,
+    "g": 9,
+    "pct": ".111",
+    "p": 2
+   },
+   {
+    "team": "PICKERINGTON BIG KATZ",
+    "w": 1,
+    "l": 8,
+    "t": 0,
+    "g": 9,
+    "pct": ".111",
+    "p": 2
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "9U - Division 3",
+  "standings": [
+   {
+    "team": "OLENTANGY STIX - BLUE",
+    "w": 8,
+    "l": 2,
+    "t": 0,
+    "g": 10,
+    "pct": ".800",
+    "p": 16
+   },
+   {
+    "team": "NATURALS BLACK",
+    "w": 5,
+    "l": 2,
+    "t": 0,
+    "g": 7,
+    "pct": ".714",
+    "p": 10
+   },
+   {
+    "team": "WORTHINGTON NATIONALS WHITE",
+    "w": 7,
+    "l": 3,
+    "t": 0,
+    "g": 10,
+    "pct": ".700",
+    "p": 14
+   },
+   {
+    "team": "HILLIARD COLTS",
+    "w": 2,
+    "l": 4,
+    "t": 0,
+    "g": 6,
+    "pct": ".333",
+    "p": 4
+   },
+   {
+    "team": "OBC - OQUENDO",
+    "w": 2,
+    "l": 7,
+    "t": 0,
+    "g": 9,
+    "pct": ".222",
+    "p": 4
+   },
+   {
+    "team": "DUBLIN GREEN SOX - HOLLANDER",
+    "w": 0,
+    "l": 6,
+    "t": 0,
+    "g": 6,
+    "pct": ".000",
+    "p": 0
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "9U - Division 4",
+  "standings": [
+   {
+    "team": "GROVE CITY TITANS",
+    "w": 9,
+    "l": 1,
+    "t": 0,
+    "g": 10,
+    "pct": ".900",
+    "p": 18
+   },
+   {
+    "team": "PIONEERS BLACK",
+    "w": 9,
+    "l": 1,
+    "t": 0,
+    "g": 10,
+    "pct": ".900",
+    "p": 18
+   },
+   {
+    "team": "WARHHAWKS BASEBALL CLUB",
+    "w": 5,
+    "l": 5,
+    "t": 0,
+    "g": 10,
+    "pct": ".500",
+    "p": 10
+   },
+   {
+    "team": "FAYETTE COUNTY EAGLES",
+    "w": 3,
+    "l": 6,
+    "t": 0,
+    "g": 9,
+    "pct": ".333",
+    "p": 6
+   },
+   {
+    "team": "WJ GOLDEN GLOVES",
+    "w": 1,
+    "l": 6,
+    "t": 0,
+    "g": 7,
+    "pct": ".143",
+    "p": 2
+   },
+   {
+    "team": "VFW POST 3762 BOMBERS",
+    "w": 0,
+    "l": 8,
+    "t": 0,
+    "g": 8,
+    "pct": ".000",
+    "p": 0
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "9U - Division 5",
+  "standings": [
+   {
+    "team": "OHIO THUNDER",
+    "w": 6,
+    "l": 4,
+    "t": 0,
+    "g": 10,
+    "pct": ".600",
+    "p": 12
+   },
+   {
+    "team": "MARYSVILLE MITTS",
+    "w": 5,
+    "l": 4,
+    "t": 0,
+    "g": 9,
+    "pct": ".556",
+    "p": 10
+   },
+   {
+    "team": "OLENTANGY STIX BLACK",
+    "w": 5,
+    "l": 4,
+    "t": 0,
+    "g": 9,
+    "pct": ".556",
+    "p": 10
+   },
+   {
+    "team": "DUBLIN GREEN SOX - STOLL",
+    "w": 5,
+    "l": 5,
+    "t": 0,
+    "g": 10,
+    "pct": ".500",
+    "p": 10
+   },
+   {
+    "team": "NATIONALS BLUE",
+    "w": 5,
+    "l": 5,
+    "t": 0,
+    "g": 10,
+    "pct": ".500",
+    "p": 10
+   },
+   {
+    "team": "BO JACKSON ELITE",
+    "w": 3,
+    "l": 7,
+    "t": 0,
+    "g": 10,
+    "pct": ".300",
+    "p": 6
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "9U - Division 6",
+  "standings": [
+   {
+    "team": "OHIO INDEPENDENCE",
+    "w": 9,
+    "l": 1,
+    "t": 0,
+    "g": 10,
+    "pct": ".900",
+    "p": 18
+   },
+   {
+    "team": "UC TIGERS",
+    "w": 9,
+    "l": 1,
+    "t": 0,
+    "g": 10,
+    "pct": ".900",
+    "p": 18
+   },
+   {
+    "team": "ROCKIES",
+    "w": 4,
+    "l": 4,
+    "t": 0,
+    "g": 8,
+    "pct": ".500",
+    "p": 8
+   },
+   {
+    "team": "LAB RATS",
+    "w": 2,
+    "l": 7,
+    "t": 0,
+    "g": 9,
+    "pct": ".222",
+    "p": 4
+   },
+   {
+    "team": "HILLIARD PANTHERS",
+    "w": 2,
+    "l": 8,
+    "t": 0,
+    "g": 10,
+    "pct": ".200",
+    "p": 4
+   },
+   {
+    "team": "DUBLIN GREEN SOX - BRUMMER",
+    "w": 1,
+    "l": 6,
+    "t": 0,
+    "g": 7,
+    "pct": ".143",
+    "p": 2
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "9U - Division 7",
+  "standings": [
+   {
+    "team": "NATURALS ORANGE",
+    "w": 10,
+    "l": 0,
+    "t": 0,
+    "g": 10,
+    "pct": "1.000",
+    "p": 20
+   },
+   {
+    "team": "OLENTANGY BASEBALL CLUB - KEMP",
+    "w": 6,
+    "l": 4,
+    "t": 0,
+    "g": 10,
+    "pct": ".600",
+    "p": 12
+   },
+   {
+    "team": "SCORPIONS - GREAT LAKES",
+    "w": 5,
+    "l": 4,
+    "t": 0,
+    "g": 9,
+    "pct": ".556",
+    "p": 10
+   },
+   {
+    "team": "NATIONALS RED",
+    "w": 4,
+    "l": 6,
+    "t": 0,
+    "g": 10,
+    "pct": ".400",
+    "p": 8
+   },
+   {
+    "team": "BIG WALNUT GENERALS",
+    "w": 3,
+    "l": 5,
+    "t": 0,
+    "g": 8,
+    "pct": ".375",
+    "p": 6
+   },
+   {
+    "team": "UAJBA LANHART",
+    "w": 0,
+    "l": 9,
+    "t": 0,
+    "g": 9,
+    "pct": ".000",
+    "p": 0
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "10U - Division 1",
+  "standings": [
+   {
+    "team": "OLENTANGY STIX - EBERHARDT",
+    "w": 10,
+    "l": 3,
+    "t": 0,
+    "g": 13,
+    "pct": ".769",
+    "p": 20
+   },
+   {
+    "team": "HILLIARD COLTS RED",
+    "w": 8,
+    "l": 5,
+    "t": 0,
+    "g": 13,
+    "pct": ".615",
+    "p": 16
+   },
+   {
+    "team": "DUBLIN GREEN SOX - DEVANEY",
+    "w": 7,
+    "l": 6,
+    "t": 0,
+    "g": 13,
+    "pct": ".538",
+    "p": 14
+   },
+   {
+    "team": "OHIO SELECT EAGLES",
+    "w": 7,
+    "l": 6,
+    "t": 0,
+    "g": 13,
+    "pct": ".538",
+    "p": 14
+   },
+   {
+    "team": "UPPER ARLINGTON BEARS",
+    "w": 7,
+    "l": 6,
+    "t": 0,
+    "g": 13,
+    "pct": ".538",
+    "p": 14
+   },
+   {
+    "team": "ALDER PIONEERS RED",
+    "w": 6,
+    "l": 7,
+    "t": 0,
+    "g": 13,
+    "pct": ".462",
+    "p": 12
+   },
+   {
+    "team": "WORTHINGTON NATIONALS BLUE",
+    "w": 4,
+    "l": 7,
+    "t": 0,
+    "g": 11,
+    "pct": ".364",
+    "p": 8
+   },
+   {
+    "team": "MARYSVILLE MITTS",
+    "w": 1,
+    "l": 10,
+    "t": 0,
+    "g": 11,
+    "pct": ".091",
+    "p": 2
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "10U - Division 2",
+  "standings": [
+   {
+    "team": "HILLIARD PANTHERS",
+    "w": 11,
+    "l": 1,
+    "t": 0,
+    "g": 12,
+    "pct": ".917",
+    "p": 22
+   },
+   {
+    "team": "NATURALS ORANGE",
+    "w": 9,
+    "l": 4,
+    "t": 0,
+    "g": 13,
+    "pct": ".692",
+    "p": 18
+   },
+   {
+    "team": "RADNOR RAPTORS",
+    "w": 8,
+    "l": 5,
+    "t": 0,
+    "g": 13,
+    "pct": ".615",
+    "p": 16
+   },
+   {
+    "team": "UC TIGERS - Eizensmits",
+    "w": 7,
+    "l": 6,
+    "t": 0,
+    "g": 13,
+    "pct": ".538",
+    "p": 14
+   },
+   {
+    "team": "Dublin Green Sox - Taylor",
+    "w": 6,
+    "l": 8,
+    "t": 0,
+    "g": 14,
+    "pct": ".429",
+    "p": 12
+   },
+   {
+    "team": "HILLIARD COLTS WHITE",
+    "w": 6,
+    "l": 8,
+    "t": 0,
+    "g": 14,
+    "pct": ".429",
+    "p": 12
+   },
+   {
+    "team": "COLUMBUS SHARKS",
+    "w": 3,
+    "l": 7,
+    "t": 0,
+    "g": 10,
+    "pct": ".300",
+    "p": 6
+   },
+   {
+    "team": "OLENTANGY STIX - WINECOFF",
+    "w": 1,
+    "l": 12,
+    "t": 0,
+    "g": 13,
+    "pct": ".077",
+    "p": 2
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "10U - Division 3",
+  "standings": [
+   {
+    "team": "LICKING VALLEY DIRTBAGS",
+    "w": 8,
+    "l": 2,
+    "t": 0,
+    "g": 10,
+    "pct": ".800",
+    "p": 16
+   },
+   {
+    "team": "OHIO BUILT BASEBALL",
+    "w": 7,
+    "l": 2,
+    "t": 0,
+    "g": 9,
+    "pct": ".778",
+    "p": 14
+   },
+   {
+    "team": "GAHANNA LIONS",
+    "w": 8,
+    "l": 4,
+    "t": 0,
+    "g": 12,
+    "pct": ".667",
+    "p": 16
+   },
+   {
+    "team": "EASTSIDE WARRIORS",
+    "w": 6,
+    "l": 3,
+    "t": 0,
+    "g": 9,
+    "pct": ".667",
+    "p": 12
+   },
+   {
+    "team": "740 SLUGGERS BASEBALL CLUB",
+    "w": 3,
+    "l": 7,
+    "t": 0,
+    "g": 10,
+    "pct": ".300",
+    "p": 6
+   },
+   {
+    "team": "ATHLETICS BASEBALL ASSOCIATION",
+    "w": 2,
+    "l": 10,
+    "t": 0,
+    "g": 12,
+    "pct": ".167",
+    "p": 4
+   },
+   {
+    "team": "CHIEFS",
+    "w": 1,
+    "l": 7,
+    "t": 0,
+    "g": 8,
+    "pct": ".125",
+    "p": 2
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "10U - Division 4",
+  "standings": [
+   {
+    "team": "AC ACES",
+    "w": 7,
+    "l": 1,
+    "t": 0,
+    "g": 8,
+    "pct": ".875",
+    "p": 14
+   },
+   {
+    "team": "LANCASTER BASEBALL CLUB",
+    "w": 7,
+    "l": 3,
+    "t": 0,
+    "g": 10,
+    "pct": ".700",
+    "p": 14
+   },
+   {
+    "team": "EAGLES",
+    "w": 5,
+    "l": 4,
+    "t": 0,
+    "g": 9,
+    "pct": ".556",
+    "p": 10
+   },
+   {
+    "team": "PICKERINGTON XPLOSION",
+    "w": 4,
+    "l": 5,
+    "t": 0,
+    "g": 9,
+    "pct": ".444",
+    "p": 8
+   },
+   {
+    "team": "BLOOM CARROLL BULLDOGS",
+    "w": 1,
+    "l": 4,
+    "t": 0,
+    "g": 5,
+    "pct": ".200",
+    "p": 2
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "10U - Division 5A",
+  "standings": [
+   {
+    "team": "WORTHINGTON CHRISTIAN WARRIORS",
+    "w": 7,
+    "l": 2,
+    "t": 0,
+    "g": 9,
+    "pct": ".778",
+    "p": 14
+   },
+   {
+    "team": "OSTRANDER ROCKETS",
+    "w": 6,
+    "l": 2,
+    "t": 0,
+    "g": 8,
+    "pct": ".750",
+    "p": 12
+   },
+   {
+    "team": "WORTHINGTON NATIONALS WHITE",
+    "w": 8,
+    "l": 4,
+    "t": 0,
+    "g": 12,
+    "pct": ".667",
+    "p": 16
+   },
+   {
+    "team": "NATURALS BLACK",
+    "w": 2,
+    "l": 5,
+    "t": 0,
+    "g": 7,
+    "pct": ".286",
+    "p": 4
+   },
+   {
+    "team": "MARION MERCHANTS",
+    "w": 1,
+    "l": 6,
+    "t": 0,
+    "g": 7,
+    "pct": ".143",
+    "p": 2
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "10U - Division 5B",
+  "standings": [
+   {
+    "team": "OBC - BRAINARD",
+    "w": 5,
+    "l": 1,
+    "t": 0,
+    "g": 6,
+    "pct": ".833",
+    "p": 10
+   },
+   {
+    "team": "GROVE CITY TITANS - BLUE",
+    "w": 5,
+    "l": 3,
+    "t": 0,
+    "g": 8,
+    "pct": ".625",
+    "p": 10
+   },
+   {
+    "team": "SCORPIONS BASEBALL GL",
+    "w": 5,
+    "l": 3,
+    "t": 0,
+    "g": 8,
+    "pct": ".625",
+    "p": 10
+   },
+   {
+    "team": "NORTH COLUMBUS COMETS",
+    "w": 1,
+    "l": 7,
+    "t": 0,
+    "g": 8,
+    "pct": ".125",
+    "p": 2
+   },
+   {
+    "team": "DUBLIN GREEN SOX - CARPENTER",
+    "w": 1,
+    "l": 8,
+    "t": 0,
+    "g": 9,
+    "pct": ".111",
+    "p": 2
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "11U - Division 1",
+  "standings": [
+   {
+    "team": "OLENTANGY STIX BLACK - HANSON",
+    "w": 8,
+    "l": 1,
+    "t": 0,
+    "g": 9,
+    "pct": ".889",
+    "p": 16
+   },
+   {
+    "team": "DUBLIN GREEN SOX - GRABOVICH",
+    "w": 6,
+    "l": 4,
+    "t": 0,
+    "g": 10,
+    "pct": ".600",
+    "p": 12
+   },
+   {
+    "team": "GAHANNA LIONS",
+    "w": 4,
+    "l": 3,
+    "t": 0,
+    "g": 7,
+    "pct": ".571",
+    "p": 8
+   },
+   {
+    "team": "WORTHINGTON NATIONALS - RED",
+    "w": 4,
+    "l": 6,
+    "t": 0,
+    "g": 10,
+    "pct": ".400",
+    "p": 8
+   },
+   {
+    "team": "OHIO ALL AMERICANS",
+    "w": 3,
+    "l": 6,
+    "t": 0,
+    "g": 9,
+    "pct": ".333",
+    "p": 6
+   },
+   {
+    "team": "NATURALS BASEBALL",
+    "w": 2,
+    "l": 7,
+    "t": 0,
+    "g": 9,
+    "pct": ".222",
+    "p": 4
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "11U - Division 2",
+  "standings": [
+   {
+    "team": "OHIO INDEPENDENCE",
+    "w": 9,
+    "l": 0,
+    "t": 0,
+    "g": 9,
+    "pct": "1.000",
+    "p": 18
+   },
+   {
+    "team": "DBC BOMBERS - PERRY",
+    "w": 3,
+    "l": 2,
+    "t": 0,
+    "g": 5,
+    "pct": ".600",
+    "p": 6
+   },
+   {
+    "team": "OHIO STING BASEBALL CLUB",
+    "w": 5,
+    "l": 4,
+    "t": 0,
+    "g": 9,
+    "pct": ".556",
+    "p": 10
+   },
+   {
+    "team": "HILLIARD COLTS RED",
+    "w": 4,
+    "l": 4,
+    "t": 0,
+    "g": 8,
+    "pct": ".500",
+    "p": 8
+   },
+   {
+    "team": "WORTHINGTON NATIONALS - BLUE",
+    "w": 4,
+    "l": 6,
+    "t": 0,
+    "g": 10,
+    "pct": ".400",
+    "p": 8
+   },
+   {
+    "team": "GROVE CITY TITANS",
+    "w": 0,
+    "l": 9,
+    "t": 0,
+    "g": 9,
+    "pct": ".000",
+    "p": 0
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "11U - Division 3",
+  "standings": [
+   {
+    "team": "PLAIN CITY PIONEERS - CORTZ",
+    "w": 9,
+    "l": 1,
+    "t": 0,
+    "g": 10,
+    "pct": ".900",
+    "p": 18
+   },
+   {
+    "team": "RADNOR RAPTORS",
+    "w": 7,
+    "l": 2,
+    "t": 0,
+    "g": 9,
+    "pct": ".778",
+    "p": 14
+   },
+   {
+    "team": "COLIMBUS SHARKS - PICKERINGTON",
+    "w": 5,
+    "l": 4,
+    "t": 0,
+    "g": 9,
+    "pct": ".556",
+    "p": 10
+   },
+   {
+    "team": "HILLIARD PANTHERS",
+    "w": 5,
+    "l": 4,
+    "t": 0,
+    "g": 9,
+    "pct": ".556",
+    "p": 10
+   },
+   {
+    "team": "NORTH COLUMBUS COMETS - RED",
+    "w": 2,
+    "l": 7,
+    "t": 0,
+    "g": 9,
+    "pct": ".222",
+    "p": 4
+   },
+   {
+    "team": "OHIO STINGERS",
+    "w": 0,
+    "l": 10,
+    "t": 0,
+    "g": 10,
+    "pct": ".000",
+    "p": 0
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "11U - Division 4",
+  "standings": [
+   {
+    "team": "LICKING VALLEY DIRTBAGS",
+    "w": 11,
+    "l": 1,
+    "t": 0,
+    "g": 12,
+    "pct": ".917",
+    "p": 22
+   },
+   {
+    "team": "OBC WILLIAMS",
+    "w": 9,
+    "l": 3,
+    "t": 0,
+    "g": 12,
+    "pct": ".750",
+    "p": 18
+   },
+   {
+    "team": "DBC BOMBERS - WILLIAMS",
+    "w": 8,
+    "l": 4,
+    "t": 0,
+    "g": 12,
+    "pct": ".667",
+    "p": 16
+   },
+   {
+    "team": "DUBLIN GREEN SOX - JENKINS",
+    "w": 4,
+    "l": 8,
+    "t": 0,
+    "g": 12,
+    "pct": ".333",
+    "p": 8
+   },
+   {
+    "team": "OLENTANGY BASEBALL CLUB - LOZ",
+    "w": 4,
+    "l": 8,
+    "t": 0,
+    "g": 12,
+    "pct": ".333",
+    "p": 8
+   },
+   {
+    "team": "ATHLETICS BASEBALL 2033",
+    "w": 3,
+    "l": 9,
+    "t": 0,
+    "g": 12,
+    "pct": ".250",
+    "p": 6
+   },
+   {
+    "team": "COLMBUS SHARKS - GALENA",
+    "w": 3,
+    "l": 9,
+    "t": 0,
+    "g": 12,
+    "pct": ".250",
+    "p": 6
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "11U - Division 5",
+  "standings": [
+   {
+    "team": "EASTSIDE WARRIORS",
+    "w": 9,
+    "l": 1,
+    "t": 0,
+    "g": 10,
+    "pct": ".900",
+    "p": 18
+   },
+   {
+    "team": "OLENTANGY STIX - YARGER",
+    "w": 5,
+    "l": 4,
+    "t": 0,
+    "g": 9,
+    "pct": ".556",
+    "p": 10
+   },
+   {
+    "team": "WHISTLEPIGS",
+    "w": 5,
+    "l": 4,
+    "t": 0,
+    "g": 9,
+    "pct": ".556",
+    "p": 10
+   },
+   {
+    "team": "MIDWEST MARLINS",
+    "w": 2,
+    "l": 4,
+    "t": 0,
+    "g": 6,
+    "pct": ".333",
+    "p": 4
+   },
+   {
+    "team": "HILLIARD COLTS WHITE",
+    "w": 1,
+    "l": 5,
+    "t": 0,
+    "g": 6,
+    "pct": ".167",
+    "p": 2
+   },
+   {
+    "team": "WORTHINGTON NATIONALS - WHITE",
+    "w": 1,
+    "l": 5,
+    "t": 0,
+    "g": 6,
+    "pct": ".167",
+    "p": 2
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "12U - Division 1",
+  "standings": [
+   {
+    "team": "OLENTANGY STIX - ACKERMAN",
+    "w": 6,
+    "l": 3,
+    "t": 0,
+    "g": 9,
+    "pct": ".667",
+    "p": 12
+   },
+   {
+    "team": "GAHANNA LIONS - BLUE",
+    "w": 5,
+    "l": 4,
+    "t": 0,
+    "g": 9,
+    "pct": ".556",
+    "p": 10
+   },
+   {
+    "team": "GROVE CITY TITANS RED - BALL",
+    "w": 5,
+    "l": 4,
+    "t": 0,
+    "g": 9,
+    "pct": ".556",
+    "p": 10
+   },
+   {
+    "team": "OHIO STING",
+    "w": 2,
+    "l": 7,
+    "t": 0,
+    "g": 9,
+    "pct": ".222",
+    "p": 4
+   },
+   {
+    "team": "COYBL TEST TEAM",
+    "w": 0,
+    "l": 0,
+    "t": 0,
+    "g": 0,
+    "pct": ".000",
+    "p": 0
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "12U - Division 2",
+  "standings": [
+   {
+    "team": "EASTSIDE WARRIORS - HICKMAN",
+    "w": 7,
+    "l": 1,
+    "t": 0,
+    "g": 8,
+    "pct": ".875",
+    "p": 14
+   },
+   {
+    "team": "WORTHINGTON NATIONALS - RED",
+    "w": 5,
+    "l": 3,
+    "t": 0,
+    "g": 8,
+    "pct": ".625",
+    "p": 10
+   },
+   {
+    "team": "OHIO INDEPENDENCE - RED",
+    "w": 4,
+    "l": 3,
+    "t": 0,
+    "g": 7,
+    "pct": ".571",
+    "p": 8
+   },
+   {
+    "team": "WHISTLEPIGS",
+    "w": 2,
+    "l": 5,
+    "t": 0,
+    "g": 7,
+    "pct": ".286",
+    "p": 4
+   },
+   {
+    "team": "EAGLES",
+    "w": 1,
+    "l": 7,
+    "t": 0,
+    "g": 8,
+    "pct": ".125",
+    "p": 2
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "12U - Division 3",
+  "standings": [
+   {
+    "team": "NATURALS - TOWNSEND",
+    "w": 8,
+    "l": 2,
+    "t": 0,
+    "g": 10,
+    "pct": ".800",
+    "p": 16
+   },
+   {
+    "team": "HILLIARD COLTS WHITE",
+    "w": 6,
+    "l": 4,
+    "t": 0,
+    "g": 10,
+    "pct": ".600",
+    "p": 12
+   },
+   {
+    "team": "PLAIN CITY PIONEERS - RED",
+    "w": 6,
+    "l": 4,
+    "t": 0,
+    "g": 10,
+    "pct": ".600",
+    "p": 12
+   },
+   {
+    "team": "WESTERVILLE OUTLAWS",
+    "w": 6,
+    "l": 4,
+    "t": 0,
+    "g": 10,
+    "pct": ".600",
+    "p": 12
+   },
+   {
+    "team": "WORTHINGTON NATIONALS - BLUE",
+    "w": 3,
+    "l": 7,
+    "t": 0,
+    "g": 10,
+    "pct": ".300",
+    "p": 6
+   },
+   {
+    "team": "DUBLIN GREEN SOX - AREND",
+    "w": 1,
+    "l": 9,
+    "t": 0,
+    "g": 10,
+    "pct": ".100",
+    "p": 2
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "12U - Division 4",
+  "standings": [
+   {
+    "team": "UAJBA BEARS BLACK - GILLEN",
+    "w": 7,
+    "l": 1,
+    "t": 0,
+    "g": 8,
+    "pct": ".875",
+    "p": 14
+   },
+   {
+    "team": "LANCASTER BASBALL CLUB",
+    "w": 4,
+    "l": 2,
+    "t": 0,
+    "g": 6,
+    "pct": ".667",
+    "p": 8
+   },
+   {
+    "team": "GAHANNA LIONS - YELLOW",
+    "w": 1,
+    "l": 2,
+    "t": 0,
+    "g": 3,
+    "pct": ".333",
+    "p": 2
+   },
+   {
+    "team": "MIDWEST MARLINS",
+    "w": 0,
+    "l": 3,
+    "t": 0,
+    "g": 3,
+    "pct": ".000",
+    "p": 0
+   },
+   {
+    "team": "OHIO INDEPENDENCE - BLUE",
+    "w": 0,
+    "l": 4,
+    "t": 0,
+    "g": 4,
+    "pct": ".000",
+    "p": 0
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "12U - Division 5",
+  "standings": [
+   {
+    "team": "GAHANNA GLADIATORS",
+    "w": 7,
+    "l": 1,
+    "t": 0,
+    "g": 8,
+    "pct": ".875",
+    "p": 14
+   },
+   {
+    "team": "DUBLIN GREEN SOX - FOLLOWELL",
+    "w": 6,
+    "l": 2,
+    "t": 0,
+    "g": 8,
+    "pct": ".750",
+    "p": 12
+   },
+   {
+    "team": "HILLIARD COLTS BLUE",
+    "w": 3,
+    "l": 5,
+    "t": 0,
+    "g": 8,
+    "pct": ".375",
+    "p": 6
+   },
+   {
+    "team": "OLENTANGY BASEBALL CLUB",
+    "w": 2,
+    "l": 6,
+    "t": 0,
+    "g": 8,
+    "pct": ".250",
+    "p": 4
+   },
+   {
+    "team": "WORTHINGTON NATIONALS - WHITE",
+    "w": 2,
+    "l": 6,
+    "t": 0,
+    "g": 8,
+    "pct": ".250",
+    "p": 4
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "13U - Division 1",
+  "standings": [
+   {
+    "team": "OHIO INDEPENDENCE",
+    "w": 7,
+    "l": 2,
+    "t": 0,
+    "g": 9,
+    "pct": ".778",
+    "p": 14
+   },
+   {
+    "team": "OHIO CANNONS",
+    "w": 3,
+    "l": 2,
+    "t": 0,
+    "g": 5,
+    "pct": ".600",
+    "p": 6
+   },
+   {
+    "team": "HILLIARD COLTS RED",
+    "w": 3,
+    "l": 3,
+    "t": 0,
+    "g": 6,
+    "pct": ".500",
+    "p": 6
+   },
+   {
+    "team": "PLAIN CITY PIONEERS - BLACK",
+    "w": 0,
+    "l": 6,
+    "t": 0,
+    "g": 6,
+    "pct": ".000",
+    "p": 0
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "13U - Division 2",
+  "standings": [
+   {
+    "team": "OBC - YOUNESS",
+    "w": 9,
+    "l": 1,
+    "t": 0,
+    "g": 10,
+    "pct": ".900",
+    "p": 18
+   },
+   {
+    "team": "NORTHSIDE VENOM",
+    "w": 7,
+    "l": 3,
+    "t": 0,
+    "g": 10,
+    "pct": ".700",
+    "p": 14
+   },
+   {
+    "team": "DUBLIN GREEN SOX - VICK",
+    "w": 5,
+    "l": 5,
+    "t": 0,
+    "g": 10,
+    "pct": ".500",
+    "p": 10
+   },
+   {
+    "team": "HILLIARD COLTS WHITE",
+    "w": 4,
+    "l": 5,
+    "t": 0,
+    "g": 9,
+    "pct": ".444",
+    "p": 8
+   },
+   {
+    "team": "LANCASTER BASBALL CLUB",
+    "w": 3,
+    "l": 6,
+    "t": 0,
+    "g": 9,
+    "pct": ".333",
+    "p": 6
+   },
+   {
+    "team": "WORTHINGTON NATIONALS - BLUE",
+    "w": 1,
+    "l": 9,
+    "t": 0,
+    "g": 10,
+    "pct": ".100",
+    "p": 2
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "13U - Division 3",
+  "standings": [
+   {
+    "team": "OBC WOOTEN",
+    "w": 6,
+    "l": 0,
+    "t": 0,
+    "g": 6,
+    "pct": "1.000",
+    "p": 12
+   },
+   {
+    "team": "NORTH COLUMBUS COMETS",
+    "w": 3,
+    "l": 3,
+    "t": 0,
+    "g": 6,
+    "pct": ".500",
+    "p": 6
+   },
+   {
+    "team": "DUBLIN GREEN SOX - NEWKIRK",
+    "w": 2,
+    "l": 4,
+    "t": 0,
+    "g": 6,
+    "pct": ".333",
+    "p": 4
+   },
+   {
+    "team": "WORTHINGTON NATIONALS - WHITE",
+    "w": 1,
+    "l": 5,
+    "t": 0,
+    "g": 6,
+    "pct": ".167",
+    "p": 2
+   },
+   {
+    "team": "LAB RATS",
+    "w": 0,
+    "l": 0,
+    "t": 0,
+    "g": 0,
+    "pct": ".000",
+    "p": 0
+   },
+   {
+    "team": "MARION MERCHANTS",
+    "w": 0,
+    "l": 0,
+    "t": 0,
+    "g": 0,
+    "pct": ".000",
+    "p": 0
+   }
+  ]
+ },
+ {
+  "season": "2026",
+  "game_type": "season",
+  "division": "14U - Division 1",
+  "standings": [
+   {
+    "team": "OHIO INDEPENDENCE",
+    "w": 7,
+    "l": 0,
+    "t": 0,
+    "g": 7,
+    "pct": "1.000",
+    "p": 14
+   },
+   {
+    "team": "Fayco Eagles 423",
+    "w": 6,
+    "l": 1,
+    "t": 0,
+    "g": 7,
+    "pct": ".857",
+    "p": 12
+   },
+   {
+    "team": "OLENTANGY STIX",
+    "w": 3,
+    "l": 3,
+    "t": 0,
+    "g": 6,
+    "pct": ".500",
+    "p": 6
+   },
+   {
+    "team": "MIDWEST MARLINS",
+    "w": 0,
+    "l": 4,
+    "t": 0,
+    "g": 4,
+    "pct": ".000",
+    "p": 0
+   },
+   {
+    "team": "WORTHINGTON NATIONALS - WHITE",
+    "w": 0,
+    "l": 4,
+    "t": 0,
+    "g": 4,
+    "pct": ".000",
+    "p": 0
+   },
+   {
+    "team": "WORTHINGTON NATIONALS BLUE",
+    "w": 0,
+    "l": 4,
+    "t": 0,
+    "g": 4,
+    "pct": ".000",
+    "p": 0
+   }
+  ]
+ }
+]
