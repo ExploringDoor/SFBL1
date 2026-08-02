@@ -422,3 +422,26 @@ html.tenant-island[data-page="admin"] body {
 html.tenant-island[data-page="admin"] {
   --card: #ffffff;
 }
+
+/* ---- score ticker on phones ---------------------------------------------
+ * globals.css hides the ticker under 700px for every tenant, on the grounds
+ * that a dense horizontal score strip is cramped on a phone. Fair, but Mike
+ * asked for it after seeing it on SFBL — and SFBL genuinely does show it: its
+ * live build predates that rule, so the hide never reached it.
+ *
+ * Island opts back in. The trade Adam already flagged is real (only two or
+ * three games fit on screen at once), but Island runs flags.ticker_scroll, so
+ * the strip auto-pans and the rest come round rather than being unreachable.
+ *
+ * --ticker-height must move with it: globals.css collapses it to 0 on mobile,
+ * and .le-nav / .site-shell position themselves off that variable, so leaving
+ * it at 0 would slide the nav up underneath the ticker. 76px matches the
+ * mobile height Ticker.css already forces. */
+@media (max-width: 700px) {
+  html.tenant-island {
+    --ticker-height: 76px;
+  }
+  html.tenant-island #score-ticker {
+    display: flex !important;
+  }
+}
