@@ -10,7 +10,7 @@ import { PwaShell } from "@/components/PwaShell";
 import { ViewTracker } from "@/components/ViewTracker";
 import { PwaTabBar } from "@/components/ui/PwaTabBar";
 import { PageBanner } from "@/components/PageBanner";
-import { headerImagesFor } from "@/lib/header-images";
+import { bannerSlugFor, headerImagesFor } from "@/lib/header-images";
 import { TickerScrollHide } from "@/components/ui/TickerScrollHide";
 import { TickerInputEnhancer } from "@/components/ui/TickerInputEnhancer";
 import { SwVersionPill } from "@/components/ui/SwVersionPill";
@@ -175,7 +175,12 @@ export default async function RootLayout({
   const tenantId = h.get("x-tenant-id");
   // First path segment seeds the header-banner image for SSR (the client
   // PageBanner then tracks the route for in-app navigation).
-  const bannerSlug = (h.get("x-pathname") ?? "/").split("/")[1] || "home";
+  const pathname = h.get("x-pathname") ?? "/";
+  const bannerSlug = pathname.split("/")[1] || "home";
+  // The banner keys off a slightly different slug: CMS pages at /content/<id>
+  // all share the first segment "content", so they resolve to "content-<id>".
+  // data-page keeps the plain first segment, which existing CSS targets.
+  const bannerImgSlug = bannerSlugFor(pathname);
   const configJson = h.get("x-tenant-config-json");
   let leagueName: string | null = null;
   let leagueAbbrev: string | undefined;
@@ -431,7 +436,7 @@ export default async function RootLayout({
           {tenantId && (
             <PageBanner
               images={headerImagesFor(tenantId)}
-              initialSlug={bannerSlug}
+              initialSlug={bannerImgSlug}
               fullBleed={bannerFullBleed}
               leagueName={leagueName ?? ""}
             />

@@ -31,6 +31,8 @@
 
 import { usePathname } from "next/navigation";
 
+import { bannerSlugFor } from "@/lib/header-images";
+
 export function PageBanner({
   images,
   initialSlug,
@@ -51,7 +53,7 @@ export function PageBanner({
   // slug from `initialSlug` (server-derived from the request path). On the
   // client it updates with the route so the banner swaps on in-app navigation.
   const pathname = usePathname();
-  const slug = pathname ? pathname.split("/")[1] || "home" : initialSlug;
+  const slug = pathname ? bannerSlugFor(pathname) : initialSlug;
   const src = images[slug];
   if (!src) return null;
 

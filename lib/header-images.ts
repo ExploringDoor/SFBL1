@@ -10,13 +10,32 @@
 //
 // To add/remove a tenant's header banners: drop the <slug>.jpg into
 // public/<tenant>/headers/ and update its entry here.
-const HEADER_SLUGS: Record<string, string[]> = {
+//
+// An entry is either "slug" (file is <slug>.jpg) or ["slug", "file"] when one
+// piece of artwork serves several routes. Island's "Information" dropdown is
+// not a page of its own, so its banner is aliased onto the real pages that
+// live under it.
+type HeaderEntry = string | [slug: string, file: string];
+
+const HEADER_SLUGS: Record<string, HeaderEntry[]> = {
   // Island Fastpitch. No playoffs banner: the only candidate was a Little
   // League BASEBALL image (boys in uniform, scoreboard reading "LITTLE LEAGUE")
   // left over from another build. Wrong sport and wrong league for a girls
-  // fastpitch site. rules / fields / tournaments have no artwork yet either;
-  // a slug with no file simply renders no banner.
-  island: ["home", "scores", "schedule", "standings", "teams"],
+  // fastpitch site. A slug with no file simply renders no banner.
+  island: [
+    "home",
+    "scores",
+    "schedule",
+    "standings",
+    "teams",
+    "fields",
+    "tournaments",
+    "team-registration",
+    "content-events-clinics",
+    ["rules", "information"],
+    ["player-ads", "information"],
+    ["summer-league", "information"],
+  ],
   coybl: [
     "home",
     "scores",
@@ -33,9 +52,23 @@ const HEADER_SLUGS: Record<string, string[]> = {
 
 export function headerImagesFor(tenant: string | null): Record<string, string> {
   if (!tenant) return {};
-  const slugs = HEADER_SLUGS[tenant];
-  if (!slugs) return {};
+  const entries = HEADER_SLUGS[tenant];
+  if (!entries) return {};
   const map: Record<string, string> = {};
-  for (const slug of slugs) map[slug] = `/${tenant}/headers/${slug}.jpg`;
+  for (const entry of entries) {
+    const [slug, file] = typeof entry === "string" ? [entry, entry] : entry;
+    map[slug] = `/${tenant}/headers/${file}.jpg`;
+  }
   return map;
+}
+
+// Which banner a pathname asks for. Normally the first path segment, so /teams
+// -> "teams". The exception is the CMS route /content/<pageId>, where the first
+// segment is the same "content" for every page — those get "content-<pageId>"
+// so each CMS page can carry its own artwork. Keep this in sync with the
+// lookups in components/PageBanner.tsx.
+export function bannerSlugFor(pathname: string): string {
+  const parts = pathname.split("/").filter(Boolean);
+  if (parts[0] === "content" && parts[1]) return `content-${parts[1]}`;
+  return parts[0] ?? "home";
 }
