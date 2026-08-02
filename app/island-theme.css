@@ -464,8 +464,26 @@ html.tenant-island[data-page="admin"] {
  * banner that reads "Information", so those pages KEEP their heading — it is
  * what tells you which of the three you are on. Home keeps its hero too; its
  * banner is the league logo, not the word "Home".
+ *
+ * WHAT gets hidden is the eyebrow + <h1> pair at the top of the page's own
+ * <header>, not the whole block. The trailing line in that header is real
+ * content on several pages ("Every park and field the league plays at", the
+ * standings' "Through May 27 · 23 teams", a CMS page's last-updated date), so
+ * it stays.
+ *
+ * Scoped .site-content > main > header so it can only ever reach a PAGE title,
+ * never an <h1> inside a card. The extra `> div` selectors are for /schedule,
+ * which wraps its title in a div to sit beside a right-hand control.
  * ------------------------------------------------------------------------- */
-html[data-banner-titled] .site-content h1 {
+html.tenant-island[data-banner-titled] .site-content > main > header > .sec-eyebrow,
+html.tenant-island[data-banner-titled] .site-content > main > header > div > .sec-eyebrow,
+html.tenant-island[data-banner-titled]:not([data-page="standings"]) .site-content > main > header > h1,
+html.tenant-island[data-banner-titled]:not([data-page="standings"]) .site-content > main > header > div > h1,
+/* Standings is inverted: its EYEBROW reads "Standings" (the duplicate) while
+   its <h1> is the season label, which is information the banner does not carry.
+   That eyebrow is a plain inline-styled <p>, not .sec-eyebrow, so it needs its
+   own selector — and the h1 is excluded above rather than hidden. */
+html.tenant-island[data-banner-titled][data-page="standings"] .site-content > main > header > p:first-child {
   position: absolute;
   width: 1px;
   height: 1px;
