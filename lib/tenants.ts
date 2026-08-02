@@ -135,6 +135,18 @@ const HOST_ALIAS_BASELINE: Record<string, string> = {
   // the tenant resolves without depending on an env var. (Adam, 2026-07.)
   "coybl.net": "coybl",
   "www.coybl.net": "coybl",
+  // COYBL's ORIGINAL domain, still on SportsEngine as of 2026-08-02
+  // (registrar AIT, nameservers ns*.sportnginserver.com). Listed ahead of
+  // the DNS cutover so the switch is a pure DNS change with no deploy: these
+  // are inert until coybl.org actually points at Vercel. Without them the
+  // cutover lands on "Tenant not found for host: coybl.org" — the same
+  // failure www.coybl.net hit before it was added here.
+  //
+  // NOTE for the cutover: coybl.org carries LIVE GOOGLE WORKSPACE EMAIL
+  // (MX -> aspmx.l.google.com). Moving nameservers MUST recreate the MX +
+  // SPF/verification TXT records or the league's mail stops being delivered.
+  "coybl.org": "coybl",
+  "www.coybl.org": "coybl",
 };
 const HOST_ALIASES: Record<string, string> = (() => {
   const out: Record<string, string> = { ...HOST_ALIAS_BASELINE };
