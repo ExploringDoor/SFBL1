@@ -445,3 +445,35 @@ html.tenant-island[data-page="admin"] {
     display: flex !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Header artwork already names the page
+ *
+ * Island's banners are WORD art: the image itself reads "Tournaments",
+ * "Events & Clinics", "Teams". The page's own <h1> then said the same thing a
+ * second time, directly underneath. Adam asked for the duplicate text gone.
+ *
+ * Hidden visually rather than removed. The heading is still the page's only
+ * <h1>, so screen readers and the document outline are untouched, and any page
+ * that loses its banner (image missing, a tenant without art) still reads
+ * correctly — nothing here edits the pages themselves.
+ *
+ * data-banner-titled is stamped by app/layout.tsx during SSR and re-stamped by
+ * <PageSlug /> on client navigation. It is set ONLY for a page whose artwork is
+ * its own: the Information menu (/rules, /player-ads, /summer-league) shares one
+ * banner that reads "Information", so those pages KEEP their heading — it is
+ * what tells you which of the three you are on. Home keeps its hero too; its
+ * banner is the league logo, not the word "Home".
+ * ------------------------------------------------------------------------- */
+html[data-banner-titled] .site-content h1 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

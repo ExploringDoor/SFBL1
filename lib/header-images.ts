@@ -50,6 +50,25 @@ const HEADER_SLUGS: Record<string, HeaderEntry[]> = {
   ],
 };
 
+// Tenants whose header art is WORD art — the image itself reads "Tournaments",
+// "Events & Clinics" and so on. On those, the page's own <h1> just repeats what
+// the banner already says. COYBL is deliberately absent: its banners are
+// photographs with no lettering, so its headings have to stay visible.
+const WORD_ART_TENANTS = new Set(["island"]);
+
+// Does the banner on this page already spell the page name out? True only when
+// the art is that page's own (a plain slug entry). An ALIASED banner is shared
+// artwork — Island's "Information" image says "Information", not "Player Ads" —
+// so those pages keep their heading. "home" is excluded too: its banner is the
+// league logo, not the word "Home".
+export function bannerCarriesTitle(
+  tenant: string | null,
+  slug: string,
+): boolean {
+  if (!tenant || !WORD_ART_TENANTS.has(tenant) || slug === "home") return false;
+  return (HEADER_SLUGS[tenant] ?? []).includes(slug);
+}
+
 export function headerImagesFor(tenant: string | null): Record<string, string> {
   if (!tenant) return {};
   const entries = HEADER_SLUGS[tenant];

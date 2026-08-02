@@ -10,7 +10,11 @@ import { PwaShell } from "@/components/PwaShell";
 import { ViewTracker } from "@/components/ViewTracker";
 import { PwaTabBar } from "@/components/ui/PwaTabBar";
 import { PageBanner } from "@/components/PageBanner";
-import { bannerSlugFor, headerImagesFor } from "@/lib/header-images";
+import {
+  bannerCarriesTitle,
+  bannerSlugFor,
+  headerImagesFor,
+} from "@/lib/header-images";
 import { TickerScrollHide } from "@/components/ui/TickerScrollHide";
 import { TickerInputEnhancer } from "@/components/ui/TickerInputEnhancer";
 import { SwVersionPill } from "@/components/ui/SwVersionPill";
@@ -288,6 +292,12 @@ export default async function RootLayout({
       // keeps it correct after client-side navigation, where this would
       // otherwise stay stuck on the page that was server-rendered.
       data-page={bannerSlug}
+      // Set when the header artwork already reads "Tournaments" / "Teams" /
+      // etc., so the page's own <h1> would say it twice. The heading is hidden
+      // visually but kept for screen readers and the document outline.
+      data-banner-titled={
+        bannerCarriesTitle(tenantId, bannerImgSlug) ? "1" : undefined
+      }
       className={`${inter.variable} ${barlow.variable} ${oswald.variable}${
         motionFx ? " fx-on" : ""
       }${stickyNav ? " nav-sticky" : ""}${
@@ -369,7 +379,7 @@ export default async function RootLayout({
         {/* Keeps <html data-page> correct after client-side navigation. Mounted
             at body level, not inside the ticker block below, so it runs on
             every page regardless of tenant chrome. */}
-        <PageSlug />
+        <PageSlug tenant={tenantId} />
         <TenantProvider tenantId={tenantId} configJson={configJson}>
           {/* SW NAVIGATE listener — handles push-tap when the PWA is
               already open. Mounted at the layout level so every page
