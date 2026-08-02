@@ -6026,3 +6026,88 @@ select:focus-visible {
   color: #7c2d12;
   margin-bottom: 14px;
 }
+
+/* COYBL registration success: "now pay your team fee" options. */
+.cop-wrap {
+  margin-top: 22px;
+  padding: 22px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  background: var(--bg2, #f7f7f8);
+}
+.cop-head {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-strong, #111);
+}
+.cop-sub {
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--muted, rgba(0, 0, 0, 0.56));
+}
+.cop-error {
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  border-radius: 8px;
+  background: rgba(220, 38, 38, 0.08);
+  color: #7f1d1d;
+  font-size: 13px;
+}
+.cop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+.cop-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--text-strong, #111);
+  font-size: 15px;
+  font-weight: 700;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.cop-btn:hover,
+.cop-btn:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+.cop-btn-primary {
+  background: var(--brand-primary, #111);
+  border-color: var(--brand-primary, #111);
+  color: #fff;
+}
+.cop-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none;
+}
+/* The check option is information, not a control. */
+.cop-btn-static {
+  cursor: default;
+}
+.cop-btn-static:hover {
+  transform: none;
+  box-shadow: none;
+}
+.cop-note {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  opacity: 0.75;
+}
+.cop-foot {
+  margin: 14px 0 0;
+  font-size: 13px;
+  color: var(--muted, rgba(0, 0, 0, 0.56));
+}

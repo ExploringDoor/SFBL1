@@ -6,6 +6,7 @@
 
 import { headers } from "next/headers";
 import { LeagueForm, type FormField } from "@/components/forms/LeagueForm";
+import { CoyblPaymentOptions } from "@/components/forms/CoyblPaymentOptions";
 
 const SFBL_FIELDS: FormField[] = [
   { name: "manager_first_name", label: "Manager First Name", type: "text", required: true, width: "half" },
@@ -328,12 +329,12 @@ function content(tenantId: string) {
         "Register your team for the Central Ohio Youth Baseball League.",
       intro: [
         "Choose your registration option below: Option 1 is $495 (includes team insurance plus Five Tool Youth registration); Option 2 is $425 (your team provides proof of its own insurance, plus Five Tool Youth registration). USSSA membership is an optional +$50 add-on.",
-        // NOTE: this used to promise "pay by card (Square) at checkout". There
-        // is no Square checkout in the codebase (no /api/square-checkout, no
-        // Square client anywhere), so every coach was being told about a
-        // payment step that does not exist. Copy now matches what the league
-        // actually does. Restore a card line only when a checkout ships.
-        "Payment is handled separately from this form: pay by Venmo or by check (details below). To pay by card, contact the league office and we will arrange it.",
+        // Card checkout now exists (/api/square-checkout, Square Payment
+        // Link), and the pay options appear on the confirmation screen right
+        // after submitting. If the Square access token is ever missing from
+        // the environment, that button reports it and Venmo/check still work,
+        // so this copy stays true either way.
+        "After you submit, you can pay right away by card, Venmo, or check. Card payments add a 3.25 percent processing fee; Venmo and check have none.",
         // GameChanger info (Doug's copy). Rich node so the numbered steps
         // render as a real list; the required gamechanger_link field is below.
         <GameChangerInfo key="gc" />,
@@ -366,8 +367,8 @@ function content(tenantId: string) {
             (scan below), or by <strong>check</strong> to COYBL, 152 Glen
             Crossing Drive, Pataskala, OH 43062. When Venmo asks you to confirm
             the recipient, the last 4 digits of the phone number are{" "}
-            <strong>1391</strong>. To pay by card, contact the league office to
-            arrange it.
+            <strong>1391</strong>. Prefer to pay by card? You can do that on the
+            confirmation screen right after you submit this form.
           </p>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -464,6 +465,16 @@ export default function TeamRegistrationPage() {
       successMessage={successMessage}
       eyebrow={abbrev}
       footer={footer}
+      // COYBL only: offer card / Venmo / check right after registering, while
+      // the coach is still on the page. Other tenants keep the plain
+      // confirmation (their payment instructions live in their own copy).
+      afterSuccess={
+        tenantId === "coybl"
+          ? (submissionId) => (
+              <CoyblPaymentOptions submissionId={submissionId} />
+            )
+          : undefined
+      }
     />
   );
 }

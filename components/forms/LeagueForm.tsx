@@ -72,6 +72,11 @@ export interface LeagueFormProps {
   /** Optional content rendered BELOW the form (e.g. a secondary payment
    *  option). Kept out of the intro so it doesn't lead the page. */
   footer?: React.ReactNode;
+  /** Optional content rendered on the SUCCESS screen, after submission.
+   *  Receives the saved submission's id (null if the server didn't return
+   *  one) so it can act on that record — COYBL uses it to offer card /
+   *  Venmo / check payment right after registering. */
+  afterSuccess?: (submissionId: string | null) => React.ReactNode;
 }
 
 export function LeagueForm({
@@ -85,11 +90,13 @@ export function LeagueForm({
   successMessage = "Thanks! Your submission was received. The league office will be in touch.",
   eyebrow,
   footer,
+  afterSuccess,
 }: LeagueFormProps) {
   const [data, setData] = useState<Record<string, unknown>>({});
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [submissionId, setSubmissionId] = useState<string | null>(null);
 
   function update(name: string, value: unknown) {
     setData((d) => ({ ...d, [name]: value }));
@@ -130,11 +137,17 @@ export function LeagueForm({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ kind, data }),
       });
+      const j = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        id?: string;
+      };
       if (!res.ok) {
-        const j = (await res.json().catch(() => ({}))) as { error?: string };
         setError(j.error ?? `HTTP ${res.status}`);
         return;
       }
+      // Keep the submission id so the success screen can offer payment
+      // (the card checkout looks the saved registration up by this id).
+      setSubmissionId(j.id ?? null);
       setDone(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "submission failed");
@@ -151,6 +164,9 @@ export function LeagueForm({
           <h2>✓ Submission received</h2>
           <p>{successMessage}</p>
         </div>
+        {/* Optional post-submit block, e.g. COYBL's pay-now options. Gets
+            the saved submission id so it can start a card checkout. */}
+        {afterSuccess?.(submissionId)}
       </main>
     );
   }
