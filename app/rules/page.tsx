@@ -23,6 +23,20 @@ Sign in as a league administrator and click **Edit** to add your league's
 rules. Markdown is supported (headings, lists, links, tables, bold/italic).
 `;
 
+// Page heading. Most tenants prefix the league name ("COYBL — Rules"), which is
+// how it has always read. Island does not: its header banner sits directly above
+// this line and already carries the league's logo and wordmark, so repeating the
+// name there just made a long title for something the art had covered. Adam
+// asked for the plain word on 2026-08-02.
+function rulesHeading(
+  tenantId: string | null,
+  config: { name?: string; flags?: { hide_page_titles?: boolean } } | null,
+): string {
+  if (config?.flags?.hide_page_titles) return "";
+  if (tenantId === "island" || !config?.name) return "Rules";
+  return `${config.name} — Rules`;
+}
+
 export default async function RulesPage() {
   const h = headers();
   const tenantId = h.get("x-tenant-id");
@@ -104,7 +118,7 @@ export default async function RulesPage() {
       (contentSnap.data()?.updated_at as string | undefined);
     return (
       <Shell
-        heading={config?.flags?.hide_page_titles ? "" : config?.name ? `${config.name} — Rules` : "Rules"}
+        heading={rulesHeading(tenantId, config)}
         wide={divisionDefs.length > 0}
       >
         {richUpdatedAt && (
@@ -150,7 +164,7 @@ export default async function RulesPage() {
     : { body: html };
 
   return (
-    <Shell heading={config?.flags?.hide_page_titles ? "" : config?.name ? `${config.name} — Rules` : "Rules"}>
+    <Shell heading={rulesHeading(tenantId, config)}>
       {updatedAt && (
         <p className="mb-4 text-xs text-slate-500">
           Last updated{" "}

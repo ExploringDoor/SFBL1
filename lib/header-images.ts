@@ -35,6 +35,7 @@ const HEADER_SLUGS: Record<string, HeaderEntry[]> = {
     ["rules", "information"],
     ["player-ads", "information"],
     ["summer-league", "information"],
+    ["content-leagues", "information"],
   ],
   coybl: [
     "home",
