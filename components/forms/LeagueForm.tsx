@@ -10,6 +10,7 @@
 // passed in as props.
 
 import { Fragment, useState } from "react";
+import { CoyblPaymentOptions } from "./CoyblPaymentOptions";
 import "./LeagueForm.css";
 
 export type FieldType =
@@ -72,11 +73,14 @@ export interface LeagueFormProps {
   /** Optional content rendered BELOW the form (e.g. a secondary payment
    *  option). Kept out of the intro so it doesn't lead the page. */
   footer?: React.ReactNode;
-  /** Optional content rendered on the SUCCESS screen, after submission.
-   *  Receives the saved submission's id (null if the server didn't return
-   *  one) so it can act on that record — COYBL uses it to offer card /
-   *  Venmo / check payment right after registering. */
-  afterSuccess?: (submissionId: string | null) => React.ReactNode;
+  /** Which post-submit block to render on the SUCCESS screen, if any.
+   *
+   *  This is a plain STRING, not a render function, on purpose: this file is
+   *  a Client Component and the pages that use it are Server Components, and
+   *  functions cannot cross that boundary (passing one 500s the page). So the
+   *  caller names the block and the switch below renders it, with the
+   *  submission id that only this component knows. */
+  afterSuccess?: "coybl-payment";
 }
 
 export function LeagueForm({
@@ -166,7 +170,9 @@ export function LeagueForm({
         </div>
         {/* Optional post-submit block, e.g. COYBL's pay-now options. Gets
             the saved submission id so it can start a card checkout. */}
-        {afterSuccess?.(submissionId)}
+        {afterSuccess === "coybl-payment" && (
+          <CoyblPaymentOptions submissionId={submissionId} />
+        )}
       </main>
     );
   }

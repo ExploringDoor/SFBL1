@@ -6,7 +6,6 @@
 
 import { headers } from "next/headers";
 import { LeagueForm, type FormField } from "@/components/forms/LeagueForm";
-import { CoyblPaymentOptions } from "@/components/forms/CoyblPaymentOptions";
 
 const SFBL_FIELDS: FormField[] = [
   { name: "manager_first_name", label: "Manager First Name", type: "text", required: true, width: "half" },
@@ -468,13 +467,9 @@ export default function TeamRegistrationPage() {
       // COYBL only: offer card / Venmo / check right after registering, while
       // the coach is still on the page. Other tenants keep the plain
       // confirmation (their payment instructions live in their own copy).
-      afterSuccess={
-        tenantId === "coybl"
-          ? (submissionId) => (
-              <CoyblPaymentOptions submissionId={submissionId} />
-            )
-          : undefined
-      }
+      // A string, not a render function — this is a Server Component and
+      // functions can't be passed to Client Components.
+      afterSuccess={tenantId === "coybl" ? "coybl-payment" : undefined}
     />
   );
 }
