@@ -6141,3 +6141,45 @@ select:focus-visible {
   border-top: 1px solid rgba(0, 0, 0, 0.08);
   padding-top: 14px;
 }
+
+/* Tournaments page: pointer to the tournament rules (moved off the league
+   Rules page, since tournament play differs from league play). */
+.tourney-rules-cta {
+  margin-top: 28px;
+  padding: 22px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  background: var(--bg2, #f7f7f8);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.tourney-rules-cta-head {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-strong, #111);
+}
+.tourney-rules-cta-sub {
+  margin: 0;
+  max-width: 620px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--muted, rgba(0, 0, 0, 0.56));
+}
+.tourney-rules-cta-btn {
+  display: inline-block;
+  padding: 12px 22px;
+  border-radius: 8px;
+  background: var(--brand-primary, #111);
+  color: #fff;
+  font-weight: 800;
+  font-size: 15px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.tourney-rules-cta-btn:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+}

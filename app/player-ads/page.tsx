@@ -180,9 +180,10 @@ export default async function PlayerAdsPage() {
         if (f.name === "posted_by") {
           return {
             ...f,
+            // Doug, 2026-08-02: drop "player looking for a team" for COYBL.
+            // The board is umpires-and-teams only here; other tenants
+            // (Island) keep the full free-agent set below.
             options: [
-              { value: "coach", label: "A coach with roster spots to fill" },
-              { value: "player", label: "A player or parent looking for a team" },
               { value: "umpire", label: "An umpire available to work games" },
               { value: "team_ump", label: "A team looking for an umpire" },
             ],
@@ -201,9 +202,9 @@ export default async function PlayerAdsPage() {
         return f;
       })
     : FIELDS;
-  const pageTitle = isCoybl ? "Umpire & Free Agent Board" : "Player Ads";
+  const pageTitle = isCoybl ? "Umpire Board" : "Player Ads";
   const pageIntro = isCoybl
-    ? "Umpires looking for games, teams that need an umpire, and coaches or players looking to connect all post here. Browse the board or add your own below. Your contact details are never shown publicly; responses reach you through the league office."
+    ? "Umpires looking for games and teams that need an umpire post here. Browse the board or add your own below. Your contact details are never shown publicly; responses reach you through the league office."
     : "Where coaches seeking players and parents and players in search of teams can post. Browse the board, or post your own below. Contact details are never shown publicly, responses come to you through the league.";
 
   return (

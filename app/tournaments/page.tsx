@@ -11,6 +11,7 @@
 //   /leagues/<id>/tournament_games/<id>
 //   /leagues/<id>/site_config/tournament_meta = { data: [{name, location}] }
 
+import Link from "next/link";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import type { PublicLeagueConfig } from "@/lib/tenants";
@@ -129,6 +130,23 @@ function EventsView({
           <EventCard key={i} e={e} fallbackUrl={fallbackUrl} />
         ))}
       </div>
+
+      {/* Tournament rules live here now, not on the league Rules page (Doug,
+          2026-08-02) — tournament play differs from league play in ways that
+          cost teams games, so the rules sit with the events. */}
+      <section className="tourney-rules-cta">
+        <div>
+          <h2 className="tourney-rules-cta-head">Tournament rules</h2>
+          <p className="tourney-rules-cta-sub">
+            Tournament play is not the same as league play. Pitching is counted
+            in outs, time limits are shorter, and pool games can end in a tie.
+            Read these before your first pool game.
+          </p>
+        </div>
+        <Link href="/content/tournament-rules" className="tourney-rules-cta-btn">
+          Read the tournament rules
+        </Link>
+      </section>
     </main>
   );
 }
