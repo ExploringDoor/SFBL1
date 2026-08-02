@@ -13,6 +13,7 @@
 // the fallback message instead of a dead button, so the page still works.
 
 import { useState } from "react";
+import { SquareCardForm } from "./SquareCardForm";
 
 // Doug's payment details. Venmo handle and the check address he gave us.
 const VENMO_HANDLE = "@Doug-Hare-2";
@@ -29,61 +30,54 @@ export function CoyblPaymentOptions({
 }: {
   submissionId: string | null;
 }) {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [paidReceipt, setPaidReceipt] = useState<string | null>(null);
+  const [paid, setPaid] = useState(false);
 
-  async function payByCard() {
-    if (!submissionId) {
-      setError(
-        "We couldn't match this to your registration. Please pay by Venmo or check, or contact the league office.",
-      );
-      return;
-    }
-    setBusy(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/square-checkout", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ registrationId: submissionId }),
-      });
-      const j = (await res.json().catch(() => ({}))) as {
-        url?: string;
-        error?: string;
-      };
-      if (!res.ok || !j.url) {
-        setError(j.error ?? "Couldn't start card payment. Try Venmo or check.");
-        return;
-      }
-      window.location.href = j.url;
-    } catch {
-      setError("Couldn't reach the card processor. Try Venmo or check.");
-    } finally {
-      setBusy(false);
-    }
+  // Paid by card — replace the whole block with a receipt, so nobody pays
+  // twice by also sending a Venmo.
+  if (paid) {
+    return (
+      <section className="cop-wrap">
+        <h3 className="cop-head">Payment received</h3>
+        <p className="cop-sub">
+          Thanks. Your team fee is paid and your registration is complete.
+          {paidReceipt ? " A receipt is available below." : ""}
+        </p>
+        {paidReceipt && (
+          <a
+            className="cop-btn"
+            href={paidReceipt}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View receipt
+          </a>
+        )}
+      </section>
+    );
   }
 
   return (
     <section className="cop-wrap">
       <h3 className="cop-head">Now pay your team fee</h3>
       <p className="cop-sub">
-        Your spot is saved. Pick whichever is easiest. Card payments add a
-        3.25 percent processing fee. Venmo and check have no fee.
+        Your spot is saved. Pay by card below, or use Venmo or check. Card
+        payments add a 3.25 percent processing fee. Venmo and check have no
+        fee.
       </p>
 
-      {error && <div className="cop-error">{error}</div>}
+      {/* Card fields render right here — no redirect off the site. */}
+      <SquareCardForm
+        registrationId={submissionId}
+        onPaid={(receipt) => {
+          setPaidReceipt(receipt);
+          setPaid(true);
+        }}
+      />
+
+      <p className="cop-or">Or pay another way</p>
 
       <div className="cop-grid">
-        <button
-          type="button"
-          className="cop-btn cop-btn-primary"
-          onClick={payByCard}
-          disabled={busy}
-        >
-          {busy ? "Starting checkout..." : "Pay by card"}
-          <span className="cop-note">Visa, Mastercard, Amex</span>
-        </button>
-
         <a
           className="cop-btn"
           href={VENMO_URL}

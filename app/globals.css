@@ -6111,3 +6111,33 @@ select:focus-visible {
   font-size: 13px;
   color: var(--muted, rgba(0, 0, 0, 0.56));
 }
+
+/* Embedded Square card form on the COYBL registration confirmation. */
+.sqc-wrap {
+  margin-bottom: 18px;
+}
+.sqc-field {
+  min-height: 90px;
+  padding: 4px 0;
+}
+.sqc-pay {
+  width: 100%;
+  align-items: center;
+  text-align: center;
+  margin-top: 6px;
+}
+.cop-note-block {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: var(--muted, rgba(0, 0, 0, 0.56));
+}
+.cop-or {
+  margin: 18px 0 10px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted, rgba(0, 0, 0, 0.56));
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding-top: 14px;
+}
