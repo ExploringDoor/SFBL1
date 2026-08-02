@@ -121,7 +121,10 @@ export default async function TeamsPage() {
   const divisionsOf = (list: TeamCard[]): DivGroup[] => {
     const byDiv = new Map<string, TeamCard[]>();
     for (const t of list) {
-      const key = t.division ?? "Division";
+      // A team that just registered has no division yet — Doug assigns those
+      // after registration. Label the bucket so the team is visible on the
+      // Teams page immediately instead of sitting under a bare "Division".
+      const key = t.division?.trim() ? t.division : "Division TBD";
       if (!byDiv.has(key)) byDiv.set(key, []);
       byDiv.get(key)!.push(t);
     }

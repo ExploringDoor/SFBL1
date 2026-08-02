@@ -32,6 +32,7 @@ interface Body {
   abbrev?: unknown;
   color?: unknown;
   division?: unknown;
+  ageGroup?: unknown;
   logo_url?: unknown;
   // Per-team captain/manager password. Stored on the PRIVATE
   // teams/{id}/_private/auth subdoc (the public team doc is
@@ -155,7 +156,22 @@ export async function POST(req: Request) {
     update.color = null;
   }
   if (typeof body.division === "string") {
-    update.division = body.division.trim() || null;
+    const div = body.division.trim();
+    update.division = div || null;
+    // Keep the sort key in step with the division so a newly assigned team
+    // lands in the right place instead of at the bottom. "Division 5A" -> 5;
+    // unassigned stays 999 so those teams sort last.
+    const m = /(\d+)/.exec(div);
+    update.divOrder = m ? Number(m[1]) : 999;
+  }
+  // Age group (COYBL: 7U..14U). Youth tenants group standings and the teams
+  // page by age first, so an unset age group leaves a team stranded in
+  // "Other". Registration sets this; this lets the office correct it.
+  if (typeof body.ageGroup === "string") {
+    const ag = body.ageGroup.trim();
+    update.ageGroup = ag || null;
+    const m = /^(\d+)/.exec(ag);
+    update.ageOrder = m ? Number(m[1]) : 999;
   }
   if (typeof body.logo_url === "string") {
     const v = body.logo_url.trim();

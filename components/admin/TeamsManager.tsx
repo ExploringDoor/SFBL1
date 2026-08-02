@@ -21,6 +21,8 @@ interface TeamRow {
   abbrev: string;
   color: string;
   division: string;
+  /** COYBL: 7U..14U. Registration sets it; the office can correct it here. */
+  ageGroup: string;
   logo_url: string;
   active: boolean;
   /** Non-secret marker: does this team have a manager password set?
@@ -73,6 +75,7 @@ export function TeamsManager({ leagueId, user }: Props) {
   const [newAbbrev, setNewAbbrev] = useState("");
   const [newColor, setNewColor] = useState("#002d72");
   const [newDivision, setNewDivision] = useState("");
+  const [newAgeGroup, setNewAgeGroup] = useState("");
 
   async function load() {
     setLoading(true);
@@ -101,6 +104,7 @@ export function TeamsManager({ leagueId, user }: Props) {
               abbrev: String(data.abbrev ?? ""),
               color: String(data.color ?? ""),
               division: String(data.division ?? ""),
+              ageGroup: String(data.ageGroup ?? ""),
               logo_url: String(data.logo_url ?? ""),
               has_captain_password: data.has_captain_password === true,
               active: data.active !== false,
@@ -405,6 +409,7 @@ export function TeamsManager({ leagueId, user }: Props) {
       abbrev: newAbbrev,
       color: newColor,
       division: newDivision,
+      ageGroup: newAgeGroup,
     });
     if (ok) {
       setSuccess(`Created ${newName}`);
@@ -413,6 +418,7 @@ export function TeamsManager({ leagueId, user }: Props) {
       setNewAbbrev("");
       setNewColor("#002d72");
       setNewDivision("");
+      setNewAgeGroup("");
       setShowNew(false);
       await load();
     }
@@ -551,6 +557,19 @@ export function TeamsManager({ leagueId, user }: Props) {
                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
               />
             </label>
+            <label className="block">
+              <span className="block text-xs font-semibold text-slate-700 mb-1">
+                Age group (COYBL)
+              </span>
+              <input
+                type="text"
+                value={newAgeGroup}
+                onChange={(e) => setNewAgeGroup(e.target.value)}
+                disabled={busy}
+                placeholder="10U"
+                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              />
+            </label>
             <label className="block sm:col-span-2">
               <span className="block text-xs font-semibold text-slate-700 mb-1">
                 Color
@@ -648,6 +667,7 @@ function TeamEditForm({
   const [abbrev, setAbbrev] = useState(team.abbrev);
   const [color, setColor] = useState(team.color || "#002d72");
   const [division, setDivision] = useState(team.division);
+  const [ageGroup, setAgeGroup] = useState(team.ageGroup);
   const [logoUrl, setLogoUrl] = useState(team.logo_url);
   const [captainPassword, setCaptainPassword] = useState("");
 
@@ -688,8 +708,30 @@ function TeamEditForm({
             value={division}
             onChange={(e) => setDivision(e.target.value)}
             disabled={busy}
+            placeholder="Division 1"
             className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
+          <span className="block text-[11px] text-slate-500 mt-1">
+            Leave blank until you assign one. Unassigned teams show as
+            &quot;Division TBD&quot; and sort last.
+          </span>
+        </label>
+        <label className="block">
+          <span className="block text-xs font-semibold text-slate-700 mb-1">
+            Age group
+          </span>
+          <input
+            type="text"
+            value={ageGroup}
+            onChange={(e) => setAgeGroup(e.target.value)}
+            disabled={busy}
+            placeholder="10U"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+          <span className="block text-[11px] text-slate-500 mt-1">
+            Set from the coach&apos;s registration. Change it only to correct a
+            mistake.
+          </span>
         </label>
         <label className="block">
           <span className="block text-xs font-semibold text-slate-700 mb-1">
@@ -773,6 +815,7 @@ function TeamEditForm({
               abbrev,
               color,
               division,
+              ageGroup,
               logo_url: logoUrl,
               // Only send a password when one was typed/generated —
               // blank means "keep current".
@@ -864,22 +907,37 @@ function DivisionGroups({
     name: string,
   ) => Promise<void>;
 }) {
-  // Group teams by division. Teams with no division go into the
-  // last bucket so they don't push a "—" header to the top.
+  // Group teams by division, and for youth leagues by AGE GROUP first.
+  // COYBL runs 7U through 14U with numbered divisions inside each, so
+  // bucketing on division alone piles 7U "Division 1" and 14U "Division 1"
+  // into one heap — unusable at ~196 teams. When any team carries an age
+  // group we key on "10U · Division 1"; flat leagues (SFBL, LBDC) are
+  // untouched and still group by division alone.
+  const hasAgeGroups = teams.some((t) => t.ageGroup.trim());
   const buckets = new Map<string, TeamRow[]>();
   for (const t of teams) {
-    const key = t.division.trim() || NO_DIVISION;
+    const div = t.division.trim() || NO_DIVISION;
+    const age = t.ageGroup.trim();
+    const key = hasAgeGroups ? `${age || "No age group"} · ${div}` : div;
     if (!buckets.has(key)) buckets.set(key, []);
     buckets.get(key)!.push(t);
   }
+
+  // Sort by age (7U before 10U before 14U), then division number, with
+  // unassigned divisions last inside each age.
+  const rank = (key: string): [number, number, string] => {
+    const [agePart, divPart] = hasAgeGroups
+      ? key.split(" · ")
+      : ["", key];
+    const age = parseInt(agePart ?? "", 10);
+    const div = divPart ?? "";
+    const divNum = div === NO_DIVISION ? 9999 : (parseInt(div.replace(/\D+/, ""), 10) || 9998);
+    return [Number.isNaN(age) ? 9999 : age, divNum, key];
+  };
   const sortedKeys = Array.from(buckets.keys()).sort((a, b) => {
-    if (a === NO_DIVISION) return 1;
-    if (b === NO_DIVISION) return -1;
-    // Try numeric prefix sort (18+, 28+, 35+ → 18, 28, 35) then alpha.
-    const an = parseInt(a, 10);
-    const bn = parseInt(b, 10);
-    if (!Number.isNaN(an) && !Number.isNaN(bn) && an !== bn) return an - bn;
-    return a.localeCompare(b);
+    const [aa, ad, ak] = rank(a);
+    const [ba, bd, bk] = rank(b);
+    return aa - ba || ad - bd || ak.localeCompare(bk);
   });
 
   return (
@@ -893,7 +951,9 @@ function DivisionGroups({
           >
             <div className="flex items-baseline justify-between bg-slate-50 px-3 py-2 border-b border-slate-200">
               <h3 className="text-sm font-bold uppercase tracking-wider text-slate-700">
-                {key === NO_DIVISION ? "Other" : key}
+                {key === NO_DIVISION
+                  ? "Other"
+                  : key.replace(NO_DIVISION, "Division TBD")}
               </h3>
               <span className="text-xs text-slate-500">
                 {bucketTeams.length} team{bucketTeams.length === 1 ? "" : "s"}

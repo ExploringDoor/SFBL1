@@ -23,6 +23,7 @@ import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { headers } from "next/headers";
 import { parseHost, resolveTenant } from "@/lib/tenants";
+import { provisionCoyblTeam } from "@/lib/provision-team";
 import { sendEmail, notifyAddress, esc } from "@/lib/email/send";
 
 export const runtime = "nodejs";
@@ -339,6 +340,16 @@ export async function POST(req: Request) {
       await createCoachLogin(cleaned, origin);
     } catch {
       /* registration still succeeds even if the login email can't be sent */
+    }
+    // Create the team and connect the coach to it right away (Doug,
+    // 2026-08-02: teams show on the Teams page as soon as they register; he
+    // assigns divisions later). This is what lets a coach post their home
+    // games and log pitch counts without a manual setup step per team.
+    // Idempotent, and never allowed to fail the registration itself.
+    try {
+      await provisionCoyblTeam(tenantId, ref.id, cleaned);
+    } catch (err) {
+      console.error("[league-form] team provisioning failed", err);
     }
     // Tell the league office a team just registered. This branch used to
     // return without notifying anyone, so the only way the director learned
