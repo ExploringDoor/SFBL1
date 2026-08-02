@@ -17,6 +17,43 @@ export interface AgeSection {
   divisionGroups: DivisionGroup[];
 }
 
+// Does this tenant publish official records that the games can't reproduce?
+//
+// True for stats-off tenants whose source site is the authority on W-L-T:
+// COYBL (the source flags which games count) and HSA/Helena (Division I and
+// Division E play crossover games that count in neither division's table,
+// so recomputing credits Division I teams with four phantom wins each).
+//
+// Every surface that shows a record — standings, schedule cards, scores
+// cards, the homepage — must agree, so they all gate on this one predicate
+// rather than each deciding for itself. Tenants that compute normally
+// (SFBL, LBDC) have stats_enabled unset and are unaffected.
+//
+// `flags.use_stored_records` exists because the two questions are NOT the
+// same question:
+//
+//   "does this league publish its own W-L-T?"   (standings source)
+//   "does this league have player stats?"       (are /players and /leaders real)
+//
+// Reading the first off stats_enabled worked while every stored-records
+// tenant also happened to have no player data. JFK broke that: it publishes
+// official records that can't be recomputed (crossover play in the INTER
+// division, plus forfeit wins), AND it has 280 pitchers' worth of real box
+// score data. Under the old predicate, turning its stat pages on would have
+// silently switched its standings to a recomputed table that disagrees with
+// the league's own published numbers.
+//
+// So: the explicit flag wins when set; otherwise fall back to the original
+// stats_enabled===false behaviour, which keeps COYBL and Helena unchanged.
+export function useStoredRecords(
+  config: { flags?: { [key: string]: boolean } } | null | undefined,
+  records: Record<string, { w: number; l: number; t: number }>,
+): boolean {
+  if (Object.keys(records).length === 0) return false;
+  if (config?.flags?.use_stored_records === true) return true;
+  return config?.flags?.stats_enabled === false;
+}
+
 // Build StandingsRow[] from stored league records (stats-off leagues).
 // No run data (rs/ra/rd = 0) or streak — the record columns are all these
 // leagues have. Sorted best-record-first so the table renders in standings

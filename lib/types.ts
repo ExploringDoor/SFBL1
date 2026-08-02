@@ -176,6 +176,11 @@ export interface LeagueConfig {
   // Unset -> falls back to the current calendar year.
   season_year?: number;
 
+  /** Footer licence credit for third-party artwork. CC BY sources (JFK's
+   *  game-icons.net team mascots) require visible attribution on a
+   *  commercial site. Omit for tenants using only original art. */
+  attribution?: string;
+
   // Power rankings produced by an OUTSIDE provider and shown as an iframe,
   // instead of the RPI the platform computes from its own games. COYBL uses
   // this: EvenField publishes weekly per-age rankings the league recognises,

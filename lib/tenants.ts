@@ -28,6 +28,10 @@ export interface PublicLeagueConfig {
   standings?: LeagueConfig["standings"];
   sponsors?: LeagueSponsor[];
   social?: LeagueSocial;
+  /** Licence credit line rendered in the footer. Required when a tenant uses
+   *  CC BY artwork (e.g. JFK's game-icons.net team mascots) — attribution is
+   *  a condition of that licence on a commercial site, not a courtesy. */
+  attribution?: string;
   // Per-tenant nav customization (label hide list). Mirrored from
   // /leagues/<slug>.nav.hide. The layout reads this off the x-tenant-
   // config-json header and passes it to <Nav> + <PwaTabBar>.
@@ -67,6 +71,7 @@ export function toPublicConfig(c: LeagueConfig): PublicLeagueConfig {
     standings: c.standings,
     sponsors: c.sponsors,
     social: c.social,
+    attribution: c.attribution,
     nav: c.nav,
     about: c.about,
     tournaments: c.tournaments,
