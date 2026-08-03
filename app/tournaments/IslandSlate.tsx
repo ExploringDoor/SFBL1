@@ -43,18 +43,21 @@ function fmt(iso: string, opts: Intl.DateTimeFormatOptions): string {
   return asDate(iso).toLocaleDateString("en-US", { ...opts, timeZone: "UTC" });
 }
 
-// "5" for a one-day event, "5 - 6" for a weekend, and "31 - 1" when the weekend
-// crosses a month (Halloween into November).
+// "5" for a one-day event, "5-6" for a weekend, and "31-1" when the weekend
+// crosses a month (Halloween into November). No spaces around the dash: at the
+// date rail's width "14 - 15" ran the full 76px and started wrapping.
 function dayLabel(e: IslandEvent): string {
   const start = fmt(e.start, { day: "numeric" });
   if (!e.end || e.end === e.start) return start;
-  return `${start} - ${fmt(e.end, { day: "numeric" })}`;
+  return `${start}-${fmt(e.end, { day: "numeric" })}`;
 }
 
+// "Sat & Sun" rather than a dash range, which read as a subtraction next to the
+// numeric range directly above it.
 function dowLabel(e: IslandEvent): string {
   const start = fmt(e.start, { weekday: "short" });
   if (!e.end || e.end === e.start) return start;
-  return `${start} - ${fmt(e.end, { weekday: "short" })}`;
+  return `${start} & ${fmt(e.end, { weekday: "short" })}`;
 }
 
 function monthKey(iso: string): string {

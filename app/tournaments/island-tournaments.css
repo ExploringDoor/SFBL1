@@ -89,8 +89,10 @@
 
 .ift-event {
   display: grid;
-  /* Fixed date rail so every row's title starts on the same vertical line. */
-  grid-template-columns: 76px 1fr auto;
+  /* Fixed date rail so every row's title starts on the same vertical line.
+     92px is set by the widest label, a two-digit weekend range like "12-13",
+     which broke across two lines at 76px. */
+  grid-template-columns: 92px 1fr auto;
   gap: 18px;
   align-items: center;
   padding: 16px 18px;
@@ -110,21 +112,25 @@
   line-height: 1;
 }
 
+/* Brand navy, not the accent blue. The row is a white card whatever the page
+   behind it is doing, and #35afea on white is washed out at 11px. */
 .ift-date-mon {
   display: block;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--brand-accent, #35afea);
+  color: var(--brand-primary);
 }
 
 .ift-date-day {
   display: block;
   margin-top: 4px;
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 900;
   letter-spacing: -0.02em;
+  /* A wrapped "12-13" reads as two separate dates. Never break it. */
+  white-space: nowrap;
   color: var(--text-strong);
 }
 
@@ -197,8 +203,10 @@
   white-space: nowrap;
 }
 
+/* Lightened navy rather than a switch to the accent blue, which put white text
+   on #35afea and dropped the button below a readable contrast ratio. */
 .ift-reg:hover {
-  background: var(--brand-accent, #35afea);
+  filter: brightness(1.35);
 }
 
 .ift-reg svg {
