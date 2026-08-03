@@ -320,7 +320,11 @@ export default async function RootLayout({
       children: [
         { label: "Rules", href: "/rules" },
         { label: "Player Ads", href: "/player-ads" },
-        { label: "Summer League", href: "/summer-league" },
+        // Summer League removed 2026-08-03 (Mike, via Adam): the League page
+        // already links to it, so in the menu it was the same destination
+        // twice. Still reachable from three places — the League page body, the
+        // home page, and the "Summer League standings (USSSA)" button on
+        // Standings — so nothing is orphaned by dropping the nav entry.
         { label: "Rainout Alerts", href: "/alerts" },
         { label: "Sponsors", href: "/sponsors" },
         { label: "Umpire Evaluation", href: "/umpire-evaluation-form" },
