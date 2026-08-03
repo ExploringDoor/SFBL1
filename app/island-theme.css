@@ -238,7 +238,12 @@ html.tenant-island .rt-wrap,
    from a CLASS, so neither the generated white-surface list nor the
    [style*="background: var(--card)"] inline match catches them, and the text
    inside would have kept the page's light tokens: white on white. */
-html.tenant-island .ift-event {
+html.tenant-island .ift-event,
+/* Same for the sponsor and store cards — all var(--card) from a class. */
+html.tenant-island .spn-partner,
+html.tenant-island .spn-tier,
+html.tenant-island .spn-card,
+html.tenant-island .str-card {
   --text-strong: #1a1a1a;
   --text-body: #1a1a1a;
   --muted: rgba(0, 0, 0, 0.56);

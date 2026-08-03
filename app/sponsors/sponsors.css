@@ -100,3 +100,214 @@ a.spn-card:hover {
 .spn-cta:hover {
   filter: brightness(1.35);
 }
+
+/* ---- reach strip --------------------------------------------------------
+ * Mike's own figures off the 2026 flyer. Four small stat blocks rather than
+ * one paragraph, because a business scanning this page is looking for the
+ * numbers first. */
+.spn-reach {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+  margin: 26px 0 8px;
+  padding: 20px 22px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--text-strong) 5%, transparent);
+}
+
+.spn-reach-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.spn-reach-stat {
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--brand-accent, #35afea);
+}
+
+.spn-reach-label {
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+/* ---- named partner ------------------------------------------------------ */
+.spn-partner {
+  padding: 22px 24px 24px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--card, #fff);
+}
+
+.spn-partner-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.spn-partner-logo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  border-radius: 10px;
+  flex: none;
+}
+
+.spn-partner-tier {
+  display: inline-block;
+  margin-bottom: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-accent, #35afea) 18%, transparent);
+  color: var(--brand-primary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.spn-partner-name {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--text-strong);
+}
+
+.spn-partner-role {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.spn-quote {
+  margin: 18px 0 0;
+  padding-left: 16px;
+  border-left: 3px solid var(--brand-accent, #35afea);
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--text-body);
+}
+
+.spn-partner-tagline {
+  margin: 12px 0 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.spn-partner-contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+.spn-partner-contact a {
+  color: var(--brand-primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.spn-partner-contact a:hover {
+  text-decoration: underline;
+}
+
+/* ---- packages ----------------------------------------------------------- */
+.spn-tiers-wrap {
+  margin-top: 34px;
+}
+
+.spn-tiers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.spn-tier {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 22px 24px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--card, #fff);
+}
+
+/* The middle package is the one Mike wants people to land on, so it gets the
+   brand edge and the flag rather than being one of three identical boxes. */
+.spn-tier-pop {
+  border-color: var(--brand-accent, #35afea);
+  box-shadow: inset 0 0 0 1px var(--brand-accent, #35afea);
+}
+
+.spn-tier-flag {
+  position: absolute;
+  top: -10px;
+  left: 22px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--brand-accent, #35afea);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.spn-tier-name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-strong);
+}
+
+.spn-tier-price {
+  margin: 6px 0 14px;
+  font-size: 36px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--brand-primary);
+}
+
+.spn-tier-list {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.spn-tier-list li {
+  display: flex;
+  gap: 9px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text-body);
+}
+
+.spn-check {
+  flex: none;
+  margin-top: 3px;
+  color: var(--brand-accent, #35afea);
+}
+
+.spn-tier-impressions {
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 12.5px;
+  color: var(--muted);
+}

@@ -1,0 +1,57 @@
+{
+  "_source": "Mike's 2026 sponsorship flyer and the two Coach Realtors partner cards, sent by Adam 2026-08-02. Prices, benefits, reach figures and the impression estimates are Mike's own numbers, quoted not invented.",
+  "_open_question": "The flyer's tier duration reads 'March-August 2026', a window that ENDS this month, so it is deliberately not published here — see the `duration` note below. Ask Mike what the sellable window is now that the site launches mid-August for a Fall season, then set `duration` and it renders.",
+  "_assets": "partners[].logo is a public path. Donna Fox's headshot and the Coach Realtors mark came in as flyer images only; drop the real files in public/island/sponsors/ and set `logo` to render them. Logos added through Admin > Sponsors also appear here and in the sitewide footer strip.",
+
+  "duration": null,
+
+  "reach": [
+    { "stat": "500,000+", "label": "views a month across our channels" },
+    { "stat": "20+", "label": "tournaments a year" },
+    { "stat": "Hundreds", "label": "of teams served" },
+    { "stat": "Thousands", "label": "of parents at our events" }
+  ],
+
+  "tiers": [
+    {
+      "name": "Premier Local Partner",
+      "price": "$1,000",
+      "impressions": "Estimated 25,000+ local impressions a month",
+      "benefits": [
+        "Your company featured at live tournaments in front of hundreds of families",
+        "Weekly verbal mentions during Thursday Night Live streams",
+        "Ongoing exposure on Instagram and Facebook"
+      ]
+    },
+    {
+      "name": "Featured Business Partner",
+      "price": "$500",
+      "popular": true,
+      "impressions": "Estimated 15,000+ local impressions a month",
+      "benefits": [
+        "Weekly mentions during Thursday Night Live",
+        "Frequent exposure on Instagram and Facebook, Monday through Friday"
+      ]
+    },
+    {
+      "name": "Community Supporter",
+      "price": "$250",
+      "impressions": "Estimated 7,000+ local impressions a month",
+      "benefits": ["Weekly exposure on Instagram and Facebook"]
+    }
+  ],
+
+  "partners": [
+    {
+      "name": "Donna Fox",
+      "company": "Coach Realtors",
+      "tier": "Premier Local Partner",
+      "role": "Licensed Real Estate Salesperson",
+      "tagline": "Let's find home. Together.",
+      "quote": "Island Fastpitch provides more than a game, they give young athletes the opportunity to grow in confidence, discipline, leadership, and teamwork. Lessons that last far beyond the field.",
+      "email": "dfox@coachrealtors.com",
+      "phone": "631.466.6678",
+      "logo": null
+    }
+  ]
+}
