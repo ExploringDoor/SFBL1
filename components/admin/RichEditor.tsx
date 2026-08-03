@@ -27,6 +27,7 @@ import { TextStyle } from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
 import Underline from "@tiptap/extension-underline";
 import Placeholder from "@tiptap/extension-placeholder";
+import { TableKit } from "@tiptap/extension-table";
 import "./RichEditor.css";
 
 interface Props {
@@ -84,6 +85,21 @@ export function RichEditor({
       Placeholder.configure({
         placeholder: placeholder ?? "Start writing…",
       }),
+      // TABLES. Not optional, and not cosmetic.
+      //
+      // ProseMirror parses incoming HTML against its schema and silently DROPS
+      // any node the schema doesn't define. StarterKit has no table node, so
+      // every <table> on a content page came in as its cell text concatenated
+      // into one paragraph ("Game typeCost per team1 umpire game$40…"), and
+      // saving wrote that flattened text back — destroying the table for good.
+      // Island's Leagues page alone has five (game formats, nights by age,
+      // league fees, umpire fees, umpires by division). Adam hit this
+      // 2026-08-03 while editing the championship umpire fee.
+      //
+      // Pinned to the project's exact TipTap version: ^3.22.5 resolves to
+      // 3.29.2, which peers on @tiptap/pm@3.29.2 against the 3.22.5 installed
+      // here, and npm refuses to install it.
+      TableKit.configure({ table: { resizable: false } }),
     ],
     content: initialHtml || "<p></p>",
     editable: !disabled,
@@ -356,6 +372,50 @@ function Toolbar({
         active={editor.isActive({ textAlign: "right" })}
       >
         ➡
+      </Btn>
+      <Sep />
+
+      {/* Table controls. Row/column buttons disable themselves outside a
+          table, so they read as unavailable rather than doing nothing. */}
+      <Btn
+        title="Insert a table"
+        onClick={() =>
+          editor
+            .chain()
+            .focus()
+            .insertTable({ rows: 3, cols: 2, withHeaderRow: true })
+            .run()
+        }
+      >
+        ▦ Table
+      </Btn>
+      <Btn
+        title="Add a row below"
+        onClick={() => editor.chain().focus().addRowAfter().run()}
+        disabled={!editor.can().addRowAfter()}
+      >
+        +Row
+      </Btn>
+      <Btn
+        title="Add a column to the right"
+        onClick={() => editor.chain().focus().addColumnAfter().run()}
+        disabled={!editor.can().addColumnAfter()}
+      >
+        +Col
+      </Btn>
+      <Btn
+        title="Delete the current row"
+        onClick={() => editor.chain().focus().deleteRow().run()}
+        disabled={!editor.can().deleteRow()}
+      >
+        −Row
+      </Btn>
+      <Btn
+        title="Delete the current column"
+        onClick={() => editor.chain().focus().deleteColumn().run()}
+        disabled={!editor.can().deleteColumn()}
+      >
+        −Col
       </Btn>
       <Sep />
 

@@ -598,9 +598,17 @@ export default async function TeamDetailPage({
                   )}
                 </div>
               )}
-              <div style={{ marginTop: 14 }}>
-                <SubscribeCalendar teamId={params.teamId} />
-              </div>
+              {/* Calendar subscribe is hidden on Island until their Fall
+                  schedule exists (Adam, 2026-08-03). The /api/schedule.ics
+                  feed itself WORKS — it returns a real per-team VCALENDAR
+                  today — but the only games in it right now are last Summer's,
+                  so a coach who subscribed would pull a calendar of finished
+                  games. Delete this condition once Fall games are published. */}
+              {tenantId !== "island" && (
+                <div style={{ marginTop: 14 }}>
+                  <SubscribeCalendar teamId={params.teamId} />
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -257,3 +257,41 @@
     padding: 6px 8px;
   }
 }
+
+/* ---- tables -------------------------------------------------------------
+ * Without borders a table in the editor is indistinguishable from stacked
+ * paragraphs, which is how the missing-table bug went unnoticed: the content
+ * LOOKED like loose text either way. These lines make the grid visible while
+ * editing. The public page has its own table styling and is unaffected. */
+.rt-content table {
+  width: 100%;
+  margin: 12px 0;
+  border-collapse: collapse;
+  table-layout: fixed;
+  overflow: hidden;
+}
+
+.rt-content table td,
+.rt-content table th {
+  position: relative;
+  min-width: 80px;
+  padding: 7px 10px;
+  border: 1px solid #cbd5e1;
+  vertical-align: top;
+  text-align: left;
+}
+
+.rt-content table th {
+  background: #f1f5f9;
+  font-weight: 700;
+}
+
+/* The cell the cursor is in, and any multi-cell selection. Without this you
+   cannot tell which row +Row / −Row will act on. */
+.rt-content table .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 132, 199, 0.12);
+  pointer-events: none;
+}

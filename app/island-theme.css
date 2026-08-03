@@ -303,6 +303,23 @@ html.tenant-island .le-nav-dropdown-menu li span {
   color: #1a1a1a !important;
 }
 
+/* The PROFILE menu is a white panel that opens INSIDE .le-nav-right, so the
+ * rule above painting every link in that region white for the black bar was
+ * also painting the panel's items — white on white. Adam saw an empty card
+ * with only the "Sign in as…" eyebrow visible (2026-08-03).
+ *
+ * Scoped to .bg-white descendants so it only reaches what is actually on a
+ * light surface, and specific enough (0,3,2) to beat the .le-nav-right rule
+ * (0,2,2) that carries !important. */
+html.tenant-island .le-nav-right .bg-white a,
+html.tenant-island .le-nav-right .bg-white button,
+html.tenant-island .le-nav-right .bg-white p {
+  color: #1e293b !important;
+}
+html.tenant-island .le-nav-right .bg-white a:hover {
+  background: rgba(0, 0, 0, 0.06) !important;
+}
+
 /* ---- header banner: true edge to edge -----------------------------------
  * PageBanner's full-bleed mode caps height (clamp(84px, 21vw, 330px)) with
  * object-fit: contain, so a banner whose aspect ratio is wider than
