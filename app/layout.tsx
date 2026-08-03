@@ -194,6 +194,19 @@ export default async function RootLayout({
   let themeSecondary: string | undefined;
   let navHideLabels: string[] = [];
   let navAddLinks: NavLink[] = [];
+  // Shortcuts pinned to the top of the MOBILE menu. Island's Leagues and
+  // Tournaments were the two most-used links on their old site, and both sat
+  // behind a dropdown here (Information and More), so on a phone neither was
+  // visible without opening the sheet and scrolling. Adam asked for them at
+  // the top on 2026-08-02. Hardcoded per tenant like the nav logo above, since
+  // no config field carries it and no admin screen would edit one.
+  const featuredNavLinks: NavLink[] =
+    tenantId === "island"
+      ? [
+          { label: "Leagues", href: "/content/leagues" },
+          { label: "Tournaments", href: "/tournaments" },
+        ]
+      : [];
   // Branded season year for the ticker (config.season_year); falls back to the
   // calendar year. COYBL registers the 2027 season during 2026.
   let seasonYear = new Date().getFullYear();
@@ -438,6 +451,7 @@ export default async function RootLayout({
               logoUrl={tenantId === "island" ? "/island/logo-nav.png" : null}
               hideLabels={navHideLabels}
               addLinks={navAddLinks}
+              featuredLinks={featuredNavLinks}
               rightSlot={<ProfileButton tenantId={tenantId} />}
             />
           ) : null}

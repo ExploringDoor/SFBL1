@@ -614,3 +614,39 @@ body.dvsl-modal-open .le-mob-menu {
 .le-mob-sub {
   padding-left: 28px !important;
 }
+
+/* ---- pinned shortcuts at the top of the mobile sheet ---------------------
+ * Two larger tiles above Home, for the links a tenant's visitors open the menu
+ * to reach. Island pins Leagues and Tournaments: both sat behind dropdowns
+ * (Information and More), and they are the two most-used links on their old
+ * site (Adam, 2026-08-02).
+ *
+ * Deliberately taller and heavier than the tiles below so the eye lands here
+ * first. Side by side rather than stacked so they stay above the fold. */
+.le-mob-featured {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.le-mob-tile-featured {
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 8px !important;
+  padding: 16px 16px 18px !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  /* Brand edge so the pair reads as promoted rather than as two more rows. */
+  border-color: var(--brand-primary) !important;
+  box-shadow: inset 0 0 0 1px var(--brand-primary);
+}
+
+.le-mob-tile-featured .le-mob-tile-icon {
+  width: auto;
+  text-align: left;
+}
+
+.le-mob-tile-featured .le-mob-tile-label {
+  line-height: 1.15;
+}

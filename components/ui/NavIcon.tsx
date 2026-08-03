@@ -41,6 +41,9 @@ const PATHS: Record<string, string> = {
   "/availability": "M4 8h16M8 3v4M16 3v4M5 5h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1zM9.5 14.5l1.8 1.8 3.5-3.5",
   "/eligibility": "M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6l8-3zM9 12l2 2 4-4",
   "/power-rankings": "M3 17l5-5 3.5 3.5L20 7M20 7h-5M20 7v5",
+  // Island's Leagues page. Without an entry it drew the neutral circle, which
+  // is fine buried in a dropdown but not for a pinned shortcut.
+  "/content/leagues": "M4 6h16M4 12h16M4 18h9M18 15v6M15 18h6",
 };
 
 /** Neutral fallback (replaces the old "•"). */

@@ -373,6 +373,22 @@ html.tenant-island .le-mob-tile:active {
   background: rgba(255, 255, 255, 0.15) !important;
 }
 
+/* The two pinned shortcuts (Leagues, Tournaments) on the black sheet.
+ *
+ * Nav.css gives them a brand-navy edge, which is invisible against black, and
+ * the .le-mob-tile rules right above are more specific than the plain
+ * .le-mob-tile-featured class — they were overriding the border and stripping
+ * the inset shadow even with !important. So the promoted look is re-stated
+ * here in the accent blue, which is what actually reads on this background. */
+html.tenant-island .le-mob-tile-featured {
+  background: rgba(53, 175, 234, 0.13) !important;
+  border-color: var(--brand-accent, #35afea) !important;
+  box-shadow: inset 0 0 0 1px var(--brand-accent, #35afea) !important;
+}
+html.tenant-island .le-mob-tile-featured:active {
+  background: rgba(53, 175, 234, 0.24) !important;
+}
+
 /* ---- inline background: var(--card) ------------------------------------
  * --card is still #ffffff (white cards are the whole point), but the generated
  * restore list only caught inline styles written as a literal white

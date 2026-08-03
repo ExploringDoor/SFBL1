@@ -38,6 +38,14 @@ export interface NavProps {
   hideLabels?: string[];
   /** Extra top-level links to add (per-tenant config.nav.add). */
   addLinks?: NavLink[];
+  /** Shortcuts pinned to the TOP of the mobile sheet, above Home, as a pair
+   *  of larger tiles. For the one or two things a tenant's visitors open the
+   *  menu to reach — Island's Leagues and Tournaments, which sat behind the
+   *  Information and More dropdowns and were the two most-used links on their
+   *  old site (Adam, 2026-08-02). These are shortcuts, not a reordering: the
+   *  same links stay in their normal sections below. Mobile only; the desktop
+   *  bar has room to show everything already. */
+  featuredLinks?: NavLink[];
   /** Right-hand slot — typically the ProfileButton. Falls back to a
    *  "Sign in" link when omitted. */
   rightSlot?: React.ReactNode;
@@ -52,6 +60,7 @@ export function Nav({
   links: linksProp = DEFAULT_LINKS,
   hideLabels,
   addLinks,
+  featuredLinks,
   rightSlot,
 }: NavProps) {
   // Per-tenant nav customization (hide-list, "About <tenant>" relabel,
@@ -237,6 +246,25 @@ export function Nav({
       />
 
       <div className={"le-mob-menu" + (mobOpen ? " open" : "")}>
+        {/* Pinned shortcuts, above everything else. See featuredLinks. */}
+        {featuredLinks && featuredLinks.length > 0 && (
+          <div className="le-mob-featured">
+            {featuredLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="le-mob-tile le-mob-tile-featured"
+                onClick={() => setMobOpen(false)}
+              >
+                <span className="le-mob-tile-icon" aria-hidden>
+                  <NavIcon href={link.href} />
+                </span>
+                <span className="le-mob-tile-label">{link.label}</span>
+              </Link>
+            ))}
+          </div>
+        )}
+
         {/* Top-level links render as a 2-column grid of icon+label
             cards (DVSL pattern). Sub-pages (children of "More") get
             their own grid below a section header. The flat 26px
