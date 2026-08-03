@@ -18,6 +18,10 @@
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { cleanName } from "@/lib/text";
+import {
+  generateTeamPassword,
+  sendCaptainWelcome,
+} from "@/lib/email/captain-welcome";
 
 export const runtime = "nodejs";
 
@@ -39,6 +43,14 @@ interface Body {
   // world-readable, so a password there would leak). Empty/omitted
   // string = leave the existing password unchanged.
   captain_password?: unknown;
+  /** Generate a readable password server-side instead of supplying one.
+   *  Ignored when captain_password is a non-empty string. */
+  generate_password?: unknown;
+  /** Email the new password to the team's managers on file. Defaults to
+   *  TRUE whenever a password is set — the whole point is that the league
+   *  office does not have to text fifty coaches by hand. Pass false to set
+   *  a password silently. */
+  email_captain?: unknown;
 }
 
 export async function POST(req: Request) {
@@ -201,6 +213,10 @@ export async function POST(req: Request) {
   // (before the empty-update guard) so a password-only edit counts
   // as a change.
   let setCaptainPassword: string | null = null;
+  if (body.generate_password === true && typeof body.captain_password !== "string") {
+    setCaptainPassword = generateTeamPassword();
+    update.has_captain_password = true;
+  }
   if (typeof body.captain_password === "string") {
     const pw = body.captain_password.trim();
     if (pw) {
@@ -254,18 +270,71 @@ export async function POST(req: Request) {
 
   await ref.set(update, { merge: true });
 
+  const emailed: string[] = [];
   if (setCaptainPassword !== null) {
-    await db
-      .doc(`leagues/${leagueId}/teams/${teamId}/_private/auth`)
-      .set(
-        {
-          captain_password: setCaptainPassword,
-          updated_at: new Date().toISOString(),
-          updated_by_uid: decoded.uid,
-        },
-        { merge: true },
-      );
+    const authRef = db.doc(
+      `leagues/${leagueId}/teams/${teamId}/_private/auth`,
+    );
+    // Read BEFORE writing, so we can tell a first-time password from a reset
+    // and word the email accordingly.
+    const hadPassword = (await authRef.get()).exists;
+    await authRef.set(
+      {
+        captain_password: setCaptainPassword,
+        updated_at: new Date().toISOString(),
+        updated_by_uid: decoded.uid,
+      },
+      { merge: true },
+    );
+
+    // Mail it to the managers on file. Default on: the point of this is that
+    // nobody has to hand out fifty passwords. Failures are logged and
+    // swallowed — a bounced email must not roll back a saved password, or the
+    // admin sees an error for a change that actually landed.
+    if (body.email_captain !== false) {
+      try {
+        const [contactSnap, leagueSnap] = await Promise.all([
+          db.doc(`leagues/${leagueId}/teams/${teamId}/_private/contact`).get(),
+          db.doc(`leagues/${leagueId}`).get(),
+        ]);
+        const managers = Array.isArray(contactSnap.data()?.managers)
+          ? (contactSnap.data()!.managers as { name?: string; email?: string }[])
+          : [];
+        const league = leagueSnap.data() ?? {};
+        const teamName =
+          (typeof update.name === "string" && update.name) ||
+          (await ref.get()).data()?.name ||
+          teamId;
+        const origin = new URL(req.url).origin;
+        for (const m of managers) {
+          const to = typeof m?.email === "string" ? m.email.trim() : "";
+          if (!to) continue;
+          await sendCaptainWelcome({
+            to,
+            coachName: typeof m?.name === "string" ? m.name : undefined,
+            teamName: String(teamName),
+            password: setCaptainPassword,
+            leagueName: String(league.name ?? "the league"),
+            leagueAbbrev: String(league.abbrev ?? league.name ?? "League"),
+            origin,
+            isReset: hadPassword,
+          });
+          emailed.push(to);
+        }
+      } catch (err) {
+        console.error("[admin-team] captain password email failed:", err);
+      }
+    }
   }
 
-  return NextResponse.json({ ok: true, action, teamId });
+  return NextResponse.json({
+    ok: true,
+    action,
+    teamId,
+    // Returned so the admin UI can show a generated password once. Admin-only
+    // route, and the caller could set the password themselves anyway.
+    ...(setCaptainPassword !== null
+      ? { captain_password: setCaptainPassword, emailed }
+      : {}),
+  });
 }

@@ -32,7 +32,11 @@ interface TeamRow {
 
 // Patch shape for saveEdit — TeamRow fields plus the write-only
 // captain_password (set, not displayed).
-type TeamPatch = Partial<TeamRow> & { captain_password?: string };
+type TeamPatch = Partial<TeamRow> & {
+  captain_password?: string;
+  /** Whether to mail the new password to the managers on file. */
+  email_captain?: boolean;
+};
 
 interface PlayerRow {
   id: string;
@@ -670,6 +674,9 @@ function TeamEditForm({
   const [ageGroup, setAgeGroup] = useState(team.ageGroup);
   const [logoUrl, setLogoUrl] = useState(team.logo_url);
   const [captainPassword, setCaptainPassword] = useState("");
+  // Default ON. Setting a password and NOT telling the coach is the unusual
+  // case, so it is the one that costs a click.
+  const [emailCoach, setEmailCoach] = useState(true);
 
   return (
     <div className="px-3 py-3 bg-slate-50 border-t border-slate-200">
@@ -798,11 +805,25 @@ function TeamEditForm({
               Generate
             </button>
           </div>
+          <label className="mt-2 flex items-start gap-2 text-[12px] text-slate-700">
+            <input
+              type="checkbox"
+              checked={emailCoach}
+              onChange={(e) => setEmailCoach(e.target.checked)}
+              disabled={busy}
+              className="mt-0.5"
+            />
+            <span>
+              Email this password to the team&rsquo;s manager, with sign-in
+              instructions. Uses the contact on file in the Captains tab; if
+              there is no email there, nothing is sent.
+            </span>
+          </label>
           <p className="mt-1 text-[11px] text-slate-500">
             The manager goes to the captain page, picks {name || "this team"},
             and types this password — no account needed. Click Generate for
             “{generatePreviewHint(name)}”, or type your own. Leaving it blank
-            keeps the current password.
+            keeps the current password and sends no email.
           </p>
         </div>
       </div>
@@ -820,7 +841,10 @@ function TeamEditForm({
               // Only send a password when one was typed/generated —
               // blank means "keep current".
               ...(captainPassword.trim()
-                ? { captain_password: captainPassword.trim() }
+                ? {
+                    captain_password: captainPassword.trim(),
+                    email_captain: emailCoach,
+                  }
                 : {}),
             })
           }
