@@ -50,12 +50,18 @@ export interface PwaTabBarProps {
   tenantShort?: string;
   /** Extra top-level links to add (per-tenant config.nav.add). */
   addLinks?: NavLink[];
+  /** Full nav list, when a tenant supplies its own instead of patching
+   *  DEFAULT_LINKS (Island, whose order is specified). Must be passed here
+   *  too, or the installed-app "More" sheet drifts from the desktop nav —
+   *  the exact thing computeNavLinks exists to prevent. */
+  links?: NavLink[];
 }
 
 export function PwaTabBar({
   hideLabels,
   tenantShort,
   addLinks,
+  links,
 }: PwaTabBarProps = {}) {
   const pathname = usePathname() ?? "/";
   const [isStandalone, setIsStandalone] = useState(false);
@@ -67,7 +73,7 @@ export function PwaTabBar({
   // links collect under "Browse"; each dropdown becomes its own section
   // (SFBL, Register, More) — same grouping as the desktop nav.
   const navLinks = computeNavLinks(
-    DEFAULT_LINKS,
+    links ?? DEFAULT_LINKS,
     tenantShort ?? "",
     hideLabels,
     addLinks,

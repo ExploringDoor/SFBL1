@@ -194,19 +194,15 @@ export default async function RootLayout({
   let themeSecondary: string | undefined;
   let navHideLabels: string[] = [];
   let navAddLinks: NavLink[] = [];
-  // Shortcuts pinned to the top of the MOBILE menu. Island's Leagues and
-  // Tournaments were the two most-used links on their old site, and both sat
-  // behind a dropdown here (Information and More), so on a phone neither was
-  // visible without opening the sheet and scrolling. Adam asked for them at
-  // the top on 2026-08-02. Hardcoded per tenant like the nav logo above, since
-  // no config field carries it and no admin screen would edit one.
-  const featuredNavLinks: NavLink[] =
-    tenantId === "island"
-      ? [
-          { label: "Leagues", href: "/content/leagues" },
-          { label: "Tournaments", href: "/tournaments" },
-        ]
-      : [];
+  // Shortcuts pinned to the top of the MOBILE menu, for links a tenant's
+  // visitors reach for that would otherwise sit inside a dropdown.
+  //
+  // Island had Leagues + Tournaments pinned here on 2026-08-02, when both were
+  // buried. Mike's reordering on 2026-08-03 puts them second and third in the
+  // nav itself, so the mobile sheet already lists them right under Home and
+  // the pins would just be the same two links twice. Dropped rather than kept
+  // — the mechanism stays for the next tenant that needs it.
+  const featuredNavLinks: NavLink[] = [];
   // Branded season year for the ticker (config.season_year); falls back to the
   // calendar year. COYBL registers the 2027 season during 2026.
   let seasonYear = new Date().getFullYear();
@@ -285,46 +281,63 @@ export default async function RootLayout({
     }
   }
 
-  // Island's Rainout Alerts / Store / Sponsors (Mike, via Adam, 2026-08-02).
+  // Island's nav is spelled out in full rather than assembled from
+  // DEFAULT_LINKS + config.nav.add, because Mike gave an exact ORDER (via
+  // Adam, 2026-08-03) and the assembled version cannot express one: nav.add
+  // entries are all injected at a single insertion point, ahead of the first
+  // dropdown, so League and Tournaments could never sit second and third.
   //
-  // Added in code rather than through config.nav.add for two reasons. Island's
-  // nav.hide list drops "Sponsors" and "Store", and hide runs BEFORE add, so a
-  // config entry would have to fight it. And the two DEFAULT_LINKS entries
-  // point at /content/sponsors and /content/store, CMS routes that need a
-  // Firestore page_content doc before they render anything — these are real
-  // routes instead, so they work with no content authored.
+  // His order: Home, League, Tournaments, Schedule, Scores, Teams,
+  // Events & Clinics, Shop, Fields, Information, Contact.
   //
-  // Alerts is not in DEFAULT_LINKS at all. Labelled "Rainout Alerts" rather
-  // than COYBL's bare "Alerts" because rainouts are the reason Mike asked for
-  // it, and "Alerts" alone reads like a notification setting.
+  // Three things are in here that he did not list, kept deliberately:
+  //   • Standings — a league site without a standings link is not a thing he
+  //     can have meant. Placed with Scores and Schedule, which keeps every
+  //     pair he DID specify in his order.
+  //   • Register — the site's main commercial job for the next two weeks, and
+  //     the homepage CTA points at it.
+  //   • Admin — the only way in for him and Adam.
+  // Say the word and any of them move or go.
   //
-  // Placement: Store goes top-level, because merch only sells if people see
-  // it. Rainout Alerts and Sponsors go inside the existing Information
-  // dropdown — Island's bar already carries seven top-level items plus three
-  // dropdowns, and three more would wrap it on a laptop. The mobile sheet
-  // expands every dropdown into a labelled section, so on a phone all three
-  // are visible either way.
-  if (tenantId === "island") {
-    const extraInfo: NavLink[] = [
-      { label: "Rainout Alerts", href: "/alerts" },
-      { label: "Sponsors", href: "/sponsors" },
-    ];
-    const info = navAddLinks.find(
-      (l) => l.label === "Information" && l.children?.length,
-    );
-    if (info) {
-      info.children = [...info.children!, ...extraInfo];
-      navAddLinks = [...navAddLinks, { label: "Store", href: "/store" }];
-    } else {
-      // No Information menu (config changed, or it failed to parse) — fall
-      // back to top-level so the pages stay reachable rather than orphaned.
-      navAddLinks = [
-        ...navAddLinks,
-        { label: "Store", href: "/store" },
-        ...extraInfo,
-      ];
-    }
-  }
+  // "Shop" not "Store": his word, and what the old site called it.
+  //
+  // Umpire Evaluation and Admin fold into Information rather than keeping a
+  // separate More menu, to buy back two slots on a bar that is already wide.
+  const ISLAND_NAV: NavLink[] = [
+    { label: "Home", href: "/" },
+    { label: "League", href: "/content/leagues" },
+    { label: "Tournaments", href: "/tournaments" },
+    { label: "Schedule", href: "/schedule" },
+    { label: "Scores", href: "/scores" },
+    { label: "Standings", href: "/standings" },
+    { label: "Teams", href: "/teams" },
+    { label: "Events & Clinics", href: "/content/events-clinics" },
+    { label: "Shop", href: "/store" },
+    { label: "Fields", href: "/fields" },
+    {
+      label: "Information",
+      href: "#",
+      children: [
+        { label: "Rules", href: "/rules" },
+        { label: "Player Ads", href: "/player-ads" },
+        { label: "Summer League", href: "/summer-league" },
+        { label: "Rainout Alerts", href: "/alerts" },
+        { label: "Sponsors", href: "/sponsors" },
+        { label: "Umpire Evaluation", href: "/umpire-evaluation-form" },
+        { label: "Coach Login", href: "/captain" },
+        { label: "Admin", href: "/admin" },
+      ],
+    },
+    { label: "Contact", href: "/content/contact" },
+    {
+      label: "Register",
+      href: "#",
+      children: [
+        { label: "Team Registration", href: "/team-registration" },
+        { label: "Team Waiver", href: "/team-waiver-form" },
+      ],
+    },
+  ];
 
   const tickerGames = tenantId ? await loadTickerGames(tenantId) : [];
 
@@ -490,8 +503,13 @@ export default async function RootLayout({
               // tighter lockup than the wide banner logo without affecting
               // anything else that reads the theme value.
               logoUrl={tenantId === "island" ? "/island/logo-nav.png" : null}
-              hideLabels={navHideLabels}
-              addLinks={navAddLinks}
+              // Island supplies its whole nav, in Mike's order. hide/add are
+              // dropped with it — they only exist to patch DEFAULT_LINKS, and
+              // re-applying them here would inject Fields, Events & Clinics
+              // and Information a second time.
+              links={tenantId === "island" ? ISLAND_NAV : undefined}
+              hideLabels={tenantId === "island" ? undefined : navHideLabels}
+              addLinks={tenantId === "island" ? undefined : navAddLinks}
               featuredLinks={featuredNavLinks}
               rightSlot={<ProfileButton tenantId={tenantId} />}
             />
@@ -513,8 +531,9 @@ export default async function RootLayout({
               mode (regular browser tabs see nothing). DVSL pattern. */}
           {tenantId ? (
             <PwaTabBar
-              hideLabels={navHideLabels}
-              addLinks={navAddLinks}
+              links={tenantId === "island" ? ISLAND_NAV : undefined}
+              hideLabels={tenantId === "island" ? undefined : navHideLabels}
+              addLinks={tenantId === "island" ? undefined : navAddLinks}
               tenantShort={leagueAbbrev ?? leagueName ?? undefined}
             />
           ) : null}

@@ -539,3 +539,54 @@ html.tenant-island[data-banner-titled][data-page="standings"] .site-content > ma
   white-space: nowrap;
   border: 0;
 }
+
+/* ---- a 13-item nav bar --------------------------------------------------
+ * Mike specified the order Home, League, Tournaments, Schedule, Scores,
+ * Teams, Events & Clinics, Shop, Fields, Information, Contact (2026-08-03).
+ * With Standings, Register and the logo that is thirteen top-level entries,
+ * and the stock bar cannot hold them: measured at 1280px the links alone ran
+ * 1188px, which squeezed the brand logo to ZERO width, pushed PROFILE 41px
+ * past the right edge, and wrapped "Events & Clinics" onto two lines.
+ *
+ * Two changes, together:
+ *
+ * 1. Tighter metrics for this tenant only. Padding 13px -> 8px a side and gap
+ *    4px -> 2px claw back roughly 130px without touching the type size, so
+ *    the labels stay as legible as every other tenant's.
+ *
+ * 2. The hamburger takes over below 1240px instead of 900px. Even at the
+ *    tightest sane metrics thirteen items do not fit a 901px viewport, so the
+ *    stock breakpoint was promising a bar that could only ever overflow. The
+ *    mobile sheet lists every item in Mike's order anyway, so nothing is lost
+ *    between 901 and 1240 — it is just presented as a sheet.
+ * ------------------------------------------------------------------------- */
+html.tenant-island .le-nav-links {
+  gap: 2px;
+}
+html.tenant-island .le-nav-links li a,
+html.tenant-island .le-nav-links li span,
+html.tenant-island .le-nav-dropdown-trigger {
+  padding-left: 7px;
+  padding-right: 7px;
+  /* 0.06em over ~110 characters of label costs about 25px of bar. Trimming
+     it is invisible at this size and buys back a whole item's worth. */
+  letter-spacing: 0.045em;
+  /* "Events & Clinics" broke across two lines, which made the whole bar
+     taller and knocked every other label off the shared baseline. */
+  white-space: nowrap;
+}
+/* The brand is a flex item that had been allowed to collapse; keep the mark
+   at its full width so it cannot be squeezed out by a crowded link list. */
+html.tenant-island .le-nav-brand {
+  flex: none;
+}
+
+@media (max-width: 1240px) {
+  html.tenant-island .le-nav-links,
+  html.tenant-island .le-nav-signup-btn {
+    display: none;
+  }
+  html.tenant-island .le-hamburger {
+    display: flex;
+  }
+}
