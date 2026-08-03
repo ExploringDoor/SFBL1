@@ -1,0 +1,9 @@
+{
+  "_status": "Mike has a line of Island merch coming (Adam, 2026-08-02). Nothing is on sale yet and the payment path is still being decided, so this page announces the line rather than pretending to sell. Deliberately no placeholder products: a fake tee with a fake price on a live site is worse than an honest empty state.",
+  "_to_launch": "Fill in `items` and set `buy_url` (or per-item `url`). Each item needs at least a name; price, sizes, image and url are optional and render only when present. Once items exist the page switches from the announcement to the product grid on its own — no code change.",
+  "headline": "Island Fastpitch merch is coming",
+  "blurb": "A full line of Island Fastpitch gear is on the way for the 2026 Fall season. Tees, hoodies and on-field extras, in league colors.",
+  "note": "Want to know the moment it drops? Sign up for league alerts and we will include it.",
+  "buy_url": null,
+  "items": []
+}

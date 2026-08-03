@@ -285,6 +285,47 @@ export default async function RootLayout({
     }
   }
 
+  // Island's Rainout Alerts / Store / Sponsors (Mike, via Adam, 2026-08-02).
+  //
+  // Added in code rather than through config.nav.add for two reasons. Island's
+  // nav.hide list drops "Sponsors" and "Store", and hide runs BEFORE add, so a
+  // config entry would have to fight it. And the two DEFAULT_LINKS entries
+  // point at /content/sponsors and /content/store, CMS routes that need a
+  // Firestore page_content doc before they render anything — these are real
+  // routes instead, so they work with no content authored.
+  //
+  // Alerts is not in DEFAULT_LINKS at all. Labelled "Rainout Alerts" rather
+  // than COYBL's bare "Alerts" because rainouts are the reason Mike asked for
+  // it, and "Alerts" alone reads like a notification setting.
+  //
+  // Placement: Store goes top-level, because merch only sells if people see
+  // it. Rainout Alerts and Sponsors go inside the existing Information
+  // dropdown — Island's bar already carries seven top-level items plus three
+  // dropdowns, and three more would wrap it on a laptop. The mobile sheet
+  // expands every dropdown into a labelled section, so on a phone all three
+  // are visible either way.
+  if (tenantId === "island") {
+    const extraInfo: NavLink[] = [
+      { label: "Rainout Alerts", href: "/alerts" },
+      { label: "Sponsors", href: "/sponsors" },
+    ];
+    const info = navAddLinks.find(
+      (l) => l.label === "Information" && l.children?.length,
+    );
+    if (info) {
+      info.children = [...info.children!, ...extraInfo];
+      navAddLinks = [...navAddLinks, { label: "Store", href: "/store" }];
+    } else {
+      // No Information menu (config changed, or it failed to parse) — fall
+      // back to top-level so the pages stay reachable rather than orphaned.
+      navAddLinks = [
+        ...navAddLinks,
+        { label: "Store", href: "/store" },
+        ...extraInfo,
+      ];
+    }
+  }
+
   const tickerGames = tenantId ? await loadTickerGames(tenantId) : [];
 
   // Tenant overrides become inline custom-properties on <html>. CSS

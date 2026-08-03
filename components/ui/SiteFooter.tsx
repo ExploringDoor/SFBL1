@@ -137,8 +137,16 @@ export function SiteFooter() {
               if the league authored a sponsors page. A tenant that hides
               "Sponsors" from its nav (Island) has no such page, so the link was
               a soft-404 on every page. Gate it on the same nav.hide signal. */}
-          {!hideSponsorCta && (
-            <Link href="/content/sponsors">Become a sponsor</Link>
+          {/* Island has a REAL /sponsors route (app/sponsors), not a CMS page,
+              so its CTA points there and is not gated by the hide list — that
+              list is what hid the CMS link, and the reason for hiding it is
+              gone. */}
+          {config.slug === "island" ? (
+            <Link href="/sponsors">Become a sponsor</Link>
+          ) : (
+            !hideSponsorCta && (
+              <Link href="/content/sponsors">Become a sponsor</Link>
+            )
           )}
           <Link href="/login">Sign in</Link>
         </nav>

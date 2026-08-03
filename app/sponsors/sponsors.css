@@ -1,0 +1,102 @@
+/* Sponsors page. Colours come from theme tokens, so this follows a dark or a
+   light tenant without changes. */
+
+.spn-intro {
+  max-width: 720px;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--text-body);
+}
+
+.spn-h2 {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.spn-thanks {
+  margin: 0 0 16px;
+  font-size: 15px;
+  color: var(--text-body);
+}
+
+.spn-current {
+  margin-top: 30px;
+}
+
+.spn-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.spn-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 120px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--card, #fff);
+  text-decoration: none;
+  text-align: center;
+}
+
+a.spn-card:hover {
+  border-color: var(--brand-accent, #35afea);
+}
+
+.spn-logo {
+  max-width: 100%;
+  max-height: 56px;
+  object-fit: contain;
+}
+
+.spn-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+/* ---- become a sponsor --------------------------------------------------- */
+.spn-pitch {
+  margin-top: 34px;
+  padding: 24px 24px 26px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  /* Barely-there lift rather than a solid card, so it reads as a closing note
+     and not as another sponsor tile. */
+  background: color-mix(in srgb, var(--text-strong) 5%, transparent);
+}
+
+.spn-body {
+  max-width: 640px;
+  margin: 0 0 12px;
+  font-size: 15.5px;
+  line-height: 1.6;
+  color: var(--text-body);
+}
+
+.spn-cta {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 6px;
+  padding: 12px 22px;
+  border-radius: 10px;
+  background: var(--brand-primary);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+}
+
+.spn-cta:hover {
+  filter: brightness(1.35);
+}

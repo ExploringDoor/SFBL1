@@ -14,20 +14,33 @@ import { getAdminDb } from "@/lib/firebase-admin";
 
 export const dynamic = "force-dynamic";
 
-// Divisions come off the tenant's own teams rather than a config field, so
-// this needs no schema change and stays correct as divisions are added.
-async function loadDivisions(tenantId: string): Promise<string[]> {
-  if (!tenantId) return [];
+// Divisions and age groups come off the tenant's own teams rather than a
+// config field, so this needs no schema change and stays correct as either is
+// added.
+//
+// Ages sort numerically. A plain string sort put "10U" before "8U", which on
+// Island reads as a typo on the one control a coach has to use.
+async function loadFollowOptions(
+  tenantId: string,
+): Promise<{ divisions: string[]; ages: string[] }> {
+  if (!tenantId) return { divisions: [], ages: [] };
   try {
     const snap = await getAdminDb().collection(`leagues/${tenantId}/teams`).get();
-    const seen = new Set<string>();
+    const divisions = new Set<string>();
+    const ages = new Set<string>();
     for (const d of snap.docs) {
-      const div = d.data().division;
-      if (div) seen.add(String(div));
+      const data = d.data();
+      if (data.division) divisions.add(String(data.division));
+      if (data.ageGroup) ages.add(String(data.ageGroup));
     }
-    return [...seen].sort();
+    return {
+      divisions: [...divisions].sort(),
+      ages: [...ages].sort(
+        (a, b) => (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0),
+      ),
+    };
   } catch {
-    return [];
+    return { divisions: [], ages: [] };
   }
 }
 
@@ -57,9 +70,13 @@ const BASE_FIELDS: FormField[] = [
 // DIVISION. Hardcoding 7U-14U put youth age groups on an adult slowpitch
 // league's signup form, so drive it off the tenant's own divisions and only
 // fall back to ages for tenants that actually have them.
-function followField(divisions: string[], useAges: boolean): FormField {
+function followField(
+  divisions: string[],
+  useAges: boolean,
+  ages: string[] = AGE_GROUPS,
+): FormField {
   const options = useAges
-    ? [{ value: "all", label: "All age groups" }, ...AGE_GROUPS.map((a) => ({ value: a, label: a }))]
+    ? [{ value: "all", label: "All age groups" }, ...ages.map((a) => ({ value: a, label: a }))]
     : [{ value: "all", label: "All divisions" }, ...divisions.map((d) => ({ value: d, label: d }))];
   return {
     name: useAges ? "age_group" : "division",
@@ -82,11 +99,18 @@ export default async function AlertsSignupPage() {
   }
   // Every league name in this copy used to read "COYBL" regardless of host.
   const short = cfg?.abbrev ?? cfg?.name ?? "the league";
-  const useAges = tenantId === "coybl";
-  const divisions = await loadDivisions(tenantId);
+  const { divisions, ages } = await loadFollowOptions(tenantId);
+  // Which axis a follower thinks in. COYBL stays on the hardcoded 7U-14U list
+  // it has always used. Everyone else prefers their OWN age groups when their
+  // teams carry them — Island's division is the league type (Weekend,
+  // Weeknight) while the thing a parent follows is the age (10U, 12U, 14U),
+  // and the hardcoded list is baseball's, which does not even contain 16U or
+  // 18U. Falls back to divisions, then to the hardcoded ages.
+  const useAges = tenantId === "coybl" || ages.length > 0 || divisions.length === 0;
+  const ageOptions = tenantId === "coybl" || ages.length === 0 ? AGE_GROUPS : ages;
   const fields: FormField[] = [
     ...BASE_FIELDS,
-    followField(divisions, useAges || divisions.length === 0),
+    followField(divisions, useAges, ageOptions),
     {
       name: "agreed_to_alerts",
       label: `I agree to receive ${short} email alerts at the address above.`,

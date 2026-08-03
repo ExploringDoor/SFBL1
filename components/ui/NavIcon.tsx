@@ -44,6 +44,10 @@ const PATHS: Record<string, string> = {
   // Island's Leagues page. Without an entry it drew the neutral circle, which
   // is fine buried in a dropdown but not for a pinned shortcut.
   "/content/leagues": "M4 6h16M4 12h16M4 18h9M18 15v6M15 18h6",
+  // Rainout alerts — a cloud with rain, since weather is what this is for.
+  "/alerts": "M7 15a4 4 0 010-8 5.5 5.5 0 0110.5 1.5A3.5 3.5 0 0117 15H7M8 19l-1 2M12 19l-1 2M16 19l-1 2",
+  "/store": "M4 8h16l-1 12a1 1 0 01-1 1H6a1 1 0 01-1-1L4 8zM9 8V6a3 3 0 016 0v2",
+  "/sponsors": "M20.8 5.6a5 5 0 00-7.1 0L12 7.3l-1.7-1.7a5 5 0 00-7.1 7.1l8.8 8.8 8.8-8.8a5 5 0 000-7.1z",
 };
 
 /** Neutral fallback (replaces the old "•"). */
