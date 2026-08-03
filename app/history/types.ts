@@ -31,6 +31,8 @@ export interface ChampionRow {
   divisions: {
     division: string;
     team: string;
+    /** The winner's record that season, e.g. "11-2" or "9-3-1". */
+    record?: string;
     /** Current-day team match (logo + brand color + link). null when
      *  the historical team name doesn't appear on any active club. */
     meta: TeamMeta | null;

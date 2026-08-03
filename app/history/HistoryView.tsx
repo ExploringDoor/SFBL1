@@ -184,9 +184,13 @@ function ChampionsTab({
             </p>
           ) : (
             <ol className="le-champ-list">
-              {filteredChamps.map((row) => (
-                <ChampionRowView key={row.season} row={row} />
-              ))}
+              {filteredChamps.map((row) =>
+                divWinners ? (
+                  <DivisionWinnerSeason key={row.season} row={row} />
+                ) : (
+                  <ChampionRowView key={row.season} row={row} />
+                ),
+              )}
             </ol>
           )}
         </section>
@@ -204,6 +208,54 @@ function ChampionsTab({
       </div>
     </>
   );
+}
+
+// A season of division winners. COYBL runs up to 22 divisions in a single
+// season across 11 seasons, so the badge wall used for bracket champions
+// turns into an unreadable pile. A table per season stays scannable: one
+// row per division, aligned, sorted, with the winner's record.
+function DivisionWinnerSeason({ row }: { row: ChampionRow }) {
+  const rows = [...row.divisions].sort((a, b) =>
+    a.division.localeCompare(b.division, undefined, { numeric: true }),
+  );
+  return (
+    <li className="le-dw-season">
+      <div className="le-dw-head">
+        <h3 className="le-dw-year">{row.season}</h3>
+        <span className="le-dw-count">
+          {rows.length} division{rows.length === 1 ? "" : "s"}
+        </span>
+      </div>
+      <div className="le-dw-scroll">
+        <table className="le-dw-table">
+          <thead>
+            <tr>
+              <th scope="col">Division</th>
+              <th scope="col">Winner</th>
+              <th scope="col" className="le-dw-rec">
+                Record
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((d) => (
+              <tr key={d.division + d.team}>
+                <td className="le-dw-div">{tidyDivision(d.division)}</td>
+                <td className="le-dw-team">{d.team}</td>
+                <td className="le-dw-rec">{d.record ?? ""}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </li>
+  );
+}
+
+// "American Buckeye Division" reads better as "American Buckeye" once it is
+// already sitting under a Division column header.
+function tidyDivision(name: string): string {
+  return name.replace(/\s+division$/i, "").trim() || name;
 }
 
 function ChampionRowView({ row }: { row: ChampionRow }) {

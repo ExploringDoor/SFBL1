@@ -135,7 +135,12 @@ function deriveChampions(
   // Group by season → list of {division, team}.
   const bySeason = new Map<
     string,
-    { division: string; team: string; meta: TeamMeta | null }[]
+    {
+      division: string;
+      team: string;
+      record?: string;
+      meta: TeamMeta | null;
+    }[]
   >();
   for (const b of all) {
     if (hasPlayoffs ? b.game_type !== "playoff" : b.game_type !== "season") {
@@ -152,7 +157,8 @@ function deriveChampions(
     if (!hasPlayoffs && top.w + top.l + top.t === 0) continue;
     const meta = nameIdx[top.team.trim().toLowerCase()] ?? null;
     const arr = bySeason.get(b.season) ?? [];
-    arr.push({ division: b.division, team: top.team, meta });
+    const record = top.t ? `${top.w}-${top.l}-${top.t}` : `${top.w}-${top.l}`;
+    arr.push({ division: b.division, team: top.team, record, meta });
     bySeason.set(b.season, arr);
   }
   const rows: ChampionRow[] = [];

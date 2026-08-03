@@ -666,3 +666,102 @@
   text-decoration: underline;
   color: var(--brand-primary);
 }
+
+/* ── Division winners: one table per season ─────────────────────────
+   COYBL fields up to 22 divisions in a season across 11 seasons. The
+   badge wall used for bracket champions becomes an unreadable pile at
+   that volume, so division-winner leagues get an aligned table where
+   the eye can run down a column. */
+.le-dw-season {
+  list-style: none;
+  margin: 0 0 26px;
+  padding: 0;
+}
+.le-dw-season:last-child {
+  margin-bottom: 0;
+}
+.le-dw-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+  border-bottom: 2px solid var(--brand-primary, #1a1a1a);
+}
+.le-dw-year {
+  margin: 0;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--text-strong, #111);
+  line-height: 1;
+}
+.le-dw-count {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted, rgba(0, 0, 0, 0.56));
+}
+/* Wide content scrolls in its own box; the page never scrolls sideways. */
+.le-dw-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.le-dw-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.le-dw-table thead th {
+  text-align: left;
+  padding: 6px 12px 6px 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted, rgba(0, 0, 0, 0.56));
+  white-space: nowrap;
+}
+.le-dw-table tbody tr {
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
+}
+.le-dw-table tbody tr:nth-child(odd) {
+  background: rgba(0, 0, 0, 0.018);
+}
+.le-dw-table td {
+  padding: 9px 12px 9px 0;
+  vertical-align: baseline;
+}
+.le-dw-div {
+  width: 34%;
+  color: var(--muted, rgba(0, 0, 0, 0.62));
+  white-space: nowrap;
+}
+.le-dw-team {
+  font-weight: 700;
+  color: var(--text-strong, #111);
+}
+/* The winner gets the accent, so the eye lands on the name first. */
+.le-dw-table tbody tr td.le-dw-team {
+  color: var(--brand-accent, #c8102e);
+}
+th.le-dw-rec,
+td.le-dw-rec {
+  width: 1%;
+  padding-right: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--text-strong, #111);
+}
+@media (max-width: 560px) {
+  .le-dw-div {
+    white-space: normal;
+  }
+  .le-dw-table {
+    font-size: 13px;
+  }
+}
