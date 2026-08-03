@@ -46,7 +46,12 @@ export function ProfileButton({ tenantId }: { tenantId: string }) {
     // shows at top-right when signed out.
     if (captainPasswordless) {
       if (isSfbl) return null;
-      return <AccessChooser />;
+      // Island has no player sign-in: it runs stats off and score-only, so
+      // there are no player records for a claim to attach to and rosters live
+      // on USSSA rather than here. Offering "Player" sent a parent through a
+      // magic-link email to an empty profile (Adam, 2026-08-03). Hidden until
+      // players exist, which is a roster decision, not a UI one.
+      return <AccessChooser hidePlayer={tenantId === "island"} />;
     }
     return (
       <Link
@@ -105,7 +110,7 @@ export function ProfileButton({ tenantId }: { tenantId: string }) {
 // Signed-out entry for passwordless tenants. A "Profile" button that
 // opens a small menu asking whether you're a captain or a player, then
 // sends you to the matching sign-in (Adam, 2026-05-18).
-function AccessChooser() {
+function AccessChooser({ hidePlayer = false }: { hidePlayer?: boolean }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="relative">
@@ -127,8 +132,10 @@ function AccessChooser() {
             onClick={() => setOpen(false)}
           />
           <div className="absolute right-0 top-full z-50 mt-1.5 w-52 rounded-md border border-slate-200 bg-white p-1 shadow-lg">
+            {/* With Player hidden there is only one destination, so the
+                "Sign in as…" framing no longer makes sense. */}
             <p className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-              Sign in as…
+              {hidePlayer ? "Sign in" : "Sign in as…"}
             </p>
             <Link
               href="/captain"
@@ -137,13 +144,15 @@ function AccessChooser() {
             >
               {<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{display:"inline-block",verticalAlign:"-2px",marginRight:5}}><path d="M12 3l7 3v6c0 4.5-3 7.8-7 9-4-1.2-7-4.5-7-9V6l7-3z"/></svg>}Captain / Manager
             </Link>
-            <Link
-              href="/login"
-              onClick={() => setOpen(false)}
-              className="block rounded px-2 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-100"
-            >
-              {<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{display:"inline-block",verticalAlign:"-2px",marginRight:5}}><path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>}Player
-            </Link>
+            {!hidePlayer && (
+              <Link
+                href="/login"
+                onClick={() => setOpen(false)}
+                className="block rounded px-2 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-100"
+              >
+                {<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{display:"inline-block",verticalAlign:"-2px",marginRight:5}}><path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>}Player
+              </Link>
+            )}
           </div>
         </>
       )}
