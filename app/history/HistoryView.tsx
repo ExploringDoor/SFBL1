@@ -31,14 +31,18 @@ type TabId = "champions" | "records" | "standings";
 
 export function HistoryView(props: HistoryViewProps) {
   const [tab, setTab] = useState<TabId>("champions");
+  // Leagues without a recorded playoff bracket crown division winners, not
+  // champions. Wording only; the data and layout are identical.
+  const divWinners = props.honourLabel === "division-winner";
+  const honourPlural = divWinners ? "Division Winners" : "Champions";
 
   return (
     <>
-      <StatsStrip stats={props.stats} />
+      <StatsStrip stats={props.stats} divWinners={divWinners} />
 
       <nav className="le-hist-tabs" role="tablist" aria-label="History sections">
         <TabButton id="champions" current={tab} onSelect={setTab}>
-          🏆 Champions
+          🏆 {honourPlural}
         </TabButton>
         <TabButton id="records" current={tab} onSelect={setTab}>
           📊 Records
@@ -53,6 +57,7 @@ export function HistoryView(props: HistoryViewProps) {
           <ChampionsTab
             champions={props.champions}
             leaderboard={props.championsLb}
+            divWinners={divWinners}
           />
         )}
         {tab === "records" && (
@@ -68,12 +73,21 @@ export function HistoryView(props: HistoryViewProps) {
 
 // ── Stats strip (always-visible KPIs) ──────────────────────────────
 
-function StatsStrip({ stats }: { stats: HistoryViewProps["stats"] }) {
+function StatsStrip({
+  stats,
+  divWinners,
+}: {
+  stats: HistoryViewProps["stats"];
+  divWinners?: boolean;
+}) {
   return (
     <div className="le-hist-stats">
       <Stat label="Seasons" value={String(stats.seasonCount)} />
       <Stat label="Since" value={stats.oldestYear} />
-      <Stat label="Champions" value={String(stats.totalChampionships)} />
+      <Stat
+        label={divWinners ? "Division Titles" : "Champions"}
+        value={String(stats.totalChampionships)}
+      />
       <Stat label="Teams Ever" value={String(stats.teamCount)} />
     </div>
   );
@@ -120,9 +134,11 @@ function TabButton({
 function ChampionsTab({
   champions,
   leaderboard,
+  divWinners,
 }: {
   champions: ChampionRow[];
   leaderboard: LeaderboardRow[];
+  divWinners?: boolean;
 }) {
   const [filter, setFilter] = useState("");
   const filterLower = filter.trim().toLowerCase();
@@ -148,7 +164,8 @@ function ChampionsTab({
         <section className="le-hist-card le-hist-card-wide">
           <header className="le-hist-card-hd">
             <h2>
-              <span aria-hidden="true">🏆</span> Wall of Champions
+              <span aria-hidden="true">🏆</span>{" "}
+              {divWinners ? "Division Winners" : "Wall of Champions"}
             </h2>
             <input
               type="search"
@@ -162,7 +179,8 @@ function ChampionsTab({
 
           {filteredChamps.length === 0 ? (
             <p className="le-hist-empty">
-              No champions match "{filter}".
+              No {divWinners ? "division winners" : "champions"} match "
+              {filter}".
             </p>
           ) : (
             <ol className="le-champ-list">
@@ -175,7 +193,7 @@ function ChampionsTab({
 
         <section className="le-hist-card">
           <header className="le-hist-card-hd">
-            <h2>Most Championships</h2>
+            <h2>{divWinners ? "Most Division Titles" : "Most Championships"}</h2>
           </header>
           <Leaderboard
             rows={leaderboard.slice(0, 12)}

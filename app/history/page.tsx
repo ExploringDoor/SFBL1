@@ -123,19 +123,33 @@ function deriveChampions(
   all: StandingsBlock[],
   nameIdx: Record<string, TeamMeta>,
 ): ChampionRow[] {
-  // Group playoff blocks by season → list of {division, team}.
+  // Leagues that record a playoff bracket get true champions: the team that
+  // came out of the bracket undefeated. Leagues that only record regular
+  // season standings (COYBL) have no bracket to read, so the honour that
+  // actually exists in their data is finishing first in a division. Fall
+  // back to that rather than showing an empty page.
+  const hasPlayoffs = all.some(
+    (b) => b.game_type === "playoff" && b.standings.length > 0,
+  );
+
+  // Group by season → list of {division, team}.
   const bySeason = new Map<
     string,
     { division: string; team: string; meta: TeamMeta | null }[]
   >();
   for (const b of all) {
-    if (b.game_type !== "playoff") continue;
+    if (hasPlayoffs ? b.game_type !== "playoff" : b.game_type !== "season") {
+      continue;
+    }
     if (b.standings.length === 0) continue;
     const top = b.standings[0]!;
     // Only count undefeated playoff teams as the bracket champion.
     // Sparse old-year data sometimes has a single round of W-L
     // recorded — flagging the top of that as champion is misleading.
-    if (top.l > 0) continue;
+    // A division winner, by contrast, can and usually does have losses.
+    if (hasPlayoffs && top.l > 0) continue;
+    // A division nobody actually played in shouldn't crown anyone.
+    if (!hasPlayoffs && top.w + top.l + top.t === 0) continue;
     const meta = nameIdx[top.team.trim().toLowerCase()] ?? null;
     const arr = bySeason.get(b.season) ?? [];
     arr.push({ division: b.division, team: top.team, meta });
@@ -245,7 +259,15 @@ export default async function HistoryPage() {
     );
   }
 
-  const nameIdx = buildNameIndex(teams);
+  // Linking a historical team name to a CURRENT team doc only makes sense
+  // where the franchise carries across seasons. COYBL rebuilds its teams from
+  // scratch every year (coaches register fresh, and last season's team docs
+  // are cleared), so any match is coincidence and the link would rot the
+  // moment the season rolls over. No index means no logos and no links, just
+  // the names as they were recorded.
+  const teamsCarryAcrossSeasons = tenantId !== "coybl";
+  const nameIdx = teamsCarryAcrossSeasons ? buildNameIndex(teams) : {};
+
   const champions = deriveChampions(all, nameIdx);
   const championsLb = deriveChampionsLeaderboard(champions, nameIdx);
   const winsLb = deriveWinsLeaderboard(all, nameIdx);
@@ -270,6 +292,13 @@ export default async function HistoryPage() {
     champions,
     championsLb,
     winsLb,
+    // When a league records no playoff bracket, the top of each division is
+    // a division winner, not a champion. Label it for what it is.
+    honourLabel: all.some(
+      (b) => b.game_type === "playoff" && b.standings.length > 0,
+    )
+      ? "champion"
+      : "division-winner",
     stats: {
       seasonCount,
       oldestYear,

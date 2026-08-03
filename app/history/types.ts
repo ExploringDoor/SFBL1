@@ -53,6 +53,10 @@ export interface HistoryViewProps {
   champions: ChampionRow[];
   championsLb: LeaderboardRow[];
   winsLb: LeaderboardRow[];
+  /** What the top of each block actually represents. Leagues with a recorded
+   *  playoff bracket crown champions; leagues that only keep regular season
+   *  standings (COYBL) have division winners. Drives the wording only. */
+  honourLabel?: "champion" | "division-winner";
   stats: {
     seasonCount: number;
     oldestYear: string;
