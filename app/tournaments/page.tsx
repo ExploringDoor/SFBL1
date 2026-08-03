@@ -15,6 +15,8 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import type { PublicLeagueConfig } from "@/lib/tenants";
+import { IslandSlate } from "./IslandSlate";
+import "./island-tournaments.css";
 
 export const dynamic = "force-dynamic";
 
@@ -138,9 +140,10 @@ function EventsView({
         <div>
           <h2 className="tourney-rules-cta-head">Tournament rules</h2>
           <p className="tourney-rules-cta-sub">
-            Tournament play is not the same as league play. Pitching is counted
-            in outs, time limits are shorter, and pool games can end in a tie.
-            Read these before your first pool game.
+            Tournament play is not the same as league play. Time limits are
+            shorter and pool games can end in a tie. Pitching follows the same
+            Pitch Smart pitch counts as the regular season. Read these before
+            your first pool game.
           </p>
         </div>
         <Link href="/content/tournament-rules" className="tourney-rules-cta-btn">
@@ -284,6 +287,15 @@ export default async function TournamentsPage() {
         <p>Visit a tenant subdomain.</p>
       </main>
     );
+  }
+
+  // Island runs its own slate of thirteen weekend tournaments, all registered
+  // through USSSA. That is a different shape from both models below: it is not
+  // games the platform schedules (LBDC), and thirteen equal cards in a grid
+  // (COYBL) buries the dates, which is the one thing a coach is scanning for.
+  // See IslandSlate for why the data is a checked-in file.
+  if (tenantId === "island") {
+    return <IslandSlate />;
   }
 
   // Config-driven event list (e.g. COYBL's Five Tool charity slate).

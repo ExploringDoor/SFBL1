@@ -1,0 +1,172 @@
+{
+  "_source": "https://www.islandfastpitch.com/tournaments and its 13 event-detail pages, read 2026-08-02. Every registration link is the USSSA eventID taken off that event's own Register button, so a team lands on the same USSSA page the old site sent them to. Prices, game guarantees, divisions and host credits are quoted from Mike's own copy, not inferred.",
+  "_updating": "When Mike posts the Spring or Summer slate, add a season block here. The page renders whatever seasons are listed, newest date first within each.",
+  "season": "Fall 2026",
+  "contact_email": "mike.islandusssa@gmail.com",
+  "intro": "Island Fastpitch runs Open and C Level tournaments across Long Island through the Fall. Every event is sanctioned and umpired by USSSA, and every one of the dates below is open for registration now.",
+  "highlights": [
+    {
+      "title": "USSSA umpires",
+      "text": "Every tournament is worked by USSSA umpires, so the standard of play and the strike zone are the same from one weekend to the next."
+    },
+    {
+      "title": "Champions and finalists",
+      "text": "Champions take home a championship award, a banner, medals and MVPs. Finalists are recognized with a finalist award and medals."
+    },
+    {
+      "title": "Game guarantee",
+      "text": "Weekend tournaments guarantee four games for every division. One day tournaments guarantee three, with 10U and 12U on Saturdays and 14U and 16U on Sundays."
+    },
+    {
+      "title": "Open and C Level",
+      "text": "Games are played on both turf and dirt. Championship MVP awards may include belts, gold chains and spinner medals."
+    }
+  ],
+  "events": [
+    {
+      "name": "Labor Day Lash Out",
+      "subtitle": "Fall season opening tournament",
+      "start": "2026-09-05",
+      "end": "2026-09-06",
+      "ages": "10U, 12U, 14U, 16U, 18U",
+      "levels": "Open and C Level",
+      "guarantee": "4 game guarantee",
+      "cost": "$625",
+      "usssa_event": "418151"
+    },
+    {
+      "name": "Never Forget",
+      "subtitle": "3rd annual, sponsored by Scrappy Sports",
+      "start": "2026-09-12",
+      "end": "2026-09-13",
+      "ages": "10U, 12U, 14U, 16U, 18U",
+      "levels": "Open and C Level",
+      "guarantee": "4 game guarantee",
+      "cost": "$625",
+      "usssa_event": "418142"
+    },
+    {
+      "name": "Play for Rhiannon",
+      "subtitle": "Hosted by Team Nitro LI",
+      "start": "2026-09-12",
+      "end": "2026-09-13",
+      "ages": "10U, 12U, 14U, 16U, 18U",
+      "levels": "Open",
+      "guarantee": "4 game guarantee",
+      "cost": "$625",
+      "usssa_event": "417840",
+      "contact": "Team Nitro LI · teamnitroli@hotmail.com · 516-551-4466"
+    },
+    {
+      "name": "Queen of the Hill",
+      "subtitle": "13th annual",
+      "start": "2026-09-19",
+      "end": "2026-09-20",
+      "ages": "10U, 12U, 14U, 16U, 18U",
+      "levels": "Open and C Level",
+      "guarantee": "4 game guarantee",
+      "cost": "$625",
+      "usssa_event": "419131"
+    },
+    {
+      "name": "Island Invitational",
+      "subtitle": "12th annual",
+      "start": "2026-09-26",
+      "end": "2026-09-27",
+      "ages": "10U, 12U, 14U, 16U, 18U",
+      "levels": "Open and C Level",
+      "guarantee": "4 game guarantee",
+      "cost": "$625",
+      "usssa_event": "418143"
+    },
+    {
+      "name": "Diamonds are a Girls Best Friend",
+      "subtitle": "12th annual",
+      "start": "2026-10-03",
+      "end": "2026-10-04",
+      "ages": "10U, 12U, 14U, 16U, 18U",
+      "levels": "Open and C Level",
+      "guarantee": "4 game guarantee",
+      "cost": "$625",
+      "usssa_event": "418144"
+    },
+    {
+      "name": "USSSA Play Pink",
+      "subtitle": "Annual tournament",
+      "start": "2026-10-10",
+      "end": "2026-10-11",
+      "ages": "10U, 12U, 14U, 16U, 18U",
+      "levels": "Open and C Level",
+      "guarantee": "4 game guarantee",
+      "cost": "$625",
+      "usssa_event": "418145"
+    },
+    {
+      "name": "Unbreakable Spirit",
+      "subtitle": "2nd annual",
+      "start": "2026-10-17",
+      "end": "2026-10-18",
+      "ages": "10U, 12U, 14U, 16U, 18U",
+      "levels": "Open and C Level",
+      "guarantee": "4 game guarantee",
+      "cost": "$625",
+      "usssa_event": "418146"
+    },
+    {
+      "name": "Boo Ya",
+      "subtitle": "Hosted by CYA",
+      "start": "2026-10-17",
+      "end": "2026-10-18",
+      "ages": "10U, 12U, 14U, 16U, 18U",
+      "levels": "Open",
+      "guarantee": "4 game guarantee",
+      "cost": "$625",
+      "usssa_event": "418404",
+      "contact": "Chiefs Fastpitch · John.wolff@yahoo.com · 516-476-5293"
+    },
+    {
+      "name": "Field of Screams",
+      "subtitle": "13th annual Halloween tournament. Our biggest and most festive of the year, so bring your A game and your costume.",
+      "start": "2026-10-24",
+      "end": "2026-10-25",
+      "ages": "10U, 12U, 14U, 16U, 18U",
+      "levels": "Open and C Level",
+      "guarantee": "4 game guarantee",
+      "cost": "$650",
+      "usssa_event": "418147"
+    },
+    {
+      "name": "Fight Against Heart Disease",
+      "subtitle": "Annual tournament",
+      "start": "2026-10-31",
+      "end": "2026-11-01",
+      "ages": "10U, 12U, 14U, 16U, 18U",
+      "levels": "Open and C Level",
+      "guarantee": "4 game guarantee",
+      "cost": "$625",
+      "usssa_event": "418148"
+    },
+    {
+      "name": "The Few, The Proud",
+      "subtitle": "Honoring our veterans",
+      "start": "2026-11-07",
+      "end": "2026-11-08",
+      "ages": "10U, 12U, 14U, 16U, 18U",
+      "levels": "Open and C Level",
+      "guarantee": "4 game guarantee",
+      "cost": "$625",
+      "usssa_event": "418149"
+    },
+    {
+      "name": "Toys for Tots Championship",
+      "subtitle": "Annual tournament and toy drive. Championship at Lasorda Legacy Park (Baseball Heaven).",
+      "start": "2026-11-14",
+      "end": "2026-11-15",
+      "ages": "10U, 12U, 14U, 16U, 18U",
+      "levels": "Open and C Level",
+      "guarantee": "4 game guarantee",
+      "cost": "$650",
+      "usssa_event": "418150"
+    }
+  ]
+}

@@ -232,7 +232,13 @@ html.tenant-island .print-toolbar button.secondary,
 html.tenant-island .rt-color-input,
 html.tenant-island .rt-content,
 html.tenant-island .rt-select,
-html.tenant-island .rt-wrap {
+html.tenant-island .rt-wrap,
+/* Tournament slate rows paint var(--card), which is still white — they are
+   cards on the dark page like every other card here. Their background comes
+   from a CLASS, so neither the generated white-surface list nor the
+   [style*="background: var(--card)"] inline match catches them, and the text
+   inside would have kept the page's light tokens: white on white. */
+html.tenant-island .ift-event {
   --text-strong: #1a1a1a;
   --text-body: #1a1a1a;
   --muted: rgba(0, 0, 0, 0.56);

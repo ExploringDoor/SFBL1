@@ -19,11 +19,10 @@ import { SquareCardForm } from "./SquareCardForm";
 const VENMO_HANDLE = "@Doug-Hare-2";
 const VENMO_URL = "https://venmo.com/u/Doug-Hare-2";
 const CHECK_PAYABLE_TO = "COYBL";
-// Matches the address already shown below the form. Doug once said "Etna"
-// while the league docs and the live page say Pataskala (same street, and
-// 43062 is the Pataskala ZIP). Kept consistent with the live page; worth one
-// confirmation from Doug.
-const CHECK_ADDRESS = "152 Glen Crossing Drive, Pataskala, OH 43062";
+// Confirmed by Doug 2026-08-02: "We live in Etna Township, not in a
+// corporation. Our address is 152 Glen Crossing Drive - Etna, 43062."
+// The older P.O. Box in Pataskala is no longer valid.
+const CHECK_ADDRESS = "152 Glen Crossing Drive, Etna, OH 43062";
 
 export function CoyblPaymentOptions({
   submissionId,
