@@ -127,10 +127,12 @@ export default async function HomePage() {
                 <p className="le-home-reg-cta-eyebrow">
                   {/* Island is registering specifically for the Fall season, so
                       name it — "2026 Season Registration" read as vague when
-                      Fall is the only thing open. Other tenants keep the
-                      generic label. */}
+                      Fall is the only thing open. "League" is in there because
+                      Island also runs a Fall TOURNAMENT slate, and this CTA
+                      registers a team for the league, not an event (Mike, via
+                      Adam, 2026-08-02). Other tenants keep the generic label. */}
                   {tenantId === "island"
-                    ? `${season} Fall Season`
+                    ? `${season} Fall League Season`
                     : `${season} Season Registration`}
                 </p>
                 <p className="le-home-reg-cta-head">
