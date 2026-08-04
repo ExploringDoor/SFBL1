@@ -90,7 +90,7 @@ export async function POST(req: Request) {
       const t = d.data();
       const c = contacts[i];
       const cdata = c && c.exists ? c.data() : null;
-      const managers = Array.isArray(cdata?.managers)
+      let managers = Array.isArray(cdata?.managers)
         ? (cdata!.managers as unknown[]).map((m) => {
             const o = (m ?? {}) as Record<string, unknown>;
             return {
@@ -99,6 +99,16 @@ export async function POST(req: Request) {
             };
           })
         : [];
+
+      // Fall back to the address captured at registration. Teams registered
+      // before contacts were written to _private/contact showed "no email on
+      // file" even though the coach had typed one into the form, and teams
+      // created by hand in admin never had a contact doc at all. The team doc
+      // keeps registered_email, so use it rather than claiming we have
+      // nothing. A real contact record always wins.
+      if (managers.length === 0 && typeof t.registered_email === "string" && t.registered_email) {
+        managers = [{ name: "", email: t.registered_email }];
+      }
       return {
         teamId: d.id,
         teamName: String(t.name ?? d.id),

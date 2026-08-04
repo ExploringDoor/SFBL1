@@ -23,6 +23,8 @@ interface Props {
 
 interface Entry {
   amount_paid: string;
+  /** What this team owes, seeded from their registration option. */
+  amount_due: string;
   note: string;
   /** "card" | "venmo" | "check" | "cash" | "" — how the money arrived. */
   method: string;
@@ -55,15 +57,23 @@ function PaidBadge({
     cash: "Cash",
     other: "Other",
   };
+  // Exact moment, not just a day. Adam wants to be able to match a card
+  // payment against the Square dashboard without guessing.
   const when = entry.paid_at
-    ? new Date(entry.paid_at).toLocaleDateString("en-US", {
+    ? new Date(entry.paid_at).toLocaleString("en-US", {
         month: "short",
         day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
       })
     : "";
   const how = label[entry.method] ?? "";
   return (
-    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-emerald-700">
+    <span
+      className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-emerald-700"
+      title={when ? `Paid ${when}` : undefined}
+    >
       Paid{how ? ` · ${how}` : ""}
       {when ? ` · ${when}` : ""}
     </span>
@@ -72,13 +82,19 @@ function PaidBadge({
 
 export function PaymentsAdmin({ leagueId, user }: Props) {
   const [loading, setLoading] = useState(true);
-  const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
+  const [teams, setTeams] = useState<
+    { id: string; name: string; ageGroup: string; ageOrder: number }[]
+  >([]);
   const [playersByTeam, setPlayersByTeam] = useState<
     Record<string, { id: string; name: string }[]>
   >({});
   const [teamPay, setTeamPay] = useState<Record<string, Entry>>({});
   const [playerPay, setPlayerPay] = useState<Record<string, Entry>>({});
   const [expanded, setExpanded] = useState<string | null>(null);
+  // Doug works one age group at a time and chases the unpaid. 196 teams in one
+  // flat list is unusable without these.
+  const [query, setQuery] = useState("");
+  const [show, setShow] = useState<"all" | "unpaid" | "paid">("all");
   const [saving, setSaving] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
@@ -104,8 +120,23 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
       setTeams(
         teamSnap.docs
           .filter((d) => d.data().active !== false)
-          .map((d) => ({ id: d.id, name: String(d.data().name ?? d.id) }))
-          .sort((a, b) => a.name.localeCompare(b.name)),
+          .map((d) => ({
+            id: d.id,
+            name: String(d.data().name ?? d.id),
+            ageGroup: String(d.data().ageGroup ?? ""),
+            ageOrder:
+              typeof d.data().ageOrder === "number"
+                ? (d.data().ageOrder as number)
+                : 999,
+          }))
+          // Age first (7U before 14U), then name. Doug works an age group at
+          // a time, so a flat alphabetical list of 196 teams was unusable.
+          .sort(
+            (a, b) =>
+              a.ageOrder - b.ageOrder ||
+              a.ageGroup.localeCompare(b.ageGroup) ||
+              a.name.localeCompare(b.name),
+          ),
       );
 
       const pbt: Record<string, { id: string; name: string }[]> = {};
@@ -124,6 +155,7 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
       const body = (await payRes.json().catch(() => ({}))) as {
         team_payments?: {
         team_id: string;
+        amount_due?: number;
         amount_paid: number;
         note: string;
         method?: string;
@@ -139,6 +171,7 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
       for (const p of body.team_payments ?? [])
         tp[p.team_id] = {
           amount_paid: p.amount_paid ? String(p.amount_paid) : "",
+          amount_due: p.amount_due ? String(p.amount_due) : "",
           note: p.note ?? "",
           method: (p as { method?: string }).method ?? "",
           paid_at: (p as { paid_at?: string }).paid_at ?? "",
@@ -148,6 +181,7 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
       for (const p of body.player_payments ?? [])
         pp[p.player_id] = {
           amount_paid: p.amount_paid ? String(p.amount_paid) : "",
+          amount_due: "",
           note: p.note ?? "",
           method: "",
           paid_at: "",
@@ -187,6 +221,7 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
           target,
           ...(target === "team" ? { teamId: id } : { playerId: id, teamId }),
           amount_paid: entry.amount_paid === "" ? 0 : Number(entry.amount_paid),
+          ...(entry.amount_due !== "" ? { amount_due: Number(entry.amount_due) } : {}),
           note: entry.note,
           method: entry.method,
           // Stamp WHEN it was recorded, so the row can read "Paid · Venmo ·
@@ -219,6 +254,27 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
     0,
   );
 
+  // How many teams have settled, and what is still outstanding across the
+  // league. "Total collected" alone does not tell Doug who to chase.
+  const teamsPaidCount = teams.filter(
+    (t) => Number(teamPay[t.id]?.amount_paid ?? 0) > 0,
+  ).length;
+  const outstanding = teams.reduce((sum, t) => {
+    const e = teamPay[t.id];
+    const due = Number(e?.amount_due ?? 0);
+    const paid = Number(e?.amount_paid ?? 0);
+    return sum + Math.max(0, due - paid);
+  }, 0);
+
+  const needle = query.trim().toLowerCase();
+  const visibleTeams = teams.filter((t) => {
+    if (needle && !t.name.toLowerCase().includes(needle)) return false;
+    const paid = Number(teamPay[t.id]?.amount_paid ?? 0) > 0;
+    if (show === "paid") return paid;
+    if (show === "unpaid") return !paid;
+    return true;
+  });
+
   return (
     <div className="space-y-4">
       <p className="text-sm text-slate-600">
@@ -227,10 +283,14 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
         captains&rsquo; own player tracking isn&rsquo;t shown here.
       </p>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <Card label="Team payments" value={money(teamTotal)} />
-        <Card label="Player payments" value={money(playerTotal)} />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Card label="Total collected" value={money(teamTotal + playerTotal)} tone="emerald" />
+        <Card
+          label="Teams paid"
+          value={`${teamsPaidCount}/${teams.length}`}
+        />
+        <Card label="Still owed" value={money(outstanding)} />
+        <Card label="Player payments" value={money(playerTotal)} />
       </div>
 
       {msg && (
@@ -244,16 +304,57 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
         </p>
       )}
 
+      <div className="flex flex-wrap items-center gap-2">
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Find a team…"
+          className="min-w-[180px] flex-1 rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+          aria-label="Find a team"
+        />
+        <div className="flex overflow-hidden rounded-md border border-slate-300">
+          {(["all", "unpaid", "paid"] as const).map((k) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => setShow(k)}
+              className={
+                "px-3 py-1.5 text-xs font-semibold capitalize " +
+                (show === k
+                  ? "bg-slate-900 text-white"
+                  : "bg-white text-slate-600 hover:bg-slate-50")
+              }
+            >
+              {k}
+            </button>
+          ))}
+        </div>
+        <span className="text-xs text-slate-500">
+          {visibleTeams.length} of {teams.length} teams
+        </span>
+      </div>
+
       <div className="space-y-2">
-        {teams.map((t) => {
+        {visibleTeams.map((t, i) => {
+          // Teams are sorted by age group, so a header appears whenever the
+          // age group changes. Doug scans for "10U" rather than a team name.
+          const prev = i > 0 ? visibleTeams[i - 1] : null;
+          const newAge = !prev || prev.ageGroup !== t.ageGroup;
           const roster = playersByTeam[t.id] ?? [];
-          const tEntry = teamPay[t.id] ?? { amount_paid: "", note: "", method: "", paid_at: "" };
+          const tEntry = teamPay[t.id] ?? { amount_paid: "", amount_due: "", note: "", method: "", paid_at: "" };
           const open = expanded === t.id;
           const playerPaidCount = roster.filter(
             (p) => Number(playerPay[p.id]?.amount_paid) > 0,
           ).length;
           return (
-            <div key={t.id} className="overflow-hidden rounded-md border border-slate-200">
+            <div key={t.id}>
+              {newAge && (
+                <h3 className="mb-1 mt-4 border-b border-slate-200 pb-1 text-xs font-bold uppercase tracking-wide text-slate-500 first:mt-0">
+                  {t.ageGroup || "No age group"}
+                </h3>
+              )}
+              <div className="overflow-hidden rounded-md border border-slate-200">
               {/* Team-level row */}
               <div className="flex flex-wrap items-center gap-2 bg-slate-50 px-3 py-2">
                 <button
@@ -326,7 +427,7 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
                     </p>
                   ) : (
                     roster.map((p) => {
-                      const e = playerPay[p.id] ?? { amount_paid: "", note: "", method: "", paid_at: "" };
+                      const e = playerPay[p.id] ?? { amount_paid: "", amount_due: "", note: "", method: "", paid_at: "" };
                       return (
                         <div
                           key={p.id}
@@ -377,9 +478,15 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
                   )}
                 </div>
               )}
+              </div>
             </div>
           );
         })}
+        {visibleTeams.length === 0 && (
+          <p className="rounded-md border border-dashed border-slate-300 px-3 py-6 text-center text-sm text-slate-500">
+            No teams match that.
+          </p>
+        )}
       </div>
     </div>
   );
