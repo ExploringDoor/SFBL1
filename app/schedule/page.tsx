@@ -168,7 +168,12 @@ export default async function SchedulePage({
           <div />
         )}
         <div className="flex flex-col items-end gap-2">
-          <SubscribeCalendar />
+          {/* Hidden on Island until their Fall schedule exists (Adam,
+              2026-08-03). Same reasoning as the team pages: /api/schedule.ics
+              WORKS and returns a real feed, but the only games in it today are
+              last Summer's, so subscribing pulls a calendar of finished games.
+              Drop this condition once Fall games are published. */}
+          {tenantId !== "island" && <SubscribeCalendar />}
           {/* Flat CSV of the whole schedule — opens straight in Excel /
               Sheets. For the umpire assigner etc. (Adam, 2026-06). */}
           <a
