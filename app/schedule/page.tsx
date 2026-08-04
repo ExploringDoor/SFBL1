@@ -167,23 +167,26 @@ export default async function SchedulePage({
         ) : (
           <div />
         )}
-        <div className="flex flex-col items-end gap-2">
-          {/* Hidden on Island until their Fall schedule exists (Adam,
-              2026-08-03). Same reasoning as the team pages: /api/schedule.ics
-              WORKS and returns a real feed, but the only games in it today are
-              last Summer's, so subscribing pulls a calendar of finished games.
-              Drop this condition once Fall games are published. */}
-          {tenantId !== "island" && <SubscribeCalendar />}
-          {/* Flat CSV of the whole schedule — opens straight in Excel /
-              Sheets. For the umpire assigner etc. (Adam, 2026-06). */}
-          <a
-            href="/api/schedule.csv"
-            className="font-barlow text-xs font-bold uppercase tracking-wider hover:underline"
-            style={{ color: "var(--brand-primary)" }}
-          >
-            ⬇ Download for Excel (CSV)
-          </a>
-        </div>
+        {/* Calendar subscribe + CSV export, both hidden on Island until their
+            Fall schedule exists (Adam, 2026-08-03). The .ics feed and the CSV
+            route both WORK — the problem is the only games in either right now
+            are last Summer's, so a coach subscribing or downloading gets a
+            calendar of finished games. Drop this condition, and the matching
+            one on the team page, once Fall games are published. */}
+        {tenantId !== "island" && (
+          <div className="flex flex-col items-end gap-2">
+            <SubscribeCalendar />
+            {/* Flat CSV of the whole schedule — opens straight in Excel /
+                Sheets. For the umpire assigner etc. (Adam, 2026-06). */}
+            <a
+              href="/api/schedule.csv"
+              className="font-barlow text-xs font-bold uppercase tracking-wider hover:underline"
+              style={{ color: "var(--brand-primary)" }}
+            >
+              ⬇ Download for Excel (CSV)
+            </a>
+          </div>
+        )}
       </header>
 
       <ScoresScheduleTabs active="schedule" />
