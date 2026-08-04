@@ -67,6 +67,13 @@ function loadSdk(src: string): Promise<void> {
   });
 }
 
+function usd(cents: number): string {
+  return (cents / 100).toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+  });
+}
+
 export function SquareCardForm({
   registrationId,
   onPaid,
@@ -80,6 +87,13 @@ export function SquareCardForm({
     "loading" | "ready" | "unavailable" | "paying"
   >("loading");
   const [error, setError] = useState<string | null>(null);
+  // What this card will actually be charged. Fetched before the button is
+  // usable so nobody is asked to pay an amount they have not seen.
+  const [quote, setQuote] = useState<{
+    fee_dollars: number;
+    surcharge_cents: number;
+    total_cents: number;
+  } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -102,6 +116,23 @@ export function SquareCardForm({
           return;
         }
 
+        // Ask what this registration owes. Non-fatal: a missing quote hides
+        // the amount line rather than blocking payment entirely.
+        if (registrationId) {
+          try {
+            const q = await fetch("/api/square-quote", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ registrationId }),
+            }).then((r) => (r.ok ? r.json() : null));
+            if (!cancelled && q && typeof q.total_cents === "number") {
+              setQuote(q);
+            }
+          } catch {
+            /* amount line simply does not render */
+          }
+        }
+
         const payments = window.Square.payments(cfg.appId, cfg.locationId);
         const card = await payments.card();
         if (cancelled) return;
@@ -119,7 +150,7 @@ export function SquareCardForm({
       cancelled = true;
       cardRef.current?.destroy?.().catch(() => {});
     };
-  }, []);
+  }, [registrationId]);
 
   async function pay() {
     if (!cardRef.current) return;
@@ -178,6 +209,23 @@ export function SquareCardForm({
       {state === "loading" && (
         <p className="cop-note-block">Loading secure card form...</p>
       )}
+      {quote && (
+        <dl className="sqc-amount">
+          <div>
+            <dt>Team fee</dt>
+            <dd>{usd(quote.fee_dollars * 100)}</dd>
+          </div>
+          <div>
+            <dt>Card processing fee</dt>
+            <dd>{usd(quote.surcharge_cents)}</dd>
+          </div>
+          <div className="sqc-amount-total">
+            <dt>Total</dt>
+            <dd>{usd(quote.total_cents)}</dd>
+          </div>
+        </dl>
+      )}
+
       {/* Square draws its card fields inside this element. */}
       <div ref={containerRef} className="sqc-field" />
       {error && <div className="cop-error">{error}</div>}
@@ -188,7 +236,11 @@ export function SquareCardForm({
           onClick={pay}
           disabled={state === "paying"}
         >
-          {state === "paying" ? "Processing..." : "Pay now"}
+          {state === "paying"
+            ? "Processing..."
+            : quote
+              ? `Pay ${usd(quote.total_cents)}`
+              : "Pay now"}
         </button>
       )}
     </div>

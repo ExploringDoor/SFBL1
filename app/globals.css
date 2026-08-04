@@ -6183,3 +6183,44 @@ select:focus-visible {
 .tourney-rules-cta-btn:hover {
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
 }
+
+/* Amount breakdown above the card fields. A coach should never be asked to
+   type a card without seeing the number they are about to be charged. */
+.sqc-amount {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 14px;
+}
+.sqc-amount > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 3px 0;
+}
+.sqc-amount dt {
+  margin: 0;
+  color: var(--muted, rgba(0, 0, 0, 0.56));
+}
+.sqc-amount dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--text-strong, #111);
+}
+.sqc-amount-total {
+  margin-top: 4px;
+  padding-top: 8px !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+.sqc-amount-total dt {
+  font-weight: 800;
+  color: var(--text-strong, #111);
+}
+.sqc-amount-total dd {
+  font-size: 17px;
+  font-weight: 800;
+}
