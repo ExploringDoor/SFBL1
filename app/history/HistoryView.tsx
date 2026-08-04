@@ -19,6 +19,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import type {
+  ArchivedGame,
   ChampionRow,
   HistoryViewProps,
   LeaderboardRow,
@@ -27,7 +28,7 @@ import type {
   TeamMeta,
 } from "./types";
 
-type TabId = "champions" | "records" | "standings";
+type TabId = "champions" | "records" | "standings" | "scores";
 
 export function HistoryView(props: HistoryViewProps) {
   const [tab, setTab] = useState<TabId>("champions");
@@ -35,6 +36,8 @@ export function HistoryView(props: HistoryViewProps) {
   // champions. Wording only; the data and layout are identical.
   const divWinners = props.honourLabel === "division-winner";
   const honourPlural = divWinners ? "Division Winners" : "Champions";
+  const archive = props.archivedGames ?? [];
+  const hasArchive = archive.some((a) => a.games.length > 0);
 
   return (
     <>
@@ -50,6 +53,11 @@ export function HistoryView(props: HistoryViewProps) {
         <TabButton id="standings" current={tab} onSelect={setTab}>
           📋 Standings
         </TabButton>
+        {hasArchive && (
+          <TabButton id="scores" current={tab} onSelect={setTab}>
+            ⚾ Scores
+          </TabButton>
+        )}
       </nav>
 
       <div className="le-hist-panel" role="tabpanel">
@@ -60,6 +68,9 @@ export function HistoryView(props: HistoryViewProps) {
             divWinners={divWinners}
           />
         )}
+        {tab === "scores" && hasArchive && (
+          <ArchivedScoresTab archive={archive} />
+        )}
         {tab === "records" && (
           <RecordsTab winsLb={props.winsLb} all={props.all} />
         )}
@@ -69,6 +80,136 @@ export function HistoryView(props: HistoryViewProps) {
       </div>
     </>
   );
+}
+
+// ── Archived scores ────────────────────────────────────────────────
+// Every game from a season that has been cleared off the live site, so the
+// results stay browsable after the rollover. Filter by team, date or
+// division; grouped by date so it reads like the schedule it replaced.
+
+function ArchivedScoresTab({
+  archive,
+}: {
+  archive: { season: string; games: ArchivedGame[] }[];
+}) {
+  const [season, setSeason] = useState(archive[0]?.season ?? "");
+  const [filter, setFilter] = useState("");
+  const active = archive.find((a) => a.season === season) ?? archive[0];
+  const q = filter.trim().toLowerCase();
+
+  const games = (active?.games ?? []).filter(
+    (g) =>
+      !q ||
+      g.home.toLowerCase().includes(q) ||
+      g.away.toLowerCase().includes(q) ||
+      (g.division ?? "").toLowerCase().includes(q) ||
+      (g.ageGroup ?? "").toLowerCase().includes(q) ||
+      g.date.includes(q),
+  );
+
+  const byDate = new Map<string, ArchivedGame[]>();
+  for (const g of games) {
+    const arr = byDate.get(g.date) ?? [];
+    arr.push(g);
+    byDate.set(g.date, arr);
+  }
+  const dates = [...byDate.keys()].sort((a, b) => b.localeCompare(a));
+
+  return (
+    <section className="le-hist-card le-hist-card-wide">
+      <header className="le-hist-card-hd">
+        <h2>
+          <span aria-hidden="true">⚾</span> Scores
+        </h2>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {archive.length > 1 && (
+            <select
+              value={season}
+              onChange={(e) => setSeason(e.target.value)}
+              className="le-hist-search"
+              aria-label="Season"
+            >
+              {archive.map((a) => (
+                <option key={a.season} value={a.season}>
+                  {a.season}
+                </option>
+              ))}
+            </select>
+          )}
+          <input
+            type="search"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            placeholder="Filter team, division or date…"
+            className="le-hist-search"
+            aria-label="Filter scores"
+          />
+        </div>
+      </header>
+
+      <p className="le-arc-count">
+        {games.length.toLocaleString()} game{games.length === 1 ? "" : "s"}
+        {active ? ` from ${active.season}` : ""}
+      </p>
+
+      {dates.length === 0 ? (
+        <p className="le-hist-empty">No games match that filter.</p>
+      ) : (
+        dates.map((d) => (
+          <div key={d} className="le-arc-day">
+            <h3 className="le-arc-date">{prettyDate(d)}</h3>
+            <div className="le-dw-scroll">
+              <table className="le-dw-table">
+                <tbody>
+                  {byDate.get(d)!.map((g, i) => {
+                    const hw =
+                      typeof g.home_score === "number" &&
+                      typeof g.away_score === "number" &&
+                      g.home_score > g.away_score;
+                    const aw =
+                      typeof g.home_score === "number" &&
+                      typeof g.away_score === "number" &&
+                      g.away_score > g.home_score;
+                    return (
+                      <tr key={i}>
+                        <td className="le-dw-div">
+                          {[g.ageGroup, g.division].filter(Boolean).join(" · ")}
+                        </td>
+                        <td className={aw ? "le-dw-team" : undefined}>
+                          {g.away}
+                        </td>
+                        <td className="le-dw-rec">{g.away_score ?? ""}</td>
+                        <td style={{ color: "var(--muted)", padding: "0 6px" }}>
+                          at
+                        </td>
+                        <td className={hw ? "le-dw-team" : undefined}>
+                          {g.home}
+                        </td>
+                        <td className="le-dw-rec">{g.home_score ?? ""}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ))
+      )}
+    </section>
+  );
+}
+
+/** "2026-06-29" -> "Mon, Jun 29". Built from parts so the calendar day
+ *  never shifts backwards in a western timezone. */
+function prettyDate(iso: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!m) return iso;
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  return d.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
 }
 
 // ── Stats strip (always-visible KPIs) ──────────────────────────────

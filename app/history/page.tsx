@@ -25,6 +25,7 @@ import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { HistoryView } from "./HistoryView";
 import type {
+  ArchivedGame,
   ChampionRow,
   HistoryViewProps,
   LeaderboardRow,
@@ -58,6 +59,30 @@ interface HistoryMeta {
   established?: number;
   years_in_operation?: number;
   season_count?: number;
+}
+
+// Games from seasons that have been cleared off the live site. Kept as a
+// static file so the results stay browsable after the season rolls over.
+function loadArchivedGames(
+  tenantId: string,
+): { season: string; games: ArchivedGame[] }[] {
+  const out: { season: string; games: ArchivedGame[] }[] = [];
+  const dir = path.resolve(process.cwd(), `data/${tenantId}`);
+  if (!fs.existsSync(dir)) return out;
+  for (const file of fs.readdirSync(dir)) {
+    const m = /^season-games-(\d{4})\.json$/.exec(file);
+    if (!m) continue;
+    try {
+      const games = JSON.parse(
+        fs.readFileSync(path.join(dir, file), "utf8"),
+      ) as ArchivedGame[];
+      out.push({ season: m[1]!, games });
+    } catch {
+      /* a malformed archive file just does not appear */
+    }
+  }
+  out.sort((a, b) => Number(b.season) - Number(a.season));
+  return out;
 }
 
 function loadHistoryMeta(tenantId: string): HistoryMeta | null {
@@ -294,6 +319,7 @@ export default async function HistoryPage() {
 
   const props: HistoryViewProps = {
     all,
+    archivedGames: loadArchivedGames(tenantId),
     nameIdx,
     champions,
     championsLb,

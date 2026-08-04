@@ -48,8 +48,25 @@ export interface LeaderboardRow {
   detail: string[];
 }
 
+/** A completed game kept for the archive after the live season is cleared. */
+export interface ArchivedGame {
+  date: string;
+  time?: string;
+  ageGroup?: string;
+  division?: string;
+  home: string;
+  away: string;
+  home_score?: number | null;
+  away_score?: number | null;
+  status?: string;
+  field?: string | null;
+}
+
 export interface HistoryViewProps {
   all: StandingsBlock[];
+  /** Past-season game results, newest season first. Empty for tenants with
+   *  no archived games, which hides the Scores tab entirely. */
+  archivedGames?: { season: string; games: ArchivedGame[] }[];
   /** name-lowercased → current team meta, for logos / colors. */
   nameIdx: Record<string, TeamMeta>;
   champions: ChampionRow[];

@@ -765,3 +765,28 @@ td.le-dw-rec {
     font-size: 13px;
   }
 }
+
+/* Archived scores: past-season results kept browsable after the live
+   season is cleared off the site. */
+.le-arc-count {
+  margin: 0 0 14px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted, rgba(0, 0, 0, 0.56));
+}
+.le-arc-day {
+  margin-bottom: 18px;
+}
+.le-arc-date {
+  margin: 0 0 6px;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-strong, #111);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding-bottom: 4px;
+}
