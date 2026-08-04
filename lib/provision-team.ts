@@ -131,6 +131,45 @@ export async function provisionCoyblTeam(
     console.error("[provision-team] could not seed payment ledger", err);
   }
 
+  // Add the team's home field to the league's field list, so the office does
+  // not have to retype 196 addresses and the schedule's field dropdown, the
+  // public Fields page and directions all work from day one.
+  //
+  // Deduped on the field NAME, case-insensitively: many teams share a park,
+  // and a second registration naming the same field should not create a
+  // duplicate. An existing entry is left as-is rather than overwritten, since
+  // the office may have corrected it by hand.
+  try {
+    const fieldName = str("home_field_name");
+    if (fieldName) {
+      const parts = [
+        str("home_field_street"),
+        [str("home_field_city"), str("home_field_zip")]
+          .filter(Boolean)
+          .join(" "),
+      ].filter(Boolean);
+      const entry = {
+        name: fieldName,
+        address: parts.join(", "),
+        ...(str("home_field_maps") ? { mapsUrl: str("home_field_maps") } : {}),
+      };
+      const ref = db.doc(`leagues/${leagueId}/site_config/fields`);
+      const snap = await ref.get();
+      const existing: unknown = snap.exists ? snap.data()?.data : null;
+      const list = Array.isArray(existing) ? [...existing] : [];
+      const already = list.some((f) => {
+        const n = typeof f === "string" ? f : String((f ?? {}).name ?? "");
+        return n.trim().toLowerCase() === fieldName.toLowerCase();
+      });
+      if (!already) {
+        list.push(entry);
+        await ref.set({ data: list }, { merge: true });
+      }
+    }
+  } catch (err) {
+    console.error("[provision-team] could not add the home field", err);
+  }
+
   // Record the link back on the submission so the admin inbox can show which
   // team a registration became, and so retries stay idempotent.
   try {

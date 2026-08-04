@@ -54,6 +54,14 @@ const ALLOWED_FIELDS: Record<Kind, string[]> = {
     "street_address",
     "city",
     "zip",
+    // COYBL asks for the team's HOME FIELD rather than an unlabelled address
+    // (2026-08-02). These must be listed here or they are dropped before the
+    // submission is written, and the field never reaches the Fields list.
+    "home_field_name",
+    "home_field_street",
+    "home_field_city",
+    "home_field_zip",
+    "home_field_maps",
     "team_name",
     "division",
     // COYBL (youth) fields — age group instead of division, the

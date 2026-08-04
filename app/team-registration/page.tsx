@@ -164,9 +164,32 @@ const COYBL_FIELDS: FormField[] = [
     options: COYBL_AGE_GROUPS.map((a) => ({ value: a, label: a })),
     width: "half",
   },
-  { name: "street_address", label: "Street Address", type: "text", required: true, width: "full" },
-  { name: "city", label: "City / Town", type: "text", required: true, width: "half" },
-  { name: "zip", label: "ZIP Code", type: "text", required: true, width: "half" },
+  // Home field, not the coach's address. The old "Street Address / City / ZIP"
+  // fields had no label saying whose address they were, so coaches were about
+  // to enter their own house. Doug needs the field a team HOSTS at, and the
+  // league needs it precise enough that a parent can drive to the right
+  // diamond (Adam + Doug, 2026-08-02).
+  {
+    name: "home_field_name",
+    label: "Home Field Name",
+    type: "text",
+    required: true,
+    placeholder: "Pataskala Community Park, Field 3",
+    help: "The park and diamond where you host your home games.",
+    width: "full",
+  },
+  { name: "home_field_street", label: "Field Street Address", type: "text", required: true, width: "full" },
+  { name: "home_field_city", label: "Field City / Town", type: "text", required: true, width: "half" },
+  { name: "home_field_zip", label: "Field ZIP Code", type: "text", required: true, width: "half" },
+  {
+    name: "home_field_maps",
+    label: "Google Maps link to the field (optional, but please add it)",
+    type: "text",
+    placeholder: "https://maps.app.goo.gl/...",
+    help:
+      "Most parks hold several diamonds, so a street address only gets people to the parking lot. Open Google Maps, drop a pin on your actual field, tap Share, and paste the link here.",
+    width: "full",
+  },
   { name: "organization", label: "Club / Organization", type: "text", required: true, placeholder: "If your team is part of a club", width: "full" },
   {
     name: "insurance_option",
