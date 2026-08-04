@@ -25,7 +25,13 @@ import {
 
 export const runtime = "nodejs";
 
-const TEAM_ID_RE = /^[a-z0-9_-]+$/;
+// Team ids come from two places and BOTH must pass:
+//   - hand-made slugs on older tenants ("18-plus", "sfbl_navy")
+//   - Firestore auto-ids from registration ("etUnCN42apFfYXnyVvrO")
+// This was lowercase-only, so every team created by a coach registering was
+// rejected with "teamId is required" and could not be assigned a division.
+// Auto-ids are mixed case by design, so uppercase has to be allowed.
+const TEAM_ID_RE = /^[A-Za-z0-9_-]{1,128}$/;
 const HEX_COLOR_RE = /^#[0-9a-fA-F]{3,8}$/;
 
 interface Body {
@@ -113,7 +119,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         error:
-          "teamId is required (lowercase letters/numbers, with - or _)",
+          "teamId is required (letters/numbers, with - or _)",
       },
       { status: 400 },
     );

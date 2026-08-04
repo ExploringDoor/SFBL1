@@ -89,6 +89,38 @@ export async function provisionCoyblTeam(
     created = true;
   }
 
+  // Put the coach's contact where the Captains view reads it
+  // (teams/{id}/_private/contact -> managers[]). Writing it only onto the
+  // team doc left every freshly registered team showing "no email on file",
+  // even though the coach had just typed their email into the form.
+  //
+  // _private is the right home for it: the public team doc is world-readable,
+  // so contact details must not sit there.
+  try {
+    const who = [str("manager_first_name"), str("manager_last_name")]
+      .filter(Boolean)
+      .join(" ");
+    if (email || who) {
+      await db
+        .doc(`leagues/${leagueId}/teams/${teamId}/_private/contact`)
+        .set(
+          {
+            managers: [
+              {
+                name: who || email,
+                email,
+                phone: str("phone"),
+                source: "registration",
+              },
+            ],
+          },
+          { merge: true },
+        );
+    }
+  } catch (err) {
+    console.error("[provision-team] could not save the coach contact", err);
+  }
+
   // Connect the coach's login to this team so they can post games, enter
   // scores and log pitch counts without a manual step from the office.
   let boundCoach = false;
@@ -151,6 +183,9 @@ export async function provisionCoyblTeam(
       const entry = {
         name: fieldName,
         address: parts.join(", "),
+        // Whose home field this is. Without it the Fields list is a pile of
+        // parks with no indication of who plays where.
+        team: teamName,
         ...(str("home_field_maps") ? { mapsUrl: str("home_field_maps") } : {}),
       };
       const ref = db.doc(`leagues/${leagueId}/site_config/fields`);
