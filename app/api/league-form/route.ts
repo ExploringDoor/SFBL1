@@ -397,9 +397,24 @@ export async function POST(req: Request) {
             `${cleaned.usssa_addon ? " (USSSA add-on)" : ""}</p>` +
             `<p>View it in the admin Registrations tab.</p>`,
         });
+        await ref.set({ office_email_sent: true }, { merge: true });
+      } else {
+        // No EMAIL_NOTIFY configured, so nobody was told. Say so on the
+        // record rather than looking like it succeeded.
+        await ref.set(
+          { office_email_sent: false, office_email_error: "no notify address configured" },
+          { merge: true },
+        );
       }
-    } catch {
-      /* notification is best-effort */
+    } catch (err) {
+      // Same lesson as the coach login email: an empty catch here meant we
+      // could not answer "did the office actually get told?" without asking
+      // Doug to search his inbox.
+      const reason = err instanceof Error ? err.message : "unknown error";
+      console.error("[league-form] office notification failed", reason);
+      await ref
+        .set({ office_email_sent: false, office_email_error: reason }, { merge: true })
+        .catch(() => {});
     }
   } else {
     // Other tenants/kinds: best-effort confirmation email, fire-and-forget.
