@@ -3,7 +3,10 @@
 
 import Link from "next/link";
 import { headers } from "next/headers";
-import { getAdminDb } from "@/lib/firebase-admin";
+import {
+  getCachedGamesSnap,
+  getCachedTeamsSnap,
+} from "@/lib/league-cache";
 import { TeamBadge } from "@/components/TeamBadge";
 import {
   computeStandings,
@@ -57,10 +60,9 @@ export default async function TeamsPage() {
     );
   }
 
-  const db = getAdminDb();
   const [teamsSnap, gamesSnap] = await Promise.all([
-    db.collection(`leagues/${tenantId}/teams`).get(),
-    db.collection(`leagues/${tenantId}/games`).get(),
+    getCachedTeamsSnap(tenantId),
+    getCachedGamesSnap(tenantId),
   ]);
 
   const games: GameResult[] = gamesSnap.docs.map((d) => {

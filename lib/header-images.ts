@@ -75,7 +75,7 @@ export function bannerCarriesTitle(
 // downloading in full — 268KB for the home banner alone, to paint it at a
 // quarter of that width. Only listed here when the variants actually exist on
 // disk; a missing candidate in a srcset is a broken image, not a fallback.
-const HAS_SMALL_HEADERS = new Set(["island"]);
+const HAS_SMALL_HEADERS = new Set(["island", "coybl"]);
 
 /** Phone-sized banner variants, keyed the same way as headerImagesFor. Empty
  *  for tenants without them, which makes PageBanner emit a plain src. */

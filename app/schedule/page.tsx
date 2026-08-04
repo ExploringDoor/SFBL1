@@ -2,7 +2,10 @@
 // shows upcoming games only. No Recap/Box Score buttons, just Preview.
 
 import { headers } from "next/headers";
-import { getAdminDb } from "@/lib/firebase-admin";
+import {
+  getCachedGamesSnap,
+  getCachedTeamsSnap,
+} from "@/lib/league-cache";
 import { PreviewCard, type PreviewCardTeam } from "@/components/ui/PreviewCard";
 import { GameCard, type GameCardTeam } from "@/components/ui/GameCard";
 import { computeWeeks, pickActiveWeek } from "@/lib/season-weeks";
@@ -322,10 +325,9 @@ async function loadSchedule(tenantId: string): Promise<{
   games: ScheduleGame[];
   teams: Record<string, TeamMeta>;
 }> {
-  const db = getAdminDb();
   const [gamesSnap, teamsSnap] = await Promise.all([
-    db.collection(`leagues/${tenantId}/games`).get(),
-    db.collection(`leagues/${tenantId}/teams`).get(),
+    getCachedGamesSnap(tenantId),
+    getCachedTeamsSnap(tenantId),
   ]);
 
   const games: ScheduleGame[] = gamesSnap.docs.map((d) => {

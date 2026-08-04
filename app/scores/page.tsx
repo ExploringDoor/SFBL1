@@ -2,7 +2,10 @@
 // selector + game cards grouped by day.
 
 import { headers } from "next/headers";
-import { getAdminDb } from "@/lib/firebase-admin";
+import {
+  getCachedGamesSnap,
+  getCachedTeamsSnap,
+} from "@/lib/league-cache";
 import { GameCard, type GameCardTeam } from "@/components/ui/GameCard";
 import { computeWeeks, pickActiveWeek } from "@/lib/season-weeks";
 import { computeStandings, type GameResult } from "@/lib/stats/shared";
@@ -331,10 +334,9 @@ async function loadScores(tenantId: string): Promise<{
   games: ScoreGame[];
   teams: Record<string, TeamMeta>;
 }> {
-  const db = getAdminDb();
   const [gamesSnap, teamsSnap] = await Promise.all([
-    db.collection(`leagues/${tenantId}/games`).get(),
-    db.collection(`leagues/${tenantId}/teams`).get(),
+    getCachedGamesSnap(tenantId),
+    getCachedTeamsSnap(tenantId),
   ]);
 
   const games: ScoreGame[] = gamesSnap.docs.map((d) => {

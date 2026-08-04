@@ -5,7 +5,10 @@
 
 import { headers } from "next/headers";
 import Link from "next/link";
-import { getAdminDb } from "@/lib/firebase-admin";
+import {
+  getCachedGamesSnap,
+  getCachedTeamsSnap,
+} from "@/lib/league-cache";
 import {
   computeStandings,
   sortByPoints,
@@ -277,10 +280,9 @@ function seasonLabel(year: string): string {
 }
 
 async function loadStandings(tenantId: string, config: PublicLeagueConfig | null) {
-  const db = getAdminDb();
   const [gamesSnap, teamsSnap] = await Promise.all([
-    db.collection(`leagues/${tenantId}/games`).get(),
-    db.collection(`leagues/${tenantId}/teams`).get(),
+    getCachedGamesSnap(tenantId),
+    getCachedTeamsSnap(tenantId),
   ]);
 
   const teams: Record<string, TeamMeta> = {};
