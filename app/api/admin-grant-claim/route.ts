@@ -36,7 +36,10 @@ import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 export const runtime = "nodejs";
 
 const ALLOWED_ROLES = new Set(["admin", "captain", "player", "remove"]);
-const TEAM_ID_RE = /^[a-z0-9_-]+$/;
+// Team/player ids are EITHER hand-made slugs on older tenants ("18-plus") OR
+// Firestore auto-ids from registration ("etUnCN42apFfYXnyVvrO"), which are
+// mixed case. Lowercase-only rejected every team a coach registered.
+const TEAM_ID_RE = /^[A-Za-z0-9_-]{1,128}$/;
 // Audit H4: player doc ids are slugs like "tribe__greg-maddux-66"
 // (LBDC: <teamSlug>__<nameSlug>) or "john_smith" (SFBL). The old
 // code reused TEAM_ID_RE for playerId, which silently 400s any id

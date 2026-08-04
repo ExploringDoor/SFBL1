@@ -180,8 +180,11 @@ export async function POST(req: Request) {
           team_name: String(data.team_name ?? ""),
           amount_due: fee,
           amount_paid: amountCents / 100,
-          note: `Paid by card ${new Date().toISOString().slice(0, 10)} (includes card fee)`,
+          // Structured, not prose. The UI renders "Card · Aug 4" from these;
+          // it used to write a sentence into the free-text note, which read
+          // like garbage in the table and could not be filtered on.
           method: "card",
+          paid_at: new Date().toISOString(),
           square_payment_id: payment.id ?? null,
         },
         { merge: true },

@@ -344,10 +344,26 @@ export async function POST(req: Request) {
   // creation must actually happen. Wrapped so an email/auth hiccup never fails
   // the registration itself.
   if (tenantId === "coybl" && body.kind === "team_registration") {
+    // Record whether the coach's login email actually went out. This used to
+    // be an empty catch, which is how a Firebase "Domain not allowlisted"
+    // error silently ate every login email while registrations looked fine:
+    // the coach got an account they could not reach, and nobody could tell.
+    // The registration still succeeds either way, but the failure is now
+    // visible in the admin inbox instead of invisible everywhere.
     try {
       await createCoachLogin(cleaned, origin);
-    } catch {
-      /* registration still succeeds even if the login email can't be sent */
+      await ref.set({ login_email_sent: true }, { merge: true });
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : "unknown error";
+      console.error("[league-form] coach login email failed", reason);
+      await ref
+        .set(
+          { login_email_sent: false, login_email_error: reason },
+          { merge: true },
+        )
+        .catch(() => {
+          /* flagging is best-effort; never fail the registration over it */
+        });
     }
     // Create the team and connect the coach to it right away (Doug,
     // 2026-08-02: teams show on the Teams page as soon as they register; he

@@ -31,7 +31,10 @@ import {
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const TEAM_ID_RE = /^[a-z0-9_-]+$/;
+// Team/player ids are EITHER hand-made slugs on older tenants ("18-plus") OR
+// Firestore auto-ids from registration ("etUnCN42apFfYXnyVvrO"), which are
+// mixed case. Lowercase-only rejected every team a coach registered.
+const TEAM_ID_RE = /^[A-Za-z0-9_-]{1,128}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_BATCH = 100;
 

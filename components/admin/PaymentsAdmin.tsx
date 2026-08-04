@@ -24,10 +24,51 @@ interface Props {
 interface Entry {
   amount_paid: string;
   note: string;
+  /** "card" | "venmo" | "check" | "cash" | "" — how the money arrived. */
+  method: string;
+  /** ISO timestamp, set automatically when a payment is recorded. */
+  paid_at: string;
 }
 
 const money = (n: number) =>
   n.toLocaleString("en-US", { style: "currency", currency: "USD" });
+
+/** Reads a payment at a glance: "Card · Aug 4" instead of a sentence like
+ *  "Paid by card 2026-08-04 (includes card fee)" sitting in a note column. */
+function PaidBadge({
+  entry,
+}: {
+  entry: { amount_paid: string; method: string; paid_at: string };
+}) {
+  const paid = Number(entry.amount_paid) > 0;
+  if (!paid) {
+    return (
+      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-slate-500">
+        Unpaid
+      </span>
+    );
+  }
+  const label: Record<string, string> = {
+    card: "Card",
+    venmo: "Venmo",
+    check: "Check",
+    cash: "Cash",
+    other: "Other",
+  };
+  const when = entry.paid_at
+    ? new Date(entry.paid_at).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      })
+    : "";
+  const how = label[entry.method] ?? "";
+  return (
+    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-emerald-700">
+      Paid{how ? ` · ${how}` : ""}
+      {when ? ` · ${when}` : ""}
+    </span>
+  );
+}
 
 export function PaymentsAdmin({ leagueId, user }: Props) {
   const [loading, setLoading] = useState(true);
@@ -81,7 +122,13 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
       setPlayersByTeam(pbt);
 
       const body = (await payRes.json().catch(() => ({}))) as {
-        team_payments?: { team_id: string; amount_paid: number; note: string }[];
+        team_payments?: {
+        team_id: string;
+        amount_paid: number;
+        note: string;
+        method?: string;
+        paid_at?: string;
+      }[];
         player_payments?: {
           player_id: string;
           amount_paid: number;
@@ -93,6 +140,8 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
         tp[p.team_id] = {
           amount_paid: p.amount_paid ? String(p.amount_paid) : "",
           note: p.note ?? "",
+          method: (p as { method?: string }).method ?? "",
+          paid_at: (p as { paid_at?: string }).paid_at ?? "",
         };
       setTeamPay(tp);
       const pp: Record<string, Entry> = {};
@@ -100,6 +149,8 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
         pp[p.player_id] = {
           amount_paid: p.amount_paid ? String(p.amount_paid) : "",
           note: p.note ?? "",
+          method: "",
+          paid_at: "",
         };
       setPlayerPay(pp);
     } catch (e) {
@@ -137,6 +188,14 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
           ...(target === "team" ? { teamId: id } : { playerId: id, teamId }),
           amount_paid: entry.amount_paid === "" ? 0 : Number(entry.amount_paid),
           note: entry.note,
+          method: entry.method,
+          // Stamp WHEN it was recorded, so the row can read "Paid · Venmo ·
+          // Aug 4" without anyone typing a date. Only set once there is money
+          // against the row; clearing an amount clears the date with it.
+          paid_at:
+            Number(entry.amount_paid) > 0
+              ? entry.paid_at || new Date().toISOString()
+              : "",
         }),
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
@@ -188,7 +247,7 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
       <div className="space-y-2">
         {teams.map((t) => {
           const roster = playersByTeam[t.id] ?? [];
-          const tEntry = teamPay[t.id] ?? { amount_paid: "", note: "" };
+          const tEntry = teamPay[t.id] ?? { amount_paid: "", note: "", method: "", paid_at: "" };
           const open = expanded === t.id;
           const playerPaidCount = roster.filter(
             (p) => Number(playerPay[p.id]?.amount_paid) > 0,
@@ -224,18 +283,30 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
                     className="w-24 rounded border border-slate-300 px-2 py-1 text-sm"
                   />
                 </label>
-                <input
-                  type="text"
-                  value={tEntry.note}
+                {/* How they paid is a fixed set, so it is a dropdown. It used
+                    to be a free-text note, which meant Doug typing "venmo",
+                    "Venmo 5/2" and "VENMO" into 196 rows that could never be
+                    counted or filtered. Card rows are set automatically by the
+                    checkout. */}
+                <select
+                  value={tEntry.method}
                   onChange={(e) =>
                     setTeamPay((m) => ({
                       ...m,
-                      [t.id]: { ...tEntry, note: e.target.value },
+                      [t.id]: { ...tEntry, method: e.target.value },
                     }))
                   }
-                  placeholder="note (Zelle 5/2…)"
-                  className="w-40 rounded border border-slate-300 px-2 py-1 text-sm"
-                />
+                  className="w-32 rounded border border-slate-300 px-2 py-1 text-sm"
+                  aria-label={`How ${t.name} paid`}
+                >
+                  <option value="">How paid…</option>
+                  <option value="card">Card</option>
+                  <option value="venmo">Venmo</option>
+                  <option value="check">Check</option>
+                  <option value="cash">Cash</option>
+                  <option value="other">Other</option>
+                </select>
+                <PaidBadge entry={tEntry} />
                 <button
                   type="button"
                   onClick={() => save("team", t.id, t.id, tEntry)}
@@ -255,7 +326,7 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
                     </p>
                   ) : (
                     roster.map((p) => {
-                      const e = playerPay[p.id] ?? { amount_paid: "", note: "" };
+                      const e = playerPay[p.id] ?? { amount_paid: "", note: "", method: "", paid_at: "" };
                       return (
                         <div
                           key={p.id}

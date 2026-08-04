@@ -25,7 +25,10 @@ import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 
 export const runtime = "nodejs";
 
-const TEAM_ID_RE = /^[a-z0-9_-]+$/;
+// Team/player ids are EITHER hand-made slugs on older tenants ("18-plus") OR
+// Firestore auto-ids from registration ("etUnCN42apFfYXnyVvrO"), which are
+// mixed case. Lowercase-only rejected every team a coach registered.
+const TEAM_ID_RE = /^[A-Za-z0-9_-]{1,128}$/;
 
 function money(raw: unknown): number | null | undefined {
   if (raw === undefined) return undefined;
@@ -61,6 +64,8 @@ export async function POST(req: Request) {
     amount_due?: unknown;
     amount_paid?: unknown;
     note?: unknown;
+    method?: unknown;
+    paid_at?: unknown;
   };
   try {
     body = await req.json();
@@ -94,6 +99,8 @@ export async function POST(req: Request) {
         amount_due: Number(x.amount_due ?? 0),
         amount_paid: Number(x.amount_paid ?? 0),
         note: String(x.note ?? ""),
+        method: String(x.method ?? ""),
+        paid_at: String(x.paid_at ?? ""),
       };
     });
     const player_payments = playerSnap.docs.map((d) => {
@@ -119,6 +126,16 @@ export async function POST(req: Request) {
     const paid = money(body.amount_paid);
     if (paid !== undefined) update.amount_paid = paid ?? 0;
     if (typeof body.note === "string") update.note = body.note.trim();
+    // How the money arrived, from a fixed set rather than free text, so the
+    // office can actually count and filter it. Anything unrecognised is
+    // ignored instead of stored.
+    if (typeof body.method === "string") {
+      const m = body.method.trim().toLowerCase();
+      update.method = ["card", "venmo", "check", "cash", "other"].includes(m)
+        ? m
+        : "";
+    }
+    if (typeof body.paid_at === "string") update.paid_at = body.paid_at.trim();
 
     if (body.target === "player") {
       const playerId = body.playerId;

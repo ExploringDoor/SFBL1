@@ -30,7 +30,10 @@ export const runtime = "nodejs";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^\d{1,2}:\d{2}(:\d{2})?$/;
-const TEAM_ID_RE = /^[a-z0-9_-]+$/;
+// Team/player ids are EITHER hand-made slugs on older tenants ("18-plus") OR
+// Firestore auto-ids from registration ("etUnCN42apFfYXnyVvrO"), which are
+// mixed case. Lowercase-only rejected every team a coach registered.
+const TEAM_ID_RE = /^[A-Za-z0-9_-]{1,128}$/;
 const ALLOWED_STATUS = new Set([
   "scheduled",
   "postponed",
