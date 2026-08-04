@@ -218,7 +218,7 @@ export default async function HomePage() {
             {recent.length === 0 && upcoming.length === 0 && (
               <div className="le-home-launch">
                 <p className="le-home-launch-eyebrow">
-                  {currentSeasonLabel()} season
+                  {season} season
                 </p>
                 <h2 className="le-home-launch-title">
                   Season starts soon
@@ -277,7 +277,7 @@ export default async function HomePage() {
             {upcoming.length > 0 && (
               <div style={{ marginTop: 36 }}>
                 <SectionHead
-                  eyebrow={`${currentSeasonLabel()} Season`}
+                  eyebrow={`${season} Season`}
                   title="Upcoming Schedule"
                   rightLink={{ href: "/schedule", label: "Full schedule →" }}
                 />
@@ -324,7 +324,7 @@ export default async function HomePage() {
                 margin: 0,
               }}
             >
-              {currentSeasonLabel()}
+              {season}
             </h2>
             <p
               style={{
@@ -661,10 +661,6 @@ function divisionSortKey(div: string): string {
 function formatRecord(w: number, l: number, t: number): string {
   // Bare record — UI components add the surrounding parens.
   return t > 0 ? `${w}-${l}-${t}` : `${w}-${l}`;
-}
-
-function currentSeasonLabel(): string {
-  return String(new Date().getFullYear());
 }
 
 // Are any games actually counted in the standings yet? Used to gate

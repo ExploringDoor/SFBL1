@@ -67,7 +67,10 @@ export default async function StandingsPage() {
     storedRecordsMode,
   } = await loadStandings(tenantId, config);
 
-  const year = String(new Date().getFullYear());
+  // The league's configured season, not the calendar year. Cleared last
+  // season and it still read "Summer 2026" in August of 2026, while the rest
+  // of the site already said 2027.
+  const year = String(config?.season_year ?? new Date().getFullYear());
 
   return (
     <main className="container py-10">
