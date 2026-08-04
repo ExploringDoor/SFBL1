@@ -31,8 +31,23 @@ export function squareApiBase(): string {
     : "https://connect.squareupsandbox.com";
 }
 
+// ===================== TEMPORARY TEST OVERRIDE =====================
+// Doug is running one end-to-end registration test (2026-08-02) and we did
+// not want to push $495 through a real card just to refund it. While this is
+// a number instead of null, EVERY card charge is this many dollars.
+//
+// SET BACK TO null AS SOON AS THAT TEST IS DONE. Leaving it on means real
+// coaches register for a dollar.
+//
+// Only the CARD amount is affected. The team_payments ledger still records
+// what a team genuinely owes, so the office's paid/unpaid tracking stays
+// truthful either way.
+const TEST_FEE_OVERRIDE: number | null = 1;
+// ===================================================================
+
 /** Registration fee in whole dollars, derived from the submitted answers. */
 export function feeFor(data: Record<string, unknown>): number {
+  if (TEST_FEE_OVERRIDE !== null) return TEST_FEE_OVERRIDE;
   const option = String(data.insurance_option ?? "");
   const usssa = String(data.usssa_addon ?? "");
   // option-2 is "we provide our own insurance"; anything else falls back to
