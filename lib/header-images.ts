@@ -70,6 +70,27 @@ export function bannerCarriesTitle(
   return (HEADER_SLUGS[tenant] ?? []).includes(slug);
 }
 
+// Tenants that ship a 1000px-wide variant beside each full-size banner, as
+// <slug>-1000.jpg. The full files are 2000px, which a 375px phone was
+// downloading in full — 268KB for the home banner alone, to paint it at a
+// quarter of that width. Only listed here when the variants actually exist on
+// disk; a missing candidate in a srcset is a broken image, not a fallback.
+const HAS_SMALL_HEADERS = new Set(["island"]);
+
+/** Phone-sized banner variants, keyed the same way as headerImagesFor. Empty
+ *  for tenants without them, which makes PageBanner emit a plain src. */
+export function headerImagesSmallFor(
+  tenant: string | null,
+): Record<string, string> {
+  if (!tenant || !HAS_SMALL_HEADERS.has(tenant)) return {};
+  const full = headerImagesFor(tenant);
+  const map: Record<string, string> = {};
+  for (const [slug, src] of Object.entries(full)) {
+    map[slug] = src.replace(/\.jpg$/, "-1000.jpg");
+  }
+  return map;
+}
+
 export function headerImagesFor(tenant: string | null): Record<string, string> {
   if (!tenant) return {};
   const entries = HEADER_SLUGS[tenant];

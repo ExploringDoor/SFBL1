@@ -35,11 +35,17 @@ import { bannerSlugFor } from "@/lib/header-images";
 
 export function PageBanner({
   images,
+  imagesSmall,
   initialSlug,
   fullBleed = false,
   leagueName = "",
 }: {
   images: Record<string, string>;
+  /** Phone-sized variants keyed by the same slug. When a slug is present here
+   *  the banner emits a srcset so a 375px screen fetches the 1000px file
+   *  instead of the 2000px one. Optional: a tenant without variants renders
+   *  exactly as before. */
+  imagesSmall?: Record<string, string>;
   initialSlug: string;
   /** Used to build a real alt. The banner art carries the page + league
    *  identity, so alt="" would hide the page's own heading from a screen
@@ -56,6 +62,10 @@ export function PageBanner({
   const slug = pathname ? bannerSlugFor(pathname) : initialSlug;
   const src = images[slug];
   if (!src) return null;
+  const small = imagesSmall?.[slug];
+  // Both banners are full-bleed, so the rendered width is always the viewport.
+  const srcSet = small ? `${small} 1000w, ${src} 2000w` : undefined;
+  const sizes = small ? "100vw" : undefined;
 
   if (fullBleed) {
     return (
@@ -71,6 +81,8 @@ export function PageBanner({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src}
+          srcSet={srcSet}
+          sizes={sizes}
           // The banner art carries the page + league identity (it IS the page
           // heading for full-bleed tenants), so it needs a real alt, not "".
           alt={bannerAlt(slug, leagueName)}
@@ -93,6 +105,8 @@ export function PageBanner({
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
+        srcSet={srcSet}
+        sizes={sizes}
         alt={bannerAlt(slug, leagueName)}
         style={{
           display: "inline-block",

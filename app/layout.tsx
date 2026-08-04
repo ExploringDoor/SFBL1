@@ -14,6 +14,7 @@ import {
   bannerCarriesTitle,
   bannerSlugFor,
   headerImagesFor,
+  headerImagesSmallFor,
 } from "@/lib/header-images";
 import { TickerScrollHide } from "@/components/ui/TickerScrollHide";
 import { TickerInputEnhancer } from "@/components/ui/TickerInputEnhancer";
@@ -523,6 +524,7 @@ export default async function RootLayout({
           {tenantId && (
             <PageBanner
               images={headerImagesFor(tenantId)}
+              imagesSmall={headerImagesSmallFor(tenantId)}
               initialSlug={bannerImgSlug}
               fullBleed={bannerFullBleed}
               leagueName={leagueName ?? ""}
