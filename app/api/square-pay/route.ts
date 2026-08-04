@@ -166,6 +166,31 @@ export async function POST(req: Request) {
     { merge: true },
   );
 
+  // Mark the team PAID in the league's own ledger, which is what the admin
+  // Payments tab actually reads. Without this a coach could pay by card and
+  // still show as unpaid to the office, who would chase them for money they
+  // had already sent. Best-effort: the card has been charged either way, so a
+  // ledger hiccup must not turn into an error the coach sees.
+  try {
+    const teamId =
+      typeof data.assigned_team_id === "string" ? data.assigned_team_id : "";
+    if (teamId) {
+      await db.doc(`leagues/${leagueId}/team_payments/${teamId}`).set(
+        {
+          team_name: String(data.team_name ?? ""),
+          amount_due: fee,
+          amount_paid: amountCents / 100,
+          note: `Paid by card ${new Date().toISOString().slice(0, 10)} (includes card fee)`,
+          method: "card",
+          square_payment_id: payment.id ?? null,
+        },
+        { merge: true },
+      );
+    }
+  } catch (err) {
+    console.error("[square-pay] could not update the payment ledger", err);
+  }
+
   return NextResponse.json({
     ok: true,
     amount_cents: amountCents,
