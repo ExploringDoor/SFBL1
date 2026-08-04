@@ -730,6 +730,113 @@ function TeamDivisionControl({
         {team?.name ? `${team.name} is live on the site now. ` : ""}
         Until a division is set it shows as Division TBD.
       </p>
+
+      <PaymentQuickRecord
+        leagueId={leagueId}
+        user={user}
+        teamId={teamId}
+        submission={submission}
+      />
+    </div>
+  );
+}
+
+// Record how a team paid without leaving the registration. The Payments tab
+// still exists for the full ledger, but making the office switch tabs and
+// hunt for the team 196 times is how reconciliation quietly stops happening.
+// Card payments already mark themselves; these are for Venmo, check and cash.
+function PaymentQuickRecord({
+  leagueId,
+  user,
+  teamId,
+  submission,
+}: {
+  leagueId: string;
+  user: User;
+  teamId: string;
+  submission: Submission;
+}) {
+  const paidByCard =
+    (submission.payment as { status?: string; method?: string } | undefined)
+      ?.status === "paid";
+  const [done, setDone] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  // What this team owes, mirroring the fee rules used at checkout.
+  const due =
+    (String(submission.insurance_option ?? "") === "option-2" ? 425 : 495) +
+    (String(submission.usssa_addon ?? "") === "yes" ? 50 : 0);
+
+  if (paidByCard) {
+    return (
+      <p className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+        Paid by card. Recorded automatically, nothing to do.
+      </p>
+    );
+  }
+
+  async function record(method: "venmo" | "check" | "cash") {
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await fetch("/api/admin-team-payment", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${await user.getIdToken()}`,
+        },
+        body: JSON.stringify({
+          leagueId,
+          action: "save",
+          target: "team",
+          teamId,
+          amount_due: due,
+          amount_paid: due,
+          method,
+          paid_at: new Date().toISOString(),
+        }),
+      });
+      const j = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setErr(j.error ?? `HTTP ${res.status}`);
+        return;
+      }
+      setDone(method);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not record it");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (done) {
+    return (
+      <p className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+        Recorded ${due} paid by {done}.
+      </p>
+    );
+  }
+
+  return (
+    <div className="mt-3 border-t border-slate-200 pt-3">
+      <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-600">
+        Payment · ${due} due
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        {(["venmo", "check", "cash"] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            onClick={() => record(m)}
+            disabled={busy || !teamId}
+            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 disabled:opacity-60"
+          >
+            Mark paid by {m}
+          </button>
+        ))}
+        {err && <span className="text-xs text-red-700">{err}</span>}
+      </div>
     </div>
   );
 }
@@ -1206,6 +1313,18 @@ function FieldValue({
     );
   }
   if (typeof value === "string") {
+    // Coded answers are stored as machine values but must READ as English.
+    // "option-1" told the office nothing about which fee a team owes.
+    const CODED: Record<string, Record<string, string>> = {
+      insurance_option: {
+        "option-1": "$495 (league provides insurance)",
+        "option-2": "$425 (team provides its own insurance)",
+      },
+      usssa_addon: { yes: "Yes, add USSSA (+$50)", no: "No" },
+    };
+    const decoded = CODED[fieldKey]?.[value];
+    if (decoded) return <span>{decoded}</span>;
+
     // Email — open in the admin's mail client.
     if (fieldKey === "email" || /^email_/.test(fieldKey)) {
       return (
@@ -1277,8 +1396,22 @@ function humanLabel(key: string): string {
   const OVERRIDES: Record<string, string> = {
     dob: "Date of birth",
     primary_position: "Position",
-    agreed_to_terms: "Waiver agreed",
+    // NOT a signed waiver. The checkbox reads "I confirm that all players
+    // and coaches will sign the league liability release before play", so
+    // this is a promise to sign later. Calling it "Waiver agreed" implied the
+    // league was holding a signed release it does not have.
+    agreed_to_terms: "Accepted terms (release signed before play)",
     team_name: "Team",
+    home_field_name: "Home field",
+    home_field_street: "Field address",
+    home_field_city: "Field city",
+    home_field_zip: "Field ZIP",
+    home_field_maps: "Field map",
+    insurance_option: "Registration option",
+    usssa_addon: "USSSA add-on",
+    gamechanger_link: "GameChanger",
+    assigned_team_id: "Team record",
+    login_email_sent: "Login email sent",
     manager_first_name: "Manager first",
     manager_last_name: "Manager last",
     evaluator_name: "Evaluator",

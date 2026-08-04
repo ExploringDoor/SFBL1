@@ -25,6 +25,9 @@ interface Props {
 interface FieldEntry {
   name: string;
   address: string;
+  /** Which team calls this their home field. Set from the registration; the
+   *  list was otherwise a pile of parks with no idea who plays where. */
+  team?: string;
   mapsUrl?: string;
   appleMapsUrl?: string;
 }
@@ -55,6 +58,7 @@ export function FieldsManager({ leagueId }: Props) {
                   : {
                       name: String(f?.name ?? ""),
                       address: String(f?.address ?? ""),
+                      team: typeof f?.team === "string" ? f.team : undefined,
                       mapsUrl:
                         typeof f?.mapsUrl === "string" ? f.mapsUrl : undefined,
                       appleMapsUrl:
@@ -101,7 +105,9 @@ export function FieldsManager({ leagueId }: Props) {
             name: f.name.trim(),
             address: f.address.trim(),
           };
-          // Preserve any explicit map links already on the record.
+          // Preserve what registration attached. Without this, one admin
+          // save silently dropped the team and the map link a coach supplied.
+          if (f.team) entry.team = f.team;
           if (f.mapsUrl) entry.mapsUrl = f.mapsUrl;
           if (f.appleMapsUrl) entry.appleMapsUrl = f.appleMapsUrl;
           return entry;
@@ -170,6 +176,29 @@ export function FieldsManager({ leagueId }: Props) {
                   placeholder="Full address (street, city, state ZIP)"
                   className="w-full flex-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
                 />
+                {f.team && (
+                  <span
+                    className="self-center whitespace-nowrap rounded-full bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-600"
+                    title="Home field for this team"
+                  >
+                    {f.team}
+                  </span>
+                )}
+                {f.mapsUrl ? (
+                  <a
+                    href={f.mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="self-center whitespace-nowrap rounded-md border border-slate-300 px-2 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50"
+                    title={f.mapsUrl}
+                  >
+                    Map ↗
+                  </a>
+                ) : (
+                  <span className="self-center whitespace-nowrap px-2 py-1.5 text-xs text-slate-400">
+                    no map
+                  </span>
+                )}
                 <button
                   type="button"
                   onClick={() => removeRow(i)}
