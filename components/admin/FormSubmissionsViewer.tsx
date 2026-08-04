@@ -106,7 +106,9 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
   const [tabCounts, setTabCounts] = useState<Partial<Record<Kind, number>>>({});
   // Teams for the "Assign to team" picker on player_registration
   // rows. Public collection — a plain client read is fine.
-  const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
+  const [teams, setTeams] = useState<
+    { id: string; name: string; division: string; ageGroup: string }[]
+  >([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -121,6 +123,8 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
             .map((d) => ({
               id: d.id,
               name: String(d.data().name ?? d.id),
+              division: String(d.data().division ?? ""),
+              ageGroup: String(d.data().ageGroup ?? ""),
             }))
             .sort((a, b) => a.name.localeCompare(b.name)),
         );
@@ -543,6 +547,23 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
                     {expanded === it.id && (
                       <>
                         <SubmissionDetail submission={it} />
+                        {kind === "team_registration" && (
+                          <TeamDivisionControl
+                            leagueId={leagueId}
+                            user={user}
+                            submission={it}
+                            teams={teams}
+                            onSaved={(division) =>
+                              setTeams((cur) =>
+                                cur.map((t) =>
+                                  t.id === String(it.assigned_team_id ?? "")
+                                    ? { ...t, division }
+                                    : t,
+                                ),
+                              )
+                            }
+                          />
+                        )}
                         {kind === "player_registration" && (
                           <>
                             <FreeAgentDecision
@@ -577,6 +598,139 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
           );
         })()}
     </section>
+  );
+}
+
+// Assign a registered team to its division, from the registration itself.
+//
+// Doug reads the signup (team, age group, coach) and picks the division right
+// there. The alternative was hunting the team down in the Teams tab and typing
+// the division freehand, which is how you end up with "Division 1", "DIVISION
+// 1" and "Div 1" as three different divisions.
+//
+// The dropdown offers divisions that already exist for that AGE GROUP, so the
+// spelling stays consistent, with a free-text escape hatch for a genuinely new
+// one. Teams are visible publicly either way (Doug, 2026-08-02: teams show as
+// soon as they register); until this is set they read "Division TBD".
+function TeamDivisionControl({
+  leagueId,
+  user,
+  submission,
+  teams,
+  onSaved,
+}: {
+  leagueId: string;
+  user: User;
+  submission: Submission;
+  teams: { id: string; name: string; division: string; ageGroup: string }[];
+  onSaved: (division: string) => void;
+}) {
+  const teamId = String(submission.assigned_team_id ?? "");
+  const team = teams.find((t) => t.id === teamId);
+  const ageGroup = String(submission.age_group ?? team?.ageGroup ?? "");
+
+  const [value, setValue] = useState(team?.division ?? "");
+  const [custom, setCustom] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  if (!teamId) {
+    return (
+      <div className="mt-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+        No team was created for this registration, so there is nothing to
+        assign yet. Create it on the Teams tab.
+      </div>
+    );
+  }
+
+  // Divisions already in use at this age group, so 10U does not offer 14U's.
+  const options = Array.from(
+    new Set(
+      teams
+        .filter((t) => !ageGroup || t.ageGroup === ageGroup)
+        .map((t) => t.division.trim())
+        .filter(Boolean),
+    ),
+  ).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+
+  async function save() {
+    const division = (value === "__new__" ? custom : value).trim();
+    setBusy(true);
+    setMsg(null);
+    try {
+      const res = await fetch("/api/admin-team", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${await user.getIdToken()}`,
+        },
+        body: JSON.stringify({
+          leagueId,
+          action: "update",
+          teamId,
+          division,
+          ...(ageGroup ? { ageGroup } : {}),
+        }),
+      });
+      const j = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setMsg(j.error ?? `HTTP ${res.status}`);
+        return;
+      }
+      setMsg(division ? `Assigned to ${division}` : "Division cleared");
+      onSaved(division);
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Save failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-3">
+      <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-600">
+        Division{ageGroup ? ` · ${ageGroup}` : ""}
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <select
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          disabled={busy}
+          className="rounded-md border border-slate-300 px-2 py-2 text-sm"
+        >
+          <option value="">Division TBD</option>
+          {options.map((d) => (
+            <option key={d} value={d}>
+              {d}
+            </option>
+          ))}
+          <option value="__new__">Add a new division...</option>
+        </select>
+        {value === "__new__" && (
+          <input
+            type="text"
+            value={custom}
+            onChange={(e) => setCustom(e.target.value)}
+            placeholder="Division 1"
+            disabled={busy}
+            className="rounded-md border border-slate-300 px-2 py-2 text-sm"
+          />
+        )}
+        <button
+          type="button"
+          onClick={save}
+          disabled={busy}
+          className="rounded-md bg-slate-900 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
+        >
+          {busy ? "Saving..." : "Save"}
+        </button>
+        {msg && <span className="text-xs text-slate-600">{msg}</span>}
+      </div>
+      <p className="mt-2 text-[11px] text-slate-500">
+        {team?.name ? `${team.name} is live on the site now. ` : ""}
+        Until a division is set it shows as Division TBD.
+      </p>
+    </div>
   );
 }
 
