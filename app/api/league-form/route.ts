@@ -350,12 +350,28 @@ export async function POST(req: Request) {
     // the coach got an account they could not reach, and nobody could tell.
     // The registration still succeeds either way, but the failure is now
     // visible in the admin inbox instead of invisible everywhere.
+    // Create the team FIRST, because that is what mints the sign-in code the
+    // coach's welcome email has to contain. Idempotent, and never allowed to
+    // fail the registration itself.
+    let teamCode: string | null = null;
     try {
-      await createCoachLogin(cleaned, origin);
+      const res = await provisionCoyblTeam(tenantId, ref.id, cleaned);
+      teamCode = res.teamCode;
+    } catch (err) {
+      console.error("[league-form] team provisioning failed", err);
+    }
+
+    // Email the coach their team's sign-in code. Recorded either way: this
+    // used to be an empty catch, which is how a Firebase "Domain not
+    // allowlisted" error silently ate every login email while registrations
+    // looked fine. The registration still succeeds regardless, but a failure
+    // is now visible in the admin inbox instead of invisible everywhere.
+    try {
+      await sendCoachCodeEmail(cleaned, origin, teamCode);
       await ref.set({ login_email_sent: true }, { merge: true });
     } catch (err) {
       const reason = err instanceof Error ? err.message : "unknown error";
-      console.error("[league-form] coach login email failed", reason);
+      console.error("[league-form] coach code email failed", reason);
       await ref
         .set(
           { login_email_sent: false, login_email_error: reason },
@@ -364,16 +380,6 @@ export async function POST(req: Request) {
         .catch(() => {
           /* flagging is best-effort; never fail the registration over it */
         });
-    }
-    // Create the team and connect the coach to it right away (Doug,
-    // 2026-08-02: teams show on the Teams page as soon as they register; he
-    // assigns divisions later). This is what lets a coach post their home
-    // games and log pitch counts without a manual setup step per team.
-    // Idempotent, and never allowed to fail the registration itself.
-    try {
-      await provisionCoyblTeam(tenantId, ref.id, cleaned);
-    } catch (err) {
-      console.error("[league-form] team provisioning failed", err);
     }
     // Tell the league office a team just registered. This branch used to
     // return without notifying anyone, so the only way the director learned
@@ -434,52 +440,49 @@ export async function POST(req: Request) {
   return NextResponse.json({ ok: true, id: ref.id });
 }
 
-// Create (or reuse) the coach's Firebase account for their COYBL team and
-// email a "set your password" link (with the confirmation). The team is
-// placed into a division by a director later; an admin then binds the coach's
-// account to the team (captain claim). Email no-ops unless RESEND is set — but
-// the account + link are still created either way.
-async function createCoachLogin(
+// Email a COYBL coach the code they type to get into their team page.
+//
+// Replaces the old "set your password" flow (Adam, 2026-08-04). That created a
+// Firebase account and mailed a reset link, which meant a volunteer coach had
+// to click through, invent a password, and remember it. A coach and a manager
+// are the same person and they get exactly one credential: a 5-digit code.
+async function sendCoachCodeEmail(
   data: Record<string, unknown>,
   origin: string,
+  teamCode: string | null,
 ): Promise<void> {
   const c = (k: string) =>
     typeof data[k] === "string" ? (data[k] as string).trim() : "";
   const email = c("email");
   if (!email) return;
-  const who = `${c("manager_first_name")} ${c("manager_last_name")}`.trim();
+  const who = [c("manager_first_name"), c("manager_last_name")]
+    .filter(Boolean)
+    .join(" ");
   const team = c("team_name");
 
-  const auth = getAdminAuth();
-  try {
-    await auth.getUserByEmail(email);
-  } catch {
-    try {
-      await auth.createUser({ email }); // no password yet — set via the link
-    } catch {
-      return; // invalid email etc.
-    }
-  }
-
-  let link = "";
-  try {
-    link = await auth.generatePasswordResetLink(
-      email,
-      origin ? { url: `${origin}/login` } : undefined,
-    );
-  } catch {
-    return;
-  }
+  // No code means provisioning failed upstream. Still confirm the
+  // registration, but do not promise a code we cannot supply.
+  const codeBlock = teamCode
+    ? `<p>Your team's sign-in code is:</p>` +
+      `<p style="font:700 34px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.18em;` +
+      `background:#f1f4f8;border:1px solid #d3dce7;border-radius:10px;padding:16px 22px;` +
+      `display:inline-block;color:#13284a;">${esc(teamCode)}</p>` +
+      `<p>Go to <a href="${esc(origin)}/captain">${esc(origin)}/captain</a>, pick ` +
+      `<strong>${esc(team) || "your team"}</strong> from the list, and type that code. ` +
+      `There is no account to create and no password to remember.</p>` +
+      `<p>Keep it to your coaching staff. Anyone with the code can enter scores for your team.</p>`
+    : `<p>Your team's sign-in code is being set up. The league office will send ` +
+      `it shortly. If you don't hear back in a day or two, just reply here.</p>`;
 
   await sendEmail({
     to: email,
-    subject: `Welcome to COYBL — set up your ${team || "team"} login`,
+    subject: `Welcome to COYBL${team ? ` — ${team}` : ""}`,
     html:
       `<p>Hi ${esc(who) || "Coach"},</p>` +
-      `<p>Thanks for registering${team ? ` <strong>${esc(team)}</strong>` : ""} with the Central Ohio Youth Baseball League — we've got your registration.</p>` +
-      `<p>Set your password to access your team portal, where you can enter scores, log pitch counts, upload your team logo, and manage your schedule:</p>` +
-      `<p><a href="${esc(link)}" style="display:inline-block;padding:10px 18px;background:#13284a;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Set your password</a></p>` +
-      `<p style="font-size:13px;color:#555;">Or paste this into your browser:<br>${esc(link)}</p>` +
+      `<p>Thanks for registering${team ? ` <strong>${esc(team)}</strong>` : ""} with the ` +
+      `Central Ohio Youth Baseball League. We've got your registration.</p>` +
+      codeBlock +
+      `<p>From there you can post your games, enter scores, log pitch counts, and upload your team logo.</p>` +
       `<p>A league director will confirm your division shortly. Questions? Just reply to this email.</p>` +
       `<p>— COYBL</p>`,
     replyTo: notifyAddress() ?? undefined,
@@ -494,12 +497,6 @@ async function sendRegistrationEmails(
   leagueName: string,
   leagueAbbrev: string,
 ): Promise<void> {
-  // COYBL team registration → create the coach's own-login account and
-  // email a "set your password" link (plus the confirmation) in one go.
-  if (tenantId === "coybl" && kind === "team_registration") {
-    await createCoachLogin(data, origin);
-    return;
-  }
   if (kind !== "player_registration" && kind !== "team_registration") return;
 
   const c = (k: string) =>

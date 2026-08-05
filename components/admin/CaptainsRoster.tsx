@@ -15,6 +15,9 @@ interface Captain {
   teamName: string;
   managers: { name: string; email: string }[];
   hasPassword: boolean;
+  /** The team's 5-digit sign-in code, so the office can read it back to a
+   *  coach who lost their welcome email. */
+  code?: string;
   lastLogin: string;
 }
 
@@ -101,15 +104,16 @@ export function CaptainsRoster({
   return (
     <div className="space-y-4">
       <p className="text-sm text-slate-600">
-        Every team&rsquo;s captain in one place — contact on file, whether a
-        team password is set, and last login. Click a row to edit the contact.
-        Passwords are set in the <strong>Teams</strong> tab.
+        Every team&rsquo;s coach in one place: contact on file, their sign-in
+        code, and when they last logged in. Click a row to edit the contact.
+        Codes are generated automatically when a coach registers, and can be
+        changed in the <strong>Teams</strong> tab.
       </p>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Card label="Teams" value={String(rows.length)} />
         <Card label="Have email" value={`${withEmail}/${rows.length}`} />
-        <Card label="Password set" value={`${withPw}/${rows.length}`} />
+        <Card label="Code set" value={`${withPw}/${rows.length}`} />
         <Card label="Logged in" value={`${loggedIn}/${rows.length}`} />
       </div>
 
@@ -126,7 +130,7 @@ export function CaptainsRoster({
         <div className="hidden bg-slate-50 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 sm:grid sm:grid-cols-[1.1fr_1.5fr_0.6fr_1.1fr]">
           <span>Team</span>
           <span>Captain · email</span>
-          <span>Password</span>
+          <span>Code</span>
           <span>Last login</span>
         </div>
         {filtered.map((r) => {
@@ -162,7 +166,11 @@ export function CaptainsRoster({
                   )}
                 </span>
                 <span>
-                  {r.hasPassword ? (
+                  {r.code ? (
+                    <span className="font-mono font-semibold tracking-widest text-slate-900">
+                      {r.code}
+                    </span>
+                  ) : r.hasPassword ? (
                     <span className="text-emerald-600">✓ set</span>
                   ) : (
                     <span className="text-slate-400">— none</span>
@@ -179,8 +187,8 @@ export function CaptainsRoster({
                   <ManagerContact leagueId={leagueId} teamId={r.teamId} />
                   {!r.hasPassword && (
                     <p className="mt-2 text-xs text-amber-700">
-                      No team password set yet — set one in the Teams tab so
-                      this captain can log in.
+                      No sign-in code yet. Set one in the Teams tab, or this
+                      coach cannot get in.
                     </p>
                   )}
                 </div>

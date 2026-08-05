@@ -52,7 +52,46 @@ const ipBuckets = new Map<string, { count: number; resets_at: number }>();
 // `captain.require_password: true`, so this can move to config later
 // without a code change. Inverting the platform default is the real
 // fix; that needs a per-tenant audit of which teams have passwords.
-const REQUIRE_PASSWORD_TENANTS = new Set(["island"]);
+// Tenants where a team with NO code configured must be REFUSED rather than
+// falling back to the lenient "trust the URL" model. COYBL mints a code for
+// every team at registration, so a team without one is a bug, not an invitation
+// to let anyone in as its coach.
+const REQUIRE_PASSWORD_TENANTS = new Set(["island", "coybl"]);
+
+// Per-TEAM lockout, on top of the per-IP limit above.
+//
+// COYBL codes are 5 digits (90,000 of them), which is guessable given enough
+// tries. The per-IP limiter alone does not stop that: an attacker rotates IPs,
+// and this Map is per-instance so it resets on every cold start. Locking the
+// TEAM after repeated wrong codes stops a targeted grind regardless of where
+// it comes from. A real coach fat-fingering their code five times is barely
+// inconvenienced; someone working through the keyspace is stopped cold.
+const TEAM_FAIL_LIMIT = 8;
+const TEAM_LOCK_MS = 15 * 60 * 1000;
+const teamFails = new Map<string, { count: number; resets_at: number }>();
+
+function teamLocked(key: string): boolean {
+  const cur = teamFails.get(key);
+  if (!cur || cur.resets_at < Date.now()) {
+    teamFails.delete(key);
+    return false;
+  }
+  return cur.count >= TEAM_FAIL_LIMIT;
+}
+
+function noteTeamFailure(key: string): void {
+  const now = Date.now();
+  const cur = teamFails.get(key);
+  if (!cur || cur.resets_at < now) {
+    teamFails.set(key, { count: 1, resets_at: now + TEAM_LOCK_MS });
+    return;
+  }
+  cur.count += 1;
+}
+
+function clearTeamFailures(key: string): void {
+  teamFails.delete(key);
+}
 
 function rateLimit(ip: string): boolean {
   const now = Date.now();
@@ -178,6 +217,20 @@ export async function POST(req: Request) {
       );
     }
     const td = teamSnap.data() ?? {};
+
+    // Too many wrong codes against THIS team recently: refuse before even
+    // looking at what was typed, so a guesser gets no signal either way.
+    const lockKey = `${leagueId}/${explicitTeamId}`;
+    if (teamLocked(lockKey)) {
+      return NextResponse.json(
+        {
+          error:
+            "Too many wrong codes for this team. Try again in 15 minutes, or ask the league office.",
+        },
+        { status: 429 },
+      );
+    }
+
     const custom = await resolveCustomPassword(db, leagueId, explicitTeamId, td);
     if (!custom && requirePassword) {
       // Fail closed. Distinct from "Wrong password" on purpose: the
@@ -193,8 +246,12 @@ export async function POST(req: Request) {
     if (custom) {
       if (rawPassword && normalize(rawPassword) === normalize(custom)) {
         teamId = explicitTeamId;
+        clearTeamFailures(lockKey);
+      } else {
+        // Wrong code. Count it against the team, not just the IP.
+        noteTeamFailure(lockKey);
       }
-      // else → teamId stays null → "Wrong password" (no fallback).
+      // teamId stays null → "Wrong password" (no fallback).
     } else if (!rawPassword) {
       // No password configured + none supplied → trust-the-URL.
       teamId = explicitTeamId;

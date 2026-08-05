@@ -614,10 +614,13 @@ export function TeamsManager({ leagueId, user }: Props) {
   );
 }
 
-// Manager password: <normalized team name> + 2 random digits, e.g.
-// "miamiyankees47". The 2 digits are what make it a real password
-// (the bare team name no longer works once one is set). Admin can
-// edit to anything before saving.
+// Two schemes, because two leagues want different things:
+//
+//   COYBL  — a bare 5-digit code ("48206"). Adam, 2026-08-04: a volunteer
+//            coach should type five digits, not a password. This is the ONLY
+//            credential a COYBL coach gets; it is emailed at registration.
+//   others — <normalized team name> + 4 digits ("miamiyankees4712"), the
+//            existing SFBL / Island scheme, left alone.
 // Friendly relative-ish label for a captain's last-login ISO time.
 function fmtLogin(iso: string): string {
   const t = Date.parse(iso);
@@ -641,7 +644,15 @@ function fmtLogin(iso: string): string {
 // only secret. Two digits meant 90 possible passwords per team —
 // inside the 60-per-10-min rate limit's reach in well under an hour.
 // Four digits take it to 10,000 and still read cleanly over the phone.
-function generateManagerPassword(teamName: string): string {
+//
+// COYBL drops the name entirely: 5 digits, 10000-99999, never leading zero
+// (a leading zero does not survive being read off a phone screen). The keyspace
+// is smaller, so /api/public-captain-claim locks a TEAM out after 8 wrong
+// codes rather than relying on the per-IP limit alone.
+function generateManagerPassword(teamName: string, leagueId: string): string {
+  if (leagueId === "coybl") {
+    return String(Math.floor(Math.random() * 90000) + 10000);
+  }
   const digits = String(Math.floor(Math.random() * 9000) + 1000); // 1000–9999
   return `${passwordBase(teamName)}${digits}`;
 }
@@ -652,21 +663,24 @@ function passwordBase(teamName: string): string {
 
 // Stable "shape" preview for the hint text (doesn't re-randomize on
 // every keystroke the way generateManagerPassword would).
-function generatePreviewHint(teamName: string): string {
-  return `${passwordBase(teamName)}####`;
+function generatePreviewHint(teamName: string, leagueId: string): string {
+  return leagueId === "coybl" ? "#####" : `${passwordBase(teamName)}####`;
 }
 
 function TeamEditForm({
   team,
+  leagueId,
   busy,
   onCancel,
   onSave,
 }: {
   team: TeamRow;
+  leagueId: string;
   busy: boolean;
   onCancel: () => void;
   onSave: (patch: TeamPatch) => void;
 }) {
+  const isCode = leagueId === "coybl";
   const [name, setName] = useState(team.name);
   const [abbrev, setAbbrev] = useState(team.abbrev);
   const [color, setColor] = useState(team.color || "#002d72");
@@ -776,7 +790,7 @@ function TeamEditForm({
         </label>
         <div className="block sm:col-span-2 rounded-md border border-blue-200 bg-blue-50 p-3">
           <span className="block text-xs font-semibold text-slate-700 mb-1">
-            Manager password{" "}
+            {isCode ? "Team sign-in code" : "Manager password"}{" "}
             {team.has_captain_password ? (
               <span className="text-emerald-700">· 🔒 currently set</span>
             ) : (
@@ -790,15 +804,21 @@ function TeamEditForm({
               onChange={(e) => setCaptainPassword(e.target.value)}
               disabled={busy}
               placeholder={
-                team.has_captain_password
-                  ? "Type a new password to change it (blank = keep current)"
-                  : "Set a password the manager will type to log in"
+                isCode
+                  ? team.has_captain_password
+                    ? "Type a new code to change it (blank = keep current)"
+                    : "5 digits the coach will type to sign in"
+                  : team.has_captain_password
+                    ? "Type a new password to change it (blank = keep current)"
+                    : "Set a password the manager will type to log in"
               }
               className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm font-mono"
             />
             <button
               type="button"
-              onClick={() => setCaptainPassword(generateManagerPassword(name))}
+              onClick={() =>
+                setCaptainPassword(generateManagerPassword(name, leagueId))
+              }
               disabled={busy}
               className="rounded-md border border-blue-300 bg-white px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-50 whitespace-nowrap"
             >
@@ -814,16 +834,20 @@ function TeamEditForm({
               className="mt-0.5"
             />
             <span>
-              Email this password to the team&rsquo;s manager, with sign-in
-              instructions. Uses the contact on file in the Captains tab; if
-              there is no email there, nothing is sent.
+              Email this {isCode ? "code" : "password"} to the coach, with
+              sign-in instructions. Uses the contact on file in the Captains
+              tab; if there is no email there, nothing is sent.
             </span>
           </label>
           <p className="mt-1 text-[11px] text-slate-500">
-            The manager goes to the captain page, picks {name || "this team"},
-            and types this password — no account needed. Click Generate for
-            “{generatePreviewHint(name)}”, or type your own. Leaving it blank
-            keeps the current password and sends no email.
+            The coach goes to the captain page, picks {name || "this team"}, and
+            types this {isCode ? "code" : "password"}. No account needed. Click
+            Generate for “{generatePreviewHint(name, leagueId)}”, or type your
+            own. Leaving it blank keeps the current{" "}
+            {isCode ? "code" : "password"} and sends no email.
+            {isCode
+              ? " Codes are created automatically when a coach registers, so you only come here to change one."
+              : ""}
           </p>
         </div>
       </div>
@@ -1210,6 +1234,7 @@ function TeamRowItem({
       {isEditing && (
         <TeamEditForm
           team={t}
+          leagueId={leagueId}
           busy={busy}
           onCancel={onCancelEdit}
           onSave={onSaveEdit}

@@ -11,7 +11,7 @@
 //
 // Body: { leagueId }
 // Response: { ok, captains: [{ teamId, teamName, managers,
-//             hasPassword, lastLogin }] }
+//             hasPassword, code, lastLogin }] }
 //
 // Admin-only (verified claim). Read-only.
 
@@ -85,6 +85,19 @@ export async function POST(req: Request) {
     ),
   );
 
+  // The team's sign-in code. Doug has to be able to read this back to a coach
+  // who has lost their welcome email, so the admin-only Captains view shows
+  // it. It is a 5-digit convenience credential for entering youth scores, not
+  // a password hash, and it is deliberately readable by the league office.
+  const auths = await Promise.all(
+    teams.map((d) =>
+      db
+        .doc(`leagues/${leagueId}/teams/${d.id}/_private/auth`)
+        .get()
+        .catch(() => null),
+    ),
+  );
+
   const captains = teams
     .map((d, i) => {
       const t = d.data();
@@ -114,6 +127,7 @@ export async function POST(req: Request) {
         teamName: String(t.name ?? d.id),
         managers,
         hasPassword: t.has_captain_password === true,
+        code: String(auths[i]?.data()?.captain_password ?? ""),
         lastLogin: lastLogin[d.id] ?? "",
       };
     })

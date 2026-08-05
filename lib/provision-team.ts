@@ -18,11 +18,16 @@
 import type { auth as AdminAuth } from "firebase-admin";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { initialsFromName } from "@/lib/team-initials";
+import { generateTeamCode } from "@/lib/team-code";
 
 export interface ProvisionResult {
   teamId: string | null;
   created: boolean;
   boundCoach: boolean;
+  /** The team's sign-in code, so the caller can email it to the coach.
+   *  Null when the team already had one (a re-submit must not change a code
+   *  the coach has already been given). */
+  teamCode: string | null;
 }
 
 /** "10U" -> 10, for sorting age groups 7U..14U. */
@@ -49,7 +54,7 @@ export async function provisionCoyblTeam(
   const ageGroup = str("age_group");
   const email = str("email");
   if (!teamName || !ageGroup) {
-    return { teamId: null, created: false, boundCoach: false };
+    return { teamId: null, created: false, boundCoach: false, teamCode: null };
   }
 
   const db = getAdminDb();
@@ -87,6 +92,36 @@ export async function provisionCoyblTeam(
     });
     teamId = ref.id;
     created = true;
+  }
+
+  // Mint the team's sign-in code. This is what the coach types on the captain
+  // page, so it is generated once and never silently rotated: a re-submitted
+  // registration must not invalidate a code the coach already has.
+  //
+  // Lives on the PRIVATE _private/auth subdoc, because the public team doc is
+  // world-readable. The public doc only carries has_captain_password, a
+  // non-secret marker the admin UI uses to show "code set".
+  let teamCode: string | null = null;
+  try {
+    const authRef = db.doc(`leagues/${leagueId}/teams/${teamId}/_private/auth`);
+    const cur = await authRef.get();
+    const existing = String(cur.data()?.captain_password ?? "").trim();
+    if (existing) {
+      teamCode = existing;
+    } else {
+      teamCode = generateTeamCode();
+      await authRef.set(
+        {
+          captain_password: teamCode,
+          updated_at: new Date().toISOString(),
+          updated_by_uid: "registration",
+        },
+        { merge: true },
+      );
+      await teamsCol.doc(teamId).set({ has_captain_password: true }, { merge: true });
+    }
+  } catch (err) {
+    console.error("[provision-team] could not mint the team code", err);
   }
 
   // Put the coach's contact where the Captains view reads it
@@ -239,5 +274,5 @@ export async function provisionCoyblTeam(
     /* non-fatal */
   }
 
-  return { teamId, created, boundCoach };
+  return { teamId, created, boundCoach, teamCode };
 }
