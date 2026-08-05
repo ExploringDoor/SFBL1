@@ -511,6 +511,41 @@ async function sendRegistrationEmails(
   leagueName: string,
   leagueAbbrev: string,
 ): Promise<void> {
+  // Site feedback goes to ADAM, not the league office (Adam, 2026-08-04).
+  // Doug triages these in the admin panel and does not need an inbox for
+  // them; Adam does, because "the standings page is broken" is his to fix.
+  //
+  // Address is env-overridable so it can move without a deploy. Falls back to
+  // the same address the captain Help tab has always used for him.
+  if (kind === "site_feedback") {
+    const to =
+      process.env.SITE_FEEDBACK_NOTIFY || "adam.mainlinewebdesign@gmail.com";
+    const f = (k: string) =>
+      typeof data[k] === "string" ? (data[k] as string).trim() : "";
+    const from = f("email");
+    await sendEmail({
+      to,
+      subject: `${leagueAbbrev} site feedback: ${f("topic") || "suggestion"}`,
+      html:
+        `<p><strong>${esc(f("topic") || "Feedback")}</strong>` +
+        ` &middot; ${esc(leagueName)}</p>` +
+        (f("page") ? `<p><strong>Page:</strong> ${esc(f("page"))}</p>` : "") +
+        `<p style="white-space:pre-wrap">${esc(f("message"))}</p>` +
+        `<hr style="border:none;border-top:1px solid #ddd">` +
+        `<p style="color:#555;font-size:13px">` +
+        `From: ${esc(f("name") || "anonymous")}` +
+        (from ? ` &lt;${esc(from)}&gt;` : " (no email left)") +
+        (f("role") ? ` &middot; ${esc(f("role"))}` : "") +
+        `</p>` +
+        `<p style="color:#555;font-size:13px">` +
+        `Also in the admin panel under Form submissions &rarr; Site feedback.` +
+        `</p>`,
+      // Reply lands on whoever wrote in, when they said who they are.
+      replyTo: from || undefined,
+    });
+    return;
+  }
+
   if (kind !== "player_registration" && kind !== "team_registration") return;
 
   const c = (k: string) =>

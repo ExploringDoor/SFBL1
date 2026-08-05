@@ -6,10 +6,9 @@
 // admin Form submissions tab under "Site feedback", where they get the same
 // new / in progress / done triage as everything else.
 //
-// Deliberately NO email to the league office (Adam, 2026-08-04): Doug reads
-// these in the admin panel. A per-submission email would just be another
-// inbox to keep on top of, and feedback is not time-critical the way an
-// unpaid registration is.
+// Doug reads these in the admin panel and gets NO email: it would just be
+// another inbox to stay on top of. Adam does get one per submission, since
+// "the standings page is broken" is his to fix (SITE_FEEDBACK_NOTIFY).
 //
 // Name and email are deliberately OPTIONAL. Requiring them is the fastest way
 // to stop hearing about the things people find embarrassing to ask about, and
