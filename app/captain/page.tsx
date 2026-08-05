@@ -38,6 +38,7 @@ import { AttendanceTab } from "@/components/captain/AttendanceTab";
 import { TeamChatTab } from "@/components/captain/TeamChatTab";
 import { CaptainsChatTab } from "@/components/captain/CaptainsChatTab";
 import { HelpTab } from "@/components/captain/HelpTab";
+import { MessageFamiliesTab } from "@/components/captain/MessageFamiliesTab";
 import { PitchCountsTab } from "@/components/captain/PitchCountsTab";
 import { TeamLogoTab } from "@/components/captain/TeamLogoTab";
 import { QuickScoreInline } from "@/components/captain/QuickScoreInline";
@@ -560,6 +561,7 @@ const TABS: Tab[] = [
   { key: "team", label: "My Team" },
   { key: "attendance", label: "Attendance" },
   { key: "roster", label: "Roster" },
+  { key: "message", label: "Message Families" },
   { key: "logo", label: "Team Logo" },
   { key: "freeagents", label: "Free Agents" },
   { key: "scores", label: "Submit Score" },
@@ -629,7 +631,10 @@ function CaptainTabNav() {
             t.key === "notifications")
         ),
     )
-    .filter((t) => !(t.key === "pitchcounts" && tenantId !== "coybl"));
+    .filter((t) => !(t.key === "pitchcounts" && tenantId !== "coybl"))
+    // COYBL only: its rosters carry a parent/guardian email, which is what
+    // this sends to. Other tenants have no family addresses to reach.
+    .filter((t) => !(t.key === "message" && tenantId !== "coybl"));
   return (
     <nav className="cap-tab-nav">
       {tabs.map((t) => (
@@ -703,6 +708,8 @@ function CaptainBody({
   if (tab === "notifications")
     return <NotificationsPanel leagueId={leagueId} />;
   if (tab === "help") return <HelpTab />;
+  if (tab === "message")
+    return <MessageFamiliesTab leagueId={leagueId} />;
   if (tab === "scores")
     return (
       <SubmitScoreTab
