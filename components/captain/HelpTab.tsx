@@ -19,14 +19,32 @@ interface Props {
   contactEmail?: string;
 }
 
-export function HelpTab({
-  contactEmail = "adam.mainlinewebdesign@gmail.com",
-}: Props) {
+// Who a stuck coach should contact, per league.
+//
+// This used to be Adam's address for every tenant, which is right while a
+// league is being built and wrong the moment it has 200 coaches: routine
+// "how do I…" questions belong with the people who run the league, not the
+// person who runs the server. Leagues not listed here still fall through to
+// Adam, which is the correct answer for one that has not launched.
+const SUPPORT: Record<string, { name: string; email: string; phone?: string }> = {
+  coybl: {
+    name: "COYBL League Office",
+    email: "doughare@coybl.org",
+    phone: "614-778-1391",
+  },
+};
+
+export function HelpTab({ contactEmail }: Props) {
   // SFBL doesn't use attendance (teams poll on WhatsApp) or push
   // notifications, so those Help sections are hidden for it. Other
   // leagues see the full guide. (Adam, 2026-06.)
   const { tenantId } = useTenant();
   const isSfbl = tenantId === "sfbl";
+  // An explicit prop wins; otherwise the league's own office, if it has one.
+  const support = contactEmail
+    ? { name: "the league office", email: contactEmail }
+    : SUPPORT[tenantId ?? ""];
+  const fallbackEmail = contactEmail ?? "adam.mainlinewebdesign@gmail.com";
   return (
     <div className="cap-tab cap-help">
       <div className="cap-section-head">
@@ -314,22 +332,51 @@ export function HelpTab({
       )}
 
       <details>
-        <summary>Still Stuck? Contact Adam</summary>
+        <summary>Still stuck? {support ? `Contact ${support.name}` : "Contact Adam"}</summary>
         <div className="help-body">
-          <p>
-            Site breaks, feature requests, "how do I…?" — I'm usually quick
-            and can push fixes within the hour.
-          </p>
-          <p>
-            <strong>Adam Miller</strong> (site builder)
-            <br />
-            Email:{" "}
-            <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
-          </p>
-          <p>
-            If something feels off or you have an idea to make the site
-            better, just tell me. That's how we get it right.
-          </p>
+          {support ? (
+            <>
+              <p>
+                Questions about the league — rules, divisions, schedules,
+                registration, or anything on this page — go to the league
+                office.
+              </p>
+              <p>
+                <strong>{support.name}</strong>
+                <br />
+                Email: <a href={`mailto:${support.email}`}>{support.email}</a>
+                {support.phone && (
+                  <>
+                    <br />
+                    Phone:{" "}
+                    <a href={`tel:${support.phone.replace(/[^0-9]/g, "")}`}>
+                      {support.phone}
+                    </a>
+                  </>
+                )}
+              </p>
+              <p>
+                If something on the site looks broken rather than confusing,
+                say so and the office will pass it on.
+              </p>
+            </>
+          ) : (
+            <>
+              <p>
+                Site breaks, feature requests, &ldquo;how do I…?&rdquo; — I&rsquo;m
+                usually quick and can push fixes within the hour.
+              </p>
+              <p>
+                <strong>Adam Miller</strong> (site builder)
+                <br />
+                Email: <a href={`mailto:${fallbackEmail}`}>{fallbackEmail}</a>
+              </p>
+              <p>
+                If something feels off or you have an idea to make the site
+                better, just tell me. That&rsquo;s how we get it right.
+              </p>
+            </>
+          )}
         </div>
       </details>
     </div>
