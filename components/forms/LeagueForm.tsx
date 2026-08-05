@@ -48,7 +48,8 @@ export interface LeagueFormProps {
     | "team_waiver"
     | "umpire_evaluation"
     | "alerts_signup"
-    | "player_ad";
+    | "player_ad"
+    | "site_feedback";
   title: string;
   description?: string;
   /** Optional intro paragraph(s) — shown above the form. Each entry

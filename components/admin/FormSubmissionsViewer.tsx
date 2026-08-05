@@ -21,13 +21,15 @@ type Kind =
   | "player_registration"
   | "team_registration"
   | "team_waiver"
-  | "umpire_evaluation";
+  | "umpire_evaluation"
+  | "site_feedback";
 
 const KIND_TABS: { key: Kind; label: string }[] = [
   { key: "player_registration", label: "Player registration" },
   { key: "team_registration", label: "Team registration" },
   { key: "team_waiver", label: "Team waiver" },
   { key: "umpire_evaluation", label: "Umpire evaluation" },
+  { key: "site_feedback", label: "Site feedback" },
 ];
 
 // Three states a submission can occupy. Missing status field on
@@ -963,6 +965,17 @@ function summaryLine(kind: Kind, s: Submission): string {
     const date = s.game_date ?? "";
     const matchup = `${s.visiting_team ?? "?"} @ ${s.home_team ?? "?"}`;
     return `${matchup}${date ? ` (${date})` : ""}${ev ? ` — ${ev}` : ""}`;
+  }
+  if (kind === "site_feedback") {
+    // Lead with what they said, not who said it: the office is triaging by
+    // problem here, and most of these arrive anonymously anyway.
+    const topic = String(s.topic ?? "").trim();
+    const msg = String(s.message ?? "").replace(/\s+/g, " ").trim();
+    const who = String(s.name ?? "").trim();
+    const short = msg.length > 80 ? msg.slice(0, 80) + "…" : msg;
+    return [topic && `[${topic}]`, short || "(no message)", who && `— ${who}`]
+      .filter(Boolean)
+      .join(" ");
   }
   return s.id;
 }

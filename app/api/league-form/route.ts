@@ -34,7 +34,8 @@ type Kind =
   | "team_waiver"
   | "umpire_evaluation"
   | "alerts_signup"
-  | "player_ad";
+  | "player_ad"
+  | "site_feedback";
 
 interface SubmissionBody {
   kind: Kind;
@@ -46,6 +47,18 @@ interface SubmissionBody {
 // keep payloads tight and prevent random bot fields ending up in
 // Firestore.
 const ALLOWED_FIELDS: Record<Kind, string[]> = {
+  // "Suggest a change" — anyone using the site can report something broken,
+  // confusing, or missing. Name and email are optional on purpose: making
+  // people identify themselves is the fastest way to stop hearing about the
+  // things they find embarrassing to ask about.
+  site_feedback: [
+    "topic",
+    "page",
+    "message",
+    "name",
+    "email",
+    "role",
+  ],
   team_registration: [
     "manager_first_name",
     "manager_last_name",
@@ -154,6 +167,7 @@ const ALLOWED_FIELDS: Record<Kind, string[]> = {
 };
 
 const REQUIRED: Record<Kind, string[]> = {
+  site_feedback: ["message"],
   team_registration: [
     // division/age_group are validated client-side per tenant (SFBL uses
     // division, COYBL uses age_group), so they're not server-required here.
@@ -497,6 +511,34 @@ async function sendRegistrationEmails(
   leagueName: string,
   leagueAbbrev: string,
 ): Promise<void> {
+  // Site feedback: tell the office, and reply-to the person if they left an
+  // address, so answering is one tap rather than a copy-paste.
+  if (kind === "site_feedback") {
+    const notify = notifyAddress();
+    if (!notify) return;
+    const f = (k: string) =>
+      typeof data[k] === "string" ? (data[k] as string).trim() : "";
+    const from = f("email");
+    await sendEmail({
+      to: notify,
+      subject: `${leagueAbbrev} site feedback: ${f("topic") || "suggestion"}`,
+      html:
+        `<p><strong>${esc(f("topic") || "Feedback")}</strong></p>` +
+        (f("page") ? `<p><strong>Page:</strong> ${esc(f("page"))}</p>` : "") +
+        `<p style="white-space:pre-wrap">${esc(f("message"))}</p>` +
+        `<hr style="border:none;border-top:1px solid #ddd">` +
+        `<p style="color:#555;font-size:13px">` +
+        `From: ${esc(f("name") || "anonymous")}` +
+        (from ? ` &lt;${esc(from)}&gt;` : " (no email left)") +
+        (f("role") ? ` · ${esc(f("role"))}` : "") +
+        `</p>` +
+        `<p style="color:#555;font-size:13px">Also in the admin panel under Form submissions → Site feedback.</p>`,
+      // Reply goes to whoever wrote in, when they said who they are.
+      replyTo: from || undefined,
+    });
+    return;
+  }
+
   if (kind !== "player_registration" && kind !== "team_registration") return;
 
   const c = (k: string) =>
