@@ -52,6 +52,10 @@ export function SiteFooter() {
       label: "Mainline Web Design",
       url: "https://mainline-webdesign.com/",
     },
+    coybl: {
+      label: "Mainline Web Design",
+      url: "https://mainline-webdesign.com/",
+    },
   };
   const credit = CREDITS[tenantId] ?? {
     label: "LeagueEngine",
