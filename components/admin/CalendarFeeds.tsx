@@ -239,28 +239,27 @@ export function CalendarFeeds({ leagueId, user }: Props) {
         {!gcal?.calendar_id ? (
           <div className="space-y-2">
             <p className="text-xs text-slate-600">
-              <strong>One-time setup needed:</strong> enable the Google
-              Calendar API in your Google Cloud project (the same one
-              hosting your Firebase service account). Go to{" "}
-              <a
-                href="https://console.cloud.google.com/apis/library/calendar-json.googleapis.com"
-                target="_blank"
-                rel="noopener"
-                className="underline text-blue-700"
-              >
-                Google Cloud Console → Calendar API → Enable
-              </a>
-              . Once enabled, click below.
+              Google Calendar sync isn&rsquo;t switched on for this league yet.
+              It needs a one-time setup on the hosting side, so{" "}
+              <strong>contact Adam if you&rsquo;d like it turned on</strong>.
             </p>
+            <p className="text-[11px] text-slate-500">
+              Once it&rsquo;s on, everyone gets a single league calendar they can
+              subscribe to in Google, Apple or Outlook, and it stays right when
+              games move.
+            </p>
+            {/* The setup button stays, but quiet and clearly labelled: it only
+                works once the Calendar API is enabled on the Cloud project, so
+                it is Adam's control, not the league office's. Telling Doug to
+                contact Adam and then putting a big green "Set up" button under
+                it just invites a click that errors. */}
             <button
               type="button"
               onClick={() => callGcal("setup")}
               disabled={gcalBusy != null}
-              className="rounded-md bg-emerald-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+              className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
             >
-              {gcalBusy === "setup"
-                ? "Setting up…"
-                : "🚀 Set up Google Calendar sync"}
+              {gcalBusy === "setup" ? "Setting up…" : "Run setup (Adam only)"}
             </button>
           </div>
         ) : (

@@ -77,10 +77,10 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         error:
-          "Google Calendar API isn't configured for this environment. " +
-          "Make sure FIREBASE_SERVICE_ACCOUNT_PATH points at a service " +
-          "account JSON, and that the Google Calendar API is enabled in " +
-          "your Google Cloud project.",
+          // Reaches a league director, not a developer, so it says who to
+          // ask rather than naming env vars they cannot set.
+          "Google Calendar sync isn't switched on for this league yet. " +
+          "Contact Adam to get it set up.",
       },
       { status: 501 },
     );
@@ -136,7 +136,7 @@ export async function POST(req: Request) {
           error:
             "Calendar create failed: " +
             (e instanceof Error ? e.message : "unknown") +
-            ". Verify Google Calendar API is enabled in your GCP project.",
+            ". Contact Adam if this keeps happening.",
         },
         { status: 500 },
       );
