@@ -448,6 +448,22 @@ export default function BoxScoreEditorPage() {
         </Link>
       </main>
     );
+  // Box scores are off for COYBL for now — coaches report the final only.
+  // The buttons are hidden on the captain dashboard, but the route has to
+  // refuse too, or "hidden" just means "one bookmark away".
+  if (tenantId === "coybl")
+    return (
+      <main className="container py-16">
+        <p>Box scores aren&rsquo;t turned on for this league yet.</p>
+        <p style={{ color: "var(--muted)" }}>
+          Report your game with <strong>Quick Score</strong> on the Submit Score
+          tab.
+        </p>
+        <Link href="/captain#scores" className="le-cap-btn-primary">
+          Go to Submit Score
+        </Link>
+      </main>
+    );
   if (loading || !game)
     return <main className="container py-16">Loading game…</main>;
 

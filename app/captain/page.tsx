@@ -43,6 +43,14 @@ import { TeamLogoTab } from "@/components/captain/TeamLogoTab";
 import { QuickScoreInline } from "@/components/captain/QuickScoreInline";
 import { PasswordlessCaptainPicker } from "@/components/captain/PasswordlessCaptainPicker";
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
+
+// Box Score (full manual AB/R/H + pitcher lines) is hidden for COYBL for now
+// (Adam, 2026-08-04): coaches report the final only, via Quick Score. SFBL and
+// Island keep it — their captains do enter full stat lines. Hiding the button
+// rather than deleting the feature, so turning it back on is one line.
+function showsBoxScore(leagueId: string): boolean {
+  return leagueId !== "coybl";
+}
 import { ManagerContact } from "@/components/ManagerContact";
 import { getDb } from "@/lib/firebase";
 import { useTenant } from "@/lib/tenant-context";
@@ -801,10 +809,14 @@ function CaptainBody({
                     game={g}
                     myTeamId={teamId}
                     teamNames={teamNames}
-                    primary={{
-                      label: "Box Score",
-                      href: `/captain/box-score?game=${g.id}`,
-                    }}
+                    {...(showsBoxScore(leagueId)
+                      ? {
+                          primary: {
+                            label: "Box Score",
+                            href: `/captain/box-score?game=${g.id}`,
+                          },
+                        }
+                      : {})}
                   />
                 ))}
               </ul>
@@ -820,10 +832,14 @@ function CaptainBody({
                     game={g}
                     myTeamId={teamId}
                     teamNames={teamNames}
-                    primary={{
-                      label: "Box Score",
-                      href: `/captain/box-score?game=${g.id}`,
-                    }}
+                    {...(showsBoxScore(leagueId)
+                      ? {
+                          primary: {
+                            label: "Box Score",
+                            href: `/captain/box-score?game=${g.id}`,
+                          },
+                        }
+                      : {})}
                   />
                 ))}
               </ul>
@@ -850,10 +866,14 @@ function CaptainBody({
                     game={g}
                     myTeamId={teamId}
                     teamNames={teamNames}
-                    primary={{
-                      label: "Box Score",
-                      href: `/captain/box-score?game=${g.id}`,
-                    }}
+                    {...(showsBoxScore(leagueId)
+                      ? {
+                          primary: {
+                            label: "Box Score",
+                            href: `/captain/box-score?game=${g.id}`,
+                          },
+                        }
+                      : {})}
                   />
                 ))}
               </ul>
@@ -1346,14 +1366,25 @@ function SubmitScoreTab({
                   game={g}
                   myTeamId={teamId}
                   teamNames={teamNames}
-                  primary={{
-                    label: "Box Score",
-                    href: `/captain/box-score?game=${g.id}`,
-                  }}
-                  secondary={{
-                    label: open ? "✕ Close" : "⚡ Quick Score",
-                    onClick: () => setOpenId(open ? null : g.id),
-                  }}
+                  {...(showsBoxScore(leagueId)
+                    ? {
+                        primary: {
+                          label: "Box Score",
+                          href: `/captain/box-score?game=${g.id}`,
+                        },
+                        secondary: {
+                          label: open ? "✕ Close" : "⚡ Quick Score",
+                          onClick: () => setOpenId(open ? null : g.id),
+                        },
+                      }
+                    : {
+                        // Only one way to report a score here, so it gets the
+                        // primary slot instead of sitting in the quieter one.
+                        secondary: {
+                          label: open ? "✕ Close" : "⚡ Quick Score",
+                          onClick: () => setOpenId(open ? null : g.id),
+                        },
+                      })}
                 />
                 {open && (
                   <li style={{ listStyle: "none" }}>
@@ -1385,7 +1416,9 @@ function CaptainGameRow({
   game: GameSnap;
   myTeamId: string;
   teamNames?: Record<string, string>;
-  primary: { label: string; href: string };
+  /** Optional: COYBL hides Box Score, which leaves some rows with no
+   *  action button at all rather than a button that goes nowhere. */
+  primary?: { label: string; href: string };
   secondary?: { label: string; href?: string; onClick?: () => void };
 }) {
   const isHome = game.home_team_id === myTeamId;
@@ -1428,9 +1461,11 @@ function CaptainGameRow({
         </span>
       )}
       <div className="le-cap-game-actions">
-        <Link href={primary.href} className="le-cap-btn-primary">
-          {primary.label}
-        </Link>
+        {primary && (
+          <Link href={primary.href} className="le-cap-btn-primary">
+            {primary.label}
+          </Link>
+        )}
         {secondary &&
           (secondary.onClick ? (
             // Button variant — used by Quick Score to toggle an inline
