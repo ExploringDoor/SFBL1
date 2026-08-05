@@ -3,9 +3,13 @@
 // or ask for something new.
 //
 // Submissions land in /form_submissions/site_feedback and show up in the
-// admin Form submissions tab under "Site feedback", so they get the same
-// new / in progress / done triage as everything else rather than living in
-// somebody's inbox.
+// admin Form submissions tab under "Site feedback", where they get the same
+// new / in progress / done triage as everything else.
+//
+// Deliberately NO email to the league office (Adam, 2026-08-04): Doug reads
+// these in the admin panel. A per-submission email would just be another
+// inbox to keep on top of, and feedback is not time-critical the way an
+// unpaid registration is.
 //
 // Name and email are deliberately OPTIONAL. Requiring them is the fastest way
 // to stop hearing about the things people find embarrassing to ask about, and
