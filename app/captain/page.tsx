@@ -1345,9 +1345,21 @@ function SubmitScoreTab({
       <div className="cap-section-head">
         <h2 className="cap-section-title">Submit Score</h2>
         <p className="cap-section-sub">
-          Tap <strong>Quick Score</strong> on a game for just the final, or{" "}
-          <strong>Box Score</strong> for the full lineup + stats. Both captains
-          can submit; the league office reconciles.
+          {/* Hiding the Box Score buttons left this sentence describing one
+              that is no longer there. */}
+          {showsBoxScore(leagueId) ? (
+            <>
+              Tap <strong>Quick Score</strong> on a game for just the final, or{" "}
+              <strong>Box Score</strong> for the full lineup + stats. Both
+              captains can submit; the league office reconciles.
+            </>
+          ) : (
+            <>
+              Tap <strong>Quick Score</strong> on a game and enter the final.
+              Both coaches can submit; the league office sorts out any
+              disagreement.
+            </>
+          )}
         </p>
       </div>
       {games.length === 0 ? (

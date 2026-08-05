@@ -172,8 +172,17 @@ export function PasswordlessCaptainPicker({
             margin: "0 0 16px",
           }}
         >
-          Enter your team password to manage roster, submit scores,
-          and chat with your players.
+          {leagueId === "coybl" ? (
+            <>
+              Enter your team&rsquo;s 5-digit code to post games, submit scores
+              and log pitch counts.
+            </>
+          ) : (
+            <>
+              Enter your team password to manage roster, submit scores, and chat
+              with your players.
+            </>
+          )}
         </p>
 
         <form onSubmit={submit}>
@@ -186,7 +195,7 @@ export function PasswordlessCaptainPicker({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={busy}
-            placeholder="Password"
+            placeholder={leagueId === "coybl" ? "5-digit code" : "Password"}
             aria-label="Team password"
             autoFocus
             style={{
@@ -250,7 +259,9 @@ export function PasswordlessCaptainPicker({
             lineHeight: 1.55,
           }}
         >
-          Don't know the password? Ask your commissioner.
+          {leagueId === "coybl"
+            ? "Don't know your code? It was emailed to you when you registered. The league office can look it up."
+            : "Don't know the password? Ask your commissioner."}
         </p>
       </div>
     );
