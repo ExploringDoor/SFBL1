@@ -23,6 +23,7 @@ const ALLOWED_KINDS = new Set([
   "player_registration",
   "team_waiver",
   "umpire_evaluation",
+  "site_feedback",
 ]);
 
 interface Body {

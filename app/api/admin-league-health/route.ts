@@ -174,6 +174,9 @@ export async function GET(req: Request) {
     "team_registration",
     "team_waiver",
     "umpire_evaluation",
+    // Doug gets no email for feedback on purpose, so the Health tab is where
+    // he finds out any is waiting.
+    "site_feedback",
   ] as const;
   const formSnaps = await Promise.all(
     FORM_KINDS.map((k) =>

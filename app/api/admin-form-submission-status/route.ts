@@ -30,6 +30,7 @@ const ALLOWED_KINDS = new Set([
   "player_registration",
   "team_waiver",
   "umpire_evaluation",
+  "site_feedback",
 ]);
 
 const ALLOWED_STATUSES = new Set(["new", "in_progress", "done"]);
