@@ -14,15 +14,14 @@
 
 import { useState } from "react";
 import { SquareCardForm } from "./SquareCardForm";
-
-// Doug's payment details. Venmo handle and the check address he gave us.
-const VENMO_HANDLE = "@Doug-Hare-2";
-const VENMO_URL = "https://venmo.com/u/Doug-Hare-2";
-const CHECK_PAYABLE_TO = "COYBL";
-// Confirmed by Doug 2026-08-02: "We live in Etna Township, not in a
-// corporation. Our address is 152 Glen Crossing Drive - Etna, 43062."
-// The older P.O. Box in Pataskala is no longer valid.
-const CHECK_ADDRESS = "152 Glen Crossing Drive, Etna, OH 43062";
+// Doug's payment details live in lib/coybl-payment so the reminder email the
+// office sends the unpaid quotes the same handle and address this form does.
+import {
+  COYBL_VENMO_HANDLE as VENMO_HANDLE,
+  COYBL_VENMO_URL as VENMO_URL,
+  COYBL_CHECK_PAYABLE_TO as CHECK_PAYABLE_TO,
+  COYBL_CHECK_ADDRESS as CHECK_ADDRESS,
+} from "@/lib/coybl-payment";
 
 export function CoyblPaymentOptions({
   submissionId,

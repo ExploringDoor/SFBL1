@@ -30,6 +30,11 @@ interface Entry {
   method: string;
   /** ISO timestamp, set automatically when a payment is recorded. */
   paid_at: string;
+  /** Square's own receipt page, on card rows. Proof of payment without
+   *  logging in to Square. */
+  receipt_url: string;
+  /** When the office last emailed this team about the money. */
+  reminder_sent_at: string;
 }
 
 const money = (n: number) =>
@@ -96,6 +101,7 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
   const [query, setQuery] = useState("");
   const [show, setShow] = useState<"all" | "unpaid" | "paid">("all");
   const [saving, setSaving] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   async function load() {
@@ -160,6 +166,8 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
         note: string;
         method?: string;
         paid_at?: string;
+        receipt_url?: string;
+        reminder_sent_at?: string;
       }[];
         player_payments?: {
           player_id: string;
@@ -175,6 +183,8 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
           note: p.note ?? "",
           method: (p as { method?: string }).method ?? "",
           paid_at: (p as { paid_at?: string }).paid_at ?? "",
+          receipt_url: p.receipt_url ?? "",
+          reminder_sent_at: p.reminder_sent_at ?? "",
         };
       setTeamPay(tp);
       const pp: Record<string, Entry> = {};
@@ -185,6 +195,8 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
           note: p.note ?? "",
           method: "",
           paid_at: "",
+          receipt_url: "",
+          reminder_sent_at: "",
         };
       setPlayerPay(pp);
     } catch (e) {
@@ -266,6 +278,26 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
     return sum + Math.max(0, due - paid);
   }, 0);
 
+  // Per age-group totals, so Doug can see which age group is lagging without
+  // adding up rows himself. Keyed off the same list that renders, so the
+  // numbers always match what is on screen.
+  const ageTotals = new Map<
+    string,
+    { teams: number; paid: number; owed: number }
+  >();
+  for (const t of teams) {
+    const k = t.ageGroup || "No age group";
+    const e = teamPay[t.id];
+    const cur = ageTotals.get(k) ?? { teams: 0, paid: 0, owed: 0 };
+    cur.teams += 1;
+    if (Number(e?.amount_paid ?? 0) > 0) cur.paid += 1;
+    cur.owed += Math.max(
+      0,
+      Number(e?.amount_due ?? 0) - Number(e?.amount_paid ?? 0),
+    );
+    ageTotals.set(k, cur);
+  }
+
   const needle = query.trim().toLowerCase();
   const visibleTeams = teams.filter((t) => {
     if (needle && !t.name.toLowerCase().includes(needle)) return false;
@@ -274,6 +306,137 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
     if (show === "unpaid") return !paid;
     return true;
   });
+
+  /** Download what is currently on screen, for the treasurer's books. */
+  function exportCsv() {
+    const rows = [
+      [
+        "Age group",
+        "Team",
+        "Amount due",
+        "Amount paid",
+        "Balance",
+        "Method",
+        "Paid at",
+        "Receipt",
+        "Note",
+      ],
+      ...visibleTeams.map((t) => {
+        const e = teamPay[t.id];
+        const due = Number(e?.amount_due ?? 0);
+        const paid = Number(e?.amount_paid ?? 0);
+        return [
+          t.ageGroup,
+          t.name,
+          due ? due.toFixed(2) : "",
+          paid ? paid.toFixed(2) : "",
+          (Math.max(0, due - paid) || 0).toFixed(2),
+          e?.method ?? "",
+          e?.paid_at ? new Date(e.paid_at).toLocaleString("en-US") : "",
+          e?.receipt_url ?? "",
+          e?.note ?? "",
+        ];
+      }),
+    ];
+    // Quote every cell and double any inner quotes. Team names contain commas
+    // and apostrophes, which would otherwise shift columns in Excel.
+    const csv = rows
+      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
+      .join("\r\n");
+    const url = URL.createObjectURL(
+      new Blob([csv], { type: "text/csv;charset=utf-8" }),
+    );
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${leagueId}-payments.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  /** Email every unpaid team currently in view. */
+  async function emailUnpaid() {
+    const targets = visibleTeams.filter(
+      (t) => !(Number(teamPay[t.id]?.amount_paid ?? 0) > 0),
+    );
+    if (targets.length === 0) {
+      setMsg({ ok: false, text: "Nobody in view is unpaid." });
+      return;
+    }
+    setSending(true);
+    setMsg(null);
+    try {
+      const idToken = await user.getIdToken();
+      const call = (action: "preview" | "send") =>
+        fetch("/api/admin-payment-reminders", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({
+            leagueId,
+            action,
+            teamIds: targets.map((t) => t.id),
+          }),
+        }).then((r) => r.json());
+
+      // Show exactly who would be written to before anything goes out. An
+      // email blast is not undoable, so it does not happen on one click.
+      const pre = (await call("preview")) as {
+        recipients?: { teamName: string }[];
+        skipped?: { teamName: string }[];
+        error?: string;
+      };
+      if (pre.error) {
+        setMsg({ ok: false, text: pre.error });
+        return;
+      }
+      const n = pre.recipients?.length ?? 0;
+      const noEmail = pre.skipped?.length ?? 0;
+      if (n === 0) {
+        setMsg({
+          ok: false,
+          text: `No reachable teams. ${noEmail} unpaid team(s) have no email on file.`,
+        });
+        return;
+      }
+      const ok = window.confirm(
+        `Email ${n} unpaid team${n === 1 ? "" : "s"} a payment reminder?` +
+          (noEmail ? `\n\n${noEmail} more have no email on file and will be skipped.` : ""),
+      );
+      if (!ok) return;
+
+      const res = (await call("send")) as {
+        sent?: number;
+        failed?: { teamName: string; error: string }[];
+        error?: string;
+      };
+      if (res.error) {
+        setMsg({ ok: false, text: res.error });
+        return;
+      }
+      const failed = res.failed ?? [];
+      setMsg({
+        ok: failed.length === 0,
+        text:
+          `Sent ${res.sent ?? 0} reminder${res.sent === 1 ? "" : "s"}.` +
+          (failed.length
+            ? ` ${failed.length} failed: ${failed
+                .slice(0, 3)
+                .map((f) => `${f.teamName} (${f.error})`)
+                .join(", ")}`
+            : ""),
+      });
+      await load();
+    } catch (e) {
+      setMsg({
+        ok: false,
+        text: e instanceof Error ? e.message : "Could not send reminders",
+      });
+    } finally {
+      setSending(false);
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -333,6 +496,21 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
         <span className="text-xs text-slate-500">
           {visibleTeams.length} of {teams.length} teams
         </span>
+        <button
+          type="button"
+          onClick={emailUnpaid}
+          disabled={sending}
+          className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+        >
+          {sending ? "Sending…" : "Email the unpaid"}
+        </button>
+        <button
+          type="button"
+          onClick={exportCsv}
+          className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+        >
+          Export CSV
+        </button>
       </div>
 
       <div className="space-y-2">
@@ -342,7 +520,7 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
           const prev = i > 0 ? visibleTeams[i - 1] : null;
           const newAge = !prev || prev.ageGroup !== t.ageGroup;
           const roster = playersByTeam[t.id] ?? [];
-          const tEntry = teamPay[t.id] ?? { amount_paid: "", amount_due: "", note: "", method: "", paid_at: "" };
+          const tEntry = teamPay[t.id] ?? { amount_paid: "", amount_due: "", note: "", method: "", paid_at: "", receipt_url: "", reminder_sent_at: "" };
           const open = expanded === t.id;
           const playerPaidCount = roster.filter(
             (p) => Number(playerPay[p.id]?.amount_paid) > 0,
@@ -350,8 +528,24 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
           return (
             <div key={t.id}>
               {newAge && (
-                <h3 className="mb-1 mt-4 border-b border-slate-200 pb-1 text-xs font-bold uppercase tracking-wide text-slate-500 first:mt-0">
-                  {t.ageGroup || "No age group"}
+                <h3 className="mb-1 mt-4 flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-200 pb-1 first:mt-0">
+                  <span className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                    {t.ageGroup || "No age group"}
+                  </span>
+                  {(() => {
+                    const a = ageTotals.get(t.ageGroup || "No age group");
+                    if (!a) return null;
+                    return (
+                      <span className="text-xs font-normal text-slate-500">
+                        {a.paid} of {a.teams} paid
+                        {a.owed > 0 ? (
+                          <span className="ml-2 font-semibold text-red-600">
+                            {money(a.owed)} owed
+                          </span>
+                        ) : null}
+                      </span>
+                    );
+                  })()}
                 </h3>
               )}
               <div className="overflow-hidden rounded-md border border-slate-200">
@@ -408,6 +602,17 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
                   <option value="other">Other</option>
                 </select>
                 <PaidBadge entry={tEntry} />
+                {tEntry.receipt_url && (
+                  <a
+                    href={tEntry.receipt_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-semibold text-sky-700 underline"
+                    title="Square receipt for this payment"
+                  >
+                    Receipt
+                  </a>
+                )}
                 <button
                   type="button"
                   onClick={() => save("team", t.id, t.id, tEntry)}
@@ -427,7 +632,7 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
                     </p>
                   ) : (
                     roster.map((p) => {
-                      const e = playerPay[p.id] ?? { amount_paid: "", amount_due: "", note: "", method: "", paid_at: "" };
+                      const e = playerPay[p.id] ?? { amount_paid: "", amount_due: "", note: "", method: "", paid_at: "", receipt_url: "", reminder_sent_at: "" };
                       return (
                         <div
                           key={p.id}

@@ -101,6 +101,8 @@ export async function POST(req: Request) {
         note: String(x.note ?? ""),
         method: String(x.method ?? ""),
         paid_at: String(x.paid_at ?? ""),
+        receipt_url: String(x.receipt_url ?? ""),
+        reminder_sent_at: String(x.reminder_sent_at ?? ""),
       };
     });
     const player_payments = playerSnap.docs.map((d) => {

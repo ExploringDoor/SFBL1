@@ -186,6 +186,10 @@ export async function POST(req: Request) {
           method: "card",
           paid_at: new Date().toISOString(),
           square_payment_id: payment.id ?? null,
+          // Square's own receipt. Kept on the ledger row so the office can
+          // answer "prove I paid" from the Payments tab, without logging in
+          // to Square and hunting for the transaction.
+          receipt_url: payment.receipt_url ?? null,
         },
         { merge: true },
       );
