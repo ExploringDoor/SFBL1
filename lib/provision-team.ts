@@ -167,10 +167,11 @@ export async function provisionCoyblTeam(
   // not have to retype 196 addresses and the schedule's field dropdown, the
   // public Fields page and directions all work from day one.
   //
-  // Deduped on the field NAME, case-insensitively: many teams share a park,
-  // and a second registration naming the same field should not create a
-  // duplicate. An existing entry is left as-is rather than overwritten, since
-  // the office may have corrected it by hand.
+  // Deduped on the field NAME, case-insensitively: many teams share a park.
+  // When the park already exists we do NOT skip, we ADD this team to its
+  // `team` list. Skipping outright meant the second, third and fourth team at
+  // Etna Park were invisible on the public Fields page, which only ever
+  // credited whoever registered first.
   try {
     const fieldName = str("home_field_name");
     if (fieldName) {
@@ -180,26 +181,47 @@ export async function provisionCoyblTeam(
           .filter(Boolean)
           .join(" "),
       ].filter(Boolean);
-      const entry = {
-        name: fieldName,
-        address: parts.join(", "),
-        // Whose home field this is. Without it the Fields list is a pile of
-        // parks with no indication of who plays where.
-        team: teamName,
-        ...(str("home_field_maps") ? { mapsUrl: str("home_field_maps") } : {}),
-      };
       const ref = db.doc(`leagues/${leagueId}/site_config/fields`);
       const snap = await ref.get();
       const existing: unknown = snap.exists ? snap.data()?.data : null;
-      const list = Array.isArray(existing) ? [...existing] : [];
-      const already = list.some((f) => {
-        const n = typeof f === "string" ? f : String((f ?? {}).name ?? "");
-        return n.trim().toLowerCase() === fieldName.toLowerCase();
-      });
-      if (!already) {
-        list.push(entry);
-        await ref.set({ data: list }, { merge: true });
+      const list: Record<string, unknown>[] = Array.isArray(existing)
+        ? existing.map((f) =>
+            typeof f === "string" ? { name: f, address: "" } : { ...(f ?? {}) },
+          )
+        : [];
+      const idx = list.findIndex(
+        (f) =>
+          String(f.name ?? "").trim().toLowerCase() === fieldName.toLowerCase(),
+      );
+
+      if (idx === -1) {
+        list.push({
+          name: fieldName,
+          address: parts.join(", "),
+          // Whose home field this is. Without it the Fields list is a pile of
+          // parks with no indication of who plays where.
+          team: teamName,
+          ...(str("home_field_maps") ? { mapsUrl: str("home_field_maps") } : {}),
+        });
+      } else {
+        // Park is already listed. Add this team to it, leaving the address and
+        // map link the office may have corrected by hand alone.
+        const cur = list[idx]!;
+        const teams = (
+          Array.isArray(cur.team) ? cur.team : cur.team ? [cur.team] : []
+        )
+          .filter((t): t is string => typeof t === "string" && t.trim() !== "")
+          .map((t) => t.trim());
+        if (!teams.some((t) => t.toLowerCase() === teamName.toLowerCase())) {
+          teams.push(teamName);
+        }
+        cur.team = teams.length === 1 ? teams[0] : teams;
+        // Fill in a map link only if the entry has none.
+        if (!cur.mapsUrl && str("home_field_maps")) {
+          cur.mapsUrl = str("home_field_maps");
+        }
       }
+      await ref.set({ data: list }, { merge: true });
     }
   } catch (err) {
     console.error("[provision-team] could not add the home field", err);

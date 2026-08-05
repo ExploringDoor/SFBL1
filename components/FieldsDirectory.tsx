@@ -26,6 +26,9 @@ export interface Field {
   location?: string | null;
   address: string;
   mapsUrl?: string | null;
+  /** Whose home field this is. A string for one team, an array when several
+   *  share the park. Set from team registrations. */
+  team?: string | string[] | null;
   appleMapsUrl?: string | null;
   notes?: string[];
   color?: string | null;
@@ -61,12 +64,19 @@ export function FieldsDirectory({ fields }: { fields: Field[] }) {
       fields.map((f) => {
         const { name, surface } = splitSurface(f.name);
         const town = townOf(f.address);
+        // One park can be home to several teams, so `team` may be a list.
+        const teams = (Array.isArray(f.team) ? f.team : [f.team])
+          .filter((t): t is string => typeof t === "string" && t.trim() !== "")
+          .map((t) => t.trim());
         return {
           f,
           name,
           surface,
           town,
-          hay: `${f.name} ${f.address}`.toLowerCase(),
+          teams,
+          // Searching a TEAM name should find their home field. A parent
+          // looking up where Saturday's game is knows the team, not the park.
+          hay: `${f.name} ${f.address} ${teams.join(" ")}`.toLowerCase(),
         };
       }),
     [fields],
@@ -113,8 +123,8 @@ export function FieldsDirectory({ fields }: { fields: Field[] }) {
             type="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search a field or town"
-            aria-label="Search fields by name or town"
+            placeholder="Search a field, town, or team"
+            aria-label="Search fields by name, town, or team"
             style={{
               width: "100%",
               padding: "11px 14px 11px 38px",
@@ -149,7 +159,7 @@ export function FieldsDirectory({ fields }: { fields: Field[] }) {
             gap: 14,
           }}
         >
-          {shown.map(({ f, name, surface, town }) => {
+          {shown.map(({ f, name, surface, town, teams }) => {
             const accent = f.color ?? "var(--brand-primary)";
             const googleHref =
               f.mapsUrl ||
@@ -239,6 +249,21 @@ export function FieldsDirectory({ fields }: { fields: Field[] }) {
                   >
                     {f.address}
                   </p>
+                  {teams.length > 0 && (
+                    <p
+                      style={{
+                        margin: "8px 0 0",
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: "var(--text-strong)",
+                      }}
+                    >
+                      <span style={{ color: "var(--muted)", fontWeight: 500 }}>
+                        Home field for{" "}
+                      </span>
+                      {teams.join(", ")}
+                    </p>
+                  )}
                 </div>
 
                 {Array.isArray(f.notes) && f.notes.length > 0 && (
