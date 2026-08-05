@@ -31,23 +31,29 @@ export function squareApiBase(): string {
     : "https://connect.squareupsandbox.com";
 }
 
-// ===================== TEMPORARY TEST OVERRIDE =====================
-// Doug is running one end-to-end registration test (2026-08-02) and we did
-// not want to push $495 through a real card just to refund it. While this is
-// a number instead of null, EVERY card charge is this many dollars.
+// Test-mode fee, for end-to-end checkout tests without pushing $495 through a
+// real card just to refund it.
 //
-// SET BACK TO null AS SOON AS THAT TEST IS DONE. Leaving it on means real
-// coaches register for a dollar.
+// Env-driven ON PURPOSE. This used to be a hardcoded constant, which meant the
+// only way to test was to edit the source, deploy, and then remember to change
+// it back. Forgetting that ships a live registration page charging a dollar.
+// Now: set COYBL_TEST_FEE=1 in Vercel to test, delete the var to go back to
+// real fees, and the code that gets deployed always means real money.
 //
-// Only the CARD amount is affected. The team_payments ledger still records
-// what a team genuinely owes, so the office's paid/unpaid tracking stays
-// truthful either way.
-const TEST_FEE_OVERRIDE: number | null = 1;
-// ===================================================================
+// Only the CARD amount is affected. The team_payments ledger always records
+// what a team genuinely owes, so paid/unpaid tracking stays truthful either
+// way.
+function testFeeOverride(): number | null {
+  const raw = process.env.COYBL_TEST_FEE;
+  if (!raw) return null;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
 
 /** Registration fee in whole dollars, derived from the submitted answers. */
 export function feeFor(data: Record<string, unknown>): number {
-  if (TEST_FEE_OVERRIDE !== null) return TEST_FEE_OVERRIDE;
+  const testFee = testFeeOverride();
+  if (testFee !== null) return testFee;
   const option = String(data.insurance_option ?? "");
   const usssa = String(data.usssa_addon ?? "");
   // option-2 is "we provide our own insurance"; anything else falls back to
