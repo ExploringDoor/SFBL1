@@ -320,7 +320,7 @@ export function RosterTab({ leagueId, teamId }: RosterTabProps) {
                       <th>Name</th>
                       <th>Pos</th>
                       <th title="Signed up for the player portal">✓</th>
-                      <th className="cap-email-col">Email</th>
+                      <th className="cap-email-col">Parent email</th>
                       <th>DOB</th>
                       <th>Actions</th>
                     </tr>
@@ -421,17 +421,17 @@ function AddPlayerForm({
       </div>
       <div className="cap-form-row">
         <div className="cap-form-col">
-          <label className="cap-form-lbl">Email</label>
+          <label className="cap-form-lbl">Parent / Guardian Email</label>
           <input
             type="email"
             className="cap-form-input"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="player@email.com"
+            placeholder="parent@email.com"
           />
         </div>
         <div className="cap-form-col">
-          <label className="cap-form-lbl">Phone</label>
+          <label className="cap-form-lbl">Parent / Guardian Phone</label>
           <input
             type="tel"
             className="cap-form-input"
@@ -614,7 +614,7 @@ function RosterRow({
               </div>
               <div className="cap-form-row">
                 <div className="cap-form-col">
-                  <label className="cap-form-lbl">Email</label>
+                  <label className="cap-form-lbl">Parent / Guardian Email</label>
                   <input
                     type="email"
                     className="cap-form-input"
@@ -623,7 +623,7 @@ function RosterRow({
                   />
                 </div>
                 <div className="cap-form-col">
-                  <label className="cap-form-lbl">Phone</label>
+                  <label className="cap-form-lbl">Parent / Guardian Phone</label>
                   <input
                     type="tel"
                     className="cap-form-input"

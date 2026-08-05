@@ -51,14 +51,7 @@ const ALLOWED_FIELDS: Record<Kind, string[]> = {
   // confusing, or missing. Name and email are optional on purpose: making
   // people identify themselves is the fastest way to stop hearing about the
   // things they find embarrassing to ask about.
-  site_feedback: [
-    "topic",
-    "page",
-    "message",
-    "name",
-    "email",
-    "role",
-  ],
+  site_feedback: ["topic", "page", "message", "name", "email", "role"],
   team_registration: [
     "manager_first_name",
     "manager_last_name",
@@ -90,6 +83,7 @@ const ALLOWED_FIELDS: Record<Kind, string[]> = {
     "asst_first_name",
     "asst_last_name",
     "asst_phone",
+    "asst_email",
     "agreed_to_terms",
     "notes",
   ],
@@ -245,8 +239,7 @@ export async function POST(req: Request) {
   // intentionally excluded for /api/* (see PRELAUNCH_AUDIT Fix #2),
   // so the `x-tenant-id` header middleware injects on page routes
   // is NEVER present here. Same pattern as /api/schedule.ics.
-  const host =
-    h.get("x-forwarded-host") ?? h.get("host") ?? "";
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
   const parsed = parseHost(host);
   const tenant = await resolveTenant(parsed);
   const tenantId = tenant?.id ?? null;
@@ -255,8 +248,7 @@ export async function POST(req: Request) {
   }
 
   // Rate limit per IP (best-effort).
-  const ip =
-    h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   const now = Date.now();
   // CHECK ONLY here — do not increment. A rejected attempt (missing field,
   // honeypot, bad JSON) must not burn a legitimate coach's budget, so the
@@ -422,7 +414,10 @@ export async function POST(req: Request) {
         // No EMAIL_NOTIFY configured, so nobody was told. Say so on the
         // record rather than looking like it succeeded.
         await ref.set(
-          { office_email_sent: false, office_email_error: "no notify address configured" },
+          {
+            office_email_sent: false,
+            office_email_error: "no notify address configured",
+          },
           { merge: true },
         );
       }
@@ -433,14 +428,16 @@ export async function POST(req: Request) {
       const reason = err instanceof Error ? err.message : "unknown error";
       console.error("[league-form] office notification failed", reason);
       await ref
-        .set({ office_email_sent: false, office_email_error: reason }, { merge: true })
+        .set(
+          { office_email_sent: false, office_email_error: reason },
+          { merge: true },
+        )
         .catch(() => {});
     }
   } else {
     // Other tenants/kinds: best-effort confirmation email, fire-and-forget.
     const cfg = tenant?.config as
-      | { name?: string; abbrev?: string }
-      | undefined;
+      { name?: string; abbrev?: string } | undefined;
     void sendRegistrationEmails(
       tenantId,
       body.kind,
@@ -473,6 +470,11 @@ async function sendCoachCodeEmail(
     .filter(Boolean)
     .join(" ");
   const team = c("team_name");
+  // The assistant coach gets the code too, which is what the registration form
+  // promises them. Deduped in case the same address was typed twice.
+  const asst = c("asst_email");
+  const recipients = [email];
+  if (asst && asst.toLowerCase() !== email.toLowerCase()) recipients.push(asst);
 
   // No code means provisioning failed upstream. Still confirm the
   // registration, but do not promise a code we cannot supply.
@@ -488,19 +490,21 @@ async function sendCoachCodeEmail(
     : `<p>Your team's sign-in code is being set up. The league office will send ` +
       `it shortly. If you don't hear back in a day or two, just reply here.</p>`;
 
-  await sendEmail({
-    to: email,
-    subject: `Welcome to COYBL${team ? ` — ${team}` : ""}`,
-    html:
-      `<p>Hi ${esc(who) || "Coach"},</p>` +
-      `<p>Thanks for registering${team ? ` <strong>${esc(team)}</strong>` : ""} with the ` +
-      `Central Ohio Youth Baseball League. We've got your registration.</p>` +
-      codeBlock +
-      `<p>From there you can post your games, enter scores, log pitch counts, and upload your team logo.</p>` +
-      `<p>A league director will confirm your division shortly. Questions? Just reply to this email.</p>` +
-      `<p>— COYBL</p>`,
-    replyTo: notifyAddress() ?? undefined,
-  });
+  for (const to of recipients) {
+    await sendEmail({
+      to,
+      subject: `Welcome to COYBL${team ? ` — ${team}` : ""}`,
+      html:
+        `<p>Hi ${esc(who) || "Coach"},</p>` +
+        `<p>Thanks for registering${team ? ` <strong>${esc(team)}</strong>` : ""} with the ` +
+        `Central Ohio Youth Baseball League. We've got your registration.</p>` +
+        codeBlock +
+        `<p>From there you can post your games, enter scores, log pitch counts, and upload your team logo.</p>` +
+        `<p>A league director will confirm your division shortly. Questions? Just reply to this email.</p>` +
+        `<p>— COYBL</p>`,
+      replyTo: notifyAddress() ?? undefined,
+    });
+  }
 }
 
 async function sendRegistrationEmails(
@@ -558,7 +562,9 @@ async function sendRegistrationEmails(
   const team = c("team_name");
   const division = c("division");
   const label =
-    kind === "player_registration" ? "Player registration" : "Team registration";
+    kind === "player_registration"
+      ? "Player registration"
+      : "Team registration";
 
   // 1) Confirmation to the registrant.
   if (email) {

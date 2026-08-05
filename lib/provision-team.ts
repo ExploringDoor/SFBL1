@@ -135,22 +135,44 @@ export async function provisionCoyblTeam(
     const who = [str("manager_first_name"), str("manager_last_name")]
       .filter(Boolean)
       .join(" ");
+    // Head coach first, then the assistant when one was given. Both land in
+    // managers[], which is what the Captains view lists, what the payment
+    // reminder writes to, and who gets the team's sign-in code — so naming an
+    // assistant on the form actually gives them access rather than just
+    // recording a name nobody uses.
+    const managers: {
+      name: string;
+      email: string;
+      phone: string;
+      role: string;
+      source: string;
+    }[] = [];
     if (email || who) {
+      managers.push({
+        name: who || email,
+        email,
+        phone: str("phone"),
+        role: "head coach",
+        source: "registration",
+      });
+    }
+    const asstEmail = str("asst_email");
+    const asstWho = [str("asst_first_name"), str("asst_last_name")]
+      .filter(Boolean)
+      .join(" ");
+    if (asstEmail || asstWho) {
+      managers.push({
+        name: asstWho || asstEmail,
+        email: asstEmail,
+        phone: str("asst_phone"),
+        role: "assistant coach",
+        source: "registration",
+      });
+    }
+    if (managers.length > 0) {
       await db
         .doc(`leagues/${leagueId}/teams/${teamId}/_private/contact`)
-        .set(
-          {
-            managers: [
-              {
-                name: who || email,
-                email,
-                phone: str("phone"),
-                source: "registration",
-              },
-            ],
-          },
-          { merge: true },
-        );
+        .set({ managers }, { merge: true });
     }
   } catch (err) {
     console.error("[provision-team] could not save the coach contact", err);

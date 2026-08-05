@@ -225,6 +225,14 @@ const COYBL_FIELDS: FormField[] = [
   { name: "asst_first_name", label: "Assistant Coach First Name", type: "text", required: true, width: "half" },
   { name: "asst_last_name", label: "Assistant Coach Last Name", type: "text", required: true, width: "half" },
   { name: "asst_phone", label: "Assistant Coach Phone", type: "tel", required: true, width: "half" },
+  {
+    name: "asst_email",
+    label: "Assistant Coach Email Address",
+    type: "email",
+    required: true,
+    width: "half",
+    help: "They'll get the team's sign-in code too, so either of you can post games and enter scores.",
+  },
   // team_logo (optional) and notes (optional) intentionally left NOT required:
   // requiring a file upload would block a team that has no logo file ready,
   // and "anything else?" is a genuine catch-all. Flagged to Adam/Doug.
