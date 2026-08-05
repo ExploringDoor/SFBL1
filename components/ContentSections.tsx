@@ -39,12 +39,38 @@ export interface ParsedContent {
   body: string;
 }
 
+/** Heading text is pulled OUT of the HTML and rendered by React as a plain
+ *  string, so any entity still in it gets escaped a second time: "&amp;"
+ *  reached the screen as literal "&amp;". Decoding here is what makes a
+ *  heading like "8. Your schedule & calendar sync" read correctly.
+ *
+ *  Deliberately narrow: this runs on text that has already had its tags
+ *  stripped and is rendered as a React child, never as HTML, so decoding
+ *  cannot reintroduce markup. */
+function decodeEntities(s: string): string {
+  return s
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&rsquo;/g, "\u2019")
+    .replace(/&lsquo;/g, "\u2018")
+    .replace(/&ldquo;/g, "\u201c")
+    .replace(/&rdquo;/g, "\u201d")
+    .replace(/&mdash;/g, "\u2014")
+    .replace(/&ndash;/g, "\u2013")
+    .replace(/&nbsp;/g, "\u00a0")
+    .replace(/&rarr;/g, "\u2192")
+    // &amp; LAST, so "&amp;lt;" decodes to "&lt;" and not to "<".
+    .replace(/&amp;/g, "&");
+}
+
 /** Pull a leading <h1> off the top so the page does not print its title twice
  *  (once from the route's own heading, once from the markdown). */
 export function extractLeadingH1(html: string): ParsedContent {
   const m = html.match(/^\s*<h1[^>]*>([\s\S]*?)<\/h1>/i);
   if (!m) return { title: null, body: html };
-  const title = m[1]!.replace(/<[^>]+>/g, "").trim();
+  const title = decodeEntities(m[1]!.replace(/<[^>]+>/g, "")).trim();
   return { title: title || null, body: html.slice(m[0].length) };
 }
 
@@ -61,7 +87,7 @@ function splitSections(html: string) {
   let m: RegExpExecArray | null;
   while ((m = re.exec(html))) {
     heads.push({
-      text: m[1]!.replace(/<[^>]+>/g, "").trim(),
+      text: decodeEntities(m[1]!.replace(/<[^>]+>/g, "")).trim(),
       start: m.index,
       end: m.index + m[0].length,
     });
