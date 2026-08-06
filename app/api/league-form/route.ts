@@ -48,6 +48,11 @@ interface SubmissionBody {
 // keep payloads tight and prevent random bot fields ending up in
 // Firestore.
 const ALLOWED_FIELDS: Record<Kind, string[]> = {
+  // NOT REACHABLE: Doug decided against a digital waiver on 2026-08-06 and
+  // /waiver was removed. The kind stays registered so nothing breaks if it is
+  // ever brought back, and so any submission made before removal still reads
+  // in the admin panel.
+  //
   // Parent-signed liability release, one per PLAYER. Distinct from
   // team_waiver, which is SFBL's adult model: one manager signing for a whole
   // roster of over-18s. A parent can only release on behalf of their own
