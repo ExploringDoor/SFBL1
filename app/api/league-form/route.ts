@@ -35,7 +35,8 @@ type Kind =
   | "umpire_evaluation"
   | "alerts_signup"
   | "player_ad"
-  | "site_feedback";
+  | "site_feedback"
+  | "player_waiver";
 
 interface SubmissionBody {
   kind: Kind;
@@ -47,6 +48,29 @@ interface SubmissionBody {
 // keep payloads tight and prevent random bot fields ending up in
 // Firestore.
 const ALLOWED_FIELDS: Record<Kind, string[]> = {
+  // Parent-signed liability release, one per PLAYER. Distinct from
+  // team_waiver, which is SFBL's adult model: one manager signing for a whole
+  // roster of over-18s. A parent can only release on behalf of their own
+  // child, so this is per player and the signer identifies themselves and
+  // their relationship to that child.
+  player_waiver: [
+    "player_first_name",
+    "player_last_name",
+    "player_dob",
+    "team_name",
+    "age_group",
+    "parent_first_name",
+    "parent_last_name",
+    "relationship",
+    "email",
+    "phone",
+    "emergency_name",
+    "emergency_phone",
+    "medical_notes",
+    "signature",
+    "signature_date",
+    "agreed_to_terms",
+  ],
   // "Suggest a change" — anyone using the site can report something broken,
   // confusing, or missing. Name and email are optional on purpose: making
   // people identify themselves is the fastest way to stop hearing about the
@@ -161,6 +185,19 @@ const ALLOWED_FIELDS: Record<Kind, string[]> = {
 };
 
 const REQUIRED: Record<Kind, string[]> = {
+  player_waiver: [
+    "player_first_name",
+    "player_last_name",
+    "player_dob",
+    "team_name",
+    "parent_first_name",
+    "parent_last_name",
+    "relationship",
+    "email",
+    "phone",
+    "signature",
+    "agreed_to_terms",
+  ],
   site_feedback: ["message"],
   team_registration: [
     // division/age_group are validated client-side per tenant (SFBL uses

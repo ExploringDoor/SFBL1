@@ -22,13 +22,15 @@ type Kind =
   | "team_registration"
   | "team_waiver"
   | "umpire_evaluation"
-  | "site_feedback";
+  | "site_feedback"
+  | "player_waiver";
 
 const KIND_TABS: { key: Kind; label: string }[] = [
   { key: "player_registration", label: "Player registration" },
   { key: "team_registration", label: "Team registration" },
   { key: "team_waiver", label: "Team waiver" },
   { key: "umpire_evaluation", label: "Umpire evaluation" },
+  { key: "player_waiver", label: "Signed waivers" },
   { key: "site_feedback", label: "Site feedback" },
 ];
 
@@ -965,6 +967,14 @@ function summaryLine(kind: Kind, s: Submission): string {
     const date = s.game_date ?? "";
     const matchup = `${s.visiting_team ?? "?"} @ ${s.home_team ?? "?"}`;
     return `${matchup}${date ? ` (${date})` : ""}${ev ? ` — ${ev}` : ""}`;
+  }
+  if (kind === "player_waiver") {
+    const player = `${s.player_first_name ?? ""} ${s.player_last_name ?? ""}`.trim();
+    const parent = `${s.parent_first_name ?? ""} ${s.parent_last_name ?? ""}`.trim();
+    const team = String(s.team_name ?? "");
+    return [player || "(unnamed player)", team && `· ${team}`, parent && `· signed by ${parent}`]
+      .filter(Boolean)
+      .join(" ");
   }
   if (kind === "site_feedback") {
     // Lead with what they said, not who said it: the office is triaging by

@@ -46,6 +46,7 @@ interface Health {
     team_waiver?: number;
     umpire_evaluation?: number;
     site_feedback?: number;
+    player_waiver?: number;
   };
   site_visits?: {
     total: number;
@@ -145,6 +146,7 @@ export function LeagueHealthDashboard({ leagueId, user, onReviewForms }: Props) 
                     [health.pending_forms.team_waiver, "team waiver"],
                     [health.pending_forms.umpire_evaluation, "umpire eval"],
                     [health.pending_forms.site_feedback, "site feedback"],
+                    [health.pending_forms.player_waiver, "signed waivers"],
                   ] as [number | undefined, string][]
                 )
                   .filter(([n]) => (n ?? 0) > 0)
