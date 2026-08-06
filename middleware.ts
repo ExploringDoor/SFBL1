@@ -44,8 +44,31 @@ function asciiSafeJson(obj: unknown): string {
   );
 }
 
+// Domains that no longer serve this platform and must hand off elsewhere.
+//
+// COYBL moved to coybl.org on 2026-08-06 and Doug wants the OLD SportsEngine
+// site to live at coybl.net. SportsEngine serves by hostname, so an A record
+// pointed at them would not resolve to the right site — a redirect is the only
+// way to do it from our side.
+//
+// Runs FIRST, before tenant resolution, so it does not matter that coybl.net
+// is still aliased to the coybl tenant.
+const DOMAIN_HANDOFF: Record<string, string> = {
+  "coybl.net": "https://coybl.sportngin.com",
+  "www.coybl.net": "https://coybl.sportngin.com",
+};
+
 export async function middleware(req: NextRequest) {
   const host = req.headers.get("host") ?? "";
+
+  const handoff = DOMAIN_HANDOFF[host.split(":")[0]!.toLowerCase()];
+  if (handoff) {
+    // 307, not 308: this is a decision the league could reverse, and a
+    // permanent redirect would stay cached in browsers long after we changed
+    // our minds.
+    return NextResponse.redirect(handoff + req.nextUrl.pathname + req.nextUrl.search, 307);
+  }
+
   const parsed = parseHost(host);
 
   console.log(
