@@ -64,7 +64,7 @@ function CoyblHelp({
         <summary>1. Signing in</summary>
         <div className="help-body">
           <p>
-            Go to <strong>coybl.net/captain</strong>, pick your team from the
+            Go to <strong>coybl.org/captain</strong>, pick your team from the
             list, and type your <strong>5-digit code</strong>.
           </p>
           <p>

@@ -133,8 +133,9 @@ const HOST_ALIAS_BASELINE: Record<string, string> = {
   // COYBL's real domain (registered at GoDaddy, nameservers pointed at
   // Vercel). Apex + www hardcoded on the reliable baseline like SFBL so
   // the tenant resolves without depending on an env var. (Adam, 2026-07.)
-  "coybl.net": "coybl",
-  "www.coybl.net": "coybl",
+  // coybl.net is NOT mapped: since 2026-08-06 it hands off to the old
+  // SportsEngine site in middleware, which runs before tenant resolution.
+  // Leaving the alias here would be misleading rather than harmful.
   // COYBL's ORIGINAL domain, still on SportsEngine as of 2026-08-02
   // (registrar AIT, nameservers ns*.sportnginserver.com). Listed ahead of
   // the DNS cutover so the switch is a pure DNS change with no deploy: these
