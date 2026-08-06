@@ -241,7 +241,12 @@ const COYBL_FIELDS: FormField[] = [
   {
     name: "agreed_to_terms",
     label:
-      "I confirm that all players and coaches will sign the league liability release before play, and I accept COYBL's terms.",
+      // Adam, 2026-08-06. Replaces a promise that "all players and coaches
+      // will sign the league liability release before play" — a commitment
+      // about a document the site did not hold. The release itself is now a
+      // separate parent-signed form at /waiver, so this confirms the thing a
+      // coach can actually speak for: that his people follow the rules.
+      "I confirm all coaches, players and families will adhere to the rules and policies of COYBL.",
     type: "checkbox",
     required: true,
     width: "full",
