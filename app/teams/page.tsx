@@ -178,33 +178,70 @@ export default async function TeamsPage() {
           functional, not decorative): with 196 teams the one-per-row
           mobile grid is a long scroll, so let users jump to their age. */}
       {hasAge && sections.length > 1 && (
-        <nav
-          aria-label="Jump to age group"
-          style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 22 }}
-        >
+        <nav aria-label="Jump to age group" className="le-agejump">
+          <span className="le-agejump-label">Jump to</span>
           {sections.map((s) => (
             <a
               key={s.ageGroup}
               href={`#age-${s.ageGroup}`}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                minHeight: 44,
-                padding: "8px 16px",
-                borderRadius: 999,
-                border: "1px solid rgba(0,0,0,0.12)",
-                background: "#fff",
-                color: "var(--brand-primary)",
-                fontWeight: 800,
-                fontSize: 14,
-                letterSpacing: "0.04em",
-                textDecoration: "none",
-              }}
+              className="le-agejump-btn"
             >
               {s.ageGroup}
             </a>
           ))}
         </nav>
+      )}
+
+      {/* Nothing to show yet. COYBL hides page titles, so without this the
+          route rendered a completely blank body — which reads as broken
+          rather than empty. Say why it is empty and what happens next. */}
+      {teams.length === 0 && (
+        <div
+          style={{
+            border: "1px dashed var(--rule, rgba(0,0,0,.15))",
+            borderRadius: 12,
+            padding: "40px 24px",
+            textAlign: "center",
+          }}
+        >
+          <h1
+            className="font-display"
+            style={{
+              fontSize: "clamp(26px, 4vw, 38px)",
+              lineHeight: 1.1,
+              color: "var(--text-strong)",
+              margin: "0 0 10px",
+            }}
+          >
+            Teams appear here as coaches register
+          </h1>
+          <p style={{ color: "var(--muted)", maxWidth: 460, margin: "0 auto" }}>
+            Every team shows up on this page as soon as its coach signs up, and
+            the league adds divisions shortly after.
+          </p>
+          {config?.flags?.registration_open && (
+            <p style={{ marginTop: 20 }}>
+              <Link
+                href="/team-registration"
+                className="le-cap-btn-primary"
+                style={{
+                  display: "inline-block",
+                  padding: "12px 26px",
+                  background: "var(--brand-primary)",
+                  color: "#fff",
+                  borderRadius: 10,
+                  fontWeight: 800,
+                  letterSpacing: ".04em",
+                  textTransform: "uppercase",
+                  textDecoration: "none",
+                  fontSize: 14,
+                }}
+              >
+                Register your team
+              </Link>
+            </p>
+          )}
+        </div>
       )}
 
       <div className="space-y-10">

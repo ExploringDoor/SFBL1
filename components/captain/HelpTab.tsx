@@ -290,6 +290,11 @@ function CoyblHelp({
             If something on the site looks broken rather than confusing, say so
             and the office will pass it on.
           </p>
+          <p>
+            You can also{" "}
+            <a href="/feedback">send a question or concern to the league here</a>
+            . It takes a second and you don&rsquo;t have to leave your name.
+          </p>
         </div>
       </details>
     </div>
