@@ -167,9 +167,7 @@ export function CaptainsRoster({
                 </span>
                 <span>
                   {r.code ? (
-                    <span className="font-mono font-semibold tracking-widest text-slate-900">
-                      {r.code}
-                    </span>
+                    <CopyCode code={r.code} />
                   ) : r.hasPassword ? (
                     <span className="text-emerald-600">✓ set</span>
                   ) : (
@@ -214,5 +212,47 @@ function Card({ label, value }: { label: string; value: string }) {
       </p>
       <p className="mt-1 text-lg font-bold text-slate-900">{value}</p>
     </div>
+  );
+}
+
+/** The team's sign-in code with one-tap copy.
+ *
+ *  The office reads these out over the phone constantly — a coach calls,
+ *  can't find their email, and needs the code right now. Selecting five
+ *  monospaced characters with a mouse and getting it exactly right is
+ *  needless friction, so make the code itself the button. */
+function CopyCode({ code }: { code: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      title="Click to copy"
+      onClick={async (e) => {
+        e.stopPropagation(); // the row itself opens the edit panel
+        try {
+          await navigator.clipboard.writeText(code);
+        } catch {
+          return; // clipboard blocked (insecure context) — leave the code visible
+        }
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1400);
+      }}
+      className="font-mono font-semibold tracking-widest text-slate-900 rounded px-1.5 py-0.5 -mx-1.5 hover:bg-slate-100 active:bg-slate-200 cursor-pointer"
+      style={{ border: 0, background: copied ? "#dcfce7" : "transparent" }}
+    >
+      {code}
+      <span
+        style={{
+          fontFamily: "system-ui, sans-serif",
+          fontSize: 10,
+          letterSpacing: 0,
+          marginLeft: 6,
+          color: copied ? "#15803d" : "#94a3b8",
+          fontWeight: 600,
+        }}
+      >
+        {copied ? "copied" : "copy"}
+      </span>
+    </button>
   );
 }

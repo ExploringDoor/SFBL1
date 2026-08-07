@@ -146,13 +146,6 @@ function CoyblHelp({
             home coach to. Two coaches posting the same game is the one thing
             that makes a mess here.
           </p>
-          <p>
-            While you are on that tab, use the{" "}
-            <strong>Google Calendar</strong> or <strong>Apple Calendar</strong>{" "}
-            buttons once. Your games drop into the calendar app on your phone
-            and stay right when a game moves. <strong>Copy URL</strong> gives
-            you the same link to hand your parents.
-          </p>
         </div>
       </details>
 

@@ -48,6 +48,13 @@ interface ScheduleTabProps {
   teamId: string;
 }
 
+/** Calendar subscription is off for COYBL: Google Calendar sync was never
+ *  switched on for them, so the buttons promised something the league does
+ *  not actually offer. */
+function showCalendarSubscribe(leagueId: string) {
+  return leagueId !== "coybl";
+}
+
 export function ScheduleTab({ leagueId, teamId }: ScheduleTabProps) {
   const user = useUser();
   const [games, setGames] = useState<GameRow[]>([]);
@@ -236,9 +243,7 @@ export function ScheduleTab({ leagueId, teamId }: ScheduleTabProps) {
       <div className="cap-section-head">
         <h2 className="cap-section-title">Schedule</h2>
         <p className="cap-section-sub">
-          Your team's upcoming + past games. Subscribe to your team's
-          schedule so the calendar app on your phone updates as games
-          shift.
+          Your team's upcoming and past games.
         </p>
       </div>
 
@@ -251,7 +256,7 @@ export function ScheduleTab({ leagueId, teamId }: ScheduleTabProps) {
           alignItems: "center",
         }}
       >
-        <SubscribeCalendar teamId={teamId} />
+        {showCalendarSubscribe(leagueId) && <SubscribeCalendar teamId={teamId} />}
         {canAddGame && !showAdd && (
           <button
             type="button"

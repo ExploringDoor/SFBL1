@@ -6,6 +6,12 @@ import * as path from "node:path";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import {
+  buildTeamHistory,
+  type ArchiveBlock,
+  type ChampionsFile,
+  type TeamHistory,
+} from "@/lib/team-history";
 import { notFound } from "next/navigation";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { TeamBadge } from "@/components/TeamBadge";
@@ -126,6 +132,18 @@ export default async function TeamDetailPage({
   const abbrev = t.abbrev ? String(t.abbrev) : undefined;
   const color = t.color ? String(t.color) : undefined;
   const logoUrl = t.logo_url ? String(t.logo_url) : null;
+  // Only http(s) is accepted. A team doc is admin-editable, and rendering an
+  // unvalidated string into href would allow a javascript: URL.
+  const gamechangerUrl = (() => {
+    const raw = String(t.gamechanger_url ?? "").trim();
+    if (!raw) return null;
+    try {
+      const u = new URL(raw);
+      return u.protocol === "https:" || u.protocol === "http:" ? u.toString() : null;
+    } catch {
+      return null;
+    }
+  })();
 
   // Count all-time championships from the historical-standings
   // archive — every playoff block where this team finished
@@ -133,6 +151,11 @@ export default async function TeamDetailPage({
   // Match by exact team name (case-insensitive). Tenants without an
   // archive (or franchises that never won) just get 0 → no pill.
   const championships = countChampionships(tenantId, teamName);
+  // Full franchise history from the archive. countChampionships only reads
+  // playoff blocks, which leagues that publish a printed champion banner (and
+  // no playoff standings) simply do not have.
+  const history = loadTeamHistory(tenantId, teamName);
+  const titleCount = Math.max(championships, history.titles.length);
 
   const teamNames: Record<string, { name: string; abbrev?: string; color?: string; logoUrl?: string | null }> = {};
   for (const d of teamsSnap.docs) {
@@ -506,6 +529,34 @@ export default async function TeamDetailPage({
               >
                 {teamName}
               </h1>
+              {/* Teams that keep their book in GameChanger link straight to it.
+                  Set per team; absent → nothing renders, so tenants that do not
+                  use GC are unaffected. rel=noopener because it opens a new tab
+                  to a third-party site. */}
+              {gamechangerUrl && (
+                <a
+                  href={gamechangerUrl}
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  className="le-gc-link"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="15"
+                    height="15"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M9 11a5 5 0 0 1 7 0l3 3a5 5 0 0 1-7 7l-1-1" />
+                    <path d="M15 13a5 5 0 0 1-7 0l-3-3a5 5 0 0 1 7-7l1 1" />
+                  </svg>
+                  Live stats on GameChanger
+                </a>
+              )}
               {/* Stats pill row — only shown when there's been at
                   least one game played. Pre-launch shows a "Season
                   starts soon" pill instead so the page doesn't
@@ -552,10 +603,10 @@ export default async function TeamDetailPage({
                       }
                     />
                   )}
-                  {championships > 0 && (
+                  {titleCount > 0 && (
                     <HeroPill
-                      primary={String(championships)}
-                      label={`Title${championships === 1 ? "" : "s"} 🏆`}
+                      primary={String(titleCount)}
+                      label={`Title${titleCount === 1 ? "" : "s"}`}
                     />
                   )}
                 </div>
@@ -590,10 +641,10 @@ export default async function TeamDetailPage({
                       visitor seeing "4 Titles 🏆" before the first
                       game has been played gets a real read on the
                       franchise's history. */}
-                  {championships > 0 && (
+                  {titleCount > 0 && (
                     <HeroPill
-                      primary={String(championships)}
-                      label={`Title${championships === 1 ? "" : "s"} 🏆`}
+                      primary={String(titleCount)}
+                      label={`Title${titleCount === 1 ? "" : "s"}`}
                     />
                   )}
                 </div>
@@ -604,7 +655,7 @@ export default async function TeamDetailPage({
                   today — but the only games in it right now are last Summer's,
                   so a coach who subscribed would pull a calendar of finished
                   games. Delete this condition once Fall games are published. */}
-              {tenantId !== "island" && (
+              {tenantId !== "island" && tenantId !== "coybl" && (
                 <div style={{ marginTop: 14 }}>
                   <SubscribeCalendar teamId={params.teamId} />
                 </div>
@@ -920,6 +971,8 @@ export default async function TeamDetailPage({
           </>
         )}
       </section>
+
+      {history.seasons.length > 0 && <FranchiseHistory h={history} />}
     </main>
   );
 }
@@ -1468,6 +1521,26 @@ function findPlayerLine(arr: unknown, playerId: string) {
 //
 // Returns 0 if the archive doesn't exist (other tenants) or the
 // team name doesn't appear in any playoff block.
+/** Read both archive files and build this team's franchise history. Missing
+ *  files yield an empty history, so tenants without an archive are unaffected. */
+function loadTeamHistory(tenantId: string, teamName: string): TeamHistory {
+  const read = <T,>(name: string): T[] => {
+    const f = path.resolve(process.cwd(), `data/${tenantId}/${name}`);
+    if (!fs.existsSync(f)) return [];
+    try {
+      const v = JSON.parse(fs.readFileSync(f, "utf8"));
+      return Array.isArray(v) ? (v as T[]) : [];
+    } catch {
+      return [];
+    }
+  };
+  return buildTeamHistory(
+    teamName,
+    read<ArchiveBlock>("historical-standings.json"),
+    read<ChampionsFile>("champions.json"),
+  );
+}
+
 function countChampionships(tenantId: string, teamName: string): number {
   const file = path.resolve(
     process.cwd(),
@@ -1504,4 +1577,96 @@ function countChampionships(tenantId: string, teamName: string): number {
     if (top.team.trim().toLowerCase() === lowered) count++;
   }
   return count;
+}
+
+
+/** Season-by-season franchise history: titles, runner-up finishes, all-time
+ *  record, and every season the archive records for this club. Rendered only
+ *  when the team actually appears in the archive. */
+function FranchiseHistory({ h }: { h: TeamHistory }) {
+  const { totals } = h;
+
+  // A club fields several age-group teams in the same year, so a flat table
+  // mixed 10U and 12U rows into a jumble. Group by year: each season is a
+  // block, its teams listed underneath, newest first. Reads as a timeline.
+  const byYear = new Map<string, typeof h.seasons>();
+  for (const s of h.seasons) {
+    if (!byYear.has(s.season)) byYear.set(s.season, []);
+    byYear.get(s.season)!.push(s);
+  }
+  const years = [...byYear.entries()].sort((a, b) => b[0].localeCompare(a[0]));
+
+  return (
+    <section className="container th-wrap">
+      <header className="th-hd">
+        <p className="th-kick">Archive</p>
+        <h2 className="th-title">Franchise History</h2>
+      </header>
+
+      <div className="th-stats">
+        <Stat v={String(totals.seasons)} l={totals.seasons === 1 ? "Season" : "Seasons"} />
+        <Stat v={`${totals.w}-${totals.l}${totals.t ? `-${totals.t}` : ""}`} l="All-time" />
+        <Stat v={totals.pct} l="Win pct" />
+        <Stat v={String(h.titles.length)} l={h.titles.length === 1 ? "Title" : "Titles"} />
+      </div>
+
+      {h.titles.length > 0 && (
+        <div className="th-honours">
+          <span className="th-honours-lbl">Championships</span>
+          <span className="th-chips">
+            {h.titles.map((t, i) => (
+              <span className="th-chip th-chip-win" key={i}>
+                {t.season} · {t.division}
+                {t.disputed && <em className="th-chip-note">unconfirmed</em>}
+              </span>
+            ))}
+          </span>
+        </div>
+      )}
+
+      <div className="th-timeline">
+        {years.map(([year, rows]) => (
+          <div className="th-yr" key={year}>
+            <div className="th-yr-year">{year}</div>
+            <div className="th-yr-list">
+              {rows
+                .slice()
+                .sort((a, b) => a.division.localeCompare(b.division))
+                .map((s, i) => (
+                  <div
+                    key={i}
+                    className={"th-yr-row" + (s.champion ? " th-yr-row-win" : "")}
+                  >
+                    <span className="th-yr-div">{s.division}</span>
+                    <span className="th-yr-rec">
+                      {s.w}-{s.l}
+                      {s.t ? `-${s.t}` : ""}
+                    </span>
+                    <span className="th-yr-fin">
+                      {ordinal(s.place)}
+                      <em> of {s.outOf}</em>
+                    </span>
+                    <span className="th-yr-tag">
+                      {s.champion && (
+                        <span className="th-badge th-badge-win">Champion</span>
+                      )}
+                      {s.runnerUp && <span className="th-badge">Runner-up</span>}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Stat({ v, l }: { v: string; l: string }) {
+  return (
+    <div className="th-stat">
+      <div className="th-stat-v">{v}</div>
+      <div className="th-stat-l">{l}</div>
+    </div>
+  );
 }
