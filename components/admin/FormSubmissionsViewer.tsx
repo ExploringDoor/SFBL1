@@ -1336,6 +1336,39 @@ function FieldValue({
     );
   }
   if (typeof value === "string") {
+    // Uploaded images are stored as base64 data URIs. Printed as text they
+    // dump ~50KB of gibberish across the panel and bury every field under it.
+    // Show the picture.
+    if (/^data:image\//.test(value)) {
+      const kb = Math.round((value.length * 0.75) / 1024);
+      return (
+        <span className="inline-flex items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={value}
+            alt="Uploaded image"
+            style={{
+              maxWidth: 96,
+              maxHeight: 96,
+              objectFit: "contain",
+              borderRadius: 6,
+              border: "1px solid #cbd5e1",
+              background: "#fff",
+              padding: 2,
+            }}
+          />
+          <a
+            href={value}
+            target="_blank"
+            rel="noreferrer"
+            className="text-blue-700 underline-offset-2 hover:underline"
+          >
+            View full size ({kb} KB)
+          </a>
+        </span>
+      );
+    }
+
     // Coded answers are stored as machine values but must READ as English.
     // "option-1" told the office nothing about which fee a team owes.
     const CODED: Record<string, Record<string, string>> = {
