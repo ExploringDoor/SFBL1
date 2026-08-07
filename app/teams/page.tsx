@@ -249,7 +249,11 @@ export default async function TeamsPage() {
           <section
             key={section.ageGroup ?? "all"}
             id={section.ageGroup ? `age-${section.ageGroup}` : undefined}
-            style={{ scrollMarginTop: 16 }}
+            style={{
+              // Sticky nav: see the matching note on the standings page.
+              scrollMarginTop:
+                "calc(var(--header-height, 62px) + 16px + env(safe-area-inset-top, 0px))",
+            }}
           >
             {section.ageGroup && (
               <h2

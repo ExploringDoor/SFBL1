@@ -428,7 +428,12 @@ body {
   font-size: 28px;
   text-transform: uppercase;
   letter-spacing: -0.01em;
-  color: #1a1a1a;
+  /* Token, not a literal. Hardcoded #1a1a1a put this heading at 1.21:1 on
+     Island's black page — invisible — while the .cap-section-sub right below
+     it uses var(--muted) and flipped correctly, so a coach saw a floating
+     subtitle with no heading. Every other tenant resolves --text-strong to
+     the same #1a1a1a, so this is a no-op for them. */
+  color: var(--text-strong, #1a1a1a);
   margin: 0 0 4px;
 }
 
@@ -522,7 +527,12 @@ body {
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 12px;
-  overflow: hidden;
+  /* overflow:hidden CLIPPED the roster table on a phone — columns past the
+     viewport were simply unreachable, with no scrollbar to hint at them.
+     overflow-x:auto lets it scroll; overflow-y:hidden keeps the rounded
+     corners clipping as before. */
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .cap-roster-tbl {
@@ -2400,7 +2410,10 @@ body {
   font-size: 22px;
   text-transform: uppercase;
   letter-spacing: 0;
-  color: #1a1a1a;
+  /* Same fix as .cap-section-title above. This one is worse: it titles
+     "Recent Games", "Upcoming Games" and "Roster" on the captain DASHBOARD,
+     the first screen a coach sees after signing in. */
+  color: var(--text-strong, #1a1a1a);
   margin: 0 0 14px;
 }
 
@@ -6567,7 +6580,10 @@ select:focus-visible {
   font-weight: 800;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #6b7280;
+  /* Token, not a literal grey. #6b7280 measured 4.34:1 on Island's black page,
+     just under the 4.5 that 12px needs. --muted follows the tenant: white at
+     64% on Island (~8:1), and the same grey everywhere else. */
+  color: var(--muted, #6b7280);
   margin-right: 2px;
 }
 .le-agejump-btn {

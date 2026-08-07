@@ -172,29 +172,13 @@ export default async function StandingsPage() {
         // with its own divisions.
         <>
           {ageSections.length > 1 && (
-            <nav
-              aria-label="Jump to age group"
-              style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 22 }}
-            >
+            <nav aria-label="Jump to age group" className="le-agejump">
+              <span className="le-agejump-label">Jump to</span>
               {ageSections.map((s) => (
                 <a
                   key={s.ageGroup}
                   href={`#age-${s.ageGroup}`}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    minHeight: 44,
-                    boxSizing: "border-box",
-                    padding: "6px 14px",
-                    borderRadius: 999,
-                    border: "1px solid rgba(0,0,0,0.12)",
-                    background: "#fff",
-                    color: "var(--brand-primary)",
-                    fontWeight: 800,
-                    fontSize: 13,
-                    letterSpacing: "0.04em",
-                    textDecoration: "none",
-                  }}
+                  className="le-agejump-btn"
                 >
                   {s.ageGroup}
                 </a>
@@ -205,7 +189,14 @@ export default async function StandingsPage() {
             <section
               key={s.ageGroup}
               id={`age-${s.ageGroup}`}
-              style={{ marginBottom: 36, scrollMarginTop: 16 }}
+              style={{
+              marginBottom: 36,
+              // The nav is sticky, so a bare 16 put the age heading UNDER it after
+              // an age-jump — on a phone you tapped "12U" and landed on rows with
+              // no idea which group you were in.
+              scrollMarginTop:
+                "calc(var(--header-height, 62px) + 16px + env(safe-area-inset-top, 0px))",
+            }}
             >
               <h2
                 className="font-barlow"

@@ -220,8 +220,8 @@ html.tenant-island .st-age-select option {
  * and React emits `background:#fff` with no space. */
 html.tenant-island .scores-week-summary-num,
 html.tenant-island .le-home-stat-val,
-html.tenant-island [style*="color: var(--brand-primary)"]:not(.le-gc-card *):not(.le-div-card *):not(.le-content-card *):not([style*="background:#fff"]):not([style*="background: #fff"]):not([style*="background:white"]):not([style*="background: white"]):not([style*="background:var(--card"]):not([style*="background: var(--card"]):not([style*="background:var(--bg2"]):not([style*="background: var(--bg2"]),
-html.tenant-island [style*="color:var(--brand-primary)"]:not(.le-gc-card *):not(.le-div-card *):not(.le-content-card *):not([style*="background:#fff"]):not([style*="background: #fff"]):not([style*="background:white"]):not([style*="background: white"]):not([style*="background:var(--card"]):not([style*="background: var(--card"]):not([style*="background:var(--bg2"]):not([style*="background: var(--bg2"]) {
+html.tenant-island [style*="color: var(--brand-primary)"]:not(.le-gc-card *):not(.le-div-card *):not(.le-content-card *):not(.le-preview-card *):not([style*="background:#fff"]):not([style*="background: #fff"]):not([style*="background:white"]):not([style*="background: white"]):not([style*="background:var(--card"]):not([style*="background: var(--card"]):not([style*="background:var(--bg2"]):not([style*="background: var(--bg2"]),
+html.tenant-island [style*="color:var(--brand-primary)"]:not(.le-gc-card *):not(.le-div-card *):not(.le-content-card *):not(.le-preview-card *):not([style*="background:#fff"]):not([style*="background: #fff"]):not([style*="background:white"]):not([style*="background: white"]):not([style*="background:var(--card"]):not([style*="background: var(--card"]):not([style*="background:var(--bg2"]):not([style*="background: var(--bg2"]) {
   color: var(--brand-accent, #35afea) !important;
 }
 
@@ -611,4 +611,163 @@ html.tenant-island .le-nav-brand {
   html.tenant-island .le-hamburger {
     display: flex;
   }
+}
+
+/* =============================================================================
+ * MOBILE AUDIT REMEDIATION — 2026-08-03
+ *
+ * Adam reported that on a phone "you can't even see things correctly". Every
+ * page was measured at 375px and the source was swept in parallel; 53 defects
+ * were confirmed. The four worst were fixed at their source above. This block
+ * handles the rest, grouped by mechanism rather than by page, because they are
+ * the same few bugs repeated.
+ * ========================================================================== */
+
+/* ---- 1. light surfaces the restore list missed --------------------------
+ * Each of these paints a light background from a CLASS, so no [style*=]
+ * matcher and no .bg-white entry can reach it, and their text kept the
+ * flipped WHITE tokens. Adding them to the restore set gives their contents
+ * dark tokens again, exactly like the generated list above.
+ *
+ * .rc-win / .rc-lose are the recap score rows; .bs-cap-tab the box-score tab
+ * strip; .le-form-success the "thanks, we got it" card a coach sees straight
+ * after registering — the last thing that should be blank. */
+html.tenant-island .rc-win,
+html.tenant-island .rc-lose,
+html.tenant-island .rc-row,
+html.tenant-island .bs-cap-tab,
+html.tenant-island .le-form-success,
+html.tenant-island .ssu-card,
+html.tenant-island .bs-cap-score-only-panel,
+html.tenant-island .bs-cap-scoreboard {
+  --text-strong: #1a1a1a;
+  --text-body: #1a1a1a;
+  --muted: rgba(0, 0, 0, 0.56);
+  --muted2: rgba(0, 0, 0, 0.35);
+  --border: rgba(0, 0, 0, 0.10);
+  --border2: rgba(0, 0, 0, 0.18);
+  color: #1a1a1a;
+}
+
+/* Those cards hardcode their own greys/darks rather than reading tokens, so
+ * the block above cannot reach them. Restate against the light surface. */
+html.tenant-island .ssu-title,
+html.tenant-island .bs-recap-p,
+html.tenant-island .rc-score,
+html.tenant-island .bs-cap-score,
+html.tenant-island .bs-cap-team-abbr {
+  color: #1a1a1a;
+}
+html.tenant-island .ssu-sub,
+html.tenant-island .rc-rec,
+html.tenant-island .bs-team-abbr,
+html.tenant-island .bs-cap-dash {
+  color: rgba(0, 0, 0, 0.56);
+}
+html.tenant-island .bs-team-winner .bs-team-abbr {
+  color: #1a1a1a;
+}
+
+/* ---- 2. brand navy sitting directly on the black page -------------------
+ * The mirror image of group 1: text that hardcodes brand navy (#0b2e4f) or
+ * reads --brand-primary from a CLASS, on no background at all. Navy on black
+ * is ~1.4:1. The existing repoint above only catches INLINE styles, so these
+ * class-driven ones were missed. Accent blue reads ~7:1 on black. */
+html.tenant-island .cap-section-h3,
+html.tenant-island .le-home-news-eyebrow,
+html.tenant-island .bs-recap-override h1,
+html.tenant-island .bs-recap-override h2,
+html.tenant-island .bs-recap-override h3,
+html.tenant-island .bs-recap-override strong,
+html.tenant-island .bs-recap-override a,
+html.tenant-island .avail-view-tab,
+html.tenant-island .avail-game-vs,
+html.tenant-island .avail-rsvp-btn {
+  color: var(--brand-accent, #35afea);
+}
+
+/* Same problem expressed as a BORDER rather than text: a navy underline or
+ * active-tab marker is invisible on black, so the selected age group or tab
+ * looked identical to the unselected ones. */
+html.tenant-island .tab-btn.active {
+  border-bottom-color: var(--brand-accent, #35afea);
+}
+html.tenant-island [style*="solid var(--brand-primary)"] {
+  border-color: var(--brand-accent, #35afea) !important;
+}
+/* The active week tab keeps its NAVY fill. Repointing the fill to accent blue
+   put its white label at 2.48:1 — I made this one worse before measuring it.
+   The real complaint was that a navy chip is hard to pick out against the
+   black page, which is a BORDER problem, not a fill one. Accent border, navy
+   fill: the chip is obvious and its label stays at ~12:1. */
+html.tenant-island .dn-slot.active {
+  border-color: var(--brand-accent, #35afea) !important;
+  box-shadow: 0 0 0 1px var(--brand-accent, #35afea);
+}
+
+/* ---- 3. the accent repoint firing on light pills -------------------------
+ * Same bug as the age chips, but this pill declares a translucent NAVY
+ * background — rgba(0,45,114,0.10) — so the light-background :not() guards
+ * cannot match it: it is not a light colour, it is navy at 10% over a white
+ * card. Handled by adding .le-preview-card to the card exclusions on the
+ * repoint itself, above.
+ *
+ * Worth recording why it is done there and not here: a separate override could
+ * not win. The repoint selector now carries eleven :not() clauses, each adding
+ * a class to its specificity, so it scores (0,13,1) — any sane override rule
+ * loses to it. Excluding at the source is the only maintainable way. */
+
+/* The caret on the age/division filter is a bare glyph on the white control;
+ * it took the flipped white token and vanished, leaving a select that did not
+ * look like a select. */
+html.tenant-island .le-age-caret,
+html.tenant-island .le-division-caret {
+  color: rgba(0, 0, 0, 0.56);
+}
+
+/* Loading skeletons are light-grey shimmer bars, invisible on black, so every
+ * page appeared to hang before its content arrived. */
+html.tenant-island .le-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.14) 50%,
+    rgba(255, 255, 255, 0.06) 100%
+  );
+}
+
+/* ---- 4. phone legibility ------------------------------------------------
+ * Island is the only tenant that shows the score ticker on phones, and it was
+ * never designed for that: the date/record/status type is 8-10px, which is
+ * below what anyone can read at arm's length. Bumped for phones only. */
+@media (max-width: 700px) {
+  html.tenant-island .st-datetime {
+    font-size: 10.5px;
+  }
+  html.tenant-island .st-rec,
+  html.tenant-island .st-final {
+    font-size: 11px;
+  }
+  /* The "Full Schedule »" cell and the age filter are both flex-shrink:0, so
+     between them they were taking a third of a 375px bar away from the actual
+     scores. The link is reachable from the nav; the scores are not. */
+  html.tenant-island .st-full {
+    display: none;
+  }
+}
+
+/* ---- 5. tap targets -----------------------------------------------------
+ * Under the 44px Apple and Android both ask for. The hamburger is the worst
+ * offender at 30x24 — it is the ONLY way to reach the nav on a phone. */
+html.tenant-island .le-hamburger {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+html.tenant-island .spn-partner-contact a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
 }
