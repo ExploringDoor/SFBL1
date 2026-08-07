@@ -22,12 +22,15 @@ import { CaptainsRoster } from "@/components/admin/CaptainsRoster";
 import { BulkInviteSection } from "@/components/admin/BulkInviteSection";
 import { BrandingSection } from "@/components/admin/BrandingSection";
 import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
+import { ActivityFeed } from "@/components/admin/ActivityFeed";
 import { FormSubmissionsViewer } from "@/components/admin/FormSubmissionsViewer";
 import { PlayerAdsManager } from "@/components/admin/PlayerAdsManager";
 import { TeamsManager } from "@/components/admin/TeamsManager";
 import { LeagueHealthDashboard } from "@/components/admin/LeagueHealthDashboard";
 import { ScheduleEditor } from "@/components/admin/ScheduleEditor";
 import { ScheduleGenerator } from "@/components/admin/ScheduleGenerator";
+import { ArbiterSync } from "@/components/admin/ArbiterSync";
+import { UmpiresManager } from "@/components/admin/UmpiresManager";
 import { ScoreDisputes } from "@/components/admin/ScoreDisputes";
 import { AlertsManager } from "@/components/admin/AlertsManager";
 import { BroadcastSection } from "@/components/admin/BroadcastSection";
@@ -46,9 +49,12 @@ import { AdminPasswordGate } from "@/components/admin/AdminPasswordGate";
 
 type TabKey =
   | "health"
+  | "activity"
   | "scores"
   | "schedule"
   | "schedule-gen"
+  | "arbiter"
+  | "umpires"
   | "score-disputes"
   | "teams"
   | "signups"
@@ -72,9 +78,12 @@ type TabKey =
 
 const TABS: { key: TabKey; label: string; description: string }[] = [
   { key: "health", label: "Health", description: "League snapshot, pending submissions, rule violations." },
+  { key: "activity", label: "Activity", description: "Everything happening in the league, newest first — registrations, payments, scores, rosters, coach messages." },
   { key: "scores", label: "Scores", description: "Quick batch score entry + resolve captain submission conflicts." },
   { key: "schedule", label: "Schedule", description: "Add games, reschedule, mark a date rained out, edit scores." },
   { key: "schedule-gen", label: "Build Schedule", description: "Generate a whole season: weeks, fields, times, and matchups that must not happen." },
+  { key: "arbiter", label: "Arbiter", description: "Bring the schedule in from Arbiter, or send this schedule back out to it." },
+  { key: "umpires", label: "Umpires", description: "Roster, availability, and who is working which game." },
   { key: "score-disputes", label: "Score Disputes", description: "Games where the two teams reported different scores. Your call is final." },
   // Playoffs tab hidden per Adam — no bracket workflow until later.
   // { key: "playoffs", label: "Playoffs", description: "Build the playoff bracket — divisions, rounds, matchups, results." },
@@ -429,6 +438,12 @@ export default function AdminPage() {
         {activeTab === "schedule-gen" && (
           <ScheduleGenerator leagueId={tenantId} user={user} />
         )}
+        {activeTab === "arbiter" && (
+          <ArbiterSync leagueId={tenantId} user={user} />
+        )}
+        {activeTab === "umpires" && (
+          <UmpiresManager leagueId={tenantId} user={user} />
+        )}
         {activeTab === "score-disputes" && (
           <ScoreDisputes leagueId={tenantId} user={user} />
         )}
@@ -496,6 +511,9 @@ export default function AdminPage() {
         )}
         {activeTab === "chat" && (
           <ChatModerator leagueId={tenantId} user={user} />
+        )}
+        {activeTab === "activity" && (
+          <ActivityFeed leagueId={tenantId} onNavigate={(t) => setActiveTab(t as TabKey)} />
         )}
         {activeTab === "forms" && (
           <FormSubmissionsViewer leagueId={tenantId} user={user} />
