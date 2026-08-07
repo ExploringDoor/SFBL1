@@ -4458,6 +4458,104 @@ body {
 }
 
 /* =============================================================================
+ * LMLL-style scoreboard (opt-in via flags.lmll_scoreboard)
+ * -----------------------------------------------------------------------------
+ * Scoped to a .le-lmll-sb wrapper so the flagship look (new.lmll.org/scores)
+ * is reproduced for LCYBL without disturbing the DVSL boxed look every other
+ * tenant ships. Three moves: a rounded pill TOGGLE for Scores|Schedule, a
+ * plain-text week strip with an accent underline on the active week (no "WK n"
+ * prefix, no boxes), and title-case day headers carrying a navy date pill.
+ * ============================================================================= */
+.le-lmll-sb .tab-row {
+  display: inline-flex;
+  gap: 4px;
+  border-bottom: 0;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 999px;
+  padding: 5px;
+  width: max-content;
+  max-width: 100%;
+}
+.le-lmll-sb .tab-btn {
+  padding: 9px 30px;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  border-bottom: 0;
+  border-radius: 999px;
+  margin-bottom: 0;
+  color: var(--muted);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.le-lmll-sb .tab-btn.active {
+  background: #fff;
+  color: var(--brand-primary);
+  border-bottom: 0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.14);
+}
+
+/* Week strip — plain text labels, accent underline on the active week. */
+.le-lmll-sb .dn-slot {
+  background: transparent;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  padding: 8px 8px 10px;
+}
+.le-lmll-sb .dn-slot:hover {
+  border-color: transparent;
+  border-bottom-color: rgba(0, 0, 0, 0.16);
+}
+.le-lmll-sb .dn-slot.active {
+  background: transparent;
+  border-color: transparent;
+  border-bottom-color: var(--brand-accent, #c9a227);
+}
+.le-lmll-sb .dn-slot .wk-label {
+  display: none;
+}
+.le-lmll-sb .dn-slot .wk-date {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.le-lmll-sb .dn-slot:hover .wk-date,
+.le-lmll-sb .dn-slot.active .wk-date {
+  color: var(--text-strong);
+}
+
+/* Day-group header — title case (not condensed caps) + navy date pill. */
+.le-sb-dayhead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.le-lmll-sb .le-sb-dayhead h3 {
+  font-family: var(--font-inter), sans-serif;
+  text-transform: none;
+  font-weight: 800;
+  font-size: 24px;
+  letter-spacing: -0.01em;
+  color: var(--text-strong);
+}
+.le-sb-datepill {
+  display: inline-flex;
+  align-items: center;
+  background: var(--brand-primary);
+  color: #fff;
+  font-family: var(--font-barlow), sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  padding: 4px 12px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+/* =============================================================================
  * Modal (game detail / player detail)
  * ============================================================================= */
 
@@ -6223,4 +6321,334 @@ select:focus-visible {
 .sqc-amount-total dd {
   font-size: 17px;
   font-weight: 800;
+}
+
+/* Per-team GameChanger link on the team hero. Leagues whose clubs keep their
+   book in GameChanger link straight to it; absent on teams without a URL. */
+.le-gc-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.le-gc-link:hover {
+  background: rgba(255, 255, 255, 0.24);
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+/* ── Franchise history on a team page ──────────────────────────
+   Season-by-season record plus titles. Only rendered for tenants whose
+   archive actually contains the club. */
+
+.th-wrap { margin: 42px auto 56px; }
+
+.th-hd { margin-bottom: 14px; }
+
+.th-kick {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 12px; font-weight: 700; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--brand-primary); margin: 0 0 4px;
+}
+
+.th-title {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: clamp(26px, 3.6vw, 38px); font-weight: 900;
+  text-transform: uppercase; letter-spacing: -.01em; margin: 0;
+}
+
+.th-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 10px; margin: 16px 0 18px;
+}
+@media (max-width: 600px) { .th-stats { grid-template-columns: repeat(2, 1fr); } }
+
+.th-stat {
+  background: linear-gradient(135deg, rgba(0,45,114,.04), rgba(218,165,32,.06));
+  border: 1px solid rgba(0,0,0,.06);
+  border-radius: 12px; padding: 13px 15px; text-align: center;
+}
+.th-stat-v {
+  font-family: var(--font-barlow), sans-serif; font-size: 27px; font-weight: 900;
+  color: var(--brand-primary); line-height: 1; font-variant-numeric: tabular-nums;
+}
+.th-stat-l {
+  font-size: 10px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--muted); margin-top: 6px;
+}
+
+.th-honours {
+  display: flex; gap: 10px; align-items: baseline;
+  flex-wrap: wrap; margin-bottom: 10px;
+}
+.th-honours-lbl {
+  font-size: 11px; font-weight: 800; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--muted); white-space: nowrap;
+}
+.th-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.th-chip {
+  padding: 4px 11px; border-radius: 999px; font-size: 12.5px; font-weight: 700;
+  background: rgba(0,0,0,.05); border: 1px solid rgba(0,0,0,.08);
+}
+.th-chip-win {
+  background: rgba(201,162,39,.18); border-color: rgba(201,162,39,.45); color: #7a5c00;
+}
+.th-chip-note {
+  margin-left: 6px; font-style: normal; font-size: 10px; opacity: .75;
+  text-transform: uppercase; letter-spacing: .04em;
+}
+
+/* A long career scrolls inside its own box, never the page. */
+.th-scroll { overflow-x: auto; }
+
+.th-table {
+  width: 100%; border-collapse: collapse; font-size: 14px;
+  background: #fff; border: 1px solid rgba(0,0,0,.08); border-radius: 12px;
+  overflow: hidden;
+}
+.th-table th {
+  text-align: left; font-size: 10.5px; font-weight: 800; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--muted);
+  padding: 9px 12px; background: rgba(0,0,0,.03);
+  border-bottom: 1px solid rgba(0,0,0,.07); white-space: nowrap;
+}
+.th-table td {
+  padding: 9px 12px; border-bottom: 1px solid rgba(0,0,0,.05); white-space: nowrap;
+}
+.th-table tr:last-child td { border-bottom: none; }
+.th-num { text-align: right; font-variant-numeric: tabular-nums; }
+.th-season { font-weight: 800; font-variant-numeric: tabular-nums; }
+.th-div { color: var(--muted); font-size: 13px; }
+.th-of { color: var(--muted); font-size: 11.5px; }
+
+.th-row-win { background: rgba(201,162,39,.07); }
+
+.th-tag {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  font-size: 10.5px; font-weight: 800; letter-spacing: .05em;
+  text-transform: uppercase; background: rgba(0,0,0,.06); color: var(--muted);
+}
+.th-tag-win { background: rgba(201,162,39,.24); color: #7a5c00; }
+
+/* ── Franchise history TIMELINE — year-grouped, replaces the flat table.
+   A club fields several age-group teams a year; grouping by year keeps 10U and
+   12U from jumbling together and reads as a clean career timeline. */
+.th-timeline { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.th-yr {
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  gap: 8px 18px;
+  align-items: start;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 14px;
+  padding: 14px 18px;
+}
+.th-yr-year {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 25px; font-weight: 900; line-height: 1;
+  color: var(--brand-primary); font-variant-numeric: tabular-nums;
+  padding-top: 4px;
+}
+.th-yr-list { display: flex; flex-direction: column; }
+.th-yr-row {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 9px 12px; border-radius: 9px;
+}
+.th-yr-row + .th-yr-row { border-top: 1px solid rgba(0,0,0,.06); }
+.th-yr-row-win { background: rgba(201,162,39,.10); }
+.th-yr-div { flex: 1 1 150px; font-weight: 700; font-size: 14.5px; }
+.th-yr-rec {
+  font-family: var(--font-barlow), sans-serif; font-weight: 800; font-size: 15px;
+  color: var(--brand-primary); font-variant-numeric: tabular-nums;
+  min-width: 62px;
+}
+.th-yr-fin { color: var(--muted); font-size: 13px; min-width: 80px; }
+.th-yr-fin em { font-style: normal; opacity: .65; }
+.th-yr-tag { margin-left: auto; display: inline-flex; gap: 6px; }
+.th-badge {
+  display: inline-block; padding: 3px 10px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+  background: rgba(0,0,0,.06); color: var(--muted);
+}
+.th-badge-win {
+  background: rgba(201,162,39,.22); color: #7a5c00; border: 1px solid rgba(201,162,39,.5);
+}
+@media (max-width: 560px) {
+  .th-yr { grid-template-columns: 1fr; gap: 6px; }
+  .th-yr-year { padding-top: 0; }
+  .th-yr-tag { margin-left: 0; }
+}
+
+/* ── Fields grouped by club ─────────────────────────────────────
+   Matches how LCYBL publishes its own field list: plain club heading, then one
+   line per field where "Name - Address" is a single link, notes bold after it. */
+
+.fbc-tools {
+  display: flex; align-items: center; gap: 12px;
+  flex-wrap: wrap; margin-bottom: 22px;
+}
+
+.fbc-search {
+  appearance: none; -webkit-appearance: none;
+  border: 1px solid rgba(0,0,0,.14); border-radius: 8px;
+  padding: 9px 12px; font-size: 14px; font-family: inherit;
+  flex: 1 1 300px; max-width: 420px; background: #fff;
+}
+.fbc-search:focus-visible {
+  outline: 2px solid var(--brand-primary); outline-offset: 1px; border-color: transparent;
+}
+
+.fbc-count {
+  font-size: 12px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--muted);
+}
+
+.fbc-empty {
+  padding: 28px; text-align: center; color: var(--muted);
+  background: rgba(0,0,0,.03); border-radius: 12px;
+}
+
+.fbc-club { margin-bottom: 26px; }
+
+/* Their club heading is quiet and grey — the field links are the loud part. */
+.fbc-club-name {
+  margin: 0 0 10px;
+  font-family: var(--font-inter), sans-serif;
+  font-size: 19px; font-weight: 500; color: #555;
+  letter-spacing: .005em;
+}
+
+.fbc-list { list-style: none; margin: 0; padding: 0; }
+
+.fbc-row {
+  padding: 3px 0; line-height: 1.5;
+  font-size: 15.5px; font-weight: 700;
+}
+
+/* Whole "Name - Address" is the link, bold and underlined, in the league's
+   olive/gold — exactly as their page renders it. */
+.fbc-link {
+  color: var(--accent, #9a8c3f);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.fbc-link:hover { color: var(--brand-primary); }
+.fbc-link-plain { text-decoration: none; color: var(--text-strong); }
+
+.fbc-notes { color: var(--text-strong); font-weight: 700; }
+
+@media (max-width: 600px) {
+  .fbc-row { font-size: 14.5px; }
+  .fbc-club-name { font-size: 17px; }
+}
+
+/* ── Age-group quick-jump buttons (LCYBL Standings + Teams) ───────────
+   Big, tappable segmented buttons so a parent can jump straight to 10U/
+   12U/14U instead of scrolling a 185-team page. */
+.le-agejump {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 26px;
+}
+.le-agejump-label {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin-right: 2px;
+}
+.le-agejump-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 84px;
+  min-height: 52px;
+  padding: 0 26px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(20, 33, 61, 0.14);
+  background: #fff;
+  color: var(--brand-primary, #14213d);
+  font-weight: 900;
+  font-size: 19px;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  box-shadow: 0 2px 6px -2px rgba(20, 33, 61, 0.18);
+  transition: transform 0.14s ease, background 0.14s ease, color 0.14s ease,
+    box-shadow 0.14s ease, border-color 0.14s ease;
+}
+.le-agejump-btn:hover,
+.le-agejump-btn:focus-visible {
+  background: var(--brand-primary, #14213d);
+  color: #fff;
+  border-color: var(--brand-primary, #14213d);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px -10px rgba(20, 33, 61, 0.55);
+  outline: none;
+}
+@media (max-width: 520px) {
+  .le-agejump-btn { min-width: 0; flex: 1 1 auto; font-size: 17px; padding: 0 14px; }
+  .le-agejump-label { flex-basis: 100%; margin-bottom: 2px; }
+}
+
+/* ── Content tables on phones ──────────────────────────────────────────
+ *
+ * Markdown tables in Rules / Player Safety / Coaches Checklist are authored
+ * for a desktop column count — the field-dimensions table has ten columns,
+ * the trainings table eight. On a 375px phone they rendered 400–520px wide
+ * and the parent CLIPPED the overflow instead of scrolling it, so the extra
+ * columns were not merely awkward, they were invisible and unreachable.
+ *
+ * What was hidden: where to take the required Abuse Awareness training,
+ * the pitch-count rest requirements, the recommended fence distances, and
+ * the league office's own phone number and email.
+ *
+ * display:block turns the table into its own scroll container. Scoped to
+ * narrow screens so desktop keeps normal full-width table layout.
+ */
+@media (max-width: 720px) {
+  .le-content table,
+  .prose table {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    /* A hint that there is more to the right: a soft fade on the right edge
+       that disappears once scrolled to the end. */
+    background:
+      linear-gradient(to right, #fff 30%, rgba(255, 255, 255, 0)) left center,
+      linear-gradient(to left, #fff 30%, rgba(255, 255, 255, 0)) right center,
+      radial-gradient(farthest-side at 0 50%, rgba(15, 23, 42, 0.13), transparent) left center,
+      radial-gradient(farthest-side at 100% 50%, rgba(15, 23, 42, 0.13), transparent) right center;
+    background-repeat: no-repeat;
+    background-size: 26px 100%, 26px 100%, 12px 100%, 12px 100%;
+    background-attachment: local, local, scroll, scroll;
+  }
+  /* Cells must not wrap to nothing: keep them readable while scrolling. */
+  .le-content table th,
+  .le-content table td,
+  .prose table th,
+  .prose table td {
+    white-space: nowrap;
+  }
+  /* …except prose-heavy cells, which should still wrap rather than make the
+     scroll run for miles. */
+  .le-content table td:first-child,
+  .prose table td:first-child {
+    white-space: normal;
+    min-width: 8rem;
+  }
 }
