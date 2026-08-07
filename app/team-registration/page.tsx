@@ -148,6 +148,13 @@ const COYBL_FIELDS: FormField[] = [
   { name: "manager_last_name", label: "Coach / Manager Last Name", type: "text", required: true, width: "half" },
   { name: "email", label: "Email Address", type: "email", required: true, width: "half" },
   { name: "phone", label: "Cell Phone", type: "tel", required: true, width: "half" },
+  // Mailing address for the head coach. Doug asked for this on 2026-08-07:
+  // the league posts cheques, insurance paperwork and awards, and chasing an
+  // address by phone one team at a time is the slow way to do it.
+  { name: "address", label: "Home Address", type: "text", required: true, width: "full", placeholder: "Street address" },
+  { name: "city", label: "City", type: "text", required: true, width: "half" },
+  { name: "state", label: "State", type: "text", required: true, width: "half", placeholder: "OH" },
+  { name: "zip", label: "ZIP Code", type: "text", required: true, width: "half" },
   {
     name: "team_name",
     label: "Team Name",
@@ -356,7 +363,99 @@ const GENERIC_FIELDS: FormField[] = [
   },
 ];
 
+// Mirrors LCYBL's own "Team Information Sheet" (one required per team): club,
+// team, level & section, head coach, and TWO home fields, each with lights,
+// available weekdays, and unavailable dates — the data that feeds field
+// scheduling. Kept field-for-field with the league's spreadsheet.
+const LCYBL_LEVEL_SECTIONS = [
+  "8U, Section 1",
+  "10U, Section 1", "10U, Section 2", "10U, Section 3",
+  "12U, Section 1", "12U, Section 2", "12U, Section 3",
+  "14U, Section 1", "14U, Section 2", "14U, Section 3",
+];
+const YES_NO = [
+  { value: "Yes", label: "Yes" },
+  { value: "No", label: "No" },
+];
+const LCYBL_FIELDS: FormField[] = [
+  { name: "organization", label: "Club Name", type: "text", required: true, placeholder: "e.g. Manheim Township, Donegal, Warwick", width: "half" },
+  { name: "team_name", label: "Team Name", type: "text", required: true, placeholder: "e.g. Warwick Cardinals 12U-1", width: "half" },
+  {
+    name: "level_section",
+    label: "Level & Section",
+    type: "select",
+    required: true,
+    options: LCYBL_LEVEL_SECTIONS.map((s) => ({ value: s, label: s })),
+    width: "full",
+  },
+  { name: "manager_first_name", label: "Head Coach First Name", type: "text", required: true, width: "half" },
+  { name: "manager_last_name", label: "Head Coach Last Name", type: "text", required: true, width: "half" },
+  { name: "email", label: "Head Coach Email", type: "email", required: true, width: "half" },
+  { name: "phone", label: "Head Coach Phone", type: "tel", required: true, width: "half" },
+
+  // Home Field #1
+  { name: "home_field_1", label: "Home Field #1", type: "text", required: true, placeholder: "e.g. Creek Field (Manheim)", width: "half" },
+  { name: "home_field_1_lights", label: "Field #1 has lights?", type: "select", required: true, options: YES_NO, width: "half" },
+  {
+    name: "home_field_1_days",
+    label: "Field #1 available days",
+    type: "text",
+    placeholder: "e.g. Mon, Wed, Fri",
+    help: "Weekdays this field is available for the league to schedule home games.",
+    width: "half",
+  },
+  {
+    name: "home_field_1_unavailable",
+    label: "Field #1 unavailable dates",
+    type: "textarea",
+    placeholder: "List any dates the field cannot be used (MM/DD/YY)",
+    width: "half",
+  },
+
+  // Home Field #2 (optional second field)
+  { name: "home_field_2", label: "Home Field #2 (optional)", type: "text", placeholder: "Second home field, if any", width: "half" },
+  { name: "home_field_2_lights", label: "Field #2 has lights?", type: "select", options: YES_NO, width: "half" },
+  {
+    name: "home_field_2_days",
+    label: "Field #2 available days",
+    type: "text",
+    placeholder: "e.g. Tue, Thu",
+    width: "half",
+  },
+  {
+    name: "home_field_2_unavailable",
+    label: "Field #2 unavailable dates",
+    type: "textarea",
+    placeholder: "List any dates the field cannot be used (MM/DD/YY)",
+    width: "half",
+  },
+
+  { name: "notes", label: "Anything else the league should know?", type: "textarea", width: "full" },
+  {
+    name: "agreed_to_terms",
+    type: "checkbox",
+    required: true,
+    label:
+      "This information sheet is complete and accurate. Our roster will be submitted separately and locks June 1.",
+    width: "full",
+  },
+];
+
 function content(tenantId: string) {
+  if (tenantId === "lcybl") {
+    return {
+      fields: LCYBL_FIELDS,
+      description:
+        "The Team Information Sheet, one required per team, for Lancaster County Youth Baseball.",
+      intro: [
+        "This is the same information the league collects on its Team Information Sheet. Complete one per team. It captures your club, team, level and section, head coach, and your home field details so the league can build the schedule.",
+        "Your roster is submitted separately and locks June 1. Questions go to the League President on the Contact page.",
+      ],
+      successMessage:
+        "Thanks! Your Team Information Sheet is in. The league will use it to build the schedule and will follow up if anything is unclear.",
+      footer: null,
+    };
+  }
   if (tenantId === "coybl") {
     return {
       fields: COYBL_FIELDS,
@@ -506,6 +605,7 @@ export default function TeamRegistrationPage() {
       // A string, not a render function — this is a Server Component and
       // functions can't be passed to Client Components.
       afterSuccess={tenantId === "coybl" ? "coybl-payment" : undefined}
+      flashy={tenantId === "lcybl"}
     />
   );
 }

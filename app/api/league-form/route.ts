@@ -87,7 +87,9 @@ const ALLOWED_FIELDS: Record<Kind, string[]> = {
     "email",
     "phone",
     "street_address",
+    "address",
     "city",
+    "state",
     "zip",
     // COYBL asks for the team's HOME FIELD rather than an unlabelled address
     // (2026-08-02). These must be listed here or they are dropped before the
