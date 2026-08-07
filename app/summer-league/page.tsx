@@ -242,9 +242,14 @@ export default function SummerLeaguePage() {
                           textAlign: "right",
                           fontVariantNumeric: "tabular-nums",
                           fontWeight: 700,
+                          // #22c55e on the white table measured 2.28:1, well
+                          // under the 4.5 a 14px figure needs — the positive
+                          // run differentials were the hardest thing on the
+                          // page to read. #15803d is the same green four steps
+                          // darker and clears 5:1. The red was already fine.
                           color: t.avg_diff.startsWith("-")
                             ? "var(--red, #c8102e)"
-                            : "var(--green, #22c55e)",
+                            : "#15803d",
                         }}
                       >
                         {t.avg_diff}

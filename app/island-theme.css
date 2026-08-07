@@ -125,7 +125,16 @@ html.tenant-island [style*="background: white"],
 html.tenant-island [style*="background:white"],
 html.tenant-island [style*="background: #fff"],
 html.tenant-island [style*="background:#fff"],
-html.tenant-island [style*="background: rgb(255"] {
+html.tenant-island [style*="background: rgb(255"],
+/* --bg2 (#f5f5f5) set INLINE. The comment at the top of this file says --bg2
+   is deliberately not flipped because it fills card internals — but that only
+   holds while it appears INSIDE something already in this list. The "Jump to
+   a section" panel on every CMS page sets `background: var(--bg2, #f7f8fa)`
+   inline on a classless div at the page level, so its label rendered white on
+   #f5f5f5: measured 1.09:1, i.e. genuinely invisible. That panel is on the
+   League page, which is Mike's second nav item. */
+html.tenant-island [style*="background: var(--bg2"],
+html.tenant-island [style*="background:var(--bg2"] {
   --text-strong: #1a1a1a;
   --text-body: #1a1a1a;
   --muted: rgba(0, 0, 0, 0.56);
@@ -196,10 +205,23 @@ html.tenant-island .st-age-select option {
  * and the navy background. The [style*=...] pair catches the inline React
  * usages (app/scores/page.tsx sets color: var(--brand-primary) inline); the
  * :not() keeps card interiors on their original navy. */
+/* The :not() chain has TWO jobs. The card exclusions keep card interiors on
+ * their original navy. The background exclusions are the important ones: this
+ * rule was repointing navy to light blue on elements that paint their OWN
+ * white background inline, which is the opposite of what it is for.
+ *
+ * The age-group chips are exactly that — `background:#fff; color:var(--brand-
+ * primary)` inline — so every one of them rendered #35afea on white, measured
+ * at 2.48:1 against the 4.5 a 13px label needs. Those chips are the primary
+ * navigation on Home, Standings and Teams, so this was the single most visible
+ * readability bug on the site (found 2026-08-03 auditing at 375px).
+ *
+ * Both spacings of every spelling, because the matcher is a literal substring
+ * and React emits `background:#fff` with no space. */
 html.tenant-island .scores-week-summary-num,
 html.tenant-island .le-home-stat-val,
-html.tenant-island [style*="color: var(--brand-primary)"]:not(.le-gc-card *):not(.le-div-card *):not(.le-content-card *),
-html.tenant-island [style*="color:var(--brand-primary)"]:not(.le-gc-card *):not(.le-div-card *):not(.le-content-card *) {
+html.tenant-island [style*="color: var(--brand-primary)"]:not(.le-gc-card *):not(.le-div-card *):not(.le-content-card *):not([style*="background:#fff"]):not([style*="background: #fff"]):not([style*="background:white"]):not([style*="background: white"]):not([style*="background:var(--card"]):not([style*="background: var(--card"]):not([style*="background:var(--bg2"]):not([style*="background: var(--bg2"]),
+html.tenant-island [style*="color:var(--brand-primary)"]:not(.le-gc-card *):not(.le-div-card *):not(.le-content-card *):not([style*="background:#fff"]):not([style*="background: #fff"]):not([style*="background:white"]):not([style*="background: white"]):not([style*="background:var(--card"]):not([style*="background: var(--card"]):not([style*="background:var(--bg2"]):not([style*="background: var(--bg2"]) {
   color: var(--brand-accent, #35afea) !important;
 }
 
