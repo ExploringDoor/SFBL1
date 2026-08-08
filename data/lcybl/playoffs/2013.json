@@ -1,0 +1,29 @@
+{
+ "year": 2013,
+ "divisions": [
+  {
+   "division": "10u Section 1",
+   "champion": "Manheim Township Blue Streaks",
+   "runner_up": "Ephrata Merlins",
+   "disputed": false,
+   "rounds": [],
+   "photos": {}
+  },
+  {
+   "division": "10u Section 2",
+   "champion": "Mountville Giants",
+   "runner_up": "Mountville Pirates",
+   "disputed": false,
+   "rounds": [],
+   "photos": {}
+  },
+  {
+   "division": "12u Section 1 / New Era Tournament",
+   "champion": "Warwick Phillies",
+   "runner_up": "Mountville Indians",
+   "disputed": false,
+   "rounds": [],
+   "photos": {}
+  }
+ ]
+}

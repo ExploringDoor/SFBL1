@@ -50,6 +50,82 @@ function loadHistory(tenantId: string): StandingsBlock[] {
   }
 }
 
+/**
+ * Champions a league publishes outright, from `data/{tenantId}/champions.json`.
+ *
+ * Shape on disk (records are deliberately absent — see the file's own note):
+ *   [{ season: "2025",
+ *      divisions: [{ division, team, runner_up, disputed? }] }]
+ *
+ * Absent file → empty array → the caller falls back to deriving champions from
+ * standings, which is the behaviour every existing tenant keeps.
+ */
+function loadExplicitChampions(
+  tenantId: string,
+  nameIdx: Record<string, TeamMeta>,
+): ChampionRow[] {
+  const file = path.resolve(process.cwd(), `data/${tenantId}/champions.json`);
+  if (!fs.existsSync(file)) return [];
+  try {
+    const raw = JSON.parse(fs.readFileSync(file, "utf8")) as {
+      season: string;
+      divisions: {
+        division: string;
+        team: string;
+        runner_up?: string | null;
+        disputed?: boolean;
+      }[];
+    }[];
+    const look = (name: string | null | undefined) =>
+      name ? nameIdx[name.trim().toLowerCase()] ?? null : null;
+    return raw
+      .filter((r) => r && r.season && Array.isArray(r.divisions))
+      .map((r) => ({
+        season: String(r.season),
+        divisions: r.divisions
+          .filter((d) => d && d.team)
+          .map((d) => ({
+            division: String(d.division ?? ""),
+            team: String(d.team),
+            meta: look(d.team),
+            runnerUp: d.runner_up ? String(d.runner_up) : null,
+            runnerUpMeta: look(d.runner_up),
+            ...(d.disputed ? { disputed: true } : {}),
+          })),
+      }))
+      .filter((r) => r.divisions.length > 0)
+      .sort((a, b) => seasonKey(b.season) - seasonKey(a.season));
+  } catch {
+    return [];
+  }
+}
+
+/** Years that have a per-season bracket page, from the playoffs index the
+ *  extraction pipeline writes. Absent file → no year links. */
+function loadChampionSlides(tenantId: string): import("@/components/ChampionsSlideshow").ChampionSlide[] {
+  const file = path.resolve(process.cwd(), `data/${tenantId}/champion-slides.json`);
+  if (!fs.existsSync(file)) return [];
+  try {
+    const v = JSON.parse(fs.readFileSync(file, "utf8"));
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
+}
+
+function loadIndex(tenantId: string): { year: number }[] {
+  const file = path.resolve(
+    process.cwd(),
+    `data/${tenantId}/playoffs/index.json`,
+  );
+  if (!fs.existsSync(file)) return [];
+  try {
+    return JSON.parse(fs.readFileSync(file, "utf8")) as { year: number }[];
+  } catch {
+    return [];
+  }
+}
+
 // Curated league-heritage facts (founding year + milestone counts).
 // The standings ARCHIVE only goes back to the years we have data
 // for; this lets the header state the real heritage (e.g. SFBL
@@ -198,21 +274,48 @@ function deriveChampionsLeaderboard(
   champions: ChampionRow[],
   nameIdx: Record<string, TeamMeta>,
 ): LeaderboardRow[] {
-  const counts = new Map<string, { count: number; seasons: string[] }>();
+  // Grouped case-insensitively. An archive assembled from more than one kind of
+  // source will spell the same club two ways — LCYBL's older seasons are typed
+  // in Title Case while the later ones are transcribed from ALL-CAPS trophy
+  // banners — and a case-sensitive key silently splits a six-time champion into
+  // two three-time champions, understating the most decorated clubs.
+  interface ChampTally {
+    count: number;
+    seasons: string[];
+    display: Map<string, number>;
+  }
+  const counts = new Map<string, ChampTally>();
   for (const row of champions) {
     for (const d of row.divisions) {
-      const key = d.team.trim();
-      const cur = counts.get(key) ?? { count: 0, seasons: [] };
+      const raw = d.team.trim();
+      if (!raw) continue;
+      const key = raw.toLowerCase();
+      // The fallback is annotated: an inline literal infers `seasons: never[]`,
+      // which makes the push below a type error.
+      const fresh: ChampTally = { count: 0, seasons: [], display: new Map() };
+      const cur = counts.get(key) ?? fresh;
       cur.count += 1;
       cur.seasons.push(row.season);
+      // Keep every spelling seen so the most common one can be displayed,
+      // rather than whichever happened to be encountered first.
+      cur.display.set(raw, (cur.display.get(raw) ?? 0) + 1);
       counts.set(key, cur);
     }
   }
   const rows: LeaderboardRow[] = [];
-  for (const [team, c] of counts) {
+  for (const [key, c] of counts) {
+    // Prefer the most-used spelling; break ties toward the one that is not
+    // shouting, since ALL CAPS comes from banner artwork rather than from how
+    // the league writes the name.
+    const display = [...c.display.entries()].sort(
+      (a, b) =>
+        b[1] - a[1] ||
+        Number(a[0] === a[0].toUpperCase()) - Number(b[0] === b[0].toUpperCase()) ||
+        a[0].localeCompare(b[0]),
+    )[0]![0];
     rows.push({
-      team,
-      meta: nameIdx[team.toLowerCase()] ?? null,
+      team: display,
+      meta: nameIdx[key] ?? null,
       count: c.count,
       detail: c.seasons,
     });
@@ -299,7 +402,12 @@ export default async function HistoryPage() {
   const teamsCarryAcrossSeasons = tenantId !== "coybl";
   const nameIdx = teamsCarryAcrossSeasons ? buildNameIndex(teams) : {};
 
-  const champions = deriveChampions(all, nameIdx);
+  // A league whose archive STATES its champions (a printed bracket winner and
+  // runner-up banner) beats deriving them from standings. Deriving would mean
+  // inventing a playoff W-L row to satisfy the "undefeated top row" rule, and
+  // there would be nowhere to record the beaten finalist at all.
+  const explicit = loadExplicitChampions(tenantId, nameIdx);
+  const champions = explicit.length > 0 ? explicit : deriveChampions(all, nameIdx);
   const championsLb = deriveChampionsLeaderboard(champions, nameIdx);
   const winsLb = deriveWinsLeaderboard(all, nameIdx);
 
@@ -324,13 +432,27 @@ export default async function HistoryPage() {
     champions,
     championsLb,
     winsLb,
-    // When a league records no playoff bracket, the top of each division is
-    // a division winner, not a champion. Label it for what it is.
-    honourLabel: all.some(
-      (b) => b.game_type === "playoff" && b.standings.length > 0,
+    // Seasons that have a full bracket page, so the Champions wall can link
+    // each year through to it. Empty for tenants with no playoff archive.
+    bracketYears: loadIndex(tenantId).map((r) => r.year),
+    championSlides: loadChampionSlides(tenantId),
+    // A tenant that ships a branded trophy image (public/<tenant>/trophy.png)
+    // gets it on the Champions tab in place of the generic emoji. Absent for
+    // every other tenant, which keeps the 🏆 fallback.
+    trophyUrl: fs.existsSync(
+      path.resolve(process.cwd(), `public/${tenantId}/trophy.png`),
     )
-      ? "champion"
-      : "division-winner",
+      ? `/${tenantId}/trophy.png`
+      : undefined,
+    // When a league records no playoff bracket, the top of each division is
+    // a division winner, not a champion. Label it for what it is — unless the
+    // league publishes its bracket winners outright, in which case they are
+    // champions regardless of whether playoff STANDINGS were ever recorded.
+    honourLabel:
+      explicit.length > 0 ||
+      all.some((b) => b.game_type === "playoff" && b.standings.length > 0)
+        ? "champion"
+        : "division-winner",
     stats: {
       seasonCount,
       oldestYear,

@@ -33,12 +33,23 @@ import { usePathname } from "next/navigation";
 
 import { bannerSlugFor } from "@/lib/header-images";
 
+// LCYBL strip banners ALL render the same way home does — full-bleed width,
+// NATURAL height (width:100% + height:auto), showing the whole banner across
+// (Adam, 2026-08-07: "I want the banner to go fully across just like the main
+// homepage has"). Every banner JPG is pre-cropped to its ribbon + wordmark
+// (the empty field below is trimmed), so the natural heights land near home's.
+// No object-fit:cover and NO max-height clip — the JPG's bottom edge IS the
+// bottom of the wordmark, so any clip would cut the word off (Adam: "standings
+// also cut off"). Height just follows the art at every width.
+
 export function PageBanner({
   images,
   imagesSmall,
   initialSlug,
   fullBleed = false,
+  strip = false,
   leagueName = "",
+  tenantId,
 }: {
   images: Record<string, string>;
   /** Phone-sized variants keyed by the same slug. When a slug is present here
@@ -54,18 +65,57 @@ export function PageBanner({
   /** Edge-to-edge strip instead of natural size. Off by default so existing
    *  tenants are unchanged. */
   fullBleed?: boolean;
+  /** Slim, super-wide fixed-ratio band (LCYBL). All the banners are one
+   *  aspect ratio (STRIP_RATIO), so the box height tracks the exact-fit height
+   *  and object-fit:cover shows the whole image with no side letterboxing. On
+   *  very wide screens the height caps and the crop is top/bottom only — the
+   *  baked title sits centred vertically, so it never clips. */
+  strip?: boolean;
+  /** Tenant id — only used to scope per-tenant banner suppression rules. */
+  tenantId?: string;
 }) {
   // usePathname() is null during the root layout's server render, so seed the
   // slug from `initialSlug` (server-derived from the request path). On the
   // client it updates with the route so the banner swaps on in-app navigation.
   const pathname = usePathname();
   const slug = pathname ? bannerSlugFor(pathname) : initialSlug;
+  // LCYBL: an individual team page (/teams/<id>) has its own team hero, so the
+  // generic "TEAMS" strip on top is redundant — Adam wants the team page ONLY.
+  // The grid page (/teams) keeps its banner. Scoped to lcybl so other tenants
+  // are unchanged.
+  const parts = (pathname ?? "").split("/").filter(Boolean);
+  if (tenantId === "lcybl" && parts[0] === "teams" && parts.length > 1) {
+    return null;
+  }
   const src = images[slug];
   if (!src) return null;
   const small = imagesSmall?.[slug];
   // Both banners are full-bleed, so the rendered width is always the viewport.
   const srcSet = small ? `${small} 1000w, ${src} 2000w` : undefined;
   const sizes = small ? "100vw" : undefined;
+
+  if (strip) {
+    // Every page (home + interior) renders the same: full-bleed width, natural
+    // height, whole banner across — no cover-crop, no max-height clip.
+    return (
+      <div
+        style={{
+          width: "100%",
+          background: "#0b1b3a",
+          lineHeight: 0,
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          srcSet={srcSet}
+          sizes={sizes}
+          alt={bannerAlt(slug, leagueName)}
+          style={{ display: "block", width: "100%", height: "auto" }}
+        />
+      </div>
+    );
+  }
 
   if (fullBleed) {
     return (

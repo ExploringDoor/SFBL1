@@ -223,19 +223,42 @@
  * No headline, no badge, no Box Score button. */
 .le-gc-hdr-compact {
   justify-content: flex-start;
+  /* Subtle divider under the status, matching the LMLL score card. */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .le-gc-status-compact {
   font-family: 'Barlow Condensed', sans-serif;
   font-weight: 700;
   font-size: 12px;
-  letter-spacing: 0.04em;
-  color: rgba(0, 0, 0, 0.55);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.5);
 }
 
 .le-gc-footer-compact {
   align-items: center;
   justify-content: space-between;
+}
+
+/* Compact recap = a gold text link with a chevron, matching the LMLL score
+   card, instead of a boxed button. */
+.le-gc-footer-compact .le-gc-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brand-accent, #c9a227);
+}
+.le-gc-footer-compact .le-gc-btn::after { content: " \203A"; }
+.le-gc-footer-compact .le-gc-btn:hover {
+  background: none;
+  filter: brightness(1.1);
+  text-decoration: underline;
 }
 
 .le-gc-age {

@@ -1,0 +1,2228 @@
+{
+ "year": 2022,
+ "divisions": [
+  {
+   "division": "10u Section 1",
+   "champion": "PENN MANOR COMETS",
+   "runner_up": "MOUNTVILLE CUBS",
+   "disputed": false,
+   "rounds": [
+    {
+     "label": "Play In Game",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "8",
+        "name": "Lanc Jr. Tornadoes"
+       },
+       "sideB": {
+        "seed": "9",
+        "name": "SOLANCO Black"
+       },
+       "games": [
+        {
+         "a": 7,
+         "b": 6
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Series Game #1",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "D1",
+        "name": "PM Comets"
+       },
+       "sideB": {
+        "seed": "8",
+        "name": "Lanc Jr. Tornadoes"
+       },
+       "games": [
+        {
+         "a": 22,
+         "b": 6
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "2",
+        "name": "Manheim"
+       },
+       "sideB": {
+        "seed": "7",
+        "name": "L-S Phillies"
+       },
+       "games": [
+        {
+         "a": 17,
+         "b": 7
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "3",
+        "name": "Mountville Cubs"
+       },
+       "sideB": {
+        "seed": "6",
+        "name": "Hempfield Black"
+       },
+       "games": [
+        {
+         "a": 11,
+         "b": 6
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "Warwick Cardinals"
+       },
+       "sideB": {
+        "seed": "5",
+        "name": "MT Streaks"
+       },
+       "games": [
+        {
+         "a": 12,
+         "b": 4
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Series Game #2",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "D1",
+        "name": "PM Comets"
+       },
+       "sideB": {
+        "seed": "8",
+        "name": "Lanc Jr. Tornadoes"
+       },
+       "games": [
+        {
+         "a": 16,
+         "b": 2
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "2",
+        "name": "Manheim"
+       },
+       "sideB": {
+        "seed": "7",
+        "name": "L-S Phillies"
+       },
+       "games": [
+        {
+         "a": 8,
+         "b": 3
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "3",
+        "name": "Mountville Cubs"
+       },
+       "sideB": {
+        "seed": "6",
+        "name": "Hempfield Black"
+       },
+       "games": [
+        {
+         "a": 13,
+         "b": 7
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "Warwick Cardinals"
+       },
+       "sideB": {
+        "seed": "5",
+        "name": "MT Streaks"
+       },
+       "games": [
+        {
+         "a": 5,
+         "b": 6
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Series Game #3 (if needed)",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "Warwick Cardinals"
+       },
+       "sideB": {
+        "seed": "5",
+        "name": "MT Streaks"
+       },
+       "games": [
+        {
+         "a": 8,
+         "b": 7
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "LNP Tournament Game 1",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "D1",
+        "name": "PM Comets"
+       },
+       "sideB": {
+        "seed": "4",
+        "name": "Warwick Cardinals"
+       },
+       "games": [
+        {
+         "a": 11,
+         "b": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "LNP Tournament Game 2",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "2",
+        "name": "Manheim"
+       },
+       "sideB": {
+        "seed": "3",
+        "name": "Mountville Cubs"
+       },
+       "games": [
+        {
+         "a": 7,
+         "b": 14
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "LNP Tournament Game 3",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "Warwick Cardinals"
+       },
+       "sideB": {
+        "seed": "2",
+        "name": "Manheim"
+       },
+       "games": [
+        {
+         "a": 12,
+         "b": 10
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "LNP Tournament Game 4",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "D1",
+        "name": "PM Comets"
+       },
+       "sideB": {
+        "seed": "3",
+        "name": "Mountville Cubs"
+       },
+       "games": [
+        {
+         "a": 2,
+         "b": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "LNP Tournament Game 5",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "3",
+        "name": "Mountville Cubs"
+       },
+       "sideB": {
+        "seed": "4",
+        "name": "Warwick Cardinals"
+       },
+       "games": [
+        {
+         "a": 19,
+         "b": 15
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "LNP Tournament Game 6",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "D1",
+        "name": "PM Comets"
+       },
+       "sideB": {
+        "seed": "3",
+        "name": "Mountville Cubs"
+       },
+       "games": [
+        {
+         "a": 13,
+         "b": 15
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "LNP Tournament Game 7 (If needed)",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "3",
+        "name": "Mountville Cubs"
+       },
+       "sideB": {
+        "seed": "D1",
+        "name": "PM Comets"
+       },
+       "games": [
+        {
+         "a": 5,
+         "b": 15
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "photos": {
+    "champion": {
+     "url": "/lcybl/history/2022/2022-pl-p01-02.jpeg",
+     "caption": "2022 LCYBL 10U SECTION ONE LNP CHAMPIONS PENN MANOR COMETS",
+     "kind": "champion"
+    },
+    "runner_up": {
+     "url": "/lcybl/history/2022/2022-pl-p02-01.jpeg",
+     "caption": "2022 LCYBL 10U SECTION ONE LNP RUNNER UP MOUNTVILLE CUBS",
+     "kind": "runner_up"
+    }
+   }
+  },
+  {
+   "division": "10u Section 2",
+   "champion": "MOUNTVILLE PIRATES",
+   "runner_up": "MANHEIM MAROON",
+   "disputed": false,
+   "rounds": [
+    {
+     "label": "Game 1",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "17",
+        "name": "Donegal Green"
+       },
+       "sideB": {
+        "seed": "16",
+        "name": "Hempfield Gray"
+       },
+       "games": [
+        {
+         "a": 14,
+         "b": 15
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 2",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "15",
+        "name": "L-S Blue"
+       },
+       "sideB": {
+        "seed": "2",
+        "name": "Mountville Pirates"
+       },
+       "games": [
+        {
+         "a": 5,
+         "b": 14
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 3",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "10",
+        "name": "GS Spartans"
+       },
+       "sideB": {
+        "seed": "7",
+        "name": "CV Bucks"
+       },
+       "games": [
+        {
+         "a": 1,
+         "b": 7
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 4",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "14",
+        "name": "Hempfield Red"
+       },
+       "sideB": {
+        "seed": "3",
+        "name": "L-S White"
+       },
+       "games": [
+        {
+         "a": 6,
+         "b": 7
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 5",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "11",
+        "name": "Ephrata"
+       },
+       "sideB": {
+        "seed": "6",
+        "name": "Donegal Black"
+       },
+       "games": [
+        {
+         "a": 6,
+         "b": 9
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 6",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "9",
+        "name": "PM White"
+       },
+       "sideB": {
+        "seed": "8",
+        "name": "Warwick D-Backs"
+       },
+       "games": [
+        {
+         "a": 5,
+         "b": 8
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 7",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "13",
+        "name": "Manheim Gray"
+       },
+       "sideB": {
+        "seed": "4",
+        "name": "PM Gold"
+       },
+       "games": [
+        {
+         "a": 5,
+         "b": 6
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 8",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "12",
+        "name": "PM Blue"
+       },
+       "sideB": {
+        "seed": "5",
+        "name": "Mountville Nats"
+       },
+       "games": [
+        {
+         "a": 15,
+         "b": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 9",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "D1",
+        "name": "Manheim Maroon"
+       },
+       "sideB": {
+        "seed": "16",
+        "name": "Hempfield Gray"
+       },
+       "games": [
+        {
+         "a": 13,
+         "b": 9
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 10",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "7",
+        "name": "CV Bucks"
+       },
+       "sideB": {
+        "seed": "2",
+        "name": "Mountville Pirates"
+       },
+       "games": [
+        {
+         "a": 2,
+         "b": 6
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 11",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "6",
+        "name": "Donegal Black"
+       },
+       "sideB": {
+        "seed": "3",
+        "name": "L-S White"
+       },
+       "games": [
+        {
+         "a": 11,
+         "b": 9
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 12",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "D1",
+        "name": "Manheim Maroon"
+       },
+       "sideB": {
+        "seed": "8",
+        "name": "Warwick D-Backs"
+       },
+       "games": [
+        {
+         "a": 9,
+         "b": 6
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 13",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "12",
+        "name": "PM Blue"
+       },
+       "sideB": {
+        "seed": "4",
+        "name": "PM Gold"
+       },
+       "games": [
+        {
+         "a": 3,
+         "b": 9
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 14",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "6",
+        "name": "Donegal Black"
+       },
+       "sideB": {
+        "seed": "2",
+        "name": "Mountville Pirates"
+       },
+       "games": [
+        {
+         "a": 8,
+         "b": 9
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 15",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "PM Gold"
+       },
+       "sideB": {
+        "seed": "D1",
+        "name": "Manheim Maroon"
+       },
+       "games": [
+        {
+         "a": 1,
+         "b": 12
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 16",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "D1",
+        "name": "Manheim Maroon"
+       },
+       "sideB": {
+        "seed": "2",
+        "name": "Mountville Pirates"
+       },
+       "games": [
+        {
+         "a": 10,
+         "b": 12
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "photos": {
+    "champion": {
+     "url": "/lcybl/history/2022/2022-pl-p04-01.jpeg",
+     "caption": "2022 LCYBL 10U SECTION TWO CHAMPIONS MOUNTVILLE PIRATES",
+     "kind": "champion"
+    },
+    "runner_up": {
+     "url": "/lcybl/history/2022/2022-pl-p05-01.jpeg",
+     "caption": "2022 LCYBL 10U SECTION TWO RUNNER UP MANHEIM MAROON",
+     "kind": "runner_up"
+    }
+   }
+  },
+  {
+   "division": "12u Section 1",
+   "champion": "WARWICK PHILLIES",
+   "runner_up": "MANHEIM TOWNSHIP STREAKS",
+   "disputed": false,
+   "rounds": [
+    {
+     "label": "Play In Game",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "7",
+        "name": "Donegal Indians"
+       },
+       "sideB": {
+        "seed": "10",
+        "name": "Cocalico"
+       },
+       "games": [
+        {
+         "a": 3,
+         "b": 2
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "8",
+        "name": "E-Town Blue"
+       },
+       "sideB": {
+        "seed": "9",
+        "name": "L-S Cardinals"
+       },
+       "games": [
+        {
+         "a": 10,
+         "b": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Series Game #1",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "D1",
+        "name": "Mountville Indians"
+       },
+       "sideB": {
+        "seed": "8",
+        "name": "E-Town Blue"
+       },
+       "games": [
+        {
+         "a": 5,
+         "b": 4
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "2",
+        "name": "MT Streaks"
+       },
+       "sideB": {
+        "seed": "7",
+        "name": "Donegal Indians"
+       },
+       "games": [
+        {
+         "a": 10,
+         "b": 0
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "3",
+        "name": "PM Comets"
+       },
+       "sideB": {
+        "seed": "6",
+        "name": "SOLANCO Gold"
+       },
+       "games": [
+        {
+         "a": 5,
+         "b": 4
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "Warwick Phillies"
+       },
+       "sideB": {
+        "seed": "5",
+        "name": "Manheim"
+       },
+       "games": [
+        {
+         "a": 6,
+         "b": 3
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Series Game #2",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "D1",
+        "name": "Mountville Indians"
+       },
+       "sideB": {
+        "seed": "8",
+        "name": "E-Town Blue"
+       },
+       "games": [
+        {
+         "a": 4,
+         "b": 3
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "2",
+        "name": "MT Streaks"
+       },
+       "sideB": {
+        "seed": "7",
+        "name": "Donegal Indians"
+       },
+       "games": [
+        {
+         "a": 7,
+         "b": 8
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "3",
+        "name": "PM Comets"
+       },
+       "sideB": {
+        "seed": "6",
+        "name": "SOLANCO Gold"
+       },
+       "games": [
+        {
+         "a": 13,
+         "b": 2
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "Warwick Phillies"
+       },
+       "sideB": {
+        "seed": "5",
+        "name": "Manheim"
+       },
+       "games": [
+        {
+         "a": 4,
+         "b": 2
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Series Game #3 (if needed)",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "2",
+        "name": "MT Streaks"
+       },
+       "sideB": {
+        "seed": "7",
+        "name": "Donegal Indians"
+       },
+       "games": [
+        {
+         "a": 8,
+         "b": 7
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "LNP Tournament Game 1",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "1",
+        "name": "Mountville Indians"
+       },
+       "sideB": {
+        "seed": "4",
+        "name": "Warwick Phillies"
+       },
+       "games": [
+        {
+         "a": 8,
+         "b": 16
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "LNP Tournament Game 2",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "2",
+        "name": "MT Streaks"
+       },
+       "sideB": {
+        "seed": "3",
+        "name": "PM Comets"
+       },
+       "games": [
+        {
+         "a": 8,
+         "b": 2
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "LNP Tournament Game 3",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "D1",
+        "name": "Mountville Indians"
+       },
+       "sideB": {
+        "seed": "3",
+        "name": "PM Comets"
+       },
+       "games": [
+        {
+         "a": 4,
+         "b": 12
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "LNP Tournament Game 4",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "Warwick Phillies"
+       },
+       "sideB": {
+        "seed": "2",
+        "name": "MT Streaks"
+       },
+       "games": [
+        {
+         "a": 9,
+         "b": 8
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "LNP Tournament Game 5",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "2",
+        "name": "MT Streaks"
+       },
+       "sideB": {
+        "seed": "3",
+        "name": "PM Comets"
+       },
+       "games": [
+        {
+         "a": 17,
+         "b": 7
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "LNP Tournament Game 6",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "Warwick Phillies"
+       },
+       "sideB": {
+        "seed": "2",
+        "name": "MT Streaks"
+       },
+       "games": [
+        {
+         "a": 3,
+         "b": 0
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "photos": {
+    "champion": {
+     "url": "/lcybl/history/2022/2022-pl-p08-02.jpeg",
+     "caption": "2022 LCYBL 12U SECTION ONE LNP CHAMPIONS WARWICK PHILLIES",
+     "kind": "champion"
+    },
+    "runner_up": {
+     "url": "/lcybl/history/2022/2022-pl-p09-01.jpeg",
+     "caption": "2022 LCYBL 12U SECTION ONE LNP RUNNER UP MANHEIM TOWNSHIP STREAKS",
+     "kind": "runner_up"
+    }
+   }
+  },
+  {
+   "division": "12u Section 2",
+   "champion": "MANHEIM TOWNSHIP LIGHTNING",
+   "runner_up": "COLUMBIA RED",
+   "disputed": false,
+   "rounds": [
+    {
+     "label": "Game 1",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "8",
+        "name": "PM Blue"
+       },
+       "sideB": {
+        "seed": "D1",
+        "name": "Warwick Braves"
+       },
+       "games": [
+        {
+         "a": 2,
+         "b": 13
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 2",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "5",
+        "name": "Donegal"
+       },
+       "sideB": {
+        "seed": "4",
+        "name": "MT Lightning"
+       },
+       "games": [
+        {
+         "a": 3,
+         "b": 13
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 3",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "6",
+        "name": "PV Braves"
+       },
+       "sideB": {
+        "seed": "3",
+        "name": "Mountville Phillies"
+       },
+       "games": [
+        {
+         "a": 3,
+         "b": 13
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 4",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "7",
+        "name": "Columbia Red"
+       },
+       "sideB": {
+        "seed": "D2",
+        "name": "Mountville Yankees"
+       },
+       "games": [
+        {
+         "a": 8,
+         "b": 5
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 5",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "MT Lightning"
+       },
+       "sideB": {
+        "seed": "D1",
+        "name": "Warwick Braves"
+       },
+       "games": [
+        {
+         "a": 6,
+         "b": 4
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 6",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "7",
+        "name": "Columbia Red"
+       },
+       "sideB": {
+        "seed": "3",
+        "name": "Mountville Phillies"
+       },
+       "games": [
+        {
+         "a": 16,
+         "b": 9
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 7",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "7",
+        "name": "Columbia Red"
+       },
+       "sideB": {
+        "seed": "4",
+        "name": "MT Lightning"
+       },
+       "games": [
+        {
+         "a": 1,
+         "b": 6
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "photos": {
+    "champion": {
+     "url": "/lcybl/history/2022/2022-pl-p11-01.jpeg",
+     "caption": "2022 LCYBL 12U SECTION TWO CHAMPIONS MANHEIM TOWNSHIP LIGHTNING",
+     "kind": "champion"
+    },
+    "runner_up": {
+     "url": "/lcybl/history/2022/2022-pl-p12-01.jpeg",
+     "caption": "2022 LCYBL 12U SECTION TWO RUNNER UP COLUMBIA RED",
+     "kind": "runner_up"
+    }
+   }
+  },
+  {
+   "division": "12u Section 3",
+   "champion": "MOUNTVILLE TIGERS",
+   "runner_up": "MANHEIM TOWNSHIP STORM",
+   "disputed": false,
+   "rounds": [
+    {
+     "label": "Game 1",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "9",
+        "name": "GS Spartans"
+       },
+       "sideB": {
+        "seed": "8",
+        "name": "Ephrata"
+       },
+       "games": [
+        {
+         "a": 10,
+         "b": 9
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 2",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "12",
+        "name": "SOLANCO Gray"
+       },
+       "sideB": {
+        "seed": "5",
+        "name": "Mountville WS"
+       },
+       "games": [
+        {
+         "a": 3,
+         "b": 4
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 3",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "10",
+        "name": "Cocalico"
+       },
+       "sideB": {
+        "seed": "7",
+        "name": "L-S Black"
+       },
+       "games": [
+        {
+         "a": 16,
+         "b": 5
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 4",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "11",
+        "name": "PM Comets"
+       },
+       "sideB": {
+        "seed": "6",
+        "name": "St. Leo Crusaders"
+       },
+       "games": [
+        {
+         "a": 3,
+         "b": 17
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 5",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "9",
+        "name": "GS Spartans"
+       },
+       "sideB": {
+        "seed": "D1",
+        "name": "Mountville Tigers"
+       },
+       "games": [
+        {
+         "a": 2,
+         "b": 25
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 6",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "Donegal"
+       },
+       "sideB": {
+        "seed": "5",
+        "name": "Mountville WS"
+       },
+       "games": [
+        {
+         "a": 8,
+         "b": 4
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 7",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "10",
+        "name": "Cocalico"
+       },
+       "sideB": {
+        "seed": "2",
+        "name": "CV Bucks"
+       },
+       "games": [
+        {
+         "a": 2,
+         "b": 16
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 8",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "3",
+        "name": "MT Storm"
+       },
+       "sideB": {
+        "seed": "6",
+        "name": "St. Leo Crusaders"
+       },
+       "games": [
+        {
+         "a": 11,
+         "b": 10
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 9",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "Donegal"
+       },
+       "sideB": {
+        "seed": "D1",
+        "name": "Mountville Tigers"
+       },
+       "games": [
+        {
+         "a": 2,
+         "b": 4
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 10",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "3",
+        "name": "MT Storm"
+       },
+       "sideB": {
+        "seed": "2",
+        "name": "CV Bucks"
+       },
+       "games": [
+        {
+         "a": 11,
+         "b": 4
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 11",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "3",
+        "name": "MT Storm"
+       },
+       "sideB": {
+        "seed": "D1",
+        "name": "Mountville Tigers"
+       },
+       "games": [
+        {
+         "a": 10,
+         "b": 21
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "photos": {
+    "champion": {
+     "url": "/lcybl/history/2022/2022-pl-p14-01.jpeg",
+     "caption": "2022 LCYBL 12U SECTION THREE CHAMPIONS MOUNTVILLE TIGERS",
+     "kind": "champion"
+    },
+    "runner_up": {
+     "url": "/lcybl/history/2022/2022-pl-p14-02.jpeg",
+     "caption": "2022 LCYBL 12U SECTION THREE RUNNER UP MANHEIM TOWNSHIP STORM",
+     "kind": "runner_up"
+    }
+   }
+  },
+  {
+   "division": "14u Section 1",
+   "champion": "MANHEIM LIONS",
+   "runner_up": "L-S WHITE SOX",
+   "disputed": false,
+   "rounds": [
+    {
+     "label": "Play In Game",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "7",
+        "name": "E-Town Black"
+       },
+       "sideB": {
+        "seed": "10",
+        "name": "SOLANCO Black"
+       },
+       "games": [
+        {
+         "a": 9,
+         "b": 4
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "8",
+        "name": "Ephrata"
+       },
+       "sideB": {
+        "seed": "9",
+        "name": "Hempfield Black"
+       },
+       "games": [
+        {
+         "a": 5,
+         "b": 3
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Series Game #1",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "D1",
+        "name": "L-S White Sox"
+       },
+       "sideB": {
+        "seed": "8",
+        "name": "Ephrata"
+       },
+       "games": [
+        {
+         "a": 16,
+         "b": 1
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "2",
+        "name": "Mountville Angels"
+       },
+       "sideB": {
+        "seed": "7",
+        "name": "E-Town Black"
+       },
+       "games": [
+        {
+         "a": 3,
+         "b": 0
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "3",
+        "name": "Manheim Lions"
+       },
+       "sideB": {
+        "seed": "6",
+        "name": "Donegal"
+       },
+       "games": [
+        {
+         "a": 4,
+         "b": 5
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "CV Bucks"
+       },
+       "sideB": {
+        "seed": "5",
+        "name": "Man Twp Streaks"
+       },
+       "games": [
+        {
+         "a": 6,
+         "b": 5
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Series Game #2",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "D1",
+        "name": "L-S White Sox"
+       },
+       "sideB": {
+        "seed": "8",
+        "name": "Ephrata"
+       },
+       "games": [
+        {
+         "a": 15,
+         "b": 1
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "2",
+        "name": "Mountville Angels"
+       },
+       "sideB": {
+        "seed": "7",
+        "name": "E-Town Black"
+       },
+       "games": [
+        {
+         "a": 7,
+         "b": 5
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "3",
+        "name": "Manheim Lions"
+       },
+       "sideB": {
+        "seed": "6",
+        "name": "Donegal"
+       },
+       "games": [
+        {
+         "a": 6,
+         "b": 4
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "CV Bucks"
+       },
+       "sideB": {
+        "seed": "5",
+        "name": "Man Twp Streaks"
+       },
+       "games": [
+        {
+         "a": 6,
+         "b": 7
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Series Game #3 (if needed)",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "3",
+        "name": "Manheim Lions"
+       },
+       "sideB": {
+        "seed": "6",
+        "name": "Donegal"
+       },
+       "games": [
+        {
+         "a": 8,
+         "b": 5
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "CV Bucks"
+       },
+       "sideB": {
+        "seed": "5",
+        "name": "Man Twp Streaks"
+       },
+       "games": [
+        {
+         "a": 6,
+         "b": 16
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "LNP Tournament Game 1",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "1",
+        "name": "L-S White Sox"
+       },
+       "sideB": {
+        "seed": "4",
+        "name": "Man Twp Streaks"
+       },
+       "games": [
+        {
+         "a": 3,
+         "b": 5
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "LNP Tournament Game 2",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "2",
+        "name": "Mountville Angels"
+       },
+       "sideB": {
+        "seed": "3",
+        "name": "Manheim Lions"
+       },
+       "games": [
+        {
+         "a": 7,
+         "b": 15
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "LNP Tournament Game 3",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "1",
+        "name": "L-S White Sox"
+       },
+       "sideB": {
+        "seed": "2",
+        "name": "Mountville Angels"
+       },
+       "games": [
+        {
+         "a": 8,
+         "b": 3
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "LNP Tournament Game 4",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "Man Twp Streaks"
+       },
+       "sideB": {
+        "seed": "3",
+        "name": "Manheim Lions"
+       },
+       "games": [
+        {
+         "a": 4,
+         "b": 5
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "LNP Tournament Game 5",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "Man Twp Streaks"
+       },
+       "sideB": {
+        "seed": "1",
+        "name": "L-S White Sox"
+       },
+       "games": [
+        {
+         "a": 2,
+         "b": 7
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "LNP Tournament Game 6",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "3",
+        "name": "Manheim Lions"
+       },
+       "sideB": {
+        "seed": "1",
+        "name": "L-S White Sox"
+       },
+       "games": [
+        {
+         "a": 3,
+         "b": 4
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "LNP Tournament Game 7 (If needed)",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "1",
+        "name": "L-S White Sox"
+       },
+       "sideB": {
+        "seed": "3",
+        "name": "Manheim Lions"
+       },
+       "games": [
+        {
+         "a": 1,
+         "b": 11
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "photos": {
+    "champion": {
+     "url": "/lcybl/history/2022/2022-pl-p17-02.jpeg",
+     "caption": "2022 LCYBL 14U SECTION ONE LNP CHAMPIONS MANHEIM LIONS",
+     "kind": "champion"
+    }
+   }
+  },
+  {
+   "division": "14u Section 2",
+   "champion": "CEDAR CREST",
+   "runner_up": "CV BUCKS",
+   "disputed": false,
+   "rounds": [
+    {
+     "label": "Game 1",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "8",
+        "name": "E-Town Navy"
+       },
+       "sideB": {
+        "seed": "D1",
+        "name": "Cedar Crest"
+       },
+       "games": [
+        {
+         "a": 5,
+         "b": 15
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 2",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "5",
+        "name": "Mountville Red Soc"
+       },
+       "sideB": {
+        "seed": "4",
+        "name": "Donegal"
+       },
+       "games": [
+        {
+         "a": 11,
+         "b": 3
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 3",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "6",
+        "name": "CV Bucks"
+       },
+       "sideB": {
+        "seed": "3",
+        "name": "Cocalico"
+       },
+       "games": [
+        {
+         "a": 5,
+         "b": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 4",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "7",
+        "name": "Mountville Blue Jays"
+       },
+       "sideB": {
+        "seed": "D2",
+        "name": "L-S Red Sox"
+       },
+       "games": [
+        {
+         "a": 4,
+         "b": 9
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 5",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "5",
+        "name": "Mountville Red Soc"
+       },
+       "sideB": {
+        "seed": "D1",
+        "name": "Cedar Crest"
+       },
+       "games": [
+        {
+         "a": 4,
+         "b": 14
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 6",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "D2",
+        "name": "L-S Red Sox"
+       },
+       "sideB": {
+        "seed": "6",
+        "name": "CV Bucks"
+       },
+       "games": [
+        {
+         "a": 2,
+         "b": 9
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 7",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "6",
+        "name": "CV Bucks"
+       },
+       "sideB": {
+        "seed": "D1",
+        "name": "Cedar Crest"
+       },
+       "games": [
+        {
+         "a": 0,
+         "b": 10
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "photos": {
+    "champion": {
+     "url": "/lcybl/history/2022/2022-pl-p21-01.jpeg",
+     "caption": "2022 LCYBL 14U SECTION TWO CHAMPIONS CEDAR CREST",
+     "kind": "champion"
+    },
+    "runner_up": {
+     "url": "/lcybl/history/2022/2022-pl-p21-02.jpeg",
+     "caption": "2022 LCYBL 14U SECTION TWO RUNNER UP CV BUCKS",
+     "kind": "runner_up"
+    }
+   }
+  },
+  {
+   "division": "14u Section 3",
+   "champion": "E-TOWN BLUE",
+   "runner_up": "L-S PHILLIES",
+   "disputed": false,
+   "rounds": [
+    {
+     "label": "Game 1",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "9",
+        "name": "E-Town White"
+       },
+       "sideB": {
+        "seed": "8",
+        "name": "Ephrata"
+       },
+       "games": [
+        {
+         "a": 6,
+         "b": 16
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 2",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "10",
+        "name": "MT Storm"
+       },
+       "sideB": {
+        "seed": "7",
+        "name": "CV Bucks"
+       },
+       "games": [
+        {
+         "a": 7,
+         "b": 11
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 3",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "11",
+        "name": "Mountville Orioles"
+       },
+       "sideB": {
+        "seed": "6",
+        "name": "St. Leo Crusaders"
+       },
+       "games": [
+        {
+         "a": 6,
+         "b": 11
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 4",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "5",
+        "name": "Donegal Green"
+       },
+       "sideB": {
+        "seed": "4",
+        "name": "Garden Spot Spartans"
+       },
+       "games": [
+        {
+         "a": 4,
+         "b": 16
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 5",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "D1",
+        "name": "E-Town Blue"
+       },
+       "sideB": {
+        "seed": "8",
+        "name": "Ephrata"
+       },
+       "games": [
+        {
+         "a": 10,
+         "b": 9
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 6",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "7",
+        "name": "CV Bucks"
+       },
+       "sideB": {
+        "seed": "D2",
+        "name": "L-S Phillies"
+       },
+       "games": [
+        {
+         "a": 5,
+         "b": 12
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 7",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "3",
+        "name": "Donegal White"
+       },
+       "sideB": {
+        "seed": "6",
+        "name": "St. Leo Crusaders"
+       },
+       "games": [
+        {
+         "a": 11,
+         "b": 13
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 8",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "D1",
+        "name": "E-Town Blue"
+       },
+       "sideB": {
+        "seed": "4",
+        "name": "Garden Spot Spartans"
+       },
+       "games": [
+        {
+         "a": 7,
+         "b": 6
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 9",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "6",
+        "name": "St. Leo Crusaders"
+       },
+       "sideB": {
+        "seed": "D2",
+        "name": "L-S Phillies"
+       },
+       "games": [
+        {
+         "a": 8,
+         "b": 9
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 10",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "D2",
+        "name": "L-S Phillies"
+       },
+       "sideB": {
+        "seed": "D1",
+        "name": "E-Town Blue"
+       },
+       "games": [
+        {
+         "a": 12,
+         "b": 14
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "photos": {}
+  }
+ ]
+}

@@ -90,8 +90,7 @@ export function GameCard({
       {compact ? (
         <div className="le-gc-card-hdr le-gc-hdr-compact">
           <span className="le-gc-status-compact">
-            {(statusLabel === "FINAL" ? "Final" : statusLabel) +
-              (dateLabel ? ` - ${dateLabel}` : "")}
+            {statusLabel + (dateLabel ? ` · ${dateLabel}` : "")}
           </span>
         </div>
       ) : (

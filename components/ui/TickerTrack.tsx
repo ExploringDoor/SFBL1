@@ -197,12 +197,20 @@ function isDone(g: TickerGame): boolean {
 }
 
 function statusLabel(g: TickerGame, done: boolean): string {
-  if (g.status === "postponed") return "PPD";
-  if (done) return "FINAL";
   if (g.status === "live") return "LIVE";
-  if (!g.date) return "TBD";
+  // A finished or postponed game still needs its DATE. Returning a bare
+  // "FINAL" erased the date from every played game, which for a league whose
+  // season is over means the whole schedule shows no dates at all.
+  const stamp = done ? "FINAL" : g.status === "postponed" ? "PPD" : "";
+  if (!g.date) return stamp || "TBD";
   const d = parseGameDate(g.date);
-  if (!d) return "TBD";
+  if (!d) return stamp || "TBD";
+  if (stamp) {
+    return `${stamp} · ${d.toLocaleDateString("en-US", {
+      month: "numeric",
+      day: "numeric",
+    })}`;
+  }
   const day = d.toLocaleDateString("en-US", {
     weekday: "short",
     month: "numeric",

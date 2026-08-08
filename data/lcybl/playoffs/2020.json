@@ -1,0 +1,1434 @@
+{
+ "year": 2020,
+ "divisions": [
+  {
+   "division": "10u Section 1",
+   "champion": "MOUNTVILLE CUBS",
+   "runner_up": "MANHEIM TOWNSHIP STREAKS",
+   "disputed": false,
+   "rounds": [
+    {
+     "label": "Game 1",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "5",
+        "name": "Donegal Indians"
+       },
+       "sideB": {
+        "seed": "4",
+        "name": "Manheim VFW"
+       },
+       "games": [
+        {
+         "a": 12,
+         "b": 4
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 2",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "3",
+        "name": "Penn Manor"
+       },
+       "sideB": {
+        "seed": "2",
+        "name": "MT Streaks"
+       },
+       "games": [
+        {
+         "a": 9,
+         "b": 12
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 3",
+     "entries": [
+      {
+       "sideA": {
+        "seed": null,
+        "name": "D1 Mountville Cubs"
+       },
+       "sideB": {
+        "seed": "5",
+        "name": "Donegal Indians"
+       },
+       "games": [
+        {
+         "a": 9,
+         "b": 3
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 4",
+     "entries": [
+      {
+       "sideA": {
+        "seed": null,
+        "name": "D1 Mountville Cubs"
+       },
+       "sideB": {
+        "seed": "2",
+        "name": "MT Streaks"
+       },
+       "games": [
+        {
+         "a": 7,
+         "b": 3
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "photos": {}
+  },
+  {
+   "division": "10u Section Two Year End Tournament",
+   "champion": "MOUNTVILLE NATS",
+   "runner_up": "MOUNTVILLE GIANTS",
+   "disputed": false,
+   "rounds": [
+    {
+     "label": "Game 1",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "9",
+        "name": "Mountville Pirates"
+       },
+       "sideB": {
+        "seed": "8",
+        "name": "Manheim VFW"
+       },
+       "games": [
+        {
+         "a": 5,
+         "b": 6
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 2",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "12",
+        "name": "Mount Joy"
+       },
+       "sideB": {
+        "seed": "5",
+        "name": "Donegal Black"
+       },
+       "games": [
+        {
+         "a": 4,
+         "b": 9
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 3",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "10",
+        "name": "Donegal White"
+       },
+       "sideB": {
+        "seed": "7",
+        "name": "Penn Manor White"
+       },
+       "games": [
+        {
+         "a": 5,
+         "b": 7
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 4",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "11",
+        "name": "Hempfield"
+       },
+       "sideB": {
+        "seed": "6",
+        "name": "Penn Manor Gold"
+       },
+       "games": [
+        {
+         "a": 1,
+         "b": 8
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 5",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "8",
+        "name": "Manheim VFW"
+       },
+       "sideB": {
+        "seed": "D1",
+        "name": "Mountville Giants"
+       },
+       "games": [
+        {
+         "a": 3,
+         "b": 5
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 6",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "Lancaster SALSA"
+       },
+       "sideB": {
+        "seed": "5",
+        "name": "Donegal Black"
+       },
+       "games": [
+        {
+         "a": 7,
+         "b": 0
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 7",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "7",
+        "name": "Penn Manor White"
+       },
+       "sideB": {
+        "seed": "D2",
+        "name": "Mountville Nats"
+       },
+       "games": [
+        {
+         "a": 2,
+         "b": 12
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 8",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "3",
+        "name": "Garden Spot"
+       },
+       "sideB": {
+        "seed": "6",
+        "name": "Penn Manor Gold"
+       },
+       "games": [
+        {
+         "a": 7,
+         "b": 6
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 9",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "Lancaster SALSA"
+       },
+       "sideB": {
+        "seed": "D1",
+        "name": "Mountville Giants"
+       },
+       "games": [
+        {
+         "a": 7,
+         "b": 8
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 10",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "3",
+        "name": "Garden Spot"
+       },
+       "sideB": {
+        "seed": "D2",
+        "name": "Mountville Nats"
+       },
+       "games": [
+        {
+         "a": 4,
+         "b": 5
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 11",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "D2",
+        "name": "Mountville Nats"
+       },
+       "sideB": {
+        "seed": "D1",
+        "name": "Mountville Giants"
+       },
+       "games": [
+        {
+         "a": 4,
+         "b": 2
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "photos": {}
+  },
+  {
+   "division": "12u Section One",
+   "champion": "PENN MANOR COMETS",
+   "runner_up": "MANHEIM TOWNSHIP STREAKS",
+   "disputed": false,
+   "rounds": [
+    {
+     "label": "Series Game #1",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "D1",
+        "name": "Manheim Township Streaks"
+       },
+       "sideB": {
+        "seed": "8",
+        "name": "SOLANCO Gold"
+       },
+       "games": [
+        {
+         "a": 16,
+         "b": 4
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "D2",
+        "name": "Mountville Indians"
+       },
+       "sideB": {
+        "seed": "7",
+        "name": "Hempfield"
+       },
+       "games": [
+        {
+         "a": 12,
+         "b": 8
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "3",
+        "name": "Penn Manor"
+       },
+       "sideB": {
+        "seed": "6",
+        "name": "Donegal Indians"
+       },
+       "games": [
+        {
+         "a": 5,
+         "b": 4
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "L-S Cardinals"
+       },
+       "sideB": {
+        "seed": "5",
+        "name": "Manheim VFW"
+       },
+       "games": [
+        {
+         "a": 6,
+         "b": 5
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Series Game #2",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "D1",
+        "name": "Manheim Township Streaks"
+       },
+       "sideB": {
+        "seed": "8",
+        "name": "SOLANCO Gold"
+       },
+       "games": [
+        {
+         "a": 8,
+         "b": 3
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "D2",
+        "name": "Mountville Indians"
+       },
+       "sideB": {
+        "seed": "7",
+        "name": "Hempfield"
+       },
+       "games": [
+        {
+         "a": 10,
+         "b": 3
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "3",
+        "name": "Penn Manor"
+       },
+       "sideB": {
+        "seed": "6",
+        "name": "Donegal Indians"
+       },
+       "games": [
+        {
+         "a": 14,
+         "b": 4
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "L-S Cardinals"
+       },
+       "sideB": {
+        "seed": "5",
+        "name": "Manheim VFW"
+       },
+       "games": [
+        {
+         "a": 10,
+         "b": 21
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Series Game #3",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "L-S Cardinals"
+       },
+       "sideB": {
+        "seed": "5",
+        "name": "Manheim VFW"
+       },
+       "games": [
+        {
+         "a": 2,
+         "b": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "LNP Tournament",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "D1",
+        "name": "Manheim Township Streaks"
+       },
+       "sideB": {
+        "seed": "4",
+        "name": "L-S Cardinals"
+       },
+       "games": [
+        {
+         "a": 7,
+         "b": 6
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "D2",
+        "name": "Mountville Indians"
+       },
+       "sideB": {
+        "seed": "3",
+        "name": "Penn Manor"
+       },
+       "games": [
+        {
+         "a": 0,
+         "b": 2
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "L-S Cardinals"
+       },
+       "sideB": {
+        "seed": "D2",
+        "name": "Mountville Indians"
+       },
+       "games": [
+        {
+         "a": 3,
+         "b": 10
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "D1",
+        "name": "Manheim Township Streaks"
+       },
+       "sideB": {
+        "seed": "3",
+        "name": "Penn Manor"
+       },
+       "games": [
+        {
+         "a": 4,
+         "b": 5
+        },
+        {
+         "a": 3,
+         "b": 2
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "D1",
+        "name": "Manheim Township Streaks"
+       },
+       "sideB": {
+        "seed": "D2",
+        "name": "Mountville Indians"
+       },
+       "games": [
+        {
+         "a": 9,
+         "b": 8
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "photos": {}
+  },
+  {
+   "division": "12u Section 2",
+   "champion": "MOUNTVILLE YANKEES",
+   "runner_up": "MANHEIM TOWNSHIP THUNDER",
+   "disputed": false,
+   "rounds": [
+    {
+     "label": "Game 1",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "8",
+        "name": "MT Lightning"
+       },
+       "sideB": {
+        "seed": "D1",
+        "name": "Manheim VFW"
+       },
+       "games": [
+        {
+         "a": 3,
+         "b": 6
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 2",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "5",
+        "name": "GS Royals"
+       },
+       "sideB": {
+        "seed": "4",
+        "name": "Mountville Yankees"
+       },
+       "games": [
+        {
+         "a": 5,
+         "b": 10
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 3",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "6",
+        "name": "Lancaster Rec"
+       },
+       "sideB": {
+        "seed": "3",
+        "name": "Mountville Phillies"
+       },
+       "games": [
+        {
+         "a": 1,
+         "b": 7
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 4",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "7",
+        "name": "Donegal Indians"
+       },
+       "sideB": {
+        "seed": "2",
+        "name": "MT Thunder"
+       },
+       "games": [
+        {
+         "a": 3,
+         "b": 14
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 5",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "Mountville Yankees"
+       },
+       "sideB": {
+        "seed": "D1",
+        "name": "Manheim VFW"
+       },
+       "games": [
+        {
+         "a": 16,
+         "b": 7
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 6",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "2",
+        "name": "MT Thunder"
+       },
+       "sideB": {
+        "seed": "3",
+        "name": "Mountville Phillies"
+       },
+       "games": [
+        {
+         "a": 1,
+         "b": 0
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 7",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "2",
+        "name": "MT Thunder"
+       },
+       "sideB": {
+        "seed": "4",
+        "name": "Mountville Yankees"
+       },
+       "games": [
+        {
+         "a": 3,
+         "b": 8
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "photos": {}
+  },
+  {
+   "division": "12u Section Three Year End",
+   "champion": "DONEGAL BLACK",
+   "runner_up": "MOUNTVILLE TIGERS",
+   "disputed": false,
+   "rounds": [
+    {
+     "label": "Game 1",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "9",
+        "name": "PM White"
+       },
+       "sideB": {
+        "seed": "8",
+        "name": "Lancaster Rec"
+       },
+       "games": [
+        {
+         "a": 4,
+         "b": 11
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 2",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "7",
+        "name": "Hempfield"
+       },
+       "sideB": {
+        "seed": "D2",
+        "name": "Manheim VFW"
+       },
+       "games": [
+        {
+         "a": 8,
+         "b": 6
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 3",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "6",
+        "name": "SOLANCO Grey"
+       },
+       "sideB": {
+        "seed": "3",
+        "name": "Mountville Tigers"
+       },
+       "games": [
+        {
+         "a": 2,
+         "b": 6
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 4",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "5",
+        "name": "Donegal Green"
+       },
+       "sideB": {
+        "seed": "4",
+        "name": "MT Chargers"
+       },
+       "games": [
+        {
+         "a": 8,
+         "b": 4
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 5",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "8",
+        "name": "Lancaster Rec"
+       },
+       "sideB": {
+        "seed": "D1",
+        "name": "Donegal Black"
+       },
+       "games": [
+        {
+         "a": 3,
+         "b": 6
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 6",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "3",
+        "name": "Mountville Tigers"
+       },
+       "sideB": {
+        "seed": "7",
+        "name": "Hempfield"
+       },
+       "games": [
+        {
+         "a": 1,
+         "b": 0
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 7",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "5",
+        "name": "Donegal Green"
+       },
+       "sideB": {
+        "seed": "D1",
+        "name": "Donegal Black"
+       },
+       "games": [
+        {
+         "a": 4,
+         "b": 16
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 8",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "D1",
+        "name": "Donegal Black"
+       },
+       "sideB": {
+        "seed": "3",
+        "name": "Mountville Tigers"
+       },
+       "games": [
+        {
+         "a": 10,
+         "b": 2
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "photos": {}
+  },
+  {
+   "division": "14u Section One",
+   "champion": "MANHEIM TOWNSHIP STREAKS",
+   "runner_up": "MOUNTVILLE ANGELS",
+   "disputed": false,
+   "rounds": [
+    {
+     "label": "Series Game #1",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "1",
+        "name": "Man Twp Streaks"
+       },
+       "sideB": {
+        "seed": "8",
+        "name": "E-Town Black"
+       },
+       "games": [
+        {
+         "a": 4,
+         "b": 2
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "2",
+        "name": "Mountville Angels"
+       },
+       "sideB": {
+        "seed": "7",
+        "name": "Mount Joy"
+       },
+       "games": [
+        {
+         "a": 10,
+         "b": 0
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "3",
+        "name": "PM Comets"
+       },
+       "sideB": {
+        "seed": "6",
+        "name": "Cocalico Eagles"
+       },
+       "games": [
+        {
+         "a": 4,
+         "b": 7
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "Manheim Lions"
+       },
+       "sideB": {
+        "seed": "5",
+        "name": "Hempfield Black"
+       },
+       "games": [
+        {
+         "a": 7,
+         "b": 3
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Series Game #2",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "1",
+        "name": "Man Twp Streaks"
+       },
+       "sideB": {
+        "seed": "8",
+        "name": "E-Town Black"
+       },
+       "games": [
+        {
+         "a": 12,
+         "b": 2
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "2",
+        "name": "Mountville Angels"
+       },
+       "sideB": {
+        "seed": "7",
+        "name": "Mount Joy"
+       },
+       "games": [
+        {
+         "a": 12,
+         "b": 2
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "3",
+        "name": "PM Comets"
+       },
+       "sideB": {
+        "seed": "6",
+        "name": "Cocalico Eagles"
+       },
+       "games": [
+        {
+         "a": 3,
+         "b": 1
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "Manheim Lions"
+       },
+       "sideB": {
+        "seed": "5",
+        "name": "Hempfield Black"
+       },
+       "games": [
+        {
+         "a": 13,
+         "b": 4
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Series Game #3",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "3",
+        "name": "PM Comets"
+       },
+       "sideB": {
+        "seed": "6",
+        "name": "Cocalico Eagles"
+       },
+       "games": [
+        {
+         "a": 4,
+         "b": 2
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "LNP Tournament",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "1",
+        "name": "Man Twp Streaks"
+       },
+       "sideB": {
+        "seed": "4",
+        "name": "Manheim Lions"
+       },
+       "games": [
+        {
+         "a": 13,
+         "b": 8
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "2",
+        "name": "Mountville Angels"
+       },
+       "sideB": {
+        "seed": "3",
+        "name": "PM Comets"
+       },
+       "games": [
+        {
+         "a": 16,
+         "b": 6
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "Manheim Lions"
+       },
+       "sideB": {
+        "seed": "3",
+        "name": "PM Comets"
+       },
+       "games": [
+        {
+         "a": 11,
+         "b": 1
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "1",
+        "name": "Man Twp Streaks"
+       },
+       "sideB": {
+        "seed": "2",
+        "name": "Mountville Angels"
+       },
+       "games": [
+        {
+         "a": 5,
+         "b": 4
+        },
+        {
+         "a": 11,
+         "b": 3
+        }
+       ]
+      },
+      {
+       "sideA": {
+        "seed": "2",
+        "name": "Mountville Angels"
+       },
+       "sideB": {
+        "seed": "4",
+        "name": "Manheim Lions"
+       },
+       "games": [
+        {
+         "a": 13,
+         "b": 1
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "photos": {}
+  },
+  {
+   "division": "14u Section 2",
+   "champion": "MOUNT JOY",
+   "runner_up": "E-TOWN BLACK",
+   "disputed": false,
+   "rounds": [
+    {
+     "label": "Game 1",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "8",
+        "name": "Bowmansville R Sox"
+       },
+       "sideB": {
+        "seed": "D1",
+        "name": "Mountville Red Sox"
+       },
+       "games": [
+        {
+         "a": 2,
+         "b": 3
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 2",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "5",
+        "name": "Lititz VFW"
+       },
+       "sideB": {
+        "seed": "4",
+        "name": "E-Town Black"
+       },
+       "games": [
+        {
+         "a": 2,
+         "b": 8
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 3",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "6",
+        "name": "Hempfield Red"
+       },
+       "sideB": {
+        "seed": "3",
+        "name": "Manheim Tigers"
+       },
+       "games": [
+        {
+         "a": 0,
+         "b": 9
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 4",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "7",
+        "name": "Mount Joy"
+       },
+       "sideB": {
+        "seed": "D2",
+        "name": "SOLANCO Black"
+       },
+       "games": [
+        {
+         "a": 13,
+         "b": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 5",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "E-Town Black"
+       },
+       "sideB": {
+        "seed": "D1",
+        "name": "Mountville Red Sox"
+       },
+       "games": [
+        {
+         "a": 10,
+         "b": 5
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 6",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "7",
+        "name": "Mount Joy"
+       },
+       "sideB": {
+        "seed": "3",
+        "name": "Manheim Tigers"
+       },
+       "games": [
+        {
+         "a": 4,
+         "b": 2
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Game 7",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "7",
+        "name": "Mount Joy"
+       },
+       "sideB": {
+        "seed": "4",
+        "name": "E-Town Black"
+       },
+       "games": [
+        {
+         "a": 6,
+         "b": 3
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "photos": {}
+  },
+  {
+   "division": "14u Section Three Year End",
+   "champion": "PENN MANOR BLUE",
+   "runner_up": "MOUNTVILLE ORIOLES",
+   "disputed": false,
+   "rounds": [
+    {
+     "label": "Sat 1:00PM (2",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "2",
+        "name": "Mountville Orioles"
+       },
+       "sideB": {
+        "seed": "3",
+        "name": "Donegal Indians"
+       },
+       "games": [
+        {
+         "a": 8,
+         "b": 4
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Sat 3:30PM (4",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "2",
+        "name": "Mountville Orioles"
+       },
+       "sideB": {
+        "seed": "D1",
+        "name": "Penn Manor Blue"
+       },
+       "games": [
+        {
+         "a": 0,
+         "b": 6
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Sat 9:00AM (1",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "4",
+        "name": "Cocalico Eagles"
+       },
+       "sideB": {
+        "seed": "6",
+        "name": "Mount Joy"
+       },
+       "games": [
+        {
+         "a": 2,
+         "b": 13
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "label": "Sat 11:00AM (3",
+     "entries": [
+      {
+       "sideA": {
+        "seed": "5",
+        "name": "Mount Joy"
+       },
+       "sideB": {
+        "seed": "D1",
+        "name": "Penn Manor Blue"
+       },
+       "games": [
+        {
+         "a": 2,
+         "b": 16
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "photos": {}
+  }
+ ]
+}

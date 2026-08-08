@@ -7,6 +7,7 @@ import {
   buildCalendar,
   type GeneratorTeam,
 } from "../lib/schedule-generator";
+import { findConflicts } from "../lib/schedule-conflicts";
 
 const team = (id: string, organization?: string): GeneratorTeam => ({
   id,
@@ -583,5 +584,133 @@ describe("generateSchedule", () => {
         fields: [],
       }).games,
     ).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Multi-division scheduling: fields shared across divisions, and teams that
+// may only use certain fields. These are the constraints a 23-club league with
+// 9 divisions actually schedules under.
+// ---------------------------------------------------------------------------
+describe("generateSchedule — existing games and field eligibility", () => {
+  const base = {
+    startDate: "2026-09-12",
+    fields: [
+      { name: "Field 1", times: ["17:30", "19:00"] },
+      { name: "Field 2", times: ["17:30", "19:00"] },
+    ],
+  };
+
+  it("never reuses a slot an existing game already occupies", () => {
+    const teams = ["a", "b", "c", "d"].map((id) => team(id));
+    // Saturate every slot on the opening date.
+    const existingGames = [
+      { date: "2026-09-12", time: "17:30", field: "Field 1", away_team_id: "x", home_team_id: "y" },
+      { date: "2026-09-12", time: "19:00", field: "Field 1", away_team_id: "x", home_team_id: "y" },
+      { date: "2026-09-12", time: "17:30", field: "Field 2", away_team_id: "x", home_team_id: "y" },
+      { date: "2026-09-12", time: "19:00", field: "Field 2", away_team_id: "x", home_team_id: "y" },
+    ];
+    const res = generateSchedule({ ...base, teams, weeks: 4, existingGames });
+    const onOpeningDay = res.games.filter((g) => g.date === "2026-09-12");
+    expect(onOpeningDay).toHaveLength(0);
+    expect(res.slotsBlockedByExisting).toBeGreaterThan(0);
+  });
+
+  it("works around another division rather than double-booking it", () => {
+    // The 10U run already took Field 1 at 17:30 every week.
+    const teams = ["a", "b", "c", "d"].map((id) => team(id));
+    const existingGames = [
+      { date: "2026-09-12", time: "17:30", field: "Field 1", away_team_id: "u10a", home_team_id: "u10b" },
+      { date: "2026-09-19", time: "17:30", field: "Field 1", away_team_id: "u10a", home_team_id: "u10b" },
+    ];
+    const res = generateSchedule({ ...base, teams, weeks: 3, existingGames });
+    const clash = res.games.some(
+      (g) =>
+        existingGames.some(
+          (e) => e.date === g.date && e.field === g.field && e.time === g.time,
+        ),
+    );
+    expect(clash).toBe(false);
+    expect(res.games.length).toBeGreaterThan(0);
+  });
+
+  it("will not put a team on a field outside its allowed list", () => {
+    const teams = [
+      { id: "big1", name: "big1", allowedFields: ["Field 1"] },
+      { id: "big2", name: "big2", allowedFields: ["Field 1"] },
+      { id: "any1", name: "any1" },
+      { id: "any2", name: "any2" },
+    ];
+    const res = generateSchedule({ ...base, teams, weeks: 6 });
+    for (const gm of res.games) {
+      for (const id of [gm.away_team_id, gm.home_team_id]) {
+        if (id === "big1" || id === "big2") expect(gm.field).toBe("Field 1");
+      }
+    }
+  });
+
+  it("reports a pairing with no shared legal field instead of silently dropping it", () => {
+    const teams = [
+      { id: "onlyA", name: "onlyA", allowedFields: ["Field 1"] },
+      { id: "onlyB", name: "onlyB", allowedFields: ["Field 2"] },
+    ];
+    const res = generateSchedule({ ...base, teams, weeks: 4 });
+    expect(res.games).toHaveLength(0);
+    expect(res.noLegalField).toHaveLength(1);
+    expect(res.unscheduled).toHaveLength(0); // not a capacity problem
+    expect(res.warnings.join(" ")).toMatch(/allowed-field/i);
+  });
+
+  it("does not schedule a team already committed elsewhere at that time", () => {
+    const teams = ["a", "b", "c", "d"].map((id) => team(id));
+    const existingGames = [
+      // Team "a" is playing a makeup game at another park at 17:30.
+      { date: "2026-09-12", time: "17:30", field: "Somewhere Else", away_team_id: "a", home_team_id: "z" },
+    ];
+    const res = generateSchedule({ ...base, teams, weeks: 3, existingGames });
+    const aAt1730 = res.games.filter(
+      (g) =>
+        g.date === "2026-09-12" &&
+        g.time === "17:30" &&
+        (g.away_team_id === "a" || g.home_team_id === "a"),
+    );
+    expect(aAt1730).toHaveLength(0);
+  });
+
+  it("produces a schedule the conflict checker finds clean", () => {
+    // The round-trip guarantee: whatever the generator emits must survive the
+    // same validation the save endpoint applies, or the admin gets a preview
+    // that cannot be saved.
+    const teams = ["a", "b", "c", "d", "e", "f"].map((id) => team(id));
+    const existingGames = [
+      { date: "2026-09-12", time: "17:30", field: "Field 1", away_team_id: "x", home_team_id: "y", id: "e1" },
+    ];
+    const res = generateSchedule({ ...base, teams, weeks: 6, existingGames });
+    expect(res.games.length).toBeGreaterThan(0);
+    const conflicts = findConflicts(res.games, { existingGames, teams });
+    expect(conflicts.filter((c) => c.severity === "error")).toEqual([]);
+  });
+
+  it("stays clean across divisions generated one after another", () => {
+    // Exactly how a 9-division league is built: generate, feed the result
+    // forward as existing, generate the next.
+    const divisions = [
+      ["a1", "a2", "a3", "a4"],
+      ["b1", "b2", "b3", "b4"],
+      ["c1", "c2", "c3", "c4"],
+    ];
+    let accumulated: ReturnType<typeof generateSchedule>["games"] = [];
+    for (const ids of divisions) {
+      const res = generateSchedule({
+        ...base,
+        teams: ids.map((id) => team(id)),
+        weeks: 6,
+        existingGames: accumulated,
+      });
+      accumulated = [...accumulated, ...res.games];
+    }
+    expect(accumulated.length).toBeGreaterThan(10);
+    const conflicts = findConflicts(accumulated);
+    expect(conflicts.filter((c) => c.severity === "error")).toEqual([]);
   });
 });

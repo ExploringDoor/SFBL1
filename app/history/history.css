@@ -348,6 +348,35 @@
   font-weight: 700;
 }
 
+/* Beaten finalist, on its own line under the champion. Deliberately quieter
+   than the winner: it is context, not a co-headline. */
+.le-champ-runner {
+  display: block;
+  font-size: 0.78em;
+  opacity: 0.72;
+  margin-top: 1px;
+  line-height: 1.25;
+}
+
+.le-champ-runner strong {
+  font-weight: 600;
+}
+
+/* Marks a title the league's own records disagree about. */
+.le-champ-disputed {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 3px;
+  font-size: 0.82em;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #8a5300;
+  background: rgba(245, 166, 35, 0.18);
+  border: 1px solid rgba(245, 166, 35, 0.45);
+}
+
 /* ── Leaderboard ──────────────────────────────────────────────── */
 
 .le-lb {
@@ -385,7 +414,10 @@
   bottom: 0;
   border-radius: 8px;
   z-index: 0;
-  opacity: 0.35;
+  /* Uniform gold on every row (see HistoryView) so the leaderboard reads as
+     one consistent bar chart, not a scatter of team colors. */
+  background: linear-gradient(90deg, rgba(201, 162, 39, 0.14), rgba(201, 162, 39, 0.4));
+  opacity: 1;
   pointer-events: none;
   transition: width 0.4s ease;
 }
@@ -789,4 +821,348 @@ td.le-dw-rec {
   color: var(--text-strong, #111);
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   padding-bottom: 4px;
+}
+
+/* Season label links through to that year's full brackets. */
+.le-champ-season-link {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 2px solid var(--accent, #9a8c3f);
+  padding-bottom: 1px;
+  transition: opacity 0.15s;
+}
+
+.le-champ-season-link:hover {
+  opacity: 0.7;
+}
+
+/* ── Champions, as season cards ────────────────────────────────
+   Replaces the old pill-heap. At 8 divisions x 17 seasons a wrapping run of
+   badges has no alignment: you cannot scan a column to compare seasons, and
+   the runner-up has nowhere to live. These are aligned three-column rows
+   inside a per-season card. */
+
+.le-champ-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.le-cs {
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  border-radius: 14px;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.le-cs-hd {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 16px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 45, 114, 0.05),
+    rgba(218, 165, 32, 0.07)
+  );
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.le-cs-year {
+  margin: 0;
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--brand-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.le-cs-year-link {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 3px solid var(--gold, #c9a227);
+}
+.le-cs-year-link:hover {
+  opacity: 0.75;
+}
+
+.le-cs-count {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.le-cs-cta {
+  margin-left: auto;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--brand-primary);
+  white-space: nowrap;
+}
+.le-cs-cta:hover {
+  text-decoration: underline;
+}
+
+.le-cs-grid {
+  display: grid;
+}
+
+.le-cs-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.9fr) minmax(160px, 1.3fr) minmax(120px, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 9px 16px;
+  font-size: 14px;
+}
+
+.le-cs-row + .le-cs-row {
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.le-cs-row:hover {
+  background: rgba(0, 45, 114, 0.025);
+}
+
+.le-cs-div {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.le-cs-win {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.le-cs-logo {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: 50%;
+  object-fit: contain;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.le-cs-logo-fb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  border: none;
+}
+
+.le-cs-team {
+  font-weight: 800;
+  color: var(--text-strong);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+a.le-cs-team:hover {
+  text-decoration: underline;
+}
+
+/* The beaten finalist is context, not a co-headline. */
+.le-cs-runner {
+  font-size: 12.5px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .le-cs-row {
+    grid-template-columns: 1fr;
+    gap: 3px;
+    padding: 11px 14px;
+  }
+  .le-cs-runner {
+    padding-left: 35px;
+  }
+}
+
+/* ── Champions slideshow (chronological, like D27) ───────────────── */
+/* ── Champions marquee — a constant horizontal scroll of champion photos,
+   the same feel as the score ticker. Two copies of the row animate
+   translateX(0 -> -50%); hover pauses. See components/ChampionsSlideshow. */
+.cs-marquee {
+  position: relative;
+  margin: 4px 0 26px;
+  padding: 14px 0;
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0b1424 0%, #0b1b3a 100%);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.22);
+}
+/* Soft fade at both edges so cards glide in/out instead of hard-cutting. */
+.cs-marquee::before,
+.cs-marquee::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 72px;
+  z-index: 2;
+  pointer-events: none;
+}
+.cs-marquee::before { left: 0; background: linear-gradient(to right, #0b1424, transparent); }
+.cs-marquee::after { right: 0; background: linear-gradient(to left, #0b1424, transparent); }
+
+.cs-mtrack {
+  display: flex;
+  width: max-content;
+  gap: 16px;
+  padding: 0 8px;
+  animation-name: cs-marquee-scroll;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+.cs-marquee:hover .cs-mtrack,
+.cs-marquee:focus-within .cs-mtrack {
+  animation-play-state: paused;
+}
+@keyframes cs-marquee-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.cs-card {
+  flex: 0 0 auto;
+  width: clamp(230px, 26vw, 320px);
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0f1b30;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  text-decoration: none;
+  color: #fff;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.cs-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--gold, #c9a227);
+  box-shadow: 0 16px 30px -14px rgba(0, 0, 0, 0.6);
+}
+.cs-card-photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  /* The photos are now pre-cropped to just the team photo (tools/crop_champ_
+     photos.py strips the baked title), so cover fills the card uniformly with
+     no letterbox and no text to clip. */
+  background: #0f1b30;
+  overflow: hidden;
+}
+.cs-card-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.cs-card-cap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px 13px;
+}
+.cs-card-year {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--gold, #c9a227);
+}
+.cs-card-div {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+.cs-card-team {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1.1;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cs-mtrack {
+    animation: none;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .cs-mtrack::-webkit-scrollbar { display: none; }
+}
+
+/* ── LCYBL Champions tab: branded trophy hero + header mark ───────────
+   Only rendered when the tenant ships public/<tenant>/trophy.png. */
+.le-champ-hero {
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 3vw, 40px);
+  padding: clamp(18px, 3vw, 34px) clamp(20px, 4vw, 44px);
+  margin-bottom: 22px;
+  border-radius: 18px;
+  background:
+    radial-gradient(120% 140% at 12% 0%, rgba(201,162,39,0.16), transparent 60%),
+    linear-gradient(135deg, #14213d 0%, #0b1b3a 100%);
+  color: #f5f0e0;
+  box-shadow: 0 18px 44px -22px rgba(11,27,58,0.7);
+  position: relative;
+  overflow: hidden;
+}
+.le-champ-hero::after {
+  /* faint diagonal pinstripes to match the home hero */
+  content: "";
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(135deg, rgba(255,255,255,0.04) 0 2px, transparent 2px 16px);
+  pointer-events: none;
+}
+.le-champ-hero-trophy {
+  width: clamp(84px, 12vw, 150px);
+  height: auto;
+  flex-shrink: 0;
+  filter: drop-shadow(0 10px 22px rgba(0,0,0,0.45));
+  position: relative; z-index: 1;
+}
+.le-champ-hero-eyebrow {
+  font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: #c9a227; font-weight: 800; margin: 0 0 4px;
+}
+.le-champ-hero-title {
+  font-family: var(--font-display, inherit);
+  font-size: clamp(30px, 5vw, 52px);
+  line-height: 0.98; margin: 0 0 8px; color: #fff;
+}
+.le-champ-hero-sub { margin: 0; opacity: 0.82; font-size: clamp(14px, 1.6vw, 17px); max-width: 46ch; }
+.le-champ-hd-trophy {
+  height: 1.5em; width: auto; vertical-align: -0.35em; margin-right: 2px;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.3));
+}
+@media (max-width: 560px) {
+  .le-champ-hero { flex-direction: column; text-align: center; }
+  .le-champ-hero-sub { margin-inline: auto; }
 }

@@ -1,0 +1,414 @@
+{
+  "league": {
+    "slug": "lcybl",
+    "name": "Lancaster County Youth Baseball League",
+    "abbrev": "LCYBL",
+    "sport": "baseball",
+    "innings": 6,
+    "ruleset": "baseball",
+    "linescore_innings": 6,
+    "stat_columns": [],
+    "pitching": {
+      "tracked": false
+    },
+    "rules_flags": {
+      "dropped_third_strike": true,
+      "balks": false,
+      "infield_fly": true
+    },
+    "flags": {
+      "stats_enabled": false,
+      "ticker_scroll": true,
+      "motion_fx": true,
+      "banner_strip": true,
+      "hide_home_hero": true,
+      "lmll_scoreboard": true
+    },
+    "season_year": 2026,
+    "theme": {
+      "primary": "#14213d",
+      "accent": "#9a8c3f",
+      "secondary": "#b23a3a",
+      "logo_url": "/lcybl/logo.png",
+      "banner_url": "/lcybl/banner-home.jpg",
+      "og_image_url": "/lcybl/og.png"
+    },
+    "billing": {
+      "status": "trial",
+      "paid_through": null,
+      "last_payment": null
+    },
+    "fields": [
+      "A. Herr Park",
+      "Cedar Hollow",
+      "Charlestown Upper",
+      "Colerain Park",
+      "Community #2",
+      "Community #3",
+      "Cornwall Field",
+      "County Park #4",
+      "Creek Field",
+      "Cresswell Park 1",
+      "Dairy Road Field",
+      "Denver 4th St",
+      "Denver Park #1",
+      "Denver Partk #2",
+      "Dutch Gold #1",
+      "Ephrata MS - Softball Sta",
+      "Farmdale Elementary",
+      "Flory Park #1",
+      "Flory Park #2",
+      "Froelich Park East",
+      "Froelich Park West",
+      "Fuhrman Park #1",
+      "Fuhrman Park #2",
+      "Fuhrman Park Field #4",
+      "Gladfelter Field 5",
+      "Gladfelter Field__1",
+      "Gloninger Woods Park",
+      "Governor Stables",
+      "Greider Park Field A",
+      "Greider Park Field C",
+      "Hempfield Fire Dept.",
+      "Herr Flowers #2",
+      "Herr Flowers #3",
+      "Highland Twp.",
+      "Highville FC",
+      "Hopeland Park",
+      "Kunkle Field",
+      "Lafayette Fire",
+      "Lanc Mennonite HS Varsity",
+      "Legion Park",
+      "Manor MS",
+      "McNickle Field",
+      "Minch Park",
+      "Minor Field",
+      "Mountville Boro",
+      "Municipal Field",
+      "New Holland Legion",
+      "New Holland Park",
+      "Nitrauer ES",
+      "Overlook #1",
+      "Overlook #2",
+      "Paradise Park #1",
+      "Paradise Park #4",
+      "Penryn Field",
+      "Pool Field",
+      "Reamstown Park",
+      "Reidenbaugh Elm",
+      "Rohrerstown ES #1",
+      "Rohrerstown ES #2",
+      "Roland Park Lloyd Field",
+      "Roland Park Wolf Field",
+      "SOLANCO Legion",
+      "SYBA Field Complex #1",
+      "SYBA Field Complex #2",
+      "SYBA Field Complex #3",
+      "SYBA Field Complex #4",
+      "Safe Harbor Creek Field",
+      "Silver Spring Park",
+      "Silvermine Park",
+      "Snyder Park #1",
+      "Snyder Park #2",
+      "Snyder Park #3",
+      "South Lebanon ES",
+      "South Lebanon Field #2",
+      "South Lebanon Field #3",
+      "South Lebanon Field #4",
+      "St. Leo Field 1",
+      "St. Leo Field 2",
+      "Stoner Park",
+      "Sweetbriar Park #2",
+      "Tom Herr",
+      "Tom Herr Field",
+      "Trolly Line Park",
+      "Veteran's Memorial Park",
+      "Village Park #1",
+      "Village Park Field #12",
+      "Village Park Field #7",
+      "Warwick Middle School",
+      "Warwick Twp #1",
+      "Warwick Twp #2",
+      "Warwick Twp #3",
+      "Washington Boro",
+      "Wayside Church",
+      "Wenger Field",
+      "Witmer Heights #1",
+      "Witmer Heights #2",
+      "Wolgemuth Park"
+    ],
+    "captain": {
+      "passwordless": false
+    },
+    "standings": {
+      "scoring": "pct",
+      "tiebreaker": "rd"
+    },
+    "about": "Lancaster County youth baseball since 1954, now in its 74th year. 185 teams across 23 member clubs play 8u, 10u, 12u and 14u baseball each spring, plus fall ball.",
+    "nav": {
+      "hide": [
+        "Stats",
+        "Team Stats",
+        "Player of the Week",
+        "Availability",
+        "Photos",
+        "Pay Online",
+        "Store",
+        "Player Registration",
+        "Team Registration",
+        "Team Waiver",
+        "Register",
+        "Umpire Evaluation",
+        "Player Ads",
+        "Free Agents",
+        "SFBL",
+        "Summer League",
+        "Eligibility"
+      ],
+      "add": [
+        {
+          "label": "League",
+          "href": "#",
+          "children": [
+            {
+              "label": "Register a Team",
+              "href": "/team-registration"
+            },
+            {
+              "label": "Registration Steps",
+              "href": "/content/register"
+            },
+            {
+              "label": "League Documents",
+              "href": "/content/documents"
+            },
+            {
+              "label": "Rules",
+              "href": "/rules"
+            },
+            {
+              "label": "Field Locations",
+              "href": "/fields"
+            },
+            {
+              "label": "Member Clubs",
+              "href": "/content/clubs"
+            },
+            {
+              "label": "History of LCYBL",
+              "href": "/content/history"
+            },
+            {
+              "label": "Board Members",
+              "href": "/content/board"
+            },
+            {
+              "label": "FAQ",
+              "href": "/content/faq"
+            },
+            {
+              "label": "Contact",
+              "href": "/content/contact"
+            }
+          ]
+        },
+        {
+          "label": "Tournaments",
+          "href": "/tournaments"
+        },
+        {
+          "label": "Volunteer",
+          "href": "#",
+          "children": [
+            {
+              "label": "Snack Bar",
+              "href": "/snack-bar"
+            },
+            {
+              "label": "Umpires",
+              "href": "/content/umpires"
+            }
+          ]
+        },
+        {
+          "label": "Sponsors",
+          "href": "/content/sponsors"
+        }
+      ]
+    },
+    "tournaments": {
+      "intro": "Two kinds of tournament run alongside the LCYBL season. Member clubs host their own tournaments open to LCYBL teams, and the league runs its own LNP Tournament for Section One. Entry questions go to the hosting club or the tournament director via the League. Listed in date order.",
+      "events": [
+        {
+          "name": "LNP Tournament \u2014 League Championship",
+          "ages": "10u, 12u & 14u Section 1",
+          "when": "June\u2013July 2026",
+          "url": "http://lnptournament.com/",
+          "note": "The league's Section One championship (formerly the New Era Tournament). The 14u LNP is a wood-bat tournament."
+        },
+        {
+          "name": "Mountville Spring Training Showdown",
+          "ages": "12u Sections 1 and 2",
+          "when": "Friday March 27 through Sunday March 29, 2026",
+          "url": "http://tournaments.mountville.org"
+        },
+        {
+          "name": "Elizabethtown Bears Club",
+          "ages": "10U1 Tournament",
+          "when": "March 28 to 29, 2026 (Saturday and Sunday)",
+          "location": "Wenger and New Minor Field on Poplar Street, Elizabethtown. GPS address: 110 Peace Alley,\u2026",
+          "cost": "$425.00 per team, payable to EBC Bears Club",
+          "note": "all teams guaranteed 3 games, weather permitting. Two randomly chosen seeding games, then teams are seeded on wins, run differential, runs against an\u2026"
+        },
+        {
+          "name": "Mountville 10u \"April Diamond Classic\"",
+          "ages": "10u Sections 2 and 3",
+          "when": "Friday April 17 through Sunday April 19, 2026",
+          "url": "http://tournaments.mountville.org"
+        },
+        {
+          "name": "Mountville 14u \"May Slugfest Showcase\"",
+          "ages": "LCYBL Sections 1 and 2",
+          "when": "Friday May 1 through Sunday May 3, 2026",
+          "url": "http://tournaments.mountville.org"
+        },
+        {
+          "name": "Donegal (DBSA) \u2014 10U1 Tournament",
+          "when": "May 1 to 3, 2026",
+          "location": "Kunkle Field & Fuhrman Park",
+          "cost": "$400 per team",
+          "note": "General league teams only. Fri/Sat seeding, Sun bracket."
+        },
+        {
+          "name": "Donegal (DBSA) \u2014 12U2 Tournament",
+          "when": "May 1 to 3, 2026",
+          "location": "Kunkle Field & Fuhrman Park",
+          "cost": "$375 per team",
+          "note": "General league teams only. Fri/Sat seeding, Sun bracket."
+        },
+        {
+          "name": "Donegal (DBSA) \u2014 12U1 Mother's Day Tournament",
+          "when": "May 8 to 10, 2026",
+          "location": "Kunkle Field & Fuhrman Park",
+          "cost": "$400 per team",
+          "note": "General league teams only. Fri/Sat seeding, Sun bracket."
+        },
+        {
+          "name": "Donegal (DBSA) \u2014 12U3 Mother's Day Tournament",
+          "when": "May 8 to 10, 2026",
+          "location": "Kunkle Field & Fuhrman Park",
+          "cost": "$375 per team",
+          "note": "General league teams only. Fri/Sat seeding, Sun bracket."
+        },
+        {
+          "name": "Donegal (DBSA) \u2014 10U2 Memorial Day Tournament",
+          "when": "May 22 to 24, 2026",
+          "location": "Kunkle Field & Fuhrman Park",
+          "cost": "$375 per team",
+          "note": "General league teams only. Fri/Sat seeding, Sun bracket."
+        },
+        {
+          "name": "Donegal (DBSA) \u2014 14U3 Memorial Day Tournament",
+          "when": "May 22 to 24, 2026",
+          "location": "Kunkle Field & Fuhrman Park",
+          "cost": "$375 per team",
+          "note": "General league teams only. Fri/Sat seeding, Sun bracket."
+        },
+        {
+          "name": "Donegal (DBSA) \u2014 14U2 Tournament",
+          "when": "June 5 to 7, 2026",
+          "location": "Kunkle Field & Fuhrman Park",
+          "cost": "$375 per team",
+          "note": "General league teams only. Fri/Sat seeding, Sun bracket."
+        },
+        {
+          "name": "Donegal (DBSA) \u2014 10u3 Tournament",
+          "when": "June 5 to 7, 2026",
+          "location": "Kunkle Field & Fuhrman Park",
+          "cost": "$375 per team",
+          "note": "General league teams only. Fri/Sat seeding, Sun bracket."
+        },
+        {
+          "name": "Pequea Valley",
+          "ages": "12u2 and 14u2",
+          "when": "May 8 to 10, 2026",
+          "note": "Docs: Pequea Valley Braves tournament flyer"
+        },
+        {
+          "name": "Warwick Travel Baseball",
+          "ages": "12U Section 2 Tournament",
+          "when": "May 15, 16, 17, 2026",
+          "location": "the Warwick Township Building field off Clay Road in Lititz, the field the 12U teams play\u2026",
+          "cost": "$400 per team",
+          "note": "all teams have a 3 game guarantee, 2 seeding games followed by single elimination"
+        },
+        {
+          "name": "CTYAA 12U Section 2",
+          "ages": "Battle at Conoy Creek Tournament",
+          "when": "May 16 to 17, 2026",
+          "location": "Strickland Field, 2118 River Rd, Bainbridge, PA 17502. Creek onsite for fishing and cooli\u2026",
+          "cost": "$325 per team. 6 team maximum. Rain out date TBD",
+          "note": "Round robin type play on Saturday with a single elimination bracket on Sunday. All teams guaranteed 3 games minimum"
+        },
+        {
+          "name": "Elizabethtown Bears Club",
+          "ages": "12U2 and 12U3 Tournament",
+          "when": "May 30 to 31, 2026 (Saturday and Sunday)",
+          "location": "Wenger and New Minor Field on Poplar Street, Elizabethtown. GPS address: 110 Peace Alley,\u2026",
+          "cost": "$425.00 per team, payable to EBC Bears Club",
+          "note": "all teams guaranteed 3 games, weather permitting. Two randomly chosen seeding games, then single elimination with byes for the top teams"
+        },
+        {
+          "name": "Manheim VFW Tournament",
+          "ages": "8u and 10u Section 2",
+          "when": "June 5 to 7, 2026",
+          "location": "Pool Field and Creek Field",
+          "cost": "$150 for 8u, $350 for 10u2",
+          "note": "8u Bracket and 10u Section 2 Bracket"
+        },
+        {
+          "name": "Manheim VFW Tournament",
+          "ages": "12u Section 1 and 10u Section 1",
+          "when": "June 12 to 14, 2026",
+          "location": "Pool Field and Creek Field",
+          "cost": "$350 for 10u1, $400 for 12u1",
+          "note": "12u Section 1 Bracket and 10u Section 1 Bracket"
+        },
+        {
+          "name": "Manheim VFW Tournament",
+          "ages": "12u2",
+          "when": "June 19 to 21, 2026",
+          "location": "Pool Field and Creek Field",
+          "cost": "$350 for 12u2",
+          "note": "12u2 Bracket"
+        },
+        {
+          "name": "SOLANCO",
+          "ages": "10u2 and 12u2",
+          "when": "June 19 to 21, 2026",
+          "location": "Solanco Youth Baseball Association Complex, 1070 Kirkwood Pike, Quarryville, PA 17566",
+          "cost": "$450 per team",
+          "note": "3 game minimum, pool play followed by seeded play"
+        },
+        {
+          "name": "Hempfield 10u3 End-Of-Season Tournament",
+          "when": "June 27 to 28, 2026",
+          "location": "Centerville Middle School, 865 Centerville Rd, Lancaster, PA 17601",
+          "cost": "$400 per team. Checks payable to Hempfield Youth Association",
+          "note": "10 team maximum, 6 team minimum. Two seeding games Saturday, then a single elimination bracket Sunday. Time limit of 1 hour 45 minutes. No time limit\u2026"
+        },
+        {
+          "name": "Ephrata Baseball Association (EBA) 3rd Annual Fall Brawl",
+          "ages": "Labor Day Weekend",
+          "when": "Saturday September 5 to Sunday September 6, 2026. Rain date Monday Se\u2026",
+          "location": "Snyder Park, 200 Clay School Road, Ephrata, PA 17522"
+        }
+      ]
+    }
+  },
+  "teams_csv": "./teams.csv",
+  "schedule_csv": "./schedule.csv",
+  "admins": [
+    "adam.miller.22@gmail.com"
+  ]
+}

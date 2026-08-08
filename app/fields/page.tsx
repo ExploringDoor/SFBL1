@@ -18,6 +18,8 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { FieldsDirectory, type Field } from "@/components/FieldsDirectory";
+import { FieldsByClub } from "@/components/FieldsByClub";
+import { FieldsMap } from "@/components/FieldsMap";
 
 export const dynamic = "force-dynamic";
 
@@ -98,6 +100,9 @@ export default async function FieldsPage() {
 
   const fields = await loadFields(tenantId);
 
+  const clubGrouped =
+    fields.filter((f) => (f.location ?? "").trim()).length >= 20;
+
   return (
     <main className="container py-10">
       <header className="mb-6">
@@ -117,13 +122,22 @@ export default async function FieldsPage() {
         </h1>
         <p style={{ marginTop: 8, color: "var(--muted)", maxWidth: 680 }}>
           {fields.length > 0
-            ? "Every park and field the league plays at. Tap a button to open directions in Google Maps or Apple Maps."
+            ? "Every diamond the league plays at on one interactive map. Search the list or tap a pin for one-tap driving directions."
             : "Field locations are posted here once the league adds them."}
         </p>
       </header>
 
+      {/* LCYBL: the LMLL interactive map — every field pinned, plus a searchable
+          list that flies the map to a field on tap. Falls back to the club-grouped
+          directory (and the town-grouped card grid) for other tenants. */}
       {fields.length > 0 ? (
-        <FieldsDirectory fields={fields} />
+        tenantId === "lcybl" ? (
+          <FieldsMap fields={fields} />
+        ) : clubGrouped ? (
+          <FieldsByClub fields={fields} />
+        ) : (
+          <FieldsDirectory fields={fields} />
+        )
       ) : (
         <p style={{ color: "var(--muted)" }}>
           No fields have been added yet. Game locations are listed on the{" "}

@@ -17,7 +17,7 @@
 //
 // CSV formats:
 //   teams.csv:
-//     id,name,abbrev,division,color,logo_url[,w,l,t]
+//     id,name,abbrev,division,color,logo_url[,w,l,t][,gamechanger_url]
 //     (w/l/t are OPTIONAL and only for stats-off tenants whose source
 //      site publishes official records that can't be recomputed from
 //      the games — e.g. leagues with crossover games that count in no
@@ -353,11 +353,37 @@ function stageTeams(): StageResult {
         ...(r.abbrev ? { abbrev: r.abbrev } : {}),
         ...(r.division ? { division: r.division } : {}),
         ...(r.color ? { color: r.color } : {}),
+        // Age group for the age-grouped standings / teams jump-nav (LCYBL).
+        // Optional column: leagues without it (SFBL, LBDC) are unchanged. The
+        // order is the leading number ("10u" -> 10) so 8U < 10U < 12U < 14U.
+        ...((r as Record<string, unknown>).age_group
+          ? {
+              ageGroup: String((r as Record<string, unknown>).age_group),
+              ageOrder:
+                parseInt(
+                  /(\d+)/.exec(
+                    String((r as Record<string, unknown>).age_group),
+                  )?.[1] ?? "999",
+                  10,
+                ) || 999,
+            }
+          : {}),
         // Explicit null when CSV column is blank — set merge:true
         // preserves existing values for omitted fields, so we have
         // to send null to actually CLEAR a previously-set logo_url
         // (e.g. when re-provisioning after marking a logo broken).
         logo_url: r.logo_url ? r.logo_url : null,
+        // Optional per-team GameChanger link, for leagues whose clubs keep
+        // their book there. Same explicit-null rule as logo_url so a cleared
+        // column actually clears the field. Only http(s) is stored; the team
+        // page validates again before rendering it into an href.
+        gamechanger_url: (() => {
+          const raw = String(
+            (r as Record<string, unknown>).gamechanger_url ?? "",
+          ).trim();
+          if (!raw) return null;
+          return /^https?:\/\//i.test(raw) ? raw : null;
+        })(),
         active: true,
         updated_at: new Date().toISOString(),
       },

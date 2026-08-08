@@ -1,0 +1,69 @@
+{
+ "year": 2014,
+ "divisions": [
+  {
+   "division": "10u Section 1",
+   "champion": "Warwick Cardinals",
+   "runner_up": "Manheim Township Blue Streaks",
+   "disputed": false,
+   "rounds": [],
+   "photos": {}
+  },
+  {
+   "division": "10u Section 2",
+   "champion": "SALSA",
+   "runner_up": "Cocalico Eagles",
+   "disputed": false,
+   "rounds": [],
+   "photos": {}
+  },
+  {
+   "division": "12u Section 1 / New Era",
+   "champion": "Manheim Township Streaks",
+   "runner_up": "Warwick Phillies",
+   "disputed": false,
+   "rounds": [],
+   "photos": {}
+  },
+  {
+   "division": "12u Section 2",
+   "champion": "Manheim Township Lightning",
+   "runner_up": "Manheim VFW",
+   "disputed": false,
+   "rounds": [],
+   "photos": {}
+  },
+  {
+   "division": "12u Section 3",
+   "champion": "Manheim Township Lightning",
+   "runner_up": "Ephrata Chargers",
+   "disputed": false,
+   "rounds": [],
+   "photos": {}
+  },
+  {
+   "division": "14u Section 1 / New Era",
+   "champion": "Donegal",
+   "runner_up": "Lititz VFW",
+   "disputed": false,
+   "rounds": [],
+   "photos": {}
+  },
+  {
+   "division": "14u Section 2",
+   "champion": "E-Town Gray",
+   "runner_up": "Cocalico Eagles",
+   "disputed": false,
+   "rounds": [],
+   "photos": {}
+  },
+  {
+   "division": "14u Section 3",
+   "champion": "Manor Ridge",
+   "runner_up": "SWS Dodgers",
+   "disputed": false,
+   "rounds": [],
+   "photos": {}
+  }
+ ]
+}

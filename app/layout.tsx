@@ -211,6 +211,8 @@ export default async function RootLayout({
   let tickerScroll = false;
   // flags.banner_full_bleed — edge-to-edge page header banners (Island).
   let bannerFullBleed = false;
+  // flags.banner_strip — slim super-wide fixed-ratio header band (LCYBL).
+  let bannerStrip = false;
   // flags.motion_fx — opt-in motion layer (scroll reveals, count-ups, banner
   // push-in). OFF for every existing tenant, so their sites do not move.
   let motionFx = false;
@@ -243,6 +245,7 @@ export default async function RootLayout({
       logoUrl = cfg.theme?.logo_url ?? null;
       tickerScroll = cfg.flags?.ticker_scroll === true;
       bannerFullBleed = cfg.flags?.banner_full_bleed === true;
+      bannerStrip = cfg.flags?.banner_strip === true;
       motionFx = cfg.flags?.motion_fx === true;
       stickyNav = cfg.flags?.sticky_nav === true;
       themePrimary = cfg.theme?.primary;
@@ -431,6 +434,14 @@ export default async function RootLayout({
             <link rel="icon" type="image/png" sizes="192x192" href="/coybl/icon-192.png" />
             <link rel="icon" type="image/png" sizes="512x512" href="/coybl/icon-512.png" />
           </>
+        ) : leagueAbbrev === "LCYBL" ? (
+          <>
+            <link rel="icon" type="image/png" sizes="32x32" href="/lcybl/favicon-32.png" />
+            <link rel="icon" type="image/png" sizes="16x16" href="/lcybl/favicon-16.png" />
+            <link rel="apple-touch-icon" href="/lcybl/apple-touch-icon.png" />
+            <link rel="icon" type="image/png" sizes="192x192" href="/lcybl/icon-192.png" />
+            <link rel="icon" type="image/png" sizes="512x512" href="/lcybl/icon-512.png" />
+          </>
         ) : (
           <>
             <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
@@ -479,10 +490,16 @@ export default async function RootLayout({
                 // SFBL: drop the big wordmark in the top-left so the
                 // ticker is all scores (Adam, 2026-05-18). Branding
                 // still lives in the nav + homepage Hero.
-                // Island: the logo moved into the nav beside "Home", so drop the
+                // Island + LCYBL: the crest moved into the nav, so drop the
                 // ticker's left tile entirely rather than fall back to its
-                // "IFP 2026" text, which would duplicate the branding again.
-                hideLabel={leagueAbbrev === "SFBL" || tenantId === "island"}
+                // "IFP 2026" / "LCYBL 2026" text, which would duplicate the
+                // branding again. (The age filter lives in TickerTrack, not
+                // this label, so hiding the label leaves it in place.)
+                hideLabel={
+                  leagueAbbrev === "SFBL" ||
+                  tenantId === "island" ||
+                  tenantId === "lcybl"
+                }
                 // Opt-in marquee. Only tenants that set flags.ticker_scroll
                 // get the animated strip; everyone else keeps the manual pan.
                 scroll={tickerScroll}
@@ -507,7 +524,16 @@ export default async function RootLayout({
               // cropped) rather than theme.logo_url, so the nav can carry a
               // tighter lockup than the wide banner logo without affecting
               // anything else that reads the theme value.
-              logoUrl={tenantId === "island" ? "/island/logo-nav.png" : null}
+              // LCYBL: the crest (Adam's own art, background removed) sits in
+              // the nav — the home banner carries the wordmark, so the emblem
+              // shows once here instead of the plain "LCYBL" text.
+              logoUrl={
+                tenantId === "island"
+                  ? "/island/logo-nav.png"
+                  : tenantId === "lcybl"
+                    ? "/lcybl/logo.png"
+                    : null
+              }
               // Island supplies its whole nav, in Mike's order. hide/add are
               // dropped with it — they only exist to patch DEFAULT_LINKS, and
               // re-applying them here would inject Fields, Events & Clinics
@@ -527,7 +553,9 @@ export default async function RootLayout({
               imagesSmall={headerImagesSmallFor(tenantId)}
               initialSlug={bannerImgSlug}
               fullBleed={bannerFullBleed}
+              strip={bannerStrip}
               leagueName={leagueName ?? ""}
+              tenantId={tenantId}
             />
           )}
           <div className="site-content">{children}</div>

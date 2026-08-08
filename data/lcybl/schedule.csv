@@ -1,0 +1,1085 @@
+id,date,time,field,away_team_id,home_team_id,week,division,status,away_score,home_score,arbiter_game_number
+arb-201,2026-04-13,18:00,A. Herr Park,14u-section-1-ls-blue,14u-section-1-hempfield-black,,14u Section 1,final,1,11,201
+arb-623,2026-04-13,18:00,Community #3,14u-section-3-e-town-navy,14u-section-3-lanc-rec-tornados,,14u Section 3,final,10,2,623
+arb-372,2026-04-13,18:00,Fuhrman Park #2,14u-section-2-cedar-crest,14u-section-2-donegal-green,,14u Section 2,final,2,12,372
+arb-331,2026-04-13,18:00,Greider Park Field C,14u-section-2-solanco-black,14u-section-2-pm-blue,,14u Section 2,final,3,13,331
+arb-734,2026-04-13,18:00,Herr Flowers #2,12u-section-1-hempfield-red,12u-section-1-ls-atta-boys,,12u Section 1,final,7,2,734
+arb-202,2026-04-13,18:00,Highville FC,14u-section-1-mountville-angels,14u-section-1-pm-comets,,14u Section 1,final,0,10,202
+arb-645,2026-04-13,18:00,Manor MS,12u-section-1-octorara-braves,12u-section-1-pm-comets,,12u Section 1,final,8,8,645
+arb-644,2026-04-13,18:00,Minor Field,12u-section-1-cedar-crest,12u-section-1-e-town-blue,,12u Section 1,final,8,6,644
+arb-1226,2026-04-13,18:00,Municipal Field,10u-section-1-manheim,10u-section-1-mt-streaks,,10u Section 1,final,10,7,1226
+arb-1227,2026-04-13,18:00,New Holland Legion,10u-section-1-warwick-cardinals,10u-section-1-garden-spot,,10u Section 1,final,22,0,1227
+arb-624,2026-04-13,18:00,Paradise Park #1,14u-section-3-solanco-black,14u-section-3-pv-braves,,14u Section 3,final,12,8,624
+arb-643,2026-04-13,18:00,Reamstown Park,12u-section-1-warwick-phillies,12u-section-1-cocalico-eagles,,12u Section 1,final,1,14,643
+arb-733,2026-04-13,18:00,SYBA Field Complex #2,12u-section-1-cv-bucks,12u-section-1-solanco-black,,12u Section 1,final,16,10,733
+arb-523,2026-04-13,18:00,Trolly Line Park,14u-section-3-cocalico-eagles,14u-section-3-e-town-white,,14u Section 3,final,5,13,523
+arb-207,2026-04-13,18:00,Warwick Twp #1,14u-section-1-cedar-crest,14u-section-1-lititz-vfw,,14u Section 1,final,5,11,207
+arb-1225,2026-04-13,18:00,Wenger Field,10u-section-1-donegal-indians,10u-section-1-e-town-bruins,,10u Section 1,final,12,8,1225
+arb-1043,2026-04-14,18:00,Charlestown Upper,12u-section-3-cedar-crest,12u-section-3-pm-blue,,12u Section 3,final,6,8,1043
+arb-1430,2026-04-14,18:00,Community #2,10u-section-2-pm-blue,10u-section-2-lanc-jr-tornados,,10u Section 2,scheduled,0,,1430
+arb-647,2026-04-14,18:00,Creek Field,12u-section-1-donegal-indians,12u-section-1-manheim,,12u Section 1,final,1,5,647
+arb-1429,2026-04-14,18:00,Farmdale Elementary,10u-section-2-pv-braves,10u-section-2-hempfield-red,,10u Section 2,final,10,0,1429
+arb-1150,2026-04-14,18:00,Flory Park #1,12u-section-3-solanco-gold,12u-section-3-cv-bucks-red,,12u Section 3,final,0,0,1150
+arb-1148,2026-04-14,18:00,Fuhrman Park #1,12u-section-3-hempfield-black,12u-section-3-donegal-black,,12u Section 3,final,13,24,1148
+arb-648,2026-04-14,18:00,Hempfield Fire Dept.,12u-section-1-ephrata-drillerz,12u-section-1-hempfield-black,,12u Section 1,final,4,4,648
+arb-526,2026-04-14,18:00,Highville FC,14u-section-3-ctyaa-moose,14u-section-3-pm-blue,,14u Section 3,final,0,0,526
+arb-332,2026-04-14,18:00,McNickle Field,14u-section-2-cv-bucks,14u-section-2-mt-thunder,,14u Section 2,final,17,0,332
+arb-524,2026-04-14,18:00,Nitrauer ES,14u-section-3-cedar-crest,14u-section-3-mt-storm,,14u Section 3,final,2,9,524
+arb-646,2026-04-14,18:00,Overlook #2,12u-section-1-mountville-indians,12u-section-1-mt-streaks,,12u Section 1,final,0,14,646
+arb-374,2026-04-14,18:00,Paradise Park #1,14u-section-2-mountville-red-sox,14u-section-2-pv-braves,,14u Section 2,final,1,13,374
+arb-203,2026-04-14,18:00,Penryn Field,14u-section-1-mt-streaks,14u-section-1-manheim-lions,,14u Section 1,final,0,10,203
+arb-1045,2026-04-14,18:00,Reidenbaugh Elm,12u-section-3-ls-black,12u-section-3-mt-bolts,,12u Section 3,final,6,2,1045
+arb-525,2026-04-14,18:00,Roland Park Lloyd Field,14u-section-3-mt-chargers,14u-section-3-ephrata-zips,,14u Section 3,final,13,5,525
+arb-1046,2026-04-14,18:00,SYBA Field Complex #4,12u-section-3-e-town-white,12u-section-3-solanco-black,,12u Section 3,final,4,8,1046
+arb-1147,2026-04-14,18:00,St. Leo Field 2,12u-section-3-e-town-gray,12u-section-3-st-leo-gold,,12u Section 3,final,2,1,1147
+arb-1149,2026-04-14,18:00,Village Park Field #7,12u-section-3-garden-spot,12u-section-3-ls-blue,,12u Section 3,final,9,2,1149
+arb-375,2026-04-14,18:00,Warwick Twp #1,14u-section-2-pm-white,14u-section-2-warwick-white-sox,,14u Section 2,final,4,5,375
+arb-1044,2026-04-14,18:00,Wenger Field,12u-section-3-cv-bucks-blue,12u-section-3-e-town-navy,,12u Section 3,final,9,7,1044
+arb-204,2026-04-15,18:00,Cornwall Field,14u-section-1-e-town-black,14u-section-1-cedar-crest,,14u Section 1,final,7,8,204
+arb-528,2026-04-15,18:00,Denver Park #1,14u-section-3-pv-braves,14u-section-3-cocalico-eagles,,14u Section 3,final,10,11,528
+arb-1151,2026-04-15,18:00,Denver Partk #2,12u-section-3-pm-white,12u-section-3-cocalico-eagles,,12u Section 3,final,5,8,1151
+arb-735,2026-04-15,18:00,Farmdale Elementary,12u-section-1-solanco-black,12u-section-1-hempfield-red,,12u Section 1,final,4,6,735
+arb-1152,2026-04-15,18:00,Fuhrman Park #1,12u-section-3-hempfield-red,12u-section-3-donegal-white,,12u Section 3,final,0,10,1152
+arb-625,2026-04-15,18:00,Fuhrman Park #2,14u-section-3-garden-spot,14u-section-3-donegal-black,,14u Section 3,final,10,9,625
+arb-1432,2026-04-15,18:00,Fuhrman Park Field #4,10u-section-2-manheim-maroon,10u-section-2-donegal-green,,10u Section 2,final,9,4,1432
+arb-334,2026-04-15,18:00,Greider Park Field C,14u-section-2-hempfield-black,14u-section-2-pm-blue,,14u Section 2,final,7,3,334
+arb-209,2026-04-15,18:00,Herr Flowers #3,14u-section-1-pm-comets,14u-section-1-ls-blue,,14u Section 1,final,11,1,209
+arb-1048,2026-04-15,18:00,Reidenbaugh Elm,12u-section-3-lanc-mennonite,12u-section-3-mt-chargers,,12u Section 3,final,5,10,1048
+arb-1047,2026-04-15,18:00,Safe Harbor Creek Field,12u-section-3-mountville-tigers,12u-section-3-pm-gold,,12u Section 3,final,8,6,1047
+arb-376,2026-04-15,18:00,South Lebanon Field #2,14u-section-2-cocalico-eagles,14u-section-2-cedar-crest,,14u Section 2,final,19,2,376
+arb-1431,2026-04-15,18:00,St. Leo Field 2,10u-section-2-mt-thunder,10u-section-2-st-leo-crusaders,,10u Section 2,final,10,3,1431
+arb-339,2026-04-15,18:00,Tom Herr,14u-section-2-ls-base-bandits,14u-section-2-hempfield-red,,14u Section 2,final,5,9,339
+arb-1289,2026-04-15,18:00,Village Park Field #7,10u-section-1-cv-bucks,10u-section-1-ls-slingers,,10u Section 1,final,1,16,1289
+arb-333,2026-04-15,18:00,Wolgemuth Park,14u-section-2-ephrata-breakers,14u-section-2-e-town-blue,,14u Section 2,final,0,14,333
+arb-1238,2026-04-16,18:00,Cedar Hollow,10u-section-1-cocalico-eagles,10u-section-1-manheim,,10u Section 1,final,2,17,1238
+arb-649,2026-04-16,18:00,Froelich Park East,12u-section-1-pm-comets,12u-section-1-mountville-indians,,12u Section 1,final,2,7,649
+arb-378,2026-04-16,18:00,Gladfelter Field 5,14u-section-2-e-town-blue,14u-section-2-columbia-red,,14u Section 2,final,3,5,378
+arb-337,2026-04-16,18:00,Greider Park Field C,14u-section-2-mt-lightning,14u-section-2-pm-white,,14u Section 2,final,8,6,337
+arb-336,2026-04-16,18:00,Lafayette Fire,14u-section-2-lanc-mennonite-blazers,14u-section-2-cv-bucks,,14u Section 2,final,5,5,336
+arb-205,2026-04-16,18:00,Mountville Boro,14u-section-1-hempfield-red,14u-section-1-mountville-angels,,14u Section 1,final,7,4,205
+arb-338,2026-04-16,18:00,New Holland Legion,14u-section-2-mountville-red-sox,14u-section-2-garden-spot,,14u Section 2,final,1,18,338
+arb-377,2026-04-16,18:00,Paradise Park #1,14u-section-2-st-leo-crusaders,14u-section-2-pv-braves,,14u Section 2,final,2,6,377
+arb-335,2026-04-16,18:00,Roland Park Lloyd Field,14u-section-2-donegal-green,14u-section-2-ephrata-breakers,,14u Section 2,final,2,8,335
+arb-340,2026-04-16,18:00,SYBA Field Complex #1,14u-section-2-solanco-black,14u-section-2-solanco-gold,,14u Section 2,final,1,1,340
+arb-1437,2026-04-16,18:00,SYBA Field Complex #3,10u-section-2-warwick-diamondbacks,10u-section-2-solanco-black,,10u Section 2,final,5,1,1437
+arb-737,2026-04-16,18:00,Snyder Park #3,12u-section-1-e-town-blue,12u-section-1-ephrata-drillerz,,12u Section 1,final,5,6,737
+arb-1435,2026-04-16,18:00,South Lebanon Field #4,10u-section-2-mt-lightning,10u-section-2-cedar-crest,,10u Section 2,final,6,3,1435
+arb-1434,2026-04-16,18:00,Village Park #1,10u-section-2-warwick-rangers,10u-section-2-ls-regulators,,10u Section 2,final,4,11,1434
+arb-738,2026-04-16,18:00,Warwick Twp #2,12u-section-1-manheim,12u-section-1-warwick-phillies,,12u Section 1,final,10,7,738
+arb-1433,2026-04-16,18:00,Witmer Heights #1,10u-section-2-ls-blue-crew,10u-section-2-cv-bucks,,10u Section 2,final,17,0,1433
+arb-210,2026-04-17,18:00,Community #3,14u-section-1-e-town-black,14u-section-1-lanc-rec-tornados,,14u Section 1,final,9,3,210
+arb-534,2026-04-17,18:00,Dairy Road Field,14u-section-3-ephrata-zips,14u-section-3-cedar-crest,,14u Section 3,final,2,8,534
+arb-736,2026-04-17,18:00,Flory Park #2,12u-section-1-ls-atta-boys,12u-section-1-cv-bucks,,12u Section 1,final,16,14,736
+arb-1229,2026-04-17,18:00,Gloninger Woods Park,10u-section-1-hempfield-black,10u-section-1-cedar-crest,,10u Section 1,final,18,7,1229
+arb-651,2026-04-17,18:00,Gloninger Woods Park,12u-section-1-cocalico-eagles,12u-section-1-cedar-crest,,12u Section 1,final,11,12,651
+arb-530,2026-04-17,18:00,Governor Stables,14u-section-3-cv-bucks,14u-section-3-ctyaa-moose,,14u Section 3,final,12,3,530
+arb-379,2026-04-17,18:00,Herr Flowers #3,14u-section-2-mt-thunder,14u-section-2-ls-blue-blazers,,14u Section 2,final,10,5,379
+arb-650,2026-04-17,18:00,Highland Twp.,12u-section-1-mt-streaks,12u-section-1-octorara-braves,,12u Section 1,final,4,15,650
+arb-531,2026-04-17,18:00,New Holland Legion,14u-section-3-mt-chargers,14u-section-3-garden-spot,,14u Section 3,final,9,2,531
+arb-532,2026-04-17,18:00,Nitrauer ES,14u-section-3-lanc-rec-tornados,14u-section-3-mt-storm,,14u Section 3,final,14,2,532
+arb-341,2026-04-17,18:00,Penryn Field,14u-section-2-warwick-white-sox,14u-section-2-manheim-lions,,14u Section 2,final,15,0,341
+arb-533,2026-04-17,18:00,SOLANCO Legion,14u-section-3-pm-blue,14u-section-3-solanco-black,,14u Section 3,final,17,2,533
+arb-206,2026-04-17,18:00,SYBA Field Complex #1,14u-section-1-lititz-vfw,14u-section-1-solanco-black,,14u Section 1,final,4,6,206
+arb-211,2026-04-17,18:00,Snyder Park #1,14u-section-1-manheim-lions,14u-section-1-ephrata-drillerz,,14u Section 1,final,18,0,211
+arb-1290,2026-04-17,18:00,Warwick Twp #3,10u-section-1-ephrata-drillerz,10u-section-1-warwick-cardinals,,10u Section 1,final,1,16,1290
+arb-1228,2026-04-17,18:00,Wayside Church,10u-section-1-mt-streaks,10u-section-1-hempfield-red,,10u Section 1,final,11,7,1228
+arb-529,2026-04-17,18:00,Wolgemuth Park,14u-section-3-donegal-black,14u-section-3-e-town-navy,,14u Section 3,final,0,24,529
+arb-739,2026-04-17,20:00,Kunkle Field,12u-section-1-hempfield-black,12u-section-1-donegal-indians,,12u Section 1,final,17,3,739
+arb-348,2026-04-20,18:00,Dutch Gold #1,14u-section-2-pm-blue,14u-section-2-st-leo-crusaders,,14u Section 2,final,1,4,348
+arb-1438,2026-04-20,18:00,Farmdale Elementary,10u-section-2-pm-gold,10u-section-2-hempfield-red,,10u Section 2,final,5,3,1438
+arb-214,2026-04-20,18:00,Governor Stables,14u-section-1-hempfield-black,14u-section-1-e-town-black,,14u Section 1,final,12,5,214
+arb-380,2026-04-20,18:00,Herr Flowers #3,14u-section-2-columbia-red,14u-section-2-ls-base-bandits,,14u Section 2,final,11,2,380
+arb-347,2026-04-20,18:00,Kunkle Field,14u-section-2-e-town-blue,14u-section-2-donegal-green,,14u Section 2,final,11,1,347
+arb-344,2026-04-20,18:00,Lanc Mennonite HS Varsity,14u-section-2-garden-spot,14u-section-2-lanc-mennonite-blazers,,14u Section 2,final,0,10,344
+arb-213,2026-04-20,18:00,McNickle Field,14u-section-1-hempfield-red,14u-section-1-mt-streaks,,14u Section 1,final,13,16,213
+arb-652,2026-04-20,18:00,Minor Field,12u-section-1-warwick-phillies,12u-section-1-e-town-blue,,12u Section 1,final,1,11,652
+arb-212,2026-04-20,18:00,Mountville Boro,14u-section-1-cedar-crest,14u-section-1-mountville-angels,,14u Section 1,final,11,7,212
+arb-342,2026-04-20,18:00,SYBA Field Complex #1,14u-section-2-pv-braves,14u-section-2-solanco-black,,14u Section 2,final,18,5,342
+arb-1439,2026-04-20,18:00,Village Park #1,10u-section-2-manheim-gray,10u-section-2-ls-blue-crew,,10u Section 2,final,3,11,1439
+arb-1291,2026-04-20,18:00,Warwick Twp #3,10u-section-1-hempfield-black,10u-section-1-warwick-cardinals,,10u Section 1,final,2,12,1291
+arb-1347,2026-04-20,18:00,Washington Boro,10u-section-2-garden-spot-blue,10u-section-2-pm-blue,,10u Section 2,final,0,13,1347
+arb-1230,2026-04-20,18:00,Wenger Field,10u-section-1-garden-spot,10u-section-1-e-town-bruins,,10u Section 1,final,1,13,1230
+arb-1050,2026-04-21,18:00,Charlestown Upper,12u-section-3-ephrata-power,12u-section-3-pm-white,,12u Section 3,final,15,6,1050
+arb-265,2026-04-21,18:00,Community #3,14u-section-1-lititz-vfw,14u-section-1-lanc-rec-tornados,,14u Section 1,final,1,4,265
+arb-1112,2026-04-21,18:00,Cresswell Park 1,12u-section-3-cocalico-eagles,12u-section-3-pm-gold,,12u Section 3,final,5,11,1112
+arb-1231,2026-04-21,18:00,Denver 4th St,10u-section-1-cedar-crest,10u-section-1-cocalico-eagles,,10u Section 1,final,6,7,1231
+arb-382,2026-04-21,18:00,Denver Park #1,14u-section-2-hempfield-red,14u-section-2-cocalico-eagles,,14u Section 2,final,3,13,382
+arb-741,2026-04-21,18:00,Farmdale Elementary,12u-section-1-mt-streaks,12u-section-1-hempfield-red,,12u Section 1,final,3,1,741
+arb-653,2026-04-21,18:00,Froelich Park East,12u-section-1-cv-bucks,12u-section-1-mountville-indians,,12u Section 1,final,9,6,653
+arb-1345,2026-04-21,18:00,Gladfelter Field__1,10u-section-2-hempfield-black,10u-section-2-columbia-red,,10u Section 2,final,11,2,1345
+arb-343,2026-04-21,18:00,Greider Park Field C,14u-section-2-manheim-lions,14u-section-2-pm-white,,14u Section 2,final,3,16,343
+arb-264,2026-04-21,18:00,Herr Flowers #3,14u-section-1-ephrata-drillerz,14u-section-1-ls-blue,,14u Section 1,final,1,11,264
+arb-346,2026-04-21,18:00,McNickle Field,14u-section-2-warwick-white-sox,14u-section-2-mt-lightning,,14u Section 2,final,15,8,346
+arb-349,2026-04-21,18:00,Mountville Boro,14u-section-2-solanco-gold,14u-section-2-mountville-red-sox,,14u Section 2,final,9,3,349
+arb-1051,2026-04-21,18:00,New Holland Legion,12u-section-3-ephrata-tourists,12u-section-3-garden-spot,,12u Section 3,final,13,8,1051
+arb-539,2026-04-21,18:00,Nitrauer ES,14u-section-3-solanco-black,14u-section-3-mt-chargers,,14u Section 3,final,9,4,539
+arb-1169,2026-04-21,18:00,Rohrerstown ES #2,12u-section-3-mt-chargers,12u-section-3-hempfield-red,,12u Section 3,final,19,7,1169
+arb-538,2026-04-21,18:00,Roland Park Lloyd Field,14u-section-3-e-town-navy,14u-section-3-ephrata-zips,,14u Section 3,final,21,0,538
+arb-1049,2026-04-21,18:00,SYBA Field Complex #4,12u-section-3-donegal-black,12u-section-3-solanco-gold,,12u Section 3,final,28,7,1049
+arb-1293,2026-04-21,18:00,Snyder Park #2,10u-section-1-pm-comets,10u-section-1-ephrata-drillerz,,10u Section 1,final,7,5,1293
+arb-381,2026-04-21,18:00,South Lebanon Field #2,14u-section-2-ephrata-breakers,14u-section-2-cedar-crest,,14u Section 2,final,8,0,381
+arb-1292,2026-04-21,18:00,Village Park Field #7,10u-section-1-solanco-black,10u-section-1-ls-slingers,,10u Section 1,final,1,16,1292
+arb-1052,2026-04-21,18:00,Wenger Field,12u-section-3-e-town-navy,12u-section-3-e-town-white,,12u Section 3,final,16,5,1052
+arb-1295,2026-04-21,18:00,Witmer Heights #1,10u-section-1-donegal-indians,10u-section-1-cv-bucks,,10u Section 1,final,13,1,1295
+arb-217,2026-04-22,18:00,A. Herr Park,14u-section-1-mountville-angels,14u-section-1-hempfield-black,,14u Section 1,final,7,11,217
+arb-636,2026-04-22,18:00,Community #3,14u-section-3-mt-chargers,14u-section-3-lanc-rec-tornados,,14u Section 3,final,8,8,636
+arb-655,2026-04-22,18:00,Creek Field,12u-section-1-cocalico-eagles,12u-section-1-manheim,,12u Section 1,final,4,11,655
+arb-743,2026-04-22,18:00,Fuhrman Park #2,12u-section-1-cedar-crest,12u-section-1-donegal-indians,,12u Section 1,final,2,5,743
+arb-541,2026-04-22,18:00,Governor Stables,14u-section-3-cedar-crest,14u-section-3-ctyaa-moose,,14u Section 3,final,10,11,541
+arb-383,2026-04-22,18:00,Herr Flowers #3,14u-section-2-cv-bucks,14u-section-2-ls-blue-blazers,,14u Section 2,final,6,4,383
+arb-654,2026-04-22,18:00,Manor MS,12u-section-1-hempfield-black,12u-section-1-pm-comets,,12u Section 1,final,18,5,654
+arb-350,2026-04-22,18:00,McNickle Field,14u-section-2-garden-spot,14u-section-2-mt-thunder,,14u Section 2,final,11,0,350
+arb-1523,2026-04-22,18:00,New Holland Park,10u-section-2-hempfield-gray,10u-section-2-garden-spot-white,,10u Section 2,final,7,2,1523
+arb-540,2026-04-22,18:00,Nitrauer ES,14u-section-3-garden-spot,14u-section-3-mt-storm,,14u Section 3,final,7,8,540
+arb-216,2026-04-22,18:00,Penryn Field,14u-section-1-cedar-crest,14u-section-1-manheim-lions,,14u Section 1,final,2,9,216
+arb-1294,2026-04-22,18:00,Rohrerstown ES #1,10u-section-1-e-town-bruins,10u-section-1-hempfield-black,,10u Section 1,scheduled,0,,1294
+arb-1399,2026-04-22,18:00,Rohrerstown ES #1,10u-section-2-warwick-rangers,10u-section-2-hempfield-white,,10u Section 2,final,8,7,1399
+arb-1441,2026-04-22,18:00,SYBA Field Complex #3,10u-section-2-ls-blue-crew,10u-section-2-solanco-black,,10u Section 2,final,14,4,1441
+arb-1380,2026-04-22,18:00,Silvermine Park,10u-section-2-manheim-gray,10u-section-2-pm-gold,,10u Section 2,final,11,3,1380
+arb-1440,2026-04-22,18:00,Snyder Park #2,10u-section-2-cedar-crest,10u-section-2-ephrata-athletics,,10u Section 2,final,0,15,1440
+arb-742,2026-04-22,18:00,Snyder Park #3,12u-section-1-octorara-braves,12u-section-1-ephrata-drillerz,,12u Section 1,final,2,3,742
+arb-1349,2026-04-22,18:00,Stoner Park,10u-section-2-ls-regulators,10u-section-2-mt-lightning,,10u Section 2,final,8,1,1349
+arb-1348,2026-04-22,18:00,Veteran's Memorial Park,10u-section-2-lanc-jr-tornados,10u-section-2-mountville-pirates,,10u Section 2,final,5,2,1348
+arb-266,2026-04-22,18:00,Warwick Twp #1,14u-section-1-e-town-black,14u-section-1-lititz-vfw,,14u Section 1,final,8,0,266
+arb-1442,2026-04-22,18:00,Warwick Twp #3,10u-section-2-mt-thunder,10u-section-2-warwick-diamondbacks,,10u Section 2,final,12,2,1442
+arb-1232,2026-04-23,18:00,Cresswell Park 1,10u-section-1-cocalico-eagles,10u-section-1-pm-comets,,10u Section 1,final,4,13,1232
+arb-1444,2026-04-23,18:00,Farmdale Elementary,10u-section-2-donegal-green,10u-section-2-hempfield-black,,10u Section 2,final,4,5,1444
+arb-1192,2026-04-23,18:00,Flory Park #1,12u-section-3-cocalico-eagles,12u-section-3-cv-bucks-red,,12u Section 3,final,6,2,1192
+arb-1053,2026-04-23,18:00,Froelich Park West,12u-section-3-st-leo-gold,12u-section-3-mountville-tigers,,12u Section 3,final,3,5,1053
+arb-384,2026-04-23,18:00,Gladfelter Field 5,14u-section-2-donegal-green,14u-section-2-columbia-red,,14u Section 2,final,13,5,384
+arb-1350,2026-04-23,18:00,Gladfelter Field__1,10u-section-2-pm-blue,10u-section-2-columbia-red,,10u Section 2,final,23,0,1350
+arb-627,2026-04-23,18:00,Kunkle Field,14u-section-3-pm-blue,14u-section-3-donegal-black,,14u Section 3,final,19,3,627
+arb-537,2026-04-23,18:00,Lafayette Fire,14u-section-3-cocalico-eagles,14u-section-3-cv-bucks,,14u Section 3,final,16,7,537
+arb-352,2026-04-23,18:00,Lanc Mennonite HS Varsity,14u-section-2-hempfield-black,14u-section-2-lanc-mennonite-blazers,,14u Section 2,final,0,6,352
+arb-218,2026-04-23,18:00,McNickle Field,14u-section-1-solanco-black,14u-section-1-mt-streaks,,14u Section 1,final,7,7,218
+arb-353,2026-04-23,18:00,Mountville Boro,14u-section-2-pm-blue,14u-section-2-mountville-red-sox,,14u Section 2,final,11,5,353
+arb-356,2026-04-23,18:00,Penryn Field,14u-section-2-mt-lightning,14u-section-2-manheim-lions,,14u Section 2,final,9,6,356
+arb-1153,2026-04-23,18:00,Rohrerstown ES #2,12u-section-3-ls-blue,12u-section-3-hempfield-red,,12u Section 3,final,20,7,1153
+arb-354,2026-04-23,18:00,Roland Park Lloyd Field,14u-section-2-cocalico-eagles,14u-section-2-ephrata-breakers,,14u Section 2,final,15,0,354
+arb-740,2026-04-23,18:00,SYBA Field Complex #2,12u-section-1-ls-atta-boys,12u-section-1-solanco-black,,12u Section 1,final,18,6,740
+arb-219,2026-04-23,18:00,Silver Spring Park,14u-section-1-ls-blue,14u-section-1-hempfield-red,,14u Section 1,final,17,2,219
+arb-267,2026-04-23,18:00,Snyder Park #1,14u-section-1-lanc-rec-tornados,14u-section-1-ephrata-drillerz,,14u Section 1,final,14,5,267
+arb-1443,2026-04-23,18:00,Sweetbriar Park #2,10u-section-2-pm-white,10u-section-2-manheim-maroon,,10u Section 2,final,9,10,1443
+arb-351,2026-04-23,18:00,Tom Herr,14u-section-2-pm-white,14u-section-2-hempfield-red,,14u Section 2,final,5,8,351
+arb-385,2026-04-23,18:00,Warwick Twp #1,14u-section-2-ls-base-bandits,14u-section-2-warwick-white-sox,,14u Section 2,final,14,15,385
+arb-1302,2026-04-23,18:00,Warwick Twp #3,10u-section-1-hempfield-red,10u-section-1-warwick-cardinals,,10u Section 1,final,8,9,1302
+arb-1054,2026-04-23,18:00,Wenger Field,12u-section-3-solanco-gold,12u-section-3-e-town-gray,,12u Section 3,final,1,17,1054
+arb-1066,2026-04-24,18:00,New Holland Legion,12u-section-3-mt-bolts,12u-section-3-garden-spot,,12u Section 3,final,3,18,1066
+arb-220,2026-04-27,18:00,A. Herr Park,14u-section-1-lititz-vfw,14u-section-1-hempfield-red,,14u Section 1,final,2,9,220
+arb-221,2026-04-27,18:00,Cornwall Field,14u-section-1-ephrata-drillerz,14u-section-1-cedar-crest,,14u Section 1,final,7,18,221
+arb-360,2026-04-27,18:00,Dutch Gold #1,14u-section-2-ls-blue-blazers,14u-section-2-st-leo-crusaders,,14u Section 2,final,4,7,360
+arb-656,2026-04-27,18:00,Gloninger Woods Park,12u-section-1-warwick-phillies,12u-section-1-cedar-crest,,12u Section 1,final,2,12,656
+arb-1351,2026-04-27,18:00,Greider Park Field A,10u-section-2-mt-lightning,10u-section-2-pm-white,,10u Section 2,final,4,5,1351
+arb-387,2026-04-27,18:00,Herr Flowers #3,14u-section-2-mt-lightning,14u-section-2-ls-base-bandits,,14u Section 2,final,3,3,387
+arb-453,2026-04-27,18:00,Herr Flowers #3,14u-section-2-solanco-gold,14u-section-2-ls-blue-blazers,,14u Section 2,final,7,3,453
+arb-545,2026-04-27,18:00,Highville FC,14u-section-3-e-town-navy,14u-section-3-pm-blue,,14u Section 3,final,21,4,545
+arb-658,2026-04-27,18:00,Kunkle Field,12u-section-1-ephrata-drillerz,12u-section-1-donegal-indians,,12u Section 1,final,10,5,658
+arb-544,2026-04-27,18:00,Lafayette Fire,14u-section-3-mt-storm,14u-section-3-cv-bucks,,14u Section 3,final,1,16,544
+arb-357,2026-04-27,18:00,McNickle Field,14u-section-2-lanc-mennonite-blazers,14u-section-2-mt-thunder,,14u Section 2,final,5,0,357
+arb-1352,2026-04-27,18:00,Paradise Park #4,10u-section-2-st-leo-crusaders,10u-section-2-pv-braves,,10u Section 2,final,0,12,1352
+arb-657,2026-04-27,18:00,Reamstown Park,12u-section-1-e-town-blue,12u-section-1-cocalico-eagles,,12u Section 1,final,2,3,657
+arb-358,2026-04-27,18:00,Roland Park Lloyd Field,14u-section-2-columbia-red,14u-section-2-ephrata-breakers,,14u Section 2,final,14,3,358
+arb-1155,2026-04-27,18:00,SYBA Field Complex #1,12u-section-3-pm-gold,12u-section-3-lanc-mennonite,,12u Section 3,final,16,7,1155
+arb-362,2026-04-27,18:00,SYBA Field Complex #1,14u-section-2-mountville-red-sox,14u-section-2-solanco-black,,14u Section 2,final,4,4,362
+arb-542,2026-04-27,18:00,SYBA Field Complex #1,14u-section-3-donegal-black,14u-section-3-solanco-black,,14u Section 3,final,7,2,542
+arb-386,2026-04-27,18:00,South Lebanon Field #2,14u-section-2-manheim-lions,14u-section-2-cedar-crest,,14u Section 2,final,11,6,386
+arb-543,2026-04-27,18:00,Trolly Line Park,14u-section-3-ctyaa-moose,14u-section-3-e-town-white,,14u Section 3,final,6,13,543
+arb-1501,2026-04-27,18:00,Village Park #1,10u-section-2-hempfield-white,10u-section-2-ls-regulators,,10u Section 2,final,3,13,1501
+arb-1445,2026-04-27,18:00,Warwick Twp #3,10u-section-2-hempfield-gray,10u-section-2-warwick-diamondbacks,,10u Section 2,final,3,14,1445
+arb-1233,2026-04-27,18:00,Wenger Field,10u-section-1-solanco-black,10u-section-1-e-town-bruins,,10u Section 1,final,3,21,1233
+arb-359,2026-04-27,20:00,Kunkle Field,14u-section-2-pm-white,14u-section-2-donegal-green,,14u Section 2,final,2,4,359
+arb-547,2026-04-28,18:00,Dairy Road Field,14u-section-3-lanc-rec-tornados,14u-section-3-cedar-crest,,14u Section 3,final,16,2,547
+arb-1234,2026-04-28,18:00,Denver 4th St,10u-section-1-ls-slingers,10u-section-1-cocalico-eagles,,10u Section 1,final,9,3,1234
+arb-546,2026-04-28,18:00,Denver Park #1,14u-section-3-ephrata-zips,14u-section-3-cocalico-eagles,,14u Section 3,final,6,7,546
+arb-1154,2026-04-28,18:00,Flory Park #1,12u-section-3-donegal-white,12u-section-3-cv-bucks-blue,,12u Section 3,final,6,15,1154
+arb-1296,2026-04-28,18:00,Fuhrman Park Field #4,10u-section-1-pm-comets,10u-section-1-donegal-indians,,10u Section 1,final,3,5,1296
+arb-223,2026-04-28,18:00,Governor Stables,14u-section-1-mountville-angels,14u-section-1-e-town-black,,14u Section 1,final,5,4,223
+arb-661,2026-04-28,18:00,Hempfield Fire Dept.,12u-section-1-manheim,12u-section-1-hempfield-black,,12u Section 1,final,2,12,661
+arb-744,2026-04-28,18:00,Herr Flowers #2,12u-section-1-mountville-indians,12u-section-1-ls-atta-boys,,12u Section 1,final,7,18,744
+arb-268,2026-04-28,18:00,Herr Flowers #3,14u-section-1-solanco-black,14u-section-1-ls-blue,,14u Section 1,final,8,3,268
+arb-660,2026-04-28,18:00,Highland Twp.,12u-section-1-hempfield-red,12u-section-1-octorara-braves,,12u Section 1,final,3,6,660
+arb-222,2026-04-28,18:00,Highville FC,14u-section-1-lanc-rec-tornados,14u-section-1-pm-comets,,14u Section 1,final,1,3,222
+arb-365,2026-04-28,18:00,Lafayette Fire,14u-section-2-solanco-gold,14u-section-2-cv-bucks,,14u Section 2,final,4,5,365
+arb-224,2026-04-28,18:00,Penryn Field,14u-section-1-hempfield-black,14u-section-1-manheim-lions,,14u Section 1,final,0,1,224
+arb-1056,2026-04-28,18:00,Reidenbaugh Elm,12u-section-3-solanco-black,12u-section-3-mt-bolts,,12u Section 3,final,4,7,1056
+arb-1297,2026-04-28,18:00,Rohrerstown ES #1,10u-section-1-hempfield-red,10u-section-1-hempfield-black,,10u Section 1,final,1,12,1297
+arb-1530,2026-04-28,18:00,Sweetbriar Park #2,10u-section-2-warwick-rangers,10u-section-2-manheim-maroon,,10u Section 2,final,0,13,1530
+arb-361,2026-04-28,18:00,Tom Herr,14u-section-2-warwick-white-sox,14u-section-2-hempfield-red,,14u Section 2,final,18,1,361
+arb-1156,2026-04-28,18:00,Village Park Field #7,12u-section-3-pm-blue,12u-section-3-ls-black,,12u Section 3,final,2,10,1156
+arb-1055,2026-04-28,18:00,Wayside Church,12u-section-3-cocalico-eagles,12u-section-3-hempfield-black,,12u Section 3,final,9,7,1055
+arb-363,2026-04-28,18:00,Wolgemuth Park,14u-section-2-cocalico-eagles,14u-section-2-e-town-blue,,14u Section 2,final,3,6,363
+arb-1058,2026-04-29,18:00,Hopeland Park,12u-section-3-hempfield-red,12u-section-3-ephrata-tourists,,12u Section 3,final,7,22,1058
+arb-1235,2026-04-29,18:00,SYBA Field Complex #4,10u-section-1-manheim,10u-section-1-solanco-black,,10u Section 1,final,19,4,1235
+arb-225,2026-04-30,18:00,A. Herr Park,14u-section-1-e-town-black,14u-section-1-hempfield-black,,14u Section 1,final,6,13,225
+arb-388,2026-04-30,18:00,Denver Park #1,14u-section-2-donegal-green,14u-section-2-cocalico-eagles,,14u Section 2,final,2,6,388
+arb-666,2026-04-30,18:00,Froelich Park East,12u-section-1-manheim,12u-section-1-mountville-indians,,12u Section 1,final,6,3,666
+arb-1062,2026-04-30,18:00,Froelich Park West,12u-section-3-donegal-black,12u-section-3-mountville-tigers,,12u Section 3,final,23,19,1062
+arb-1157,2026-04-30,18:00,Fuhrman Park #1,12u-section-3-e-town-white,12u-section-3-donegal-white,,12u Section 3,final,16,21,1157
+arb-447,2026-04-30,18:00,Gladfelter Field 5,14u-section-2-cedar-crest,14u-section-2-columbia-red,,14u Section 2,final,1,16,447
+arb-368,2026-04-30,18:00,Greider Park Field C,14u-section-2-ls-base-bandits,14u-section-2-pm-white,,14u Section 2,final,7,3,368
+arb-665,2026-04-30,18:00,Hempfield Fire Dept.,12u-section-1-ls-atta-boys,12u-section-1-hempfield-black,,12u Section 1,final,14,4,665
+arb-270,2026-04-30,18:00,Herr Flowers #3,14u-section-1-manheim-lions,14u-section-1-ls-blue,,14u Section 1,final,8,3,270
+arb-226,2026-04-30,18:00,Highville FC,14u-section-1-hempfield-red,14u-section-1-pm-comets,,14u Section 1,final,4,6,226
+arb-449,2026-04-30,18:00,Lafayette Fire,14u-section-2-lanc-mennonite-blazers,14u-section-2-pv-braves,,14u Section 2,final,8,1,449
+arb-371,2026-04-30,18:00,Mountville Boro,14u-section-2-st-leo-crusaders,14u-section-2-mountville-red-sox,,14u Section 2,final,14,4,371
+arb-1237,2026-04-30,18:00,Municipal Field,10u-section-1-hempfield-black,10u-section-1-mt-streaks,,10u Section 1,final,14,10,1237
+arb-369,2026-04-30,18:00,New Holland Legion,14u-section-2-ls-blue-blazers,14u-section-2-garden-spot,,14u Section 2,final,3,9,369
+arb-1061,2026-04-30,18:00,Reidenbaugh Elm,12u-section-3-st-leo-gold,12u-section-3-mt-chargers,,12u Section 3,final,9,1,1061
+arb-227,2026-04-30,18:00,SYBA Field Complex #1,14u-section-1-ephrata-drillerz,14u-section-1-solanco-black,,14u Section 1,final,10,6,227
+arb-1298,2026-04-30,18:00,Snyder Park #2,10u-section-1-warwick-cardinals,10u-section-1-ephrata-drillerz,,10u Section 1,final,4,5,1298
+arb-1356,2026-04-30,18:00,Stoner Park,10u-section-2-hempfield-red,10u-section-2-mt-thunder,,10u Section 2,final,1,14,1356
+arb-745,2026-04-30,18:00,Warwick Twp #2,12u-section-1-ephrata-drillerz,12u-section-1-warwick-phillies,,12u Section 1,final,6,2,745
+arb-1059,2026-04-30,18:00,Wenger Field,12u-section-3-cedar-crest,12u-section-3-e-town-navy,,12u Section 3,final,6,8,1059
+arb-271,2026-05-01,18:00,Community #3,14u-section-1-mountville-angels,14u-section-1-lanc-rec-tornados,,14u Section 1,final,2,8,271
+arb-228,2026-05-01,18:00,Cornwall Field,14u-section-1-mt-streaks,14u-section-1-cedar-crest,,14u Section 1,final,5,6,228
+arb-552,2026-05-01,18:00,Dairy Road Field,14u-section-3-e-town-white,14u-section-3-cedar-crest,,14u Section 3,final,5,5,552
+arb-746,2026-05-01,18:00,Flory Park #2,12u-section-1-hempfield-red,12u-section-1-cv-bucks,,12u Section 1,final,9,2,746
+arb-1341,2026-05-01,18:00,New Holland Legion,10u-section-1-cedar-crest,10u-section-1-garden-spot,,10u Section 1,final,5,1,1341
+arb-1357,2026-05-01,18:00,Rohrerstown ES #1,10u-section-2-ephrata-athletics,10u-section-2-hempfield-white,,10u Section 2,final,15,3,1357
+arb-550,2026-05-01,18:00,Roland Park Lloyd Field,14u-section-3-mt-storm,14u-section-3-ephrata-zips,,14u Section 3,final,3,6,550
+arb-1063,2026-05-01,18:00,SYBA Field Complex #4,12u-section-3-pm-blue,12u-section-3-solanco-black,,12u Section 3,final,4,13,1063
+arb-390,2026-05-01,18:00,Tom Herr Field,14u-section-2-solanco-black,14u-section-2-hempfield-black,,14u Section 2,final,3,14,390
+arb-1158,2026-05-01,18:00,Village Park Field #7,12u-section-3-cv-bucks-blue,12u-section-3-ls-blue,,12u Section 3,final,20,14,1158
+arb-448,2026-05-01,18:00,Warwick Twp #1,14u-section-2-e-town-blue,14u-section-2-warwick-white-sox,,14u Section 2,final,13,1,448
+arb-1449,2026-05-01,18:00,Warwick Twp #3,10u-section-2-cocalico-eagles,10u-section-2-warwick-rangers,,10u Section 2,final,3,5,1449
+arb-1239,2026-05-01,18:00,Wayside Church,10u-section-1-pm-comets,10u-section-1-hempfield-red,,10u Section 1,final,13,5,1239
+arb-1064,2026-05-01,18:00,Wenger Field,12u-section-3-pm-gold,12u-section-3-e-town-gray,,12u Section 3,final,0,15,1064
+arb-1065,2026-05-01,18:00,Wenger Field,12u-section-3-solanco-gold,12u-section-3-pm-white,,12u Section 3,final,8,9,1065
+arb-1448,2026-05-02,10:00,Warwick Twp #3,10u-section-2-garden-spot-white,10u-section-2-warwick-diamondbacks,,10u Section 2,final,0,15,1448
+arb-749,2026-05-04,18:00,Flory Park #2,12u-section-1-mt-streaks,12u-section-1-cv-bucks,,12u Section 1,final,5,2,749
+arb-1240,2026-05-04,18:00,Fuhrman Park Field #4,10u-section-1-cedar-crest,10u-section-1-donegal-indians,,10u Section 1,final,6,16,1240
+arb-393,2026-05-04,18:00,Greider Park Field C,14u-section-2-ephrata-breakers,14u-section-2-pm-white,,14u Section 2,final,1,17,393
+arb-557,2026-05-04,18:00,Highville FC,14u-section-3-pv-braves,14u-section-3-pm-blue,,14u Section 3,final,5,12,557
+arb-1159,2026-05-04,18:00,Kunkle Field,12u-section-3-cv-bucks-red,12u-section-3-donegal-black,,12u Section 3,final,6,16,1159
+arb-554,2026-05-04,18:00,Lafayette Fire,14u-section-3-garden-spot,14u-section-3-cv-bucks,,14u Section 3,final,11,9,554
+arb-392,2026-05-04,18:00,McNickle Field,14u-section-2-donegal-green,14u-section-2-mt-thunder,,14u Section 2,final,9,3,392
+arb-1391,2026-05-04,18:00,Paradise Park #4,10u-section-2-hempfield-gray,10u-section-2-pv-braves,,10u Section 2,final,1,12,1391
+arb-230,2026-05-04,18:00,Penryn Field,14u-section-1-lanc-rec-tornados,14u-section-1-manheim-lions,,14u Section 1,final,0,10,230
+arb-667,2026-05-04,18:00,Reamstown Park,12u-section-1-hempfield-black,12u-section-1-cocalico-eagles,,12u Section 1,final,4,1,667
+arb-389,2026-05-04,18:00,SYBA Field Complex #1,14u-section-2-pm-blue,14u-section-2-solanco-gold,,14u Section 2,final,5,5,389
+arb-1241,2026-05-04,18:00,SYBA Field Complex #4,10u-section-1-cocalico-eagles,10u-section-1-solanco-black,,10u Section 1,final,12,17,1241
+arb-229,2026-05-04,18:00,Silver Spring Park,14u-section-1-solanco-black,14u-section-1-hempfield-red,,14u Section 1,final,5,7,229
+arb-1353,2026-05-04,18:00,Silvermine Park,10u-section-2-mountville-pirates,10u-section-2-pm-gold,,10u Section 2,final,12,2,1353
+arb-272,2026-05-04,18:00,Snyder Park #1,14u-section-1-hempfield-black,14u-section-1-ephrata-drillerz,,14u Section 1,final,17,5,272
+arb-748,2026-05-04,18:00,Snyder Park #3,12u-section-1-cedar-crest,12u-section-1-ephrata-drillerz,,12u Section 1,final,4,6,748
+arb-391,2026-05-04,18:00,Tom Herr,14u-section-2-cedar-crest,14u-section-2-hempfield-red,,14u Section 2,final,5,8,391
+arb-750,2026-05-04,18:00,Warwick Twp #2,12u-section-1-donegal-indians,12u-section-1-warwick-phillies,,12u Section 1,final,4,5,750
+arb-1236,2026-05-04,18:00,Wenger Field,10u-section-1-cv-bucks,10u-section-1-e-town-bruins,,10u Section 1,final,3,18,1236
+arb-553,2026-05-04,18:00,Wolgemuth Park,14u-section-3-cedar-crest,14u-section-3-e-town-navy,,14u Section 3,final,0,22,553
+arb-1074,2026-05-05,18:00,Charlestown Upper,12u-section-3-mt-bolts,12u-section-3-pm-blue,,12u Section 3,final,13,7,1074
+arb-669,2026-05-05,18:00,Creek Field,12u-section-1-solanco-black,12u-section-1-manheim,,12u Section 1,final,1,11,669
+arb-1242,2026-05-05,18:00,Cresswell Park 1,10u-section-1-garden-spot,10u-section-1-pm-comets,,10u Section 1,final,1,11,1242
+arb-1346,2026-05-05,18:00,Denver 4th St,10u-section-2-pm-white,10u-section-2-cocalico-eagles,,10u Section 2,final,2,2,1346
+arb-450,2026-05-05,18:00,Denver Park #1,14u-section-2-ls-base-bandits,14u-section-2-cocalico-eagles,,14u Section 2,final,4,7,450
+arb-751,2026-05-05,18:00,Farmdale Elementary,12u-section-1-mountville-indians,12u-section-1-hempfield-red,,12u Section 1,final,3,8,751
+arb-1164,2026-05-05,18:00,Flory Park #1,12u-section-3-ephrata-tourists,12u-section-3-cv-bucks-blue,,12u Section 3,final,6,7,1164
+arb-1451,2026-05-05,18:00,Fuhrman Park Field #4,10u-section-2-mt-lightning,10u-section-2-donegal-green,,10u Section 2,final,12,4,1451
+arb-451,2026-05-05,18:00,Gladfelter Field 5,14u-section-2-manheim-lions,14u-section-2-columbia-red,,14u Section 2,final,1,11,451
+arb-556,2026-05-05,18:00,Governor Stables,14u-section-3-lanc-rec-tornados,14u-section-3-ctyaa-moose,,14u Section 3,final,12,1,556
+arb-399,2026-05-05,18:00,Lafayette Fire,14u-section-2-solanco-black,14u-section-2-cv-bucks,,14u Section 2,final,2,12,399
+arb-395,2026-05-05,18:00,Lanc Mennonite HS Varsity,14u-section-2-st-leo-crusaders,14u-section-2-lanc-mennonite-blazers,,14u Section 2,final,6,7,395
+arb-668,2026-05-05,18:00,Manor MS,12u-section-1-ls-atta-boys,12u-section-1-pm-comets,,12u Section 1,final,11,5,668
+arb-670,2026-05-05,18:00,Minor Field,12u-section-1-ephrata-drillerz,12u-section-1-e-town-blue,,12u Section 1,final,5,15,670
+arb-396,2026-05-05,18:00,Mountville Boro,14u-section-2-hempfield-black,14u-section-2-mountville-red-sox,,14u Section 2,final,8,3,396
+arb-1243,2026-05-05,18:00,Municipal Field,10u-section-1-warwick-cardinals,10u-section-1-mt-streaks,,10u Section 1,final,7,4,1243
+arb-398,2026-05-05,18:00,New Holland Legion,14u-section-2-pm-blue,14u-section-2-garden-spot,,14u Section 2,final,1,10,398
+arb-555,2026-05-05,18:00,Nitrauer ES,14u-section-3-donegal-black,14u-section-3-mt-storm,,14u Section 3,final,1,16,555
+arb-1071,2026-05-05,18:00,Reidenbaugh Elm,12u-section-3-ephrata-power,12u-section-3-mt-chargers,,12u Section 3,final,15,3,1071
+arb-400,2026-05-05,18:00,Roland Park Lloyd Field,14u-section-2-warwick-white-sox,14u-section-2-ephrata-breakers,,14u Section 2,final,12,2,400
+arb-1067,2026-05-05,18:00,SYBA Field Complex #4,12u-section-3-mountville-tigers,12u-section-3-solanco-gold,,12u Section 3,final,17,9,1067
+arb-1069,2026-05-05,18:00,Safe Harbor Creek Field,12u-section-3-donegal-white,12u-section-3-pm-gold,,12u Section 3,final,10,7,1069
+arb-1447,2026-05-05,18:00,Sweetbriar Park #2,10u-section-2-cedar-crest,10u-section-2-manheim-maroon,,10u Section 2,final,3,8,1447
+arb-1483,2026-05-05,18:00,Village Park #1,10u-section-2-mt-thunder,10u-section-2-ls-blue-crew,,10u Section 2,final,6,3,1483
+arb-1452,2026-05-05,18:00,Warwick Twp #3,10u-section-2-columbia-red,10u-section-2-warwick-rangers,,10u Section 2,final,3,2,1452
+arb-1068,2026-05-05,18:00,Wayside Church,12u-section-3-lanc-mennonite,12u-section-3-hempfield-black,,12u Section 3,final,20,7,1068
+arb-355,2026-05-05,18:00,Wolgemuth Park,14u-section-2-cedar-crest,14u-section-2-e-town-blue,,14u Section 2,final,7,14,355
+arb-1244,2026-05-06,18:00,Denver 4th St,10u-section-1-e-town-bruins,10u-section-1-cocalico-eagles,,10u Section 1,final,17,6,1244
+arb-452,2026-05-06,18:00,Fuhrman Park #2,14u-section-2-hempfield-red,14u-section-2-donegal-green,,14u Section 2,final,0,10,452
+arb-1245,2026-05-06,18:00,Gloninger Woods Park,10u-section-1-ls-slingers,10u-section-1-cedar-crest,,10u Section 1,final,11,6,1245
+arb-671,2026-05-06,18:00,Hempfield Fire Dept.,12u-section-1-warwick-phillies,12u-section-1-hempfield-black,,12u Section 1,final,3,13,671
+arb-558,2026-05-06,18:00,Nitrauer ES,14u-section-3-e-town-white,14u-section-3-mt-chargers,,14u Section 3,final,10,0,558
+arb-454,2026-05-06,18:00,Paradise Park #1,14u-section-2-garden-spot,14u-section-2-pv-braves,,14u Section 2,final,10,10,454
+arb-273,2026-05-06,18:00,Warwick Twp #1,14u-section-1-ls-blue,14u-section-1-lititz-vfw,,14u Section 1,final,1,0,273
+arb-1300,2026-05-06,18:00,Witmer Heights #1,10u-section-1-manheim,10u-section-1-cv-bucks,,10u Section 1,final,7,1,1300
+arb-1246,2026-05-07,18:00,Cresswell Park 1,10u-section-1-mt-streaks,10u-section-1-pm-comets,,10u Section 1,final,8,10,1246
+arb-676,2026-05-07,18:00,Dairy Road Field,12u-section-1-manheim,12u-section-1-cedar-crest,,12u Section 1,final,15,5,676
+arb-1359,2026-05-07,18:00,Denver 4th St,10u-section-2-ls-blue-crew,10u-section-2-cocalico-eagles,,10u Section 2,final,17,2,1359
+arb-405,2026-05-07,18:00,Dutch Gold #1,14u-section-2-mt-thunder,14u-section-2-st-leo-crusaders,,14u Section 2,final,6,10,405
+arb-1160,2026-05-07,18:00,Flory Park #1,12u-section-3-st-leo-gold,12u-section-3-cv-bucks-red,,12u Section 3,final,20,3,1160
+arb-1162,2026-05-07,18:00,Fuhrman Park #1,12u-section-3-e-town-gray,12u-section-3-donegal-black,,12u Section 3,final,6,10,1162
+arb-562,2026-05-07,18:00,Fuhrman Park #2,14u-section-3-lanc-rec-tornados,14u-section-3-donegal-black,,14u Section 3,final,8,4,562
+arb-1361,2026-05-07,18:00,Greider Park Field A,10u-section-2-donegal-green,10u-section-2-pm-white,,10u Section 2,final,2,5,1361
+arb-404,2026-05-07,18:00,Greider Park Field C,14u-section-2-columbia-red,14u-section-2-pm-blue,,14u Section 2,final,7,5,404
+arb-674,2026-05-07,18:00,Kunkle Field,12u-section-1-cocalico-eagles,12u-section-1-donegal-indians,,12u Section 1,final,3,2,674
+arb-1161,2026-05-07,18:00,Lanc Mennonite HS Varsity,12u-section-3-cocalico-eagles,12u-section-3-lanc-mennonite,,12u Section 3,final,9,12,1161
+arb-673,2026-05-07,18:00,Legion Park,12u-section-1-pm-comets,12u-section-1-solanco-black,,12u Section 1,final,19,9,673
+arb-402,2026-05-07,18:00,McNickle Field,14u-section-2-cocalico-eagles,14u-section-2-mt-lightning,,14u Section 2,final,13,7,402
+arb-677,2026-05-07,18:00,Minor Field,12u-section-1-mt-streaks,12u-section-1-e-town-blue,,12u Section 1,final,1,2,677
+arb-234,2026-05-07,18:00,Mountville Boro,14u-section-1-manheim-lions,14u-section-1-mountville-angels,,14u Section 1,final,10,0,234
+arb-630,2026-05-07,18:00,Paradise Park #1,14u-section-3-mt-storm,14u-section-3-pv-braves,,14u Section 3,final,2,12,630
+arb-1358,2026-05-07,18:00,Paradise Park #4,10u-section-2-pm-gold,10u-section-2-pv-braves,,10u Section 2,final,2,7,1358
+arb-401,2026-05-07,18:00,Penryn Field,14u-section-2-e-town-blue,14u-section-2-manheim-lions,,14u Section 2,final,14,2,401
+arb-1360,2026-05-07,18:00,Rohrerstown ES #1,10u-section-2-solanco-black,10u-section-2-hempfield-gray,,10u Section 2,final,7,1,1360
+arb-1060,2026-05-07,18:00,Roland Park Wolf Field,12u-section-3-hempfield-black,12u-section-3-ephrata-power,,12u Section 3,final,3,18,1060
+arb-235,2026-05-07,18:00,SOLANCO Legion,14u-section-1-hempfield-black,14u-section-1-solanco-black,,14u Section 1,final,8,7,235
+arb-1163,2026-05-07,18:00,South Lebanon Field #3,12u-section-3-solanco-black,12u-section-3-cedar-crest,,12u Section 3,final,8,11,1163
+arb-1485,2026-05-07,18:00,South Lebanon Field #4,10u-section-2-ls-regulators,10u-section-2-cedar-crest,,10u Section 2,final,5,3,1485
+arb-1453,2026-05-07,18:00,St. Leo Field 1,10u-section-2-cv-bucks,10u-section-2-st-leo-crusaders,,10u Section 2,final,2,3,1453
+arb-1390,2026-05-07,18:00,Stoner Park,10u-section-2-hempfield-red,10u-section-2-mt-lightning,,10u Section 2,final,5,13,1390
+arb-1498,2026-05-07,18:00,Sweetbriar Park #2,10u-section-2-columbia-red,10u-section-2-manheim-maroon,,10u Section 2,final,5,11,1498
+arb-403,2026-05-07,18:00,Tom Herr Field,14u-section-2-cv-bucks,14u-section-2-hempfield-black,,14u Section 2,final,11,9,403
+arb-1421,2026-05-07,18:00,Veteran's Memorial Park,10u-section-2-mt-thunder,10u-section-2-mountville-pirates,,10u Section 2,final,9,8,1421
+arb-269,2026-05-07,18:00,Warwick Twp #1,14u-section-1-mt-streaks,14u-section-1-lititz-vfw,,14u Section 1,final,8,5,269
+arb-1362,2026-05-07,18:00,Washington Boro,10u-section-2-warwick-rangers,10u-section-2-pm-blue,,10u Section 2,final,1,13,1362
+arb-1248,2026-05-08,18:00,Cedar Hollow,10u-section-1-ls-slingers,10u-section-1-manheim,,10u Section 1,final,10,13,1248
+arb-564,2026-05-08,18:00,Dairy Road Field,14u-section-3-cocalico-eagles,14u-section-3-cedar-crest,,14u Section 3,final,12,8,564
+arb-1446,2026-05-08,18:00,Farmdale Elementary,10u-section-2-ephrata-athletics,10u-section-2-hempfield-black,,10u Section 2,final,6,0,1446
+arb-675,2026-05-08,18:00,Froelich Park East,12u-section-1-octorara-braves,12u-section-1-mountville-indians,,12u Section 1,final,9,0,675
+arb-563,2026-05-08,18:00,Governor Stables,14u-section-3-mt-chargers,14u-section-3-ctyaa-moose,,14u Section 3,final,20,4,563
+arb-455,2026-05-08,18:00,Herr Flowers #3,14u-section-2-mountville-red-sox,14u-section-2-ls-blue-blazers,,14u Section 2,final,3,11,455
+arb-237,2026-05-08,18:00,Highville FC,14u-section-1-ls-blue,14u-section-1-pm-comets,,14u Section 1,final,1,16,237
+arb-236,2026-05-08,18:00,McNickle Field,14u-section-1-cedar-crest,14u-section-1-mt-streaks,,14u Section 1,final,10,8,236
+arb-549,2026-05-08,18:00,Minor Field,14u-section-3-solanco-black,14u-section-3-e-town-navy,,14u Section 3,final,1,8,549
+arb-1165,2026-05-08,18:00,Rohrerstown ES #2,12u-section-3-ls-black,12u-section-3-hempfield-red,,12u Section 3,final,19,25,1165
+arb-406,2026-05-08,18:00,SYBA Field Complex #1,14u-section-2-lanc-mennonite-blazers,14u-section-2-solanco-black,,14u Section 2,final,8,1,406
+arb-565,2026-05-08,18:00,Trolly Line Park,14u-section-3-pm-blue,14u-section-3-e-town-white,,14u Section 3,final,9,5,565
+arb-752,2026-05-08,18:00,Warwick Twp #2,12u-section-1-hempfield-red,12u-section-1-warwick-phillies,,12u Section 1,final,15,11,752
+arb-1247,2026-05-08,18:00,Wayside Church,10u-section-1-e-town-bruins,10u-section-1-hempfield-red,,10u Section 1,final,10,0,1247
+arb-1303,2026-05-08,18:00,Witmer Heights #1,10u-section-1-solanco-black,10u-section-1-cv-bucks,,10u Section 1,final,6,11,1303
+arb-1450,2026-05-08,19:00,Sweetbriar Park #2,10u-section-2-lanc-jr-tornados,10u-section-2-manheim-gray,,10u Section 2,final,0,3,1450
+arb-1070,2026-05-08,20:00,New Holland Legion,12u-section-3-e-town-navy,12u-section-3-garden-spot,,12u Section 3,final,1,12,1070
+arb-631,2026-05-11,18:00,Community #3,14u-section-3-pv-braves,14u-section-3-lanc-rec-tornados,,14u Section 3,final,4,14,631
+arb-238,2026-05-11,18:00,Cornwall Field,14u-section-1-lanc-rec-tornados,14u-section-1-cedar-crest,,14u Section 1,final,12,13,238
+arb-1166,2026-05-11,18:00,Flory Park #1,12u-section-3-hempfield-black,12u-section-3-cv-bucks-red,,12u Section 3,final,13,11,1166
+arb-572,2026-05-11,18:00,Governor Stables,14u-section-3-mt-storm,14u-section-3-ctyaa-moose,,14u Section 3,final,10,8,572
+arb-678,2026-05-11,18:00,Hempfield Fire Dept.,12u-section-1-cedar-crest,12u-section-1-hempfield-black,,12u Section 1,final,0,3,678
+arb-274,2026-05-11,18:00,Herr Flowers #3,14u-section-1-hempfield-red,14u-section-1-ls-blue,,14u Section 1,final,5,16,274
+arb-1301,2026-05-11,18:00,Kunkle Field,10u-section-1-ephrata-drillerz,10u-section-1-donegal-indians,,10u Section 1,final,3,7,1301
+arb-1077,2026-05-11,18:00,Kunkle Field,12u-section-3-garden-spot,12u-section-3-donegal-black,,12u Section 3,final,12,11,1077
+arb-567,2026-05-11,18:00,Lafayette Fire,14u-section-3-cedar-crest,14u-section-3-cv-bucks,,14u Section 3,final,2,15,567
+arb-364,2026-05-11,18:00,McNickle Field,14u-section-2-ephrata-breakers,14u-section-2-mt-lightning,,14u Section 2,final,10,20,364
+arb-709,2026-05-11,18:00,Minor Field,12u-section-1-manheim,12u-section-1-e-town-blue,,12u Section 1,final,3,0,709
+arb-407,2026-05-11,18:00,New Holland Legion,14u-section-2-cocalico-eagles,14u-section-2-garden-spot,,14u Section 2,final,4,8,407
+arb-1304,2026-05-11,18:00,New Holland Park,10u-section-1-manheim,10u-section-1-garden-spot,,10u Section 1,final,22,3,1304
+arb-663,2026-05-11,18:00,Overlook #2,12u-section-1-solanco-black,12u-section-1-mt-streaks,,12u Section 1,final,2,8,663
+arb-1306,2026-05-11,18:00,Rohrerstown ES #1,10u-section-1-cv-bucks,10u-section-1-hempfield-black,,10u Section 1,final,4,14,1306
+arb-1354,2026-05-11,18:00,Rohrerstown ES #1,10u-section-2-pm-white,10u-section-2-hempfield-white,,10u Section 2,final,16,3,1354
+arb-239,2026-05-11,18:00,SYBA Field Complex #1,14u-section-1-manheim-lions,14u-section-1-solanco-black,,14u Section 1,final,10,0,239
+arb-754,2026-05-11,18:00,Snyder Park #3,12u-section-1-cv-bucks,12u-section-1-ephrata-drillerz,,12u Section 1,final,2,3,754
+arb-1454,2026-05-11,18:00,St. Leo Field 1,10u-section-2-pm-gold,10u-section-2-st-leo-crusaders,,10u Section 2,final,1,2,1454
+arb-345,2026-05-11,18:00,Tom Herr Field,14u-section-2-ls-blue-blazers,14u-section-2-hempfield-black,,14u Section 2,final,11,12,345
+arb-1305,2026-05-11,18:00,Village Park Field #7,10u-section-1-warwick-cardinals,10u-section-1-ls-slingers,,10u Section 1,final,3,13,1305
+arb-275,2026-05-11,18:00,Warwick Twp #1,14u-section-1-ephrata-drillerz,14u-section-1-lititz-vfw,,14u Section 1,final,10,3,275
+arb-1075,2026-05-11,18:00,Wenger Field,12u-section-3-solanco-gold,12u-section-3-e-town-navy,,12u Section 3,final,4,20,1075
+arb-1079,2026-05-11,18:00,Wenger Field,12u-section-3-mt-bolts,12u-section-3-e-town-gray,,12u Section 3,final,3,13,1079
+arb-1076,2026-05-11,18:00,Wenger Field,12u-section-3-mountville-tigers,12u-section-3-pm-white,,12u Section 3,final,16,8,1076
+arb-242,2026-05-12,18:00,A. Herr Park,14u-section-1-lititz-vfw,14u-section-1-hempfield-black,,14u Section 1,final,4,11,242
+arb-680,2026-05-12,18:00,Creek Field,12u-section-1-e-town-blue,12u-section-1-manheim,,12u Section 1,final,3,11,680
+arb-1249,2026-05-12,18:00,Denver 4th St,10u-section-1-mt-streaks,10u-section-1-cocalico-eagles,,10u Section 1,final,15,6,1249
+arb-1168,2026-05-12,18:00,Denver Park #1,12u-section-3-solanco-black,12u-section-3-cocalico-eagles,,12u Section 3,final,12,4,1168
+arb-1436,2026-05-12,18:00,Farmdale Elementary,10u-section-2-mountville-pirates,10u-section-2-hempfield-red,,10u Section 2,final,9,0,1436
+arb-411,2026-05-12,18:00,Fuhrman Park #2,14u-section-2-st-leo-crusaders,14u-section-2-donegal-green,,14u Section 2,final,6,1,411
+arb-632,2026-05-12,18:00,Fuhrman Park #2,14u-section-3-ctyaa-moose,14u-section-3-donegal-black,,14u Section 3,final,11,1,632
+arb-1363,2026-05-12,18:00,Gladfelter Field__1,10u-section-2-ls-regulators,10u-section-2-columbia-red,,10u Section 2,final,13,0,1363
+arb-1251,2026-05-12,18:00,Gloninger Woods Park,10u-section-1-hempfield-red,10u-section-1-cedar-crest,,10u Section 1,final,13,7,1251
+arb-756,2026-05-12,18:00,Hempfield Fire Dept.,12u-section-1-octorara-braves,12u-section-1-hempfield-red,,12u Section 1,final,14,3,756
+arb-753,2026-05-12,18:00,Herr Flowers #2,12u-section-1-cocalico-eagles,12u-section-1-ls-atta-boys,,12u Section 1,final,1,11,753
+arb-240,2026-05-12,18:00,Highville FC,14u-section-1-mt-streaks,14u-section-1-pm-comets,,14u Section 1,final,7,12,240
+arb-679,2026-05-12,18:00,Kunkle Field,12u-section-1-pm-comets,12u-section-1-donegal-indians,,12u Section 1,final,9,10,679
+arb-1170,2026-05-12,18:00,Kunkle Field,12u-section-3-lanc-mennonite,12u-section-3-donegal-white,,12u Section 3,final,0,9,1170
+arb-408,2026-05-12,18:00,Lanc Mennonite HS Varsity,14u-section-2-mountville-red-sox,14u-section-2-lanc-mennonite-blazers,,14u Section 2,final,2,17,408
+arb-410,2026-05-12,18:00,McNickle Field,14u-section-2-pv-braves,14u-section-2-mt-thunder,,14u Section 2,final,7,8,410
+arb-560,2026-05-12,18:00,New Holland Legion,14u-section-3-ephrata-zips,14u-section-3-garden-spot,,14u Section 3,final,7,17,560
+arb-568,2026-05-12,18:00,Nitrauer ES,14u-section-3-cocalico-eagles,14u-section-3-mt-storm,,14u Section 3,final,11,11,568
+arb-1078,2026-05-12,18:00,Roland Park Wolf Field,12u-section-3-cedar-crest,12u-section-3-ephrata-power,,12u Section 3,final,5,14,1078
+arb-459,2026-05-12,18:00,SYBA Field Complex #1,14u-section-2-ls-base-bandits,14u-section-2-solanco-gold,,14u Section 2,final,3,7,459
+arb-755,2026-05-12,18:00,SYBA Field Complex #2,12u-section-1-mountville-indians,12u-section-1-solanco-black,,12u Section 1,final,10,4,755
+arb-1458,2026-05-12,18:00,Snyder Park #2,10u-section-2-garden-spot-blue,10u-section-2-ephrata-athletics,,10u Section 2,final,0,13,1458
+arb-456,2026-05-12,18:00,South Lebanon Field #2,14u-section-2-pm-white,14u-section-2-cedar-crest,,14u Section 2,final,7,4,456
+arb-1459,2026-05-12,18:00,South Lebanon Field #4,10u-section-2-hempfield-gray,10u-section-2-cedar-crest,,10u Section 2,final,9,5,1459
+arb-1167,2026-05-12,18:00,St. Leo Field 2,12u-section-3-e-town-white,12u-section-3-st-leo-gold,,12u Section 3,final,3,9,1167
+arb-1364,2026-05-12,18:00,Stoner Park,10u-section-2-lanc-jr-tornados,10u-section-2-mt-thunder,,10u Section 2,final,2,3,1364
+arb-1455,2026-05-12,18:00,Sweetbriar Park #2,10u-section-2-garden-spot-white,10u-section-2-manheim-gray,,10u Section 2,final,1,17,1455
+arb-458,2026-05-12,18:00,Warwick Twp #1,14u-section-2-ls-blue-blazers,14u-section-2-warwick-white-sox,,14u Section 2,final,2,8,458
+arb-1457,2026-05-12,18:00,Warwick Twp #3,10u-section-2-pv-braves,10u-section-2-warwick-rangers,,10u Section 2,final,8,2,1457
+arb-409,2026-05-12,18:00,Wolgemuth Park,14u-section-2-pm-blue,14u-section-2-e-town-blue,,14u Section 2,final,7,7,409
+arb-1253,2026-05-13,18:00,Cedar Hollow,10u-section-1-ephrata-drillerz,10u-section-1-manheim,,10u Section 1,final,2,9,1253
+arb-1081,2026-05-13,18:00,Charlestown Upper,12u-section-3-donegal-black,12u-section-3-pm-blue,,12u Section 3,final,16,8,1081
+arb-1171,2026-05-13,18:00,Flory Park #1,12u-section-3-pm-white,12u-section-3-cv-bucks-blue,,12u Section 3,final,8,15,1171
+arb-276,2026-05-13,18:00,Herr Flowers #3,14u-section-1-mountville-angels,14u-section-1-ls-blue,,14u Section 1,final,2,16,276
+arb-460,2026-05-13,18:00,New Holland Legion,14u-section-2-mt-lightning,14u-section-2-garden-spot,,14u Section 2,final,12,8,460
+arb-569,2026-05-13,18:00,Nitrauer ES,14u-section-3-cv-bucks,14u-section-3-mt-chargers,,14u Section 3,final,23,10,569
+arb-681,2026-05-13,18:00,Overlook #2,12u-section-1-warwick-phillies,12u-section-1-mt-streaks,,12u Section 1,final,6,13,681
+arb-1460,2026-05-13,18:00,Warwick Twp #3,10u-section-2-ls-blue-crew,10u-section-2-warwick-diamondbacks,,10u Section 2,final,13,5,1460
+arb-1252,2026-05-13,18:00,Wenger Field,10u-section-1-warwick-cardinals,10u-section-1-e-town-bruins,,10u Section 1,final,8,6,1252
+arb-571,2026-05-13,18:00,Wolgemuth Park,14u-section-3-e-town-white,14u-section-3-e-town-navy,,14u Section 3,final,1,11,571
+arb-277,2026-05-14,18:00,Community #3,14u-section-1-solanco-black,14u-section-1-lanc-rec-tornados,,14u Section 1,final,9,8,277
+arb-682,2026-05-14,18:00,Dairy Road Field,12u-section-1-mountville-indians,12u-section-1-cedar-crest,,12u Section 1,final,3,12,682
+arb-463,2026-05-14,18:00,Denver Park #1,14u-section-2-mt-thunder,14u-section-2-cocalico-eagles,,14u Section 2,final,4,13,463
+arb-1524,2026-05-14,18:00,Farmdale Elementary,10u-section-2-pm-blue,10u-section-2-hempfield-red,,10u Section 2,final,13,0,1524
+arb-1461,2026-05-14,18:00,Fuhrman Park Field #4,10u-section-2-ls-regulators,10u-section-2-donegal-green,,10u Section 2,final,10,5,1461
+arb-246,2026-05-14,18:00,Governor Stables,14u-section-1-cedar-crest,14u-section-1-e-town-black,,14u Section 1,final,0,7,246
+arb-412,2026-05-14,18:00,Greider Park Field C,14u-section-2-donegal-green,14u-section-2-pm-blue,,14u Section 2,final,2,6,412
+arb-570,2026-05-14,18:00,Highville FC,14u-section-3-ephrata-zips,14u-section-3-pm-blue,,14u Section 3,final,5,11,570
+arb-414,2026-05-14,18:00,Lanc Mennonite HS Varsity,14u-section-2-manheim-lions,14u-section-2-lanc-mennonite-blazers,,14u Section 2,final,3,12,414
+arb-684,2026-05-14,18:00,Manor MS,12u-section-1-hempfield-red,12u-section-1-pm-comets,,12u Section 1,final,13,9,684
+arb-1254,2026-05-14,18:00,Municipal Field,10u-section-1-pm-comets,10u-section-1-mt-streaks,,10u Section 1,final,3,4,1254
+arb-1342,2026-05-14,18:00,New Holland Legion,10u-section-1-donegal-indians,10u-section-1-garden-spot,,10u Section 1,final,18,0,1342
+arb-1525,2026-05-14,18:00,New Holland Park,10u-section-2-st-leo-crusaders,10u-section-2-garden-spot-white,,10u Section 2,final,19,1,1525
+arb-462,2026-05-14,18:00,Paradise Park #1,14u-section-2-pm-white,14u-section-2-pv-braves,,14u Section 2,final,11,1,462
+arb-245,2026-05-14,18:00,Penryn Field,14u-section-1-mountville-angels,14u-section-1-manheim-lions,,14u Section 1,final,2,11,245
+arb-683,2026-05-14,18:00,Reamstown Park,12u-section-1-ephrata-drillerz,12u-section-1-cocalico-eagles,,12u Section 1,final,1,10,683
+arb-1366,2026-05-14,18:00,Rohrerstown ES #1,10u-section-2-pm-white,10u-section-2-hempfield-gray,,10u Section 2,final,13,1,1366
+arb-243,2026-05-14,18:00,Silver Spring Park,14u-section-1-mt-streaks,14u-section-1-hempfield-red,,14u Section 1,final,9,5,243
+arb-1173,2026-05-14,18:00,South Lebanon Field #3,12u-section-3-mountville-tigers,12u-section-3-cedar-crest,,12u Section 3,final,13,2,1173
+arb-1463,2026-05-14,18:00,South Lebanon Field #4,10u-section-2-cocalico-eagles,10u-section-2-cedar-crest,,10u Section 2,final,15,10,1463
+arb-1367,2026-05-14,18:00,Stoner Park,10u-section-2-columbia-red,10u-section-2-mt-lightning,,10u Section 2,final,0,12,1367
+arb-1365,2026-05-14,18:00,Veteran's Memorial Park,10u-section-2-manheim-maroon,10u-section-2-mountville-pirates,,10u Section 2,final,4,5,1365
+arb-1082,2026-05-14,18:00,Wenger Field,12u-section-3-cocalico-eagles,12u-section-3-e-town-white,,12u Section 3,final,23,21,1082
+arb-1307,2026-05-14,18:00,Witmer Heights #1,10u-section-1-hempfield-black,10u-section-1-cv-bucks,,10u Section 1,final,14,1,1307
+arb-633,2026-05-15,18:00,Community #3,14u-section-3-solanco-black,14u-section-3-lanc-rec-tornados,,14u Section 3,final,5,6,633
+arb-1256,2026-05-15,18:00,Denver 4th St,10u-section-1-solanco-black,10u-section-1-cocalico-eagles,,10u Section 1,final,17,20,1256
+arb-576,2026-05-15,18:00,Denver Park #1,14u-section-3-mt-chargers,14u-section-3-cocalico-eagles,,14u Section 3,final,4,14,576
+arb-418,2026-05-15,18:00,Dutch Gold #1,14u-section-2-warwick-white-sox,14u-section-2-st-leo-crusaders,,14u Section 2,final,12,3,418
+arb-1465,2026-05-15,18:00,Farmdale Elementary,10u-section-2-manheim-gray,10u-section-2-hempfield-black,,10u Section 2,final,5,3,1465
+arb-757,2026-05-15,18:00,Flory Park #2,12u-section-1-donegal-indians,12u-section-1-cv-bucks,,12u Section 1,final,1,8,757
+arb-1174,2026-05-15,18:00,Fuhrman Park #1,12u-section-3-e-town-navy,12u-section-3-donegal-white,,12u Section 3,final,4,6,1174
+arb-1257,2026-05-15,18:00,Gloninger Woods Park,10u-section-1-ephrata-drillerz,10u-section-1-cedar-crest,,10u Section 1,final,12,1,1257
+arb-685,2026-05-15,18:00,Highland Twp.,12u-section-1-hempfield-black,12u-section-1-octorara-braves,,12u Section 1,final,9,10,685
+arb-416,2026-05-15,18:00,McNickle Field,14u-section-2-ls-blue-blazers,14u-section-2-mt-lightning,,14u Section 2,final,2,12,416
+arb-417,2026-05-15,18:00,Mountville Boro,14u-section-2-e-town-blue,14u-section-2-mountville-red-sox,,14u Section 2,final,14,4,417
+arb-1083,2026-05-15,18:00,New Holland Legion,12u-section-3-cv-bucks-blue,12u-section-3-garden-spot,,12u Section 3,final,4,7,1083
+arb-1462,2026-05-15,18:00,New Holland Park,10u-section-2-hempfield-white,10u-section-2-garden-spot-blue,,10u Section 2,final,21,2,1462
+arb-686,2026-05-15,18:00,Overlook #2,12u-section-1-ls-atta-boys,12u-section-1-mt-streaks,,12u Section 1,final,4,2,686
+arb-1085,2026-05-15,18:00,Reidenbaugh Elm,12u-section-3-hempfield-red,12u-section-3-mt-bolts,,12u Section 3,final,15,3,1085
+arb-419,2026-05-15,18:00,SOLANCO Legion,14u-section-2-ls-base-bandits,14u-section-2-solanco-black,,14u Section 2,final,3,7,419
+arb-413,2026-05-15,18:00,SYBA Field Complex #1,14u-section-2-hempfield-red,14u-section-2-solanco-gold,,14u Section 2,final,2,10,413
+arb-1464,2026-05-15,18:00,SYBA Field Complex #3,10u-section-2-pv-braves,10u-section-2-solanco-black,,10u Section 2,final,17,2,1464
+arb-1086,2026-05-15,18:00,Safe Harbor Creek Field,12u-section-3-mt-chargers,12u-section-3-pm-gold,,12u Section 3,final,4,7,1086
+arb-1176,2026-05-15,18:00,St. Leo Field 2,12u-section-3-ephrata-power,12u-section-3-st-leo-gold,,12u Section 3,final,9,0,1176
+arb-1368,2026-05-15,18:00,Stoner Park,10u-section-2-warwick-rangers,10u-section-2-mt-thunder,,10u Section 2,final,2,20,1368
+arb-575,2026-05-15,18:00,Trolly Line Park,14u-section-3-ephrata-zips,14u-section-3-e-town-white,,14u Section 3,final,1,16,575
+arb-1175,2026-05-15,18:00,Village Park Field #7,12u-section-3-e-town-gray,12u-section-3-ls-blue,,12u Section 3,final,15,5,1175
+arb-1466,2026-05-15,18:00,Warwick Twp #3,10u-section-2-lanc-jr-tornados,10u-section-2-warwick-diamondbacks,,10u Section 2,final,7,5,1466
+arb-1084,2026-05-15,18:00,Wayside Church,12u-section-3-ephrata-tourists,12u-section-3-hempfield-black,,12u Section 3,final,23,3,1084
+arb-548,2026-05-16,10:00,New Holland Legion,14u-section-3-ctyaa-moose,14u-section-3-garden-spot,,14u Section 3,final,2,12,548
+arb-1456,2026-05-16,10:00,SYBA Field Complex #3,10u-section-2-cv-bucks,10u-section-2-solanco-black,,10u Section 2,final,10,2,1456
+arb-527,2026-05-17,13:00,Lafayette Fire,14u-section-3-e-town-white,14u-section-3-cv-bucks,,14u Section 3,final,3,18,527
+arb-247,2026-05-18,18:00,A. Herr Park,14u-section-1-lanc-rec-tornados,14u-section-1-hempfield-black,,14u Section 1,final,5,13,247
+arb-233,2026-05-18,18:00,Cornwall Field,14u-section-1-pm-comets,14u-section-1-cedar-crest,,14u Section 1,final,9,0,233
+arb-1177,2026-05-18,18:00,County Park #4,12u-section-3-cedar-crest,12u-section-3-ls-blue,,12u Section 3,final,13,16,1177
+arb-1369,2026-05-18,18:00,Denver 4th St,10u-section-2-manheim-maroon,10u-section-2-cocalico-eagles,,10u Section 2,final,12,6,1369
+arb-1178,2026-05-18,18:00,Flory Park #1,12u-section-3-ls-black,12u-section-3-cv-bucks-red,,12u Section 3,final,16,12,1178
+arb-1087,2026-05-18,18:00,Froelich Park West,12u-section-3-pm-blue,12u-section-3-mountville-tigers,,12u Section 3,final,3,13,1087
+arb-464,2026-05-18,18:00,Gladfelter Field 5,14u-section-2-mountville-red-sox,14u-section-2-columbia-red,,14u Section 2,final,2,13,464
+arb-1258,2026-05-18,18:00,Gloninger Woods Park,10u-section-1-e-town-bruins,10u-section-1-cedar-crest,,10u Section 1,final,14,1,1258
+arb-578,2026-05-18,18:00,Highville FC,14u-section-3-lanc-rec-tornados,14u-section-3-pm-blue,,14u Section 3,final,9,8,578
+arb-1088,2026-05-18,18:00,Legion Park,12u-section-3-st-leo-gold,12u-section-3-solanco-black,,12u Section 3,final,20,12,1088
+arb-664,2026-05-18,18:00,Manor MS,12u-section-1-cv-bucks,12u-section-1-pm-comets,,12u Section 1,final,6,15,664
+arb-249,2026-05-18,18:00,McNickle Field,14u-section-1-ls-blue,14u-section-1-mt-streaks,,14u Section 1,final,12,6,249
+arb-662,2026-05-18,18:00,Minor Field,12u-section-1-donegal-indians,12u-section-1-e-town-blue,,12u Section 1,final,7,17,662
+arb-782,2026-05-18,18:00,Overlook #1,12u-section-1-mt-streaks,12u-section-1-ls-atta-boys,,12u Section 1,final,9,17,782
+arb-394,2026-05-18,18:00,SYBA Field Complex #1,14u-section-2-pv-braves,14u-section-2-solanco-gold,,14u Section 2,final,12,1,394
+arb-248,2026-05-18,18:00,Silver Spring Park,14u-section-1-e-town-black,14u-section-1-hempfield-red,,14u Section 1,final,8,1,248
+arb-1308,2026-05-18,18:00,Snyder Park #2,10u-section-1-cocalico-eagles,10u-section-1-ephrata-drillerz,,10u Section 1,final,2,8,1308
+arb-758,2026-05-18,18:00,Snyder Park #3,12u-section-1-manheim,12u-section-1-ephrata-drillerz,,12u Section 1,final,2,5,758
+arb-457,2026-05-18,18:00,South Lebanon Field #2,14u-section-2-cv-bucks,14u-section-2-cedar-crest,,14u Section 2,final,13,3,457
+arb-1467,2026-05-18,18:00,Sweetbriar Park #2,10u-section-2-warwick-diamondbacks,10u-section-2-manheim-gray,,10u Section 2,final,3,2,1467
+arb-420,2026-05-18,18:00,Tom Herr,14u-section-2-solanco-black,14u-section-2-hempfield-red,,14u Section 2,final,14,15,420
+arb-278,2026-05-18,18:00,Warwick Twp #1,14u-section-1-solanco-black,14u-section-1-lititz-vfw,,14u Section 1,final,8,6,278
+arb-759,2026-05-18,18:00,Warwick Twp #2,12u-section-1-octorara-braves,12u-section-1-warwick-phillies,,12u Section 1,final,21,5,759
+arb-1259,2026-05-18,18:00,Wayside Church,10u-section-1-garden-spot,10u-section-1-hempfield-red,,10u Section 1,final,3,16,1259
+arb-397,2026-05-18,18:00,Wolgemuth Park,14u-section-2-mt-lightning,14u-section-2-e-town-blue,,14u Section 2,final,6,7,397
+arb-577,2026-05-18,18:00,Wolgemuth Park,14u-section-3-mt-storm,14u-section-3-e-town-navy,,14u Section 3,final,0,15,577
+arb-1471,2026-05-19,18:00,Community #2,10u-section-2-cv-bucks,10u-section-2-lanc-jr-tornados,,10u Section 2,final,5,6,1471
+arb-688,2026-05-19,18:00,Dairy Road Field,12u-section-1-hempfield-red,12u-section-1-cedar-crest,,12u Section 1,final,4,5,688
+arb-1181,2026-05-19,18:00,Denver Partk #2,12u-section-3-solanco-gold,12u-section-3-cocalico-eagles,,12u Section 3,final,15,15,1181
+arb-1373,2026-05-19,18:00,Greider Park Field A,10u-section-2-cedar-crest,10u-section-2-pm-white,,10u Section 2,final,1,4,1373
+arb-424,2026-05-19,18:00,Greider Park Field C,14u-section-2-st-leo-crusaders,14u-section-2-pm-white,,14u Section 2,final,11,3,424
+arb-689,2026-05-19,18:00,Hempfield Fire Dept.,12u-section-1-solanco-black,12u-section-1-hempfield-black,,12u Section 1,final,0,14,689
+arb-580,2026-05-19,18:00,Kunkle Field,14u-section-3-cocalico-eagles,14u-section-3-donegal-black,,14u Section 3,final,21,16,580
+arb-1179,2026-05-19,18:00,Lanc Mennonite HS Varsity,12u-section-3-cv-bucks-blue,12u-section-3-lanc-mennonite,,12u Section 3,final,13,3,1179
+arb-422,2026-05-19,18:00,McNickle Field,14u-section-2-cedar-crest,14u-section-2-mt-thunder,,14u Section 2,final,5,2,422
+arb-250,2026-05-19,18:00,Mountville Boro,14u-section-1-pm-comets,14u-section-1-mountville-angels,,14u Section 1,final,17,0,250
+arb-465,2026-05-19,18:00,New Holland Legion,14u-section-2-garden-spot,14u-section-2-warwick-white-sox,,14u Section 2,final,2,5,465
+arb-634,2026-05-19,18:00,Paradise Park #1,14u-section-3-garden-spot,14u-section-3-pv-braves,,14u Section 3,final,15,1,634
+arb-423,2026-05-19,18:00,Penryn Field,14u-section-2-pv-braves,14u-section-2-manheim-lions,,14u Section 2,final,10,4,423
+arb-1090,2026-05-19,18:00,Reidenbaugh Elm,12u-section-3-ephrata-tourists,12u-section-3-mt-bolts,,12u Section 3,final,17,4,1090
+arb-1371,2026-05-19,18:00,Rohrerstown ES #1,10u-section-2-mountville-pirates,10u-section-2-hempfield-gray,,10u Section 2,final,15,3,1371
+arb-1180,2026-05-19,18:00,Rohrerstown ES #2,12u-section-3-garden-spot,12u-section-3-hempfield-red,,12u Section 3,final,26,10,1180
+arb-579,2026-05-19,18:00,Roland Park Lloyd Field,14u-section-3-ctyaa-moose,14u-section-3-ephrata-zips,,14u Section 3,final,16,6,579
+arb-1091,2026-05-19,18:00,Roland Park Wolf Field,12u-section-3-e-town-gray,12u-section-3-ephrata-power,,12u Section 3,final,17,10,1091
+arb-1089,2026-05-19,18:00,Safe Harbor Creek Field,12u-section-3-pm-white,12u-section-3-pm-gold,,12u Section 3,final,7,7,1089
+arb-1370,2026-05-19,18:00,Silvermine Park,10u-section-2-ls-blue-crew,10u-section-2-pm-gold,,10u Section 2,final,7,6,1370
+arb-279,2026-05-19,18:00,Snyder Park #1,14u-section-1-cedar-crest,14u-section-1-ephrata-drillerz,,14u Section 1,final,6,7,279
+arb-1468,2026-05-19,18:00,St. Leo Field 1,10u-section-2-hempfield-red,10u-section-2-st-leo-crusaders,,10u Section 2,final,0,15,1468
+arb-1372,2026-05-19,18:00,Stoner Park,10u-section-2-garden-spot-white,10u-section-2-mt-thunder,,10u Section 2,final,0,19,1372
+arb-1502,2026-05-19,18:00,Warwick Middle School,10u-section-2-donegal-green,10u-section-2-warwick-rangers,,10u Section 2,final,18,7,1502
+arb-691,2026-05-20,18:00,Creek Field,12u-section-1-pm-comets,12u-section-1-manheim,,12u Section 1,final,2,6,691
+arb-251,2026-05-20,18:00,Governor Stables,14u-section-1-lanc-rec-tornados,14u-section-1-e-town-black,,14u Section 1,final,1,11,251
+arb-467,2026-05-20,18:00,Kunkle Field,14u-section-2-mountville-red-sox,14u-section-2-donegal-green,,14u Section 2,final,4,7,467
+arb-581,2026-05-20,18:00,New Holland Legion,14u-section-3-e-town-navy,14u-section-3-garden-spot,,14u Section 3,final,12,4,581
+arb-1388,2026-05-20,18:00,New Holland Park,10u-section-2-cocalico-eagles,10u-section-2-garden-spot-blue,,10u Section 2,final,33,2,1388
+arb-1092,2026-05-20,18:00,Reidenbaugh Elm,12u-section-3-hempfield-black,12u-section-3-mt-chargers,,12u Section 3,final,2,17,1092
+arb-1311,2026-05-20,18:00,Rohrerstown ES #1,10u-section-1-manheim,10u-section-1-hempfield-black,,10u Section 1,final,3,5,1311
+arb-574,2026-05-21,18:00,Dairy Road Field,14u-section-3-donegal-black,14u-section-3-cedar-crest,,14u Section 3,final,15,5,574
+arb-1093,2026-05-21,18:00,New Holland Legion,12u-section-3-donegal-white,12u-section-3-garden-spot,,12u Section 3,final,0,10,1093
+arb-1318,2026-05-21,18:00,Village Park Field #7,10u-section-1-hempfield-black,10u-section-1-ls-slingers,,10u Section 1,final,8,6,1318
+arb-231,2026-05-22,18:00,McNickle Field,14u-section-1-lanc-rec-tornados,14u-section-1-mt-streaks,,14u Section 1,final,9,6,231
+arb-1312,2026-05-22,18:00,New Holland Park,10u-section-1-mt-streaks,10u-section-1-garden-spot,,10u Section 1,final,15,0,1312
+arb-1309,2026-05-22,18:00,Village Park Field #7,10u-section-1-donegal-indians,10u-section-1-ls-slingers,,10u Section 1,final,1,11,1309
+arb-1255,2026-05-25,18:00,Wenger Field,10u-section-1-ls-slingers,10u-section-1-e-town-bruins,,10u Section 1,final,14,5,1255
+arb-261,2026-05-26,18:00,A. Herr Park,14u-section-1-mt-streaks,14u-section-1-hempfield-black,,14u Section 1,final,6,20,261
+arb-1264,2026-05-26,18:00,Cedar Hollow,10u-section-1-donegal-indians,10u-section-1-manheim,,10u Section 1,final,6,7,1264
+arb-281,2026-05-26,18:00,Community #3,14u-section-1-hempfield-red,14u-section-1-lanc-rec-tornados,,14u Section 1,final,2,1,281
+arb-695,2026-05-26,18:00,Creek Field,12u-section-1-hempfield-black,12u-section-1-manheim,,12u Section 1,final,15,3,695
+arb-1263,2026-05-26,18:00,Cresswell Park 1,10u-section-1-solanco-black,10u-section-1-pm-comets,,10u Section 1,final,5,17,1263
+arb-1374,2026-05-26,18:00,Denver 4th St,10u-section-2-columbia-red,10u-section-2-cocalico-eagles,,10u Section 2,scheduled,,0,1374
+arb-559,2026-05-26,18:00,Denver Park #1,14u-section-3-e-town-navy,14u-section-3-cocalico-eagles,,14u Section 3,final,12,1,559
+arb-431,2026-05-26,18:00,Dutch Gold #1,14u-section-2-cocalico-eagles,14u-section-2-st-leo-crusaders,,14u Section 2,final,9,11,431
+arb-241,2026-05-26,18:00,Governor Stables,14u-section-1-ephrata-drillerz,14u-section-1-e-town-black,,14u Section 1,final,3,6,241
+arb-435,2026-05-26,18:00,Greider Park Field C,14u-section-2-ls-blue-blazers,14u-section-2-pm-blue,,14u Section 2,final,7,10,435
+arb-696,2026-05-26,18:00,Highland Twp.,12u-section-1-solanco-black,12u-section-1-octorara-braves,,12u Section 1,final,2,10,696
+arb-257,2026-05-26,18:00,Highville FC,14u-section-1-manheim-lions,14u-section-1-pm-comets,,14u Section 1,final,8,0,257
+arb-1096,2026-05-26,18:00,Hopeland Park,12u-section-3-ls-black,12u-section-3-ephrata-tourists,,12u Section 3,final,9,25,1096
+arb-1095,2026-05-26,18:00,Kunkle Field,12u-section-3-ephrata-power,12u-section-3-donegal-black,,12u Section 3,final,7,4,1095
+arb-437,2026-05-26,18:00,Lanc Mennonite HS Varsity,14u-section-2-hempfield-red,14u-section-2-lanc-mennonite-blazers,,14u Section 2,final,6,6,437
+arb-659,2026-05-26,18:00,Manor MS,12u-section-1-mt-streaks,12u-section-1-pm-comets,,12u Section 1,final,6,1,659
+arb-697,2026-05-26,18:00,Minor Field,12u-section-1-mountville-indians,12u-section-1-e-town-blue,,12u Section 1,final,2,13,697
+arb-258,2026-05-26,18:00,Mountville Boro,14u-section-1-lititz-vfw,14u-section-1-mountville-angels,,14u Section 1,final,18,3,258
+arb-429,2026-05-26,18:00,New Holland Legion,14u-section-2-ls-base-bandits,14u-section-2-garden-spot,,14u Section 2,final,1,11,429
+arb-1487,2026-05-26,18:00,New Holland Park,10u-section-2-solanco-black,10u-section-2-garden-spot-white,,10u Section 2,final,12,8,1487
+arb-629,2026-05-26,18:00,Paradise Park #1,14u-section-3-cv-bucks,14u-section-3-pv-braves,,14u Section 3,final,21,18,629
+arb-433,2026-05-26,18:00,Penryn Field,14u-section-2-solanco-gold,14u-section-2-manheim-lions,,14u Section 2,final,4,1,433
+arb-1315,2026-05-26,18:00,Rohrerstown ES #1,10u-section-1-cedar-crest,10u-section-1-hempfield-black,,10u Section 1,final,2,12,1315
+arb-436,2026-05-26,18:00,Roland Park Lloyd Field,14u-section-2-mt-thunder,14u-section-2-ephrata-breakers,,14u Section 2,final,6,6,436
+arb-256,2026-05-26,18:00,SYBA Field Complex #1,14u-section-1-ls-blue,14u-section-1-solanco-black,,14u Section 1,final,8,4,256
+arb-1472,2026-05-26,18:00,Snyder Park #2,10u-section-2-donegal-green,10u-section-2-ephrata-athletics,,10u Section 2,final,2,5,1472
+arb-469,2026-05-26,18:00,South Lebanon Field #2,14u-section-2-mt-lightning,14u-section-2-cedar-crest,,14u Section 2,final,13,6,469
+arb-1403,2026-05-26,18:00,Stoner Park,10u-section-2-cv-bucks,10u-section-2-mt-thunder,,10u Section 2,final,5,7,1403
+arb-1314,2026-05-26,18:00,Warwick Twp #3,10u-section-1-garden-spot,10u-section-1-warwick-cardinals,,10u Section 1,final,4,19,1314
+arb-1101,2026-05-26,18:00,Wenger Field,12u-section-3-mt-chargers,12u-section-3-pm-white,,12u Section 3,final,15,2,1101
+arb-1479,2026-05-27,18:00,Community #2,10u-section-2-st-leo-crusaders,10u-section-2-lanc-jr-tornados,,10u Section 2,final,3,4,1479
+arb-263,2026-05-27,18:00,Cornwall Field,14u-section-1-solanco-black,14u-section-1-cedar-crest,,14u Section 1,final,9,7,263
+arb-588,2026-05-27,18:00,Dairy Road Field,14u-section-3-garden-spot,14u-section-3-cedar-crest,,14u Section 3,final,16,7,588
+arb-1266,2026-05-27,18:00,Denver 4th St,10u-section-1-cv-bucks,10u-section-1-cocalico-eagles,,10u Section 1,final,10,5,1266
+arb-765,2026-05-27,18:00,Farmdale Elementary,12u-section-1-manheim,12u-section-1-hempfield-red,,12u Section 1,final,2,6,765
+arb-1184,2026-05-27,18:00,Flory Park #1,12u-section-3-hempfield-red,12u-section-3-cv-bucks-blue,,12u Section 3,final,5,20,1184
+arb-690,2026-05-27,18:00,Froelich Park East,12u-section-1-donegal-indians,12u-section-1-mountville-indians,,12u Section 1,final,4,2,690
+arb-438,2026-05-27,18:00,Greider Park Field C,14u-section-2-solanco-black,14u-section-2-pm-white,,14u Section 2,final,8,14,438
+arb-586,2026-05-27,18:00,Kunkle Field,14u-section-3-donegal-black,14u-section-3-e-town-white,,14u Section 3,final,13,3,586
+arb-1187,2026-05-27,18:00,Lanc Mennonite HS Varsity,12u-section-3-cv-bucks-red,12u-section-3-lanc-mennonite,,12u Section 3,final,14,15,1187
+arb-432,2026-05-27,18:00,Minor Field,14u-section-2-hempfield-black,14u-section-2-e-town-blue,,14u Section 2,final,7,13,432
+arb-1265,2026-05-27,18:00,Municipal Field,10u-section-1-hempfield-red,10u-section-1-mt-streaks,,10u Section 1,final,0,11,1265
+arb-1383,2026-05-27,18:00,New Holland Legion,10u-section-2-mt-thunder,10u-section-2-garden-spot-blue,,10u Section 2,final,23,0,1383
+arb-252,2026-05-27,18:00,Penryn Field,14u-section-1-hempfield-red,14u-section-1-manheim-lions,,14u Section 1,scheduled,,0,252
+arb-698,2026-05-27,18:00,Reamstown Park,12u-section-1-cv-bucks,12u-section-1-cocalico-eagles,,12u Section 1,final,7,6,698
+arb-1385,2026-05-27,18:00,Rohrerstown ES #1,10u-section-2-ls-blue-crew,10u-section-2-hempfield-gray,,10u Section 2,final,13,1,1385
+arb-1316,2026-05-27,18:00,Snyder Park #2,10u-section-1-ls-slingers,10u-section-1-ephrata-drillerz,,10u Section 1,final,19,2,1316
+arb-763,2026-05-27,18:00,Snyder Park #3,12u-section-1-warwick-phillies,12u-section-1-ephrata-drillerz,,12u Section 1,final,3,13,763
+arb-1188,2026-05-27,18:00,South Lebanon Field #3,12u-section-3-donegal-white,12u-section-3-cedar-crest,,12u Section 3,final,20,9,1188
+arb-1185,2026-05-27,18:00,St. Leo Field 2,12u-section-3-pm-gold,12u-section-3-st-leo-gold,,12u Section 3,final,3,8,1185
+arb-1478,2026-05-27,18:00,Sweetbriar Park #2,10u-section-2-manheim-gray,10u-section-2-hempfield-red,,10u Section 2,final,6,0,1478
+arb-1384,2026-05-27,18:00,Veteran's Memorial Park,10u-section-2-pv-braves,10u-section-2-mountville-pirates,,10u Section 2,final,11,9,1384
+arb-1477,2026-05-27,18:00,Warwick Twp #3,10u-section-2-columbia-red,10u-section-2-warwick-diamondbacks,,10u Section 2,final,1,5,1477
+arb-1382,2026-05-27,18:00,Washington Boro,10u-section-2-donegal-green,10u-section-2-pm-blue,,10u Section 2,final,12,13,1382
+arb-1099,2026-05-27,18:00,Wenger Field,12u-section-3-mt-bolts,12u-section-3-e-town-navy,,12u Section 3,final,8,18,1099
+arb-1482,2026-05-27,18:00,Witmer Heights #1,10u-section-2-pm-gold,10u-section-2-cv-bucks,,10u Section 2,final,4,1,1482
+arb-1268,2026-05-28,18:00,Cedar Hollow,10u-section-1-pm-comets,10u-section-1-manheim,,10u Section 1,final,13,14,1268
+arb-1475,2026-05-28,18:00,Community #2,10u-section-2-hempfield-red,10u-section-2-lanc-jr-tornados,,10u Section 2,final,3,7,1475
+arb-701,2026-05-28,18:00,Dairy Road Field,12u-section-1-donegal-indians,12u-section-1-cedar-crest,,12u Section 1,final,7,9,701
+arb-1269,2026-05-28,18:00,Denver 4th St,10u-section-1-garden-spot,10u-section-1-cocalico-eagles,,10u Section 1,final,2,12,1269
+arb-591,2026-05-28,18:00,Denver Park #1,14u-section-3-ctyaa-moose,14u-section-3-cocalico-eagles,,14u Section 3,final,10,14,591
+arb-1186,2026-05-28,18:00,Denver Partk #2,12u-section-3-donegal-black,12u-section-3-cocalico-eagles,,12u Section 3,final,21,7,1186
+arb-1100,2026-05-28,18:00,Froelich Park West,12u-section-3-hempfield-black,12u-section-3-mountville-tigers,,12u Section 3,final,4,19,1100
+arb-1267,2026-05-28,18:00,Gloninger Woods Park,10u-section-1-solanco-black,10u-section-1-cedar-crest,,10u Section 1,final,8,5,1267
+arb-700,2026-05-28,18:00,Hempfield Fire Dept.,12u-section-1-e-town-blue,12u-section-1-hempfield-black,,12u Section 1,final,0,10,700
+arb-283,2026-05-28,18:00,Herr Flowers #3,14u-section-1-lititz-vfw,14u-section-1-ls-blue,,14u Section 1,final,4,2,283
+arb-442,2026-05-28,18:00,Lafayette Fire,14u-section-2-manheim-lions,14u-section-2-cv-bucks,,14u Section 2,final,6,18,442
+arb-439,2026-05-28,18:00,New Holland Legion,14u-section-2-ephrata-breakers,14u-section-2-garden-spot,,14u Section 2,final,3,14,439
+arb-590,2026-05-28,18:00,Roland Park Lloyd Field,14u-section-3-cv-bucks,14u-section-3-ephrata-zips,,14u Section 3,final,16,6,590
+arb-693,2026-05-28,18:00,SOLANCO Legion,12u-section-1-ephrata-drillerz,12u-section-1-solanco-black,,12u Section 1,final,14,0,693
+arb-1189,2026-05-28,18:00,SYBA Field Complex #2,12u-section-3-ephrata-tourists,12u-section-3-solanco-black,,12u Section 3,final,6,4,1189
+arb-1480,2026-05-28,18:00,SYBA Field Complex #3,10u-section-2-hempfield-white,10u-section-2-solanco-black,,10u Section 2,final,21,8,1480
+arb-260,2026-05-28,18:00,Silver Spring Park,14u-section-1-pm-comets,14u-section-1-hempfield-red,,14u Section 1,final,16,12,260
+arb-282,2026-05-28,18:00,Snyder Park #1,14u-section-1-mountville-angels,14u-section-1-ephrata-drillerz,,14u Section 1,final,0,2,282
+arb-1381,2026-05-28,18:00,Stoner Park,10u-section-2-warwick-rangers,10u-section-2-mt-lightning,,10u Section 2,final,1,11,1381
+arb-441,2026-05-28,18:00,Tom Herr Field,14u-section-2-st-leo-crusaders,14u-section-2-hempfield-black,,14u Section 2,final,20,7,441
+arb-471,2026-05-28,18:00,Village Park Field #12,14u-section-2-pv-braves,14u-section-2-ls-base-bandits,,14u Section 2,final,23,15,471
+arb-472,2026-05-28,18:00,Warwick Twp #1,14u-section-2-cocalico-eagles,14u-section-2-warwick-white-sox,,14u Section 2,final,4,6,472
+arb-1317,2026-05-28,18:00,Warwick Twp #3,10u-section-1-donegal-indians,10u-section-1-warwick-cardinals,,10u Section 1,final,4,8,1317
+arb-1102,2026-05-28,18:00,Wenger Field,12u-section-3-garden-spot,12u-section-3-e-town-white,,12u Section 3,final,17,4,1102
+arb-1103,2026-05-29,18:00,Charlestown Upper,12u-section-3-e-town-navy,12u-section-3-pm-blue,,12u Section 3,final,14,3,1103
+arb-637,2026-05-29,18:00,Community #3,14u-section-3-e-town-white,14u-section-3-lanc-rec-tornados,,14u Section 3,final,8,9,637
+arb-764,2026-05-29,18:00,Flory Park #2,12u-section-1-pm-comets,12u-section-1-cv-bucks,,12u Section 1,final,18,5,764
+arb-1486,2026-05-29,18:00,Fuhrman Park Field #4,10u-section-2-mountville-pirates,10u-section-2-donegal-green,,10u Section 2,final,18,6,1486
+arb-1389,2026-05-29,18:00,Gladfelter Field__1,10u-section-2-pm-gold,10u-section-2-columbia-red,,10u Section 2,final,11,6,1389
+arb-1386,2026-05-29,18:00,Greider Park Field A,10u-section-2-hempfield-black,10u-section-2-pm-white,,10u Section 2,final,9,1,1386
+arb-766,2026-05-29,18:00,Herr Flowers #2,12u-section-1-octorara-braves,12u-section-1-ls-atta-boys,,12u Section 1,final,6,16,766
+arb-473,2026-05-29,18:00,Herr Flowers #3,14u-section-2-e-town-blue,14u-section-2-ls-blue-blazers,,14u Section 2,final,13,3,473
+arb-592,2026-05-29,18:00,Highville FC,14u-section-3-solanco-black,14u-section-3-pm-blue,,14u Section 3,final,11,8,592
+arb-446,2026-05-29,18:00,Lanc Mennonite HS Varsity,14u-section-2-pm-blue,14u-section-2-lanc-mennonite-blazers,,14u Section 2,final,15,1,446
+arb-444,2026-05-29,18:00,McNickle Field,14u-section-2-donegal-green,14u-section-2-mt-lightning,,14u Section 2,final,7,6,444
+arb-628,2026-05-29,18:00,Nitrauer ES,14u-section-3-mt-chargers,14u-section-3-pv-braves,,14u Section 3,final,18,3,628
+arb-262,2026-05-29,18:00,Penryn Field,14u-section-1-e-town-black,14u-section-1-manheim-lions,,14u Section 1,final,1,8,262
+arb-1299,2026-05-29,18:00,Rohrerstown ES #1,10u-section-1-ephrata-drillerz,10u-section-1-hempfield-black,,10u Section 1,final,10,1,1299
+arb-1387,2026-05-29,18:00,Rohrerstown ES #1,10u-section-2-pm-blue,10u-section-2-hempfield-white,,10u Section 2,final,13,8,1387
+arb-445,2026-05-29,18:00,SYBA Field Complex #1,14u-section-2-mt-thunder,14u-section-2-solanco-black,,14u Section 2,final,7,8,445
+arb-767,2026-05-29,18:00,SYBA Field Complex #2,12u-section-1-mt-streaks,12u-section-1-solanco-black,,12u Section 1,final,12,2,767
+arb-1098,2026-05-29,18:00,SYBA Field Complex #3,12u-section-3-ls-blue,12u-section-3-solanco-gold,,12u Section 3,final,0,0,1098
+arb-443,2026-05-29,18:00,Tom Herr,14u-section-2-columbia-red,14u-section-2-hempfield-red,,14u Section 2,final,6,7,443
+arb-1474,2026-05-29,18:00,Village Park #1,10u-section-2-ephrata-athletics,10u-section-2-ls-regulators,,10u Section 2,final,3,8,1474
+arb-1172,2026-05-29,18:00,Village Park Field #7,12u-section-3-pm-gold,12u-section-3-ls-black,,12u Section 3,final,23,3,1172
+arb-1270,2026-05-29,18:00,Wayside Church,10u-section-1-cv-bucks,10u-section-1-hempfield-red,,10u Section 1,final,4,9,1270
+arb-1271,2026-05-29,18:00,Wenger Field,10u-section-1-mt-streaks,10u-section-1-e-town-bruins,,10u Section 1,final,10,12,1271
+arb-255,2026-05-29,20:00,SYBA Field Complex #1,14u-section-1-mountville-angels,14u-section-1-solanco-black,,14u Section 1,final,0,10,255
+arb-415,2026-05-30,10:00,Lafayette Fire,14u-section-2-ephrata-breakers,14u-section-2-cv-bucks,,14u Section 2,final,10,12,415
+arb-1250,2026-05-30,10:00,SYBA Field Complex #4,10u-section-1-donegal-indians,10u-section-1-solanco-black,,10u Section 1,final,4,3,1250
+arb-1377,2026-05-30,12:00,Greider Park Field A,10u-section-2-st-leo-crusaders,10u-section-2-pm-white,,10u Section 2,final,0,4,1377
+arb-253,2026-05-30,14:00,Cornwall Field,14u-section-1-lititz-vfw,14u-section-1-cedar-crest,,14u Section 1,final,14,2,253
+arb-1313,2026-06-01,18:00,Ephrata MS - Softball Sta,10u-section-1-e-town-bruins,10u-section-1-ephrata-drillerz,,10u Section 1,final,8,10,1313
+arb-702,2026-06-01,18:00,Froelich Park East,12u-section-1-hempfield-red,12u-section-1-mountville-indians,,12u Section 1,final,6,12,702
+arb-1191,2026-06-01,18:00,Fuhrman Park #1,12u-section-3-lanc-mennonite,12u-section-3-donegal-black,,12u Section 3,final,2,5,1191
+arb-1320,2026-06-01,18:00,Fuhrman Park Field #4,10u-section-1-manheim,10u-section-1-donegal-indians,,10u Section 1,final,13,7,1320
+arb-606,2026-06-01,18:00,Greider Park Field C,14u-section-3-cocalico-eagles,14u-section-3-pm-blue,,14u Section 3,final,9,6,606
+arb-508,2026-06-01,18:00,Herr Flowers #3,14u-section-2-columbia-red,14u-section-2-ls-blue-blazers,,14u Section 2,final,7,3,508
+arb-705,2026-06-01,18:00,Highland Twp.,12u-section-1-cocalico-eagles,12u-section-1-octorara-braves,,12u Section 1,final,10,9,705
+arb-285,2026-06-01,18:00,Highville FC,14u-section-1-e-town-black,14u-section-1-pm-comets,,14u Section 1,final,6,8,285
+arb-1106,2026-06-01,18:00,Hopeland Park,12u-section-3-e-town-white,12u-section-3-ephrata-tourists,,12u Section 3,final,13,15,1106
+arb-704,2026-06-01,18:00,Kunkle Field,12u-section-1-warwick-phillies,12u-section-1-donegal-indians,,12u Section 1,final,7,6,704
+arb-475,2026-06-01,18:00,Kunkle Field,14u-section-2-hempfield-black,14u-section-2-donegal-green,,14u Section 2,final,2,4,475
+arb-1105,2026-06-01,18:00,Legion Park,12u-section-3-mt-chargers,12u-section-3-solanco-gold,,12u Section 3,final,20,3,1105
+arb-284,2026-06-01,18:00,Mountville Boro,14u-section-1-ls-blue,14u-section-1-mountville-angels,,14u Section 1,final,7,8,284
+arb-1190,2026-06-01,18:00,New Holland Legion,12u-section-3-cedar-crest,12u-section-3-garden-spot,,12u Section 3,final,11,9,1190
+arb-703,2026-06-01,18:00,Overlook #2,12u-section-1-cedar-crest,12u-section-1-mt-streaks,,12u Section 1,final,0,14,703
+arb-1379,2026-06-01,18:00,Paradise Park #4,10u-section-2-garden-spot-blue,10u-section-2-pv-braves,,10u Section 2,final,2,12,1379
+arb-286,2026-06-01,18:00,Penryn Field,14u-section-1-solanco-black,14u-section-1-manheim-lions,,14u Section 1,final,4,14,286
+arb-474,2026-06-01,18:00,Roland Park Lloyd Field,14u-section-2-hempfield-red,14u-section-2-ephrata-breakers,,14u Section 2,final,8,10,474
+arb-595,2026-06-01,18:00,SOLANCO Legion,14u-section-3-mt-chargers,14u-section-3-solanco-black,,14u Section 3,final,9,6,595
+arb-425,2026-06-01,18:00,SYBA Field Complex #1,14u-section-2-mt-lightning,14u-section-2-solanco-gold,,14u Section 2,final,8,11,425
+arb-316,2026-06-01,18:00,Snyder Park #1,14u-section-1-hempfield-red,14u-section-1-ephrata-drillerz,,14u Section 1,final,7,5,316
+arb-1492,2026-06-01,18:00,St. Leo Field 2,10u-section-2-mountville-pirates,10u-section-2-st-leo-crusaders,,10u Section 2,final,8,7,1492
+arb-594,2026-06-01,18:00,Trolly Line Park,14u-section-3-garden-spot,14u-section-3-e-town-white,,14u Section 3,final,12,9,594
+arb-1481,2026-06-01,18:00,Village Park #1,10u-section-2-manheim-maroon,10u-section-2-ls-regulators,,10u Section 2,final,1,11,1481
+arb-1182,2026-06-01,18:00,Village Park Field #7,12u-section-3-e-town-navy,12u-section-3-ls-black,,12u Section 3,final,13,9,1182
+arb-317,2026-06-01,18:00,Warwick Twp #1,14u-section-1-lanc-rec-tornados,14u-section-1-lititz-vfw,,14u Section 1,final,3,9,317
+arb-1272,2026-06-01,18:00,Wayside Church,10u-section-1-solanco-black,10u-section-1-hempfield-red,,10u Section 1,final,3,18,1272
+arb-1319,2026-06-01,18:00,Witmer Heights #1,10u-section-1-garden-spot,10u-section-1-cv-bucks,,10u Section 1,final,4,3,1319
+arb-1107,2026-06-02,18:00,Charlestown Upper,12u-section-3-hempfield-red,12u-section-3-pm-white,,12u Section 3,final,12,22,1107
+arb-1490,2026-06-02,18:00,Community #2,10u-section-2-pv-braves,10u-section-2-lanc-jr-tornados,,10u Section 2,final,14,6,1490
+arb-287,2026-06-02,18:00,Cornwall Field,14u-section-1-hempfield-black,14u-section-1-cedar-crest,,14u Section 1,final,16,7,287
+arb-1273,2026-06-02,18:00,Cresswell Park 1,10u-section-1-ephrata-drillerz,10u-section-1-pm-comets,,10u Section 1,final,5,8,1273
+arb-1393,2026-06-02,18:00,Denver 4th St,10u-section-2-pm-blue,10u-section-2-cocalico-eagles,,10u Section 2,final,17,5,1393
+arb-510,2026-06-02,18:00,Denver Park #1,14u-section-2-lanc-mennonite-blazers,14u-section-2-cocalico-eagles,,14u Section 2,final,4,9,510
+arb-477,2026-06-02,18:00,Dutch Gold #1,14u-section-2-cedar-crest,14u-section-2-st-leo-crusaders,,14u Section 2,final,5,15,477
+arb-1491,2026-06-02,18:00,Farmdale Elementary,10u-section-2-cedar-crest,10u-section-2-hempfield-red,,10u Section 2,final,4,2,1491
+arb-769,2026-06-02,18:00,Flory Park #2,12u-section-1-solanco-black,12u-section-1-cv-bucks,,12u Section 1,final,9,10,769
+arb-1110,2026-06-02,18:00,Froelich Park West,12u-section-3-e-town-gray,12u-section-3-mountville-tigers,,12u Section 3,final,17,7,1110
+arb-1489,2026-06-02,18:00,Fuhrman Park Field #4,10u-section-2-hempfield-white,10u-section-2-donegal-green,,10u Section 2,final,5,16,1489
+arb-1396,2026-06-02,18:00,Gladfelter Field__1,10u-section-2-garden-spot-blue,10u-section-2-columbia-red,,10u Section 2,final,1,17,1396
+arb-598,2026-06-02,18:00,Governor Stables,14u-section-3-mt-storm,14u-section-3-ctyaa-moose,,14u Section 3,final,19,9,598
+arb-476,2026-06-02,18:00,Greider Park Field C,14u-section-2-e-town-blue,14u-section-2-pm-white,,14u Section 2,final,12,5,476
+arb-367,2026-06-02,18:00,Highville FC,14u-section-2-pv-braves,14u-section-2-pm-blue,,14u Section 2,final,10,7,367
+arb-597,2026-06-02,18:00,Lafayette Fire,14u-section-3-donegal-black,14u-section-3-cv-bucks,,14u Section 3,final,2,17,597
+arb-479,2026-06-02,18:00,Legion Park,14u-section-2-garden-spot,14u-section-2-solanco-black,,14u Section 2,final,16,17,479
+arb-1395,2026-06-02,18:00,New Holland Legion,10u-section-2-mt-lightning,10u-section-2-garden-spot-white,,10u Section 2,final,11,0,1395
+arb-638,2026-06-02,18:00,Paradise Park #1,14u-section-3-lanc-rec-tornados,14u-section-3-pv-braves,,14u Section 3,final,8,9,638
+arb-566,2026-06-02,18:00,Roland Park Lloyd Field,14u-section-3-solanco-black,14u-section-3-ephrata-zips,,14u Section 3,final,12,4,566
+arb-1392,2026-06-02,18:00,Silvermine Park,10u-section-2-warwick-diamondbacks,10u-section-2-pm-gold,,10u Section 2,final,15,15,1392
+arb-1488,2026-06-02,18:00,Snyder Park #2,10u-section-2-pm-white,10u-section-2-ephrata-athletics,,10u Section 2,final,6,14,1488
+arb-1394,2026-06-02,18:00,Stoner Park,10u-section-2-manheim-gray,10u-section-2-mt-thunder,,10u Section 2,final,5,8,1394
+arb-1493,2026-06-02,18:00,Village Park #1,10u-section-2-hempfield-black,10u-section-2-ls-blue-crew,,10u Section 2,scheduled,0,,1493
+arb-1321,2026-06-02,18:00,Village Park Field #7,10u-section-1-mt-streaks,10u-section-1-ls-slingers,,10u Section 1,final,1,7,1321
+arb-1108,2026-06-02,18:00,Wayside Church,12u-section-3-st-leo-gold,12u-section-3-hempfield-black,,12u Section 3,final,14,3,1108
+arb-1072,2026-06-02,18:00,Wenger Field,12u-section-3-ls-blue,12u-section-3-e-town-white,,12u Section 3,final,9,20,1072
+arb-1275,2026-06-03,18:00,Cedar Hollow,10u-section-1-e-town-bruins,10u-section-1-manheim,,10u Section 1,final,8,16,1275
+arb-1111,2026-06-03,18:00,Charlestown Upper,12u-section-3-cv-bucks-blue,12u-section-3-pm-blue,,12u Section 3,final,20,4,1111
+arb-707,2026-06-03,18:00,Dairy Road Field,12u-section-1-hempfield-black,12u-section-1-cedar-crest,,12u Section 1,final,18,7,707
+arb-596,2026-06-03,18:00,Denver Park #1,14u-section-3-cedar-crest,14u-section-3-cocalico-eagles,,14u Section 3,final,14,18,596
+arb-1322,2026-06-03,18:00,Fuhrman Park Field #4,10u-section-1-hempfield-red,10u-section-1-donegal-indians,,10u Section 1,final,13,10,1322
+arb-1274,2026-06-03,18:00,Gloninger Woods Park,10u-section-1-cocalico-eagles,10u-section-1-cedar-crest,,10u Section 1,final,5,6,1274
+arb-768,2026-06-03,18:00,Herr Flowers #2,12u-section-1-ephrata-drillerz,12u-section-1-ls-atta-boys,,12u Section 1,final,4,1,768
+arb-509,2026-06-03,18:00,Herr Flowers #3,14u-section-2-pm-blue,14u-section-2-ls-base-bandits,,14u Section 2,final,13,2,509
+arb-672,2026-06-03,18:00,Highland Twp.,12u-section-1-cv-bucks,12u-section-1-octorara-braves,,12u Section 1,final,9,8,672
+arb-1115,2026-06-03,18:00,Hopeland Park,12u-section-3-ls-blue,12u-section-3-ephrata-tourists,,12u Section 3,final,6,16,1115
+arb-1109,2026-06-03,18:00,Kunkle Field,12u-section-3-ls-black,12u-section-3-donegal-white,,12u Section 3,final,6,13,1109
+arb-1193,2026-06-03,18:00,Lanc Mennonite HS Varsity,12u-section-3-solanco-gold,12u-section-3-lanc-mennonite,,12u Section 3,final,10,14,1193
+arb-708,2026-06-03,18:00,Manor MS,12u-section-1-mountville-indians,12u-section-1-pm-comets,,12u Section 1,final,12,5,708
+arb-288,2026-06-03,18:00,McNickle Field,14u-section-1-manheim-lions,14u-section-1-mt-streaks,,14u Section 1,final,9,5,288
+arb-289,2026-06-03,18:00,Mountville Boro,14u-section-1-ephrata-drillerz,14u-section-1-mountville-angels,,14u Section 1,final,12,0,289
+arb-480,2026-06-03,18:00,Penryn Field,14u-section-2-ephrata-breakers,14u-section-2-manheim-lions,,14u Section 2,final,10,14,480
+arb-706,2026-06-03,18:00,Reamstown Park,12u-section-1-manheim,12u-section-1-cocalico-eagles,,12u Section 1,final,6,9,706
+arb-1114,2026-06-03,18:00,Reidenbaugh Elm,12u-section-3-ephrata-power,12u-section-3-mt-bolts,,12u Section 3,final,26,6,1114
+arb-1376,2026-06-03,18:00,Rohrerstown ES #1,10u-section-2-mt-thunder,10u-section-2-hempfield-gray,,10u Section 2,final,21,3,1376
+arb-308,2026-06-03,18:00,SYBA Field Complex #1,14u-section-1-e-town-black,14u-section-1-solanco-black,,14u Section 1,final,9,4,308
+arb-1495,2026-06-03,18:00,Sweetbriar Park #2,10u-section-2-cv-bucks,10u-section-2-manheim-maroon,,10u Section 2,final,0,12,1495
+arb-481,2026-06-03,18:00,Tom Herr Field,14u-section-2-solanco-gold,14u-section-2-hempfield-black,,14u Section 2,final,5,15,481
+arb-1494,2026-06-03,18:00,Village Park #1,10u-section-2-solanco-black,10u-section-2-ls-regulators,,10u Section 2,final,2,17,1494
+arb-280,2026-06-03,18:00,Village Park Field #12,14u-section-1-hempfield-black,14u-section-1-ls-blue,,14u Section 1,final,12,0,280
+arb-511,2026-06-03,18:00,Warwick Twp #1,14u-section-2-pv-braves,14u-section-2-warwick-white-sox,,14u Section 2,final,0,10,511
+arb-770,2026-06-03,18:00,Warwick Twp #2,12u-section-1-e-town-blue,12u-section-1-warwick-phillies,,12u Section 1,final,13,2,770
+arb-1113,2026-06-03,18:00,Wenger Field,12u-section-3-solanco-black,12u-section-3-e-town-navy,,12u Section 3,final,8,17,1113
+arb-1323,2026-06-03,18:00,Witmer Heights #1,10u-section-1-warwick-cardinals,10u-section-1-cv-bucks,,10u Section 1,final,9,5,1323
+arb-599,2026-06-03,18:00,Wolgemuth Park,14u-section-3-ephrata-zips,14u-section-3-e-town-navy,,14u Section 3,final,0,20,599
+arb-318,2026-06-04,18:00,Community #3,14u-section-1-cedar-crest,14u-section-1-lanc-rec-tornados,,14u Section 1,final,3,6,318
+arb-1262,2026-06-04,18:00,Cresswell Park 1,10u-section-1-cv-bucks,10u-section-1-pm-comets,,10u Section 1,final,12,13,1262
+arb-468,2026-06-04,18:00,Denver Park #1,14u-section-2-pm-white,14u-section-2-cocalico-eagles,,14u Section 2,final,8,10,468
+arb-771,2026-06-04,18:00,Farmdale Elementary,12u-section-1-ls-atta-boys,12u-section-1-hempfield-red,,12u Section 1,final,8,5,771
+arb-1195,2026-06-04,18:00,Flory Park #1,12u-section-3-mountville-tigers,12u-section-3-cv-bucks-red,,12u Section 3,final,19,14,1195
+arb-319,2026-06-04,18:00,Herr Flowers #3,14u-section-1-mt-streaks,14u-section-1-ls-blue,,14u Section 1,final,14,6,319
+arb-483,2026-06-04,18:00,Lafayette Fire,14u-section-2-st-leo-crusaders,14u-section-2-cv-bucks,,14u Section 2,final,4,5,483
+arb-1343,2026-06-04,18:00,New Holland Legion,10u-section-1-ephrata-drillerz,10u-section-1-garden-spot,,10u Section 1,final,13,4,1343
+arb-600,2026-06-04,18:00,New Holland Legion,14u-section-3-pm-blue,14u-section-3-garden-spot,,14u Section 3,final,1,11,600
+arb-1526,2026-06-04,18:00,New Holland Park,10u-section-2-hempfield-black,10u-section-2-garden-spot-blue,,10u Section 2,final,16,3,1526
+arb-602,2026-06-04,18:00,Nitrauer ES,14u-section-3-pv-braves,14u-section-3-mt-chargers,,14u Section 3,final,1,11,602
+arb-1324,2026-06-04,18:00,Rohrerstown ES #1,10u-section-1-cocalico-eagles,10u-section-1-hempfield-black,,10u Section 1,final,2,19,1324
+arb-585,2026-06-04,18:00,Roland Park Lloyd Field,14u-section-3-lanc-rec-tornados,14u-section-3-ephrata-zips,,14u Section 3,final,9,8,585
+arb-1104,2026-06-04,18:00,Roland Park Wolf Field,12u-section-3-pm-gold,12u-section-3-ephrata-power,,12u Section 3,final,4,8,1104
+arb-290,2026-06-04,18:00,Silver Spring Park,14u-section-1-hempfield-black,14u-section-1-hempfield-red,,14u Section 1,final,6,4,290
+arb-1497,2026-06-04,18:00,Snyder Park #2,10u-section-2-lanc-jr-tornados,10u-section-2-ephrata-athletics,,10u Section 2,final,4,3,1497
+arb-772,2026-06-04,18:00,Snyder Park #3,12u-section-1-donegal-indians,12u-section-1-ephrata-drillerz,,12u Section 1,final,12,9,772
+arb-1496,2026-06-04,18:00,Village Park #1,10u-section-2-garden-spot-white,10u-section-2-ls-blue-crew,,10u Section 2,final,1,11,1496
+arb-1194,2026-06-04,18:00,Village Park Field #7,12u-section-3-cedar-crest,12u-section-3-ls-black,,12u Section 3,final,5,6,1194
+arb-1397,2026-06-04,18:00,Washington Boro,10u-section-2-cedar-crest,10u-section-2-pm-blue,,10u Section 2,final,2,5,1397
+arb-1116,2026-06-04,18:00,Wenger Field,12u-section-3-pm-white,12u-section-3-e-town-gray,,12u Section 3,final,3,11,1116
+arb-1277,2026-06-05,18:00,Cresswell Park 1,10u-section-1-ls-slingers,10u-section-1-pm-comets,,10u Section 1,final,10,11,1277
+arb-1198,2026-06-05,18:00,Flory Park #1,12u-section-3-mt-bolts,12u-section-3-cv-bucks-blue,,12u Section 3,final,8,20,1198
+arb-512,2026-06-05,18:00,Gladfelter Field 5,14u-section-2-lanc-mennonite-blazers,14u-section-2-columbia-red,,14u Section 2,final,6,10,512
+arb-603,2026-06-05,18:00,Governor Stables,14u-section-3-e-town-white,14u-section-3-ctyaa-moose,,14u Section 3,final,9,8,603
+arb-1400,2026-06-05,18:00,Greider Park Field A,10u-section-2-hempfield-gray,10u-section-2-pm-white,,10u Section 2,final,3,10,1400
+arb-711,2026-06-05,18:00,Highland Twp.,12u-section-1-pm-comets,12u-section-1-octorara-braves,,12u Section 1,final,8,10,711
+arb-309,2026-06-05,18:00,Highville FC,14u-section-1-cedar-crest,14u-section-1-pm-comets,,14u Section 1,final,0,8,309
+arb-485,2026-06-05,18:00,McNickle Field,14u-section-2-hempfield-red,14u-section-2-mt-thunder,,14u Section 2,final,22,13,485
+arb-1196,2026-06-05,18:00,New Holland Legion,12u-section-3-hempfield-black,12u-section-3-garden-spot,,12u Section 3,final,7,16,1196
+arb-710,2026-06-05,18:00,Overlook #2,12u-section-1-cv-bucks,12u-section-1-mt-streaks,,12u Section 1,final,6,7,710
+arb-729,2026-06-05,18:00,Reamstown Park,12u-section-1-cedar-crest,12u-section-1-cocalico-eagles,,12u Section 1,final,8,6,729
+arb-1118,2026-06-05,18:00,Reidenbaugh Elm,12u-section-3-e-town-navy,12u-section-3-mt-chargers,,12u Section 3,final,14,12,1118
+arb-1197,2026-06-05,18:00,Rohrerstown ES #2,12u-section-3-solanco-black,12u-section-3-hempfield-red,,12u Section 3,final,14,15,1197
+arb-484,2026-06-05,18:00,Roland Park Lloyd Field,14u-section-2-ls-base-bandits,14u-section-2-ephrata-breakers,,14u Section 2,final,4,5,484
+arb-1276,2026-06-05,18:00,SYBA Field Complex #4,10u-section-1-mt-streaks,10u-section-1-solanco-black,,10u Section 1,final,16,6,1276
+arb-1401,2026-06-05,18:00,Silvermine Park,10u-section-2-ls-regulators,10u-section-2-pm-gold,,10u Section 2,final,14,2,1401
+arb-208,2026-06-05,18:00,Snyder Park #1,14u-section-1-solanco-black,14u-section-1-ephrata-drillerz,,14u Section 1,final,16,11,208
+arb-461,2026-06-05,18:00,South Lebanon Field #2,14u-section-2-hempfield-black,14u-section-2-cedar-crest,,14u Section 2,final,14,4,461
+arb-1499,2026-06-05,18:00,St. Leo Field 2,10u-section-2-donegal-green,10u-section-2-st-leo-crusaders,,10u Section 2,final,5,4,1499
+arb-1398,2026-06-05,18:00,Veteran's Memorial Park,10u-section-2-solanco-black,10u-section-2-mountville-pirates,,10u Section 2,final,2,3,1398
+arb-1199,2026-06-05,18:00,Village Park Field #7,12u-section-3-donegal-white,12u-section-3-ls-blue,,12u Section 3,final,15,1,1199
+arb-1325,2026-06-05,18:00,Warwick Twp #3,10u-section-1-cedar-crest,10u-section-1-warwick-cardinals,,10u Section 1,final,4,10,1325
+arb-1117,2026-06-05,18:00,Wenger Field,12u-section-3-pm-blue,12u-section-3-e-town-white,,12u Section 3,final,10,22,1117
+arb-1500,2026-06-05,18:00,Witmer Heights #1,10u-section-2-cocalico-eagles,10u-section-2-cv-bucks,,10u Section 2,final,9,14,1500
+arb-601,2026-06-05,18:00,Wolgemuth Park,14u-section-3-cv-bucks,14u-section-3-e-town-navy,,14u Section 3,final,1,16,601
+arb-295,2026-06-08,18:00,A. Herr Park,14u-section-1-manheim-lions,14u-section-1-hempfield-black,,14u Section 1,final,4,8,295
+arb-291,2026-06-08,18:00,Cornwall Field,14u-section-1-mountville-angels,14u-section-1-cedar-crest,,14u Section 1,final,1,16,291
+arb-293,2026-06-08,18:00,Governor Stables,14u-section-1-ls-blue,14u-section-1-e-town-black,,14u Section 1,final,0,10,293
+arb-487,2026-06-08,18:00,Greider Park Field C,14u-section-2-cv-bucks,14u-section-2-pm-blue,,14u Section 2,final,7,9,487
+arb-292,2026-06-08,18:00,Highville FC,14u-section-1-ephrata-drillerz,14u-section-1-pm-comets,,14u Section 1,final,5,12,292
+arb-712,2026-06-08,18:00,Kunkle Field,12u-section-1-e-town-blue,12u-section-1-donegal-indians,,12u Section 1,final,1,11,712
+arb-490,2026-06-08,18:00,Kunkle Field,14u-section-2-manheim-lions,14u-section-2-donegal-green,,14u Section 2,final,9,6,490
+arb-488,2026-06-08,18:00,Mountville Boro,14u-section-2-mt-thunder,14u-section-2-mountville-red-sox,,14u Section 2,final,18,1,488
+arb-1282,2026-06-08,18:00,Municipal Field,10u-section-1-donegal-indians,10u-section-1-mt-streaks,,10u Section 1,final,3,18,1282
+arb-1402,2026-06-08,18:00,New Holland Legion,10u-section-2-pm-gold,10u-section-2-garden-spot-white,,10u Section 2,final,12,2,1402
+arb-486,2026-06-08,18:00,New Holland Park,14u-section-2-solanco-gold,14u-section-2-garden-spot,,14u Section 2,final,11,13,486
+arb-604,2026-06-08,18:00,Nitrauer ES,14u-section-3-ephrata-zips,14u-section-3-mt-storm,,14u Section 3,final,7,12,604
+arb-1404,2026-06-08,18:00,Rohrerstown ES #1,10u-section-2-lanc-jr-tornados,10u-section-2-hempfield-gray,,10u Section 2,final,4,2,1404
+arb-421,2026-06-08,18:00,Roland Park Lloyd Field,14u-section-2-lanc-mennonite-blazers,14u-section-2-ephrata-breakers,,14u Section 2,final,14,10,421
+arb-605,2026-06-08,18:00,SOLANCO Legion,14u-section-3-e-town-navy,14u-section-3-solanco-black,,14u Section 3,final,11,4,605
+arb-294,2026-06-08,18:00,SYBA Field Complex #1,14u-section-1-hempfield-red,14u-section-1-solanco-black,,14u Section 1,final,5,5,294
+arb-1260,2026-06-08,18:00,SYBA Field Complex #4,10u-section-1-warwick-cardinals,10u-section-1-solanco-black,,10u Section 1,final,17,4,1260
+arb-513,2026-06-08,18:00,South Lebanon Field #2,14u-section-2-warwick-white-sox,14u-section-2-cedar-crest,,14u Section 2,final,11,6,513
+arb-1503,2026-06-08,18:00,South Lebanon Field #4,10u-section-2-columbia-red,10u-section-2-cedar-crest,,10u Section 2,final,0,11,1503
+arb-426,2026-06-08,18:00,Tom Herr Field,14u-section-2-columbia-red,14u-section-2-hempfield-black,,14u Section 2,scheduled,,0,426
+arb-1405,2026-06-08,18:00,Veteran's Memorial Park,10u-section-2-manheim-gray,10u-section-2-mountville-pirates,,10u Section 2,final,16,17,1405
+arb-1327,2026-06-08,18:00,Village Park Field #7,10u-section-1-hempfield-red,10u-section-1-ls-slingers,,10u Section 1,final,3,13,1327
+arb-1278,2026-06-08,18:00,Wenger Field,10u-section-1-manheim,10u-section-1-e-town-bruins,,10u Section 1,final,12,5,1278
+arb-489,2026-06-08,18:00,Wolgemuth Park,14u-section-2-ls-base-bandits,14u-section-2-e-town-blue,,14u Section 2,final,1,14,489
+arb-640,2026-06-09,18:00,Community #3,14u-section-3-garden-spot,14u-section-3-lanc-rec-tornados,,14u Section 3,final,10,11,640
+arb-715,2026-06-09,18:00,Creek Field,12u-section-1-cedar-crest,12u-section-1-manheim,,12u Section 1,final,2,12,715
+arb-1406,2026-06-09,18:00,Denver 4th St,10u-section-2-ephrata-athletics,10u-section-2-cocalico-eagles,,10u Section 2,final,14,0,1406
+arb-1201,2026-06-09,18:00,Denver Partk #2,12u-section-3-st-leo-gold,12u-section-3-cocalico-eagles,,12u Section 3,final,6,10,1201
+arb-495,2026-06-09,18:00,Dutch Gold #1,14u-section-2-garden-spot,14u-section-2-st-leo-crusaders,,14u Section 2,final,14,3,495
+arb-1504,2026-06-09,18:00,Farmdale Elementary,10u-section-2-manheim-maroon,10u-section-2-hempfield-black,,10u Section 2,final,5,6,1504
+arb-713,2026-06-09,18:00,Froelich Park East,12u-section-1-mt-streaks,12u-section-1-mountville-indians,,12u Section 1,final,3,1,713
+arb-714,2026-06-09,18:00,Highland Twp.,12u-section-1-ls-atta-boys,12u-section-1-octorara-braves,,12u Section 1,final,11,7,714
+arb-491,2026-06-09,18:00,McNickle Field,14u-section-2-columbia-red,14u-section-2-mt-lightning,,14u Section 2,final,4,8,491
+arb-306,2026-06-09,18:00,Mountville Boro,14u-section-1-hempfield-black,14u-section-1-mountville-angels,,14u Section 1,final,19,5,306
+arb-1344,2026-06-09,18:00,New Holland Legion,10u-section-1-hempfield-black,10u-section-1-garden-spot,,10u Section 1,final,12,0,1344
+arb-1527,2026-06-09,18:00,New Holland Park,10u-section-2-pm-white,10u-section-2-garden-spot-blue,,10u Section 2,final,18,3,1527
+arb-607,2026-06-09,18:00,Nitrauer ES,14u-section-3-donegal-black,14u-section-3-mt-chargers,,14u Section 3,final,9,11,607
+arb-1119,2026-06-09,18:00,Reidenbaugh Elm,12u-section-3-donegal-black,12u-section-3-mt-chargers,,12u Section 3,final,21,3,1119
+arb-1120,2026-06-09,18:00,Roland Park Wolf Field,12u-section-3-cv-bucks-red,12u-section-3-ephrata-power,,12u Section 3,final,2,19,1120
+arb-773,2026-06-09,18:00,SYBA Field Complex #2,12u-section-1-warwick-phillies,12u-section-1-solanco-black,,12u Section 1,final,5,6,773
+arb-1505,2026-06-09,18:00,SYBA Field Complex #3,10u-section-2-hempfield-red,10u-section-2-solanco-black,,10u Section 2,final,0,0,1505
+arb-1121,2026-06-09,18:00,SYBA Field Complex #4,12u-section-3-ls-black,12u-section-3-solanco-black,,12u Section 3,final,6,7,1121
+arb-774,2026-06-09,18:00,Snyder Park #3,12u-section-1-hempfield-black,12u-section-1-ephrata-drillerz,,12u Section 1,final,18,6,774
+arb-1200,2026-06-09,18:00,South Lebanon Field #3,12u-section-3-ephrata-tourists,12u-section-3-cedar-crest,,12u Section 3,final,21,10,1200
+arb-1407,2026-06-09,18:00,Stoner Park,10u-section-2-pm-blue,10u-section-2-mt-lightning,,10u Section 2,final,20,3,1407
+arb-608,2026-06-09,18:00,Trolly Line Park,14u-section-3-cedar-crest,14u-section-3-e-town-white,,14u Section 3,final,4,14,608
+arb-1328,2026-06-09,18:00,Warwick Twp #3,10u-section-1-pm-comets,10u-section-1-warwick-cardinals,,10u Section 1,final,1,7,1328
+arb-1310,2026-06-09,18:00,Witmer Heights #1,10u-section-1-mt-streaks,10u-section-1-cv-bucks,,10u Section 1,final,23,6,1310
+arb-1202,2026-06-09,20:00,Kunkle Field,12u-section-3-pm-blue,12u-section-3-donegal-white,,12u Section 3,final,6,16,1202
+arb-1280,2026-06-10,18:00,Cedar Hollow,10u-section-1-hempfield-red,10u-section-1-manheim,,10u Section 1,final,2,17,1280
+arb-775,2026-06-10,18:00,Farmdale Elementary,12u-section-1-pm-comets,12u-section-1-hempfield-red,,12u Section 1,final,9,3,775
+arb-582,2026-06-10,18:00,Nitrauer ES,14u-section-3-cedar-crest,14u-section-3-mt-chargers,,14u Section 3,final,7,17,582
+arb-493,2026-06-10,18:00,Penryn Field,14u-section-2-cocalico-eagles,14u-section-2-manheim-lions,,14u Section 2,scheduled,0,,493
+arb-492,2026-06-10,18:00,SYBA Field Complex #1,14u-section-2-pm-white,14u-section-2-solanco-gold,,14u Section 2,final,11,1,492
+arb-1331,2026-06-10,18:00,SYBA Field Complex #4,10u-section-1-hempfield-black,10u-section-1-solanco-black,,10u Section 1,final,18,2,1331
+arb-1122,2026-06-10,18:00,Wenger Field,12u-section-3-lanc-mennonite,12u-section-3-e-town-gray,,12u Section 3,final,3,15,1122
+arb-1330,2026-06-10,18:00,Witmer Heights #1,10u-section-1-cedar-crest,10u-section-1-cv-bucks,,10u Section 1,final,10,7,1330
+arb-215,2026-06-11,17:30,Highville FC,14u-section-1-pm-comets,14u-section-1-solanco-black,,14u Section 1,final,19,12,215
+arb-718,2026-06-11,18:00,Creek Field,12u-section-1-warwick-phillies,12u-section-1-manheim,,12u Section 1,final,4,14,718
+arb-720,2026-06-11,18:00,Dairy Road Field,12u-section-1-ephrata-drillerz,12u-section-1-cedar-crest,,12u Section 1,final,11,4,720
+arb-1284,2026-06-11,18:00,Denver 4th St,10u-section-1-warwick-cardinals,10u-section-1-cocalico-eagles,,10u Section 1,final,16,2,1284
+arb-611,2026-06-11,18:00,Denver Park #1,14u-section-3-lanc-rec-tornados,14u-section-3-cocalico-eagles,,14u Section 3,final,11,9,611
+arb-1207,2026-06-11,18:00,Denver Partk #2,12u-section-3-mountville-tigers,12u-section-3-cocalico-eagles,,12u Section 3,final,23,4,1207
+arb-1508,2026-06-11,18:00,Farmdale Elementary,10u-section-2-cedar-crest,10u-section-2-hempfield-black,,10u Section 2,final,1,12,1508
+arb-776,2026-06-11,18:00,Flory Park #2,12u-section-1-e-town-blue,12u-section-1-cv-bucks,,12u Section 1,final,12,7,776
+arb-1329,2026-06-11,18:00,Fuhrman Park #2,10u-section-1-ls-slingers,10u-section-1-donegal-indians,,10u Section 1,final,13,1,1329
+arb-1510,2026-06-11,18:00,Fuhrman Park Field #4,10u-section-2-columbia-red,10u-section-2-donegal-green,,10u Section 2,final,1,3,1510
+arb-517,2026-06-11,18:00,Gladfelter Field 5,14u-section-2-pm-white,14u-section-2-columbia-red,,14u Section 2,final,7,6,517
+arb-1281,2026-06-11,18:00,Gloninger Woods Park,10u-section-1-pm-comets,10u-section-1-cedar-crest,,10u Section 1,final,15,0,1281
+arb-516,2026-06-11,18:00,Herr Flowers #3,14u-section-2-solanco-black,14u-section-2-ls-blue-blazers,,14u Section 2,final,4,11,516
+arb-1080,2026-06-11,18:00,Hopeland Park,12u-section-3-cv-bucks-red,12u-section-3-ephrata-tourists,,12u Section 3,final,1,18,1080
+arb-1204,2026-06-11,18:00,Lanc Mennonite HS Varsity,12u-section-3-pm-white,12u-section-3-lanc-mennonite,,12u Section 3,final,5,4,1204
+arb-496,2026-06-11,18:00,McNickle Field,14u-section-2-pm-blue,14u-section-2-mt-thunder,,14u Section 2,final,11,5,496
+arb-613,2026-06-11,18:00,Nitrauer ES,14u-section-3-cv-bucks,14u-section-3-mt-storm,,14u Section 3,final,15,12,613
+arb-717,2026-06-11,18:00,Overlook #2,12u-section-1-octorara-braves,12u-section-1-mt-streaks,,12u Section 1,final,1,8,717
+arb-507,2026-06-11,18:00,Paradise Park #1,14u-section-2-mt-lightning,14u-section-2-pv-braves,,14u Section 2,final,4,10,507
+arb-1355,2026-06-11,18:00,Paradise Park #4,10u-section-2-cv-bucks,10u-section-2-pv-braves,,10u Section 2,final,0,10,1355
+arb-716,2026-06-11,18:00,Reamstown Park,12u-section-1-donegal-indians,12u-section-1-cocalico-eagles,,12u Section 1,final,10,15,716
+arb-610,2026-06-11,18:00,Roland Park Lloyd Field,14u-section-3-pv-braves,14u-section-3-ephrata-zips,,14u Section 3,final,15,3,610
+arb-584,2026-06-11,18:00,SYBA Field Complex #1,14u-section-3-e-town-white,14u-section-3-solanco-black,,14u Section 3,final,13,9,584
+arb-1126,2026-06-11,18:00,SYBA Field Complex #4,12u-section-3-ephrata-power,12u-section-3-solanco-gold,,12u Section 3,final,16,4,1126
+arb-1410,2026-06-11,18:00,Silvermine Park,10u-section-2-solanco-black,10u-section-2-pm-gold,,10u Section 2,final,1,9,1410
+arb-1509,2026-06-11,18:00,Snyder Park #2,10u-section-2-manheim-maroon,10u-section-2-ephrata-athletics,,10u Section 2,final,2,9,1509
+arb-1206,2026-06-11,18:00,South Lebanon Field #3,12u-section-3-hempfield-red,12u-section-3-cedar-crest,,12u Section 3,final,4,16,1206
+arb-1205,2026-06-11,18:00,St. Leo Field 2,12u-section-3-donegal-black,12u-section-3-st-leo-gold,,12u Section 3,final,5,2,1205
+arb-1375,2026-06-11,18:00,Stoner Park,10u-section-2-hempfield-white,10u-section-2-mt-lightning,,10u Section 2,final,8,10,1375
+arb-1203,2026-06-11,18:00,Village Park Field #7,12u-section-3-garden-spot,12u-section-3-ls-black,,12u Section 3,final,21,5,1203
+arb-321,2026-06-11,18:00,Warwick Twp #1,14u-section-1-hempfield-black,14u-section-1-lititz-vfw,,14u Section 1,final,8,1,321
+arb-1411,2026-06-11,18:00,Washington Boro,10u-section-2-garden-spot-white,10u-section-2-pm-blue,,10u Section 2,final,0,17,1411
+arb-1124,2026-06-11,18:00,Wayside Church,12u-section-3-pm-gold,12u-section-3-hempfield-black,,12u Section 3,final,5,2,1124
+arb-428,2026-06-11,18:00,Wolgemuth Park,14u-section-2-cv-bucks,14u-section-2-e-town-blue,,14u Section 2,final,6,16,428
+arb-298,2026-06-11,19:00,Highville FC,14u-section-1-solanco-black,14u-section-1-pm-comets,,14u Section 1,final,0,12,298
+arb-497,2026-06-12,18:00,Dutch Gold #1,14u-section-2-solanco-gold,14u-section-2-st-leo-crusaders,,14u Section 2,final,7,8,497
+arb-761,2026-06-12,18:00,Farmdale Elementary,12u-section-1-e-town-blue,12u-section-1-hempfield-red,,12u Section 1,final,5,11,761
+arb-1208,2026-06-12,18:00,Flory Park #1,12u-section-3-mt-chargers,12u-section-3-cv-bucks-red,,12u Section 3,final,18,14,1208
+arb-777,2026-06-12,18:00,Flory Park #2,12u-section-1-mountville-indians,12u-section-1-cv-bucks,,12u Section 1,final,10,12,777
+arb-1413,2026-06-12,18:00,Greider Park Field A,10u-section-2-ls-regulators,10u-section-2-pm-white,,10u Section 2,final,16,5,1413
+arb-719,2026-06-12,18:00,Hempfield Fire Dept.,12u-section-1-cocalico-eagles,12u-section-1-hempfield-black,,12u Section 1,final,0,10,719
+arb-778,2026-06-12,18:00,Herr Flowers #2,12u-section-1-solanco-black,12u-section-1-ls-atta-boys,,12u Section 1,final,2,12,778
+arb-518,2026-06-12,18:00,Herr Flowers #3,14u-section-2-donegal-green,14u-section-2-ls-base-bandits,,14u Section 2,final,12,2,518
+arb-615,2026-06-12,18:00,Highville FC,14u-section-3-donegal-black,14u-section-3-pm-blue,,14u Section 3,final,10,13,615
+arb-299,2026-06-12,18:00,Mountville Boro,14u-section-1-mt-streaks,14u-section-1-mountville-angels,,14u Section 1,final,10,2,299
+arb-1283,2026-06-12,18:00,New Holland Legion,10u-section-1-e-town-bruins,10u-section-1-garden-spot,,10u Section 1,final,12,2,1283
+arb-612,2026-06-12,18:00,New Holland Legion,14u-section-3-solanco-black,14u-section-3-garden-spot,,14u Section 3,final,13,9,612
+arb-1129,2026-06-12,18:00,Reidenbaugh Elm,12u-section-3-donegal-white,12u-section-3-mt-bolts,,12u Section 3,final,22,6,1129
+arb-323,2026-06-12,18:00,Snyder Park #1,14u-section-1-lititz-vfw,14u-section-1-ephrata-drillerz,,14u Section 1,final,4,2,323
+arb-1412,2026-06-12,18:00,Stoner Park,10u-section-2-garden-spot-blue,10u-section-2-mt-lightning,,10u Section 2,scheduled,,0,1412
+arb-498,2026-06-12,18:00,Tom Herr,14u-section-2-mountville-red-sox,14u-section-2-hempfield-red,,14u Section 2,final,7,8,498
+arb-1512,2026-06-12,18:00,Village Park #1,10u-section-2-st-leo-crusaders,10u-section-2-ls-blue-crew,,10u Section 2,final,15,17,1512
+arb-1209,2026-06-12,18:00,Village Park Field #7,12u-section-3-solanco-black,12u-section-3-ls-blue,,12u Section 3,final,13,8,1209
+arb-1511,2026-06-12,18:00,Warwick Twp #3,10u-section-2-hempfield-red,10u-section-2-warwick-diamondbacks,,10u Section 2,final,1,4,1511
+arb-1128,2026-06-12,18:00,Wayside Church,12u-section-3-e-town-gray,12u-section-3-hempfield-black,,12u Section 3,final,19,0,1128
+arb-1127,2026-06-12,18:00,Wenger Field,12u-section-3-cv-bucks-blue,12u-section-3-e-town-white,,12u Section 3,final,23,12,1127
+arb-1513,2026-06-12,18:00,Witmer Heights #1,10u-section-2-hempfield-gray,10u-section-2-cv-bucks,,10u Section 2,final,4,8,1513
+arb-1326,2026-06-12,19:30,Snyder Park #2,10u-section-1-solanco-black,10u-section-1-ephrata-drillerz,,10u Section 1,final,5,15,1326
+arb-583,2026-06-14,17:00,Lafayette Fire,14u-section-3-pm-blue,14u-section-3-cv-bucks,,14u Section 3,final,12,2,583
+arb-1094,2026-06-15,18:00,Charlestown Upper,12u-section-3-ls-blue,12u-section-3-pm-blue,,12u Section 3,scheduled,0,,1094
+arb-1288,2026-06-15,18:00,Cresswell Park 1,10u-section-1-e-town-bruins,10u-section-1-pm-comets,,10u Section 1,final,7,8,1288
+arb-1419,2026-06-15,18:00,Denver 4th St,10u-section-2-mt-lightning,10u-section-2-cocalico-eagles,,10u Section 2,final,13,5,1419
+arb-1515,2026-06-15,18:00,Farmdale Elementary,10u-section-2-garden-spot-white,10u-section-2-hempfield-red,,10u Section 2,final,3,14,1515
+arb-1211,2026-06-15,18:00,Flory Park #1,12u-section-3-cedar-crest,12u-section-3-cv-bucks-blue,,12u Section 3,final,10,19,1211
+arb-1334,2026-06-15,18:00,Fuhrman Park Field #4,10u-section-1-hempfield-black,10u-section-1-donegal-indians,,10u Section 1,final,4,6,1334
+arb-1414,2026-06-15,18:00,Gladfelter Field__1,10u-section-2-pm-white,10u-section-2-columbia-red,,10u Section 2,final,13,3,1414
+arb-300,2026-06-15,18:00,Governor Stables,14u-section-1-pm-comets,14u-section-1-e-town-black,,14u Section 1,final,8,5,300
+arb-427,2026-06-15,18:00,Greider Park Field C,14u-section-2-warwick-white-sox,14u-section-2-pm-blue,,14u Section 2,final,10,4,427
+arb-519,2026-06-15,18:00,Herr Flowers #3,14u-section-2-cedar-crest,14u-section-2-ls-base-bandits,,14u Section 2,final,14,4,519
+arb-500,2026-06-15,18:00,Lafayette Fire,14u-section-2-pv-braves,14u-section-2-cv-bucks,,14u Section 2,final,1,8,500
+arb-482,2026-06-15,18:00,McNickle Field,14u-section-2-solanco-black,14u-section-2-mt-lightning,,14u Section 2,final,8,6,482
+arb-617,2026-06-15,18:00,New Holland Legion,14u-section-3-cocalico-eagles,14u-section-3-garden-spot,,14u Section 3,final,20,24,617
+arb-1514,2026-06-15,18:00,New Holland Park,10u-section-2-ls-regulators,10u-section-2-garden-spot-blue,,10u Section 2,final,24,0,1514
+arb-1417,2026-06-15,18:00,Paradise Park #4,10u-section-2-manheim-gray,10u-section-2-pv-braves,,10u Section 2,final,11,0,1417
+arb-1125,2026-06-15,18:00,Reidenbaugh Elm,12u-section-3-e-town-white,12u-section-3-mt-bolts,,12u Section 3,final,21,12,1125
+arb-1132,2026-06-15,18:00,Roland Park Wolf Field,12u-section-3-lanc-mennonite,12u-section-3-ephrata-power,,12u Section 3,final,12,22,1132
+arb-721,2026-06-15,18:00,SOLANCO Legion,12u-section-1-hempfield-red,12u-section-1-solanco-black,,12u Section 1,final,1,8,721
+arb-302,2026-06-15,18:00,SOLANCO Legion,14u-section-1-lanc-rec-tornados,14u-section-1-solanco-black,,14u Section 1,final,1,11,302
+arb-499,2026-06-15,18:00,SYBA Field Complex #1,14u-section-2-mt-thunder,14u-section-2-solanco-gold,,14u Section 2,final,6,2,499
+arb-1210,2026-06-15,18:00,SYBA Field Complex #2,12u-section-3-st-leo-gold,12u-section-3-solanco-gold,,12u Section 3,final,18,16,1210
+arb-1332,2026-06-15,18:00,SYBA Field Complex #3,10u-section-1-cv-bucks,10u-section-1-solanco-black,,10u Section 1,final,4,10,1332
+arb-1131,2026-06-15,18:00,SYBA Field Complex #4,12u-section-3-donegal-white,12u-section-3-solanco-black,,12u Section 3,final,16,1,1131
+arb-301,2026-06-15,18:00,Silver Spring Park,14u-section-1-cedar-crest,14u-section-1-hempfield-red,,14u Section 1,final,17,17,301
+arb-501,2026-06-15,18:00,Tom Herr Field,14u-section-2-garden-spot,14u-section-2-hempfield-black,,14u Section 2,final,17,2,501
+arb-324,2026-06-15,18:00,Warwick Twp #1,14u-section-1-mountville-angels,14u-section-1-lititz-vfw,,14u Section 1,final,8,15,324
+arb-779,2026-06-15,18:00,Warwick Twp #2,12u-section-1-cedar-crest,12u-section-1-warwick-phillies,,12u Section 1,final,10,3,779
+arb-1473,2026-06-15,18:00,Warwick Twp #3,10u-section-2-hempfield-black,10u-section-2-warwick-rangers,,10u Section 2,final,14,5,1473
+arb-1073,2026-06-15,18:00,Wayside Church,12u-section-3-pm-white,12u-section-3-hempfield-black,,12u Section 3,final,4,14,1073
+arb-1516,2026-06-15,18:00,Witmer Heights #1,10u-section-2-warwick-diamondbacks,10u-section-2-cv-bucks,,10u Section 2,final,15,4,1516
+arb-616,2026-06-15,18:00,Wolgemuth Park,14u-section-3-mt-chargers,14u-section-3-e-town-navy,,14u Section 3,final,3,14,616
+arb-1285,2026-06-16,18:00,Cedar Hollow,10u-section-1-cedar-crest,10u-section-1-manheim,,10u Section 1,final,3,19,1285
+arb-1521,2026-06-16,18:00,Community #2,10u-section-2-pm-gold,10u-section-2-lanc-jr-tornados,,10u Section 2,final,6,9,1521
+arb-642,2026-06-16,18:00,Community #3,14u-section-3-ctyaa-moose,14u-section-3-lanc-rec-tornados,,14u Section 3,final,8,18,642
+arb-725,2026-06-16,18:00,Froelich Park East,12u-section-1-ls-atta-boys,12u-section-1-mountville-indians,,12u Section 1,final,20,9,725
+arb-1212,2026-06-16,18:00,Fuhrman Park #1,12u-section-3-pm-gold,12u-section-3-donegal-black,,12u Section 3,scheduled,,0,1212
+arb-1517,2026-06-16,18:00,Fuhrman Park Field #4,10u-section-2-cocalico-eagles,10u-section-2-donegal-green,,10u Section 2,final,9,10,1517
+arb-520,2026-06-16,18:00,Gladfelter Field 5,14u-section-2-warwick-white-sox,14u-section-2-columbia-red,,14u Section 2,final,6,10,520
+arb-1134,2026-06-16,18:00,Hopeland Park,12u-section-3-e-town-navy,12u-section-3-ephrata-tourists,,12u Section 3,final,6,7,1134
+arb-724,2026-06-16,18:00,Kunkle Field,12u-section-1-manheim,12u-section-1-donegal-indians,,12u Section 1,final,12,6,724
+arb-620,2026-06-16,18:00,Kunkle Field,14u-section-3-ephrata-zips,14u-section-3-donegal-black,,14u Section 3,final,7,12,620
+arb-618,2026-06-16,18:00,Lafayette Fire,14u-section-3-cedar-crest,14u-section-3-cv-bucks,,14u Section 3,final,4,17,618
+arb-502,2026-06-16,18:00,Lanc Mennonite HS Varsity,14u-section-2-ls-blue-blazers,14u-section-2-lanc-mennonite-blazers,,14u Section 2,final,0,5,502
+arb-503,2026-06-16,18:00,McNickle Field,14u-section-2-hempfield-red,14u-section-2-mt-lightning,,14u Section 2,final,1,11,503
+arb-722,2026-06-16,18:00,Minor Field,12u-section-1-hempfield-black,12u-section-1-e-town-blue,,12u Section 1,final,15,0,722
+arb-478,2026-06-16,18:00,Mountville Boro,14u-section-2-cv-bucks,14u-section-2-mountville-red-sox,,14u Section 2,final,1,0,478
+arb-1279,2026-06-16,18:00,Municipal Field,10u-section-1-ephrata-drillerz,10u-section-1-mt-streaks,,10u Section 1,final,10,8,1279
+arb-1135,2026-06-16,18:00,Reidenbaugh Elm,12u-section-3-e-town-gray,12u-section-3-mt-chargers,,12u Section 3,final,9,5,1135
+arb-1416,2026-06-16,18:00,Rohrerstown ES #1,10u-section-2-st-leo-crusaders,10u-section-2-hempfield-gray,,10u Section 2,final,21,13,1416
+arb-619,2026-06-16,18:00,SYBA Field Complex #1,14u-section-3-mt-storm,14u-section-3-solanco-black,,14u Section 3,final,17,18,619
+arb-747,2026-06-16,18:00,SYBA Field Complex #2,12u-section-1-octorara-braves,12u-section-1-solanco-black,,12u Section 1,final,5,3,747
+arb-1519,2026-06-16,18:00,SYBA Field Complex #3,10u-section-2-mt-thunder,10u-section-2-solanco-black,,10u Section 2,final,20,12,1519
+arb-1522,2026-06-16,18:00,Snyder Park #2,10u-section-2-mt-lightning,10u-section-2-ephrata-athletics,,10u Section 2,final,3,7,1522
+arb-780,2026-06-16,18:00,Snyder Park #3,12u-section-1-cocalico-eagles,12u-section-1-ephrata-drillerz,,12u Section 1,final,7,2,780
+arb-1520,2026-06-16,18:00,Sweetbriar Park #2,10u-section-2-hempfield-white,10u-section-2-manheim-maroon,,10u Section 2,final,6,7,1520
+arb-1333,2026-06-16,18:00,Village Park Field #7,10u-section-1-garden-spot,10u-section-1-ls-slingers,,10u Section 1,final,1,16,1333
+arb-373,2026-06-16,18:00,Village Park Field #7,14u-section-2-ls-base-bandits,14u-section-2-manheim-lions,,14u Section 2,final,11,19,373
+arb-1415,2026-06-16,18:00,Washington Boro,10u-section-2-hempfield-black,10u-section-2-pm-blue,,10u Section 2,final,12,9,1415
+arb-1261,2026-06-16,18:00,Wayside Church,10u-section-1-cocalico-eagles,10u-section-1-hempfield-red,,10u Section 1,final,12,13,1261
+arb-1214,2026-06-16,18:00,Witmer Heights #2,12u-section-3-e-town-white,12u-section-3-hempfield-red,,12u Section 3,final,17,3,1214
+arb-304,2026-06-17,18:00,A. Herr Park,14u-section-1-solanco-black,14u-section-1-hempfield-black,,14u Section 1,final,2,13,304
+arb-325,2026-06-17,18:00,Community #3,14u-section-1-pm-comets,14u-section-1-lanc-rec-tornados,,14u Section 1,final,16,2,325
+arb-593,2026-06-17,18:00,Dairy Road Field,14u-section-3-e-town-navy,14u-section-3-cedar-crest,,14u Section 3,final,10,0,593
+arb-521,2026-06-17,18:00,Denver Park #1,14u-section-2-cv-bucks,14u-section-2-cocalico-eagles,,14u Section 2,final,13,18,521
+arb-1338,2026-06-17,18:00,Ephrata MS - Softball Sta,10u-section-1-cv-bucks,10u-section-1-ephrata-drillerz,,10u Section 1,final,7,11,1338
+arb-781,2026-06-17,18:00,Farmdale Elementary,12u-section-1-cv-bucks,12u-section-1-hempfield-red,,12u Section 1,final,3,6,781
+arb-1137,2026-06-17,18:00,Froelich Park West,12u-section-3-ephrata-power,12u-section-3-mountville-tigers,,12u Section 3,final,13,7,1137
+arb-504,2026-06-17,18:00,Greider Park Field C,14u-section-2-hempfield-black,14u-section-2-pm-white,,14u Section 2,final,7,8,504
+arb-305,2026-06-17,18:00,McNickle Field,14u-section-1-lititz-vfw,14u-section-1-mt-streaks,,14u Section 1,final,2,4,305
+arb-440,2026-06-17,18:00,Mountville Boro,14u-section-2-cedar-crest,14u-section-2-mountville-red-sox,,14u Section 2,final,11,7,440
+arb-621,2026-06-17,18:00,Nitrauer ES,14u-section-3-garden-spot,14u-section-3-mt-chargers,,14u Section 3,final,12,3,621
+arb-723,2026-06-17,18:00,Overlook #2,12u-section-1-pm-comets,12u-section-1-mt-streaks,,12u Section 1,final,3,5,723
+arb-303,2026-06-17,18:00,Penryn Field,14u-section-1-ephrata-drillerz,14u-section-1-manheim-lions,,14u Section 1,final,1,11,303
+arb-1336,2026-06-17,18:00,Rohrerstown ES #1,10u-section-1-pm-comets,10u-section-1-hempfield-black,,10u Section 1,final,3,4,1336
+arb-1408,2026-06-17,18:00,Rohrerstown ES #1,10u-section-2-warwick-diamondbacks,10u-section-2-hempfield-white,,10u Section 2,final,11,9,1408
+arb-589,2026-06-17,18:00,SOLANCO Legion,14u-section-3-pv-braves,14u-section-3-solanco-black,,14u Section 3,final,19,3,589
+arb-505,2026-06-17,18:00,SYBA Field Complex #1,14u-section-2-manheim-lions,14u-section-2-solanco-black,,14u Section 2,final,10,11,505
+arb-1337,2026-06-17,18:00,SYBA Field Complex #4,10u-section-1-garden-spot,10u-section-1-solanco-black,,10u Section 1,final,0,14,1337
+arb-1136,2026-06-17,18:00,SYBA Field Complex #4,12u-section-3-garden-spot,12u-section-3-solanco-black,,12u Section 3,final,8,7,1136
+arb-1218,2026-06-17,18:00,St. Leo Field 2,12u-section-3-pm-white,12u-section-3-st-leo-gold,,12u Section 3,final,8,12,1218
+arb-1409,2026-06-17,18:00,Stoner Park,10u-section-2-pv-braves,10u-section-2-mt-thunder,,10u Section 2,final,3,1,1409
+arb-494,2026-06-17,18:00,Tom Herr,14u-section-2-e-town-blue,14u-section-2-hempfield-red,,14u Section 2,final,15,4,494
+arb-1528,2026-06-17,18:00,Village Park #1,10u-section-2-mountville-pirates,10u-section-2-ls-blue-crew,,10u Section 2,final,11,15,1528
+arb-1213,2026-06-17,18:00,Village Park Field #7,12u-section-3-ls-blue,12u-section-3-ls-black,,12u Section 3,final,4,21,1213
+arb-1286,2026-06-17,18:00,Wayside Church,10u-section-1-ls-slingers,10u-section-1-hempfield-red,,10u Section 1,final,12,2,1286
+arb-1476,2026-06-17,18:00,Witmer Heights #1,10u-section-2-garden-spot-white,10u-section-2-cv-bucks,,10u Section 2,final,0,15,1476
+arb-430,2026-06-18,18:00,Colerain Park,14u-section-2-lanc-mennonite-blazers,14u-section-2-solanco-gold,,14u Section 2,final,12,3,430
+arb-626,2026-06-18,18:00,Community #3,14u-section-3-cv-bucks,14u-section-3-lanc-rec-tornados,,14u Section 3,final,11,7,626
+arb-312,2026-06-18,18:00,Cornwall Field,14u-section-1-hempfield-red,14u-section-1-cedar-crest,,14u Section 1,final,12,13,312
+arb-730,2026-06-18,18:00,Creek Field,12u-section-1-ephrata-drillerz,12u-section-1-manheim,,12u Section 1,final,10,13,730
+arb-622,2026-06-18,18:00,Denver Park #1,14u-section-3-e-town-white,14u-section-3-cocalico-eagles,,14u Section 3,final,10,20,622
+arb-1215,2026-06-18,18:00,Denver Partk #2,12u-section-3-mt-chargers,12u-section-3-cocalico-eagles,,12u Section 3,final,9,11,1215
+arb-1340,2026-06-18,18:00,Fuhrman Park Field #4,10u-section-1-cocalico-eagles,10u-section-1-donegal-indians,,10u Section 1,final,5,16,1340
+arb-1420,2026-06-18,18:00,Gladfelter Field__1,10u-section-2-ephrata-athletics,10u-section-2-columbia-red,,10u Section 2,final,12,1,1420
+arb-609,2026-06-18,18:00,Governor Stables,14u-section-3-e-town-navy,14u-section-3-ctyaa-moose,,14u Section 3,final,11,5,609
+arb-760,2026-06-18,18:00,Herr Flowers #2,12u-section-1-cv-bucks,12u-section-1-ls-atta-boys,,12u Section 1,final,1,13,760
+arb-466,2026-06-18,18:00,Herr Flowers #3,14u-section-2-ephrata-breakers,14u-section-2-ls-blue-blazers,,14u Section 2,final,10,11,466
+arb-641,2026-06-18,18:00,Highville FC,14u-section-3-pm-blue,14u-section-3-pv-braves,,14u Section 3,final,9,2,641
+arb-726,2026-06-18,18:00,Manor MS,12u-section-1-solanco-black,12u-section-1-pm-comets,,12u Section 1,final,13,23,726
+arb-296,2026-06-18,18:00,McNickle Field,14u-section-1-e-town-black,14u-section-1-mt-streaks,,14u Section 1,final,6,5,296
+arb-728,2026-06-18,18:00,Minch Park,12u-section-1-mountville-indians,12u-section-1-octorara-braves,,12u Section 1,final,10,6,728
+arb-687,2026-06-18,18:00,Minor Field,12u-section-1-cocalico-eagles,12u-section-1-e-town-blue,,12u Section 1,final,4,14,687
+arb-1287,2026-06-18,18:00,Municipal Field,10u-section-1-cedar-crest,10u-section-1-mt-streaks,,10u Section 1,final,8,11,1287
+arb-1418,2026-06-18,18:00,New Holland Legion,10u-section-2-donegal-green,10u-section-2-garden-spot-blue,,10u Section 2,final,25,8,1418
+arb-370,2026-06-18,18:00,Penryn Field,14u-section-2-hempfield-red,14u-section-2-manheim-lions,,14u Section 2,final,0,0,370
+arb-506,2026-06-18,18:00,SYBA Field Complex #1,14u-section-2-st-leo-crusaders,14u-section-2-solanco-black,,14u Section 2,final,8,7,506
+arb-1216,2026-06-18,18:00,SYBA Field Complex #2,12u-section-3-hempfield-black,12u-section-3-solanco-gold,,12u Section 3,final,8,5,1216
+arb-326,2026-06-18,18:00,Snyder Park #1,14u-section-1-ls-blue,14u-section-1-ephrata-drillerz,,14u Section 1,final,18,5,326
+arb-1183,2026-06-18,18:00,South Lebanon ES,12u-section-3-e-town-white,12u-section-3-cedar-crest,,12u Section 3,final,18,7,1183
+arb-515,2026-06-18,18:00,Tom Herr Field,14u-section-2-hempfield-black,14u-section-2-pv-braves,,14u Section 2,final,10,13,515
+arb-1378,2026-06-18,18:00,Veteran's Memorial Park,10u-section-2-warwick-diamondbacks,10u-section-2-mountville-pirates,,10u Section 2,final,11,12,1378
+arb-1529,2026-06-18,18:00,Village Park #1,10u-section-2-hempfield-black,10u-section-2-ls-regulators,,10u Section 2,final,10,18,1529
+arb-1217,2026-06-18,18:00,Village Park Field #7,12u-section-3-mt-bolts,12u-section-3-ls-blue,,12u Section 3,scheduled,,0,1217
+arb-470,2026-06-18,18:00,Warwick Twp #1,14u-section-2-donegal-green,14u-section-2-warwick-white-sox,,14u Section 2,final,6,16,470
+arb-1339,2026-06-18,18:00,Warwick Twp #3,10u-section-1-manheim,10u-section-1-warwick-cardinals,,10u Section 1,final,8,13,1339
+arb-1138,2026-06-19,18:00,Cresswell Park 1,12u-section-3-garden-spot,12u-section-3-pm-blue,,12u Section 3,final,14,5,1138
+arb-522,2026-06-19,18:00,Denver Park #1,14u-section-2-columbia-red,14u-section-2-cocalico-eagles,,14u Section 2,final,2,3,522
+arb-1140,2026-06-19,18:00,Kunkle Field,12u-section-3-ephrata-tourists,12u-section-3-donegal-white,,12u Section 3,final,11,9,1140
+arb-434,2026-06-19,18:00,Lafayette Fire,14u-section-2-garden-spot,14u-section-2-cv-bucks,,14u Section 2,final,4,12,434
+arb-1219,2026-06-19,18:00,Lanc Mennonite HS Varsity,12u-section-3-mountville-tigers,12u-section-3-lanc-mennonite,,12u Section 3,final,12,3,1219
+arb-254,2026-06-19,18:00,McNickle Field,14u-section-1-pm-comets,14u-section-1-mt-streaks,,14u Section 1,final,7,8,254
+arb-1423,2026-06-19,18:00,New Holland Legion,10u-section-2-lanc-jr-tornados,10u-section-2-garden-spot-white,,10u Section 2,final,15,0,1423
+arb-551,2026-06-19,18:00,Nitrauer ES,14u-section-3-pm-blue,14u-section-3-mt-chargers,,14u Section 3,final,23,14,551
+arb-514,2026-06-19,18:00,Paradise Park #1,14u-section-2-ls-blue-blazers,14u-section-2-pv-braves,,14u Section 2,final,13,2,514
+arb-1424,2026-06-19,18:00,Rohrerstown ES #1,10u-section-2-cedar-crest,10u-section-2-hempfield-white,,10u Section 2,final,11,12,1424
+arb-1141,2026-06-19,18:00,Safe Harbor Creek Field,12u-section-3-cv-bucks-red,12u-section-3-pm-gold,,12u Section 3,scheduled,,0,1141
+arb-1425,2026-06-19,18:00,Silvermine Park,10u-section-2-hempfield-gray,10u-section-2-pm-gold,,10u Section 2,final,0,0,1425
+arb-1533,2026-06-19,18:00,St. Leo Field 2,10u-section-2-solanco-black,10u-section-2-st-leo-crusaders,,10u Section 2,final,9,12,1533
+arb-1531,2026-06-19,18:00,Sweetbriar Park #2,10u-section-2-cv-bucks,10u-section-2-manheim-gray,,10u Section 2,final,0,11,1531
+arb-366,2026-06-19,18:00,Tom Herr Field,14u-section-2-mt-thunder,14u-section-2-hempfield-black,,14u Section 2,final,6,18,366
+arb-536,2026-06-19,18:00,Trolly Line Park,14u-section-3-mt-storm,14u-section-3-e-town-white,,14u Section 3,final,12,13,536
+arb-1532,2026-06-19,18:00,Village Park #1,10u-section-2-hempfield-red,10u-section-2-ls-blue-crew,,10u Section 2,final,2,9,1532
+arb-1220,2026-06-19,18:00,Village Park Field #7,12u-section-3-cv-bucks-blue,12u-section-3-ls-black,,12u Section 3,final,21,19,1220
+arb-1139,2026-06-19,18:00,Wenger Field,12u-section-3-hempfield-red,12u-section-3-e-town-navy,,12u Section 3,final,1,16,1139
+arb-1335,2026-06-19,19:30,Ephrata MS - Softball Sta,10u-section-1-hempfield-red,10u-section-1-ephrata-drillerz,,10u Section 1,final,5,15,1335
+arb-307,2026-06-19,20:00,Governor Stables,14u-section-1-manheim-lions,14u-section-1-e-town-black,,14u Section 1,final,9,4,307
+arb-639,2026-06-20,10:00,Fuhrman Park #2,14u-section-3-solanco-black,14u-section-3-donegal-black,,14u Section 3,final,16,13,639
+arb-1507,2026-06-20,10:00,Sweetbriar Park #2,10u-section-2-st-leo-crusaders,10u-section-2-manheim-gray,,10u Section 2,scheduled,0,,1507
+arb-1506,2026-06-22,18:00,Community #2,10u-section-2-ls-blue-crew,10u-section-2-lanc-jr-tornados,,10u Section 2,final,16,6,1506
+arb-1534,2026-06-22,18:00,Farmdale Elementary,10u-section-2-cocalico-eagles,10u-section-2-hempfield-black,,10u Section 2,final,3,7,1534
+arb-1145,2026-06-22,18:00,Froelich Park West,12u-section-3-mt-chargers,12u-section-3-mountville-tigers,,12u Section 3,final,7,17,1145
+arb-535,2026-06-22,18:00,Kunkle Field,14u-section-3-pv-braves,14u-section-3-donegal-black,,14u Section 3,final,6,16,535
+arb-1422,2026-06-22,18:00,Paradise Park #4,10u-section-2-warwick-diamondbacks,10u-section-2-pv-braves,,10u Section 2,final,2,7,1422
+arb-692,2026-06-22,18:00,Reamstown Park,12u-section-1-mt-streaks,12u-section-1-cocalico-eagles,,12u Section 1,final,0,4,692
+arb-1142,2026-06-22,18:00,Roland Park Wolf Field,12u-section-3-cocalico-eagles,12u-section-3-ephrata-power,,12u Section 3,final,15,30,1142
+arb-1221,2026-06-22,18:00,South Lebanon Field #3,12u-section-3-mt-bolts,12u-section-3-cedar-crest,,12u Section 3,final,15,12,1221
+arb-1536,2026-06-22,18:00,South Lebanon Field #4,10u-section-2-garden-spot-blue,10u-section-2-cedar-crest,,10u Section 2,final,0,0,1536
+arb-784,2026-06-22,18:00,Warwick Twp #2,12u-section-1-hempfield-black,12u-section-1-warwick-phillies,,12u Section 1,final,15,0,784
+arb-1535,2026-06-22,18:00,Warwick Twp #3,10u-section-2-ephrata-athletics,10u-section-2-warwick-rangers,,10u Section 2,final,10,0,1535
+arb-1427,2026-06-22,18:00,Washington Boro,10u-section-2-manheim-maroon,10u-section-2-pm-blue,,10u Section 2,final,3,5,1427
+arb-1146,2026-06-22,18:00,Wenger Field,12u-section-3-donegal-black,12u-section-3-pm-white,,12u Section 3,final,16,14,1146
+arb-1538,2026-06-22,18:00,Witmer Heights #1,10u-section-2-mountville-pirates,10u-section-2-cv-bucks,,10u Section 2,final,5,4,1538
+arb-731,2026-06-23,18:00,Dairy Road Field,12u-section-1-e-town-blue,12u-section-1-cedar-crest,,12u Section 1,final,5,16,731
+arb-1224,2026-06-23,18:00,Flory Park #1,12u-section-3-solanco-black,12u-section-3-cv-bucks-blue,,12u Section 3,final,1,13,1224
+arb-732,2026-06-23,18:00,Froelich Park East,12u-section-1-solanco-black,12u-section-1-mountville-indians,,12u Section 1,final,12,13,732
+arb-785,2026-06-23,18:00,Herr Flowers #2,12u-section-1-pm-comets,12u-section-1-ls-atta-boys,,12u Section 1,final,1,11,785
+arb-1144,2026-06-23,18:00,Minor Field,12u-section-3-ls-black,12u-section-3-e-town-white,,12u Section 3,final,2,17,1144
+arb-1426,2026-06-23,18:00,New Holland Legion,10u-section-2-hempfield-white,10u-section-2-garden-spot-white,,10u Section 2,final,16,3,1426
+arb-635,2026-06-23,18:00,Paradise Park #1,14u-section-3-cocalico-eagles,14u-section-3-pv-braves,,14u Section 3,final,0,0,635
+arb-311,2026-06-23,18:00,Silver Spring Park,14u-section-1-manheim-lions,14u-section-1-hempfield-red,,14u Section 1,final,14,6,311
+arb-1518,2026-06-23,18:00,South Lebanon Field #4,10u-section-2-warwick-rangers,10u-section-2-cedar-crest,,10u Section 2,final,25,12,1518
+arb-1222,2026-06-23,18:00,St. Leo Field 2,12u-section-3-lanc-mennonite,12u-section-3-st-leo-gold,,12u Section 3,final,4,19,1222
+arb-1537,2026-06-23,18:00,Sweetbriar Park #2,10u-section-2-solanco-black,10u-section-2-manheim-gray,,10u Section 2,final,5,15,1537
+arb-1223,2026-06-23,18:00,Witmer Heights #2,12u-section-3-pm-blue,12u-section-3-hempfield-red,,12u Section 3,final,9,2,1223
+arb-1123,2026-06-23,20:00,Wenger Field,12u-section-3-ls-blue,12u-section-3-e-town-navy,,12u Section 3,final,9,19,1123
+arb-1133,2026-06-24,18:00,Charlestown Upper,12u-section-3-cv-bucks-red,12u-section-3-pm-white,,12u Section 3,final,8,14,1133
+arb-328,2026-06-24,18:00,Community #3,14u-section-1-ls-blue,14u-section-1-lanc-rec-tornados,,14u Section 1,final,1,8,328
+arb-1143,2026-06-24,18:00,Cresswell Park 1,12u-section-3-solanco-gold,12u-section-3-pm-gold,,12u Section 3,final,3,19,1143
+arb-614,2026-06-24,18:00,Dairy Road Field,14u-section-3-ctyaa-moose,14u-section-3-cedar-crest,,14u Section 3,final,0,0,614
+arb-1470,2026-06-24,18:00,Farmdale Elementary,10u-section-2-pv-braves,10u-section-2-hempfield-black,,10u Section 2,final,8,0,1470
+arb-232,2026-06-24,18:00,Governor Stables,14u-section-1-hempfield-red,14u-section-1-e-town-black,,14u Section 1,final,2,3,232
+arb-330,2026-06-24,18:00,Highville FC,14u-section-1-pm-comets,14u-section-1-lititz-vfw,,14u Section 1,final,3,4,330
+arb-1130,2026-06-24,18:00,Hopeland Park,12u-section-3-pm-blue,12u-section-3-ephrata-tourists,,12u Section 3,final,6,17,1130
+arb-762,2026-06-24,18:00,Kunkle Field,12u-section-1-ls-atta-boys,12u-section-1-donegal-indians,,12u Section 1,final,16,1,762
+arb-310,2026-06-24,18:00,McNickle Field,14u-section-1-hempfield-black,14u-section-1-mt-streaks,,14u Section 1,final,20,2,310
+arb-573,2026-06-24,18:00,New Holland Legion,14u-section-3-pv-braves,14u-section-3-garden-spot,,14u Section 3,final,4,14,573
+arb-587,2026-06-24,18:00,Nitrauer ES,14u-section-3-pm-blue,14u-section-3-mt-storm,,14u Section 3,final,14,18,587
+arb-1484,2026-06-24,18:00,Pool Field,10u-section-2-ephrata-athletics,10u-section-2-manheim-gray,,10u Section 2,final,5,2,1484
+arb-1428,2026-06-24,18:00,Rohrerstown ES #1,10u-section-2-cocalico-eagles,10u-section-2-hempfield-white,,10u Section 2,final,16,8,1428
+arb-561,2026-06-24,18:00,SOLANCO Legion,14u-section-3-cv-bucks,14u-section-3-solanco-black,,14u Section 3,final,10,9,561
+arb-1540,2026-06-24,18:00,Sweetbriar Park #2,10u-section-2-mt-lightning,10u-section-2-manheim-maroon,,10u Section 2,final,2,12,1540
+arb-1469,2026-06-24,18:00,Village Park #1,10u-section-2-pm-blue,10u-section-2-ls-regulators,,10u Section 2,final,2,17,1469
+arb-786,2026-06-24,18:00,Warwick Twp #2,12u-section-1-cocalico-eagles,12u-section-1-warwick-phillies,,12u Section 1,final,3,5,786
+arb-1539,2026-06-24,18:00,Warwick Twp #3,10u-section-2-garden-spot-blue,10u-section-2-warwick-rangers,,10u Section 2,final,1,14,1539
+arb-1097,2026-06-24,18:00,Wenger Field,12u-section-3-cocalico-eagles,12u-section-3-e-town-gray,,12u Section 3,final,7,17,1097
+arb-244,2026-06-25,18:00,A. Herr Park,14u-section-1-pm-comets,14u-section-1-hempfield-black,,14u Section 1,final,3,12,244
+arb-783,2026-06-25,18:00,Flory Park #2,12u-section-1-octorara-braves,12u-section-1-cv-bucks,,12u Section 1,final,5,0,783
+arb-727,2026-06-25,18:00,Hempfield Fire Dept.,12u-section-1-donegal-indians,12u-section-1-hempfield-black,,12u Section 1,final,2,12,727
+arb-694,2026-06-25,18:00,Manor MS,12u-section-1-cedar-crest,12u-section-1-pm-comets,,12u Section 1,final,7,8,694
+arb-313,2026-06-25,18:00,Mountville Boro,14u-section-1-e-town-black,14u-section-1-mountville-angels,,14u Section 1,final,16,3,313
+arb-314,2026-06-25,18:00,Penryn Field,14u-section-1-lititz-vfw,14u-section-1-manheim-lions,,14u Section 1,final,3,9,314
+arb-329,2026-06-25,18:00,Snyder Park #1,14u-section-1-mt-streaks,14u-section-1-ephrata-drillerz,,14u Section 1,final,15,7,329
+arb-1057,2026-06-25,18:00,Wenger Field,12u-section-3-cv-bucks-red,12u-section-3-e-town-gray,,12u Section 3,final,0,0,1057
+arb-259,2026-06-26,18:00,Governor Stables,14u-section-1-mt-streaks,14u-section-1-e-town-black,,14u Section 1,final,6,2,259
+arb-699,2026-06-26,18:00,Overlook #2,12u-section-1-hempfield-red,12u-section-1-mt-streaks,,12u Section 1,final,0,10,699
+arb-315,2026-06-29,18:00,A. Herr Park,14u-section-1-ephrata-drillerz,14u-section-1-hempfield-black,,14u Section 1,final,3,18,315
+arb-320,2026-06-30,18:00,Herr Flowers #3,14u-section-1-cedar-crest,14u-section-1-ls-blue,,14u Section 1,final,7,8,320
+arb-297,2026-06-30,18:00,Silver Spring Park,14u-section-1-lanc-rec-tornados,14u-section-1-hempfield-red,,14u Section 1,final,18,10,297
+arb-322,2026-07-01,18:00,Community #3,14u-section-1-manheim-lions,14u-section-1-lanc-rec-tornados,,14u Section 1,final,12,1,322
+arb-327,2026-07-02,18:00,Community #3,14u-section-1-ephrata-drillerz,14u-section-1-lanc-rec-tornados,,14u Section 1,final,3,7,327

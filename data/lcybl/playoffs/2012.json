@@ -1,0 +1,61 @@
+{
+ "year": 2012,
+ "divisions": [
+  {
+   "division": "10u Section 1",
+   "champion": "Hempfield Black",
+   "runner_up": "Warwick Cardinals",
+   "disputed": false,
+   "rounds": [],
+   "photos": {}
+  },
+  {
+   "division": "12u Section 1",
+   "champion": "Mountville Indians",
+   "runner_up": "Warwick Phillies",
+   "disputed": false,
+   "rounds": [],
+   "photos": {}
+  },
+  {
+   "division": "12u Section 2",
+   "champion": "Warwick Braves",
+   "runner_up": "Garden Spot Blue",
+   "disputed": false,
+   "rounds": [],
+   "photos": {}
+  },
+  {
+   "division": "12u Section 3",
+   "champion": "Manheim Township Lightning",
+   "runner_up": "SALSA",
+   "disputed": false,
+   "rounds": [],
+   "photos": {}
+  },
+  {
+   "division": "14u Section 1",
+   "champion": "SWS White Sox",
+   "runner_up": "E-Town Navy",
+   "disputed": false,
+   "rounds": [],
+   "photos": {}
+  },
+  {
+   "division": "14u Section 2",
+   "champion": "St. Leo Lions",
+   "runner_up": null,
+   "disputed": false,
+   "rounds": [],
+   "photos": {}
+  },
+  {
+   "division": "14u Section 3",
+   "champion": "SALSA",
+   "runner_up": "Penryn",
+   "disputed": false,
+   "rounds": [],
+   "photos": {}
+  }
+ ]
+}

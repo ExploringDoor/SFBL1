@@ -1,0 +1,121 @@
+[
+ {
+  "year": 2025,
+  "divisions": 8,
+  "champions": 8,
+  "games": 113,
+  "photos": 15
+ },
+ {
+  "year": 2024,
+  "divisions": 8,
+  "champions": 8,
+  "games": 106,
+  "photos": 7
+ },
+ {
+  "year": 2023,
+  "divisions": 8,
+  "champions": 8,
+  "games": 103,
+  "photos": 16
+ },
+ {
+  "year": 2022,
+  "divisions": 8,
+  "champions": 8,
+  "games": 104,
+  "photos": 13
+ },
+ {
+  "year": 2021,
+  "divisions": 8,
+  "champions": 8,
+  "games": 94,
+  "photos": 12
+ },
+ {
+  "year": 2020,
+  "divisions": 8,
+  "champions": 8,
+  "games": 71,
+  "photos": 0
+ },
+ {
+  "year": 2019,
+  "divisions": 10,
+  "champions": 8,
+  "games": 93,
+  "photos": 0
+ },
+ {
+  "year": 2018,
+  "divisions": 11,
+  "champions": 8,
+  "games": 104,
+  "photos": 0
+ },
+ {
+  "year": 2017,
+  "divisions": 2,
+  "champions": 2,
+  "games": 0,
+  "photos": 0
+ },
+ {
+  "year": 2016,
+  "divisions": 2,
+  "champions": 2,
+  "games": 0,
+  "photos": 0
+ },
+ {
+  "year": 2015,
+  "divisions": 8,
+  "champions": 8,
+  "games": 0,
+  "photos": 0
+ },
+ {
+  "year": 2014,
+  "divisions": 8,
+  "champions": 8,
+  "games": 0,
+  "photos": 0
+ },
+ {
+  "year": 2013,
+  "divisions": 3,
+  "champions": 3,
+  "games": 0,
+  "photos": 0
+ },
+ {
+  "year": 2012,
+  "divisions": 7,
+  "champions": 7,
+  "games": 0,
+  "photos": 0
+ },
+ {
+  "year": 2011,
+  "divisions": 8,
+  "champions": 8,
+  "games": 0,
+  "photos": 0
+ },
+ {
+  "year": 2010,
+  "divisions": 8,
+  "champions": 8,
+  "games": 0,
+  "photos": 0
+ },
+ {
+  "year": 2009,
+  "divisions": 8,
+  "champions": 8,
+  "games": 5,
+  "photos": 0
+ }
+]

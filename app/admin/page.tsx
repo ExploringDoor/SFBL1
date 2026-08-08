@@ -292,6 +292,20 @@ export default function AdminPage() {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
+            /* Land on a whole tab, never halfway through a word. Without this
+               the strip stopped wherever the finger left it and the first
+               label read "EALTH" or "VITY". */
+            scroll-snap-type: x proximity;
+            scroll-padding-left: 4px;
+            /* Fade the edges so a partly-scrolled strip looks intentional and
+               signals there is more in both directions. */
+            -webkit-mask-image: linear-gradient(
+              to right, transparent 0, #000 14px, #000 calc(100% - 20px), transparent 100%);
+            mask-image: linear-gradient(
+              to right, transparent 0, #000 14px, #000 calc(100% - 20px), transparent 100%);
+          }
+          .le-admin-tabs > * {
+            scroll-snap-align: start;
           }
           .le-admin-tabs::-webkit-scrollbar {
             display: none;
@@ -532,7 +546,7 @@ export default function AdminPage() {
 
 function Shell({ heading, children }: { heading: string; children: React.ReactNode }) {
   return (
-    <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-5 px-6 py-12">
+    <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-5 px-3 py-5 pb-28 sm:px-6 sm:py-12 sm:pb-12">
       <header className="flex items-baseline justify-between">
         <h1 className="text-3xl font-bold tracking-tight">{heading} — Admin</h1>
       </header>
@@ -551,7 +565,17 @@ function SignedInHeader({
   return (
     <header className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
       <div className="text-slate-700">
-        Signed in as <span className="font-semibold">{email ?? "(none)"}</span>
+        {email ? (
+          <>
+            Signed in as <span className="font-semibold">{email}</span>
+          </>
+        ) : (
+          /* Password sign-in carries no email, so this said "(none)", which
+             reads as a bug rather than as a fact about how you signed in. */
+          <>
+            Signed in with the <span className="font-semibold">league password</span>
+          </>
+        )}
         <span className="ml-2 inline-block rounded bg-slate-900 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
           {role}
         </span>

@@ -1,0 +1,217 @@
+/* Snack-bar volunteer board. */
+
+.le-sb-count {
+  margin: 18px 0 4px;
+  font-size: 15px;
+}
+
+.le-sb-msg {
+  margin: 12px 0;
+  padding: 10px 13px;
+  border-radius: 9px;
+  font-size: 14px;
+}
+
+.le-sb-err {
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.4);
+  color: #7f1d1d;
+}
+
+.le-sb-ok {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #14532d;
+}
+
+.le-sb-empty {
+  margin: 22px 0;
+  padding: 20px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.04);
+  text-align: center;
+  font-size: 15px;
+}
+
+.le-sb-day {
+  margin-top: 26px;
+}
+
+.le-sb-date {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  opacity: 0.68;
+}
+
+.le-sb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(238px, 1fr));
+  gap: 12px;
+}
+
+.le-sb-card {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  padding: 14px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* A covered shift stays visible — the league wants to see it is handled —
+   but recedes so open slots are what catches the eye. */
+.le-sb-full {
+  background: rgba(0, 0, 0, 0.02);
+  opacity: 0.82;
+}
+
+.le-sb-time {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.le-sb-loc {
+  margin: 0;
+  font-size: 13.5px;
+  opacity: 0.75;
+}
+
+.le-sb-note {
+  margin: 0;
+  font-size: 12.5px;
+  opacity: 0.62;
+  font-style: italic;
+}
+
+.le-sb-claims {
+  list-style: none;
+  margin: 4px 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.le-sb-claims li {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.14);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.le-sb-open {
+  background: rgba(0, 0, 0, 0.04) !important;
+  border: 1px dashed rgba(0, 0, 0, 0.2) !important;
+  color: rgba(0, 0, 0, 0.45);
+  font-weight: 500 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 11px !important;
+}
+
+.le-sb-covered {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #14532d;
+}
+
+.le-sb-btn {
+  margin-top: auto;
+  padding: 8px 14px;
+  border-radius: 9px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  background: #fff;
+  font-weight: 700;
+  font-size: 13.5px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.le-sb-btn-go {
+  background: var(--brand-primary, #14213d);
+  border-color: transparent;
+  color: #fff;
+}
+
+.le-sb-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.le-sb-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.le-sb-input {
+  padding: 7px 9px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  font-size: 13.5px;
+  font-family: inherit;
+  width: 100%;
+}
+
+.le-sb-privacy {
+  margin: 2px 0;
+  font-size: 11.5px;
+  line-height: 1.45;
+  opacity: 0.65;
+}
+
+.le-sb-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.le-sb-actions .le-sb-btn {
+  margin-top: 0;
+  flex: 1 1 auto;
+}
+
+/* Page heading. Defined here rather than importing all of history.css, which
+   would pull an archive page's layout onto a sign-up board. */
+.le-sb-page .le-history-hd {
+  margin-bottom: 8px;
+}
+
+.le-sb-page .le-history-eyebrow {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--brand-primary);
+  margin: 0 0 6px;
+}
+
+.le-sb-page .le-history-title {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: clamp(36px, 5vw, 54px);
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+  color: var(--text-strong);
+  margin: 0;
+}
+
+.le-sb-page .le-history-sub {
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--muted);
+  max-width: 680px;
+  line-height: 1.5;
+}

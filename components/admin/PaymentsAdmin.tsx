@@ -554,7 +554,7 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
                 <button
                   type="button"
                   onClick={() => setExpanded(open ? null : t.id)}
-                  className="flex-1 min-w-[150px] text-left text-sm font-semibold text-slate-900"
+                  className="w-full sm:flex-1 sm:w-auto sm:min-w-[150px] text-left text-sm font-semibold text-slate-900"
                 >
                   {open ? "▾ " : "▸ "}
                   {t.name}
@@ -575,7 +575,7 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
                       }))
                     }
                     placeholder="0"
-                    className="w-24 rounded border border-slate-300 px-2 py-1 text-sm"
+                    className="w-20 sm:w-24 rounded border border-slate-300 px-2 py-1 text-sm"
                   />
                 </label>
                 {/* How they paid is a fixed set, so it is a dropdown. It used
@@ -591,7 +591,7 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
                       [t.id]: { ...tEntry, method: e.target.value },
                     }))
                   }
-                  className="w-32 rounded border border-slate-300 px-2 py-1 text-sm"
+                  className="w-28 sm:w-32 rounded border border-slate-300 px-2 py-1 text-sm"
                   aria-label={`How ${t.name} paid`}
                 >
                   <option value="">How paid…</option>

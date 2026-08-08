@@ -61,10 +61,37 @@ export function PwaShell() {
     mq.addEventListener("change", updateViewport);
 
     // 1. Register SW (idempotent — Chrome dedupes).
+    //
+    // EXCEPT on localhost. The dev server serves same-origin JS/CSS at STABLE
+    // paths (unlike Vercel's content-hashed build output), and the SW caches
+    // them stale-while-revalidate, so a code change only shows up on the SECOND
+    // reload — every review was one build behind. On localhost we instead
+    // actively unregister any existing SW and drop its caches, so a normal
+    // reload is always fresh. Production is unaffected: hashed filenames make
+    // SWR correct there, and this branch never runs off localhost.
+    const host = window.location.hostname;
+    const isLocalDev =
+      host === "localhost" ||
+      host.endsWith(".localhost") ||
+      host === "127.0.0.1" ||
+      host === "[::1]";
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker
-        .register(SW_PATH)
-        .catch((e) => console.warn("[PwaShell] SW register failed:", e));
+      if (isLocalDev) {
+        navigator.serviceWorker
+          .getRegistrations()
+          .then((regs) => regs.forEach((r) => r.unregister()))
+          .catch(() => {});
+        if (typeof caches !== "undefined") {
+          caches
+            .keys()
+            .then((keys) => keys.forEach((k) => caches.delete(k)))
+            .catch(() => {});
+        }
+      } else {
+        navigator.serviceWorker
+          .register(SW_PATH)
+          .catch((e) => console.warn("[PwaShell] SW register failed:", e));
+      }
     }
 
     // 2. beforeinstallprompt — modern browsers (Chrome, Edge, Brave).

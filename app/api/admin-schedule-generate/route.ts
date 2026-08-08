@@ -18,6 +18,11 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import {
+  findConflicts,
+  type ConflictGame,
+  type ConflictTeam,
+} from "@/lib/schedule-conflicts";
 
 export const runtime = "nodejs";
 
@@ -97,7 +102,12 @@ export async function POST(req: Request) {
     const rawTs = (body as { teamSettings?: unknown }).teamSettings;
     const teamSettings: Record<
       string,
-      { organization?: string; homeField?: string; unavailable?: string[] }
+      {
+        organization?: string;
+        homeField?: string;
+        unavailable?: string[];
+        allowedFields?: string[];
+      }
     > = {};
     if (rawTs && typeof rawTs === "object") {
       for (const [teamId, v] of Object.entries(rawTs as Record<string, unknown>)) {
@@ -114,12 +124,24 @@ export async function POST(req: Request) {
               ),
             ].sort()
           : [];
+        // Fields this team may play at at all. An empty list is meaningful in
+        // the UI ("no restriction") and is simply not stored.
+        const af = Array.isArray(s.allowedFields)
+          ? [
+              ...new Set(
+                s.allowedFields
+                  .map((f) => String(f).trim().slice(0, 120))
+                  .filter(Boolean),
+              ),
+            ]
+          : [];
         // Skip teams with nothing set, so the doc stays readable.
-        if (!org && !hf && un.length === 0) continue;
+        if (!org && !hf && un.length === 0 && af.length === 0) continue;
         teamSettings[teamId] = {
           ...(org ? { organization: org } : {}),
           ...(hf ? { homeField: hf } : {}),
           ...(un.length ? { unavailable: un } : {}),
+          ...(af.length ? { allowedFields: af } : {}),
         };
       }
     }
@@ -203,6 +225,80 @@ export async function POST(req: Request) {
       });
     }
 
+    // ---- conflict gate ----------------------------------------------------
+    // The generator already avoids conflicts, and the admin UI previews them,
+    // but neither is authoritative: a preview can be minutes stale, two admins
+    // can generate at once, and games can be hand-posted straight to this
+    // endpoint. So the check runs again here against live data, and this is the
+    // one that decides. `force: true` lets an admin knowingly override a
+    // warning-free-but-conflicting write; it is recorded in the audit entry.
+    const force = (body as { force?: unknown }).force === true;
+
+    const rulesSnap = await db
+      .doc(`leagues/${leagueId}/site_config/schedule_rules`)
+      .get();
+    const teamSettings = (rulesSnap.data()?.team_settings ?? {}) as Record<
+      string,
+      { allowedFields?: string[]; unavailable?: string[] }
+    >;
+
+    // Only games on the dates being written can possibly conflict, so the read
+    // is scoped to those rather than pulling a whole season.
+    const dates = [...new Set(clean.map((g) => String(g.date)))].sort();
+    const existingGames: ConflictGame[] = [];
+    if (dates.length > 0) {
+      // Firestore caps an `in` filter at 30 values; a range over the sorted
+      // bounds covers any date span in one query and is filtered below.
+      const snap = await db
+        .collection(`leagues/${leagueId}/games`)
+        .where("date", ">=", dates[0]!)
+        .where("date", "<=", dates[dates.length - 1]!)
+        .get();
+      const wanted = new Set(dates);
+      for (const d of snap.docs) {
+        const data = d.data();
+        if (!wanted.has(String(data.date ?? ""))) continue;
+        existingGames.push({
+          id: d.id,
+          date: String(data.date ?? ""),
+          time: String(data.time ?? ""),
+          field: String(data.field ?? ""),
+          away_team_id: String(data.away_team_id ?? ""),
+          home_team_id: String(data.home_team_id ?? ""),
+          division: data.division ? String(data.division) : undefined,
+        });
+      }
+    }
+
+    const teamsForCheck: ConflictTeam[] = Object.entries(teamSettings).map(
+      ([id, s]) => ({
+        id,
+        allowedFields: s?.allowedFields ?? null,
+        unavailable: s?.unavailable ?? null,
+      }),
+    );
+
+    const conflicts = findConflicts(
+      clean as unknown as ConflictGame[],
+      {
+        existingGames,
+        teams: teamsForCheck,
+        gameMinutes: Number(rulesSnap.data()?.game_minutes ?? 0) || 0,
+      },
+    );
+    const blocking = conflicts.filter((c) => c.severity === "error");
+    if (blocking.length > 0 && !force) {
+      return NextResponse.json(
+        {
+          error: `${blocking.length} scheduling conflict${blocking.length === 1 ? "" : "s"}. Nothing was saved.`,
+          conflicts: blocking.slice(0, 50),
+          conflictCount: blocking.length,
+          warnings: conflicts.filter((c) => c.severity === "warning").slice(0, 50),
+        },
+        { status: 409 },
+      );
+    }
+
     const col = db.collection(`leagues/${leagueId}/games`);
     for (let i = 0; i < clean.length; i += BATCH_LIMIT) {
       const batch = db.batch();
@@ -218,9 +314,18 @@ export async function POST(req: Request) {
       by_uid: decoded.uid,
       count: clean.length,
       batch: now,
+      // A forced save is the one case where games were written over a known
+      // conflict. Recorded so "why are two games on that field" is answerable.
+      ...(blocking.length > 0 ? { forced_over_conflicts: blocking.length } : {}),
     });
 
-    return NextResponse.json({ ok: true, created: clean.length, batch: now });
+    return NextResponse.json({
+      ok: true,
+      created: clean.length,
+      batch: now,
+      warnings: conflicts.filter((c) => c.severity === "warning").slice(0, 50),
+      ...(blocking.length > 0 ? { forcedOverConflicts: blocking.length } : {}),
+    });
   }
 
   // ---- undo the last generated batch ------------------------------------

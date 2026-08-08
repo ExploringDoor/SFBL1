@@ -44,6 +44,7 @@ interface Body {
   division?: unknown;
   ageGroup?: unknown;
   logo_url?: unknown;
+  gamechanger_url?: unknown;
   // Per-team captain/manager password. Stored on the PRIVATE
   // teams/{id}/_private/auth subdoc (the public team doc is
   // world-readable, so a password there would leak). Empty/omitted
@@ -206,6 +207,23 @@ export async function POST(req: Request) {
           error:
             "logo_url must start with /, https://, or http:// (or empty)",
         },
+        { status: 400 },
+      );
+    }
+  }
+
+  // Optional per-team GameChanger link. Only http(s) is accepted — this value
+  // is rendered straight into an href on the public team page, so a
+  // javascript: URL here would be stored XSS. Empty clears it.
+  if (typeof body.gamechanger_url === "string") {
+    const v = body.gamechanger_url.trim();
+    if (v === "") {
+      update.gamechanger_url = null;
+    } else if (/^https?:\/\//i.test(v) && v.length <= 500) {
+      update.gamechanger_url = v;
+    } else {
+      return NextResponse.json(
+        { error: "GameChanger link must start with http:// or https://" },
         { status: 400 },
       );
     }

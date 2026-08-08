@@ -49,6 +49,13 @@ const HEADER_SLUGS: Record<string, HeaderEntry[]> = {
     "rules",
     "team-registration",
   ],
+  // LCYBL — slim super-wide photographic strips with the page name baked in
+  // (cream text + gold underline on a navy panel). Rendered as a fixed-ratio
+  // band (see PageBanner `strip`), not word art, so page <h1>s stay visible.
+  // "home" is included: the floating DvslHero is turned off (flags.hide_home_hero)
+  // so the homepage gets the same full-bleed strip as the interior pages instead
+  // of a contained banner marooned in white gutters.
+  lcybl: ["home", "scores", "schedule", "standings", "teams"],
 };
 
 // Tenants whose header art is WORD art — the image itself reads "Tournaments",
@@ -75,7 +82,7 @@ export function bannerCarriesTitle(
 // downloading in full — 268KB for the home banner alone, to paint it at a
 // quarter of that width. Only listed here when the variants actually exist on
 // disk; a missing candidate in a srcset is a broken image, not a fallback.
-const HAS_SMALL_HEADERS = new Set(["island", "coybl"]);
+const HAS_SMALL_HEADERS = new Set(["island", "coybl", "lcybl"]);
 
 /** Phone-sized banner variants, keyed the same way as headerImagesFor. Empty
  *  for tenants without them, which makes PageBanner emit a plain src. */

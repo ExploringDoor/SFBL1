@@ -1,0 +1,679 @@
+[
+ {
+  "season": "2025",
+  "divisions": [
+   {
+    "division": "10u Section 1",
+    "team": "HEMPFIELD BLACK",
+    "runner_up": "LS BLUE"
+   },
+   {
+    "division": "10u Section 2",
+    "team": "LS HEATERS",
+    "runner_up": "MT LIGHTNING"
+   },
+   {
+    "division": "12u Section 1",
+    "team": "Mountville Indians",
+    "runner_up": null,
+    "disputed": true
+   },
+   {
+    "division": "12u Section 2",
+    "team": "MOUNTVILLE PHILLIES",
+    "runner_up": "LS BLACK"
+   },
+   {
+    "division": "12u Section 3",
+    "team": "MT CHARGERS",
+    "runner_up": "HEMPFIELD BLACK"
+   },
+   {
+    "division": "14u Section 1",
+    "team": "HEMPFIELD BLACK",
+    "runner_up": "MANHEIM LIONS"
+   },
+   {
+    "division": "14u Section 2",
+    "team": "DONEGAL GREEN",
+    "runner_up": "CEDAR CREST"
+   },
+   {
+    "division": "14u Section 3",
+    "team": "MT CHARGERS",
+    "runner_up": "HEMPFIELD BLACK"
+   }
+  ]
+ },
+ {
+  "season": "2024",
+  "divisions": [
+   {
+    "division": "10u Section 1",
+    "team": "HEMPFIELD BLACK",
+    "runner_up": "LS - ATTA BOYS"
+   },
+   {
+    "division": "10u Section 2",
+    "team": "LS - BLUE",
+    "runner_up": "HEMPFIELD GREY"
+   },
+   {
+    "division": "12u Section 1",
+    "team": "MANHEIM",
+    "runner_up": "HEMPFIELD BLACK"
+   },
+   {
+    "division": "12u Section Two",
+    "team": "Warwick Braves",
+    "runner_up": "SOLANCO BLACK"
+   },
+   {
+    "division": "12u Section 3",
+    "team": "E-TOWN ORIOLES",
+    "runner_up": "MANHEIM"
+   },
+   {
+    "division": "14u Section 1",
+    "team": "MANHEIM TOWNSHIP STREAKS",
+    "runner_up": "CEDAR CREST"
+   },
+   {
+    "division": "14u Section 2",
+    "team": "Warwick White Sox",
+    "runner_up": "MOUNTVILLE RED SOX",
+    "disputed": true
+   },
+   {
+    "division": "14U SECTION THREE",
+    "team": "CEDAR CREST",
+    "runner_up": "E-TOWN WHITE"
+   }
+  ]
+ },
+ {
+  "season": "2023",
+  "divisions": [
+   {
+    "division": "10u Section 1",
+    "team": "MOUNTVILLE CUBS",
+    "runner_up": "MANHEIM VFW"
+   },
+   {
+    "division": "10u Section 2",
+    "team": "MOUNTVILLE NATIONALS",
+    "runner_up": "MOUNTVILLE PIRATES"
+   },
+   {
+    "division": "12u Section 1",
+    "team": "MANHEIM VFW",
+    "runner_up": "DONEGAL INDIANS"
+   },
+   {
+    "division": "12u Section 2",
+    "team": "GARDEN SPOT SPARTANS",
+    "runner_up": "MOUNTVILLE YANKEES"
+   },
+   {
+    "division": "12u Section 3",
+    "team": "CV BUCKS",
+    "runner_up": "MT CHARGERS"
+   },
+   {
+    "division": "14u Section 1",
+    "team": "L-S WHITE SOX",
+    "runner_up": "DONEGAL INDIANS"
+   },
+   {
+    "division": "14u Section 2",
+    "team": "L-S RED SOX",
+    "runner_up": "MOUNTVILLE RED SOX"
+   },
+   {
+    "division": "14u Section 3",
+    "team": "LS THUNDER",
+    "runner_up": "DONEGAL GREEN"
+   }
+  ]
+ },
+ {
+  "season": "2022",
+  "divisions": [
+   {
+    "division": "10u Section 1",
+    "team": "PENN MANOR COMETS",
+    "runner_up": "MOUNTVILLE CUBS"
+   },
+   {
+    "division": "10u Section 2",
+    "team": "MOUNTVILLE PIRATES",
+    "runner_up": "MANHEIM MAROON"
+   },
+   {
+    "division": "12u Section 1",
+    "team": "WARWICK PHILLIES",
+    "runner_up": "MANHEIM TOWNSHIP STREAKS"
+   },
+   {
+    "division": "12u Section 2",
+    "team": "MANHEIM TOWNSHIP LIGHTNING",
+    "runner_up": "COLUMBIA RED"
+   },
+   {
+    "division": "12u Section 3",
+    "team": "MOUNTVILLE TIGERS",
+    "runner_up": "MANHEIM TOWNSHIP STORM"
+   },
+   {
+    "division": "14u Section 1",
+    "team": "MANHEIM LIONS",
+    "runner_up": "L-S WHITE SOX"
+   },
+   {
+    "division": "14u Section 2",
+    "team": "CEDAR CREST",
+    "runner_up": "CV BUCKS"
+   },
+   {
+    "division": "14u Section 3",
+    "team": "E-TOWN BLUE",
+    "runner_up": "L-S PHILLIES"
+   }
+  ]
+ },
+ {
+  "season": "2021",
+  "divisions": [
+   {
+    "division": "10u Section One",
+    "team": "DONEGAL INDIANS",
+    "runner_up": "MOUNTVILLE CUBS"
+   },
+   {
+    "division": "10u Section Two Year End Tournament",
+    "team": "MOUNTVILLE NATS",
+    "runner_up": "WARWICK DIAMONDBACKS"
+   },
+   {
+    "division": "12u Section 1",
+    "team": "MOUNTVILLE INDIANS",
+    "runner_up": "DONEGAL INDIANS"
+   },
+   {
+    "division": "12u Section 2",
+    "team": "MOUNTVILLE PHILLIES",
+    "runner_up": "MOUNTVILLE YANKEES"
+   },
+   {
+    "division": "12u Section Three Year End",
+    "team": "MOUNTVILLE TIGERS",
+    "runner_up": "DONEGAL"
+   },
+   {
+    "division": "14u Section 1",
+    "team": "MANHEIM LIONS",
+    "runner_up": "MOUNTVILLE ANGELS"
+   },
+   {
+    "division": "14u Section 2",
+    "team": "MOUNTVILLE RED SOX",
+    "runner_up": "COLUMBIA RED"
+   },
+   {
+    "division": "14u Section Three Year End Tournament",
+    "team": "SOLANCO BLACK",
+    "runner_up": "COCALICO"
+   }
+  ]
+ },
+ {
+  "season": "2020",
+  "divisions": [
+   {
+    "division": "10u Section 1",
+    "team": "MOUNTVILLE CUBS",
+    "runner_up": "MANHEIM TOWNSHIP STREAKS"
+   },
+   {
+    "division": "10u Section Two Year End Tournament",
+    "team": "MOUNTVILLE NATS",
+    "runner_up": "MOUNTVILLE GIANTS"
+   },
+   {
+    "division": "12u Section One",
+    "team": "PENN MANOR COMETS",
+    "runner_up": "MANHEIM TOWNSHIP STREAKS"
+   },
+   {
+    "division": "12u Section 2",
+    "team": "MOUNTVILLE YANKEES",
+    "runner_up": "MANHEIM TOWNSHIP THUNDER"
+   },
+   {
+    "division": "12u Section Three Year End",
+    "team": "DONEGAL BLACK",
+    "runner_up": "MOUNTVILLE TIGERS"
+   },
+   {
+    "division": "14u Section One",
+    "team": "MANHEIM TOWNSHIP STREAKS",
+    "runner_up": "MOUNTVILLE ANGELS"
+   },
+   {
+    "division": "14u Section 2",
+    "team": "MOUNT JOY",
+    "runner_up": "E-TOWN BLACK"
+   },
+   {
+    "division": "14u Section Three Year End",
+    "team": "PENN MANOR BLUE",
+    "runner_up": "MOUNTVILLE ORIOLES"
+   }
+  ]
+ },
+ {
+  "season": "2019",
+  "divisions": [
+   {
+    "division": "10u Section 1",
+    "team": "#1 Mountville Cubs",
+    "runner_up": "#2 MT Steaks"
+   },
+   {
+    "division": "10u Section Two",
+    "team": "#D2 Mountville Nationals",
+    "runner_up": "#D1 Mountville Pirates"
+   },
+   {
+    "division": "New LNP Tournament",
+    "team": "#3 Penn Manor",
+    "runner_up": "#1 Mountville Indians"
+   },
+   {
+    "division": "12u Section 2",
+    "team": "#3 Columbia Gold",
+    "runner_up": "#D1 MT Thunder"
+   },
+   {
+    "division": "12u Section 3",
+    "team": "#D1 Manheim VFW",
+    "runner_up": "#7 Donegal Indians"
+   },
+   {
+    "division": "LNP Tournament (Wood Bat)",
+    "team": "#2 Mountville Angels",
+    "runner_up": "#4 Lititz VFW"
+   },
+   {
+    "division": "14u Section 2",
+    "team": "#3 Mountville Red Sox",
+    "runner_up": "#D1 Man Twp Streaks"
+   },
+   {
+    "division": "14u Section 3",
+    "team": "#2 Mountville Orioles",
+    "runner_up": "#D1 Mountville Yankees"
+   }
+  ]
+ },
+ {
+  "season": "2018",
+  "divisions": [
+   {
+    "division": "10U Section One",
+    "team": "#1 Manheim Twp. Streaks",
+    "runner_up": "#2 Manheim VFW"
+   },
+   {
+    "division": "10u Section 2",
+    "team": "#D2 CV Buckskins",
+    "runner_up": "#D1 Mountville Pirates"
+   },
+   {
+    "division": "New LNP Tournament",
+    "team": "#1 Mountville Indians",
+    "runner_up": "#4 Manheim Twp Streaks"
+   },
+   {
+    "division": "12u Section Two",
+    "team": "#D1 Mountville Phillies",
+    "runner_up": "#D2 Mountville Braves"
+   },
+   {
+    "division": "12u Section 3",
+    "team": "#D1 Mountville Tigers",
+    "runner_up": "#2 CV Red"
+   },
+   {
+    "division": "LNP Tournament (Wood Bat)",
+    "team": "#1 Man Twp Streaks",
+    "runner_up": "#2 Manheim Lions"
+   },
+   {
+    "division": "14u Section Two",
+    "team": "#4 Mountville Blue Jays",
+    "runner_up": "#3 Donegal"
+   },
+   {
+    "division": "14u Section 3",
+    "team": "#3 Lancaster - SALSA",
+    "runner_up": "#D1 Mountville Orioles"
+   }
+  ]
+ },
+ {
+  "season": "2017",
+  "divisions": [
+   {
+    "division": "10u Section 1",
+    "team": "Manheim VFW",
+    "runner_up": "Warwick Cardinals"
+   },
+   {
+    "division": "10u Section 2",
+    "team": "Mountville Pirates",
+    "runner_up": "MT Lightning"
+   }
+  ]
+ },
+ {
+  "season": "2016",
+  "divisions": [
+   {
+    "division": "10u Section 1",
+    "team": "Manheim Township Blue Streaks",
+    "runner_up": null
+   },
+   {
+    "division": "10u Section 2 Year End Tournament",
+    "team": "Mountville Pirates",
+    "runner_up": null
+   }
+  ]
+ },
+ {
+  "season": "2015",
+  "divisions": [
+   {
+    "division": "10u Section 1",
+    "team": "Manheim VFW",
+    "runner_up": "Ephrata Merlins"
+   },
+   {
+    "division": "10u Section 2",
+    "team": "Mountville Pirates",
+    "runner_up": "Mountville Giants"
+   },
+   {
+    "division": "12u Section 1 / LNP",
+    "team": "Manheim Township Blue Streaks",
+    "runner_up": null
+   },
+   {
+    "division": "12u Section 2",
+    "team": "Mountville Phillies",
+    "runner_up": "Cocalico"
+   },
+   {
+    "division": "12u Section 3",
+    "team": "Ephrata Archers",
+    "runner_up": null
+   },
+   {
+    "division": "14u Section 1 LNP",
+    "team": "Mountville Angels",
+    "runner_up": "E-Town Navy"
+   },
+   {
+    "division": "14u Section 2",
+    "team": "Mountville Red Sox",
+    "runner_up": null
+   },
+   {
+    "division": "14u Section 3",
+    "team": "Mountville Yankees",
+    "runner_up": null
+   }
+  ]
+ },
+ {
+  "season": "2014",
+  "divisions": [
+   {
+    "division": "10u Section 1",
+    "team": "Warwick Cardinals",
+    "runner_up": "Manheim Township Blue Streaks"
+   },
+   {
+    "division": "10u Section 2",
+    "team": "SALSA",
+    "runner_up": "Cocalico Eagles"
+   },
+   {
+    "division": "12u Section 1 / New Era",
+    "team": "Manheim Township Streaks",
+    "runner_up": "Warwick Phillies"
+   },
+   {
+    "division": "12u Section 2",
+    "team": "Manheim Township Lightning",
+    "runner_up": "Manheim VFW"
+   },
+   {
+    "division": "12u Section 3",
+    "team": "Manheim Township Lightning",
+    "runner_up": "Ephrata Chargers"
+   },
+   {
+    "division": "14u Section 1 / New Era",
+    "team": "Donegal",
+    "runner_up": "Lititz VFW"
+   },
+   {
+    "division": "14u Section 2",
+    "team": "E-Town Gray",
+    "runner_up": "Cocalico Eagles"
+   },
+   {
+    "division": "14u Section 3",
+    "team": "Manor Ridge",
+    "runner_up": "SWS Dodgers"
+   }
+  ]
+ },
+ {
+  "season": "2013",
+  "divisions": [
+   {
+    "division": "10u Section 1",
+    "team": "Manheim Township Blue Streaks",
+    "runner_up": "Ephrata Merlins"
+   },
+   {
+    "division": "10u Section 2",
+    "team": "Mountville Giants",
+    "runner_up": "Mountville Pirates"
+   },
+   {
+    "division": "12u Section 1 / New Era Tournament",
+    "team": "Warwick Phillies",
+    "runner_up": "Mountville Indians"
+   }
+  ]
+ },
+ {
+  "season": "2012",
+  "divisions": [
+   {
+    "division": "10u Section 1",
+    "team": "Hempfield Black",
+    "runner_up": "Warwick Cardinals"
+   },
+   {
+    "division": "12u Section 1",
+    "team": "Mountville Indians",
+    "runner_up": "Warwick Phillies"
+   },
+   {
+    "division": "12u Section 2",
+    "team": "Warwick Braves",
+    "runner_up": "Garden Spot Blue"
+   },
+   {
+    "division": "12u Section 3",
+    "team": "Manheim Township Lightning",
+    "runner_up": "SALSA"
+   },
+   {
+    "division": "14u Section 1",
+    "team": "SWS White Sox",
+    "runner_up": "E-Town Navy"
+   },
+   {
+    "division": "14u Section 2",
+    "team": "St. Leo Lions",
+    "runner_up": null
+   },
+   {
+    "division": "14u Section 3",
+    "team": "SALSA",
+    "runner_up": "Penryn"
+   }
+  ]
+ },
+ {
+  "season": "2011",
+  "divisions": [
+   {
+    "division": "10u Section 1",
+    "team": "Mountville Cubs",
+    "runner_up": "Manheim VFW"
+   },
+   {
+    "division": "10u Section 2",
+    "team": "Warwick Yankees",
+    "runner_up": "Hempfield Black"
+   },
+   {
+    "division": "12u Section 1",
+    "team": "Warwick Phillies",
+    "runner_up": "Mountville Indians"
+   },
+   {
+    "division": "12u Section 2",
+    "team": "Garden Spot Blue",
+    "runner_up": "Manheim Township Black"
+   },
+   {
+    "division": "12u Section 3",
+    "team": "Manheim Township Blue",
+    "runner_up": "Manheim Township Black"
+   },
+   {
+    "division": "14u Section 1",
+    "team": "Manheim Lions",
+    "runner_up": null
+   },
+   {
+    "division": "14u Section 2",
+    "team": "Solanco Black",
+    "runner_up": "Pequea Valley Red"
+   },
+   {
+    "division": "14u Section 3",
+    "team": "SALSA",
+    "runner_up": "Warwick White Sox"
+   }
+  ]
+ },
+ {
+  "season": "2010",
+  "divisions": [
+   {
+    "division": "10u Section 1",
+    "team": "Donegal",
+    "runner_up": "Manheim VFW"
+   },
+   {
+    "division": "10u Section 2",
+    "team": "SALSA",
+    "runner_up": "Mountville"
+   },
+   {
+    "division": "12u Section 1",
+    "team": "Ephrata Green Dragons",
+    "runner_up": "Warwick Phillies"
+   },
+   {
+    "division": "12u Section 2",
+    "team": "Hempfield Black #2",
+    "runner_up": "Manor Ridge"
+   },
+   {
+    "division": "12u Section 3",
+    "team": "St. Leo Lions",
+    "runner_up": "Manheim Township Black"
+   },
+   {
+    "division": "14u Section 1",
+    "team": "Solanco Gold",
+    "runner_up": "Lititz VFW"
+   },
+   {
+    "division": "14u Section 2",
+    "team": "Baron Steigel Lions",
+    "runner_up": "Cocalico Blue"
+   },
+   {
+    "division": "14u Section 3",
+    "team": "Manor Ridge",
+    "runner_up": "Manheim Township Streaks"
+   }
+  ]
+ },
+ {
+  "season": "2009",
+  "divisions": [
+   {
+    "division": "10u Section 1",
+    "team": "Mountville Cubs",
+    "runner_up": null
+   },
+   {
+    "division": "(division not printed on this page)",
+    "team": "SALSA 10u",
+    "runner_up": null
+   },
+   {
+    "division": "12u Section 1",
+    "team": "Hempfield Black",
+    "runner_up": null
+   },
+   {
+    "division": "12u Section 2",
+    "team": "Lititz Braves",
+    "runner_up": null
+   },
+   {
+    "division": "(division not printed on this page)",
+    "team": "Rohrerstown Blue",
+    "runner_up": null
+   },
+   {
+    "division": "14u Section 1",
+    "team": "Hempfield Black",
+    "runner_up": null
+   },
+   {
+    "division": "14u Section 2",
+    "team": "Solanco Gold",
+    "runner_up": null
+   },
+   {
+    "division": "14u Section 3",
+    "team": "Manheim Black",
+    "runner_up": null
+   }
+  ]
+ }
+]

@@ -59,6 +59,11 @@ export default async function ScoresPage({
     );
   }
 
+  // LMLL-flagship scoreboard chrome (pill tabs, clean week strip, no stats
+  // bar, banner carries the page title). Opt-in per tenant so the DVSL boxed
+  // look every other league ships stays put.
+  const lmllStyle = config?.flags?.lmll_scoreboard === true;
+
   const { games, teams } = await loadScores(tenantId);
   const allFinal = games.filter(
     (g) => g.status === "final" || g.status === "approved",
@@ -178,8 +183,8 @@ export default async function ScoresPage({
   }
 
   return (
-    <main className="container py-10">
-      {!config?.flags?.hide_page_titles && (
+    <main className={"container py-10" + (lmllStyle ? " le-lmll-sb" : "")}>
+      {!config?.flags?.hide_page_titles && !lmllStyle && (
         <header className="mb-6">
           <h1 className="font-display" style={{ fontSize: "clamp(40px, 6vw, 64px)" }}>
             <span style={{ color: "var(--text-strong)" }}>Season</span>{" "}
@@ -238,7 +243,7 @@ export default async function ScoresPage({
             basePath="/scores"
           />
 
-          {weekSummary && weekSummary.gamesPlayed > 0 && (
+          {!lmllStyle && weekSummary && weekSummary.gamesPlayed > 0 && (
             <div className="scores-week-summary">
               <div className="scores-week-summary-stat">
                 <span className="scores-week-summary-num">
@@ -289,10 +294,20 @@ export default async function ScoresPage({
         <div className="space-y-8 mt-6">
           {dayGroups.map(([date, list]) => (
             <section key={date}>
-              <header className="mb-3 flex items-baseline gap-3">
+              <header
+                className={
+                  "mb-3 gap-3 " +
+                  (lmllStyle
+                    ? "le-sb-dayhead"
+                    : "flex items-baseline")
+                }
+              >
                 <h3 className="font-display" style={{ fontSize: 24 }}>
                   {formatDayHeading(date)}
                 </h3>
+                {lmllStyle && (
+                  <span className="le-sb-datepill">{shortDate(date)}</span>
+                )}
                 <span className="text-xs" style={{ color: "var(--muted)" }}>
                   {list.length} game{list.length === 1 ? "" : "s"}
                 </span>
@@ -412,6 +427,16 @@ function formatDayHeading(yyyyMmDd: string): string {
   return d.toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+// Short "Jun 29" label for the LMLL-style navy date pill beside the day heading.
+function shortDate(yyyyMmDd: string): string {
+  const d = new Date(yyyyMmDd + "T12:00:00Z");
+  return d.toLocaleDateString("en-US", {
+    month: "short",
     day: "numeric",
     timeZone: "UTC",
   });

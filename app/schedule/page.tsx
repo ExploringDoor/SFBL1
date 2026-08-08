@@ -66,6 +66,9 @@ export default async function SchedulePage({
     );
   }
 
+  // LMLL-flagship scoreboard chrome — see /scores. Opt-in per tenant.
+  const lmllStyle = config?.flags?.lmll_scoreboard === true;
+
   const { games, teams } = await loadSchedule(tenantId);
   // Show every game in the season — scheduled, final, postponed,
   // cancelled — so the schedule page is a real season-long calendar
@@ -157,9 +160,9 @@ export default async function SchedulePage({
   const dayGroups = [...upcomingDayGroups, ...pastDayGroups];
 
   return (
-    <main className="container py-10">
+    <main className={"container py-10" + (lmllStyle ? " le-lmll-sb" : "")}>
       <header className="mb-6 flex items-end justify-between gap-4 flex-wrap">
-        {!config?.flags?.hide_page_titles ? (
+        {!config?.flags?.hide_page_titles && !lmllStyle ? (
           <div>
             <h1 className="font-display" style={{ fontSize: "clamp(40px, 6vw, 64px)" }}>
               <span style={{ color: "var(--text-strong)" }}>Season</span>{" "}
@@ -276,6 +279,7 @@ export default async function SchedulePage({
               teams={teams}
               isFirstUpcomingDay={date === upcomingDayGroups[0]?.[0]}
               compact={config?.flags?.stats_enabled === false}
+              lmllStyle={lmllStyle}
             />
           ))}
           {upcomingDayGroups.length > 0 && pastDayGroups.length > 0 && (
@@ -303,6 +307,7 @@ export default async function SchedulePage({
               teams={teams}
               isFirstUpcomingDay={false}
               compact={config?.flags?.stats_enabled === false}
+              lmllStyle={lmllStyle}
             />
           ))}
             </div>
@@ -420,6 +425,16 @@ function formatDayHeading(yyyyMmDd: string): string {
   });
 }
 
+// Short "Jun 29" label for the LMLL-style navy date pill beside the day heading.
+function shortDate(yyyyMmDd: string): string {
+  const d = new Date(yyyyMmDd + "T12:00:00Z");
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
 function formatRecord(w: number, l: number, t: number): string {
   return t > 0 ? `${w}-${l}-${t}` : `${w}-${l}`;
 }
@@ -438,19 +453,26 @@ function DaySection({
   teams,
   isFirstUpcomingDay,
   compact,
+  lmllStyle,
 }: {
   date: string;
   list: ScheduleGame[];
   teams: Record<string, TeamMeta>;
   isFirstUpcomingDay: boolean;
   compact: boolean;
+  lmllStyle: boolean;
 }) {
   return (
     <section>
-      <header className="mb-3 flex items-baseline gap-3">
+      <header
+        className={
+          "mb-3 gap-3 " + (lmllStyle ? "le-sb-dayhead" : "flex items-baseline")
+        }
+      >
         <h3 className="font-display" style={{ fontSize: 24 }}>
           {formatDayHeading(date)}
         </h3>
+        {lmllStyle && <span className="le-sb-datepill">{shortDate(date)}</span>}
         <span className="text-xs" style={{ color: "var(--muted)" }}>
           {list.length} game{list.length === 1 ? "" : "s"}
         </span>

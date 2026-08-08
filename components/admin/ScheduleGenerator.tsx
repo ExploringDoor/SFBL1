@@ -22,6 +22,7 @@ import {
   type GeneratorField,
   type GeneratorResult,
 } from "@/lib/schedule-generator";
+import type { Conflict, ConflictGame } from "@/lib/schedule-conflicts";
 
 interface TeamOpt {
   id: string;
@@ -145,8 +146,22 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
   const [blocked, setBlocked] = useState<[string, string][]>([]);
   // Per-team scheduling settings: club, home field, dates they cannot play.
   const [teamCfg, setTeamCfg] = useState<
-    Record<string, { organization?: string; homeField?: string; unavailable?: string[] }>
+    Record<
+      string,
+      {
+        organization?: string;
+        homeField?: string;
+        unavailable?: string[];
+        allowedFields?: string[];
+      }
+    >
   >({});
+  // Every game already on the schedule, across ALL divisions. The generator
+  // needs these or it will happily book a field another division already took.
+  const [existingGames, setExistingGames] = useState<ConflictGame[]>([]);
+  // Conflicts the server refused to write, kept so the admin can see exactly
+  // what collided rather than just "save failed".
+  const [saveConflicts, setSaveConflicts] = useState<Conflict[] | null>(null);
   const [newUnavail, setNewUnavail] = useState<Record<string, string>>({});
   const [pendingTeam, setPendingTeam] = useState<string | null>(null);
   const [rulesSaved, setRulesSaved] = useState(false);
@@ -158,11 +173,32 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
     (async () => {
       try {
         const db = getDb();
-        const [teamSnap, rulesSnap, fieldsSnap] = await Promise.all([
+        const [teamSnap, rulesSnap, fieldsSnap, gameSnap] = await Promise.all([
           getDocs(collection(db, `leagues/${leagueId}/teams`)),
           getDoc(doc(db, `leagues/${leagueId}/site_config/schedule_rules`)),
           getDoc(doc(db, `leagues/${leagueId}/site_config/fields`)),
+          getDocs(collection(db, `leagues/${leagueId}/games`)),
         ]);
+
+        // Read every existing game once, up front. These are what the new
+        // schedule has to fit around: other divisions, earlier generations,
+        // and anything hand-added in the Schedule editor.
+        const existing: ConflictGame[] = [];
+        gameSnap.forEach((d) => {
+          const gd = d.data() as Record<string, unknown>;
+          const date = String(gd.date ?? "").slice(0, 10);
+          if (!date) return;
+          existing.push({
+            id: d.id,
+            date,
+            time: String(gd.time ?? ""),
+            field: String(gd.field ?? ""),
+            away_team_id: String(gd.away_team_id ?? ""),
+            home_team_id: String(gd.home_team_id ?? ""),
+            division: gd.division ? String(gd.division) : undefined,
+          });
+        });
+        setExistingGames(existing);
         const rows: TeamOpt[] = [];
         teamSnap.forEach((d) => {
           const t = d.data() as Record<string, unknown>;
@@ -265,7 +301,18 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
       body: JSON.stringify({ leagueId, ...body }),
     });
     const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-    if (!res.ok) throw new Error(String(data.error ?? `HTTP ${res.status}`));
+    if (!res.ok) {
+      // Carry the payload on the error: a 409 from the conflict gate ships the
+      // offending games, and dropping them here would reduce a precise,
+      // fixable report to "save failed".
+      const err = new Error(String(data.error ?? `HTTP ${res.status}`)) as Error & {
+        data?: Record<string, unknown>;
+        status?: number;
+      };
+      err.data = data;
+      err.status = res.status;
+      throw err;
+    }
     return data;
   }
 
@@ -294,6 +341,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
     if (genFields.length === 0) return setError("Add at least one field with a time.");
     if (picked.size < 2) return setError("Select at least two teams.");
 
+    setSaveConflicts(null);
     setResult(
       generateSchedule({
         teams: [...picked].map((id) => ({
@@ -302,6 +350,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
           organization: teamCfg[id]?.organization ?? null,
           homeField: teamCfg[id]?.homeField ?? null,
           unavailable: teamCfg[id]?.unavailable ?? [],
+          allowedFields: teamCfg[id]?.allowedFields ?? [],
         })),
         startDate,
         ...(useEndDate ? { endDate } : { weeks }),
@@ -312,28 +361,50 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
         weeklyPairing: pairing,
         blockedPairs: blocked,
         division: ageGroup || division || undefined,
+        // The whole point: never place a game on a slot the rest of the
+        // league is already using.
+        existingGames,
       }),
     );
   }
 
-  async function commit() {
+  async function commit(force = false) {
     if (!result || result.games.length === 0) return;
     if (
       !window.confirm(
-        `Create ${result.games.length} games on the live schedule?\n\n` +
-          `Existing games are not touched.`,
+        force
+          ? `Save these ${result.games.length} games ANYWAY, over the conflicts listed?\n\n` +
+              `Fields will be double-booked. This is recorded in the audit log.`
+          : `Create ${result.games.length} games on the live schedule?\n\n` +
+              `Existing games are not touched.`,
       )
     )
       return;
     setBusy(true);
     setError(null);
     try {
-      const data = await post({ action: "create_games", games: result.games });
+      const data = await post({
+        action: "create_games",
+        games: result.games,
+        ...(force ? { force: true } : {}),
+      });
       setDone(`Created ${data.created} games. They are live on the schedule now.`);
       if (typeof data.batch === "string") setLastBatch(data.batch);
+      setSaveConflicts(null);
       setResult(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to create games");
+      const err = e as Error & { data?: Record<string, unknown>; status?: number };
+      // 409 means the server's own re-check caught something the preview did
+      // not — most often another admin writing games since this page loaded.
+      if (err.status === 409 && Array.isArray(err.data?.conflicts)) {
+        setSaveConflicts(err.data!.conflicts as Conflict[]);
+        setError(
+          `${err.data!.conflictCount ?? "Some"} conflicts blocked the save. ` +
+            `Nothing was written.`,
+        );
+      } else {
+        setError(e instanceof Error ? e.message : "Failed to create games");
+      }
     } finally {
       setBusy(false);
     }
@@ -804,6 +875,69 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
                         ))}
                       </select>
                     </div>
+                    <div style={{ minWidth: 240 }}>
+                      {/* Hard eligibility, distinct from the home-field nudge
+                          above: a team is never scheduled onto a field that is
+                          not ticked here. Nothing ticked = plays anywhere,
+                          which is the right default at 185 teams. */}
+                      <label style={LABEL}>
+                        Can only play at{" "}
+                        <span style={{ fontWeight: 400, color: "var(--muted)" }}>
+                          (none ticked = anywhere)
+                        </span>
+                      </label>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: 6,
+                          maxHeight: 92,
+                          overflowY: "auto",
+                          padding: "4px 0",
+                        }}
+                      >
+                        {leagueFields.length === 0 && (
+                          <span style={{ fontSize: 12, color: "var(--muted)" }}>
+                            Add fields in the Fields tab first.
+                          </span>
+                        )}
+                        {leagueFields.map((n) => {
+                          const on = (cfg.allowedFields ?? []).includes(n);
+                          return (
+                            <label
+                              key={n}
+                              style={{
+                                fontSize: 12,
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 4,
+                                border: "1px solid rgba(0,0,0,0.12)",
+                                borderRadius: 999,
+                                padding: "2px 8px",
+                                cursor: "pointer",
+                                background: on ? "var(--accent, #0b5)" : "transparent",
+                                color: on ? "#fff" : "inherit",
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={on}
+                                onChange={() => {
+                                  const cur = cfg.allowedFields ?? [];
+                                  patch({
+                                    allowedFields: on
+                                      ? cur.filter((f) => f !== n)
+                                      : [...cur, n],
+                                  });
+                                }}
+                                style={{ margin: 0 }}
+                              />
+                              {n}
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
                     <div style={{ minWidth: 200 }}>
                       <label style={LABEL}>Cannot play on</label>
                       <div style={{ display: "flex", gap: 6 }}>
@@ -873,7 +1007,10 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
         {result && result.games.length > 0 && (
           <button
             type="button"
-            onClick={commit}
+            // Wrapped, not passed directly: React hands the click event to the
+            // handler, which would arrive as `force` and turn every ordinary
+            // save into a conflict override.
+            onClick={() => commit(false)}
             disabled={busy}
             style={{ padding: "11px 20px", borderRadius: 10, border: "none", background: "var(--green, #22c55e)", color: "#fff", fontWeight: 800, fontSize: 15, cursor: "pointer" }}
           >
@@ -1014,6 +1151,72 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
                 .map((s) => `${s.a} v ${s.b}`)
                 .join(", ")}
             </p>
+          )}
+
+          {/* A pairing with no shared legal field is a setup problem, not a
+              capacity one. Called out separately so the admin fixes the right
+              thing instead of adding calendar that cannot help. */}
+          {result.noLegalField.length > 0 && (
+            <div
+              style={{
+                fontSize: 13,
+                margin: "0 0 10px",
+                padding: "9px 12px",
+                borderRadius: 8,
+                background: "rgba(220,38,38,0.08)",
+                border: "1px solid rgba(220,38,38,0.35)",
+                color: "#7f1d1d",
+              }}
+            >
+              <strong>No shared field:</strong>{" "}
+              {result.noLegalField.map((s) => `${s.a} v ${s.b}`).join(", ")}.
+              <br />
+              Widen one of those teams&rsquo; &ldquo;can only play at&rdquo; lists.
+            </div>
+          )}
+
+          {/* Reassurance, not a problem: says out loud that the generator
+              routed around the rest of the league. */}
+          {result.slotsBlockedByExisting > 0 && (
+            <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 10px" }}>
+              Worked around {result.slotsBlockedByExisting} slot
+              {result.slotsBlockedByExisting === 1 ? "" : "s"} already in use by{" "}
+              {existingGames.length} existing game
+              {existingGames.length === 1 ? "" : "s"} elsewhere in the league. Nothing
+              here double-books.
+            </p>
+          )}
+
+          {/* The server refused the write. Shows exactly what collided, and
+              offers the deliberate override. */}
+          {saveConflicts && saveConflicts.length > 0 && (
+            <div
+              style={{
+                margin: "0 0 12px",
+                padding: "10px 12px",
+                borderRadius: 8,
+                background: "rgba(220,38,38,0.08)",
+                border: "1px solid rgba(220,38,38,0.45)",
+              }}
+            >
+              <p style={{ margin: "0 0 6px", fontWeight: 800, fontSize: 13, color: "#7f1d1d" }}>
+                Save blocked — {saveConflicts.length} conflict
+                {saveConflicts.length === 1 ? "" : "s"}. Nothing was written.
+              </p>
+              <ul style={{ margin: "0 0 8px", paddingLeft: 18, fontSize: 12.5, color: "#7f1d1d" }}>
+                {saveConflicts.slice(0, 12).map((c, i) => (
+                  <li key={i} style={{ marginBottom: 3 }}>{c.message}</li>
+                ))}
+              </ul>
+              {saveConflicts.length > 12 && (
+                <p style={{ margin: "0 0 8px", fontSize: 12, color: "#7f1d1d" }}>
+                  …and {saveConflicts.length - 12} more.
+                </p>
+              )}
+              <button type="button" style={BTN} disabled={busy} onClick={() => commit(true)}>
+                Save anyway, over the conflicts
+              </button>
+            </div>
           )}
 
           {byWeek.map(([wk, games]) => (

@@ -1,0 +1,1132 @@
+[
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 1 \u00b7 Play In Game",
+  "away": "#7 Cedar Crest",
+  "home": "#10 Donegal Indians",
+  "away_score": 8,
+  "home_score": 2
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 1 \u00b7 Play In Game",
+  "away": "#8 Ephrata Drillerz",
+  "home": "#9 MT Streaks",
+  "away_score": 5,
+  "home_score": 7
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 1 \u00b7 Series Game #1",
+  "away": "#D1 Hempfield Black",
+  "home": "#8 MT Streaks",
+  "away_score": 17,
+  "home_score": 5
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 1 \u00b7 Series Game #1",
+  "away": "#2 LS Blue",
+  "home": "#7 Cedar Crest",
+  "away_score": 10,
+  "home_score": 8
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 1 \u00b7 Series Game #1",
+  "away": "#3 SOLANCO Black",
+  "home": "#6 Hempfield Red",
+  "away_score": 7,
+  "home_score": 11
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 1 \u00b7 Series Game #1",
+  "away": "#4 PM Comets",
+  "home": "#5 E-town Bruins",
+  "away_score": 7,
+  "home_score": 2
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 1 \u00b7 Series Game #2",
+  "away": "#D1 Hempfield Black",
+  "home": "#8 MT Streaks",
+  "away_score": 8,
+  "home_score": 6
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 1 \u00b7 Series Game #2",
+  "away": "#2 LS Blue",
+  "home": "#7 Cedar Crest",
+  "away_score": 7,
+  "home_score": 10
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 1 \u00b7 Series Game #2",
+  "away": "#3 SOLANCO Black",
+  "home": "#6 Hempfield Red",
+  "away_score": 16,
+  "home_score": 4
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 1 \u00b7 Series Game #2",
+  "away": "#4 PM Comets",
+  "home": "#5 E-town Bruins",
+  "away_score": 10,
+  "home_score": 12
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 1 \u00b7 Series Game #3 (if needed)",
+  "away": "#2 LS Blue",
+  "home": "#7 Cedar Crest",
+  "away_score": 11,
+  "home_score": 1
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 1 \u00b7 Series Game #3 (if needed)",
+  "away": "#3 SOLANCO Black",
+  "home": "#6 Hempfield Red",
+  "away_score": 11,
+  "home_score": 6
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 1 \u00b7 Series Game #3 (if needed)",
+  "away": "#4 PM Comets",
+  "home": "#5 E-town Bruins",
+  "away_score": 10,
+  "home_score": 6
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 1 \u00b7 LNP Tournament game 1",
+  "away": "#D1 Hempfield Black",
+  "home": "#4 PM Comets",
+  "away_score": 8,
+  "home_score": 7
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 1 \u00b7 LNP Tournament game 2",
+  "away": "#2 LS Blue",
+  "home": "#3 SOLANCO Black",
+  "away_score": 5,
+  "home_score": 4
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 1 \u00b7 LNP Tournament game 3",
+  "away": "#4 PM Comets",
+  "home": "#3 SOLANCO Black",
+  "away_score": 14,
+  "home_score": 2
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 1 \u00b7 LNP Tournament game 4",
+  "away": "#D1 Hempfield Black",
+  "home": "#2 LS Blue",
+  "away_score": 6,
+  "home_score": 5
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 1 \u00b7 LNP Tournament game 5",
+  "away": "#2 LS Blue",
+  "home": "#4 PM Comets",
+  "away_score": 8,
+  "home_score": 5
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 1 \u00b7 LNP Tournament game 6",
+  "away": "#D1 Hempfield Black",
+  "home": "#2 LS Blue",
+  "away_score": 14,
+  "home_score": 5
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 2 \u00b7 Game 1",
+  "away": "#17 Warwick Diamondbacks",
+  "home": "#16 PM White",
+  "away_score": 8,
+  "home_score": 9
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 2 \u00b7 Game 2",
+  "away": "#20 CTYAA Moose",
+  "home": "#13 Cocalico Eagles",
+  "away_score": 5,
+  "home_score": 9
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 2 \u00b7 Game 3",
+  "away": "#21 Mountville Pirates",
+  "home": "#12 Donegal Black",
+  "away_score": 0,
+  "home_score": 10
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 2 \u00b7 Game 4",
+  "away": "#18 Donegal Green",
+  "home": "#15 Columbia Red",
+  "away_score": 11,
+  "home_score": 4
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 2 \u00b7 Game 5",
+  "away": "#23 Lancaster Rec White",
+  "home": "#10 SOLANCO Black",
+  "away_score": 2,
+  "home_score": 8
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 2 \u00b7 Game 6",
+  "away": "#19 Ephrata Deckers",
+  "home": "#14 Garden Spot",
+  "away_score": 0,
+  "home_score": 6
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 2 \u00b7 Game 7",
+  "away": "#22 Cedar Crest Gray",
+  "home": "#11 St. Leo Gold",
+  "away_score": 7,
+  "home_score": 6
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 2 \u00b7 Game 8",
+  "away": "#9 Cedar Crest Blue",
+  "home": "#8 PM Blue",
+  "away_score": 1,
+  "home_score": 6
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 2 \u00b7 Game 9",
+  "away": "#D1 LS Heater",
+  "home": "#16 PM White",
+  "away_score": 6,
+  "home_score": 0
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 2 \u00b7 Game 10",
+  "away": "#13 Cocalico Eagles",
+  "home": "#4 Hempfield Black",
+  "away_score": 6,
+  "home_score": 11
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 2 \u00b7 Game 11",
+  "away": "#5 Hempfield Red",
+  "home": "#12 Donegal Black",
+  "away_score": 4,
+  "home_score": 13
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 2 \u00b7 Game 12",
+  "away": "#18 Donegal Green",
+  "home": "#2 LS Blue Bombers",
+  "away_score": 6,
+  "home_score": 5
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 2 \u00b7 Game 13",
+  "away": "#7 PM Comets",
+  "home": "#10 SOLANCO Black",
+  "away_score": 12,
+  "home_score": 11
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 2 \u00b7 Game 14",
+  "away": "#14 Garden Spot",
+  "home": "#3 Manheim Gray",
+  "away_score": 16,
+  "home_score": 3
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 2 \u00b7 Game 15",
+  "away": "#6 MT Lightning",
+  "home": "#22 Cedar Crest Gray",
+  "away_score": 16,
+  "home_score": 0
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 2 \u00b7 Game 16",
+  "away": "#D1 LS Heater",
+  "home": "#8 PM Blue",
+  "away_score": 6,
+  "home_score": 5
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 2 \u00b7 Game 17",
+  "away": "#12 Donegal Black",
+  "home": "#4 Hempfield Black",
+  "away_score": 8,
+  "home_score": 6
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 2 \u00b7 Game 18",
+  "away": "#7 PM Comets",
+  "home": "#18 Donegal Green",
+  "away_score": 5,
+  "home_score": 0
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 2 \u00b7 Game 19",
+  "away": "#6 MT Lightning",
+  "home": "#14 Garden Spot",
+  "away_score": 6,
+  "home_score": 1
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 2 \u00b7 Game 20",
+  "away": "#12 Donegal Black",
+  "home": "#D1 LS Heater",
+  "away_score": 6,
+  "home_score": 18
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 2 \u00b7 Game 21",
+  "away": "#6 MT Lightning",
+  "home": "#7 PM Comets",
+  "away_score": 13,
+  "home_score": 12
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "10u",
+  "division": "10u Section 2 \u00b7 Game 22",
+  "away": "#6 MT Lightning",
+  "home": "#D1 LS Heater",
+  "away_score": 0,
+  "home_score": 10
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 1 \u00b7 Play In Game",
+  "away": "#7 Warwick Phillies",
+  "home": "#10 Ephrata Drilerz",
+  "away_score": 13,
+  "home_score": 10
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 1 \u00b7 Play In Game",
+  "away": "#8 Cocalico Eagles",
+  "home": "#9 Manheim",
+  "away_score": 1,
+  "home_score": 3
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 1 \u00b7 Series Game #1",
+  "away": "#D1 Hempfield Black",
+  "home": "#8 Manheim",
+  "away_score": 16,
+  "home_score": 3
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 1 \u00b7 Series Game #1",
+  "away": "#2 Mountville Indians",
+  "home": "#7 Warwick Phillies",
+  "away_score": 11,
+  "home_score": 1
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 1 \u00b7 Series Game #1",
+  "away": "#3 E-Town Blue",
+  "home": "#6 PM Comets",
+  "away_score": 4,
+  "home_score": 1
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 1 \u00b7 Series Game #1",
+  "away": "#4 MT Streaks",
+  "home": "#5 LS Say Hey Kids",
+  "away_score": 3,
+  "home_score": 1
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 1 \u00b7 Series Game #2",
+  "away": "#D1 Hempfield Black",
+  "home": "#8 Manheim",
+  "away_score": 14,
+  "home_score": 1
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 1 \u00b7 Series Game #2",
+  "away": "#2 Mountville Indians",
+  "home": "#7 Warwick Phillies",
+  "away_score": 11,
+  "home_score": 3
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 1 \u00b7 Series Game #2",
+  "away": "#3 E-Town Blue",
+  "home": "#6 PM Comets",
+  "away_score": 14,
+  "home_score": 13
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 1 \u00b7 Series Game #2",
+  "away": "#4 MT Streaks",
+  "home": "#5 LS Say Hey Kids",
+  "away_score": 2,
+  "home_score": 3
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 1 \u00b7 Series Game #3 (if needed)",
+  "away": "#4 MT Streaks",
+  "home": "#5 LS Say Hey Kids",
+  "away_score": 18,
+  "home_score": 8
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 1 \u00b7 LNP Tournament game 1",
+  "away": "#D1 Hempfield Black",
+  "home": "#4 MT Streaks",
+  "away_score": 10,
+  "home_score": 7
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 1 \u00b7 LNP Tournament game 2",
+  "away": "#2 Mountville Indians",
+  "home": "#3 E-Town Blue",
+  "away_score": 5,
+  "home_score": 4
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 1 \u00b7 LNP Tournament game 3",
+  "away": "#4 MT Streaks",
+  "home": "#3 E-Town Blue",
+  "away_score": 10,
+  "home_score": 9
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 1 \u00b7 LNP Tournament game 4",
+  "away": "#D1 Hempfield Black",
+  "home": "#2 Mountville Indians",
+  "away_score": 11,
+  "home_score": 10
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 1 \u00b7 LNP Tournament game 5",
+  "away": "#2 Mountville Indians",
+  "home": "#4 MT Streaks",
+  "away_score": 10,
+  "home_score": 8
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 1 \u00b7 LNP Tournament game 6",
+  "away": "#D1 Hempfield Black",
+  "home": "#2 Mountville Indians",
+  "away_score": 1,
+  "home_score": 20
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 1 \u00b7 LNP Tournament game 7",
+  "away": "#2 Mountville Indians",
+  "home": "#D1 Hempfield Black",
+  "away_score": 14,
+  "home_score": 7
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 2 \u00b7 Game 1",
+  "away": "#8 LS Blue",
+  "home": "#D1 E-Town Black",
+  "away_score": 4,
+  "home_score": 6
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 2 \u00b7 Game 2",
+  "away": "#5 Mountville Yankees",
+  "home": "#4 LS Black",
+  "away_score": 3,
+  "home_score": 12
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 2 \u00b7 Game 3",
+  "away": "#6 SOLANCO Black",
+  "home": "#3 Mountville Phillies",
+  "away_score": 4,
+  "home_score": 11
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 2 \u00b7 Game 4",
+  "away": "#7 Hempfield Black",
+  "home": "#2 Warwick Braves",
+  "away_score": 10,
+  "home_score": 6
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 2 \u00b7 Game 5",
+  "away": "#4 LS Black",
+  "home": "#D1 E-Town Black",
+  "away_score": 17,
+  "home_score": 8
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 2 \u00b7 Game 6",
+  "away": "#7 Hempfield Black",
+  "home": "#3 Mountville Phillies",
+  "away_score": 6,
+  "home_score": 7
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 2 \u00b7 Game 7",
+  "away": "#3 Mountville Phillies",
+  "home": "#4 LS Black",
+  "away_score": 9,
+  "home_score": 8
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 3 \u00b7 Game 1",
+  "away": "#9 LS Blue Outlaws",
+  "home": "#8 SOLANCO Gold",
+  "away_score": 9,
+  "home_score": 13
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 3 \u00b7 Game 2",
+  "away": "#13 Lancaster Rec Red",
+  "home": "#4 Ephrata Tourists",
+  "away_score": 8,
+  "home_score": 14
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 3 \u00b7 Game 3",
+  "away": "#12 Ephrata Twisters",
+  "home": "#5 Hempfield Black",
+  "away_score": 7,
+  "home_score": 20
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 3 \u00b7 Game 4",
+  "away": "#15 PM White",
+  "home": "#2 MT Storm",
+  "away_score": 4,
+  "home_score": 14
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 3 \u00b7 Game 5",
+  "away": "#10 MT Flash",
+  "home": "#7 E-Town Gray",
+  "away_score": 2,
+  "home_score": 18
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 3 \u00b7 Game 6",
+  "away": "#14 Donegal Black",
+  "home": "#3 MT Chargers",
+  "away_score": 5,
+  "home_score": 20
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 3 \u00b7 Game 7",
+  "away": "#11 Mountville Tigers",
+  "home": "#6 CV Bucks",
+  "away_score": 3,
+  "home_score": 10
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 3 \u00b7 Game 8",
+  "away": "#8 SOLANCO Gold",
+  "home": "#D1 E-Town Navy",
+  "away_score": 7,
+  "home_score": 15
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 3 \u00b7 Game 9",
+  "away": "#5 Hempfield Black",
+  "home": "#4 Ephrata Tourists",
+  "away_score": 15,
+  "home_score": 11
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 3 \u00b7 Game 10",
+  "away": "#7 E-Town Gray",
+  "home": "#2 MT Storm",
+  "away_score": 8,
+  "home_score": 5
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 3 \u00b7 Game 11",
+  "away": "#6 CV Bucks",
+  "home": "#3 MT Chargers",
+  "away_score": 3,
+  "home_score": 4
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 3 \u00b7 Game 12",
+  "away": "#5 Hempfield Black",
+  "home": "#D1 E-Town Navy",
+  "away_score": 13,
+  "home_score": 9
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 3 \u00b7 Game 13",
+  "away": "#3 MT Chargers",
+  "home": "#7 E-Town Gray",
+  "away_score": 4,
+  "home_score": 2
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "12u",
+  "division": "12u Section 3 \u00b7 Game 14",
+  "away": "#3 MT Chargers",
+  "home": "#5 Hempfield Black",
+  "away_score": 17,
+  "home_score": 2
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 1 \u00b7 Play In Game",
+  "away": "#7 CV Bucks",
+  "home": "#10 LS White Sox",
+  "away_score": 2,
+  "home_score": 0
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 1 \u00b7 Play In Game",
+  "away": "#8 E-Town Black",
+  "home": "#9 Donegal Indians",
+  "away_score": 5,
+  "home_score": 0
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 1 \u00b7 Series Game #1",
+  "away": "#D1 Cedar Crest",
+  "home": "#8 E-Town Black",
+  "away_score": 3,
+  "home_score": 6
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 1 \u00b7 Series Game #1",
+  "away": "#2 Hempfield Black",
+  "home": "7 CV Bucks",
+  "away_score": 14,
+  "home_score": 1
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 1 \u00b7 Series Game #1",
+  "away": "#3 Lititz VFW",
+  "home": "#6 MT Streaks",
+  "away_score": 10,
+  "home_score": 0
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 1 \u00b7 Series Game #1",
+  "away": "#4 PM Comets",
+  "home": "#5 Manheim Lions",
+  "away_score": 13,
+  "home_score": 3
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 1 \u00b7 Series Game #2",
+  "away": "#D1 Cedar Crest",
+  "home": "#8 E-Town Black",
+  "away_score": 13,
+  "home_score": 0
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 1 \u00b7 Series Game #2",
+  "away": "#2 Hempfield Black",
+  "home": "7 CV Bucks",
+  "away_score": 3,
+  "home_score": 2
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 1 \u00b7 Series Game #2",
+  "away": "#3 Lititz VFW",
+  "home": "#6 MT Streaks",
+  "away_score": 15,
+  "home_score": 3
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 1 \u00b7 Series Game #2",
+  "away": "#4 PM Comets",
+  "home": "#5 Manheim Lions",
+  "away_score": 4,
+  "home_score": 10
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 1 \u00b7 Series Game #3 (if needed)",
+  "away": "#D1 Cedar Crest",
+  "home": "#8 E-Town Black",
+  "away_score": 2,
+  "home_score": 16
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 1 \u00b7 Series Game #3 (if needed)",
+  "away": "#4 PM Comets",
+  "home": "#5 Manheim Lions",
+  "away_score": 0,
+  "home_score": 3
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 1 \u00b7 LNP Tournament game 1",
+  "away": "#1 Hempfield Black",
+  "home": "#4 E-Town Black",
+  "away_score": 3,
+  "home_score": 2
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 1 \u00b7 LNP Tournament game 2",
+  "away": "#2 Lititz VFW",
+  "home": "#3 Manheim Lions",
+  "away_score": 0,
+  "home_score": 7
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 1 \u00b7 LNP Tournament game 3",
+  "away": "#4 E-Town Black",
+  "home": "#2 Lititz VFW",
+  "away_score": 3,
+  "home_score": 4
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 1 \u00b7 LNP Tournament game 4",
+  "away": "#1 Hempfield Black",
+  "home": "#3 Manheim Lions",
+  "away_score": 4,
+  "home_score": 3
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 1 \u00b7 LNP Tournament game 5",
+  "away": "#3 Manheim Lions",
+  "home": "#2 Lititz VFW",
+  "away_score": 8,
+  "home_score": 6
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 1 \u00b7 LNP Tournament game 6",
+  "away": "#1 Hempfield Black",
+  "home": "#3 Manheim Lions",
+  "away_score": 6,
+  "home_score": 4
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 2 \u00b7 Game 1",
+  "away": "#8 Hempfield Black",
+  "home": "#D1 Warwick White Sox",
+  "away_score": 3,
+  "home_score": 2
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 2 \u00b7 Game 2",
+  "away": "#5 PM Comets",
+  "home": "#4 Donegal Green",
+  "away_score": 6,
+  "home_score": 10
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 2 \u00b7 Game 3",
+  "away": "#6 Manheim Lions",
+  "home": "#3 Cedar Crest",
+  "away_score": 4,
+  "home_score": 12
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 2 \u00b7 Game 4",
+  "away": "#7 LS Red Sox",
+  "home": "#D2 Lancaster Rec Black",
+  "away_score": 2,
+  "home_score": 14
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 2 \u00b7 Game 5",
+  "away": "#4 Donegal Green",
+  "home": "#8 Hempfield Black",
+  "away_score": 5,
+  "home_score": 0
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 2 \u00b7 Game 6",
+  "away": "#D2 Lancaster Rec Black",
+  "home": "#3 Cedar Crest",
+  "away_score": 2,
+  "home_score": 3
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 2 \u00b7 Game 7",
+  "away": "#3 Cedar Crest",
+  "home": "#4 Donegal Green",
+  "away_score": 0,
+  "home_score": 3
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 3 \u00b7 Game 1",
+  "away": "#9 SOLANCO Black",
+  "home": "#8 LS White",
+  "away_score": 3,
+  "home_score": 11
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 3 \u00b7 Game 2",
+  "away": "#7 Garden Spot",
+  "home": "#2 E-Town Navy",
+  "away_score": 9,
+  "home_score": 8
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 3 \u00b7 Game 3",
+  "away": "#6 Donegal Black",
+  "home": "#3 MT Chargers",
+  "away_score": 7,
+  "home_score": 9
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 3 \u00b7 Game 4",
+  "away": "#5 LS Blue",
+  "home": "#4 E-Town White",
+  "away_score": 17,
+  "home_score": 16
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 3 \u00b7 Game 5",
+  "away": "#8 LS White",
+  "home": "#D1 Hempfield Black",
+  "away_score": 4,
+  "home_score": 6
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 3 \u00b7 Game 6",
+  "away": "#3 MT Chargers",
+  "home": "#7 Garden Spot",
+  "away_score": 7,
+  "home_score": 1
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 3 \u00b7 Game 7",
+  "away": "#5 LS Blue",
+  "home": "#D1 Hempfield Black",
+  "away_score": 4,
+  "home_score": 7
+ },
+ {
+  "orientation_known": false,
+  "date": "2025",
+  "ageGroup": "14u",
+  "division": "14u Section 3 \u00b7 Game 8",
+  "away": "#D1 Hempfield Black",
+  "home": "#3 MT Chargers",
+  "away_score": 3,
+  "home_score": 13
+ }
+]

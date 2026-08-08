@@ -17,6 +17,7 @@
 //   default Champions tab is what gets indexed, which is fine).
 
 import Link from "next/link";
+import { ChampionsSlideshow } from "@/components/ChampionsSlideshow";
 import { useMemo, useState } from "react";
 import type {
   ArchivedGame,
@@ -38,6 +39,12 @@ export function HistoryView(props: HistoryViewProps) {
   const honourPlural = divWinners ? "Division Winners" : "Champions";
   const archive = props.archivedGames ?? [];
   const hasArchive = archive.some((a) => a.games.length > 0);
+  // Seasons with a full bracket page. Built once so every season label can do
+  // an O(1) lookup instead of scanning an array per row.
+  const bracketYearSet = useMemo(
+    () => new Set(props.bracketYears ?? []),
+    [props.bracketYears],
+  );
 
   return (
     <>
@@ -61,11 +68,32 @@ export function HistoryView(props: HistoryViewProps) {
       </nav>
 
       <div className="le-hist-panel" role="tabpanel">
+        {tab === "champions" && props.trophyUrl && (
+          <div className="le-champ-hero">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={props.trophyUrl} alt="" className="le-champ-hero-trophy" />
+            <div>
+              <p className="le-champ-hero-eyebrow">Since 1954</p>
+              <h2 className="le-champ-hero-title">
+                {divWinners ? "Division Winners" : "Champions"}
+              </h2>
+              <p className="le-champ-hero-sub">
+                Every title in {props.stats.seasonCount} seasons of Lancaster
+                County youth baseball.
+              </p>
+            </div>
+          </div>
+        )}
+        {tab === "champions" && (props.championSlides?.length ?? 0) > 0 && (
+          <ChampionsSlideshow slides={props.championSlides!} />
+        )}
         {tab === "champions" && (
           <ChampionsTab
             champions={props.champions}
             leaderboard={props.championsLb}
             divWinners={divWinners}
+            bracketYears={bracketYearSet}
+            trophyUrl={props.trophyUrl}
           />
         )}
         {tab === "scores" && hasArchive && (
@@ -180,7 +208,9 @@ function ArchivedScoresTab({
                         </td>
                         <td className="le-dw-rec">{g.away_score ?? ""}</td>
                         <td style={{ color: "var(--muted)", padding: "0 6px" }}>
-                          at
+                          {/* "at" names a home team. Archives that never
+                              recorded which side was home get "vs" instead. */}
+                          {g.orientation_known === false ? "vs" : "at"}
                         </td>
                         <td className={hw ? "le-dw-team" : undefined}>
                           {g.home}
@@ -276,10 +306,14 @@ function ChampionsTab({
   champions,
   leaderboard,
   divWinners,
+  bracketYears,
+  trophyUrl,
 }: {
   champions: ChampionRow[];
   leaderboard: LeaderboardRow[];
   divWinners?: boolean;
+  bracketYears: Set<number>;
+  trophyUrl?: string;
 }) {
   const [filter, setFilter] = useState("");
   const filterLower = filter.trim().toLowerCase();
@@ -305,7 +339,17 @@ function ChampionsTab({
         <section className="le-hist-card le-hist-card-wide">
           <header className="le-hist-card-hd">
             <h2>
-              <span aria-hidden="true">🏆</span>{" "}
+              {trophyUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={trophyUrl}
+                  alt=""
+                  className="le-champ-hd-trophy"
+                  aria-hidden="true"
+                />
+              ) : (
+                <span aria-hidden="true">🏆</span>
+              )}{" "}
               {divWinners ? "Division Winners" : "Wall of Champions"}
             </h2>
             <input
@@ -329,7 +373,11 @@ function ChampionsTab({
                 divWinners ? (
                   <DivisionWinnerSeason key={row.season} row={row} />
                 ) : (
-                  <ChampionRowView key={row.season} row={row} />
+                  <ChampionRowView
+                    key={row.season}
+                    row={row}
+                    bracketYears={bracketYears}
+                  />
                 ),
               )}
             </ol>
@@ -399,21 +447,102 @@ function tidyDivision(name: string): string {
   return name.replace(/\s+division$/i, "").trim() || name;
 }
 
-function ChampionRowView({ row }: { row: ChampionRow }) {
+/** "2025" -> 2025. Season labels can carry a qualifier ("Spring - 2024"), so
+ *  the year is extracted rather than parsed whole. */
+function seasonYear(season: string): number {
+  const m = /\d{4}/.exec(season);
+  return m ? Number(m[0]) : NaN;
+}
+
+/** One season of champions, as a card.
+ *
+ *  The previous layout was a season label beside a wrapping run of pill
+ *  badges. At eight divisions across seventeen seasons that reads as a heap of
+ *  pills with no alignment — you cannot scan down a column to compare seasons,
+ *  and the runner-up had nowhere to sit. A card with an aligned grid fixes
+ *  both: division on the left, champion and the team it beat on the right,
+ *  same columns every season. */
+function ChampionRowView({
+  row,
+  bracketYears,
+}: {
+  row: ChampionRow;
+  bracketYears: Set<number>;
+}) {
+  const year = seasonYear(row.season);
+  const hasBracket = bracketYears.has(year);
+  const divs = [...row.divisions].sort((a, b) =>
+    a.division.localeCompare(b.division, undefined, { numeric: true }),
+  );
   return (
-    <li className="le-champ-row">
-      <span className="le-champ-season">{row.season}</span>
-      <span className="le-champ-divs">
-        {row.divisions.map((d) => (
-          <ChampBadge
-            key={d.division}
-            division={d.division}
-            team={d.team}
-            meta={d.meta}
-          />
+    <li className="le-cs">
+      <header className="le-cs-hd">
+        <h3 className="le-cs-year">
+          {hasBracket ? (
+            <Link href={`/history/${year}`} className="le-cs-year-link">
+              {row.season}
+            </Link>
+          ) : (
+            row.season
+          )}
+        </h3>
+        <span className="le-cs-count">
+          {divs.length} champion{divs.length === 1 ? "" : "s"}
+        </span>
+        {hasBracket && (
+          <Link href={`/history/${year}`} className="le-cs-cta">
+            View brackets ›
+          </Link>
+        )}
+      </header>
+
+      <div className="le-cs-grid">
+        {divs.map((d, i) => (
+          <div className="le-cs-row" key={`${d.division}-${d.team}-${i}`}>
+            <span className="le-cs-div">
+              {tidyDivision(d.division) || "—"}
+              {d.disputed && (
+                <span
+                  className="le-champ-disputed"
+                  title="The league's own records disagree on this title — awaiting confirmation."
+                >
+                  unconfirmed
+                </span>
+              )}
+            </span>
+            <span className="le-cs-win">
+              <ChampLogo team={d.team} meta={d.meta} />
+              {d.meta ? (
+                <Link href={`/teams/${d.meta.id}`} className="le-cs-team">
+                  {d.team}
+                </Link>
+              ) : (
+                <span className="le-cs-team">{d.team}</span>
+              )}
+            </span>
+            <span className="le-cs-runner">
+              {d.runnerUp ? <>def. {d.runnerUp}</> : ""}
+            </span>
+          </div>
         ))}
-      </span>
+      </div>
     </li>
+  );
+}
+
+/** Crest when the historical name matches a current club, monogram otherwise. */
+function ChampLogo({ team, meta }: { team: string; meta: TeamMeta | null }) {
+  if (meta?.logoUrl) {
+    return <img src={meta.logoUrl} alt="" className="le-cs-logo" loading="lazy" />;
+  }
+  return (
+    <span
+      className="le-cs-logo le-cs-logo-fb"
+      aria-hidden="true"
+      style={{ background: meta?.color ?? "#7a5c00" }}
+    >
+      {initials(team)}
+    </span>
   );
 }
 
@@ -421,10 +550,18 @@ function ChampBadge({
   division,
   team,
   meta,
+  runnerUp = null,
+  disputed = false,
 }: {
   division: string;
   team: string;
   meta: TeamMeta | null;
+  /** Beaten finalist, where the league publishes one. */
+  runnerUp?: string | null;
+  /** The source contradicts itself about this title. Marked in the UI rather
+   *  than resolved silently — a disputed championship shown as settled fact is
+   *  the kind of error a league notices immediately. */
+  disputed?: boolean;
 }) {
   const accent = meta?.color ?? "#7a5c00"; // muted gold fallback
   const inner = (
@@ -446,8 +583,23 @@ function ChampBadge({
         </span>
       )}
       <span className="le-champ-badge-text">
-        <span className="le-champ-div">{division || "—"}</span>
+        <span className="le-champ-div">
+          {division || "—"}
+          {disputed && (
+            <span
+              className="le-champ-disputed"
+              title="The league's own records disagree on this title — awaiting confirmation."
+            >
+              unconfirmed
+            </span>
+          )}
+        </span>
         <span className="le-champ-team">{team}</span>
+        {runnerUp && (
+          <span className="le-champ-runner">
+            def. <strong>{runnerUp}</strong>
+          </span>
+        )}
       </span>
     </>
   );
@@ -789,12 +941,13 @@ function Leaderboard({
                 {r.count === 1 ? unitSingular : unitPlural}
               </span>
             </span>
+            {/* One uniform gold bar on EVERY row (width = share of the leader's
+                total). Was tinted per-team, but `${accent}33` is only valid when
+                accent is a hex — the var() fallback produced invalid CSS, so
+                only current-team matches got a bar and the rest looked bare. */}
             <span
               className="le-lb-bar"
-              style={{
-                width: `${widthPct}%`,
-                background: `linear-gradient(90deg, ${accent}33, ${accent}aa)`,
-              }}
+              style={{ width: `${widthPct}%` }}
               aria-hidden="true"
             />
           </li>

@@ -8,8 +8,11 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import {
   buildTeamHistory,
+  buildTeamGameLog,
   type ArchiveBlock,
+  type ArchivedGame,
   type ChampionsFile,
+  type GameLogLine,
   type TeamHistory,
 } from "@/lib/team-history";
 import { notFound } from "next/navigation";
@@ -155,6 +158,10 @@ export default async function TeamDetailPage({
   // playoff blocks, which leagues that publish a printed champion banner (and
   // no playoff standings) simply do not have.
   const history = loadTeamHistory(tenantId, teamName);
+  // Archived playoff games (LCYBL 2009-2025 extract) keyed by season — the
+  // per-game detail under each Franchise History year. Empty for tenants
+  // without season-games files.
+  const gameLog = loadTeamGameLog(tenantId, teamName);
   const titleCount = Math.max(championships, history.titles.length);
 
   const teamNames: Record<string, { name: string; abbrev?: string; color?: string; logoUrl?: string | null }> = {};
@@ -972,7 +979,9 @@ export default async function TeamDetailPage({
         )}
       </section>
 
-      {history.seasons.length > 0 && <FranchiseHistory h={history} />}
+      {history.seasons.length > 0 && (
+        <FranchiseHistory h={history} gameLog={gameLog} />
+      )}
     </main>
   );
 }
@@ -1541,6 +1550,36 @@ function loadTeamHistory(tenantId: string, teamName: string): TeamHistory {
   );
 }
 
+/** Archived playoff games for this team, grouped by season. Reads every
+ *  data/{tenant}/season-games-YYYY.json present (LCYBL: 2009-2025 extract).
+ *  Tolerates both file shapes (bare array, or { games: [] }). Missing files
+ *  simply yield no game log — other tenants are unaffected. */
+function loadTeamGameLog(
+  tenantId: string,
+  teamName: string,
+): Map<string, GameLogLine[]> {
+  const dir = path.resolve(process.cwd(), `data/${tenantId}`);
+  const bySeason: Record<string, ArchivedGame[]> = {};
+  let names: string[] = [];
+  try {
+    names = fs.readdirSync(dir);
+  } catch {
+    return new Map();
+  }
+  for (const name of names) {
+    const m = /^season-games-(\d{4})\.json$/.exec(name);
+    if (!m) continue;
+    try {
+      const v = JSON.parse(fs.readFileSync(path.join(dir, name), "utf8"));
+      const games = Array.isArray(v) ? v : Array.isArray(v?.games) ? v.games : [];
+      if (games.length) bySeason[m[1]!] = games as ArchivedGame[];
+    } catch {
+      // Unreadable season file: skip it rather than losing the whole log.
+    }
+  }
+  return buildTeamGameLog(teamName, bySeason);
+}
+
 function countChampionships(tenantId: string, teamName: string): number {
   const file = path.resolve(
     process.cwd(),
@@ -1581,9 +1620,16 @@ function countChampionships(tenantId: string, teamName: string): number {
 
 
 /** Season-by-season franchise history: titles, runner-up finishes, all-time
- *  record, and every season the archive records for this club. Rendered only
- *  when the team actually appears in the archive. */
-function FranchiseHistory({ h }: { h: TeamHistory }) {
+ *  record, every season the archive records for this club, and (when the
+ *  tenant ships season-games files) that season's playoff game log. Rendered
+ *  only when the team actually appears in the archive. */
+function FranchiseHistory({
+  h,
+  gameLog,
+}: {
+  h: TeamHistory;
+  gameLog?: Map<string, GameLogLine[]>;
+}) {
   const { totals } = h;
 
   // A club fields several age-group teams in the same year, so a flat table
@@ -1625,38 +1671,66 @@ function FranchiseHistory({ h }: { h: TeamHistory }) {
       )}
 
       <div className="th-timeline">
-        {years.map(([year, rows]) => (
-          <div className="th-yr" key={year}>
-            <div className="th-yr-year">{year}</div>
-            <div className="th-yr-list">
-              {rows
-                .slice()
-                .sort((a, b) => a.division.localeCompare(b.division))
-                .map((s, i) => (
-                  <div
-                    key={i}
-                    className={"th-yr-row" + (s.champion ? " th-yr-row-win" : "")}
-                  >
-                    <span className="th-yr-div">{s.division}</span>
-                    <span className="th-yr-rec">
-                      {s.w}-{s.l}
-                      {s.t ? `-${s.t}` : ""}
-                    </span>
-                    <span className="th-yr-fin">
-                      {ordinal(s.place)}
-                      <em> of {s.outOf}</em>
-                    </span>
-                    <span className="th-yr-tag">
-                      {s.champion && (
-                        <span className="th-badge th-badge-win">Champion</span>
-                      )}
-                      {s.runnerUp && <span className="th-badge">Runner-up</span>}
-                    </span>
+        {years.map(([year, rows]) => {
+          const games = gameLog?.get(year) ?? [];
+          return (
+            <div className="th-yr" key={year}>
+              <div className="th-yr-year">{year}</div>
+              <div className="th-yr-list">
+                {rows
+                  .slice()
+                  .sort((a, b) => a.division.localeCompare(b.division))
+                  .map((s, i) => (
+                    <div
+                      key={i}
+                      className={
+                        "th-yr-row" + (s.champion ? " th-yr-row-win" : "")
+                      }
+                    >
+                      <span className="th-yr-div">{s.division}</span>
+                      <span className="th-yr-rec">
+                        {s.w}-{s.l}
+                        {s.t ? `-${s.t}` : ""}
+                      </span>
+                      <span className="th-yr-fin">
+                        {ordinal(s.place)}
+                        <em> of {s.outOf}</em>
+                      </span>
+                      <span className="th-yr-tag">
+                        {s.champion && (
+                          <span className="th-badge th-badge-win">Champion</span>
+                        )}
+                        {s.runnerUp && (
+                          <span className="th-badge">Runner-up</span>
+                        )}
+                      </span>
+                    </div>
+                  ))}
+                {games.length > 0 && (
+                  <div className="th-games">
+                    <span className="th-games-lbl">Playoffs</span>
+                    {games.map((g, i) => (
+                      <span
+                        key={i}
+                        className={
+                          "th-game" +
+                          (g.result === "W" ? " th-game-w" : "") +
+                          (g.result === "L" ? " th-game-l" : "")
+                        }
+                        title={g.division}
+                      >
+                        <b>{g.result}</b> {g.scored}–{g.allowed}{" "}
+                        {/* Reading-order archives never say who was home,
+                            so this is always "vs", never "at". */}
+                        vs {g.opponent}
+                      </span>
+                    ))}
                   </div>
-                ))}
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

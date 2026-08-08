@@ -56,6 +56,7 @@ export function GET() {
   const ICON_SETS: Record<string, { base: string; maskable: string }> = {
     coybl: { base: "/coybl", maskable: "/coybl/icon-512-maskable.png" },
     helena: { base: "/helena", maskable: "/helena/icon-512-maskable.png" },
+    lcybl: { base: "/lcybl", maskable: "/lcybl/icon-512-maskable.png" },
   };
   const iconSet = ICON_SETS[tenantId ?? ""] ?? {
     base: "/icons",

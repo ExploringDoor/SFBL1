@@ -24,6 +24,9 @@ interface TeamRow {
   /** COYBL: 7U..14U. Registration sets it; the office can correct it here. */
   ageGroup: string;
   logo_url: string;
+  /** Optional per-team GameChanger link, for leagues whose clubs keep their
+   *  book there. Rendered on the public team page when set. */
+  gamechanger_url: string;
   active: boolean;
   /** Non-secret marker: does this team have a manager password set?
    *  The password itself lives privately and is never loaded here. */
@@ -110,6 +113,7 @@ export function TeamsManager({ leagueId, user }: Props) {
               division: String(data.division ?? ""),
               ageGroup: String(data.ageGroup ?? ""),
               logo_url: String(data.logo_url ?? ""),
+              gamechanger_url: String(data.gamechanger_url ?? ""),
               has_captain_password: data.has_captain_password === true,
               active: data.active !== false,
             };
@@ -687,6 +691,7 @@ function TeamEditForm({
   const [division, setDivision] = useState(team.division);
   const [ageGroup, setAgeGroup] = useState(team.ageGroup);
   const [logoUrl, setLogoUrl] = useState(team.logo_url);
+  const [gamechangerUrl, setGamechangerUrl] = useState(team.gamechanger_url);
   const [captainPassword, setCaptainPassword] = useState("");
   // Default ON. Setting a password and NOT telling the coach is the unusual
   // case, so it is the one that costs a click.
@@ -735,6 +740,24 @@ function TeamEditForm({
           <span className="block text-[11px] text-slate-500 mt-1">
             Leave blank until you assign one. Unassigned teams show as
             &quot;Division TBD&quot; and sort last.
+          </span>
+        </label>
+        <label className="block sm:col-span-2">
+          <span className="block text-xs font-semibold text-slate-700 mb-1">
+            GameChanger link
+          </span>
+          <input
+            type="url"
+            value={gamechangerUrl}
+            onChange={(e) => setGamechangerUrl(e.target.value)}
+            disabled={busy}
+            placeholder="https://web.gc.com/teams/..."
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+          <span className="block text-[11px] text-slate-500 mt-1">
+            Optional. Shown as a &quot;Live stats on GameChanger&quot; button on
+            the team page. Must start with http:// or https:// — anything else is
+            ignored rather than rendered.
           </span>
         </label>
         <label className="block">
@@ -862,6 +885,7 @@ function TeamEditForm({
               division,
               ageGroup,
               logo_url: logoUrl,
+              gamechanger_url: gamechangerUrl.trim(),
               // Only send a password when one was typed/generated —
               // blank means "keep current".
               ...(captainPassword.trim()

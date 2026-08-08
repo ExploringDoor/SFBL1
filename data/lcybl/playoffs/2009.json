@@ -1,0 +1,179 @@
+{
+ "year": 2009,
+ "divisions": [
+  {
+   "division": "10u Section 1",
+   "champion": "Mountville Cubs",
+   "runner_up": null,
+   "disputed": false,
+   "rounds": [
+    {
+     "label": "printed on the champion banner (round not stated)",
+     "entries": [
+      {
+       "sideA": {
+        "seed": null,
+        "name": "Mountville Cubs"
+       },
+       "sideB": {
+        "seed": null,
+        "name": "Hempfield Black"
+       },
+       "games": [
+        {
+         "a": 9,
+         "b": 0
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "photos": {}
+  },
+  {
+   "division": "(division not printed on this page)",
+   "champion": "SALSA 10u",
+   "runner_up": null,
+   "disputed": false,
+   "rounds": [],
+   "photos": {}
+  },
+  {
+   "division": "12u Section 1",
+   "champion": "Hempfield Black",
+   "runner_up": null,
+   "disputed": false,
+   "rounds": [
+    {
+     "label": "printed on the champion banner (round not stated)",
+     "entries": [
+      {
+       "sideA": {
+        "seed": null,
+        "name": "Hempfield Black"
+       },
+       "sideB": {
+        "seed": null,
+        "name": "Warwick Phillies"
+       },
+       "games": [
+        {
+         "a": 7,
+         "b": 5
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "photos": {}
+  },
+  {
+   "division": "12u Section 2",
+   "champion": "Lititz Braves",
+   "runner_up": null,
+   "disputed": false,
+   "rounds": [
+    {
+     "label": "printed on the champion banner (round not stated)",
+     "entries": [
+      {
+       "sideA": {
+        "seed": null,
+        "name": "Lititz Braves"
+       },
+       "sideB": {
+        "seed": null,
+        "name": "Hempfield Black"
+       },
+       "games": [
+        {
+         "a": 7,
+         "b": 6
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "photos": {}
+  },
+  {
+   "division": "(division not printed on this page)",
+   "champion": "Rohrerstown Blue",
+   "runner_up": null,
+   "disputed": false,
+   "rounds": [],
+   "photos": {}
+  },
+  {
+   "division": "14u Section 1",
+   "champion": "Hempfield Black",
+   "runner_up": null,
+   "disputed": false,
+   "rounds": [
+    {
+     "label": "printed on the champion banner (round not stated)",
+     "entries": [
+      {
+       "sideA": {
+        "seed": null,
+        "name": "Hempfield"
+       },
+       "sideB": {
+        "seed": null,
+        "name": "Mountville Angels"
+       },
+       "games": [
+        {
+         "a": 7,
+         "b": 1
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "photos": {}
+  },
+  {
+   "division": "14u Section 2",
+   "champion": "Solanco Gold",
+   "runner_up": null,
+   "disputed": false,
+   "rounds": [],
+   "photos": {}
+  },
+  {
+   "division": "14u Section 3",
+   "champion": "Manheim Black",
+   "runner_up": null,
+   "disputed": false,
+   "rounds": [
+    {
+     "label": "printed on the champion banner (round not stated)",
+     "entries": [
+      {
+       "sideA": {
+        "seed": null,
+        "name": "Manheim Black"
+       },
+       "sideB": {
+        "seed": null,
+        "name": "SWS Tigers"
+       },
+       "games": [
+        {
+         "a": 9,
+         "b": 6
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "photos": {}
+  }
+ ]
+}

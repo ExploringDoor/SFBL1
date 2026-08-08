@@ -20,6 +20,13 @@
 //
 // Anything that cannot be placed is reported, never silently dropped.
 
+import {
+  legalFieldsFor,
+  minutesOf,
+  type ConflictGame,
+  type ConflictTeam,
+} from "./schedule-conflicts";
+
 export interface GeneratorTeam {
   id: string;
   name: string;
@@ -34,6 +41,17 @@ export interface GeneratorTeam {
    *  made the home side when a game lands there. Ties into a home-field
    *  discount, where a club is expected to host a share of its games. */
   homeField?: string | null;
+  /**
+   * Fields this team may play at AT ALL. Distinct from `homeField`, which is a
+   * preference worth a scoring nudge: this is a hard wall. A 14U squad that
+   * needs a full-size diamond, or a club with permits for only its own park,
+   * cannot simply be "nudged" elsewhere.
+   *
+   * Empty or missing means unrestricted, which is the right default — most
+   * teams travel, and requiring every team to be configured before a schedule
+   * can be built would make the feature unusable at 185 teams.
+   */
+  allowedFields?: string[] | null;
 }
 
 /** A field and the start times available ON THAT FIELD. Times are per field,
@@ -85,6 +103,22 @@ export interface GeneratorOptions {
    * DIFFERENT opponents (that many rounds packed into the week)?
    */
   weeklyPairing?: "same-opponent" | "different-opponents";
+  /**
+   * Games that already exist — other divisions generated earlier, hand-added
+   * rows, last week's fixtures. Their date+field+time slots are treated as
+   * taken, and their teams as busy at those times.
+   *
+   * Without this, generating division by division silently double-books: the
+   * 12U run has no idea the 10U run already took Cedar Hill at 5:30. That is
+   * the single most common way a multi-division league's schedule breaks.
+   */
+  existingGames?: ConflictGame[];
+  /**
+   * How long a game occupies its field, in minutes. 0 (default) means a slot
+   * is only "taken" by an exact same-start game. Set it and near-misses like
+   * 17:30 against 18:00 on one field stop being scheduled.
+   */
+  gameMinutes?: number;
 }
 
 export interface GeneratedGame {
@@ -108,6 +142,14 @@ export interface GeneratorResult {
   skippedBlocked: { a: string; b: string }[];
   /** Pairs with no slot left (more matchups than the calendar can hold). */
   unscheduled: { a: string; b: string }[];
+  /** Pairs whose teams' allowed-field sets do not overlap, so no field in the
+   *  league can legally host them. A configuration problem, not a capacity
+   *  one — worth telling the admin apart from `unscheduled`. */
+  noLegalField: { a: string; b: string }[];
+  /** Slots skipped because an existing game already occupies them. Counted so
+   *  the admin can see the generator worked around the rest of the league
+   *  rather than wondering why it produced fewer games than expected. */
+  slotsBlockedByExisting: number;
   /** True once every allowed pair has been scheduled at least once. */
   everyPairPlayed: boolean;
   warnings: string[];
@@ -222,6 +264,8 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
     skippedSameOrg: [],
     skippedBlocked: [],
     unscheduled: [],
+    noLegalField: [],
+    slotsBlockedByExisting: 0,
     everyPairPlayed: false,
     warnings: [msg],
   });
@@ -286,9 +330,99 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
 
   const games: GeneratedGame[] = [];
   const unscheduled: GeneratorResult["unscheduled"] = [];
+  const noLegalField: GeneratorResult["noLegalField"] = [];
+  const noLegalFieldSeen = new Set<string>();
   const playedPairs = new Set<string>();
   const pairKey = (a: string, b: string) => [a, b].sort().join("|");
   const usedDates: string[] = [];
+  let slotsBlockedByExisting = 0;
+
+  // ---- what the rest of the league has already taken ---------------------
+  // Existing games make two things unavailable: the field slot itself, and the
+  // teams playing in it. Both are indexed up front so the placement loop below
+  // stays a cheap lookup rather than a scan per candidate slot.
+  const gameMinutes = Math.max(0, Math.floor(opts.gameMinutes ?? 0));
+  const normField = (f: string | null | undefined) =>
+    String(f ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+
+  // date|field -> start times in minutes that are occupied
+  const busyField = new Map<string, number[]>();
+  // date|teamId -> start times in minutes that team is already committed to
+  const busyTeam = new Map<string, number[]>();
+  for (const eg of opts.existingGames ?? []) {
+    const mins = minutesOf(eg.time);
+    if (mins === null) continue; // no time to compare against
+    const f = normField(eg.field);
+    if (f) {
+      const key = `${eg.date}|${f}`;
+      const list = busyField.get(key);
+      if (list) list.push(mins);
+      else busyField.set(key, [mins]);
+    }
+    for (const tid of [eg.away_team_id, eg.home_team_id]) {
+      if (!tid) continue;
+      const key = `${eg.date}|${tid}`;
+      const list = busyTeam.get(key);
+      if (list) list.push(mins);
+      else busyTeam.set(key, [mins]);
+    }
+  }
+
+  /** Does a candidate start time collide with anything already booked? Same
+   *  overlap rule the conflict checker uses, so the generator can never emit a
+   *  schedule that findConflicts would then reject. */
+  const collides = (taken: number[] | undefined, start: number) => {
+    if (!taken) return false;
+    if (gameMinutes <= 0) return taken.includes(start);
+    return taken.some((t) => start < t + gameMinutes && t < start + gameMinutes);
+  };
+
+  const slotTaken = (date: string, field: string, time: string) => {
+    const mins = minutesOf(time);
+    if (mins === null) return false;
+    return collides(busyField.get(`${date}|${normField(field)}`), mins);
+  };
+
+  const teamBusy = (teamId: string, date: string, time: string) => {
+    const mins = minutesOf(time);
+    if (mins === null) return false;
+    return collides(busyTeam.get(`${date}|${teamId}`), mins);
+  };
+
+  /** Record a placement so later matchups in this same run see it too. */
+  const markTaken = (date: string, field: string, time: string, a: string, b: string) => {
+    const mins = minutesOf(time);
+    if (mins === null) return;
+    const fk = `${date}|${normField(field)}`;
+    busyField.set(fk, [...(busyField.get(fk) ?? []), mins]);
+    for (const tid of [a, b]) {
+      const tk = `${date}|${tid}`;
+      busyTeam.set(tk, [...(busyTeam.get(tk) ?? []), mins]);
+    }
+  };
+
+  // Fields a given matchup is allowed to use at all, cached per pair.
+  const asConflictTeam = (id: string): ConflictTeam | undefined => {
+    const t = byId.get(id);
+    return t ? { id: t.id, name: t.name, allowedFields: t.allowedFields } : undefined;
+  };
+  const legalFieldCache = new Map<string, Set<string> | null>();
+  const legalFieldsSet = (a: string, b: string): Set<string> | null => {
+    const key = pairKey(a, b);
+    if (legalFieldCache.has(key)) return legalFieldCache.get(key)!;
+    const allowed = legalFieldsFor(
+      asConflictTeam(a),
+      asConflictTeam(b),
+      validFields.map((f) => f.name),
+    );
+    // null means "no restriction", which is not the same as "no legal field".
+    const unrestricted =
+      (byId.get(a)?.allowedFields ?? []).length === 0 &&
+      (byId.get(b)?.allowedFields ?? []).length === 0;
+    const set = unrestricted ? null : new Set(allowed.map(normField));
+    legalFieldCache.set(key, set);
+    return set;
+  };
 
   // Running fairness counters. These are what stop one team being home seven
   // times out of ten, or always drawing the 9am slot.
@@ -341,6 +475,7 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
      *     days and fields that the round-robin cursor used to give
      */
     const takeSlots = (n: number, a: string, b: string) => {
+      const legal = legalFieldsSet(a, b);
       let best: { r: number; i: number; score: number } | null = null;
       for (let r = 0; r < runs.length; r++) {
         // Every start position whose next n slots are all still free. For a
@@ -357,6 +492,22 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
           ) {
             continue;
           }
+          // Hard block: this field is not one both teams may use.
+          if (legal && window.some((s) => !legal.has(normField(s.field)))) continue;
+          // Hard block: the slot, or one of these teams, is already committed
+          // elsewhere in the league. This is what stops division-by-division
+          // generation from stacking games onto one field.
+          if (
+            window.some(
+              (s) =>
+                slotTaken(s.date, s.field, s.time) ||
+                teamBusy(a, s.date, s.time) ||
+                teamBusy(b, s.date, s.time),
+            )
+          ) {
+            slotsBlockedByExisting += 1;
+            continue;
+          }
           let score = load[r]! * 2; // spread across days and fields
           for (const s of window) {
             score += (timesFor(a).get(s.time) ?? 0) + (timesFor(b).get(s.time) ?? 0);
@@ -369,7 +520,11 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
       const { r, i } = best;
       for (let k = 0; k < n; k++) free[r]![i + k] = false;
       load[r] = load[r]! + 1;
-      return runs[r]!.slice(i, i + n);
+      const picked = runs[r]!.slice(i, i + n);
+      // Feed the placement back into the busy index so the next matchup in this
+      // same run sees it, exactly as it would see a pre-existing game.
+      picked.forEach((s) => markTaken(s.date, s.field, s.time, a, b));
+      return picked;
     };
 
     // This week's matchups.
@@ -384,6 +539,19 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
     roundCursor += roundsPerWeek;
 
     for (const { a, b } of weekMatchups) {
+      // A pairing whose allowed-field sets do not intersect can never be placed,
+      // no matter how much calendar is added. Report it as its own problem —
+      // telling an admin to "add a field or another start time" when the real
+      // fix is a team's eligibility list would send them the wrong way.
+      const legal = legalFieldsSet(a, b);
+      if (legal && legal.size === 0) {
+        const key = pairKey(a, b);
+        if (!noLegalFieldSeen.has(key)) {
+          noLegalFieldSeen.add(key);
+          noLegalField.push({ a: nameOf(a), b: nameOf(b) });
+        }
+        continue;
+      }
       const picked = takeSlots(gamesPerMatchup, a, b);
       if (!picked) {
         unscheduled.push({ a: nameOf(a), b: nameOf(b) });
@@ -463,12 +631,29 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
     );
   }
 
+  if (noLegalField.length > 0) {
+    warnings.push(
+      `${noLegalField.length} matchup${noLegalField.length === 1 ? "" : "s"} ` +
+        `could not be placed because the two teams share no field they are both ` +
+        `allowed to use. Widen one of their allowed-field lists.`,
+    );
+  }
+  if (slotsBlockedByExisting > 0) {
+    warnings.push(
+      `${slotsBlockedByExisting} slot${slotsBlockedByExisting === 1 ? "" : "s"} ` +
+        `were already taken by games elsewhere in the league and were worked ` +
+        `around, so nothing here double-books an existing game.`,
+    );
+  }
+
   return {
     games,
     dates: usedDates,
     skippedSameOrg,
     skippedBlocked,
     unscheduled,
+    noLegalField,
+    slotsBlockedByExisting,
     everyPairPlayed,
     warnings,
   };

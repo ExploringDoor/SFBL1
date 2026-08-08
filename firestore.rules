@@ -216,6 +216,42 @@ service cloud.firestore {
         allow write: if isAdmin(leagueId);
       }
 
+      // /leagues/{leagueId}/snackbar_shifts/{shiftId}
+      // The public shift board: date, time, location, how many volunteers are
+      // needed, and each claim as a first-name + last-initial display string.
+      //
+      // Volunteers' real names, emails and phones live in
+      // /leagues/{leagueId}/snackbar_claims, which has NO rule here and so
+      // falls through to the default deny at the bottom of this file. The
+      // Admin SDK reads it; nobody else can. Same separation as player_ads,
+      // for the same reason: signing up to run the snack bar is not consent to
+      // publish your phone number.
+      //
+      // Write is admin-only. Parents claim slots through /api/snack-bar, which
+      // runs the claim in a transaction (so the last slot cannot be taken
+      // twice) and is the only thing that builds the public projection.
+      match /snackbar_shifts/{shiftId} {
+        allow read: if true;
+        allow write: if isAdmin(leagueId);
+      }
+
+      // /leagues/{leagueId}/umpires/{umpireId}
+      // The umpire roster carries officials' emails, phones and the dates they
+      // cannot work. None of that is public: an umpire signing up to work games
+      // has not agreed to publish their mobile number, and a list of who is
+      // working which field on which night is exactly the sort of thing a
+      // league should not broadcast.
+      //
+      // So unlike almost every other collection here, read is ADMIN-ONLY.
+      // The public /content/umpires page is chapter information (meetings, rule
+      // books, fees) written by the admin — not a directory of people.
+      //
+      // Assignments themselves live on the game doc as an array of umpire ids,
+      // which are opaque without this collection to resolve them.
+      match /umpires/{umpireId} {
+        allow read, write: if isAdmin(leagueId);
+      }
+
       // Box scores: admin OR captain of one of the teams in the game.
       match /box_scores/{gameId} {
         allow read: if true;

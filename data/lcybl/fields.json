@@ -1,0 +1,1014 @@
+{
+ "data": [
+  {
+   "name": "Brubaker Park",
+   "location": "Bowmansville",
+   "address": "100 Brubaker Lane East Earl,PA 17519",
+   "mapsUrl": "https://www.google.com/maps/dir//40.1776052,-76.0484481/@40.1762373,-76.0482769,691m/data=!3m1!1e3?hl=en",
+   "lat": 40.1776052,
+   "lng": -76.0484481
+  },
+  {
+   "name": "Shiffler Field",
+   "location": "Bowmansville",
+   "address": "100 Brubaker Lane East Earl,PA 17519",
+   "mapsUrl": "https://www.google.com/maps/@40.1760476,-76.0468398,909m/data=!3m1!1e3?hl=en",
+   "lat": 40.1760476,
+   "lng": -76.0468398
+  },
+  {
+   "name": "Hoshour Field",
+   "location": "Bowmansville",
+   "address": "100 Brubaker Lane East Earl,PA 17519",
+   "mapsUrl": "https://www.google.com/maps/@40.1760476,-76.0468398,909m/data=!3m1!1e3?hl=en",
+   "lat": 40.1760476,
+   "lng": -76.0468398
+  },
+  {
+   "name": "Messner Field",
+   "location": "Bowmansville",
+   "address": "100 Brubaker Lane East Earl,PA 17519",
+   "mapsUrl": "https://www.google.com/maps/@40.1760476,-76.0468398,909m/data=!3m1!1e3?hl=en",
+   "lat": 40.1760476,
+   "lng": -76.0468398
+  },
+  {
+   "name": "Cornwall Field",
+   "location": "Cedar Crest",
+   "address": "45 Freeman Drive Lebanon PA 17042",
+   "mapsUrl": "https://maps.app.goo.gl/Xiw2ucFhn8gzXyMq9",
+   "notes": [
+    "Portable Mound",
+    "No Metal Cleats"
+   ],
+   "lat": 40.276353,
+   "lng": -76.4199803
+  },
+  {
+   "name": "Dairy Road Field",
+   "location": "Cedar Crest",
+   "address": "Dairy Road",
+   "mapsUrl": "https://goo.gl/maps/Z8PjpsVD2ffHXX618",
+   "notes": [
+    "Portable Mound",
+    "No Metal Cleats"
+   ],
+   "lat": 40.3347715,
+   "lng": -76.4643039
+  },
+  {
+   "name": "Gloninger Woods Park",
+   "location": "Cedar Crest",
+   "address": "115 S 22nd St, Lebanon, PA 17042",
+   "mapsUrl": "https://maps.app.goo.gl/qMjhCcgypdukhj869",
+   "notes": [
+    "Field #1 (10u) and Field #2 (12u)"
+   ],
+   "lat": 40.3353516,
+   "lng": -76.4559865
+  },
+  {
+   "name": "South Lebanon Elementary School",
+   "location": "Cedar Crest",
+   "address": "1825 South 5th Ave. Lebanon, PA 17042",
+   "mapsUrl": "https://www.google.com/maps/place/1825+S+5th+Ave,+Lebanon,+PA+17042/@40.3168749,-76.370232,563m/data=!3m1!1e3!4m15!1m9!4m8!1m0!1m6!1m2!1s0x89c603565d8a1acd:0xfcd0cb43e55bc548!2s1825+S+5th+Ave,+Lebanon,+PA+17042!2m2!1d-76.3661367!2d40.3166054!3m4!1s0x89c603565d8a1acd:0xfcd0cb43e55bc548!8m2!3d40.3166054!4d-76.3661367!6m1!1e1",
+   "notes": [
+    "Portable Mound",
+    "No Metal Cleats"
+   ],
+   "lat": 40.3168749,
+   "lng": -76.370232
+  },
+  {
+   "name": "Cocalico High School Fields",
+   "location": "Cocalico",
+   "address": "700 S 4th St, Denver, Pennsylvania 17517",
+   "mapsUrl": "https://goo.gl/maps/wqKi4",
+   "lat": 40.2255552,
+   "lng": -76.148832
+  },
+  {
+   "name": "Denver 4th St.",
+   "location": "Cocalico",
+   "address": "303 N 4th St, Denver, Pennsylvania 17517",
+   "mapsUrl": "https://goo.gl/maps/eUzHm",
+   "lat": 40.2336223,
+   "lng": -76.1365509
+  },
+  {
+   "name": "Denver Memorial Park",
+   "location": "Cocalico",
+   "address": "385 N 8th St, Denver, Pennsylvania 17517",
+   "mapsUrl": "https://goo.gl/maps/GYufM",
+   "lat": 40.2369319,
+   "lng": -76.1409404
+  },
+  {
+   "name": "Denver Memorial Park #2",
+   "location": "Cocalico",
+   "address": "801 Main St, Denver, PA 17517",
+   "mapsUrl": "https://goo.gl/maps/mgWJ1",
+   "lat": 40.2375019,
+   "lng": -76.1424132
+  },
+  {
+   "name": "Manetas Park (Old Zinn's Park)",
+   "location": "Cocalico",
+   "address": "2270 N. Reading Road, Route 272, Denver, PA17517",
+   "mapsUrl": "https://goo.gl/maps/moETY",
+   "lat": 40.2259936,
+   "lng": -76.0924008
+  },
+  {
+   "name": "Reamstown Park",
+   "location": "Cocalico",
+   "address": "13 E Church St, Stevens, PA 17578",
+   "mapsUrl": "https://goo.gl/maps/X2Xsc",
+   "lat": 40.2105858,
+   "lng": -76.1221737
+  },
+  {
+   "name": "Schoeneck Park",
+   "location": "Cocalico",
+   "address": "178 W Queen St, Stevens, Pennsylvania 17578",
+   "mapsUrl": "https://goo.gl/maps/cJBpg",
+   "lat": 40.2426511,
+   "lng": -76.1800361
+  },
+  {
+   "name": "Gladfelter Field 1 thru 5",
+   "location": "Columbia",
+   "address": "1115 Lancaster Ave, Columbia, Pennsylvania 17512",
+   "mapsUrl": "https://www.google.com/maps/dir/1115+Lancaster+Ave,+Columbia,+PA+17512/40.2426511,-76.1800361/@40.0317269,-76.4860599,532m/data=!3m1!1e3!4m14!4m13!1m10!1m1!1s0x89c89d11ba1a0923:0x5f9711aea606f27f!2m2!1d-76.487331!2d40.0317!3m4!1m2!1d-76.486428!2d40.0308573!3s0x89c89d11a767a5d1:0x2899a8a3c40bde1a!1m0!3e0?hl=en",
+   "notes": [
+    "NO PETS!"
+   ],
+   "lat": 40.0317269,
+   "lng": -76.4860599
+  },
+  {
+   "name": "Janson Park",
+   "location": "Columbia",
+   "address": "650 Cherry Street Columbia, Pennsylvania 17512",
+   "mapsUrl": "https://www.google.com/maps/@40.0328903,-76.4958286,456m/data=!3m1!1e3?hl=en",
+   "lat": 40.0328903,
+   "lng": -76.4958286
+  },
+  {
+   "name": "Conestoga Valley High School",
+   "location": "Conestoga Valley",
+   "address": "JV Field",
+   "mapsUrl": "https://goo.gl/maps/qJA5z",
+   "notes": [
+    "2110 Horseshoe Rd, Lancaster, PA 17601"
+   ],
+   "lat": 40.0482718,
+   "lng": -76.2211477
+  },
+  {
+   "name": "Flory Park",
+   "location": "Conestoga Valley",
+   "address": "416 Dohner Dr, Lancaster, PA 17602",
+   "mapsUrl": "https://www.google.com/maps/dir/416+Dohner+Dr,+Lancaster,+PA+17602/416+Dohner+Dr,+Lancaster,+PA+17602/@40.0276195,-76.243183,1206m/data=!3m1!1e3!4m13!4m12!1m5!1m1!1s0x89c63b101de1188f:0x844f22c4789b194d!2m2!1d-76.236402!2d40.024402!1m5!1m1!1s0x89c63b101de1188f:0x844f22c4789b194d!2m2!1d-76.236402!2d40.024402?hl=en",
+   "notes": [
+    "new"
+   ],
+   "lat": 40.0276195,
+   "lng": -76.243183
+  },
+  {
+   "name": "Lafayette Tower Park Fire Company Lower Field 1905 Woodland Ave, Lancaster, PA 17602",
+   "location": "Conestoga Valley",
+   "address": "",
+   "mapsUrl": "https://goo.gl/maps/5Rp8U",
+   "lat": 40.0317801,
+   "lng": -76.2549755
+  },
+  {
+   "name": "The Leola Community Pool & Park",
+   "location": "Conestoga Valley",
+   "address": "40 E Main St, Leola, PA 17540",
+   "mapsUrl": "https://goo.gl/maps/LFRNi",
+   "lat": 40.0888839,
+   "lng": -76.1835641
+  },
+  {
+   "name": "Upper Leacock Twp Municipal building",
+   "location": "Conestoga Valley",
+   "address": "29 Hillcrest Avenue Leola, PA 17540",
+   "mapsUrl": "https://www.google.com/maps/dir/29+Hillcrest+Ave,+Leola,+PA+17540/29+Hillcrest+Ave,+Leola,+PA+17540/@40.0861994,-76.1895093,718m/data=!3m1!1e3!4m13!4m12!1m5!1m1!1s0x89c63c2cc081459d:0xd73eb8900e49299f!2m2!1d-76.1852602!2d40.0867678!1m5!1m1!1s0x89c63c2cc081459d:0xd73eb8900e49299f!2m2!1d-76.1852602!2d40.0867678?hl=en",
+   "lat": 40.0861994,
+   "lng": -76.1895093
+  },
+  {
+   "name": "Witmer Heights Field #2",
+   "location": "Conestoga Valley",
+   "address": "2250 Old Philadelphia Pike Lancaster, PA 17602",
+   "mapsUrl": "https://www.google.com/maps/place/2250+Old+Philadelphia+Pike,+Lancaster,+PA+17602/@40.0381056,-76.2228114,666m/data=!3m1!1e3!4m5!3m4!1s0x89c63b9c186549f1:0xc0cdb1ea64a5cf43!8m2!3d40.0381056!4d-76.2206227",
+   "lat": 40.0381056,
+   "lng": -76.2228114
+  },
+  {
+   "name": "Conoy West",
+   "location": "Conoy (CTYAA)",
+   "address": "Conoy West",
+   "mapsUrl": "https://www.google.com/maps/place/2115+River+Rd,+Bainbridge,+PA+17502/@40.0847159,-76.6641521,17z/data=!3m1!4b1!4m6!3m5!1s0x89c890be0ddb2e49:0x582ef82b5db7219a!8m2!3d40.0847119!4d-76.6592812!16s%2Fg%2F11gxx60jfl?entry=ttu&g_ep=EgoyMDI0MTAwOS4wIKXMDSoASAFQAw%3D%3D",
+   "notes": [
+    "2115 River Rd, Bainbridge, PA 17502"
+   ],
+   "lat": 40.0847159,
+   "lng": -76.6641521
+  },
+  {
+   "name": "Conoy East",
+   "location": "Conoy (CTYAA)",
+   "address": "Conoy East",
+   "mapsUrl": "https://www.google.com/maps/place/2116+River+Rd,+Bainbridge,+PA+17502/@40.0856703,-76.6622401,17z/data=!3m1!4b1!4m5!3m4!1s0x89c890be603f9289:0x2d6a95cc6b7f4873!8m2!3d40.0856662!4d-76.6596652?entry=ttu&g_ep=EgoyMDI0MTAwOS4wIKXMDSoASAFQAw%3D%3D",
+   "notes": [
+    "116 River Road, Bainbridge, PA 17502"
+   ],
+   "lat": 40.0856703,
+   "lng": -76.6622401
+  },
+  {
+   "name": "Fuhrman Memorial Park",
+   "location": "Donegal",
+   "address": "159 E High St, Maytown, PA 17550",
+   "mapsUrl": "https://goo.gl/maps/CJBpj",
+   "notes": [
+    "Marietta <https://goo.gl/maps/DGTND>"
+   ],
+   "lat": 40.077775,
+   "lng": -76.5783753
+  },
+  {
+   "name": "Kunkle Field",
+   "location": "Donegal",
+   "address": "301 Manheim St, Mt. Joy, Pennsylvania 17552",
+   "mapsUrl": "https://goo.gl/maps/aPuiT",
+   "lat": 40.1134957,
+   "lng": -76.500853
+  },
+  {
+   "name": "Rotary Park",
+   "location": "Donegal",
+   "address": "147 Manheim St, Mount Joy, PA 17552",
+   "mapsUrl": "https://goo.gl/maps/LHMBM",
+   "lat": 40.1124816,
+   "lng": -76.5057166
+  },
+  {
+   "name": "The Lakes",
+   "location": "Donegal",
+   "address": "272 Lakeside Crossing, Mount Joy, PA 17552",
+   "mapsUrl": "https://goo.gl/maps/hjpCP",
+   "lat": 40.1103321,
+   "lng": -76.5305649
+  },
+  {
+   "name": "War Memorial",
+   "location": "Donegal",
+   "address": "336 E Walnut St, Marietta, Pennsylvania 17547",
+   "mapsUrl": "https://goo.gl/maps/DGTND",
+   "lat": 40.0594112,
+   "lng": -76.548156
+  },
+  {
+   "name": "West Donegal Field #1",
+   "location": "Donegal",
+   "address": "",
+   "mapsUrl": "https://goo.gl/maps/w5gExtGTtmkCj2Kc8",
+   "lat": 40.1383706,
+   "lng": -76.6037963
+  },
+  {
+   "name": "West Donegal Field #2",
+   "location": "Donegal",
+   "address": "",
+   "mapsUrl": "https://goo.gl/maps/w5gExtGTtmkCj2Kc8",
+   "lat": 40.1383706,
+   "lng": -76.6037963
+  },
+  {
+   "name": "Govenor Stables (Gerber Field)",
+   "location": "Elizabethtown",
+   "address": "101 Governor Stable Rd Elizabethtown, PA 17022",
+   "mapsUrl": "https://goo.gl/maps/u5toI",
+   "lat": 40.1321144,
+   "lng": -76.6952526
+  },
+  {
+   "name": "Minor Field",
+   "location": "Elizabethtown",
+   "address": "70 South Poplar Street, Elizabethtown, PA 17022",
+   "mapsUrl": "https://maps.app.goo.gl/NYwUUP4Ftadfct2s6",
+   "lat": 40.1493776,
+   "lng": -76.6102241
+  },
+  {
+   "name": "Old Trolley Line Park",
+   "location": "Elizabethtown",
+   "address": "475 Beverly Rd, Elizabethtown, PA 17022",
+   "mapsUrl": "https://goo.gl/maps/K7PgYEAbio5itNXz5",
+   "lat": 40.1862509,
+   "lng": -76.6008319
+  },
+  {
+   "name": "Poplar Street",
+   "location": "Elizabethtown",
+   "address": "152 S Poplar St, Elizabethtown, PA 17022",
+   "mapsUrl": "https://goo.gl/maps/f0AHw",
+   "notes": [
+    "Portable mound"
+   ],
+   "lat": 40.1486065,
+   "lng": -76.6065249
+  },
+  {
+   "name": "Wenger Field",
+   "location": "Elizabethtown",
+   "address": "70 S. Poplar St. Elizabethtown, PA 17022",
+   "mapsUrl": "https://maps.app.goo.gl/pr1e9vi7kSrgpmhV8",
+   "lat": 40.148895,
+   "lng": -76.611126
+  },
+  {
+   "name": "Wolgemuth Park",
+   "location": "Elizabethtown",
+   "address": "8805 Elizabethtown Rd, Elizabethtown, PA 17022",
+   "mapsUrl": "https://goo.gl/maps/0XqjP",
+   "lat": 40.1732605,
+   "lng": -76.5561826
+  },
+  {
+   "name": "Charity Gardens",
+   "location": "Ephrata",
+   "address": "87 Agape Dr, Ephrata, Pennsylvania 17522",
+   "mapsUrl": "https://goo.gl/maps/3lO1I",
+   "lat": 40.2031069,
+   "lng": -76.205154
+  },
+  {
+   "name": "Ephrata Township Park",
+   "location": "Ephrata",
+   "address": "436 East Fulton St, Ephrata, Pennsylvania 17522",
+   "mapsUrl": "https://goo.gl/maps/WrfL2",
+   "notes": [
+    "Turf mound"
+   ],
+   "lat": 40.1653381,
+   "lng": -76.1679423
+  },
+  {
+   "name": "Highland Field",
+   "location": "Ephrata",
+   "address": "99 Highland Ave, Ephrata, Pennsylvania 17522",
+   "mapsUrl": "https://goo.gl/maps/9T14P",
+   "lat": 40.1841957,
+   "lng": -76.1838872
+  },
+  {
+   "name": "Hopeland Park",
+   "location": "Ephrata",
+   "address": "658 Hopeland Rd, Lititz, Pennsylvania 17543",
+   "mapsUrl": "https://goo.gl/maps/TpB2E",
+   "lat": 40.233818,
+   "lng": -76.2616376
+  },
+  {
+   "name": "Roland Park",
+   "location": "Ephrata",
+   "address": "Lloyd Field",
+   "mapsUrl": "https://goo.gl/maps/PKUmq",
+   "notes": [
+    "Akron",
+    "207 N 11th St, Akron, Pennsylvania 17501"
+   ],
+   "lat": 40.1598054,
+   "lng": -76.1982926
+  },
+  {
+   "name": "Roland Park",
+   "location": "Ephrata",
+   "address": "Wolf Field",
+   "mapsUrl": "https://goo.gl/maps/C7ah9",
+   "notes": [
+    "Akron",
+    "1343 Main St, Akron, Pennsylvania 17501",
+    "Turf mound"
+   ],
+   "lat": 40.1588527,
+   "lng": -76.1948479
+  },
+  {
+   "name": "Snyder Park #1",
+   "location": "Ephrata",
+   "address": "200 Clay School Rd, Ephrata, Pennsylvania 17522",
+   "mapsUrl": "https://goo.gl/maps/Zf7jj",
+   "lat": 40.2190638,
+   "lng": -76.2409056
+  },
+  {
+   "name": "Snyder Park #2 & #3",
+   "location": "Ephrata",
+   "address": "230 Clay School Rd, Ephrata, Pennsylvania 17522",
+   "mapsUrl": "https://goo.gl/maps/DAObV",
+   "notes": [
+    "Turf mound"
+   ],
+   "lat": 40.2195247,
+   "lng": -76.2388017
+  },
+  {
+   "name": "Thomas P. Grater Community Park",
+   "location": "Ephrata",
+   "address": "435 Cocalico Street, Ephrata, PA 17522",
+   "mapsUrl": "https://maps.app.goo.gl/rgxcZP3f3bnAuE8b8",
+   "notes": [
+    "New"
+   ],
+   "lat": 40.1812606,
+   "lng": -76.185911
+  },
+  {
+   "name": "Garden Spot High School JV Field",
+   "location": "Garden Spot",
+   "address": "601 Grandview Dr, New Holland, PA 17557",
+   "mapsUrl": "https://goo.gl/maps/ACQtU",
+   "lat": 40.1102805,
+   "lng": -76.0734702
+  },
+  {
+   "name": "New Holland Legion Field",
+   "location": "Garden Spot",
+   "address": "35 S Hoover Ave, New Holland, PA 17557",
+   "mapsUrl": "https://goo.gl/maps/JUkSyanrqytJe2dz8",
+   "lat": 40.0973013,
+   "lng": -76.1035948
+  },
+  {
+   "name": "New Holland Park Field",
+   "location": "Garden Spot",
+   "address": "11 Chestnut Dr. New Holland, PA 17557",
+   "mapsUrl": "https://goo.gl/maps/MpRS0",
+   "notes": [
+    "Portable mound"
+   ],
+   "lat": 40.1028131,
+   "lng": -76.0724136
+  },
+  {
+   "name": "Terre Hill Community Memorial Park",
+   "location": "Garden Spot",
+   "address": "107 Conestoga St, East Earl, PA 17581",
+   "mapsUrl": "https://goo.gl/maps/JrDCN",
+   "lat": 40.1556957,
+   "lng": -76.0533438
+  },
+  {
+   "name": "Amos Herr Park",
+   "location": "Hempfield",
+   "address": "1630 Nissley Rd, Landisville, Pennsylvania 17538",
+   "mapsUrl": "https://goo.gl/maps/h4YvL",
+   "lat": 40.092916,
+   "lng": -76.400496
+  },
+  {
+   "name": "Fairview Park",
+   "location": "Hempfield",
+   "address": "4375 Fairview Rd, Columbia, Pennsylvania 17512",
+   "mapsUrl": "https://goo.gl/maps/S9o5O",
+   "lat": 40.0554627,
+   "lng": -76.481144
+  },
+  {
+   "name": "Farmdale Elementary",
+   "location": "Hempfield",
+   "address": "695 Prospect Rd, Mount Joy, Pennsylvania 17552",
+   "mapsUrl": "https://www.google.com/maps/dir//695+Prospect+Rd,+Mount+Joy,+Pennsylvania+17552/@40.0669335,-76.4620263,574m/data=!3m1!1e3!4m8!4m7!1m0!1m5!1m1!1s0x89c89df6fa66b865:0xf49e7587c7c6e0f9!2m2!1d-76.4596389!2d40.0667537",
+   "lat": 40.0669335,
+   "lng": -76.4620263
+  },
+  {
+   "name": "Pennsylvania 17552",
+   "location": "Hempfield",
+   "address": "",
+   "mapsUrl": "https://www.google.com/maps/dir//695+Prospect+Rd,+Mount+Joy,+Pennsylvania+17552/@40.0669335,-76.4620263,574m/data=!3m1!1e3!4m8!4m7!1m0!1m5!1m1!1s0x89c89df6fa66b865:0xf49e7587c7c6e0f9!2m2!1d-76.4596389!2d40.0667537",
+   "lat": 40.0669335,
+   "lng": -76.4620263
+  },
+  {
+   "name": "Rohrerstown Elementary Fields",
+   "location": "Hempfield",
+   "address": "2200 Noll Dr., Lancaster, Pennsylvania 17603",
+   "mapsUrl": "https://maps.app.goo.gl/ENsgYP5myAPs8CSw7",
+   "lat": 40.0490487,
+   "lng": -76.3674481
+  },
+  {
+   "name": "Rohrerstown Fire House field",
+   "location": "Hempfield",
+   "address": "10u2/10u3"
+  },
+  {
+   "name": "Rohrerstown Road/Mayer Ave field",
+   "location": "Hempfield",
+   "address": "10u1"
+  },
+  {
+   "name": "Rohrerstown Elementary Pavilion field",
+   "location": "Hempfield",
+   "address": "12u2"
+  },
+  {
+   "name": "Salunga Fire Company",
+   "location": "Hempfield",
+   "address": "23 W Main St, Landisville, Pennsylvania 17538",
+   "mapsUrl": "https://goo.gl/maps/0vVP1",
+   "lat": 40.1001476,
+   "lng": -76.4233226
+  },
+  {
+   "name": "Tom Herr Field",
+   "location": "Hempfield",
+   "address": "6051 Pine St. , East Petersburg, Pennsylvania 17520",
+   "mapsUrl": "https://www.google.com/maps/place/6051+Pine+St,+East+Petersburg,+PA+17520/@40.1016726,-76.3534243,454m/data=!3m2!1e3!4b1!4m5!3m4!1s0x89c623ce19c68155:0x2cfbc7976a3f18e2!8m2!3d40.101669!4d-76.351497",
+   "lat": 40.1016726,
+   "lng": -76.3534243
+  },
+  {
+   "name": "Wayside Church",
+   "location": "Hempfield",
+   "address": "606 Stony Battery Rd, Landisville, Pennsylvania 17538",
+   "mapsUrl": "https://goo.gl/maps/7JYgN",
+   "lat": 40.0851034,
+   "lng": -76.4201176
+  },
+  {
+   "name": "County park #4",
+   "location": "Lampeter Strasburg",
+   "address": "826 Eshelman Mill Rd, Lancaster, PA 17602",
+   "mapsUrl": "http://binged.it/1juPven"
+  },
+  {
+   "name": "Herr Flowers Fields 1888 Lampeter Rd, Lancaster, Pennsylvania 17602",
+   "location": "Lampeter Strasburg",
+   "address": "",
+   "mapsUrl": "http://binged.it/GJdNEk"
+  },
+  {
+   "name": "Lampeter YMCA",
+   "location": "Lampeter Strasburg",
+   "address": "801 Village Rd, Lancaster, PA 17602",
+   "mapsUrl": "http://binged.it/GM6yZt"
+  },
+  {
+   "name": "Starr Field",
+   "location": "Lampeter Strasburg",
+   "address": "Willow Street",
+   "mapsUrl": "http://binged.it/GM7Q6S",
+   "notes": [
+    "322 Peach Bottom Rd, Willow Street, Pennsylvania 17584",
+    "Strasburg Elementary School",
+    "110 S Jackson St, Strasburg, PA 17579 <http://binged.it/GM8u4i>"
+   ]
+  },
+  {
+   "name": "Village Park Fields",
+   "location": "Lampeter Strasburg",
+   "address": "800 Village Rd, Lancaster, PA 17579",
+   "mapsUrl": "https://maps.app.goo.gl/rqtCfwu28o7r4BPH9",
+   "lat": 39.987136,
+   "lng": -76.2517804
+  },
+  {
+   "name": "Lancaster Community Park Field #1 ~ 3",
+   "location": "Lancaster",
+   "address": "1221 Millersville Pike, Lancaster, PA 17603",
+   "mapsUrl": "https://goo.gl/maps/5cljh",
+   "lat": 40.0279707,
+   "lng": -76.3266353
+  },
+  {
+   "name": "County park #4",
+   "location": "Lancaster",
+   "address": "830 Eshelman Mill Rd, Lancaster, PA 17602",
+   "mapsUrl": "https://goo.gl/maps/phnaF",
+   "lat": 40.0204316,
+   "lng": -76.2784557
+  },
+  {
+   "name": "Davey Arnold Field",
+   "location": "Lancaster",
+   "address": "Washington Elementary School",
+   "mapsUrl": "http://binged.it/GUS24E",
+   "notes": [
+    "539 Chesapeake St, Lancaster, Pennsylvania 17602"
+   ]
+  },
+  {
+   "name": "St. Joseph's Catholic Club Athletic Field",
+   "location": "Lancaster",
+   "address": "1409 Wabank Rd, Lancaster, Pennsylvania 17603",
+   "mapsUrl": "http://binged.it/Hij95i"
+  },
+  {
+   "name": "Lancaster Mennonite High School JV field",
+   "location": "Lancaster Mennonite",
+   "address": "2162 Lincoln Hwy E, Lancaster, PA 17602",
+   "mapsUrl": "https://goo.gl/maps/nze1b",
+   "lat": 40.0267979,
+   "lng": -76.231692
+  },
+  {
+   "name": "Grove Locust Mennonite School field",
+   "location": "Lancaster Mennonite",
+   "address": "2257 Old Philadelphia Pike, Lancaster, PA 17602",
+   "mapsUrl": "https://goo.gl/maps/L9ZNG",
+   "lat": 40.0390867,
+   "lng": -76.2184953
+  },
+  {
+   "name": "Cedar Hollow Park",
+   "location": "Manheim & Penryn",
+   "address": "306 Cedar Hollow, Manheim, PA 17545",
+   "mapsUrl": "https://goo.gl/maps/fzUbR",
+   "lat": 40.1444936,
+   "lng": -76.3898501
+  },
+  {
+   "name": "Creek Field / Pool Field",
+   "location": "Manheim & Penryn",
+   "address": "527 E Adele Ave, Manheim, Pennsylvania 17545",
+   "mapsUrl": "https://goo.gl/maps/I1Kac",
+   "lat": 40.1706992,
+   "lng": -76.3917602
+  },
+  {
+   "name": "Doe Run Elementary School",
+   "location": "Manheim & Penryn",
+   "address": "281 Doe Run Rd, Manheim, Pennsylvania 17545",
+   "mapsUrl": "https://goo.gl/maps/S2gBh",
+   "lat": 40.1751053,
+   "lng": -76.3725137
+  },
+  {
+   "name": "Hollinger Field",
+   "location": "Manheim & Penryn",
+   "address": "201 Mill St., Manheim, PA 17545",
+   "mapsUrl": "https://www.google.com/maps/place/201+Mill+St,+Manheim,+PA+17545/@40.1629264,-76.3900468,357m/data=!3m1!1e3!4m5!3m4!1s0x89c61f68727db0bd:0x59773d8144d9f4c2!8m2!3d40.163047!4d-76.388516?hl=en",
+   "lat": 40.1629264,
+   "lng": -76.3900468
+  },
+  {
+   "name": "LCBC",
+   "location": "Manheim & Penryn",
+   "address": "2392 Mount Joy Rd., Manheim PA 17545",
+   "mapsUrl": "https://maps.app.goo.gl/ZE2x1xkFmZ9WuczcA",
+   "notes": [
+    "New Field"
+   ],
+   "lat": 40.1294336,
+   "lng": -76.4575279
+  },
+  {
+   "name": "Logan Park",
+   "location": "Manheim & Penryn",
+   "address": "700 West Ferdinand St., Manheim, PA 17545",
+   "mapsUrl": "https://www.google.com/maps/dir//700+W+Ferdinand+St,+Manheim,+PA+17545/@40.1565942,-76.4055369,764m/data=!3m1!1e3!4m8!4m7!1m0!1m5!1m1!1s0x89c61f7dab9eb879:0x2c293280cf4c794f!2m2!1d-76.4018491!2d40.1561546",
+   "lat": 40.1565942,
+   "lng": -76.4055369
+  },
+  {
+   "name": "Mummau Park",
+   "location": "Manheim & Penryn",
+   "address": "536 West High St., Manheim, PA 17545",
+   "mapsUrl": "https://www.google.com/maps/dir//536+West+High+Street,+Manheim,+PA+17545/@40.1591738,-76.406873,467m/data=!3m1!1e3!4m8!4m7!1m0!1m5!1m1!1s0x89c61f7ea8056e4d:0x2c4d9515326c727c!2m2!1d-76.404282!2d40.158704",
+   "lat": 40.1591738,
+   "lng": -76.406873
+  },
+  {
+   "name": "Penryn",
+   "location": "Manheim & Penryn",
+   "address": "1280 Meadow Rd, Manheim, Pennsylvania 17545",
+   "mapsUrl": "https://goo.gl/maps/enepY",
+   "lat": 40.202787,
+   "lng": -76.3575889
+  },
+  {
+   "name": "Sweetbriar Creek Park #1",
+   "location": "Manheim & Penryn",
+   "address": "6028 Bayberry Ave. Manheim, PA 17545",
+   "mapsUrl": "https://goo.gl/maps/ZGWUeCjqPNMYAjTL6",
+   "lat": 40.1458681,
+   "lng": -76.3783612
+  },
+  {
+   "name": "Sweetbriar Creek Park #2",
+   "location": "Manheim & Penryn",
+   "address": "6312 Bayberry Ave. Manheim, PA 17545",
+   "mapsUrl": "https://goo.gl/maps/ZGWUeCjqPNMYAjTL6",
+   "lat": 40.1458681,
+   "lng": -76.3783612
+  },
+  {
+   "name": "Rapho Community Park #1",
+   "location": "Manheim & Penryn",
+   "address": "960 Strickler Rd., Mount Joy, PA 17552",
+   "mapsUrl": "https://www.google.com/maps/place/960+Strickler+Rd,+Mount+Joy,+PA+17552/@40.1204793,-76.4745775,727m/data=!3m2!1e3!4b1!4m5!3m4!1s0x89c89e2966d48da1:0xcdf4d4a1c7bf51a3!8m2!3d40.1204752!4d-76.4723888?hl=en",
+   "lat": 40.1204793,
+   "lng": -76.4745775
+  },
+  {
+   "name": "Rapho Community Park #2",
+   "location": "Manheim & Penryn",
+   "address": "960 Strickler Rd., Mount Joy, PA 17552",
+   "mapsUrl": "https://www.google.com/maps/place/960+Strickler+Rd,+Mount+Joy,+PA+17552/@40.1204793,-76.4745775,727m/data=!3m2!1e3!4b1!4m5!3m4!1s0x89c89e2966d48da1:0xcdf4d4a1c7bf51a3!8m2!3d40.1204752!4d-76.4723888?hl=en",
+   "lat": 40.1204793,
+   "lng": -76.4745775
+  },
+  {
+   "name": "Bucher Elementary School",
+   "location": "Manheim Township",
+   "address": "2192 Brockton Rd, Lancaster, PA 17601",
+   "mapsUrl": "https://goo.gl/maps/1PhK8",
+   "lat": 40.0812545,
+   "lng": -76.3326956
+  },
+  {
+   "name": "Community (Neffsville) Park",
+   "location": "Manheim Township",
+   "address": "108 Baneberry Ln, Lititz, PA 17543",
+   "mapsUrl": "https://goo.gl/maps/6lLp7",
+   "lat": 40.1074643,
+   "lng": -76.3096975
+  },
+  {
+   "name": "McMinn Field",
+   "location": "Manheim Township",
+   "address": "1358 Fruitville Pike, Lancaster, PA 17601",
+   "mapsUrl": "https://goo.gl/maps/nP1jz",
+   "lat": 40.0582154,
+   "lng": -76.312967
+  },
+  {
+   "name": "McNickle Field",
+   "location": "Manheim Township",
+   "address": "1840 Municipal Dr, Lancaster, Pennsylvania 17601",
+   "mapsUrl": "https://goo.gl/maps/tzvRj",
+   "notes": [
+    "Do not park at the Police Station!"
+   ],
+   "lat": 40.0767066,
+   "lng": -76.2996779
+  },
+  {
+   "name": "Municipal Field",
+   "location": "Manheim Township",
+   "address": "1820 Municipal Dr, Lancaster, PA 17601",
+   "mapsUrl": "https://goo.gl/maps/BhEEA",
+   "lat": 40.0780654,
+   "lng": -76.299537
+  },
+  {
+   "name": "Nitrauer Elementary School Field",
+   "location": "Manheim Township",
+   "address": "2145 Oregon Pike, Lancaster, Pennsylvania 17601",
+   "mapsUrl": "https://goo.gl/maps/8xmdJ",
+   "lat": 40.0822892,
+   "lng": -76.2883228
+  },
+  {
+   "name": "Overlook 1 & 2 Fields",
+   "location": "Manheim Township",
+   "address": "2237 Bassett Dr, Lancaster, PA 17601",
+   "mapsUrl": "https://goo.gl/maps/gronT",
+   "lat": 40.0844881,
+   "lng": -76.3214829
+  },
+  {
+   "name": "Reidenbaugh Elementary School",
+   "location": "Manheim Township",
+   "address": "1017 Buckwalter Rd, Lititz, PA 17543",
+   "mapsUrl": "https://goo.gl/maps/fbM8i",
+   "lat": 40.1210061,
+   "lng": -76.3246814
+  },
+  {
+   "name": "Stoner Park",
+   "location": "Manheim Township",
+   "address": "1280 Winchester Rd. Lancaster, PA",
+   "mapsUrl": "https://goo.gl/maps/5CWFi",
+   "notes": [
+    "17601"
+   ],
+   "lat": 40.077607,
+   "lng": -76.2787306
+  },
+  {
+   "name": "Stumpf Field",
+   "location": "Manheim Township",
+   "address": "1358 Fruitville Pike, Lancaster, PA 17601",
+   "mapsUrl": "https://goo.gl/maps/BSbW0",
+   "lat": 40.058092,
+   "lng": -76.3124465
+  },
+  {
+   "name": "Weaver Road Field",
+   "location": "Manheim Township",
+   "address": "2841 Weaver Rd, Lancaster, PA 17601",
+   "mapsUrl": "https://goo.gl/maps/37Ked",
+   "lat": 40.1003933,
+   "lng": -76.3162431
+  },
+  {
+   "name": "Froelich Park",
+   "location": "Mountville",
+   "address": "450 W Main St, Mountville, PA 17554",
+   "mapsUrl": "https://goo.gl/maps/H2Gnm",
+   "lat": 40.037128,
+   "lng": -76.4411345
+  },
+  {
+   "name": "Mountville Borough Park",
+   "location": "Mountville",
+   "address": "158 Clay St, Mountville, PA 17554",
+   "mapsUrl": "https://goo.gl/maps/3BDKY",
+   "lat": 40.0434548,
+   "lng": -76.4286142
+  },
+  {
+   "name": "Veteran's Memorial Park",
+   "location": "Mountville",
+   "address": "40 Spruce Rd, Mountville, PA 17554",
+   "mapsUrl": "https://goo.gl/maps/8BYiW",
+   "lat": 40.0381773,
+   "lng": -76.4300863
+  },
+  {
+   "name": "Highland Township Municipal Building",
+   "location": "Octorara",
+   "address": "100 Five Points Road, Coatesville, PA 19320",
+   "mapsUrl": "https://goo.gl/maps/d5BsQWnWWxDr2sz69",
+   "lat": 39.9163136,
+   "lng": -75.869139
+  },
+  {
+   "name": "Charlestown Park",
+   "location": "Penn Manor",
+   "address": "Lower",
+   "mapsUrl": "https://goo.gl/maps/MsLVQ",
+   "notes": [
+    "1075 Richmond Rd, Lancaster, PA 17603"
+   ],
+   "lat": 40.0201202,
+   "lng": -76.3619632
+  },
+  {
+   "name": "Creswell Park",
+   "location": "Penn Manor",
+   "address": "3109 River Rd, Conestoga, PA 17516",
+   "mapsUrl": "http://binged.it/GU1EY5"
+  },
+  {
+   "name": "Eshleman Elementary School",
+   "location": "Penn Manor",
+   "address": "59 Shertzer Ln, Millersville, Pennsylvania 17551",
+   "mapsUrl": "https://goo.gl/maps/bJul3",
+   "lat": 40.010302,
+   "lng": -76.3601254
+  },
+  {
+   "name": "Grieder Park",
+   "location": "Penn Manor",
+   "address": "340 Banyan Circle Dr, Lancaster, PA 17603",
+   "mapsUrl": "https://goo.gl/maps/7wjIn",
+   "notes": [
+    "B Field",
+    "Portable mound"
+   ],
+   "lat": 40.0338168,
+   "lng": -76.3528046
+  },
+  {
+   "name": "Hambright Elementary School",
+   "location": "Penn Manor",
+   "address": "29 Hawthorn Dr, Lancaster, PA 17603",
+   "mapsUrl": "https://goo.gl/maps/5IfEU",
+   "lat": 40.0386072,
+   "lng": -76.3619832
+  },
+  {
+   "name": "Highville Fire Company",
+   "location": "Penn Manor",
+   "address": "3081 River Rd, Conestoga, PA 17516",
+   "mapsUrl": "http://binged.it/VboplV"
+  },
+  {
+   "name": "Manor Middle School 2950 Charlestown Road Lancaster,PA 17603",
+   "location": "Penn Manor",
+   "address": "",
+   "mapsUrl": "http://binged.it/YYPOEf"
+  },
+  {
+   "name": "Manor Township Office",
+   "location": "Penn Manor",
+   "address": "950 West Fairway Drive, Lancaster, PA 17603",
+   "mapsUrl": "https://bit.ly/1RpYVgy"
+  },
+  {
+   "name": "Millersville Community Church",
+   "location": "Penn Manor",
+   "address": "242 Bender Road, Washington Boro, PA 17582",
+   "mapsUrl": "https://www.google.com/maps/place/242+Bender+Rd,+Washington+Boro,+PA+17582/@39.993168,-76.3940491,466m/data=%213m1%211e3%214m2%213m1%211s0x89c6289e10276a5f:0x88d3e6233b4de902",
+   "lat": 39.993168,
+   "lng": -76.3940491
+  },
+  {
+   "name": "Silver Mine Park",
+   "location": "Penn Manor",
+   "address": "99 Silver Mine Rd, Pequea, PA 17565",
+   "mapsUrl": "https://maps.google.com/?q=99+Silver+Mine+Rd,+Pequea,+PA+17565&entry=gmail&source=g"
+  },
+  {
+   "name": "Paradise Park 3226 Lincoln Hwy E, Paradise, PA 17562",
+   "location": "Pequea Valley",
+   "address": "",
+   "mapsUrl": "http://binged.it/1ln7lX1"
+  },
+  {
+   "name": "Gap",
+   "location": "Pequea Valley",
+   "address": "VFW 4980 Lincoln Hwy, Kinzers, PA 17535",
+   "mapsUrl": "http://binged.it/1ln6Ufd"
+  },
+  {
+   "name": "Colerain Park",
+   "location": "SOLANCO",
+   "address": "Kirkwood",
+   "mapsUrl": "http://binged.it/GSaXbZ",
+   "notes": [
+    "66 Buttermilk Rd, Kirkwood, Pennsylvania 17536",
+    "Portable mound"
+   ]
+  },
+  {
+   "name": "Legion Memorial Park",
+   "location": "SOLANCO",
+   "address": "297 Park Ave Quarryville, PA 17566",
+   "mapsUrl": "https://goo.gl/maps/SWSkxKiu6Dab1q2M6",
+   "notes": [
+    "Portable mound"
+   ],
+   "lat": 39.8932475,
+   "lng": -76.1628899
+  },
+  {
+   "name": "Little Britain Township",
+   "location": "SOLANCO",
+   "address": "46 Green Ln, Nottingham Pennsylvania 19362",
+   "mapsUrl": "http://binged.it/ZFIE7F"
+  },
+  {
+   "name": "SYBA Complex- 1070 Kirkwood Pike, Quarryville, PA 17566",
+   "location": "SOLANCO",
+   "address": "Field #1 has a Portable mound.",
+   "mapsUrl": "https://www.bing.com/maps/?v=2&cp=39.873558%7E-76.124439&lvl=14.5&sty=b&rtp=adr.%7Epos.39.873565_-76.124429_near+1070+Kirkwood+Pike%2C+Quarryville%2C+PA+17566___a_&mode=D&rtop=0%7E0%7E0%7E&form=LMLTCC"
+  },
+  {
+   "name": "St Leo Church Fields",
+   "location": "St. Leo",
+   "address": "2439 Marietta Ave, Lancaster, PA 17601",
+   "mapsUrl": "https://goo.gl/maps/5jCWUfzdirBKXzkx6",
+   "notes": [
+    "Includes Dutch Gold"
+   ],
+   "lat": 40.0562306,
+   "lng": -76.3646179
+  },
+  {
+   "name": "Tom Herr Field (East Petersburg Community Park)",
+   "location": "St. Leo",
+   "address": "6051 Pine Street, East Petersburg, PA 17520",
+   "mapsUrl": "http://www.bing.com/maps/?v=2&cp=qph9838n3jfx&lvl=18.5&dir=8.44&sty=b&rtp=adr.~pos.40.101650_-76.352394_6051%20Pine%20St,%20East%20Petersburg,%20PA%2017520___e_&mode=D&rtop=0~0~0~&form=LMLTCC"
+  },
+  {
+   "name": "Warwick Township Municipal Building Field 1",
+   "location": "Warwick",
+   "address": "339 Clay Rd, Lititz, Pennsylvania 17543",
+   "mapsUrl": "http://binged.it/Hc1Wwu"
+  },
+  {
+   "name": "Warwick Township Municipal Building Field 2",
+   "location": "Warwick",
+   "address": "339 Clay Rd, Lititz, Pennsylvania 17543",
+   "mapsUrl": "http://binged.it/Hc2e6E"
+  },
+  {
+   "name": "Warwick Township Municipal Building Field 3",
+   "location": "Warwick",
+   "address": "339 Clay Rd, Lititz, Pennsylvania 17543",
+   "mapsUrl": "http://binged.it/Hc2e6E"
+  }
+ ]
+}

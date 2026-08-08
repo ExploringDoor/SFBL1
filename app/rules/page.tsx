@@ -1,3 +1,5 @@
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { markdownToHtml } from "@/lib/markdown";
@@ -12,6 +14,79 @@ import {
   type RulesSection,
   type DivisionDef,
 } from "@/components/RulesRichView";
+import { RulesTabbed, type RulesGroup } from "@/components/RulesTabbed";
+
+// Age-group rule sheets a tenant ships as markdown files (LCYBL publishes one
+// per group). When present they drive the tabbed rules view; a tenant without
+// them is unaffected.
+const RULES_SHEETS: { file: string; label: string }[] = [
+  { file: "rules-8u-10u", label: "8U & 10U" },
+  { file: "rules-12u-14u", label: "12U & 14U" },
+  { file: "rules-fall", label: "Fall Ball" },
+];
+
+// Pull the "## At a glance" bullets ("- **Label:** value") out of a sheet into
+// {label, value} tiles, and return the markdown with that section removed so it
+// isn't repeated in the deep-dive below the tiles.
+function extractGlance(md: string): {
+  glance: { label: string; value: string }[];
+  rest: string;
+} {
+  const lines = md.split("\n");
+  const start = lines.findIndex((l) => /^##\s+at a glance/i.test(l.trim()));
+  if (start === -1) return { glance: [], rest: md };
+  let end = start + 1;
+  while (end < lines.length && !/^##\s/.test(lines[end]!) && lines[end]!.trim() !== "---") {
+    end++;
+  }
+  const glance: { label: string; value: string }[] = [];
+  for (const l of lines.slice(start + 1, end)) {
+    const m = /^-\s+\*\*(.+?):\*\*\s*(.+)$/.exec(l.trim());
+    if (m) glance.push({ label: m[1]!.trim(), value: m[2]!.trim() });
+  }
+  // drop the section (and a trailing "---" divider) from the deep dive
+  let restEnd = end;
+  if (lines[restEnd]?.trim() === "---") restEnd++;
+  const rest = [...lines.slice(0, start), ...lines.slice(restEnd)].join("\n");
+  return { glance, rest };
+}
+
+function loadRulesSheets(tenantId: string): RulesGroup[] {
+  const dir = path.resolve(process.cwd(), `data/${tenantId}/pages`);
+  const groups: RulesGroup[] = [];
+  for (const s of RULES_SHEETS) {
+    const p = path.join(dir, `${s.file}.md`);
+    if (!fs.existsSync(p)) continue;
+    let raw = fs.readFileSync(p, "utf8");
+    // strip YAML frontmatter (---\n...\n---)
+    const fm = /^---\n[\s\S]*?\n---\n?/;
+    raw = raw.replace(fm, "").trim();
+    const { glance, rest } = extractGlance(raw);
+    // Split the deep-dive into collapsible sections at each "## " heading, so it
+    // renders as an accordion (2D Sports style): a clean list of rule rows that
+    // each expand on click.
+    const blocks = rest.trim().split(/\n(?=##\s)/);
+    const sections: { title: string; html: string }[] = [];
+    let lead = "";
+    for (const b of blocks) {
+      const m = /^##\s+([^\n]+)\n?([\s\S]*)$/.exec(b.trim());
+      if (m) {
+        sections.push({ title: m[1]!.trim(), html: markdownToHtml(m[2]!.trim()) });
+      } else if (b.trim()) {
+        lead += b.trim() + "\n\n";
+      }
+    }
+    groups.push({
+      key: s.file,
+      label: s.label,
+      glance,
+      lead: lead.trim() ? markdownToHtml(lead.trim()) : "",
+      sections,
+      html: markdownToHtml(rest.trim()),
+    });
+  }
+  return groups;
+}
 
 export const dynamic = "force-dynamic";
 
@@ -137,6 +212,18 @@ export default async function RulesPage() {
           divisionsAvailable={divisionsAvailable}
           {...(divisionDefs.length > 0 ? { divisions: divisionDefs } : {})}
         />
+      </Shell>
+    );
+  }
+
+  // Age-group rule sheets shipped as markdown files (LCYBL). Renders a tabbed
+  // view, one tab per sheet, each carded by ContentSections. Only taken when the
+  // tenant has no structured rules AND ships the files, so others are unchanged.
+  const ruleSheets = loadRulesSheets(tenantId);
+  if (ruleSheets.length > 0) {
+    return (
+      <Shell heading={rulesHeading(tenantId, config)} wide>
+        <RulesTabbed groups={ruleSheets} updatedAt="March 10, 2026" />
       </Shell>
     );
   }

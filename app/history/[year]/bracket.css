@@ -1,0 +1,610 @@
+/* Bracket tree styling — PORTED from the STSBT/D27/Texas Select stylesheet so
+   the bracket looks identical across every one of these sites. Card size,
+   colours, the gold championship treatment and the region labels all match.
+
+   Colour tokens are localised here (the source uses --sts-navy / --sts-red /
+   --gold), falling back to the tenant's own theme where one is set. */
+
+.le-bracket-page {
+  --bk-navy: var(--brand-primary, #002d72);
+  --bk-red: #bf0a30;
+  --bk-gold: #c9a227;
+  --bk-line: rgba(0, 0, 0, 0.12);
+  padding-bottom: 48px;
+}
+
+/* ── season nav ─────────────────────────────────────────────── */
+
+.le-yr-nav {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.le-yr-btn {
+  display: inline-block;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--bk-line);
+  background: #fff;
+  font-weight: 700;
+  font-size: 13.5px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.le-yr-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.28);
+}
+
+.le-yr-btn-off {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* ── a division block ───────────────────────────────────────── */
+
+.le-bk-div {
+  margin: 30px 0 0;
+  padding: 18px;
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.le-bk-div-hd h2 {
+  margin: 0;
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+
+.le-bk-runner {
+  margin: 4px 0 0;
+  font-size: 14px;
+  opacity: 0.75;
+}
+
+/* ── champion banner ────────────────────────────────────────── */
+
+.bk-champion {
+  background: linear-gradient(120deg, #c9a227, #ebcb5e 45%, #c9a227);
+  color: var(--bk-navy);
+  border-radius: 14px;
+  padding: 14px 34px;
+  margin: 18px auto 14px;
+  width: fit-content;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  box-shadow: 0 10px 34px rgba(201, 162, 39, 0.45);
+  position: relative;
+  overflow: hidden;
+}
+
+.bk-champion::after {
+  content: "";
+  position: absolute;
+  right: -30px;
+  top: -40px;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.4), transparent 60%);
+  pointer-events: none;
+}
+
+.bk-champion .trophy {
+  line-height: 1;
+  position: relative;
+  z-index: 2;
+  display: flex;
+}
+.bk-champion .trophy .bk-trophy-img {
+  height: 68px;
+  width: auto;
+  display: block;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.4));
+}
+
+.bk-champion .ct {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  font-family: var(--font-barlow), sans-serif;
+}
+
+.bk-champion .ct .tourn {
+  letter-spacing: 0.14em;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  opacity: 0.92;
+}
+
+.bk-champion .ct .lbl {
+  letter-spacing: 0.2em;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.bk-champion .ct .team {
+  font-weight: 800;
+  font-size: clamp(28px, 5.4vw, 52px);
+  line-height: 1;
+}
+
+/* ── champion photo ─────────────────────────────────────────── */
+
+.bk-champ-photo {
+  margin: 0 auto 16px;
+  max-width: 620px;
+}
+
+.bk-champ-photo img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 10px;
+  border: 1px solid var(--bk-line);
+  background: #f4f4f4;
+}
+
+.bk-champ-photo figcaption {
+  margin-top: 6px;
+  font-size: 12.5px;
+  opacity: 0.72;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* ── the canvas ─────────────────────────────────────────────── */
+
+.bk-empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 40px;
+  font-family: var(--font-barlow), sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* The tree scrolls inside its own box — a wide bracket must never make the
+   whole page scroll sideways. */
+.bk-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 14px 0 26px;
+}
+
+.bk-canvas {
+  position: relative;
+}
+
+.bk-canvas svg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.bk-region {
+  position: absolute;
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding-left: 10px;
+  border-left: 4px solid var(--bk-navy);
+  white-space: nowrap;
+}
+
+.bk-region.w {
+  color: var(--bk-navy);
+  border-left-color: var(--bk-navy);
+}
+.bk-region.l {
+  color: var(--bk-red);
+  border-left-color: var(--bk-red);
+}
+.bk-region.f {
+  color: #9a7b15;
+  border-left-color: var(--bk-gold);
+}
+
+/* ── a match card ───────────────────────────────────────────── */
+
+.bk-match {
+  position: absolute;
+  width: 210px;
+  background: #fff;
+  border: 1px solid var(--bk-line);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  transition: box-shadow 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+  z-index: 2;
+}
+
+.bk-match:hover {
+  box-shadow: 0 0 0 3px rgba(0, 120, 255, 0.32), 0 10px 26px rgba(0, 80, 200, 0.3);
+  border-color: #0070f3;
+  transform: translateY(-3px);
+  z-index: 6;
+}
+
+.bk-match.acc-w {
+  border-left: 3px solid var(--bk-navy);
+}
+.bk-match.acc-l {
+  border-left: 3px solid var(--bk-red);
+}
+.bk-match.acc-f {
+  border: 1.5px solid var(--bk-gold);
+  background: linear-gradient(180deg, #fffbec, #fff 60%);
+}
+.bk-match.acc-f .bk-mtop {
+  background: linear-gradient(90deg, var(--bk-gold), #e2b53c);
+}
+.bk-match.acc-f .bk-mtop .g {
+  color: var(--bk-navy);
+}
+
+.bk-mtop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 24px;
+  padding: 0 10px;
+  background: rgba(0, 45, 114, 0.035);
+  border-bottom: 1px solid var(--bk-line);
+}
+
+.bk-mtop .g {
+  font-family: var(--font-barlow), sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--bk-navy);
+  letter-spacing: 0.04em;
+}
+
+.bk-mtop .tag {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+.bk-mtop .tag.w {
+  background: rgba(0, 45, 114, 0.1);
+  color: var(--bk-navy);
+}
+.bk-mtop .tag.l {
+  background: rgba(191, 10, 48, 0.1);
+  color: var(--bk-red);
+}
+.bk-mtop .tag.f {
+  background: rgba(201, 162, 39, 0.22);
+  color: #8a6d10;
+}
+
+/* ── a side within a card ───────────────────────────────────── */
+
+.bk-side {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 10px;
+  font-size: 13.5px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.bk-side .nm {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  overflow: hidden;
+}
+.bk-side .nm .bk-nm-txt {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Every concrete side carries a mark: club logo when it resolves, else a
+   uniform navy initials chip (the D27 fallback) so it never looks half-done. */
+.bk-logo {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  object-fit: contain;
+  background: #fff;
+}
+.bk-logo-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--brand-primary, #14213d);
+  color: #fff;
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.bk-side .via {
+  margin-left: 5px;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.5;
+}
+
+.bk-side .sc {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+/* The winner is what a reader is scanning for. */
+.bk-side.win {
+  font-weight: 800;
+  background: rgba(201, 162, 39, 0.1);
+}
+.bk-side.win .sc {
+  opacity: 1;
+}
+
+.bk-side.tbd,
+.bk-side.bye {
+  color: rgba(0, 0, 0, 0.42);
+  font-style: italic;
+}
+
+/* ── card footer ────────────────────────────────────────────── */
+
+.bk-mfoot {
+  padding: 6px 10px 8px;
+  background: rgba(0, 0, 0, 0.015);
+}
+
+.bk-wrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.bk-when {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--bk-navy);
+  opacity: 0.8;
+}
+
+.bk-field {
+  display: block;
+  font-size: 11px;
+  opacity: 0.55;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── divisions with no bracket recorded ─────────────────────── */
+
+.le-bk-nolist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.le-bk-nolist li {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  font-size: 14px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .le-bk-div {
+    padding: 14px;
+  }
+}
+
+/* ── hover a team, trace its path ───────────────────────────────
+   Ported behaviour from the STS/D27 renderer's wireHover: hovering any team
+   lights up every game it appears in, so you can follow one club from its
+   first game to the final. This is the thing that makes a bracket feel alive
+   rather than static. */
+
+.bk-side.path-hi {
+  background: rgba(0, 120, 255, 0.14);
+  box-shadow: inset 3px 0 0 #0070f3;
+}
+
+.bk-side.path-hi .nm {
+  font-weight: 800;
+}
+
+/* The winner styling is gold; a highlighted winner keeps both by layering the
+   blue trace over it rather than replacing it. */
+.bk-side.win.path-hi {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 120, 255, 0.16),
+    rgba(201, 162, 39, 0.16)
+  );
+}
+
+.bk-match.path-card {
+  border-color: #0070f3;
+  box-shadow: 0 0 0 2px rgba(0, 120, 255, 0.25), 0 8px 22px rgba(0, 80, 200, 0.22);
+  z-index: 5;
+}
+
+/* ── toolbar: jump-to-division + zoom ───────────────────────────
+   Zoom ported from brackets.html on STSBT (.bk-zoomctl / .bk-tool-btn). The
+   jump row is new: eight divisions per season is a lot of scrolling, and the
+   age group is what people actually navigate by. */
+
+.bk-toolbar {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin: 18px 0 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--bk-line);
+  border-radius: 12px;
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.bk-jump {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.bk-jump-lbl {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.bk-jump-btns {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.bk-jump-btn {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--bk-line);
+  background: #fff;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--bk-navy);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.bk-jump-btn:hover {
+  background: var(--bk-navy);
+  border-color: var(--bk-navy);
+  color: #fff;
+}
+
+.bk-tools {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.bk-zoomctl {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--bk-line);
+  border-radius: 6px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.bk-zoomctl button {
+  background: none;
+  border: none;
+  width: 30px;
+  height: 30px;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--bk-navy);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.bk-zoomctl button:hover {
+  background: rgba(0, 45, 114, 0.07);
+}
+
+.bk-zoomctl span {
+  min-width: 46px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--bk-navy);
+  border-left: 1px solid var(--bk-line);
+  border-right: 1px solid var(--bk-line);
+  height: 30px;
+  line-height: 30px;
+  font-variant-numeric: tabular-nums;
+}
+
+.bk-tool-btn {
+  background: #fff;
+  border: 1px solid var(--bk-line);
+  border-radius: 6px;
+  padding: 0 13px;
+  height: 30px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--bk-navy);
+  cursor: pointer;
+  font-family: var(--font-barlow), inherit;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.bk-tool-btn:hover {
+  background: var(--bk-navy);
+  color: #fff;
+}
+
+/* Anchored sections must clear the sticky toolbar when jumped to. */
+.le-bk-div {
+  scroll-margin-top: 74px;
+}
+
+@media (max-width: 700px) {
+  .bk-toolbar {
+    position: static;
+  }
+  .bk-tools {
+    margin-left: 0;
+  }
+}

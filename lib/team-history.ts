@@ -62,6 +62,74 @@ export interface TeamHistory {
   totals: { w: number; l: number; t: number; seasons: number; pct: string };
 }
 
+/** One archived game as extracted from the league's playoff PDFs. The
+ *  away/home keys are READING ORDER, not actual home/away, whenever
+ *  `orientation_known` is false — display must say "vs", never "at". */
+export interface ArchivedGame {
+  date?: string | null;
+  ageGroup?: string | null;
+  division?: string | null;
+  away: string;
+  home: string;
+  away_score?: number | null;
+  home_score?: number | null;
+  orientation_known?: boolean;
+}
+
+export interface GameLogLine {
+  season: string;
+  division: string;
+  /** The opponent's name as printed in the archive. */
+  opponent: string;
+  /** This team's runs / the opponent's runs. */
+  scored: number;
+  allowed: number;
+  result: "W" | "L" | "T";
+}
+
+/** Per-season archived playoff games for one team, newest season first.
+ *  Games without both scores are skipped — a bracket slot with no printed
+ *  score describes a matchup, not a result. Matching is case-insensitive
+ *  (same reason as buildTeamHistory: the archive mixes Title Case and
+ *  ALL-CAPS spellings of the same club). */
+export function buildTeamGameLog(
+  teamName: string,
+  gamesBySeason: Record<string, ArchivedGame[]>,
+): Map<string, GameLogLine[]> {
+  const want = norm(teamName);
+  const out = new Map<string, GameLogLine[]>();
+  const seasons = Object.keys(gamesBySeason).sort((a, b) => b.localeCompare(a));
+  for (const season of seasons) {
+    const games = gamesBySeason[season];
+    if (!Array.isArray(games)) continue;
+    const lines: GameLogLine[] = [];
+    for (const g of games) {
+      if (!g) continue;
+      const isAway = norm(g.away) === want;
+      const isHome = norm(g.home) === want;
+      if (!isAway && !isHome) continue;
+      if (
+        typeof g.away_score !== "number" ||
+        typeof g.home_score !== "number"
+      ) {
+        continue;
+      }
+      const scored = isAway ? g.away_score : g.home_score;
+      const allowed = isAway ? g.home_score : g.away_score;
+      lines.push({
+        season,
+        division: String(g.division ?? g.ageGroup ?? ""),
+        opponent: isAway ? String(g.home) : String(g.away),
+        scored,
+        allowed,
+        result: scored > allowed ? "W" : scored < allowed ? "L" : "T",
+      });
+    }
+    if (lines.length) out.set(season, lines);
+  }
+  return out;
+}
+
 const norm = (s: unknown) => String(s ?? "").trim().toLowerCase();
 
 function pct(w: number, l: number, t: number): string {

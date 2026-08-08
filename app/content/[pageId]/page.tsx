@@ -23,6 +23,9 @@ import {
   ContentSections,
   extractLeadingH1,
 } from "@/components/ContentSections";
+import { FaqAccordion } from "@/components/FaqAccordion";
+import { DocumentsView } from "@/components/DocumentsView";
+import { ClubsView } from "@/components/ClubsView";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 
 export const dynamic = "force-dynamic";
@@ -117,9 +120,33 @@ export default async function ContentPage({
   const { title: h1Title, body: html } = extractLeadingH1(rawHtml);
   const title = h1Title ?? String(data.title ?? humanize(pageId));
 
+  // Per-page-type layouts (LCYBL): FAQ renders as an accordion, League
+  // Documents as a download grid, Member Clubs as a club grid — instead of the
+  // generic markdown cards Adam rejected ("looks like a Word document").
+  // Scoped to lcybl; other tenants keep ContentSections. The markdown doc
+  // stays the admin-editable source; these views are curated replacements.
+  const lcyblView =
+    tenantId === "lcybl"
+      ? pageId === "faq"
+        ? "faq"
+        : pageId === "documents"
+          ? "documents"
+          : pageId === "clubs"
+            ? "clubs"
+            : null
+      : null;
+
   return (
     <Shell eyebrow={eyebrow} heading={title} updatedAt={updatedAt}>
-      <ContentSections html={html} />
+      {lcyblView === "faq" ? (
+        <FaqAccordion html={html} />
+      ) : lcyblView === "documents" ? (
+        <DocumentsView />
+      ) : lcyblView === "clubs" ? (
+        <ClubsView />
+      ) : (
+        <ContentSections html={html} />
+      )}
       <PageContentEditor
         tenantId={tenantId}
         pageId={pageId}

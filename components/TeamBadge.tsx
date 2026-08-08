@@ -68,6 +68,9 @@ export function TeamBadge({
             width={px}
             height={px}
             className="h-full w-full object-contain"
+            // The xl badge is the team-page hero logo, above the fold — load it
+            // eagerly so it never flashes an empty white box on first paint.
+            priority={size === "xl"}
           />
         )}
       </span>

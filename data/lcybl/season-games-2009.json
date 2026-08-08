@@ -1,0 +1,52 @@
+[
+ {
+  "orientation_known": false,
+  "date": "2009",
+  "ageGroup": "10u",
+  "division": "10u Section 1 \u00b7 printed on the champion banner (round not stated)",
+  "away": "Mountville Cubs",
+  "home": "Hempfield Black",
+  "away_score": 9,
+  "home_score": 0
+ },
+ {
+  "orientation_known": false,
+  "date": "2009",
+  "ageGroup": "12u",
+  "division": "12u Section 1 \u00b7 printed on the champion banner (round not stated)",
+  "away": "Hempfield Black",
+  "home": "Warwick Phillies",
+  "away_score": 7,
+  "home_score": 5
+ },
+ {
+  "orientation_known": false,
+  "date": "2009",
+  "ageGroup": "12u",
+  "division": "12u Section 2 \u00b7 printed on the champion banner (round not stated)",
+  "away": "Lititz Braves",
+  "home": "Hempfield Black",
+  "away_score": 7,
+  "home_score": 6
+ },
+ {
+  "orientation_known": false,
+  "date": "2009",
+  "ageGroup": "14u",
+  "division": "14u Section 1 \u00b7 printed on the champion banner (round not stated)",
+  "away": "Hempfield",
+  "home": "Mountville Angels",
+  "away_score": 7,
+  "home_score": 1
+ },
+ {
+  "orientation_known": false,
+  "date": "2009",
+  "ageGroup": "14u",
+  "division": "14u Section 3 \u00b7 printed on the champion banner (round not stated)",
+  "away": "Manheim Black",
+  "home": "SWS Tigers",
+  "away_score": 9,
+  "home_score": 6
+ }
+]

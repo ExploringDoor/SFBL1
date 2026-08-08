@@ -288,3 +288,69 @@
   margin: 0;
   line-height: 1.55;
 }
+
+/* ── Flashy Apple-style treatment (LCYBL) — opt-in via `flashy` prop ──────
+   Fields fly in on load with a stagger, inputs glow on focus, the submit
+   button lifts and glows. Scoped to .le-form-flashy so no other tenant moves. */
+.le-form-flashy .le-form {
+  position: relative;
+}
+.le-form-flashy .le-form-cell {
+  opacity: 0;
+  transform: translateY(14px);
+  animation: lf-flyin 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+/* Stagger: each cell arrives a beat after the last. */
+.le-form-flashy .le-form-cell:nth-child(1)  { animation-delay: 0.04s; }
+.le-form-flashy .le-form-cell:nth-child(2)  { animation-delay: 0.10s; }
+.le-form-flashy .le-form-cell:nth-child(3)  { animation-delay: 0.16s; }
+.le-form-flashy .le-form-cell:nth-child(4)  { animation-delay: 0.22s; }
+.le-form-flashy .le-form-cell:nth-child(5)  { animation-delay: 0.28s; }
+.le-form-flashy .le-form-cell:nth-child(6)  { animation-delay: 0.34s; }
+.le-form-flashy .le-form-cell:nth-child(7)  { animation-delay: 0.40s; }
+.le-form-flashy .le-form-cell:nth-child(8)  { animation-delay: 0.46s; }
+.le-form-flashy .le-form-cell:nth-child(9)  { animation-delay: 0.52s; }
+.le-form-flashy .le-form-cell:nth-child(n+10) { animation-delay: 0.58s; }
+@keyframes lf-flyin {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Apple-ish inputs: soft, rounded, with a focus glow ring. */
+.le-form-flashy .le-form-cell input,
+.le-form-flashy .le-form-cell select,
+.le-form-flashy .le-form-cell textarea {
+  border-radius: 12px;
+  border: 1.5px solid rgba(20, 33, 61, 0.14);
+  background: rgba(255, 255, 255, 0.9);
+  transition: border-color 0.18s ease, box-shadow 0.22s ease, transform 0.18s ease;
+}
+.le-form-flashy .le-form-cell input:hover,
+.le-form-flashy .le-form-cell select:hover,
+.le-form-flashy .le-form-cell textarea:hover {
+  border-color: rgba(20, 33, 61, 0.3);
+}
+.le-form-flashy .le-form-cell input:focus,
+.le-form-flashy .le-form-cell select:focus,
+.le-form-flashy .le-form-cell textarea:focus {
+  outline: none;
+  border-color: var(--brand-accent, #9a8c3f);
+  box-shadow: 0 0 0 4px rgba(201, 162, 39, 0.18), 0 8px 22px -12px rgba(20, 33, 61, 0.45);
+}
+
+/* Submit button: gradient, lifts and glows on hover, presses on click. */
+.le-form-flashy .le-form-submit {
+  border-radius: 14px;
+  background: linear-gradient(135deg, #14213d 0%, #24365f 100%);
+  box-shadow: 0 10px 26px -12px rgba(20, 33, 61, 0.6);
+  transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+}
+.le-form-flashy .le-form-submit:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow: 0 16px 34px -12px rgba(201, 162, 39, 0.5), 0 10px 26px -12px rgba(20, 33, 61, 0.6);
+}
+.le-form-flashy .le-form-submit:active { transform: translateY(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .le-form-flashy .le-form-cell { opacity: 1; transform: none; animation: none; }
+}
