@@ -83,6 +83,10 @@ export interface LeagueFormProps {
    *  caller names the block and the switch below renders it, with the
    *  submission id that only this component knows. */
   afterSuccess?: "coybl-payment";
+  /** Flashy Apple-style treatment (LCYBL): fields fly in on load, inputs glow
+   *  on focus, the submit button lifts. Off by default so other tenants are
+   *  unchanged. */
+  flashy?: boolean;
 }
 
 export function LeagueForm({
@@ -97,6 +101,7 @@ export function LeagueForm({
   eyebrow,
   footer,
   afterSuccess,
+  flashy = false,
 }: LeagueFormProps) {
   const [data, setData] = useState<Record<string, unknown>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -180,7 +185,7 @@ export function LeagueForm({
   }
 
   return (
-    <main className="container py-10">
+    <main className={"container py-10" + (flashy ? " le-form-flashy" : "")}>
       <FormHeader title={title} description={description} eyebrow={eyebrow} />
 
       {intro && intro.length > 0 && (
