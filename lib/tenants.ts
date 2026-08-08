@@ -53,6 +53,28 @@ export interface PublicLeagueConfig {
   admin?: { passwordless?: boolean };
 }
 
+/** Drop base64 data: URIs from sponsor entries so the tenant config stays far
+ *  below Vercel's 32KB header limit.
+ *
+ *  Checks EVERY string field, not a named one. The first version of this only
+ *  looked at `logo`, and the field COYBL actually uses is `logo_url` — so the
+ *  site stayed down through a deploy that looked like a fix. Anything that
+ *  starts with "data:" goes, whatever it is called; URLs are untouched.
+ */
+function stripInlineImages(
+  list: LeagueSponsor[] | undefined,
+): LeagueSponsor[] | undefined {
+  if (!Array.isArray(list)) return list;
+  return list.map((sponsor) => {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(sponsor as unknown as Record<string, unknown>)) {
+      if (typeof v === "string" && v.startsWith("data:")) continue;
+      out[k] = v;
+    }
+    return out as unknown as LeagueSponsor;
+  });
+}
+
 export function toPublicConfig(c: LeagueConfig): PublicLeagueConfig {
   return {
     slug: c.slug,
@@ -69,7 +91,16 @@ export function toPublicConfig(c: LeagueConfig): PublicLeagueConfig {
     billing: { status: c.billing?.status ?? "active" },
     flags: c.flags,
     standings: c.standings,
-    sponsors: c.sponsors,
+    // Sponsor logos are sometimes pasted in as base64 data URIs, which puts
+    // hundreds of KB into a doc that middleware serialises into a REQUEST
+    // HEADER. Vercel caps headers at 32KB and returns
+    // MIDDLEWARE_INVOCATION_FAILED (a hard 500) above it — COYBL went down
+    // on 2026-08-08 with a 491KB config, 487KB of it two sponsor logos.
+    //
+    // Strip inline image payloads here. Everything else about the sponsor
+    // (name, link, tier) still travels, and a logo served from a URL is
+    // unaffected. See stripInlineImages.
+    sponsors: stripInlineImages(c.sponsors),
     social: c.social,
     attribution: c.attribution,
     nav: c.nav,
