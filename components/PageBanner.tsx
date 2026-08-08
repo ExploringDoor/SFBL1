@@ -94,6 +94,34 @@ export function PageBanner({
   const srcSet = small ? `${small} 1000w, ${src} 2000w` : undefined;
   const sizes = small ? "100vw" : undefined;
 
+  // COYBL: every page header spans the full screen width.
+  //
+  // Adam, 2026-08-08. The banners are 375px at natural size and were rendered
+  // at that size, so they filled a narrow phone but left ~197px of white on
+  // EACH side at 768px — a tablet, or a phone in landscape. Anything wider
+  // than ~563px had gutters.
+  //
+  // NOT flags.banner_full_bleed: that path caps height at clamp(84px,21vw,330px)
+  // with object-fit:contain over black, which letterboxes. Right for Island,
+  // whose banners range 5.4:1 to 3.25:1. COYBL's are all exactly 2.50:1, so
+  // width:100% + height:auto gives identical heights on every page with
+  // nothing cropped and no bars — which is what Adam approved on the homepage
+  // before asking for it everywhere.
+  if (tenantId === "coybl") {
+    return (
+      <div style={{ width: "100%", lineHeight: 0 }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          srcSet={srcSet}
+          sizes="100vw"
+          alt={bannerAlt(slug, leagueName)}
+          style={{ display: "block", width: "100%", height: "auto" }}
+        />
+      </div>
+    );
+  }
+
   if (strip) {
     // Every page (home + interior) renders the same: full-bleed width, natural
     // height, whole banner across — no cover-crop, no max-height clip.
