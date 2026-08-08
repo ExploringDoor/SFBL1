@@ -318,7 +318,9 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
   // kind; the logo blob + internal/honeypot fields are dropped.
   function exportCsv() {
     if (items.length === 0) return;
-    const BLOCK = new Set(["id", "team_logo", "ip", "user_agent", "website"]);
+    // "mailbox" is the normalized address used for flood control, not
+    // something the office needs to read.
+    const BLOCK = new Set(["id", "team_logo", "ip", "user_agent", "website", "mailbox"]);
     const keys = new Set<string>();
     for (const r of items) {
       for (const k of Object.keys(r)) if (!BLOCK.has(k)) keys.add(k);

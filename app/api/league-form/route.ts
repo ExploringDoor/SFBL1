@@ -254,6 +254,61 @@ const REQUIRED: Record<Kind, string[]> = {
   ],
 };
 
+
+/** Collapse an address to the mailbox it actually reaches.
+ *
+ *  Gmail ignores dots and anything after "+", so h.u.m.at.er.u.fu.q.o.6.4@,
+ *  h.u.mat.e.r.u.fu.q.o.6.4@ and humaterufuqo64+x@ are ONE inbox. A bot that
+ *  rotates IPs (COYBL saw Tor exit ranges on 2026-08-08) still has to receive
+ *  mail somewhere, so the mailbox is the stable identity to limit on when the
+ *  IP is not.
+ */
+function normalizeEmail(raw: unknown): string {
+  const e = String(raw ?? "").trim().toLowerCase();
+  const at = e.lastIndexOf("@");
+  if (at < 1) return "";
+  let local = e.slice(0, at);
+  const domain = e.slice(at + 1);
+  const plus = local.indexOf("+");
+  if (plus > 0) local = local.slice(0, plus);
+  if (domain === "gmail.com" || domain === "googlemail.com") {
+    local = local.replace(/\./g, "");
+  }
+  return `${local}@${domain}`;
+}
+
+/** How many submissions this mailbox has already made across ALL form kinds
+ *  in the window. Firestore rather than memory: serverless instances do not
+ *  share state, and this attacker's whole method is looking like a new
+ *  visitor each time. */
+async function recentByMailbox(
+  db: FirebaseFirestore.Firestore,
+  tenantId: string,
+  kinds: readonly string[],
+  mailbox: string,
+  sinceIso: string,
+): Promise<number> {
+  if (!mailbox) return 0;
+  let n = 0;
+  for (const k of kinds) {
+    try {
+      const snap = await db
+        .collection(`leagues/${tenantId}/form_submissions/${k}/items`)
+        .where("mailbox", "==", mailbox)
+        .get();
+      n += snap.docs.filter(
+        (d) => String(d.data().submitted_at ?? "") >= sinceIso,
+      ).length;
+    } catch {
+      /* a kind with no docs yet is not an error */
+    }
+  }
+  return n;
+}
+
+const MAILBOX_WINDOW_MS = 24 * 60 * 60 * 1000;
+const MAILBOX_LIMIT = 3;
+
 // In-memory rate limiter — fine for single-instance Vercel/Next dev.
 // On production with multiple regions, swap to Redis or Edge Config.
 const rate = new Map<string, { count: number; reset: number }>();
@@ -350,7 +405,45 @@ export async function POST(req: Request) {
   // error handling. Unwrapped, a transient Firestore failure threw out of the
   // route as a bare 500 and the coach lost a filled-in 17-field registration
   // with no idea whether it had been recorded.
+  // Too fast to be a person. A coach fills a registration in tens of seconds;
+  // the bot that hit COYBL submitted instantly. Only rejects when the client
+  // actually reported a time — a missing value is logged, not blocked, so a
+  // cached older page or a non-standard client is never punished for it.
+  const formMs = Number((body as unknown as Record<string, unknown>).form_ms);
+  if (Number.isFinite(formMs) && formMs >= 0 && formMs < 4000) {
+    console.warn(
+      `[league-form] submitted in ${formMs}ms (too fast) tenant=${tenantId} kind=${body.kind} ip=${ip} — dropping`,
+    );
+    return NextResponse.json({ ok: true });
+  }
+  if (!Number.isFinite(formMs)) {
+    console.warn(
+      `[league-form] no form_ms tenant=${tenantId} kind=${body.kind} ip=${ip} (direct POST or stale client)`,
+    );
+  }
+
   const db = getAdminDb();
+
+  // Same-mailbox flood check. Silent 200 like the honeypot: telling a bot it
+  // was blocked just teaches it what to change.
+  const mailbox = normalizeEmail((cleaned as Record<string, unknown>).email);
+  if (mailbox) {
+    const since = new Date(Date.now() - MAILBOX_WINDOW_MS).toISOString();
+    const seen = await recentByMailbox(
+      db,
+      tenantId,
+      ["team_registration", "player_registration", "site_feedback", "player_ad"],
+      mailbox,
+      since,
+    );
+    if (seen >= MAILBOX_LIMIT) {
+      console.warn(
+        `[league-form] mailbox flood: ${mailbox} already has ${seen} in 24h — dropping`,
+      );
+      return NextResponse.json({ ok: true });
+    }
+  }
+
   let ref;
   try {
     ref = await db
@@ -358,6 +451,7 @@ export async function POST(req: Request) {
       .add({
         ...cleaned,
         submitted_at: new Date().toISOString(),
+        mailbox,
         ip,
         user_agent: h.get("user-agent") ?? null,
       });

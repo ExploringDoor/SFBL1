@@ -103,6 +103,9 @@ export function LeagueForm({
   afterSuccess,
   flashy = false,
 }: LeagueFormProps) {
+  // Set once on mount; sent with the payload so the server can see how long
+  // the form was actually open.
+  const [openedAt] = useState(() => String(Date.now()));
   const [data, setData] = useState<Record<string, unknown>>({});
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -146,7 +149,12 @@ export function LeagueForm({
       const res = await fetch("/api/league-form", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ kind, data }),
+        body: JSON.stringify({
+          kind,
+          data,
+          // Elapsed ms, for the server's too-fast-to-be-human check.
+          form_ms: Date.now() - Number(openedAt),
+        }),
       });
       const j = (await res.json().catch(() => ({}))) as {
         error?: string;
@@ -204,6 +212,11 @@ export function LeagueForm({
       )}
 
       <form onSubmit={onSubmit} noValidate className="le-form">
+        {/* How long the form has been open. A coach takes tens of seconds to
+            fill a registration; the bot that hit COYBL on 2026-08-08 filled
+            every field instantly. Checked server-side. */}
+        <input type="hidden" name="form_opened_at" value={openedAt} readOnly />
+
         {/* Honeypot — hidden from real users, bots fill it. */}
         <input
           type="text"
