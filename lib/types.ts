@@ -213,6 +213,33 @@ export interface LeagueConfig {
   captain?: {
     passwordless?: boolean;
   };
+
+  // Minor / age-eligibility policy. Adult leagues that allow teenagers need to
+  // know which players are minors — Helena's commissioner: "we don't have
+  // anything flagging it and it makes it difficult to keep track of our minors
+  // that are playing."
+  //
+  // Read SERVER-SIDE ONLY, straight off this doc via the Admin SDK. It is
+  // deliberately NOT forwarded through toPublicConfig: nothing in the browser
+  // needs it, and minor status is derived per-request in
+  // /api/team-roster (admin/captain-gated) rather than stored.
+  //
+  // See lib/minors.ts for the math and the safeguarding rationale behind
+  // `public_age` defaulting off.
+  minors?: {
+    /** Under this age at the cutoff → minor. Helena: 18. */
+    age_of_majority: number;
+    /** "MM-DD" the age is measured as of. Helena: "12-31". */
+    cutoff: string;
+    /** Below this at the cutoff → cannot play at all. Helena: 15. */
+    min_age?: number;
+    /** Publish the bare derived age on the public player doc. DEFAULT FALSE —
+     *  an integer age plus a known cutoff reverses to a ~365-day DOB window,
+     *  and the public player doc is world-readable AND listable. */
+    public_age?: boolean;
+    /** Minors require a signed parental consent form. Helena: true. */
+    requires_consent?: boolean;
+  };
   // Admin UX. `passwordless: true` + a `password` enables a single-
   // field "admin sign-in" on /admin: the user types the shared
   // password and the server mints a custom token with the admin

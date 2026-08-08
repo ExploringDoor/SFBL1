@@ -143,3 +143,14 @@
   margin: 0.5in 0.5in;
   size: letter;
 }
+
+/* Explanatory line under a print heading — used by /print/minors to state the
+   cutoff date and what the sheet is for. Muted and small so it reads as a
+   caption on paper rather than competing with the table. */
+.print-sub {
+  margin: 2px 0 14px;
+  max-width: 78ch;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #444;
+}

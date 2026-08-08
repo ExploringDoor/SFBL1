@@ -71,6 +71,7 @@ export async function POST(req: Request) {
     email?: unknown;
     phone?: unknown;
     dob?: unknown;
+    consent_on_file?: unknown;
     teamId?: unknown;
   };
   try {
@@ -255,6 +256,20 @@ export async function POST(req: Request) {
     }
     if (typeof body.dob === "string") {
       contactUpdate.dob = body.dob.trim();
+    }
+    // Parental consent for a minor. Helena requires a signed permission form
+    // for anyone under 18. Stored beside the DOB in the admin/self-gated
+    // _private doc — the fact that a named player is a minor must not land on
+    // the world-readable player doc. Stamped with who recorded it and when so
+    // the league can show its work if anyone asks.
+    if (typeof body.consent_on_file === "boolean") {
+      contactUpdate.consent_on_file = body.consent_on_file;
+      contactUpdate.consent_recorded_at = body.consent_on_file
+        ? new Date().toISOString()
+        : null;
+      contactUpdate.consent_recorded_by_uid = body.consent_on_file
+        ? decoded.uid
+        : null;
     }
     if (Object.keys(contactUpdate).length > 0) {
       contactUpdate.updated_at = new Date().toISOString();

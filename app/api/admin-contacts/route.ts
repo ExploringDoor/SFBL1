@@ -13,6 +13,7 @@
 // print/PDF flow.
 
 import { NextResponse } from "next/server";
+import { assessPlayer, needsConsent, type MinorsPolicy } from "@/lib/minors";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 
 export const runtime = "nodejs";
@@ -87,9 +88,25 @@ export async function GET(req: Request) {
     ),
   );
 
+  // Minor status, derived per request and never stored — see lib/minors.ts.
+  // The league doc carries the policy; the cutoff is evaluated inside the
+  // current season year, so a player who turns 18 becomes an adult on the next
+  // page load with no recompute job and no stale stamped value anywhere.
+  const leagueSnap = await db.doc(`leagues/${leagueId}`).get();
+  const policy = (leagueSnap.data()?.minors ?? null) as MinorsPolicy | null;
+  const seasonYear =
+    typeof leagueSnap.data()?.season_year === "number"
+      ? (leagueSnap.data()!.season_year as number)
+      : new Date().getFullYear();
+
   const players = activePlayers.map((d, i) => {
     const data = d.data();
     const contact = contactDocs[i]!.exists ? contactDocs[i]!.data()! : {};
+    const age = assessPlayer(
+      typeof contact.dob === "string" ? contact.dob : null,
+      policy,
+      seasonYear,
+    );
     return {
       id: d.id,
       team_id: String(data.team_id ?? ""),
@@ -98,8 +115,18 @@ export async function GET(req: Request) {
       position: String(data.position ?? ""),
       email: String(contact.email ?? ""),
       phone: String(contact.phone ?? ""),
+      minor_status: age.status,
+      age_at_cutoff: age.age,
+      cutoff_date: age.cutoffDate,
+      needs_consent: needsConsent(age, policy),
+      consent_on_file: contact.consent_on_file === true,
     };
   });
 
-  return NextResponse.json({ ok: true, teams, players });
+  return NextResponse.json({
+    ok: true,
+    teams,
+    players,
+    minors_policy: policy,
+  });
 }

@@ -46,6 +46,12 @@
     "captain": {
       "passwordless": true
     },
+    "minors": {
+      "age_of_majority": 18,
+      "cutoff": "12-31",
+      "min_age": 15,
+      "requires_consent": true
+    },
     "standings": {
       "scoring": "pct",
       "tiebreaker": "rd"

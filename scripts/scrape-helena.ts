@@ -562,6 +562,22 @@ function provisionConfig(fields: string[]) {
       // No email sign-in — a slowpitch captain will not do a magic-link dance
       // standing at the field with a scorebook.
       captain: { passwordless: true },
+      // HSA's published eligibility rule, verbatim from their own site:
+      // "A player must be fifteen (15) years of age by the end of the year
+      // (December 31) to be eligible to play. Any player under the age of 18
+      // must have a signed permission form."
+      //
+      // public_age is deliberately absent (defaults false). This is an ADULT
+      // league — a public age next to a named player would tell anyone which
+      // people on the field are children, and the public player doc is both
+      // world-readable and listable. Minor status shows to captains and
+      // admins only. See lib/minors.ts.
+      minors: {
+        age_of_majority: 18,
+        cutoff: "12-31",
+        min_age: 15,
+        requires_consent: true,
+      },
       // HSA publishes W-L-T with Pct and GB, no points table.
       standings: { scoring: "pct", tiebreaker: "rd" },
       // Homepage welcome blurb.

@@ -38,6 +38,13 @@ interface Player {
   /** Date of birth (YYYY-MM-DD). PII — captain/admin only, from
    *  _private/contact via the team-roster API; never public. */
   dob: string;
+  /** Derived server-side per request in /api/team-roster — never stored, so it
+   *  cannot go stale when the season rolls over. */
+  minor_status?: "adult" | "minor" | "under_minimum" | "unknown";
+  age_at_cutoff?: number | null;
+  cutoff_date?: string | null;
+  needs_consent?: boolean;
+  consent_on_file?: boolean;
   auth_uid?: string;
   pending_approval?: boolean;
   active?: boolean;
@@ -82,6 +89,11 @@ export function RosterTab({ leagueId, teamId }: RosterTabProps) {
           email: string;
           phone: string;
           dob: string;
+          minor_status?: "adult" | "minor" | "under_minimum" | "unknown";
+          age_at_cutoff?: number | null;
+          cutoff_date?: string | null;
+          needs_consent?: boolean;
+          consent_on_file?: boolean;
           auth_uid: string | null;
           walk_on: boolean;
         }[];
@@ -118,6 +130,11 @@ export function RosterTab({ leagueId, teamId }: RosterTabProps) {
             email: p.email,
             phone: p.phone,
             dob: p.dob ?? "",
+            minor_status: p.minor_status,
+            age_at_cutoff: p.age_at_cutoff ?? null,
+            cutoff_date: p.cutoff_date ?? null,
+            needs_consent: p.needs_consent === true,
+            consent_on_file: p.consent_on_file === true,
             auth_uid: p.auth_uid ?? undefined,
             pending_approval: pendingById.get(p.id) ?? false,
             active: activeById.get(p.id) ?? true,
@@ -548,6 +565,7 @@ function RosterRow({
           ) : (
             <span style={{ color: "rgba(0,0,0,0.3)" }}>—</span>
           )}
+          <MinorBadge player={player} />
         </td>
         <td className="cap-roster-actions">
           <button
@@ -671,6 +689,96 @@ function RosterRow({
 // "1992-05-11" → "May 11, 1992". Parsed at local noon so the
 // calendar day never shifts (same date-only TZ trap as audit H1).
 // Non-date-shaped input echoes back unchanged.
+/** Eligibility badge shown beside a player's DOB in the captain roster.
+ *
+ *  Captain/admin surface only — this table is behind /api/team-roster, which is
+ *  gated to admin-of-league or captain-of-team. Nothing here is public, and
+ *  deliberately so: publicly labelling which named players in an adult league
+ *  are children is a safeguarding problem, not a display choice.
+ *
+ *  "No DOB" is rendered as a real warning rather than left blank, because an
+ *  unknown age is exactly what the league needs chased down. */
+function MinorBadge({
+  player,
+}: {
+  player: Pick<
+    Player,
+    "minor_status" | "age_at_cutoff" | "cutoff_date" | "needs_consent" | "consent_on_file"
+  >;
+}) {
+  const status = player.minor_status;
+  if (!status || status === "adult") return null;
+
+  const base: React.CSSProperties = {
+    display: "inline-block",
+    marginLeft: 8,
+    padding: "1px 7px",
+    borderRadius: 99,
+    fontSize: 11,
+    fontWeight: 700,
+    letterSpacing: ".03em",
+    whiteSpace: "nowrap",
+    verticalAlign: "middle",
+  };
+
+  if (status === "unknown") {
+    return (
+      <span
+        style={{ ...base, background: "#eceff1", color: "#4a5560" }}
+        title="No date of birth on file — the league can't confirm this player is an adult."
+      >
+        NO DOB
+      </span>
+    );
+  }
+
+  const asOf = player.cutoff_date
+    ? ` as of ${player.cutoff_date}`
+    : "";
+  const consentOk = player.consent_on_file === true;
+  const wantsConsent = player.needs_consent === true;
+
+  if (status === "under_minimum") {
+    return (
+      <span
+        style={{ ...base, background: "#fdecea", color: "#9b1c14" }}
+        title={`Age ${player.age_at_cutoff}${asOf} — below the league minimum. Not eligible to play.`}
+      >
+        UNDER AGE {player.age_at_cutoff != null ? `· ${player.age_at_cutoff}` : ""}
+      </span>
+    );
+  }
+
+  // status === "minor"
+  return (
+    <>
+      <span
+        style={{ ...base, background: "#fff4e0", color: "#8a5200" }}
+        title={`Age ${player.age_at_cutoff}${asOf} — a minor under league rules.`}
+      >
+        MINOR{player.age_at_cutoff != null ? ` · ${player.age_at_cutoff}` : ""}
+      </span>
+      {wantsConsent && (
+        <span
+          style={{
+            ...base,
+            marginLeft: 4,
+            background: consentOk ? "#e6f4ea" : "#fdecea",
+            color: consentOk ? "#1b6a3a" : "#9b1c14",
+          }}
+          title={
+            consentOk
+              ? "Signed parental consent form is on file."
+              : "Parental consent form is REQUIRED and not yet on file."
+          }
+        >
+          {consentOk ? "CONSENT ✓" : "CONSENT MISSING"}
+        </span>
+      )}
+    </>
+  );
+}
+
 function fmtDob(s: string): string {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
   if (!m) return s;

@@ -10,6 +10,7 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { assessPlayer, needsConsent, type MinorsPolicy } from "@/lib/minors";
 
 export const runtime = "nodejs";
 
@@ -80,9 +81,29 @@ export async function GET(req: Request) {
     ),
   );
 
+  // Minor status is DERIVED HERE, on every read, and never stored.
+  //
+  // Storing a stamped age is the trap the older STS implementation fell into:
+  // the number is written once and then silently goes stale the moment the
+  // season rolls over. Deriving on read means the answer is always computed
+  // against the current season's cutoff, and — just as important — nothing
+  // age-related ever has to be written to the world-readable player doc.
+  const leagueSnap = await db.doc(`leagues/${leagueId}`).get();
+  const policy = (leagueSnap.data()?.minors ?? null) as MinorsPolicy | null;
+  // Season year for the cutoff: the tenant's branded season year when set,
+  // otherwise the calendar year.
+  const seasonYear =
+    typeof leagueSnap.data()?.season_year === "number"
+      ? (leagueSnap.data()!.season_year as number)
+      : new Date().getFullYear();
+
+  const assess = (dob: unknown) =>
+    assessPlayer(typeof dob === "string" ? dob : null, policy, seasonYear);
+
   const players = activeDocs.map((d, i) => {
     const data = d.data();
     const contact = contactDocs[i]!.exists ? contactDocs[i]!.data()! : {};
+    const age = assess(contact.dob);
     return {
       id: d.id,
       team_id: String(data.team_id ?? ""),
@@ -98,6 +119,17 @@ export async function GET(req: Request) {
       dob: String(contact.dob ?? ""),
       walk_on: data.walk_on === true,
       auth_uid: data.auth_uid ? String(data.auth_uid) : null,
+      // Derived, never stored. `status` is "adult" | "minor" |
+      // "under_minimum" | "unknown"; a missing DOB is "unknown", NOT "adult",
+      // so the gap surfaces for follow-up instead of reading as fine.
+      minor_status: age.status,
+      age_at_cutoff: age.age,
+      cutoff_date: age.cutoffDate,
+      needs_consent: needsConsent(age, policy),
+      consent_on_file: contact.consent_on_file === true,
+      consent_recorded_at: contact.consent_recorded_at
+        ? String(contact.consent_recorded_at)
+        : null,
     };
   });
 
