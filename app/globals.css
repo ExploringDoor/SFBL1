@@ -6697,3 +6697,35 @@ select:focus-visible {
     min-width: 8rem;
   }
 }
+
+/* ── COYBL page banners ────────────────────────────────────────────────
+ *
+ * Adam asked for full-width banners on MOBILE and the web app. The first
+ * pass applied it at every width, which changed the desktop site he had not
+ * asked about — on a 1920px monitor a 2.5:1 banner becomes 768px tall and
+ * pushes all the content below the fold.
+ *
+ * So: full-bleed up to tablet, original centred natural-size look above it.
+ */
+.le-coybl-banner {
+  width: 100%;
+  text-align: center;
+}
+.le-coybl-banner img {
+  display: block;
+  /* Phones + tablets: edge to edge, natural height, nothing cropped. This is
+     the part Adam approved. Below ~563px the banners used to leave white
+     gutters at the sides; a phone in landscape showed ~197px of white. */
+  width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+@media (min-width: 1024px) {
+  .le-coybl-banner img {
+    /* Desktop: exactly as it was before — the image at its own size, centred,
+       capped so it never dominates the page. */
+    width: auto;
+    max-width: 100%;
+    max-height: 225px;
+  }
+}

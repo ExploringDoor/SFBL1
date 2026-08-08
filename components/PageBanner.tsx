@@ -109,14 +109,13 @@ export function PageBanner({
   // before asking for it everywhere.
   if (tenantId === "coybl") {
     return (
-      <div style={{ width: "100%", lineHeight: 0 }}>
+      <div className="le-coybl-banner" style={{ lineHeight: 0 }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src}
           srcSet={srcSet}
           sizes="100vw"
           alt={bannerAlt(slug, leagueName)}
-          style={{ display: "block", width: "100%", height: "auto" }}
         />
       </div>
     );
