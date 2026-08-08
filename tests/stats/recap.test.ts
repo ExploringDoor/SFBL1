@@ -46,24 +46,26 @@ const HALL_OF_FAME_BATTER = {
 // ── headline shapes ────────────────────────────────────────────────
 
 describe("buildRecap — headline", () => {
-  it("uses winner-first format with margin-flavored verb", () => {
+  it("uses winner-first format with a margin verb", () => {
     const out = buildRecap(emptyInput({ awayScore: 7, homeScore: 3 }));
-    // 4-run win → "took down" verb (margin >= 3 < 6).
+    // 4-run win → "beat" (margin 3–5). The old flowery verb ladder
+    // (took down / ran away / rolled past) was simplified to
+    // defeated / beat / edged.
     expect(out.headline).toContain("Yankees");
     expect(out.headline).toContain("Red Sox");
     expect(out.headline).toContain("7");
     expect(out.headline).toContain("3");
-    expect(out.headline.toLowerCase()).toMatch(/yankees took down red sox/);
+    expect(out.headline.toLowerCase()).toMatch(/yankees beat red sox/);
   });
 
-  it("ran-away verb on margin >= 10", () => {
+  it("'defeated' verb on a large margin (>= 6)", () => {
     const out = buildRecap(emptyInput({ awayScore: 15, homeScore: 1 }));
-    expect(out.headline.toLowerCase()).toContain("ran away from");
+    expect(out.headline.toLowerCase()).toContain("defeated");
   });
 
-  it("rolled-past verb on margin 6-9", () => {
+  it("'defeated' verb on margin 6-9", () => {
     const out = buildRecap(emptyInput({ awayScore: 8, homeScore: 1 }));
-    expect(out.headline.toLowerCase()).toContain("rolled past");
+    expect(out.headline.toLowerCase()).toContain("defeated");
   });
 
   it("edged verb on 1-run margin", () => {
@@ -298,7 +300,7 @@ describe("buildRecap — Score-Only mode", () => {
 // ── inning highlight ──────────────────────────────────────────────
 
 describe("buildRecap — inning highlight", () => {
-  it("calls out a 4+ run inning as 'broke things open'", () => {
+  it("names the biggest 5+ run inning with its ordinal", () => {
     const out = buildRecap(
       emptyInput({
         awayScore: 8,
@@ -307,11 +309,12 @@ describe("buildRecap — inning highlight", () => {
         homeLine: [1, 0, 0, 0, 0, 0, 0, 0, 0],
       }),
     );
-    expect(out.body.join(" ")).toMatch(/broke things open|broke it open/i);
-    expect(out.body.join(" ")).toContain("3rd"); // ordinal
+    // The 5-run 3rd is the big inning; a later, smaller inning must not
+    // overwrite it (regression guard for the big-inning fix).
+    expect(out.body.join(" ")).toMatch(/put up 5 runs in the 3rd/i);
   });
 
-  it("calls out a 3-run inning as 'difference'", () => {
+  it("a 3-run inning gets no big-inning callout (threshold is 5)", () => {
     const out = buildRecap(
       emptyInput({
         awayScore: 4,
@@ -320,7 +323,7 @@ describe("buildRecap — inning highlight", () => {
         homeLine: [0, 0, 0, 0, 0, 1, 0, 0, 0],
       }),
     );
-    expect(out.body.join(" ")).toMatch(/difference|3-run/i);
+    expect(out.body.join(" ")).not.toMatch(/put up \d+ runs in the/i);
   });
 
   it("no inning highlight when no inning has 3+ runs", () => {
@@ -399,40 +402,28 @@ describe("buildRecap — opener context", () => {
 // ── closing line + tone ────────────────────────────────────────────
 
 describe("buildRecap — closing line", () => {
-  it("'statement win' for blowouts (margin >= 8)", () => {
-    const out = buildRecap(
-      emptyInput({
-        awayScore: 12,
-        homeScore: 2,
-        awayLineup: [HALL_OF_FAME_BATTER],
-        playerNames: { p1: "X" },
-      }),
-    );
-    expect(out.body.join(" ").toLowerCase()).toContain("statement win");
-  });
-
-  it("'momentum' line for moderate wins (margin 4-7)", () => {
-    const out = buildRecap(
-      emptyInput({
-        awayScore: 7,
-        homeScore: 2,
-        awayLineup: [HALL_OF_FAME_BATTER],
-        playerNames: { p1: "X" },
-      }),
-    );
-    expect(out.body.join(" ").toLowerCase()).toContain("momentum");
-  });
-
-  it("'played them tough' for close games", () => {
-    const out = buildRecap(
-      emptyInput({
-        awayScore: 4,
-        homeScore: 3,
-        awayLineup: [HALL_OF_FAME_BATTER],
-        playerNames: { p1: "X" },
-      }),
-    );
-    expect(out.body.join(" ").toLowerCase()).toContain("played them tough");
+  it("emits no editorial closing rhetoric (removed by design)", () => {
+    // The old "statement win" / "momentum" / "played them tough" closers
+    // weren't backed by data and were intentionally removed. Guard so they
+    // don't creep back in.
+    for (const [awayScore, homeScore] of [
+      [12, 2],
+      [7, 2],
+      [4, 3],
+    ] as const) {
+      const out = buildRecap(
+        emptyInput({
+          awayScore,
+          homeScore,
+          awayLineup: [HALL_OF_FAME_BATTER],
+          playerNames: { p1: "X" },
+        }),
+      );
+      const text = out.body.join(" ").toLowerCase();
+      expect(text).not.toContain("statement win");
+      expect(text).not.toContain("momentum");
+      expect(text).not.toContain("played them tough");
+    }
   });
 
   it("no closing line for ties (no winner to anchor it)", () => {

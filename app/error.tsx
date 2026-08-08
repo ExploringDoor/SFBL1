@@ -31,7 +31,13 @@ export default function GlobalError({
         message: error.message,
         digest: error.digest ?? null,
         stack: error.stack ?? null,
-        url: typeof window !== "undefined" ? window.location.href : null,
+        // Origin + path only — NEVER the query/hash. Magic-link sign-in
+        // puts a single-use `oobCode` in the URL; logging the full href
+        // would park live auth tokens in /errors (audit M4).
+        url:
+          typeof window !== "undefined"
+            ? window.location.origin + window.location.pathname
+            : null,
         ua:
           typeof navigator !== "undefined" ? navigator.userAgent : null,
       }),

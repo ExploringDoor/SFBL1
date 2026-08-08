@@ -51,6 +51,15 @@ function num(v: unknown): number | undefined {
   return Number.isFinite(n) ? n : undefined;
 }
 
+// ip_outs is a raw out count and MUST be a non-negative integer. A
+// captain-entered fraction (e.g. 2.5) would otherwise reach formatIP()/
+// ipDecimal(), which throw on non-integers and 500 the entire public box
+// score + recap (audit M6). Floor to the nearest out, clamp at zero.
+function intOuts(v: unknown): number | undefined {
+  const n = num(v);
+  return n === undefined ? undefined : Math.max(0, Math.floor(n));
+}
+
 function coerceLineup(raw: unknown): BoxBatter[] {
   if (!Array.isArray(raw)) return [];
   const out: BoxBatter[] = [];
@@ -92,7 +101,7 @@ function coercePitchers(raw: unknown): BoxPitcher[] {
         : undefined;
     out.push({
       player_id,
-      ip_outs: num(obj.ip_outs),
+      ip_outs: intOuts(obj.ip_outs),
       h: num(obj.h),
       r: num(obj.r),
       er: num(obj.er),
@@ -131,17 +140,26 @@ async function loadTenantBoxAggregates(
       logoUrl: data.logo_url ? String(data.logo_url) : null,
     };
   }
-  const standingsGames: GameResult[] = allGamesSnap.docs.map((d) => {
+  const standingsGames: GameResult[] = allGamesSnap.docs.flatMap((d) => {
     const data = d.data();
-    return {
-      home_team_id: String(data.home_team_id ?? ""),
-      away_team_id: String(data.away_team_id ?? ""),
-      home_score: Number(data.home_score ?? 0),
-      away_score: Number(data.away_score ?? 0),
-      status: (data.status ?? "draft") as GameResult["status"],
-      date: data.date ? String(data.date) : undefined,
-      is_playoff: data.is_playoff === true,
-    };
+    // M7: never coerce a missing score to 0. A final game with no scores
+    // was becoming a phantom 0-0 tie in the record badge. Skip any game
+    // whose scores aren't both present — mirrors app/print/standings,
+    // which was already correct. (computeStandings still filters status.)
+    const homeScore = Number(data.home_score);
+    const awayScore = Number(data.away_score);
+    if (!Number.isFinite(homeScore) || !Number.isFinite(awayScore)) return [];
+    return [
+      {
+        home_team_id: String(data.home_team_id ?? ""),
+        away_team_id: String(data.away_team_id ?? ""),
+        home_score: homeScore,
+        away_score: awayScore,
+        status: (data.status ?? "draft") as GameResult["status"],
+        date: data.date ? String(data.date) : undefined,
+        is_playoff: data.is_playoff === true,
+      },
+    ];
   });
   const standings = computeStandings(standingsGames);
   const recordByTeam = new Map(

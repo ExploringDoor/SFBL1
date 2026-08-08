@@ -13,6 +13,7 @@ import {
   type StandingsRow,
 } from "@/lib/stats/shared";
 import { captainNoun, type PublicLeagueConfig } from "@/lib/tenants";
+import { formatGameDate } from "@/lib/format-time";
 import {
   StandingsTable,
   type DivisionGroup,
@@ -212,17 +213,25 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
     };
   }
 
-  const games: GameResult[] = gamesSnap.docs.map((d) => {
+  const games: GameResult[] = gamesSnap.docs.flatMap((d) => {
     const data = d.data();
-    return {
-      home_team_id: String(data.home_team_id ?? ""),
-      away_team_id: String(data.away_team_id ?? ""),
-      home_score: Number(data.home_score ?? 0),
-      away_score: Number(data.away_score ?? 0),
-      status: (data.status ?? "draft") as GameResult["status"],
-      date: data.date ? String(data.date) : undefined,
-      is_playoff: data.is_playoff === true,
-    };
+    // M7: a final game with missing scores must not be coerced to a 0-0
+    // tie. Skip games whose scores aren't both present (matches
+    // app/print/standings). computeStandings still applies its status filter.
+    const homeScore = Number(data.home_score);
+    const awayScore = Number(data.away_score);
+    if (!Number.isFinite(homeScore) || !Number.isFinite(awayScore)) return [];
+    return [
+      {
+        home_team_id: String(data.home_team_id ?? ""),
+        away_team_id: String(data.away_team_id ?? ""),
+        home_score: homeScore,
+        away_score: awayScore,
+        status: (data.status ?? "draft") as GameResult["status"],
+        date: data.date ? String(data.date) : undefined,
+        is_playoff: data.is_playoff === true,
+      },
+    ];
   });
 
   let standings: StandingsRow[] = computeStandings(games);
@@ -245,13 +254,14 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
     .filter(Boolean)
     .sort();
   const lastDate = finalDates[finalDates.length - 1];
-  const throughDate = lastDate
-    ? new Date(lastDate).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
-    : "today";
+  // Parse via formatGameDate (calendar-day safe) so the subtitle doesn't
+  // slip to the prior day on a UTC server for a date-only string.
+  const throughDate =
+    formatGameDate(lastDate, null, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }) || "today";
 
   return {
     divisionGroups,

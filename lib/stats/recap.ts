@@ -315,7 +315,12 @@ function linescoreBeat(
   for (let i = 0; i < innings; i++) {
     const ar = a[i] ?? 0;
     const hr = h[i] ?? 0;
-    if (ar >= 5) bigInning = { inning: i + 1, runs: ar, team: input.awayTeamName };
+    // Keep the single largest 5+ run inning across both teams. The away
+    // branch previously overwrote unconditionally, so a later, smaller
+    // away inning could replace a bigger one (or the home team's).
+    if (ar >= 5 && ar > (bigInning?.runs ?? 0)) {
+      bigInning = { inning: i + 1, runs: ar, team: input.awayTeamName };
+    }
     if (hr >= 5 && hr > (bigInning?.runs ?? 0)) {
       bigInning = { inning: i + 1, runs: hr, team: input.homeTeamName };
     }
@@ -426,8 +431,11 @@ function standoutBatters(
   );
   if (interesting.length === 0) return null;
 
-  // Top 3 standouts only — keeps it readable.
-  const top = interesting.slice(0, 3);
+  // Top 3 standouts by production, not lineup order — rank by HR, then
+  // RBI, then hits so the three named are actually the best of the day.
+  const score = (b: POTGBatterLine) =>
+    (b.hr ?? 0) * 100 + (b.rbi ?? 0) * 10 + (b.h ?? 0);
+  const top = [...interesting].sort((x, y) => score(y) - score(x)).slice(0, 3);
   const sentences = top.map((b) => {
     const name = names[b.player_id] ?? b.player_id;
     const ab = b.ab ?? 0;

@@ -29,10 +29,11 @@ interface BundleEntry {
   expires_at: number;
 }
 
-// 30s TTL — long enough to absorb a crawler sweeping hundreds of player
-// URLs, short enough that a captain viewing their page right after a
-// score is entered sees fresh data within half a minute.
-const BUNDLE_TTL_MS = 30_000;
+// 10min TTL — raised from 30s alongside the other layout caches in the
+// 2026-08 read-cost work (audit M10). 30s was missing on nearly every
+// crawler hit against a cold lambda; player/team/leaders data isn't time-
+// sensitive, and per-game docs are still read fresh where freshness matters.
+const BUNDLE_TTL_MS = 10 * 60_000;
 const bundleCache = new Map<string, BundleEntry>();
 
 export async function loadLeagueBundle(
