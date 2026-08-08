@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { loadGamesAndTeamsSnaps } from "@/lib/league-cache";
 import { TeamBadge } from "@/components/TeamBadge";
 import {
   computeStandings,
@@ -56,10 +57,9 @@ export default async function TeamsPage() {
   }
 
   const db = getAdminDb();
-  const [teamsSnap, gamesSnap] = await Promise.all([
-    db.collection(`leagues/${tenantId}/teams`).get(),
-    db.collection(`leagues/${tenantId}/games`).get(),
-  ]);
+  // Shared tenant-keyed cache — was two uncached full-collection reads
+  // per request on a page that's in the sitemap (audit M12).
+  const { gamesSnap, teamsSnap } = await loadGamesAndTeamsSnaps(db, tenantId);
 
   const games: GameResult[] = gamesSnap.docs.map((d) => {
     const data = d.data();

@@ -19,6 +19,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { loadLeagueBundle } from "@/lib/league-cache";
 import "./leaders.css";
 
 export const dynamic = "force-dynamic";
@@ -55,11 +56,13 @@ export default async function LeadersPage() {
   }
 
   const db = getAdminDb();
-  const [gameSnap, teamSnap, playerSnap] = await Promise.all([
-    db.collection(`leagues/${tenantId}/games`).get(),
-    db.collection(`leagues/${tenantId}/teams`).get(),
-    db.collection(`leagues/${tenantId}/players`).get(),
-  ]);
+  // Shared tenant-keyed cache — was three uncached full-collection reads
+  // per request (audit M11). Renamed to keep the downstream var names.
+  const {
+    gamesSnap: gameSnap,
+    teamsSnap: teamSnap,
+    playersSnap: playerSnap,
+  } = await loadLeagueBundle(db, tenantId);
 
   const teamMap = new Map<string, TeamLite>();
   for (const d of teamSnap.docs) {

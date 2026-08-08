@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { loadLeagueBundle } from "@/lib/league-cache";
 import { numericStatsOrEmpty } from "@/lib/safe-stats";
 import { TeamBadge } from "@/components/TeamBadge";
 import { formatIP } from "@/lib/stats/ip";
@@ -80,10 +81,9 @@ export default async function PlayersPage() {
   //   - LBDC active docs (status:"active")  → keep
   //   - LBDC orphans (status:"unknown", orphan:true) → drop
   // Audit C1 fix (2026-05-15).
-  const [playersSnap, teamsSnap] = await Promise.all([
-    db.collection(`leagues/${tenantId}/players`).get(),
-    db.collection(`leagues/${tenantId}/teams`).get(),
-  ]);
+  // Shared tenant-keyed cache — was two uncached full-collection reads
+  // per request (audit M12). players + teams come from the bundle.
+  const { playersSnap, teamsSnap } = await loadLeagueBundle(db, tenantId);
 
   const teams: Record<string, { name: string; abbrev?: string; color?: string; logoUrl?: string | null }> = {};
   for (const d of teamsSnap.docs) {

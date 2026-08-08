@@ -8,6 +8,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { loadLeagueBundle } from "@/lib/league-cache";
 import { TeamBadge } from "@/components/TeamBadge";
 import { SubscribeCalendar } from "@/components/SubscribeCalendar";
 import {
@@ -100,22 +101,25 @@ export default async function TeamDetailPage({
   //   - orphan === true    → drop (LBDC migration orphans)
   //   - status set and != active → drop (e.g. "unknown")
   //   - missing status     → keep (SFBL legacy)
-  const [teamSnap, rosterSnap, gamesSnap, teamsSnap, boxesSnap] = await Promise.all([
-    db.doc(`leagues/${tenantId}/teams/${params.teamId}`).get(),
-    db
-      .collection(`leagues/${tenantId}/players`)
-      .where("team_id", "==", params.teamId)
-      .get(),
-    db.collection(`leagues/${tenantId}/games`).get(),
-    db.collection(`leagues/${tenantId}/teams`).get(),
-    // All box_scores — we use these to compute CURRENT-SEASON per-
-    // player stats. The career aggregate on player.stats was the
-    // source of the "Bill Crews has 17 GP and a .352 average" bug
-    // when the actual spring season only had 5 games played
-    // (2026-05-14): recalcLeague writes a career-wide total and the
-    // team roster was reading that.
-    db.collection(`leagues/${tenantId}/box_scores`).get(),
-  ]);
+  // games/teams/box_scores come from the shared tenant cache (was three
+  // uncached full-collection reads per team page, all in the sitemap;
+  // audit HIGH-06). The team doc and THIS team's roster stay per-request
+  // — cheap, team-specific, and want to reflect a roster edit promptly.
+  //
+  // box_scores drive CURRENT-SEASON per-player stats. The career
+  // aggregate on player.stats was the source of the "Bill Crews has 17 GP
+  // and a .352 average" bug when the spring season only had 5 games
+  // (2026-05-14): recalcLeague writes a career-wide total and the roster
+  // was reading that.
+  const [{ gamesSnap, teamsSnap, boxesSnap }, teamSnap, rosterSnap] =
+    await Promise.all([
+      loadLeagueBundle(db, tenantId),
+      db.doc(`leagues/${tenantId}/teams/${params.teamId}`).get(),
+      db
+        .collection(`leagues/${tenantId}/players`)
+        .where("team_id", "==", params.teamId)
+        .get(),
+    ]);
   if (!teamSnap.exists) notFound();
 
   const t = teamSnap.data() ?? {};

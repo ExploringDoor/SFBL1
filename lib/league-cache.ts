@@ -6,9 +6,11 @@
 // Why this exists (audit 2026-07): every /players/[id] render did four
 // FULL collection reads (box_scores + seasons + teams + games) that are
 // identical for every player in a league. With ~400 player pages in the
-// sitemap, a crawl re-fetched the same four collections ~400 times. This
+// sitemap, a crawl re-fetched the same collections ~400 times. This
 // caches that bundle so a burst/crawl shares one read set per warm
-// process within the TTL window.
+// process within the TTL window. The players collection was added to the
+// bundle in the 2026-08 read-cost work so /leaders and /players (the
+// index) can share it too (audit M11/M12).
 //
 // NOT a CDN/HTML cache: this only dedups Firestore reads inside the
 // server process. Rendered HTML is still per-request and per-tenant, so
@@ -22,6 +24,7 @@ export interface LeagueBundle {
   seasonsSnap: QuerySnapshot;
   teamsSnap: QuerySnapshot;
   gamesSnap: QuerySnapshot;
+  playersSnap: QuerySnapshot;
 }
 
 interface BundleEntry {
@@ -43,17 +46,20 @@ export async function loadLeagueBundle(
   const hit = bundleCache.get(tenantId);
   if (hit && Date.now() < hit.expires_at) return hit.bundle;
 
-  const [boxesSnap, seasonsSnap, teamsSnap, gamesSnap] = await Promise.all([
-    db.collection(`leagues/${tenantId}/box_scores`).get(),
-    db.collection(`leagues/${tenantId}/seasons`).get(),
-    db.collection(`leagues/${tenantId}/teams`).get(),
-    db.collection(`leagues/${tenantId}/games`).get(),
-  ]);
+  const [boxesSnap, seasonsSnap, teamsSnap, gamesSnap, playersSnap] =
+    await Promise.all([
+      db.collection(`leagues/${tenantId}/box_scores`).get(),
+      db.collection(`leagues/${tenantId}/seasons`).get(),
+      db.collection(`leagues/${tenantId}/teams`).get(),
+      db.collection(`leagues/${tenantId}/games`).get(),
+      db.collection(`leagues/${tenantId}/players`).get(),
+    ]);
   const bundle: LeagueBundle = {
     boxesSnap,
     seasonsSnap,
     teamsSnap,
     gamesSnap,
+    playersSnap,
   };
   bundleCache.set(tenantId, {
     bundle,

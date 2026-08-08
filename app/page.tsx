@@ -9,6 +9,7 @@ import {
 } from "@/lib/stats/shared";
 import { captainNoun, type PublicLeagueConfig } from "@/lib/tenants";
 import { combineDateTime } from "@/lib/format-time";
+import { loadGamesAndTeamsSnaps } from "@/lib/league-cache";
 import { GameCard, type GameCardTeam } from "@/components/ui/GameCard";
 import { PreviewCard, type PreviewCardTeam } from "@/components/ui/PreviewCard";
 import { Hero as DvslHero } from "@/components/ui/Hero";
@@ -327,10 +328,9 @@ function deriveAbbrev(name: string): string {
 
 async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null) {
   const db = getAdminDb();
-  const [gamesSnap, teamsSnap] = await Promise.all([
-    db.collection(`leagues/${tenantId}/games`).get(),
-    db.collection(`leagues/${tenantId}/teams`).get(),
-  ]);
+  // Shared tenant-keyed cache (was two uncached full-collection reads on
+  // every homepage render — the most-visited route; audit HIGH-05).
+  const { gamesSnap, teamsSnap } = await loadGamesAndTeamsSnaps(db, tenantId);
 
   const teams: Record<string, TeamMeta> = {};
   for (const d of teamsSnap.docs) {
