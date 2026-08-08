@@ -1,0 +1,211 @@
+{
+  "intro": "Every league document in one place — view online or download. Meetings are held at Penn Medicine Park, 650 North Prince St, Lancaster, PA 17603 (since February 2019; renamed from Clipper Magazine Stadium in 2025). All meetings start at 7 pm.",
+  "notes": [
+    "Rosters are locked on June 1st.",
+    "No rosters required for Fall Ball, and both bat standards are allowed.",
+    "Rules updated 03.10.26 with reference numbers."
+  ],
+  "sections": [
+    {
+      "title": "Season Dates & Calendar",
+      "items": [
+        {
+          "title": "2026 Meeting Dates",
+          "version": "v07.21.25",
+          "desc": "The season meeting schedule: Fall Ball meeting, officer nominations and elections, team registration and payment due dates, proof of insurance, and the mandatory coaches meetings with rosters due.",
+          "file": "/lcybl/docs/lcybl-2026-meeting-dates.pdf",
+          "type": "PDF",
+          "size": "376 KB"
+        },
+        {
+          "title": "2026 Season Calendar",
+          "version": "2.17.26",
+          "desc": "Month-by-month calendar: start of season, opening day at Penn Medicine Park, holiday weekends with no games, end-of-season dates by section, playoff and year-end tournament weekends, and the LNP series dates.",
+          "file": "/lcybl/docs/lcybl-2026-calendar.pdf",
+          "type": "PDF",
+          "size": "297 KB"
+        },
+        {
+          "title": "End of Season Dates",
+          "version": "2.20.26",
+          "desc": "The last day of the regular season for each age and section. Please do not contact the league about extending the season.",
+          "file": "/lcybl/docs/end-of-season-dates.pdf",
+          "type": "PDF",
+          "size": "130 KB"
+        }
+      ]
+    },
+    {
+      "title": "Rules & Eligibility",
+      "items": [
+        {
+          "title": "Boundary Rule",
+          "version": "v9.21.23 v2",
+          "desc": "Section 6 of the league rules. Which member club a player must play for based on his school district, adjacent-club exceptions, releases, and Executive Committee approval.",
+          "file": "/lcybl/docs/boundary-rule.pdf",
+          "type": "PDF",
+          "size": "63 KB"
+        },
+        {
+          "title": "Double Roster Rule",
+          "version": "01.05.14",
+          "desc": "Section 5 of the league rules. Players may not play for a competing baseball league. Defines tournament teams, violating players, and the forfeit penalty.",
+          "file": "/lcybl/docs/double-roster-rule.pdf",
+          "type": "PDF",
+          "size": "70 KB"
+        },
+        {
+          "title": "2027 Age Chart",
+          "version": "v07.28.26",
+          "desc": "Fall 2026 to Spring 2027 age chart. Birth year by month, from age 8 through age 14.",
+          "file": "/lcybl/docs/2027-age-chart.pdf",
+          "type": "PDF",
+          "size": "112 KB"
+        },
+        {
+          "title": "Spring Rules Summary, 8U & 10U",
+          "version": "03.10.26",
+          "desc": "Full spring rules for 8U and 10U Sections 1, 2 and 3 — also published as an interactive page on this site.",
+          "file": "/lcybl/docs/rules-8u-10u.pdf",
+          "type": "PDF",
+          "size": "177 KB",
+          "webHref": "/rules",
+          "webLabel": "Read on the Rules page"
+        },
+        {
+          "title": "Spring Rules Summary, 12U & 14U",
+          "version": "3.10.26",
+          "desc": "Full spring rules for 12U and 14U Sections 1, 2 and 3 — also published as an interactive page on this site.",
+          "file": "/lcybl/docs/rules-12u-14u.pdf",
+          "type": "PDF",
+          "size": "189 KB",
+          "webHref": "/rules",
+          "webLabel": "Read on the Rules page"
+        }
+      ]
+    },
+    {
+      "title": "Forms Clubs & Coaches Must Return",
+      "items": [
+        {
+          "title": "Field, Team & Coach Information Sheet",
+          "version": "2026",
+          "desc": "One sheet per team: club and team name, level and section, home field with unavailable dates, and coach contact details. Also available as an online form on this site.",
+          "file": "/lcybl/docs/field-team-coach-info-sheet.doc",
+          "type": "DOC",
+          "size": "26 KB",
+          "webHref": "/team-registration",
+          "webLabel": "Fill out online"
+        },
+        {
+          "title": "Team Information Sheet (Excel)",
+          "version": "v2, 2.13.25",
+          "desc": "Excel version of the team and field information sheet.",
+          "file": "/lcybl/docs/team-information-sheet.xlsx",
+          "type": "XLSX",
+          "size": "32 KB"
+        },
+        {
+          "title": "Roster Form",
+          "version": "2022",
+          "desc": "Team roster form. Due at the April coaches meeting. Rosters lock June 1st.",
+          "file": "/lcybl/docs/roster-form.xlsx",
+          "type": "XLSX",
+          "size": "17 KB"
+        },
+        {
+          "title": "Child Protection Policy Certificate",
+          "version": "10.07.15",
+          "desc": "Certificate each member organization signs confirming it has obtained the background clearances required by Pennsylvania law (23 Pa.C.S.A. § 6301 et seq.) for people having contact with minors.",
+          "file": "/lcybl/docs/child-protection-certificate.docx",
+          "type": "DOCX",
+          "size": "19 KB"
+        },
+        {
+          "title": "COVID-19 Certificate",
+          "version": "01.22.21",
+          "desc": "Certificate confirming a member organization has obtained signed waivers from every participant and will comply with league guidelines.",
+          "file": "/lcybl/docs/covid-certificate.docx",
+          "type": "DOCX",
+          "size": "28 KB"
+        }
+      ]
+    },
+    {
+      "title": "Pitching & Safety",
+      "items": [
+        {
+          "title": "Pitch Count Log",
+          "version": "v02.15.24",
+          "desc": "The official log that must be at every game. Records pitches, both managers' signatures, required rest and eligibility dates. Limits: 8U = 50, 10U = 65 or 9 outs, 12U = 85, 14U = 95. Violation = forfeit, one-game suspension and a $50 fine.",
+          "file": "/lcybl/docs/pitch-count-log.pdf",
+          "type": "PDF",
+          "size": "89 KB"
+        },
+        {
+          "title": "Pitch Tracker Log",
+          "version": "v04.05.23",
+          "desc": "The in-game pitch-by-pitch tracker with marking conventions. Alert the opposing manager 10 pitches before each threshold.",
+          "file": "/lcybl/docs/pitch-tracker-log.pdf",
+          "type": "PDF",
+          "size": "213 KB"
+        },
+        {
+          "title": "Catchers NOCSAE Chest Protector",
+          "version": "3.24.21",
+          "desc": "Reference document on the NOCSAE chest protector requirement for catchers.",
+          "file": "/lcybl/docs/catchers-chest-protector.pdf",
+          "type": "PDF",
+          "size": "323 KB"
+        },
+        {
+          "title": "Wristband Usage Memo",
+          "version": "4.4.23",
+          "desc": "NFHS memorandum confirming play-calling wristbands must be worn on the wrist, not the belt (NFHS Baseball Rule 1-5-11).",
+          "file": "/lcybl/docs/wristband-memo.pdf",
+          "type": "PDF",
+          "size": "102 KB"
+        },
+        {
+          "title": "Bat Decertification",
+          "version": "3.10.20",
+          "desc": "Bat decertification reference. See also the USA Bat decertified bats list.",
+          "file": "/lcybl/docs/bat-decertification.pdf",
+          "type": "PDF",
+          "size": "71 KB"
+        }
+      ]
+    },
+    {
+      "title": "Fall Ball",
+      "items": [
+        {
+          "title": "Fall Rules Summary",
+          "version": "3.10.26",
+          "desc": "Full fall rules for 8U, 10U Sections 1–2, 12U Sections 1–2, and 14U Sections 1–2 — also published as an interactive page on this site.",
+          "file": "/lcybl/docs/fall-rules-summary.pdf",
+          "type": "PDF",
+          "size": "163 KB",
+          "webHref": "/rules",
+          "webLabel": "Read on the Rules page"
+        },
+        {
+          "title": "Fall Ball 2027 Information Sheet",
+          "version": "2027",
+          "desc": "Fall Ball meeting details, levels of play with base and pitching distances, entry fees, insurance, season start and end, umpire fees and rescheduling.",
+          "file": "/lcybl/docs/fall-ball-2027-info-sheet.pdf",
+          "type": "PDF",
+          "size": "66 KB"
+        },
+        {
+          "title": "Fall Ball 2027 Field, Team & Coach Information",
+          "version": "2027",
+          "desc": "One sheet per Fall Ball team: club and team name, level and section, fees, home field with unavailable dates, and coach contacts.",
+          "file": "/lcybl/docs/fall-ball-2027-team-info.docx",
+          "type": "DOCX",
+          "size": "26 KB"
+        }
+      ]
+    }
+  ]
+}

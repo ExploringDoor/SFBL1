@@ -1,0 +1,87 @@
+.intro {
+  font-size: 15.5px;
+  line-height: 1.6;
+  color: #1f2937;
+  max-width: 720px;
+  margin: 0 0 22px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(290px, 100%), 1fr));
+  gap: 12px;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fff;
+  border: 1px solid rgba(20, 33, 61, 0.14);
+  border-radius: 14px;
+  padding: 14px 16px;
+  transition: box-shadow 0.15s ease, transform 0.12s ease;
+}
+.card:hover {
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.09);
+  transform: translateY(-1px);
+}
+
+.mono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: var(--brand-primary, #14213d);
+  color: #f2e9c9;
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.body {
+  min-width: 0;
+}
+
+.name {
+  font-family: var(--font-inter), sans-serif;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text-strong, #0f172a);
+  margin: 0 0 3px;
+  line-height: 1.25;
+}
+
+.site {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #1d4ed8;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+.site:hover {
+  text-decoration: underline;
+}
+
+.nosite {
+  font-size: 12.5px;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.footnote {
+  margin-top: 20px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: rgba(0, 0, 0, 0.5);
+  max-width: 680px;
+}

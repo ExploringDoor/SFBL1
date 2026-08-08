@@ -1,0 +1,28 @@
+{
+  "intro": "Twenty-three member clubs place teams with the Lancaster County Youth Baseball League — 185 teams across the county in 2026, a league record.",
+  "clubs": [
+    { "name": "Bowmansville", "website": null },
+    { "name": "Crest Baseball", "website": null },
+    { "name": "Crusaders YAA — St. Leo", "website": "https://www.stleos.org/slyaa-athletics/" },
+    { "name": "Cocalico Baseball Organization", "website": "https://cocalicoyouthbaseball.org/" },
+    { "name": "Columbia Borough Athletic Association", "website": "http://cbaaonline.weebly.com/baseball.html" },
+    { "name": "Conestoga Valley Baseball Association", "website": "http://www.cvbaseballassociation.com/" },
+    { "name": "Conoy Township YAA", "website": "http://www.ctyaa.com" },
+    { "name": "Donegal Baseball & Softball Association", "website": "https://www.donegalbaseball.com/" },
+    { "name": "Elizabethtown Boys Club", "website": "http://www.etownboysclub.com/" },
+    { "name": "Ephrata Baseball Association", "website": "http://www.ephratabaseball.org/" },
+    { "name": "Garden Spot Youth Baseball", "website": "https://tshq.bluesombrero.com/gardenspotll" },
+    { "name": "Hempfield Youth Association", "website": "http://www.playhya.com/" },
+    { "name": "Lampeter Strasburg Youth Baseball", "website": "https://tshq.bluesombrero.com/strasburgwillowst" },
+    { "name": "Lancaster Baseball", "website": "http://www.lancasterrec.org" },
+    { "name": "Manheim Township Baseball & Softball", "website": "http://www.mtbsa.com/" },
+    { "name": "Manheim VFW", "website": "https://sites.google.com/view/manheim-vfw-baseball/home" },
+    { "name": "Mountville Youth Athletic Association", "website": "http://www.mountville.org/" },
+    { "name": "North Cornwall Rec Association", "website": "https://www.ncbaseball.org/" },
+    { "name": "Octorara", "website": null },
+    { "name": "Penn Manor Youth Baseball", "website": "http://www.pennmanoryouthbaseball.com/" },
+    { "name": "Pequea Valley Athletic Association", "website": "http://www.pequeavalleybaseball.com/" },
+    { "name": "Solanco Youth Baseball", "website": "http://www.sybaseball.com/" },
+    { "name": "Warwick Travel Baseball", "website": "https://www.warwickyouthbaseball.net/warwicktravel" }
+  ]
+}
