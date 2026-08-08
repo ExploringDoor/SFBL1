@@ -771,3 +771,12 @@ html.tenant-island .spn-partner-contact a {
   align-items: center;
   min-height: 44px;
 }
+
+/* .le-agejump-label is #6b7280 in globals.css, which measured 4.34:1 on the
+ * black page — just under the 4.5 that 12px needs. Fixed HERE rather than by
+ * swapping the literal for var(--muted) in globals.css, because --muted
+ * defaults to rgba(0,0,0,0.56): a different grey, which would have restyled
+ * COYBL, SFBL and LBDC for a problem only Island has. */
+html.tenant-island .le-agejump-label {
+  color: var(--muted);
+}

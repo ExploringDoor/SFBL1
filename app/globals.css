@@ -6580,10 +6580,12 @@ select:focus-visible {
   font-weight: 800;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  /* Token, not a literal grey. #6b7280 measured 4.34:1 on Island's black page,
-     just under the 4.5 that 12px needs. --muted follows the tenant: white at
-     64% on Island (~8:1), and the same grey everywhere else. */
-  color: var(--muted, #6b7280);
+  /* Deliberately a literal, NOT var(--muted). This measured 4.34:1 on Island's
+     black page, a hair under the 4.5 that 12px needs, and the token would fix
+     it — but --muted defaults to rgba(0,0,0,0.56), which is a different grey
+     from #6b7280, so switching here would quietly restyle COYBL, SFBL and
+     LBDC as well. Island gets a scoped override in island-theme.css instead. */
+  color: #6b7280;
   margin-right: 2px;
 }
 .le-agejump-btn {
