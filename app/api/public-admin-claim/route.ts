@@ -102,8 +102,22 @@ export async function POST(req: Request) {
   const data = leagueSnap.data() ?? {};
   const adminCfg = data.admin ?? {};
   let passwordless = adminCfg.passwordless === true;
+
+  // The password lives in the Admin-SDK-only /_secrets/admin doc — moved
+  // off the world-readable /leagues/{id} config doc (2026-08 audit
+  // CRITICAL: a visitor could read it in cleartext and mint an admin
+  // token). We read it via the Admin SDK, which bypasses the deny-all
+  // rule on /_secrets. The legacy `admin.password` field is a transitional
+  // fallback for any tenant not yet migrated — remove once all are moved.
+  const secretSnap = await db.doc(`leagues/${leagueId}/_secrets/admin`).get();
+  const secretPw = secretSnap.exists ? secretSnap.data()?.password : undefined;
+  const legacyPw = adminCfg.password;
   let storedPassword: string | null =
-    typeof adminCfg.password === "string" ? adminCfg.password : null;
+    typeof secretPw === "string" && secretPw
+      ? secretPw
+      : typeof legacyPw === "string" && legacyPw
+        ? legacyPw
+        : null;
 
   // Env-var fallback for hardcoded-config tenants (e.g. SFBL): the
   // tenant declares `admin.passwordless: true` in lib/tenants.ts and

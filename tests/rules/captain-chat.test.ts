@@ -4,10 +4,11 @@
 // scrapers), no client writes (everything goes through
 // /api/chat-message and /api/chat-message-delete).
 //
-// Captains-only enforcement is server-side via the API endpoints
-// (verify caller's claim is captain or admin). Reads are open to any
-// authenticated user — admins need to moderate, and the captain-only
-// reveal in the prefs UI is client-side gating only.
+// 2026-08 audit HIGH-01: read was `request.auth != null`, so any
+// authenticated user — including a captain of another league — could
+// read this league's captains chat. Reads are now scoped to admins and
+// captains OF THIS LEAGUE (still open enough for cross-team moderation,
+// but closed to players, non-members, and other tenants).
 
 import { afterAll, beforeAll, beforeEach, describe, it } from "vitest";
 import {
@@ -32,19 +33,20 @@ beforeEach(async () => {
   await env.clearFirestore();
 });
 
-describe("/captain_chat — read access", () => {
-  it("captain can read a league-wide captain_chat doc", async () => {
+describe("/captain_chat — read access (captains + admins, tenant-scoped)", () => {
+  async function seedMsg() {
     await env.withSecurityRulesDisabled(async (admin) => {
-      await setDoc(
-        doc(admin.firestore(), "leagues/sfbl/captain_chat/m1"),
-        {
-          text: "captains huddle",
-          author_email: "alice@example.com",
-          team_id: "team_a",
-        },
-      );
+      await setDoc(doc(admin.firestore(), "leagues/sfbl/captain_chat/m1"), {
+        text: "captains huddle",
+        author_email: "alice@example.com",
+        team_id: "team_a",
+      });
     });
-    const ctx = env.authenticatedContext(uid("u"), {
+  }
+
+  it("a captain in the league can read", async () => {
+    await seedMsg();
+    const ctx = env.authenticatedContext(uid("cap"), {
       leagues: { sfbl: "captain:team_a" },
     });
     await assertSucceeds(
@@ -52,13 +54,38 @@ describe("/captain_chat — read access", () => {
     );
   });
 
-  it("anonymous user CANNOT read captain_chat", async () => {
-    await env.withSecurityRulesDisabled(async (admin) => {
-      await setDoc(
-        doc(admin.firestore(), "leagues/sfbl/captain_chat/m1"),
-        { text: "secret", team_id: "team_a" },
-      );
+  it("an admin can read (for moderation)", async () => {
+    await seedMsg();
+    const ctx = env.authenticatedContext(uid("adm"), {
+      leagues: { sfbl: "admin" },
     });
+    await assertSucceeds(
+      getDoc(doc(ctx.firestore(), "leagues/sfbl/captain_chat/m1")),
+    );
+  });
+
+  it("a plain player (non-captain) CANNOT read captain_chat", async () => {
+    await seedMsg();
+    const ctx = env.authenticatedContext(uid("plr"), {
+      leagues: { sfbl: "player:p1" },
+    });
+    await assertFails(
+      getDoc(doc(ctx.firestore(), "leagues/sfbl/captain_chat/m1")),
+    );
+  });
+
+  it("a captain of ANOTHER league CANNOT read this league's captain_chat (cross-tenant)", async () => {
+    await seedMsg();
+    const ctx = env.authenticatedContext(uid("spy"), {
+      leagues: { kcsl: "captain:team_a" },
+    });
+    await assertFails(
+      getDoc(doc(ctx.firestore(), "leagues/sfbl/captain_chat/m1")),
+    );
+  });
+
+  it("anonymous user CANNOT read captain_chat", async () => {
+    await seedMsg();
     const ctx = env.unauthenticatedContext();
     await assertFails(
       getDoc(doc(ctx.firestore(), "leagues/sfbl/captain_chat/m1")),

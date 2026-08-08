@@ -105,6 +105,21 @@ service cloud.firestore {
       allow write: if isAdmin(leagueId);
 
       // -------------------------------------------------------------------
+      // /_secrets/{doc} — Admin-SDK ONLY. Never client-readable or writable.
+      //
+      // The parent /leagues/{id} doc is world-readable (middleware resolves
+      // tenant config pre-auth on the Edge), so NOTHING sensitive may live
+      // on it. The admin password sign-in secret lives here instead and is
+      // read only by /api/public-admin-claim via the Admin SDK, which
+      // bypasses these rules. 2026-08 audit CRITICAL: the password used to
+      // sit on the world-readable config doc, where any visitor could read
+      // it and mint an admin token.
+      // -------------------------------------------------------------------
+      match /_secrets/{doc} {
+        allow read, write: if false;
+      }
+
+      // -------------------------------------------------------------------
       // Public-facing collections + their `_private/{doc}` siblings.
       //
       // Convention: anything visible on the public website lives on the
@@ -133,7 +148,14 @@ service cloud.firestore {
 
       match /players/{playerId} {
         allow read: if true;
-        allow write: if isAdmin(leagueId);
+        // 2026-08 audit M3: the public player doc must never carry PII.
+        // Reject any write that includes contact/DOB keys — those live in
+        // _private/contact below. (delete carries no request.resource, so
+        // it's a separate clause.)
+        allow create, update: if isAdmin(leagueId)
+                            && !request.resource.data.keys()
+                                 .hasAny(['dob', 'date_of_birth', 'email', 'phone']);
+        allow delete: if isAdmin(leagueId);
 
         match /_private/{doc} {
           allow read, write: if isAdmin(leagueId)
@@ -283,7 +305,10 @@ service cloud.firestore {
       // -------------------------------------------------------------------
 
       match /team_messages/{msgId} {
-        allow read: if request.auth != null;
+        // 2026-08 audit HIGH-01: scope reads to members of THIS league.
+        // Was `request.auth != null` — a captain of another tenant could
+        // read this league's chat (message text + author name/email).
+        allow read: if leagueRole(leagueId) != null;
         allow write: if false;
       }
 
@@ -307,7 +332,11 @@ service cloud.firestore {
       // -------------------------------------------------------------------
 
       match /captain_chat/{msgId} {
-        allow read: if request.auth != null;
+        // 2026-08 audit HIGH-01: scope reads to admins + captains of THIS
+        // league. Was `request.auth != null` — readable cross-tenant, and
+        // by non-captains. Players are excluded (captains-only channel);
+        // admins retain read for moderation.
+        allow read: if isAdmin(leagueId) || captainTeamId(leagueId) != null;
         allow write: if false;
       }
 
@@ -396,15 +425,16 @@ service cloud.firestore {
     // ---------------------------------------------------------------------
     // /errors — append-only platform error log
     //
-    // Authenticated-only create so an anonymous attacker can't fill the
-    // collection. Phase 2c: replace with a Cloud Function ingest that
-    // applies size + rate limits.
+    // Writes go ONLY through /api/errors-log (Admin SDK, which bypasses
+    // rules); app/error.tsx and server catches POST to that route. Client-
+    // SDK create used to be `request.auth != null`, which let any signed-in
+    // user spam the collection with unbounded docs (2026-08 audit M2).
+    // Denied entirely now — read stays admin-dashboard-only (Admin SDK).
     // ---------------------------------------------------------------------
 
     match /errors/{errorId} {
       allow read: if false;
-      allow create: if request.auth != null;
-      allow update, delete: if false;
+      allow create, update, delete: if false;
     }
 
     // ---------------------------------------------------------------------

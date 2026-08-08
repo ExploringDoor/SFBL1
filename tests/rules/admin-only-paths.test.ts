@@ -109,9 +109,10 @@ describe("/domains mapping", () => {
 });
 
 describe("/errors", () => {
-  // Anonymous create-from-anywhere used to be allowed; an attacker could
-  // fill the collection. Now restricted to authenticated callers, with a
-  // Cloud Function ingest planned for Phase 2c.
+  // 2026-08 audit M2: client-SDK create is denied entirely. Writes go
+  // only through /api/errors-log (Admin SDK, bypasses rules); an
+  // authenticated client could previously spam the collection with
+  // unbounded docs. See errors-and-secrets.test.ts for the full set.
   it("anonymous CANNOT create error log entry", async () => {
     const ctx = env.unauthenticatedContext();
     const db = ctx.firestore();
@@ -120,10 +121,10 @@ describe("/errors", () => {
     );
   });
 
-  it("authenticated user CAN create error log entry", async () => {
+  it("authenticated user CANNOT create error log entry", async () => {
     const ctx = env.authenticatedContext(uid("user"), {});
     const db = ctx.firestore();
-    await assertSucceeds(
+    await assertFails(
       setDoc(doc(db, "errors/abc2"), { msg: "real error", at: "now" }),
     );
   });

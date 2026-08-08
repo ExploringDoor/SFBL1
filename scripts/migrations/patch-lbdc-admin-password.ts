@@ -26,7 +26,7 @@ import * as path from "node:path";
 })();
 
 import { cert, initializeApp } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
 
 let league: string | null = null;
 let password: string | null = null;
@@ -58,15 +58,26 @@ const db = getFirestore();
 
 (async () => {
   const ref = db.doc(`leagues/${league}`);
-  const snap = await ref.get();
-  const cur = snap.exists ? snap.data()?.admin ?? {} : {};
-  const next = off
-    ? { ...cur, passwordless: false }
-    : { ...cur, passwordless: true, password };
-  await ref.set({ admin: next }, { merge: true });
+  // The `passwordless` flag stays on the (world-readable) league doc — it's
+  // just a boolean. The password itself goes to the Admin-SDK-only
+  // /_secrets/admin doc, NEVER the public config doc. `password:
+  // FieldValue.delete()` also scrubs any legacy plaintext password left on
+  // the public doc by an older version of this script (2026-08 audit CRITICAL).
+  await ref.set(
+    { admin: { passwordless: !off, password: FieldValue.delete() } },
+    { merge: true },
+  );
+
+  const secretRef = db.doc(`leagues/${league}/_secrets/admin`);
+  if (off) {
+    await secretRef.set({ password: FieldValue.delete() }, { merge: true });
+  } else {
+    await secretRef.set({ password }, { merge: true });
+  }
+
   console.log(
     `[patch-admin-pw] /leagues/${league} admin.passwordless = ${!off}` +
-      (off ? "" : "  (password set)"),
+      (off ? "  (secret cleared)" : "  (password set in _secrets/admin)"),
   );
   process.exit(0);
 })();
