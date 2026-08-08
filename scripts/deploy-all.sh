@@ -31,7 +31,7 @@ ORG_ID="team_7O6fyvsxUHRXLc7Fz5dHcajT"
 # in a release, delete the leading "# " on its line.
 TENANTS=(
   "Island Fastpitch (island-fastpitch.vercel.app)|prj_ecoDgk2YDYb7jnMLHaFFy7D1Ph8y"
-  "COYBL (coybl.net)|prj_rfvXgVTyTqNVYiaGWeWYExWs9H7r"
+  "COYBL (coybl.org)|prj_rfvXgVTyTqNVYiaGWeWYExWs9H7r"
   "SFBL (sfbl.com)|prj_vI6KktUD8lqvd705egSekx5pRrld"
   # "LBDC (lbdc1.vercel.app)|prj_eAzA97QQx4LPt3goJ0gMbKHxpFep"
 )
