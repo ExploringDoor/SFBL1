@@ -26,6 +26,7 @@ import {
 import { FaqAccordion } from "@/components/FaqAccordion";
 import { DocumentsView } from "@/components/DocumentsView";
 import { ClubsView } from "@/components/ClubsView";
+import { NewsFeed } from "@/components/NewsFeed";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 
 export const dynamic = "force-dynamic";
@@ -96,6 +97,17 @@ export default async function ContentPage({
   // Eyebrow above the page title, matching the Fields / Player Ads header
   // treatment. Falls back to a neutral word when config or abbrev is absent.
   const eyebrow = config?.abbrev ?? "League";
+
+  // News feed lives at /content/news (the default nav's "News" link) and reads
+  // the leagues/{tenant}/news collection directly — there is no page_content
+  // doc for it, so it must short-circuit BEFORE the doc-exists check below.
+  if (pageId === "news" && tenantId === "lcybl") {
+    return (
+      <Shell eyebrow={eyebrow} heading="News & Events">
+        <NewsFeed tenantId={tenantId} />
+      </Shell>
+    );
+  }
 
   const db = getAdminDb();
   const docSnap = await db
