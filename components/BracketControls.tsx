@@ -44,28 +44,50 @@ export function BracketControls({
     });
   }, []);
 
-  const fit = useCallback(() => {
-    const root = ref.current;
-    if (!root) return;
-    // Reset to 1 before measuring: offsetWidth is reported in the ZOOMED
-    // coordinate space, so fitting twice without this compounds and shrinks
-    // the bracket further each press. The original does the same.
-    root.querySelectorAll<HTMLElement>(".bk-zoomable").forEach((el) => {
-      el.style.zoom = "1";
-    });
-    // Widest canvas on the page decides the fit, so one zoom suits them all.
-    let widest = 0;
-    root.querySelectorAll<HTMLElement>(".bk-canvas").forEach((c) => {
-      widest = Math.max(widest, c.offsetWidth);
-    });
-    const avail = (root.clientWidth || window.innerWidth) - 6;
-    const z =
-      widest > 0
-        ? Math.round(Math.max(MIN, Math.min(1, avail / widest)) * 100) / 100
-        : 1;
-    setZoom(z);
-    apply(z);
-  }, [apply]);
+  // Fit the widest bracket into the available width, but never below `floor`.
+  // On a phone a season's ~1350px canvas would fit at ~0.27 (clamped 0.4),
+  // which renders the 13.5px team names at ~5px — unreadable, "can only see
+  // the scores" (Adam, 2026-08-08). The auto-open floor is therefore raised on
+  // narrow screens so names stay legible and the bracket PANS sideways (the
+  // .bk-scroll wrapper is overflow-x:auto) instead of shrinking to nothing.
+  // The explicit Fit button still floors at MIN so the user can force the
+  // whole thing on screen if they want the overview.
+  const applyFit = useCallback(
+    (floor: number) => {
+      const root = ref.current;
+      if (!root) return;
+      // Reset to 1 before measuring: offsetWidth is reported in the ZOOMED
+      // coordinate space, so fitting twice without this compounds and shrinks
+      // the bracket further each press. The original does the same.
+      root.querySelectorAll<HTMLElement>(".bk-zoomable").forEach((el) => {
+        el.style.zoom = "1";
+      });
+      let widest = 0;
+      root.querySelectorAll<HTMLElement>(".bk-canvas").forEach((c) => {
+        widest = Math.max(widest, c.offsetWidth);
+      });
+      const avail = (root.clientWidth || window.innerWidth) - 6;
+      const z =
+        widest > 0
+          ? Math.round(Math.max(floor, Math.min(1, avail / widest)) * 100) / 100
+          : 1;
+      setZoom(z);
+      apply(z);
+    },
+    [apply],
+  );
+
+  // Readable auto-open: keep names legible on phones. Below 700px CSS width we
+  // floor at ~0.9 (names ≈ 12px) and let the bracket pan; wider screens fit
+  // the whole board (floor MIN) since it stays readable there.
+  const autoFit = useCallback(() => {
+    const w = ref.current?.clientWidth || window.innerWidth;
+    applyFit(w < 700 ? 0.9 : MIN);
+  }, [applyFit]);
+
+  // The Fit button = true fit-to-width (floor MIN), the overview the label
+  // promises.
+  const fit = useCallback(() => applyFit(MIN), [applyFit]);
 
   // Auto-fit on mount, and re-fit when the container resizes.
   //
@@ -86,7 +108,7 @@ export function BracketControls({
     if (!root) return;
     if (!didAutoFit.current) {
       didAutoFit.current = true;
-      fit();
+      autoFit();
     }
     let raf = 0;
     const ro = new ResizeObserver(() => {
@@ -94,7 +116,7 @@ export function BracketControls({
       // Re-fit on a real container resize only; a zoom the user chose is not
       // overwritten unless the box actually changed.
       raf = requestAnimationFrame(() => {
-        if (root.clientWidth > 0) fit();
+        if (root.clientWidth > 0) autoFit();
       });
     });
     ro.observe(root);
@@ -102,7 +124,7 @@ export function BracketControls({
       cancelAnimationFrame(raf);
       ro.disconnect();
     };
-  }, [fit]);
+  }, [autoFit]);
 
   const step = (dir: 1 | -1) => {
     const z = Math.round((zoom + dir * STEP) * 10) / 10;
