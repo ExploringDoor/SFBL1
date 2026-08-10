@@ -296,23 +296,41 @@ export function BracketTree({
 
   return (
     <>
-      {outcome.champion && (
-        <div className="bk-champion">
-          <span className="trophy" aria-hidden="true">
-            {trophyUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={trophyUrl} alt="" className="bk-trophy-img" />
-            ) : (
-              <TrophySvg />
-            )}
-          </span>
-          <div className="ct">
-            {tournamentName && <div className="tourn">{tournamentName}</div>}
-            <div className="lbl">★ Champion ★</div>
-            <div className="team">{outcome.champion.replace(/^#\S+\s+/, "")}</div>
-          </div>
-        </div>
-      )}
+      {outcome.champion &&
+        (() => {
+          // Strip the "#seed " prefix, then resolve the champion's club logo the
+          // same way the bracket cards do. The logo sits on the RIGHT of the
+          // banner, opposite the trophy (matching the D27 champion banner).
+          const champName = outcome.champion.replace(/^#\S+\s+/, "");
+          const champLogo = teamLogos?.[logoKey(champName)];
+          return (
+            <div className="bk-champion">
+              <span className="trophy" aria-hidden="true">
+                {trophyUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={trophyUrl} alt="" className="bk-trophy-img" />
+                ) : (
+                  <TrophySvg />
+                )}
+              </span>
+              <div className="ct">
+                {tournamentName && <div className="tourn">{tournamentName}</div>}
+                <div className="lbl">★ Champion ★</div>
+                <div className="team">{champName}</div>
+              </div>
+              <span className="bk-champ-logo" aria-hidden="true">
+                {champLogo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={champLogo} alt="" />
+                ) : (
+                  <span className="bk-champ-logo-fallback">
+                    {badgeInitials(champName)}
+                  </span>
+                )}
+              </span>
+            </div>
+          );
+        })()}
 
       {championPhoto && (
         <figure className="bk-champ-photo">

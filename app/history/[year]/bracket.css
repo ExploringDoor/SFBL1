@@ -146,6 +146,57 @@
   line-height: 1;
 }
 
+/* Champion's club logo, opposite the trophy (matches the D27 champion banner).
+   The centre text column grows so the trophy sits hard left and the logo hard
+   right. Falls back to a navy initials chip when a club has no logo. */
+.bk-champion .ct {
+  flex: 1 1 auto;
+}
+.bk-champ-logo {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 76px;
+  width: 76px;
+}
+.bk-champ-logo img {
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.3));
+}
+.bk-champ-logo-fallback {
+  height: 66px;
+  width: 66px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bk-navy, #14213d);
+  color: #f2e9c9;
+  font-family: var(--font-barlow), sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: 0.03em;
+}
+
+@media (max-width: 560px) {
+  .bk-champion {
+    gap: 12px;
+    padding: 12px 16px;
+  }
+  .bk-champ-logo,
+  .bk-champion .trophy .bk-trophy-img {
+    height: 54px;
+  }
+  .bk-champ-logo {
+    width: 54px;
+  }
+}
+
 /* ── champion photo ─────────────────────────────────────────── */
 
 .bk-champ-photo {
