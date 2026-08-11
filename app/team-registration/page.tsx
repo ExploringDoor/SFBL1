@@ -6,6 +6,7 @@
 
 import { headers } from "next/headers";
 import { LeagueForm, type FormField } from "@/components/forms/LeagueForm";
+import { paymentDetailsFor } from "@/lib/league-payment";
 
 const SFBL_FIELDS: FormField[] = [
   { name: "manager_first_name", label: "Manager First Name", type: "text", required: true, width: "half" },
@@ -599,12 +600,23 @@ export default function TeamRegistrationPage() {
       successMessage={successMessage}
       eyebrow={abbrev}
       footer={footer}
-      // COYBL only: offer card / Venmo / check right after registering, while
-      // the coach is still on the page. Other tenants keep the plain
-      // confirmation (their payment instructions live in their own copy).
+      // Offer card / Venmo right after registering, while the coach is still
+      // on the page. Gated on the tenant having payment details configured in
+      // lib/league-payment — a tenant without them keeps the plain
+      // confirmation, because a pay-now block with nowhere to pay is worse
+      // than none.
+      //
+      // Island is deliberately NOT payment-required: Mike's rules say fees are
+      // due before the season, not at signup (his call, 2026-08-11), so this
+      // is an OFFER on the confirmation screen. A coach who closes the page is
+      // still registered and gets chased by the office.
+      //
       // A string, not a render function — this is a Server Component and
       // functions can't be passed to Client Components.
-      afterSuccess={tenantId === "coybl" ? "coybl-payment" : undefined}
+      afterSuccess={
+        tenantId && paymentDetailsFor(tenantId) ? "payment" : undefined
+      }
+      leagueId={tenantId ?? undefined}
       flashy={tenantId === "lcybl"}
     />
   );

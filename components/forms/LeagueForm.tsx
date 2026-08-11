@@ -10,7 +10,7 @@
 // passed in as props.
 
 import { Fragment, useState } from "react";
-import { CoyblPaymentOptions } from "./CoyblPaymentOptions";
+import { PaymentOptions } from "./PaymentOptions";
 import "./LeagueForm.css";
 
 export type FieldType =
@@ -82,7 +82,14 @@ export interface LeagueFormProps {
    *  functions cannot cross that boundary (passing one 500s the page). So the
    *  caller names the block and the switch below renders it, with the
    *  submission id that only this component knows. */
-  afterSuccess?: "coybl-payment";
+  /** Post-submit block. "payment" renders the pay-now options; the league's
+   *  Venmo / cheque details and surcharge come from lib/league-payment.
+   *  "coybl-payment" is the old name for the same thing, still accepted so
+   *  nothing breaks if a caller was missed. */
+  afterSuccess?: "payment" | "coybl-payment";
+  /** Tenant whose payment details to show. Required when afterSuccess is set;
+   *  without it the block cannot know whose Venmo handle to print. */
+  leagueId?: string;
   /** Flashy Apple-style treatment (LCYBL): fields fly in on load, inputs glow
    *  on focus, the submit button lifts. Off by default so other tenants are
    *  unchanged. */
@@ -101,6 +108,7 @@ export function LeagueForm({
   eyebrow,
   footer,
   afterSuccess,
+  leagueId,
   flashy = false,
 }: LeagueFormProps) {
   // Set once on mount; sent with the payload so the server can see how long
@@ -185,8 +193,8 @@ export function LeagueForm({
         </div>
         {/* Optional post-submit block, e.g. COYBL's pay-now options. Gets
             the saved submission id so it can start a card checkout. */}
-        {afterSuccess === "coybl-payment" && (
-          <CoyblPaymentOptions submissionId={submissionId} />
+        {afterSuccess && leagueId && (
+          <PaymentOptions submissionId={submissionId} leagueId={leagueId} />
         )}
       </main>
     );
