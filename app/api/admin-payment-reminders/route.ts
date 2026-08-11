@@ -26,13 +26,8 @@
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { esc, sendEmail } from "@/lib/email/send";
-import {
-  COYBL_CARD_FEE_LABEL,
-  COYBL_CHECK_ADDRESS,
-  COYBL_CHECK_PAYABLE_TO,
-  COYBL_VENMO_HANDLE,
-  COYBL_VENMO_URL,
-} from "@/lib/coybl-payment";
+import { paymentDetailsFor } from "@/lib/league-payment";
+import { surchargeFor } from "@/lib/square";
 
 export const runtime = "nodejs";
 
@@ -51,8 +46,53 @@ interface Recipient {
 const money = (n: number) =>
   n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 
-function reminderHtml(r: Recipient, leagueName: string, origin: string) {
+// leagueId is REQUIRED. This body used to be built from module-level COYBL
+// constants with no tenant lookup, while the route around it was already
+// tenant-scoped for auth and reads. The result: open Island's Payments tab,
+// click "email the unpaid", and every Island coach is told to Venmo
+// @Doug-Hare-2 and post a cheque payable to COYBL in Etna, Ohio. That is a
+// New York league's fees leaving for another league's account, off-platform
+// and unrecoverable. Found in review before it ever ran (2026-08-11).
+function reminderHtml(
+  r: Recipient,
+  leagueName: string,
+  origin: string,
+  leagueId: string,
+) {
   const owed = r.balance > 0 ? money(r.balance) : "";
+  const pay = paymentDetailsFor(leagueId);
+
+  // Only offer what this league has actually configured. Island has no cheque
+  // details on purpose, and inventing them is how a coach posts money nowhere.
+  const methods: string[] = [];
+  // The card line quotes DOLLARS, not a percentage: Island's surcharge is
+  // Square's exact cost, so it differs per fee tier and any single percentage
+  // is wrong at most of them.
+  const cardFee =
+    r.balance > 0
+      ? `adds ${money(surchargeFor(leagueId, r.balance))}`
+      : pay?.cardFeeLabel
+        ? `adds a ${pay.cardFeeLabel} processing fee`
+        : "";
+  methods.push(
+    `<li><strong>Card</strong> at <a href="${esc(origin)}/team-registration">${esc(origin)}/team-registration</a>${cardFee ? ` (${cardFee})` : ""}</li>`,
+  );
+  if (pay?.venmoUrl && pay?.venmoHandle) {
+    methods.push(
+      `<li><strong>Venmo</strong> to <a href="${esc(pay.venmoUrl)}">${esc(pay.venmoHandle)}</a> (no fee)</li>`,
+    );
+  }
+  if (pay?.checkPayableTo && pay?.checkAddress) {
+    methods.push(
+      `<li><strong>Check</strong> payable to ${esc(pay.checkPayableTo)}, mailed to ${esc(pay.checkAddress)} (no fee)</li>`,
+    );
+  }
+  const offPlatform = [
+    pay?.venmoHandle && "Venmo",
+    pay?.checkPayableTo && "check",
+  ]
+    .filter(Boolean)
+    .join(" or ");
   return `
 <div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;max-width:560px;color:#0f172a">
   <p>Hi${r.name ? ` ${esc(r.name)}` : ""},</p>
@@ -62,24 +102,13 @@ function reminderHtml(r: Recipient, leagueName: string, origin: string) {
   </p>
   <p>You can pay any of these ways:</p>
   <ul style="padding-left:18px;line-height:1.6">
-    <li>
-      <strong>Card</strong> at
-      <a href="${esc(origin)}/team-registration">${esc(origin)}/team-registration</a>
-      (adds a ${COYBL_CARD_FEE_LABEL} processing fee)
-    </li>
-    <li>
-      <strong>Venmo</strong> to
-      <a href="${COYBL_VENMO_URL}">${COYBL_VENMO_HANDLE}</a> (no fee)
-    </li>
-    <li>
-      <strong>Check</strong> payable to ${esc(COYBL_CHECK_PAYABLE_TO)},
-      mailed to ${esc(COYBL_CHECK_ADDRESS)} (no fee)
-    </li>
+    ${methods.join("")}
   </ul>
-  <p>
-    Paying by Venmo or check? Put <strong>${esc(r.teamName)}</strong> in the
-    note so we can match it to your registration.
-  </p>
+  ${
+    offPlatform
+      ? `<p>Paying by ${offPlatform}? Put <strong>${esc(r.teamName)}</strong> in the note so we can match it to your registration.</p>`
+      : ""
+  }
   <p style="color:#475569;font-size:13px">
     Already sent it? Ignore this, and reply so we can get the ledger straight.
   </p>
@@ -227,7 +256,7 @@ export async function POST(req: Request) {
       const res = await sendEmail({
         to: r.email,
         subject: `${leagueName}: registration payment for ${r.teamName}`,
-        html: reminderHtml(r, leagueName, origin),
+        html: reminderHtml(r, leagueName, origin, leagueId),
       });
       if (res.ok) {
         sent++;

@@ -123,11 +123,16 @@ export function PaymentOptions({
       <p className="cop-sub">
         Your spot is saved.{" "}
         {quote
-          ? `Paying by card adds ${money(
-              quote.surcharge_cents / 100,
-            )}, which is what the card processor charges us${
-              noFeeMethods ? `. ${noFeeMethods} have no fee` : ""
-            }.`
+          ? // "which is what the processor charges us" is only TRUE where the
+            // surcharge is derived from real cost. Island's is; COYBL's flat
+            // 3.25% over-collects slightly, so claiming it there would be a
+            // false statement about someone else's money. Tenants that quote a
+            // fixed percentage get the plain wording.
+            `Paying by card adds ${money(quote.surcharge_cents / 100)}${
+              details?.cardFeeLabel
+                ? ""
+                : ", which is what the card processor charges us"
+            }${noFeeMethods ? `. ${noFeeMethods} have no fee` : ""}.`
           : details?.cardFeeLabel
             ? `Card payments add a ${details.cardFeeLabel} processing fee.${
                 noFeeMethods ? ` ${noFeeMethods} have no fee.` : ""

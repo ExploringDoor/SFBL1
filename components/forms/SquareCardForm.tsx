@@ -116,8 +116,14 @@ export function SquareCardForm({
           return;
         }
 
-        // Ask what this registration owes. Non-fatal: a missing quote hides
-        // the amount line rather than blocking payment entirely.
+        // Ask what this registration owes.
+        //
+        // NOT non-fatal any more. It used to hide the amount and leave an
+        // enabled button reading "Pay now", so a failed quote meant a coach
+        // could be charged $819.05 having never been shown a number. That is
+        // both a bad way to treat someone and, where the fee is passed on, the
+        // thing New York GBL 518 specifically forbids: the total has to be
+        // disclosed BEFORE checkout. No price, no button.
         if (registrationId) {
           try {
             const q = await fetch("/api/square-quote", {
@@ -127,9 +133,15 @@ export function SquareCardForm({
             }).then((r) => (r.ok ? r.json() : null));
             if (!cancelled && q && typeof q.total_cents === "number") {
               setQuote(q);
+            } else if (!cancelled) {
+              setState("unavailable");
+              return;
             }
           } catch {
-            /* amount line simply does not render */
+            if (!cancelled) {
+              setState("unavailable");
+              return;
+            }
           }
         }
 
@@ -229,18 +241,16 @@ export function SquareCardForm({
       {/* Square draws its card fields inside this element. */}
       <div ref={containerRef} className="sqc-field" />
       {error && <div className="cop-error">{error}</div>}
-      {state !== "loading" && (
+      {/* The button always carries the amount. If there is no quote there is
+          no button — see the note on the quote fetch above. */}
+      {state !== "loading" && quote && (
         <button
           type="button"
           className="cop-btn cop-btn-primary sqc-pay"
           onClick={pay}
           disabled={state === "paying"}
         >
-          {state === "paying"
-            ? "Processing..."
-            : quote
-              ? `Pay ${usd(quote.total_cents)}`
-              : "Pay now"}
+          {state === "paying" ? "Processing..." : `Pay ${usd(quote.total_cents)}`}
         </button>
       )}
     </div>

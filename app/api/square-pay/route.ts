@@ -108,11 +108,21 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify({
         source_id: sourceId,
-        // Same registration => same key => Square will not double-charge.
-        idempotency_key: `coybl-reg-${registrationId}`,
+        // Keyed on the registration AND this card nonce.
+        //
+        // It used to be the registration id alone, which stops a double-click
+        // but also welds the coach to their first attempt: after a decline,
+        // Square replays the SAME failed result for every later try, so a
+        // second card can never be used for that registration. A source_id is
+        // single-use and unique per card entry, so this is still stable across
+        // a retry of the SAME submission (the double-click case) while a fresh
+        // card attempt gets a fresh key.
+        idempotency_key: `reg-${registrationId}-${sourceId.slice(-24)}`,
         amount_money: { amount: amountCents, currency: "USD" },
         location_id: locationId,
-        note: `COYBL 2027 registration: ${String(data.team_name ?? "Team")}`,
+        // Tenant id, not a hardcoded "COYBL 2027" — this string is what
+        // shows on the Square receipt and in the seller dashboard.
+        note: `${leagueId} registration: ${String(data.team_name ?? "Team")}`,
       }),
     });
   } catch (err) {
@@ -148,23 +158,40 @@ export async function POST(req: Request) {
 
   const payment = json.payment ?? {};
 
-  // Record it on the registration so the office can reconcile in the
-  // Payments tab without logging into Square.
-  await ref.set(
-    {
-      payment: {
-        status: "paid",
-        method: "card",
-        amount_cents: amountCents,
-        fee_dollars: fee,
-        surcharge_cents: amountCents - fee * 100,
-        square_payment_id: payment.id ?? null,
-        receipt_url: payment.receipt_url ?? null,
-        paid_at: new Date().toISOString(),
+  // THE CARD HAS ALREADY BEEN CHARGED. Everything from here is bookkeeping,
+  // and none of it may surface to the coach as a failure.
+  //
+  // This write used to be unguarded. A transient Firestore error, or this
+  // function timing out after the locations lookup plus the payment call,
+  // threw AFTER the money moved — the coach saw "Something went wrong taking
+  // the payment. Please try again.", with the button re-enabled and no record
+  // anywhere that they had paid. There is no Square webhook in this codebase
+  // to reconcile it out of band, so it would surface as an angry phone call.
+  try {
+    await ref.set(
+      {
+        payment: {
+          status: "paid",
+          method: "card",
+          amount_cents: amountCents,
+          fee_dollars: fee,
+          surcharge_cents: amountCents - fee * 100,
+          square_payment_id: payment.id ?? null,
+          receipt_url: payment.receipt_url ?? null,
+          paid_at: new Date().toISOString(),
+        },
       },
-    },
-    { merge: true },
-  );
+      { merge: true },
+    );
+  } catch (err) {
+    // Loud, because this is money taken that the office cannot see. The
+    // Square dashboard is the source of truth for reconciling it.
+    console.error(
+      "[square-pay] CHARGED BUT NOT RECORDED — reconcile by hand.",
+      { leagueId, registrationId, squarePaymentId: payment.id ?? null, amountCents },
+      err,
+    );
+  }
 
   // Mark the team PAID in the league's own ledger, which is what the admin
   // Payments tab actually reads. Without this a coach could pay by card and
