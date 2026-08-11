@@ -187,7 +187,7 @@ function SfblFallback() {
       <h2>Membership &amp; Cost</h2>
       <ul>
         <li>
-          <strong>Player fee: $280 per season.</strong> Covers field
+          <strong>Player fee: $285 per season.</strong> Covers field
           rentals, umpire services, equipment, insurance, website +
           stats software, championship events, and admin.
         </li>

@@ -94,7 +94,7 @@ function tenantConfig(
     description:
       "All SFBL players must register online each season. Players must be at least 18 years old.",
     intro: [
-      "The player registration fee is $280 per season. Pro-rated fees are available after the third game.",
+      "The player registration fee is $285 per season. Pro-rated fees are available after the third game.",
       <>
         Preferred payment methods are Zelle and Venmo. Contact{" "}
         <a href="mailto:playball@sfbl.com">playball@sfbl.com</a> or{" "}
