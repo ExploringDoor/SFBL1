@@ -6709,6 +6709,7 @@ select:focus-visible {
  */
 .le-coybl-banner {
   width: 100%;
+  background: #fff;
   text-align: center;
 }
 .le-coybl-banner img {
@@ -6722,10 +6723,14 @@ select:focus-visible {
 }
 @media (min-width: 1024px) {
   .le-coybl-banner img {
-    /* Desktop: exactly as it was before — the image at its own size, centred,
-       capped so it never dominates the page. */
+    /* Desktop: exactly as it was before. max-height min(60vw, 420px) is the
+       ORIGINAL value from PageBanner's inline styles — I first wrote 225px
+       here, which quietly halved every desktop banner. */
+    display: inline-block;
     width: auto;
+    height: auto;
     max-width: 100%;
-    max-height: 225px;
+    max-height: min(60vw, 420px);
+    vertical-align: middle;
   }
 }
