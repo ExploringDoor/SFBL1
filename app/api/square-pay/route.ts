@@ -85,8 +85,8 @@ export async function POST(req: Request) {
     );
   }
 
-  const fee = feeFor(data);
-  const amountCents = chargeCents(fee);
+  const fee = feeFor(leagueId, data);
+  const amountCents = chargeCents(leagueId, fee);
   const base = squareApiBase();
 
   const locationId = await resolveLocationId(token, base);

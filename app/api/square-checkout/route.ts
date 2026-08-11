@@ -19,30 +19,20 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { parseHost, resolveTenant } from "@/lib/tenants";
+import { chargeCents, feeFor } from "@/lib/square";
 
 export const runtime = "nodejs";
 
-// 3.25% processing fee, passed to the payer (per Doug). Card only —
-// Venmo and check have no surcharge.
-const CARD_SURCHARGE = 0.0325;
 const SQUARE_VERSION = "2025-01-23";
 
-// 2027 COYBL fees. Mirrors the copy on /team-registration. Kept server-side
-// so a tampered client can't invent its own price.
-const FEE_WITH_INSURANCE = 495;
-const FEE_WITHOUT_INSURANCE = 425;
-const USSSA_ADDON = 50;
-
-/** Registration fee in whole dollars, from the submitted answers. */
-function feeFor(data: Record<string, unknown>): number {
-  const option = String(data.insurance_option ?? "");
-  const usssa = String(data.usssa_addon ?? "");
-  // option-2 is "we provide our own insurance"; anything else is the
-  // league-provides-insurance price, which is also the safe default.
-  const base =
-    option === "option-2" ? FEE_WITHOUT_INSURANCE : FEE_WITH_INSURANCE;
-  return base + (usssa === "yes" ? USSSA_ADDON : 0);
-}
+// Fee + surcharge come from lib/square.ts, NOT a private copy.
+//
+// This route used to carry its own duplicate of COYBL's fee table and a flat
+// 3.25% surcharge. Two copies of a price is a bug waiting to happen — and it
+// became one the moment a second league arrived: the copy here would have
+// charged Island teams COYBL's $495 and applied a surcharge that is unlawful
+// in New York, while /api/square-pay charged them correctly. Same
+// registration, two different prices, depending on which route ran.
 
 export async function POST(req: Request) {
   // Resolve the tenant from the Host, NOT from x-tenant-id: middleware skips
@@ -93,8 +83,8 @@ export async function POST(req: Request) {
   }
   const data = snap.data() ?? {};
 
-  const fee = feeFor(data);
-  const amountCents = Math.round(fee * (1 + CARD_SURCHARGE) * 100);
+  const fee = feeFor(leagueId, data);
+  const amountCents = chargeCents(leagueId, fee);
   const teamName = String(data.team_name ?? "Team");
 
   const base =

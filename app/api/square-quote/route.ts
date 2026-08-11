@@ -13,7 +13,7 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { parseHost, resolveTenant } from "@/lib/tenants";
-import { CARD_SURCHARGE, chargeCents, feeFor } from "@/lib/square";
+import { chargeCents, feeFor } from "@/lib/square";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -54,12 +54,17 @@ export async function POST(req: Request) {
     );
   }
 
-  const fee = feeFor(snap.data() ?? {});
-  const total = chargeCents(fee);
+  const fee = feeFor(leagueId, snap.data() ?? {});
+  const total = chargeCents(leagueId, fee);
+  const surchargeCents = total - fee * 100;
   return NextResponse.json({
     fee_dollars: fee,
-    surcharge_cents: total - fee * 100,
+    surcharge_cents: surchargeCents,
     total_cents: total,
-    surcharge_pct: CARD_SURCHARGE * 100,
+    // Derived from the actual amounts rather than a stored constant. Island's
+    // surcharge is Square's real cost, so the percentage differs per fee tier
+    // and quoting a fixed number here would be wrong (and, in New York,
+    // wrong in the direction that carries a penalty).
+    surcharge_pct: Math.round((surchargeCents / (fee * 100)) * 10000) / 100,
   });
 }
