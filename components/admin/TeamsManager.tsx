@@ -9,7 +9,8 @@
 // missing players. Click "Edit" to open the metadata form, or click
 // the row's chevron to toggle the roster.
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { toSquarePngBase64 } from "@/lib/logo-image";
 import type { User } from "firebase/auth";
 import { collection, getDocs, query, where, limit } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
@@ -350,6 +351,32 @@ export function TeamsManager({ leagueId, user }: Props) {
     }
   }
 
+  // Admin logo upload — resizes client-side, then POSTs to the shared
+  // /api/captain-team-logo endpoint with an explicit teamId (admins may
+  // set ANY team; a captain is locked to their own). Returns the new
+  // logo_url so the open editor can show it immediately; the endpoint has
+  // already written it to the team doc.
+  async function uploadLogo(teamId: string, pngBase64: string): Promise<string> {
+    const idToken = await user.getIdToken();
+    const res = await fetch("/api/captain-team-logo", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${idToken}`,
+      },
+      body: JSON.stringify({ leagueId, teamId, pngBase64 }),
+    });
+    const data = (await res.json().catch(() => ({}))) as {
+      ok?: boolean;
+      logoUrl?: string;
+      error?: string;
+    };
+    if (!res.ok || !data.ok || !data.logoUrl) {
+      throw new Error(data.error || "Logo upload failed.");
+    }
+    return data.logoUrl;
+  }
+
   async function deactivate(t: TeamRow) {
     if (
       !window.confirm(
@@ -477,6 +504,7 @@ export function TeamsManager({ leagueId, user }: Props) {
           onDeactivate={deactivate}
           onReactivate={reactivate}
           onSaveEdit={saveEdit}
+          onUploadLogo={uploadLogo}
           onCancelEdit={() => setEditing(null)}
           onStartAddPlayer={(id) =>
             setAddingPlayerToTeam(addingPlayerToTeam === id ? null : id)
@@ -638,11 +666,13 @@ function TeamEditForm({
   busy,
   onCancel,
   onSave,
+  onUploadLogo,
 }: {
   team: TeamRow;
   busy: boolean;
   onCancel: () => void;
   onSave: (patch: TeamPatch) => void;
+  onUploadLogo: (pngBase64: string) => Promise<string>;
 }) {
   const [name, setName] = useState(team.name);
   const [abbrev, setAbbrev] = useState(team.abbrev);
@@ -650,6 +680,30 @@ function TeamEditForm({
   const [division, setDivision] = useState(team.division);
   const [logoUrl, setLogoUrl] = useState(team.logo_url);
   const [captainPassword, setCaptainPassword] = useState("");
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const [logoBusy, setLogoBusy] = useState(false);
+  const [logoErr, setLogoErr] = useState<string | null>(null);
+
+  async function onPickLogo(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setLogoErr(null);
+    if (!file.type.startsWith("image/")) {
+      setLogoErr("Please choose an image file.");
+      return;
+    }
+    setLogoBusy(true);
+    try {
+      const pngBase64 = await toSquarePngBase64(file);
+      const newUrl = await onUploadLogo(pngBase64);
+      setLogoUrl(newUrl); // endpoint already saved it to the team doc
+    } catch (err) {
+      setLogoErr(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setLogoBusy(false);
+    }
+  }
   const { config } = useTenant();
   const captain = captainNoun(config);
 
@@ -716,16 +770,56 @@ function TeamEditForm({
         </label>
         <label className="block sm:col-span-2">
           <span className="block text-xs font-semibold text-slate-700 mb-1">
-            Logo URL
+            Logo
           </span>
-          <input
-            type="text"
-            value={logoUrl}
-            onChange={(e) => setLogoUrl(e.target.value)}
-            disabled={busy}
-            placeholder="/logos/sfbl/miami_yankees.png"
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm font-mono"
-          />
+          <div className="flex items-center gap-2">
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={logoUrl}
+                alt=""
+                width={40}
+                height={40}
+                className="h-10 w-10 rounded border border-slate-200 object-contain bg-slate-50"
+              />
+            ) : (
+              <span className="flex h-10 w-10 items-center justify-center rounded border border-dashed border-slate-300 text-[10px] text-slate-400">
+                none
+              </span>
+            )}
+            <input
+              type="text"
+              value={logoUrl}
+              onChange={(e) => setLogoUrl(e.target.value)}
+              disabled={busy || logoBusy}
+              placeholder="/logos/sfbl/miami_yankees.png"
+              className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm font-mono"
+            />
+            <input
+              ref={logoInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={onPickLogo}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => logoInputRef.current?.click()}
+              disabled={busy || logoBusy}
+              className="rounded-md border border-blue-300 bg-white px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-50 whitespace-nowrap"
+            >
+              {logoBusy ? "Uploading…" : "Upload image"}
+            </button>
+          </div>
+          {logoErr && (
+            <span className="mt-1 block text-[11px] text-red-600">
+              {logoErr}
+            </span>
+          )}
+          <p className="mt-1 text-[11px] text-slate-500">
+            Upload an image (auto-sized to 512×512) or paste a path. Saves
+            immediately; may take a minute to appear everywhere.
+          </p>
         </label>
         <div className="block sm:col-span-2 rounded-md border border-blue-200 bg-blue-50 p-3">
           <span className="block text-xs font-semibold text-slate-700 mb-1">
@@ -828,6 +922,7 @@ function DivisionGroups({
   onDeactivate,
   onReactivate,
   onSaveEdit,
+  onUploadLogo,
   onCancelEdit,
   onStartAddPlayer,
   onCancelAddPlayer,
@@ -848,6 +943,7 @@ function DivisionGroups({
   onDeactivate: (t: TeamRow) => void;
   onReactivate: (t: TeamRow) => void;
   onSaveEdit: (t: TeamRow, patch: Partial<TeamRow>) => void;
+  onUploadLogo: (teamId: string, pngBase64: string) => Promise<string>;
   onCancelEdit: () => void;
   onStartAddPlayer: (id: string) => void;
   onCancelAddPlayer: () => void;
@@ -918,6 +1014,7 @@ function DivisionGroups({
                   onDeactivate={() => onDeactivate(t)}
                   onReactivate={() => onReactivate(t)}
                   onSaveEdit={(patch) => onSaveEdit(t, patch)}
+                  onUploadLogo={(pngBase64) => onUploadLogo(t.id, pngBase64)}
                   onCancelEdit={onCancelEdit}
                   onStartAddPlayer={() => onStartAddPlayer(t.id)}
                   onCancelAddPlayer={onCancelAddPlayer}
@@ -954,6 +1051,7 @@ function TeamRowItem({
   onDeactivate,
   onReactivate,
   onSaveEdit,
+  onUploadLogo,
   onCancelEdit,
   onStartAddPlayer,
   onCancelAddPlayer,
@@ -974,6 +1072,7 @@ function TeamRowItem({
   onDeactivate: () => void;
   onReactivate: () => void;
   onSaveEdit: (patch: Partial<TeamRow>) => void;
+  onUploadLogo: (pngBase64: string) => Promise<string>;
   onCancelEdit: () => void;
   onStartAddPlayer: () => void;
   onCancelAddPlayer: () => void;
@@ -1134,6 +1233,7 @@ function TeamRowItem({
           busy={busy}
           onCancel={onCancelEdit}
           onSave={onSaveEdit}
+          onUploadLogo={onUploadLogo}
         />
       )}
     </li>
