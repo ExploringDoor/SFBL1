@@ -314,7 +314,9 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
         "Age group",
         "Team",
         "Amount due",
-        "Amount paid",
+        "League fee received",
+        "Card fee",
+        "Total charged",
         "Balance",
         "Method",
         "Paid at",
@@ -324,13 +326,23 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
       ...visibleTeams.map((t) => {
         const e = teamPay[t.id];
         const due = Number(e?.amount_due ?? 0);
-        const paid = Number(e?.amount_paid ?? 0);
+        const charged = Number(e?.amount_paid ?? 0);
+        // Card payments are charged fee-inclusive, so amount_paid is
+        // due x 1.0325. Reported as one number it reads like an overpayment:
+        // Bellepoint showed "due 475, paid 490.44". Split it so the league
+        // fee actually received, the processor's cut, and the total the coach
+        // was charged are each their own column.
+        const isCard = String(e?.method ?? "") === "card";
+        const fee = isCard ? Math.max(0, charged - due) : 0;
+        const received = charged - fee;
         return [
           t.ageGroup,
           t.name,
           due ? due.toFixed(2) : "",
-          paid ? paid.toFixed(2) : "",
-          (Math.max(0, due - paid) || 0).toFixed(2),
+          received ? received.toFixed(2) : "",
+          fee ? fee.toFixed(2) : "",
+          charged ? charged.toFixed(2) : "",
+          (Math.max(0, due - received) || 0).toFixed(2),
           e?.method ?? "",
           e?.paid_at ? new Date(e.paid_at).toLocaleString("en-US") : "",
           e?.receipt_url ?? "",
@@ -602,6 +614,22 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
                   <option value="other">Other</option>
                 </select>
                 <PaidBadge entry={tEntry} />
+                {/* Card charges are fee-inclusive, so the raw figure looks
+                    like an overpayment ("due 475, paid 490.44"). Spell out
+                    where the extra went. */}
+                {tEntry.method === "card" &&
+                  Number(tEntry.amount_paid) > Number(tEntry.amount_due) && (
+                    <span
+                      className="text-[11px] text-slate-500"
+                      title="Card payments include the 3.25% processing fee the payer covers"
+                    >
+                      = ${Number(tEntry.amount_due).toFixed(2)} fee + $
+                      {(
+                        Number(tEntry.amount_paid) - Number(tEntry.amount_due)
+                      ).toFixed(2)}{" "}
+                      card
+                    </span>
+                  )}
                 {tEntry.receipt_url && (
                   <a
                     href={tEntry.receipt_url}
