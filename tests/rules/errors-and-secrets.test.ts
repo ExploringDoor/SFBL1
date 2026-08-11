@@ -78,6 +78,31 @@ describe("/leagues/{id}/_secrets — Admin-SDK only", () => {
   });
 });
 
+describe("/leagues/{id}/team_logos — Admin-SDK only", () => {
+  it("anonymous CANNOT read a team logo doc", async () => {
+    await env.withSecurityRulesDisabled(async (admin) => {
+      await setDoc(doc(admin.firestore(), "leagues/sfbl/team_logos/team_a"), {
+        png_base64: "iVBORw0KGgo",
+      });
+    });
+    const ctx = env.unauthenticatedContext();
+    await assertFails(
+      getDoc(doc(ctx.firestore(), "leagues/sfbl/team_logos/team_a")),
+    );
+  });
+
+  it("a captain CANNOT write their team's logo doc directly (must go via the API)", async () => {
+    const ctx = env.authenticatedContext(uid("cap"), {
+      leagues: { sfbl: "captain:team_a" },
+    });
+    await assertFails(
+      setDoc(doc(ctx.firestore(), "leagues/sfbl/team_logos/team_a"), {
+        png_base64: "iVBORw0KGgo",
+      }),
+    );
+  });
+});
+
 describe("/errors — no client create, no client read", () => {
   it("an authenticated user CANNOT create an error doc", async () => {
     const ctx = env.authenticatedContext(uid("u"), {

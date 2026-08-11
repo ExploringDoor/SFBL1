@@ -39,6 +39,7 @@ import { TeamChatTab } from "@/components/captain/TeamChatTab";
 import { CaptainsChatTab } from "@/components/captain/CaptainsChatTab";
 import { HelpTab } from "@/components/captain/HelpTab";
 import { LeagueRostersTab } from "@/components/captain/LeagueRostersTab";
+import { TeamLogoTab } from "@/components/captain/TeamLogoTab";
 import { QuickScoreInline } from "@/components/captain/QuickScoreInline";
 import { GameSummaryInline } from "@/components/captain/GameSummaryInline";
 import { PasswordlessCaptainPicker } from "@/components/captain/PasswordlessCaptainPicker";
@@ -516,6 +517,7 @@ const TABS: Tab[] = [
   { key: "team", label: "My Team" },
   { key: "attendance", label: "Attendance" },
   { key: "roster", label: "Roster" },
+  { key: "logo", label: "Team Logo" },
   // Cross-team roster QA — shown only when the league opts in via the
   // cross_team_roster_qa flag (filtered in CaptainTabNav).
   { key: "rostercheck", label: "Roster Check" },
@@ -629,6 +631,8 @@ function CaptainBody({
 
   if (tab === "roster")
     return <RosterTab leagueId={leagueId} teamId={teamId} />;
+  if (tab === "logo")
+    return <TeamLogoTab leagueId={leagueId} teamId={teamId} team={team} />;
   if (tab === "rostercheck" && config?.flags?.cross_team_roster_qa === true)
     return <LeagueRostersTab leagueId={leagueId} />;
   if (tab === "freeagents")

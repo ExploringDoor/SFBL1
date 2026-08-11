@@ -119,6 +119,16 @@ service cloud.firestore {
         allow read, write: if false;
       }
 
+      // /team_logos/{teamId} — Admin-SDK ONLY. Captain-uploaded team logos
+      // are stored here as base64 and served publicly via GET /api/team-logo
+      // (which reads with the Admin SDK). Writes go through
+      // /api/captain-team-logo (also Admin SDK), which enforces that a
+      // captain can only set their OWN team's logo. No client access.
+      // (The catch-all default-deny already covers this; explicit for clarity.)
+      match /team_logos/{teamId} {
+        allow read, write: if false;
+      }
+
       // -------------------------------------------------------------------
       // Public-facing collections + their `_private/{doc}` siblings.
       //
