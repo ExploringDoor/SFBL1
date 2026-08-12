@@ -615,6 +615,7 @@ export async function POST(req: Request) {
         teamCode,
         leagueName,
         leagueAbbrev,
+        tenantId,
       );
       await ref.set({ login_email_sent: true }, { merge: true });
     } catch (err) {
@@ -647,8 +648,20 @@ export async function POST(req: Request) {
             `<p><strong>Coach:</strong> ${esc(who)}</p>` +
             `<p><strong>Email:</strong> ${esc(cleaned.email)}</p>` +
             `<p><strong>Phone:</strong> ${esc(cleaned.phone)}</p>` +
-            `<p><strong>Option:</strong> ${esc(cleaned.insurance_option)}` +
-            `${cleaned.usssa_addon ? " (USSSA add-on)" : ""}</p>` +
+            // "Option" is COYBL's insurance choice. Island never collects it,
+            // so the line rendered permanently blank, while the two things
+            // Mike actually needs — which league they picked, and the
+            // GameChanger link the site pulls schedules from — were missing.
+            (cleaned.insurance_option
+              ? `<p><strong>Option:</strong> ${esc(cleaned.insurance_option)}` +
+                `${cleaned.usssa_addon ? " (USSSA add-on)" : ""}</p>`
+              : "") +
+            (cleaned.division
+              ? `<p><strong>League:</strong> ${esc(cleaned.division)}</p>`
+              : "") +
+            (cleaned.gamechanger_link
+              ? `<p><strong>GameChanger:</strong> ${esc(cleaned.gamechanger_link)}</p>`
+              : "") +
             `<p>View it in the admin Registrations tab.</p>`,
         });
         await ref.set({ office_email_sent: true }, { merge: true });
@@ -709,6 +722,7 @@ async function sendCoachCodeEmail(
   teamCode: string | null,
   leagueName: string,
   leagueAbbrev: string,
+  tenantId: string,
 ): Promise<void> {
   const c = (k: string) =>
     typeof data[k] === "string" ? (data[k] as string).trim() : "";
@@ -747,7 +761,18 @@ async function sendCoachCodeEmail(
         `<p>Thanks for registering${team ? ` <strong>${esc(team)}</strong>` : ""} with ` +
         `${esc(leagueName)}. We've got your registration.</p>` +
         codeBlock +
-        `<p>From there you can post your games, enter scores, log pitch counts, and upload your team logo.</p>` +
+        // What this lists has to match the tabs app/captain/page.tsx actually
+        // renders for the tenant. "Log pitch counts" was promised to every
+        // league, but that tab is filtered to COYBL only and Island's config
+        // sets show_pitch_counts:false — so an Island coach was told to use a
+        // feature that is not on their screen. Adam caught it reading the
+        // email copy (2026-08-12). Pitch counts are a Little League baseball
+        // rule; this is girls fastpitch.
+        `<p>From there you can ${
+          tenantId === "coybl"
+            ? "post your games, enter scores, log pitch counts, and upload your team logo"
+            : "submit your scores, manage your roster and attendance, and upload your team logo"
+        }.</p>` +
         `<p>A league director will confirm your division shortly. Questions? Just reply to this email.</p>` +
         `<p>— ${esc(leagueAbbrev)}</p>`,
       replyTo: notifyAddress() ?? undefined,
