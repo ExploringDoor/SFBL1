@@ -184,6 +184,19 @@ const HOST_ALIAS_BASELINE: Record<string, string> = {
   // SPF/verification TXT records or the league's mail stops being delivered.
   "coybl.org": "coybl",
   "www.coybl.org": "coybl",
+  // Island Fastpitch's real domain (registrar GoDaddy, DNS stays at GoDaddy,
+  // A + CNAME pointed at Vercel 2026-08-12). Added DURING the cutover rather
+  // than before it, which is exactly the mistake the COYBL note above warns
+  // about: the moment DNS switched, both hosts served
+  // "Tenant not found for host: www.islandfastpitch.com" while the old Wix
+  // site was already gone. Anyone adding a tenant domain should put it here
+  // FIRST — these lines are inert until DNS actually points at Vercel.
+  //
+  // NOTE: islandfastpitch.com carries LIVE EMAIL on GoDaddy
+  // (MX -> smtp.secureserver.net) plus the SendGrid authentication records.
+  // DNS stays at GoDaddy precisely so none of that has to move.
+  "islandfastpitch.com": "island",
+  "www.islandfastpitch.com": "island",
 };
 const HOST_ALIASES: Record<string, string> = (() => {
   const out: Record<string, string> = { ...HOST_ALIAS_BASELINE };
