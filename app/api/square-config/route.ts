@@ -84,11 +84,43 @@ async function runCheck(token: string, appId: string) {
     // Square's code is safe to surface and is the whole point of the check.
     result.squareErrorCode = json.errors?.[0]?.code ?? null;
     result.squareErrorDetail = json.errors?.[0]?.detail ?? null;
-    result.problem =
+
+    // A 401 says only "not valid HERE". It does not say why, and the fixes
+    // differ: a Sandbox-instead-of-Production mix-up needs a different token
+    // from a different tab, while a truncated paste, a revoked token or an
+    // unactivated account need something else entirely. So ask the OTHER
+    // environment. If the token authorizes there, the mix-up is proven rather
+    // than assumed. Both hosts are Square's own.
+    const otherEnv = env === "production" ? "sandbox" : "production";
+    const otherBase =
+      otherEnv === "production"
+        ? "https://connect.squareup.com"
+        : "https://connect.squareupsandbox.com";
+    try {
+      const probe = await fetch(`${otherBase}/v2/locations`, {
+        headers: {
+          "Square-Version": SQUARE_VERSION,
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      });
+      result.tokenAuthorizesInOtherEnv = probe.ok;
+      result.otherEnvTried = otherEnv;
+    } catch {
+      result.tokenAuthorizesInOtherEnv = null;
+      result.otherEnvTried = otherEnv;
+    }
+
+    if (result.tokenAuthorizesInOtherEnv === true) {
+      result.problem = `SQUARE_ACCESS_TOKEN is a ${otherEnv.toUpperCase()} token, but SQUARE_ENV is ${env}. Copy the token from the ${env} tab of the app's Credentials page. A ${otherEnv} location id is probably pasted alongside it, so clear SQUARE_LOCATION_ID too.`;
+    } else if (
       json.errors?.[0]?.code === "UNAUTHORIZED" ||
       json.errors?.[0]?.category === "AUTHENTICATION_ERROR"
-        ? `SQUARE_ACCESS_TOKEN is not valid for the ${env} environment. Most often this is a Sandbox token while SQUARE_ENV says production, or the reverse.`
-        : "Square rejected the credentials.";
+    ) {
+      result.problem = `SQUARE_ACCESS_TOKEN is not valid in EITHER environment, so this is not a sandbox mix-up. Likely a partial copy or trailing whitespace, the application SECRET pasted instead of the access token, a token that has since been revoked or regenerated, or a Square account that has not finished activation.`;
+    } else {
+      result.problem = "Square rejected the credentials.";
+    }
     return result;
   }
 
