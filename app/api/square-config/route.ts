@@ -64,9 +64,10 @@ async function runCheck(token: string, appId: string) {
     appIdMatchesEnv: appIdEnv(appId) === env,
     locationIdPinnedByEnvVar: Boolean(pinnedLocation),
     tokenLength: trimmed.length,
-    // Square production access tokens are 64 chars beginning EAAA. A shorter
-    // one is a clipped paste; that is a different fix from a wrong token.
-    tokenLengthLooksRight: trimmed.length === 64,
+    // A range, not an exact figure. Square has issued access tokens of more
+    // than one length over the years and pinning a number here would cry wolf
+    // on a perfectly good token. Only a clearly truncated value is called out.
+    tokenLengthPlausible: trimmed.length >= 60,
     tokenPrefixLooksRight: trimmed.startsWith("EAAA"),
     // .trim() above hides this from the request, so surface it: a stray newline
     // or space is invisible in the Vercel UI and breaks the header silently.
