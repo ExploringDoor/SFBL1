@@ -823,7 +823,16 @@ async function sendRegistrationEmails(
     return;
   }
 
-  if (kind !== "player_registration" && kind !== "team_registration") return;
+  // team_waiver used to fall out here. The waiver was written to Firestore and
+  // NOBODY was emailed — the coach had no confirmation their signed waiver
+  // arrived, and the office was never told to look. Adam asked where waivers
+  // go (2026-08-12); the answer was "into the admin panel, silently".
+  if (
+    kind !== "player_registration" &&
+    kind !== "team_registration" &&
+    kind !== "team_waiver"
+  )
+    return;
 
   const c = (k: string) =>
     typeof data[k] === "string" ? (data[k] as string).trim() : "";
@@ -834,21 +843,36 @@ async function sendRegistrationEmails(
   const email = c("email");
   const team = c("team_name");
   const division = c("division");
+  // A team waiver is not a registration. Both emails called it one, so a coach
+  // who signed the waiver was told "we got your team registration" — and Mike
+  // got "New Team registration" for a team that had registered weeks earlier
+  // (Adam asked where waivers go, 2026-08-12).
+  // A waiver is not a registration. Calling it one told a coach who had just
+  // signed the waiver that we had their "team registration", weeks after they
+  // actually registered.
   const label =
     kind === "player_registration"
       ? "Player registration"
-      : "Team registration";
+      : kind === "team_waiver"
+        ? "Team waiver"
+        : "Team registration";
 
   // 1) Confirmation to the registrant.
   if (email) {
     await sendEmail({
       to: email,
-      subject: `We got your ${leagueAbbrev} registration`,
+      subject:
+        kind === "team_waiver"
+          ? `We got your ${leagueAbbrev} team waiver`
+          : `We got your ${leagueAbbrev} registration`,
       html:
         `<p>Hi ${esc(who) || "there"},</p>` +
-        `<p>Thanks for registering with ${esc(leagueName)}. ` +
-        `We've received your ${esc(label.toLowerCase())} and the league ` +
-        `office will follow up with payment and roster details.</p>` +
+        (kind === "team_waiver"
+          ? `<p>Thanks for signing the waiver for ${esc(leagueName)}. ` +
+            `We have it on file — nothing else is needed.</p>`
+          : `<p>Thanks for registering with ${esc(leagueName)}. ` +
+            `We've received your ${esc(label.toLowerCase())} and the league ` +
+            `office will follow up with payment and roster details.</p>`) +
         (division ? `<p><strong>Division:</strong> ${esc(division)}</p>` : "") +
         (team ? `<p><strong>Team:</strong> ${esc(team)}</p>` : "") +
         `<p>Questions? Reply to this email or text the league office.</p>` +

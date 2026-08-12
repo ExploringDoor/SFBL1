@@ -580,7 +580,12 @@ function content(tenantId: string) {
         // at the field. Kept in the intro so nobody registers without seeing
         // the number, since payment is handled off-site.
         "League fees are $795 per team ($500 for 8U Weekend), plus umpire fees paid at the field. Teams using their own home field for at least half their games may qualify for a $200 discount. Fees must be paid in full before the season begins.",
-        "Submit this form and the league office will follow up about payment and rosters. Rosters must be on USSSA.",
+        // What actually happens next, in order. The site now creates the team
+        // and emails a sign-in code the moment this is submitted, and a coach
+        // who is not told that either misses the email or does not know what
+        // the five digits are for (Adam, 2026-08-12).
+        "As soon as you submit, your team appears on the site and we email you a five digit coach sign-in code. That code is how you get into your team page to submit scores, manage your roster and attendance, and upload your team logo. There is no account to create and no password to remember. Keep the code to your coaching staff \u2014 anyone who has it can enter scores for your team.",
+        "You can pay by card or Venmo on the next screen, or choose to pay later. Rosters must be on USSSA.",
       ],
       successMessage:
         // Deliberately does NOT say "the office will be in touch about fees":

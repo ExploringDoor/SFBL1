@@ -6734,3 +6734,43 @@ select:focus-visible {
     vertical-align: middle;
   }
 }
+
+/* Big call-to-action button for CMS pages (/content/*).
+ *
+ * The League page's registration link was a plain markdown link in a
+ * blockquote — easy to miss on the page whose whole job, for the next two
+ * weeks, is getting coaches to register (Adam, 2026-08-12). This is the
+ * homepage CTA button in a form markdown can produce, since raw <a> with a
+ * class survives the sanitizer.
+ *
+ * Colours are literal rather than tokens: it renders inside admin-authored
+ * content on every tenant including Island's dark theme, and a solid brand
+ * fill with white text is legible on any background without needing a line
+ * in each tenant's restore list.
+ */
+.le-cms-cta {
+  display: inline-block;
+  background: var(--brand-primary, #0b2e4f);
+  color: #fff !important;
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: 0.01em;
+  padding: 16px 30px;
+  border-radius: 10px;
+  text-decoration: none !important;
+  margin: 4px 0 8px;
+  /* Comfortable thumb target on a phone. */
+  min-height: 44px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.le-cms-cta:hover,
+.le-cms-cta:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+}
+@media (max-width: 560px) {
+  .le-cms-cta {
+    display: block;
+    text-align: center;
+  }
+}

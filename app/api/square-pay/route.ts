@@ -16,6 +16,7 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { parseHost, resolveTenant } from "@/lib/tenants";
+import { sendEmail, notifyAddress, esc } from "@/lib/email/send";
 import {
   SQUARE_VERSION,
   chargeCents,
@@ -129,6 +130,12 @@ export async function POST(req: Request) {
         idempotency_key: idempotencyKey(registrationId, sourceId),
         amount_money: { amount: amountCents, currency: "USD" },
         location_id: locationId,
+        // Square emails its own branded receipt when it knows who paid. This
+        // costs nothing and was simply never passed, which is half the reason
+        // a coach could pay $819 and receive nothing at all.
+        ...(typeof data.email === "string" && data.email.includes("@")
+          ? { buyer_email_address: data.email.trim() }
+          : {}),
         // Tenant id, not a hardcoded "COYBL 2027" — this string is what
         // shows on the Square receipt and in the seller dashboard.
         note: `${leagueId} registration: ${String(data.team_name ?? "Team")}`,
@@ -250,6 +257,86 @@ export async function POST(req: Request) {
     }
   } catch (err) {
     console.error("[square-pay] could not update the payment ledger", err);
+  }
+
+  // Receipt to the coach, and a heads-up to the office.
+  //
+  // Until now NOTHING was sent when a card was charged — not to the payer, not
+  // to the league. A coach paid the largest amount they will ever pay this
+  // site and had no proof of it in their inbox, and the office learned about
+  // it only by opening Square. Adam asked for this directly (2026-08-12).
+  //
+  // Awaited, not fire-and-forget: this runs after the charge, and unawaited
+  // work on a serverless function dies with the response. Wrapped, because the
+  // card has ALREADY been charged and an email failure must never surface to
+  // the coach as a failed payment.
+  const money = (cents: number) =>
+    (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
+  try {
+    const teamName = String(data.team_name ?? "your team");
+    const surcharge = amountCents - fee * 100;
+    const receiptLink = payment.receipt_url
+      ? `<p><a href="${esc(payment.receipt_url)}">View your Square receipt</a></p>`
+      : "";
+    const payerEmail =
+      typeof data.email === "string" && data.email.includes("@")
+        ? data.email.trim()
+        : "";
+
+    if (payerEmail) {
+      await sendEmail({
+        to: payerEmail,
+        subject: `Payment received — ${teamName}`,
+        html:
+          `<p>Hi ${esc(String(data.manager_first_name ?? "")) || "Coach"},</p>` +
+          `<p>Thanks — we have received your team fee for ` +
+          `<strong>${esc(teamName)}</strong>.</p>` +
+          `<table style="border-collapse:collapse;margin:14px 0">` +
+          `<tr><td style="padding:4px 18px 4px 0;color:#555">Team fee</td>` +
+          `<td style="padding:4px 0;text-align:right"><strong>${money(fee * 100)}</strong></td></tr>` +
+          (surcharge > 0
+            ? `<tr><td style="padding:4px 18px 4px 0;color:#555">Card processing fee</td>` +
+              `<td style="padding:4px 0;text-align:right">${money(surcharge)}</td></tr>`
+            : "") +
+          `<tr><td style="padding:8px 18px 4px 0;border-top:1px solid #ddd"><strong>Paid</strong></td>` +
+          `<td style="padding:8px 0 4px;text-align:right;border-top:1px solid #ddd">` +
+          `<strong>${money(amountCents)}</strong></td></tr>` +
+          `</table>` +
+          receiptLink +
+          `<p>Keep this for your records. Questions? Just reply to this email.</p>`,
+        replyTo: notifyAddress() ?? undefined,
+      });
+      await ref.set({ receipt_email_sent: true }, { merge: true });
+    }
+
+    const notify = notifyAddress();
+    if (notify) {
+      await sendEmail({
+        to: notify,
+        subject: `Payment received: ${teamName} — ${money(amountCents)}`,
+        html:
+          `<p><strong>${esc(teamName)}</strong> has paid by card.</p>` +
+          `<p>Amount: <strong>${money(amountCents)}</strong> ` +
+          `(fee ${money(fee * 100)}${surcharge > 0 ? `, card ${money(surcharge)}` : ""})</p>` +
+          `<p>Coach: ${esc(String(data.manager_first_name ?? ""))} ` +
+          `${esc(String(data.manager_last_name ?? ""))}` +
+          (payerEmail ? ` &lt;${esc(payerEmail)}&gt;` : "") +
+          `</p>` +
+          receiptLink +
+          `<p>It is on the admin Payments tab.</p>`,
+        replyTo: payerEmail || undefined,
+      });
+    }
+  } catch (err) {
+    // Money moved and is recorded; only the notification failed.
+    console.error("[square-pay] payment recorded but receipt email failed", {
+      leagueId,
+      registrationId,
+      squarePaymentId: payment.id ?? null,
+    }, err);
+    await ref
+      .set({ receipt_email_sent: false }, { merge: true })
+      .catch(() => {});
   }
 
   return NextResponse.json({
