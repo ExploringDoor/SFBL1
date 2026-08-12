@@ -42,6 +42,10 @@ export interface PublicLeagueConfig {
   tournaments?: LeagueConfig["tournaments"];
   // Branded season year (e.g. 2027). See LeagueConfig["season_year"].
   season_year?: number;
+  // Overrides the month-derived "Spring 2026" / "Summer 2026" heading. A
+  // league that registers in August for a September season needs to say
+  // "Fall 2026" in August, and no calendar heuristic can know that.
+  season_label?: string;
   // Outside-provider rankings embed. See LeagueConfig["power_rankings"].
   // Safe to forward: it is just a public embed URL and layout hints.
   power_rankings?: LeagueConfig["power_rankings"];
@@ -107,6 +111,7 @@ export function toPublicConfig(c: LeagueConfig): PublicLeagueConfig {
     about: c.about,
     tournaments: c.tournaments,
     season_year: c.season_year,
+    season_label: c.season_label,
     power_rankings: c.power_rankings,
     captain: c.captain,
     // Strip `admin.password` — only forward whether passwordless is

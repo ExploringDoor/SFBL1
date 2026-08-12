@@ -100,7 +100,7 @@ export default async function StandingsPage() {
             margin: 0,
           }}
         >
-          {seasonLabel(year)}
+          {config?.season_label ?? seasonLabel(year)}
         </h1>
         <p
           style={{
@@ -265,6 +265,11 @@ export default async function StandingsPage() {
 
 // "Spring 2026" / "Summer 2026" — picked from the current month so
 // the standings header reads like a real season label.
+//
+// A month heuristic cannot be right for every league. Island opens Fall
+// registration in August and plays from September, so in August this returned
+// "Summer 2026" over a page advertising the Fall season. Tenants that need to
+// say otherwise set config.season_label, which wins.
 function seasonLabel(year: string): string {
   const m = new Date().getMonth();
   if (m >= 2 && m <= 4) return `Spring ${year}`;

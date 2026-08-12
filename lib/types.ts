@@ -175,6 +175,9 @@ export interface LeagueConfig {
   // calendar year, so the branded season is NOT `new Date().getFullYear()`.
   // Unset -> falls back to the current calendar year.
   season_year?: number;
+  /** Overrides the month-derived season heading ("Fall 2026"). Needed by any
+   *  league whose registration month and playing season disagree. */
+  season_label?: string;
 
   /** Footer licence credit for third-party artwork. CC BY sources (JFK's
    *  game-icons.net team mascots) require visible attribution on a
