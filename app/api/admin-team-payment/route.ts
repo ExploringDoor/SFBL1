@@ -88,9 +88,24 @@ export async function POST(req: Request) {
   const db = getAdminDb();
 
   if (body.action === "list") {
-    const [teamSnap, playerSnap] = await Promise.all([
+    const [teamSnap, playerSnap, regSnap] = await Promise.all([
       db.collection(`leagues/${leagueId}/team_payments`).get(),
       db.collection(`leagues/${leagueId}/league_payments`).get(),
+      // Registrations that paid by card. The submission's `payment` block is
+      // written by /api/square-pay in the same breath as the charge, so it is
+      // the closest thing to a source of truth this app has for "did money
+      // arrive" — closer than the ledger, which is a derived convenience.
+      //
+      // Read here so the Payments tab is self-healing. Card payments taken
+      // before the ledger keyed rows on the registration left no ledger row at
+      // all, and Adam's first live payment was one of them: recorded on the
+      // submission, invisible on the Payments tab, unrecoverable without a
+      // hand-written backfill. Deriving from the submissions means any past or
+      // future gap closes itself.
+      db
+        .collection(`leagues/${leagueId}/form_submissions/team_registration/items`)
+        .get()
+        .catch(() => null),
     ]);
     const team_payments = teamSnap.docs.map((d) => {
       const x = d.data();
@@ -119,6 +134,34 @@ export async function POST(req: Request) {
         note: String(x.note ?? ""),
       };
     });
+    // Fold in any paid registration the ledger does not already account for,
+    // keyed the same way /api/square-pay keys a pre-assignment row so the two
+    // can never produce a duplicate.
+    const haveIds = new Set(team_payments.map((p) => p.team_id));
+    for (const d of regSnap?.docs ?? []) {
+      const x = d.data();
+      const pay = (x.payment ?? {}) as Record<string, unknown>;
+      if (pay.status !== "paid") continue;
+      const assigned =
+        typeof x.assigned_team_id === "string" ? x.assigned_team_id : "";
+      // Assigned teams are already represented by their own ledger row.
+      const id = assigned || `reg-${d.id}`;
+      if (haveIds.has(id)) continue;
+      haveIds.add(id);
+      team_payments.push({
+        team_id: id,
+        team_name: String(x.team_name ?? ""),
+        registration_id: d.id,
+        amount_due: Number(pay.fee_dollars ?? 0),
+        amount_paid: Number(pay.amount_cents ?? 0) / 100,
+        note: "",
+        method: String(pay.method ?? "card"),
+        paid_at: String(pay.paid_at ?? ""),
+        receipt_url: String(pay.receipt_url ?? ""),
+        reminder_sent_at: "",
+      });
+    }
+
     return NextResponse.json({ ok: true, team_payments, player_payments });
   }
 

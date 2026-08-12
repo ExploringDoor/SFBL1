@@ -1440,6 +1440,66 @@ function FieldValue({
   if (typeof value === "number") {
     return <span>{value}</span>;
   }
+  // The payment block. The generic JSON fallback below dumped this as a wall of
+  // raw text — {"paid_at":"2026-08-12T03:03:27.849Z","receipt_url":… — across
+  // four lines of the card. It is the single most important field on a paid
+  // registration and it was the least readable thing on the page.
+  if (
+    fieldKey === "payment" &&
+    value &&
+    typeof value === "object" &&
+    !Array.isArray(value)
+  ) {
+    const p = value as Record<string, unknown>;
+    const cents = Number(p.amount_cents ?? 0);
+    const when = typeof p.paid_at === "string" ? p.paid_at : "";
+    const method = typeof p.method === "string" ? p.method : "";
+    const receipt = typeof p.receipt_url === "string" ? p.receipt_url : "";
+    const paid = p.status === "paid";
+    return (
+      <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span
+          className={
+            paid
+              ? "rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-emerald-700"
+              : "rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-slate-500"
+          }
+        >
+          {paid ? "Paid" : String(p.status ?? "unpaid")}
+        </span>
+        {cents > 0 && (
+          <strong>
+            {(cents / 100).toLocaleString("en-US", {
+              style: "currency",
+              currency: "USD",
+            })}
+          </strong>
+        )}
+        {method && <span className="capitalize text-slate-600">{method}</span>}
+        {when && (
+          <span className="text-slate-600">
+            {new Date(when).toLocaleString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+            })}
+          </span>
+        )}
+        {receipt && (
+          <a
+            className="font-semibold text-blue-700 underline"
+            href={receipt}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Receipt
+          </a>
+        )}
+      </span>
+    );
+  }
   // Arrays / objects / anything else — show the JSON inline; rare
   // enough that a generic fallback is fine.
   return (
