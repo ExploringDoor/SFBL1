@@ -197,6 +197,37 @@ export async function POST(req: Request) {
       );
   }
 
+  // Move any payment that arrived BEFORE this team existed onto the team.
+  //
+  // A coach who registers and pays in one sitting is charged while there is no
+  // team to file the money under, so /api/square-pay writes the ledger row
+  // under the registration id instead. Assignment is the moment that row can
+  // find its team. Left behind, the Payments tab would show the new team as
+  // owing its full fee, and admin-payment-reminders would email a coach who
+  // had already paid — the exact chase the ledger exists to prevent.
+  if (teamId) {
+    try {
+      const legacyRef = db.doc(
+        `leagues/${leagueId}/team_payments/reg-${submissionId}`,
+      );
+      const legacy = await legacyRef.get();
+      if (legacy.exists) {
+        await db
+          .doc(`leagues/${leagueId}/team_payments/${teamId}`)
+          .set({ ...legacy.data(), team_assigned: true }, { merge: true });
+        await legacyRef.delete();
+      }
+    } catch (err) {
+      // Never block the assignment itself. The money is still recorded on the
+      // registration and in Square either way.
+      console.error(
+        "[assign-registration] could not move the pre-assignment payment row",
+        { leagueId, submissionId, teamId },
+        err,
+      );
+    }
+  }
+
   // Mark the submission handled + link the player for idempotency
   // and traceability.
   await subRef.set(

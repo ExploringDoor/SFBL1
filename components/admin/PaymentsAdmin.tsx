@@ -94,6 +94,17 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
     Record<string, { id: string; name: string }[]>
   >({});
   const [teamPay, setTeamPay] = useState<Record<string, Entry>>({});
+  // Paid registrations with no team yet — see the note where this is populated.
+  const [unassignedPaid, setUnassignedPaid] = useState<
+    {
+      id: string;
+      teamName: string;
+      amountPaid: number;
+      method: string;
+      paidAt: string;
+      receiptUrl: string;
+    }[]
+  >([]);
   const [playerPay, setPlayerPay] = useState<Record<string, Entry>>({});
   const [expanded, setExpanded] = useState<string | null>(null);
   // Doug works one age group at a time and chases the unpaid. 196 teams in one
@@ -161,6 +172,7 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
       const body = (await payRes.json().catch(() => ({}))) as {
         team_payments?: {
         team_id: string;
+        team_name?: string;
         amount_due?: number;
         amount_paid: number;
         note: string;
@@ -187,6 +199,34 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
           reminder_sent_at: p.reminder_sent_at ?? "",
         };
       setTeamPay(tp);
+
+      // Money that has arrived for a team that does not exist yet.
+      //
+      // This table is built from the TEAMS collection and looks payments up by
+      // team id, which works on COYBL because COYBL provisions a team the
+      // moment someone registers. Island assigns teams by hand, days later. So
+      // a coach who registers and pays in one sitting is money in Square with
+      // no team to hang it on, and the tab read "nothing collected" while the
+      // office had actually been paid. Adam hit this minutes after Island's
+      // first successful live payment.
+      //
+      // /api/square-pay keys those rows on the registration instead, and they
+      // are listed separately here until assignment gives them a team.
+      const knownTeamIds = new Set(teamSnap.docs.map((d) => d.id));
+      setUnassignedPaid(
+        (body.team_payments ?? [])
+          .filter((p) => !knownTeamIds.has(p.team_id) && Number(p.amount_paid) > 0)
+          .map((p) => ({
+            id: p.team_id,
+            teamName: String((p as { team_name?: string }).team_name ?? "(no name)"),
+            amountPaid: Number(p.amount_paid) || 0,
+            method: p.method ?? "",
+            paidAt: p.paid_at ?? "",
+            receiptUrl: p.receipt_url ?? "",
+          }))
+          .sort((a, b) => (b.paidAt ?? "").localeCompare(a.paidAt ?? "")),
+      );
+
       const pp: Record<string, Entry> = {};
       for (const p of body.player_payments ?? [])
         pp[p.player_id] = {
@@ -467,6 +507,55 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
         <Card label="Still owed" value={money(outstanding)} />
         <Card label="Player payments" value={money(playerTotal)} />
       </div>
+
+      {/* Paid, but there is no team to file it under yet.
+          The table below is driven by the TEAMS collection, so on a league that
+          assigns teams by hand (Island) a coach who registers and pays in one
+          sitting had nowhere to appear, and this tab read as "nothing
+          collected" while the money was already in Square. These rows are the
+          registrations that have paid and are still waiting to be assigned. */}
+      {unassignedPaid.length > 0 && (
+        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <h3 className="text-sm font-bold uppercase tracking-wide text-amber-900">
+            Paid · awaiting team assignment ({unassignedPaid.length})
+          </h3>
+          <p className="mt-1 text-xs text-amber-800">
+            These teams have paid but have not been assigned a team on the site
+            yet. Assign them from Form submissions and they will move into the
+            table below.
+          </p>
+          <ul className="mt-3 space-y-2">
+            {unassignedPaid.map((u) => (
+              <li
+                key={u.id}
+                className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-white px-3 py-2 text-sm"
+              >
+                <span className="font-semibold text-slate-900">{u.teamName}</span>
+                <span className="font-semibold text-emerald-700">
+                  {money(u.amountPaid)}
+                </span>
+                <PaidBadge
+                  entry={{
+                    amount_paid: String(u.amountPaid),
+                    method: u.method,
+                    paid_at: u.paidAt,
+                  }}
+                />
+                {u.receiptUrl && (
+                  <a
+                    className="text-xs font-semibold text-blue-700 underline"
+                    href={u.receiptUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Receipt
+                  </a>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {msg && (
         <p

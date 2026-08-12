@@ -96,6 +96,10 @@ export async function POST(req: Request) {
       const x = d.data();
       return {
         team_id: d.id,
+        // Carried so the Payments tab can name a row whose team does not exist
+        // yet (paid at registration, assigned by hand later).
+        team_name: String(x.team_name ?? ""),
+        registration_id: String(x.registration_id ?? ""),
         amount_due: Number(x.amount_due ?? 0),
         amount_paid: Number(x.amount_paid ?? 0),
         note: String(x.note ?? ""),

@@ -207,13 +207,31 @@ export async function POST(req: Request) {
   // still show as unpaid to the office, who would chase them for money they
   // had already sent. Best-effort: the card has been charged either way, so a
   // ledger hiccup must not turn into an error the coach sees.
+  //
+  // The row is keyed on the assigned team when there is one, and on the
+  // REGISTRATION when there is not. It used to be written only when
+  // assigned_team_id was already set, which is a COYBL-shaped assumption: COYBL
+  // auto-provisions a team at registration, Island assigns by hand days later.
+  // So an Island coach who registered and paid in one sitting produced no
+  // ledger row at all, and the office's Payments tab showed nothing collected
+  // while the money sat in Square. Adam found it minutes after the first
+  // successful live payment. Worse, admin-payment-reminders reads a missing row
+  // as "owes money", so a team that had paid could be chased for it.
+  //
+  // registration_id is carried on the row either way, so assignment can
+  // reconcile the two without a second source of truth.
   try {
     const teamId =
       typeof data.assigned_team_id === "string" ? data.assigned_team_id : "";
-    if (teamId) {
-      await db.doc(`leagues/${leagueId}/team_payments/${teamId}`).set(
+    const ledgerId = teamId || `reg-${registrationId}`;
+    {
+      await db.doc(`leagues/${leagueId}/team_payments/${ledgerId}`).set(
         {
           team_name: String(data.team_name ?? ""),
+          registration_id: registrationId,
+          // False when the row is keyed on the registration because no team
+          // exists yet. Assignment flips it.
+          team_assigned: Boolean(teamId),
           amount_due: fee,
           amount_paid: amountCents / 100,
           // Structured, not prose. The UI renders "Card · Aug 4" from these;
