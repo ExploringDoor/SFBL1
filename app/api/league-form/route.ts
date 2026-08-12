@@ -427,6 +427,18 @@ export async function POST(req: Request) {
       "8U": ["weekend"],
       college: ["weeknight", "weekend"],
     };
+    // College does not run in the Fall (Mike, via Adam 2026-08-12), and Fall is
+    // the only season currently open. The form no longer offers it; this stops
+    // a direct POST taking money for a league nobody is playing.
+    if (age === "college") {
+      return NextResponse.json(
+        {
+          error:
+            "The College Division does not run in the Fall season. Please contact the league office about Spring and Summer college play.",
+        },
+        { status: 400 },
+      );
+    }
     const allowed = LEAGUES_BY_AGE[age];
     if (allowed && division && !allowed.includes(division)) {
       return NextResponse.json(

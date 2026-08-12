@@ -19,7 +19,10 @@ const DIVISION = {
   ],
 };
 
-const AGES = ["8U", "10U", "12U", "14U", "16/18U", "college"];
+// College is intentionally NOT here: it does not run in the Fall, which is the
+// only season currently open (Mike, via Adam 2026-08-12). The form omits it and
+// app/api/league-form rejects it outright.
+const AGES = ["8U", "10U", "12U", "14U", "16/18U"];
 
 describe("EVERY age x league combination a coach can actually submit", () => {
   for (const age of AGES) {
@@ -42,7 +45,11 @@ describe("EVERY age x league combination a coach can actually submit", () => {
   it("8U can ONLY pick weekend", () => {
     expect(optionsFor(DIVISION, { age_group: "8U" }).map((o) => o.value)).toEqual(["weekend"]);
   });
-  it("college cannot pick sunday-night", () => {
+  it("college is not offered at all while Fall is the open season", () => {
+    expect(AGES).not.toContain("college");
+  });
+
+  it("but the college PAIRING rule survives, for when spring reopens it", () => {
     expect(optionsFor(DIVISION, { age_group: "college" }).map((o) => o.value)).not.toContain("sunday-night");
   });
   it("every other age keeps all three", () => {

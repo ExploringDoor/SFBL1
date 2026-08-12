@@ -309,7 +309,20 @@ export default async function RootLayout({
   // separate More menu, to buy back two slots on a bar that is already wide.
   const ISLAND_NAV: NavLink[] = [
     { label: "Home", href: "/" },
-    { label: "League", href: "/content/leagues" },
+    // "League" and "Register" merged into one item (Adam, 2026-08-12).
+    // A coach looking for the league and a coach looking to sign up were being
+    // sent to two different places, and the nav was already eleven items wide.
+    // The League page now opens with the registration call to action, so the
+    // parent link still lands somewhere that sells.
+    {
+      label: "League & Registration",
+      href: "/content/leagues",
+      children: [
+        { label: "League Info", href: "/content/leagues" },
+        { label: "Register a Team", href: "/team-registration" },
+        { label: "Team Waiver", href: "/team-waiver-form" },
+      ],
+    },
     { label: "Tournaments", href: "/tournaments" },
     { label: "Schedule", href: "/schedule" },
     { label: "Scores", href: "/scores" },
@@ -344,14 +357,6 @@ export default async function RootLayout({
       ],
     },
     { label: "Contact", href: "/content/contact" },
-    {
-      label: "Register",
-      href: "#",
-      children: [
-        { label: "Team Registration", href: "/team-registration" },
-        { label: "Team Waiver", href: "/team-waiver-form" },
-      ],
-    },
   ];
 
   const tickerGames = tenantId ? await loadTickerGames(tenantId) : [];

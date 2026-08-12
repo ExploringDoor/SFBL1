@@ -274,6 +274,24 @@ const COYBL_FIELDS: FormField[] = [
 // weeknight and a weekend league (Mike, 2026-07-29). `age_group` carries the
 // age and `division` carries which league — both are already whitelisted in
 // app/api/league-form/route.ts, so no backend change was needed.
+// Which season registration is currently open for.
+//
+// Adam asked to "break up registration into spring, summer, fall" and chose
+// Fall-only for now (2026-08-12), so this is a single constant rather than a
+// picker on the form: a coach registering in August is registering for Fall,
+// and a dropdown whose only sensible answer is Fall is a question not worth
+// asking. When Spring opens, change this one value (and add a Season field if
+// two seasons are ever open at once).
+const ISLAND_SEASON: "fall" | "spring" | "summer" = "fall";
+
+// Age groups that exist ON TOP of the year-round 8U..16/18U list, per season.
+// College plays in the spring and summer but not the fall.
+const ISLAND_AGES_BY_SEASON: Record<string, { value: string; label: string }[]> = {
+  fall: [],
+  spring: [{ value: "college", label: "College — $795" }],
+  summer: [{ value: "college", label: "College — $795" }],
+};
+
 const ISLAND_FIELDS: FormField[] = [
   { name: "manager_first_name", label: "Coach / Manager First Name", type: "text", required: true, width: "half" },
   { name: "manager_last_name", label: "Coach / Manager Last Name", type: "text", required: true, width: "half" },
@@ -300,11 +318,14 @@ const ISLAND_FIELDS: FormField[] = [
       { value: "12U", label: "12U — $795" },
       { value: "14U", label: "14U — $795" },
       { value: "16/18U", label: "16/18U — $795" },
-      // College was missing entirely, so a college team could not register at
-      // all — while the home banner says "18+" precisely because Island runs a
-      // College Division (Mike, via Adam 2026-08-10). The League page fee table
-      // lists "College Division $795".
-      { value: "college", label: "College — $795" },
+      // College is deliberately ABSENT while ISLAND_SEASON is "fall".
+      //
+      // Island does run a College Division — it is why the banner says 18+ —
+      // but not in the Fall (Mike, via Adam 2026-08-12). Listing it here would
+      // take money for a league that is not being played this season. It comes
+      // back automatically when ISLAND_SEASON moves to spring or summer; see
+      // ISLAND_AGES_BY_SEASON above.
+      ...(ISLAND_AGES_BY_SEASON[ISLAND_SEASON] ?? []),
     ],
   },
   {
