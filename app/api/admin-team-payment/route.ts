@@ -137,18 +137,31 @@ export async function POST(req: Request) {
     // Fold in any paid registration the ledger does not already account for,
     // keyed the same way /api/square-pay keys a pre-assignment row so the two
     // can never produce a duplicate.
-    const haveIds = new Set(team_payments.map((p) => p.team_id));
+    const byId = new Map(team_payments.map((p) => [p.team_id, p]));
     for (const d of regSnap?.docs ?? []) {
       const x = d.data();
       const pay = (x.payment ?? {}) as Record<string, unknown>;
       if (pay.status !== "paid") continue;
       const assigned =
         typeof x.assigned_team_id === "string" ? x.assigned_team_id : "";
-      // Assigned teams are already represented by their own ledger row.
       const id = assigned || `reg-${d.id}`;
-      if (haveIds.has(id)) continue;
-      haveIds.add(id);
-      team_payments.push({
+
+      // A row can already exist and still show nothing paid: provisioning
+      // seeds amount_due the moment a team is created, so a coach who paid at
+      // signup gets a row saying they owe the full fee. Skipping on "a row
+      // exists" left Adam's paid team reading as unpaid seconds after he
+      // created it. Fill the gap instead of skipping.
+      const row = byId.get(id);
+      if (row) {
+        if (!row.amount_paid) {
+          row.amount_paid = Number(pay.amount_cents ?? 0) / 100;
+          row.method = row.method || String(pay.method ?? "card");
+          row.paid_at = row.paid_at || String(pay.paid_at ?? "");
+          row.receipt_url = row.receipt_url || String(pay.receipt_url ?? "");
+        }
+        continue;
+      }
+      const fresh = {
         team_id: id,
         team_name: String(x.team_name ?? ""),
         registration_id: d.id,
@@ -159,7 +172,9 @@ export async function POST(req: Request) {
         paid_at: String(pay.paid_at ?? ""),
         receipt_url: String(pay.receipt_url ?? ""),
         reminder_sent_at: "",
-      });
+      };
+      team_payments.push(fresh);
+      byId.set(id, fresh);
     }
 
     return NextResponse.json({ ok: true, team_payments, player_payments });

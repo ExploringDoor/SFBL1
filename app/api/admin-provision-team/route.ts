@@ -118,6 +118,27 @@ export async function POST(req: Request) {
         .doc(`leagues/${leagueId}/team_payments/${result.teamId}`)
         .set({ ...legacy.data(), team_assigned: true }, { merge: true });
       await legacyRef.delete();
+    } else {
+      // No placeholder row to move, but the registration may still have been
+      // paid — every card payment taken before square-pay started keying rows
+      // on the registration is in exactly that state. Provisioning has just
+      // seeded a row with amount_due and NOTHING paid, so without this the
+      // team reads as owing its full fee minutes after the coach paid it.
+      // Adam's own $1.33 landed here.
+      const pay = (data.payment ?? {}) as Record<string, unknown>;
+      if (pay.status === "paid") {
+        await db.doc(`leagues/${leagueId}/team_payments/${result.teamId}`).set(
+          {
+            amount_paid: Number(pay.amount_cents ?? 0) / 100,
+            method: String(pay.method ?? "card"),
+            paid_at: String(pay.paid_at ?? ""),
+            square_payment_id: pay.square_payment_id ?? null,
+            receipt_url: pay.receipt_url ?? null,
+            team_assigned: true,
+          },
+          { merge: true },
+        );
+      }
     }
   } catch (err) {
     console.error("[admin-provision-team] could not move the payment row", {
