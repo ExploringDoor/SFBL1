@@ -187,6 +187,41 @@ export async function POST(req: Request) {
   const pay = new Map<string, Record<string, unknown>>();
   for (const d of paySnap.docs) pay.set(d.id, d.data());
 
+  // Fold in payments recorded on the REGISTRATION but not yet on the ledger.
+  //
+  // /api/square-pay writes the payment onto the submission in the same breath
+  // as the charge; the ledger row is a convenience written alongside. Any team
+  // provisioned before that ledger write existed has a row saying amount_due
+  // with nothing paid — and this route reads the ledger alone, so it would
+  // email a coach who has already paid, asking for the full fee. Adam's own
+  // paid team was in exactly that state. The Payments tab already derives from
+  // the registrations for the same reason; this is the other half.
+  try {
+    const regSnap = await db
+      .collection(`leagues/${leagueId}/form_submissions/team_registration/items`)
+      .get();
+    for (const d of regSnap.docs) {
+      const x = d.data();
+      const paid = (x.payment ?? {}) as Record<string, unknown>;
+      if (paid.status !== "paid") continue;
+      const teamId =
+        typeof x.assigned_team_id === "string" ? x.assigned_team_id : "";
+      if (!teamId) continue;
+      const row = pay.get(teamId) ?? {};
+      if (Number(row.amount_paid ?? 0) > 0) continue;
+      pay.set(teamId, {
+        ...row,
+        amount_paid: Number(paid.amount_cents ?? 0) / 100,
+        method: row.method ?? paid.method ?? "card",
+        paid_at: row.paid_at ?? paid.paid_at ?? "",
+      });
+    }
+  } catch (err) {
+    // Reminders are better than no reminders; worst case this route behaves
+    // exactly as it did before.
+    console.error("[payment-reminders] could not read registrations", err);
+  }
+
   // Teams still owing, before we know whether we can reach them.
   const owing = teamSnap.docs.filter((d) => {
     if (d.data().active === false) return false;
