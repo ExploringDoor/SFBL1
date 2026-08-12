@@ -306,6 +306,16 @@ async function recentByMailbox(
   return n;
 }
 
+// Leagues where a team registration immediately becomes a real team: the team
+// is created, its coach sign-in code minted, the coach's login bound and their
+// welcome email sent, without anyone in the office clicking anything.
+//
+// The trade is that EVERY submission becomes a public team, including tests and
+// duplicates, so the office deletes rather than approves. Doug wanted that at
+// COYBL ("teams show as soon as they register", 2026-08-02) and Adam asked for
+// Island to match it (2026-08-11).
+const AUTO_PROVISION_TEAMS = new Set(["coybl", "island"]);
+
 const MAILBOX_WINDOW_MS = 24 * 60 * 60 * 1000;
 const MAILBOX_LIMIT = 3;
 // Team registrations get their own, far higher ceiling. A club director
@@ -541,11 +551,25 @@ export async function POST(req: Request) {
   const origin =
     h.get("origin") ?? (h.get("host") ? `https://${h.get("host")}` : "");
 
-  // COYBL: create the coach's login account NOW (awaited) — fire-and-forget
-  // work after the response is killed by the serverless runtime, and account
+  // Create the coach's login account NOW (awaited) — fire-and-forget work
+  // after the response is killed by the serverless runtime, and account
   // creation must actually happen. Wrapped so an email/auth hiccup never fails
   // the registration itself.
-  if (tenantId === "coybl" && body.kind === "team_registration") {
+  //
+  // This used to read `tenantId === "coybl"`. Island was excluded by that
+  // hardcoded check rather than by anyone deciding it should be, and the
+  // consequence was invisible until Adam paid a real registration and found
+  // there was no way to turn it into a team at all. A coach who registers and
+  // pays now gets their team, their sign-in code and their login immediately,
+  // the same as COYBL's (Adam, 2026-08-11).
+  //
+  // The admin's "Create team from this registration" button stays as the
+  // fallback: registrations taken before this, and any where provisioning
+  // failed, still need a way through.
+  if (
+    AUTO_PROVISION_TEAMS.has(tenantId) &&
+    body.kind === "team_registration"
+  ) {
     // Record whether the coach's login email actually went out. This used to
     // be an empty catch, which is how a Firebase "Domain not allowlisted"
     // error silently ate every login email while registrations looked fine:
