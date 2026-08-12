@@ -797,7 +797,11 @@ html.tenant-island .le-agejump-label {
  * The card fields themselves are a Square iframe and were never affected. */
 html.tenant-island .cop-wrap,
 html.tenant-island .cop-or,
-html.tenant-island .cop-btn,
+/* :not(.cop-btn-primary) — the Pay button is NAVY with white text by design.
+   Sweeping it into the dark-text restore turned "Pay $515.24" into near-black
+   on navy: my own fix from ten minutes earlier, caught by Adam on the live
+   page. Only the white secondary buttons want dark text. */
+html.tenant-island .cop-btn:not(.cop-btn-primary),
 html.tenant-island .cop-prices,
 html.tenant-island .sqc-wrap,
 html.tenant-island .sqc-amount,

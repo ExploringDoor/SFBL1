@@ -287,11 +287,19 @@ const ISLAND_FIELDS: FormField[] = [
     required: true,
     width: "half",
     options: [
-      { value: "8U", label: "8U" },
-      { value: "10U", label: "10U" },
-      { value: "12U", label: "12U" },
-      { value: "14U", label: "14U" },
-      { value: "16/18U", label: "16/18U" },
+      // Prices in the labels, so a coach sees the fee at the moment of
+      // choosing rather than after submitting (Adam, 2026-08-11).
+      //
+      // They sit on AGE GROUP, not on "Which league?", because age is what
+      // actually sets the price: 8U is $500 and every other age is $795
+      // whichever league it plays in (lib/square.ts feeFor). Putting "$795"
+      // beside Weekend would be wrong for an 8U weekend team — the one case
+      // that is cheaper.
+      { value: "8U", label: "8U — $500" },
+      { value: "10U", label: "10U — $795" },
+      { value: "12U", label: "12U — $795" },
+      { value: "14U", label: "14U — $795" },
+      { value: "16/18U", label: "16/18U — $795" },
     ],
   },
   {
@@ -301,6 +309,8 @@ const ISLAND_FIELDS: FormField[] = [
     required: true,
     width: "half",
     options: [
+      // No prices here on purpose — see the note on age_group above. Every
+      // league is the same fee; the age is what changes it.
       { value: "weekend", label: "Weekend (Saturdays and Sundays)" },
       { value: "weeknight", label: "Weeknight" },
       { value: "sunday-night", label: "Sunday Night" },

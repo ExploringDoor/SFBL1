@@ -81,8 +81,17 @@ export function squareApiBase(): string {
 // Only the CARD amount is affected. The team_payments ledger always records
 // what a team genuinely owes, so paid/unpaid tracking stays truthful either
 // way.
+// LEAGUE_TEST_FEE is the tenant-neutral name; COYBL_TEST_FEE still works so
+// COYBL's existing Vercel config keeps functioning. Each league is its own
+// Vercel project, so setting this on one cannot affect another.
+//
+// Worth knowing WHY this matters more than it looks: Square stopped returning
+// processing fees on refunds in April 2023. Testing with a real $795 team fee
+// and refunding it costs the league $24.05 it never gets back. Set
+// LEAGUE_TEST_FEE=1 instead, run the card through at $1.33, and the whole cost
+// of a full end-to-end test is 34 cents.
 function testFeeOverride(): number | null {
-  const raw = process.env.COYBL_TEST_FEE;
+  const raw = process.env.LEAGUE_TEST_FEE ?? process.env.COYBL_TEST_FEE;
   if (!raw) return null;
   const n = Number(raw);
   return Number.isFinite(n) && n > 0 ? n : null;
