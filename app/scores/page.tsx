@@ -2,6 +2,7 @@
 // selector + game cards grouped by day.
 
 import { headers } from "next/headers";
+import { DemoDataBanner } from "@/components/ui/DemoDataBanner";
 import {
   getCachedGamesSnap,
   getCachedTeamsSnap,
@@ -184,6 +185,7 @@ export default async function ScoresPage({
 
   return (
     <main className={"container py-10" + (lmllStyle ? " le-lmll-sb" : "")}>
+    <DemoDataBanner show={config?.flags?.demo_data === true} />
       {!config?.flags?.hide_page_titles && !lmllStyle && (
         <header className="mb-6">
           <h1 className="font-display" style={{ fontSize: "clamp(40px, 6vw, 64px)" }}>

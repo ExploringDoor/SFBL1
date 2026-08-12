@@ -2,6 +2,7 @@
 // shows upcoming games only. No Recap/Box Score buttons, just Preview.
 
 import { headers } from "next/headers";
+import { DemoDataBanner } from "@/components/ui/DemoDataBanner";
 import {
   getCachedGamesSnap,
   getCachedTeamsSnap,
@@ -161,6 +162,7 @@ export default async function SchedulePage({
 
   return (
     <main className={"container py-10" + (lmllStyle ? " le-lmll-sb" : "")}>
+    <DemoDataBanner show={config?.flags?.demo_data === true} />
       <header className="mb-6 flex items-end justify-between gap-4 flex-wrap">
         {!config?.flags?.hide_page_titles && !lmllStyle ? (
           <div>

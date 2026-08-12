@@ -3,6 +3,7 @@
 
 import Link from "next/link";
 import { headers } from "next/headers";
+import { DemoDataBanner } from "@/components/ui/DemoDataBanner";
 import {
   getCachedGamesSnap,
   getCachedTeamsSnap,
@@ -164,6 +165,7 @@ export default async function TeamsPage() {
 
   return (
     <main className="container py-10">
+    <DemoDataBanner show={config?.flags?.demo_data === true} />
       {!config?.flags?.hide_page_titles && (
         <header className="mb-8">
           <h1 className="font-display" style={{ fontSize: "clamp(40px, 6vw, 64px)" }}>

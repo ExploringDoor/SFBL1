@@ -4,6 +4,7 @@
 // in full mode.
 
 import { headers } from "next/headers";
+import { DemoDataBanner } from "@/components/ui/DemoDataBanner";
 import Link from "next/link";
 import {
   getCachedGamesSnap,
@@ -74,6 +75,7 @@ export default async function StandingsPage() {
 
   return (
     <main className="container py-10">
+    <DemoDataBanner show={config?.flags?.demo_data === true} />
       <header className="mb-8">
         <p
           className="font-barlow"

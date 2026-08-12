@@ -6774,3 +6774,25 @@ select:focus-visible {
     text-align: center;
   }
 }
+
+/* "Sample data" strip — see components/ui/DemoDataBanner.tsx.
+ *
+ * Amber and full width on purpose. Realistic fake results with nothing saying
+ * so is how a parent concludes the season has already started. Colours are
+ * literal, not tokens: this renders on Island's dark theme too, and a warning
+ * that needs a line in each tenant's restore list is a warning that will one
+ * day be invisible on the tenant that needs it.
+ */
+.le-demo-banner {
+  background: #fef3c7;
+  color: #7c2d12;
+  border: 1px solid #f59e0b;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 0 0 18px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.le-demo-banner strong {
+  font-weight: 800;
+}
