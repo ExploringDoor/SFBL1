@@ -70,6 +70,7 @@ export function ScheduleEditor({ leagueId, user }: Props) {
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [divisionFilter, setDivisionFilter] = useState<string>("");
+  const [seasonFilter, setSeasonFilter] = useState<string>("");
   const [searchTeam, setSearchTeam] = useState<string>("");
 
   // Inline edit / add state
@@ -94,11 +95,15 @@ export function ScheduleEditor({ leagueId, user }: Props) {
         getDoc(doc(db, `leagues/${leagueId}/site_config/fields`)),
       ]);
       const leagueData = leagueDoc.exists() ? leagueDoc.data() : null;
-      setCurrentSeason(
+      const curSeason =
         typeof leagueData?.current_season === "string"
           ? leagueData.current_season
-          : "",
-      );
+          : "";
+      setCurrentSeason(curSeason);
+      // Default the list to the current season on first load (so the editor
+      // opens on the season you're actually running); don't clobber a filter
+      // the admin already changed.
+      setSeasonFilter((prev) => prev || curSeason);
       setSeasons(
         Array.isArray(leagueData?.seasons)
           ? (leagueData!.seasons as { id?: unknown; label?: unknown }[])
@@ -157,6 +162,7 @@ export function ScheduleEditor({ leagueId, user }: Props) {
                 data.away_score == null ? null : Number(data.away_score),
               home_score:
                 data.home_score == null ? null : Number(data.home_score),
+              season: String(data.season ?? ""),
             };
           })
           .sort((a, b) => {
@@ -241,6 +247,7 @@ export function ScheduleEditor({ leagueId, user }: Props) {
   const filteredGames = useMemo(() => {
     const search = searchTeam.toLowerCase().trim();
     return games.filter((g) => {
+      if (seasonFilter && (g.season ?? "") !== seasonFilter) return false;
       if (statusFilter && g.status !== statusFilter) return false;
       if (divisionFilter && g.division !== divisionFilter) return false;
       if (search) {
@@ -250,7 +257,7 @@ export function ScheduleEditor({ leagueId, user }: Props) {
       }
       return true;
     });
-  }, [games, statusFilter, divisionFilter, searchTeam, teamName]);
+  }, [games, seasonFilter, statusFilter, divisionFilter, searchTeam, teamName]);
 
   // Group by date for display.
   const gamesByDate = useMemo(() => {
@@ -320,6 +327,20 @@ export function ScheduleEditor({ leagueId, user }: Props) {
 
       {/* Filter bar */}
       <div className="flex items-center gap-2 flex-wrap text-xs">
+        {seasons.length > 0 && (
+          <select
+            value={seasonFilter}
+            onChange={(e) => setSeasonFilter(e.target.value)}
+            className="rounded-md border border-blue-300 bg-blue-50 px-2 py-1.5 text-xs font-semibold text-blue-800"
+            title="Which season's schedule you're viewing / building"
+          >
+            {seasons.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+        )}
         <input
           type="text"
           value={searchTeam}
@@ -374,7 +395,7 @@ export function ScheduleEditor({ leagueId, user }: Props) {
           fields={fields}
           divisions={allDivisions}
           seasons={seasons}
-          currentSeason={currentSeason}
+          currentSeason={seasonFilter || currentSeason}
           busy={busy}
           onCancel={() => setShowAdd(false)}
           onSubmit={async (g) => {
@@ -405,7 +426,15 @@ export function ScheduleEditor({ leagueId, user }: Props) {
         <p className="text-sm text-slate-500">Loading schedule…</p>
       ) : filteredGames.length === 0 ? (
         <p className="text-sm text-slate-500 italic">
-          No games match the current filters.
+          {games.some((g) => (g.season ?? "") === seasonFilter) ||
+          statusFilter ||
+          divisionFilter ||
+          searchTeam
+            ? "No games match the current filters."
+            : `No games in ${
+                seasons.find((s) => s.id === seasonFilter)?.label ??
+                "this season"
+              } yet — click “+ Add Game” to start building it.`}
         </p>
       ) : (
         <div className="space-y-3">
