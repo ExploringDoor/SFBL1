@@ -300,6 +300,14 @@ export function HelpTab({ contactEmail }: Props) {
   // leagues see the full guide. (Adam, 2026-06.)
   const { tenantId } = useTenant();
   const isSfbl = tenantId === "sfbl";
+  // Island runs no calendar feed — Adam had the subscribe/export controls
+  // taken off the site (2026-08-03) and the captain portal's copy was missed,
+  // so Help still explained a button that is not there.
+  const noCalendarFeed = tenantId === "island" || tenantId === "coybl";
+  // Island keeps stats off (flags.stats_enabled === false), so coaches submit
+  // a score, not a box score. "Building your lineup" described tapping players
+  // into a batting order they never see (Adam, 2026-08-12).
+  const noBoxScores = tenantId === "island";
   // An explicit prop wins; otherwise the league's own office, if it has one.
   const support = contactEmail
     ? { name: "the league office", email: contactEmail }
@@ -385,7 +393,7 @@ export function HelpTab({ contactEmail }: Props) {
       </details>
 
       <details>
-        <summary>3. Schedule &amp; Calendar Sync</summary>
+        <summary>{noCalendarFeed ? "3. Schedule" : "3. Schedule & Calendar Sync"}</summary>
         <div className="help-body">
           <p>
             The <strong>Schedule</strong> tab shows every game on your
@@ -393,13 +401,13 @@ export function HelpTab({ contactEmail }: Props) {
             the commissioner manages the master schedule.
           </p>
           <ul>
-            <li>
+            {!noCalendarFeed && (<li>
               <strong>Subscribe to Calendar</strong> — at the top of the tab,
               the Apple / Google buttons subscribe each player's phone to a
               feed of your team's games. <em>Each device has to subscribe
               individually</em>; the link doesn't subscribe the whole team at
               once.
-            </li>
+            </li>)}
             <li>
               <strong>Rainouts &amp; reschedules</strong> — handled by the
               commissioner. Once they update a game, subscribed players see
@@ -436,6 +444,7 @@ export function HelpTab({ contactEmail }: Props) {
         </div>
       </details>
 
+{!noBoxScores && (
       <details>
         <summary>5. Building Your Lineup</summary>
         <div className="help-body">
@@ -462,9 +471,10 @@ export function HelpTab({ contactEmail }: Props) {
           </ul>
         </div>
       </details>
+      )}
 
       <details>
-        <summary>6. Score Discrepancies</summary>
+        <summary>{noBoxScores ? "5" : "6"}. Score Discrepancies</summary>
         <div className="help-body">
           <p>
             Both captains submit independently. Here's how conflicts are
@@ -492,7 +502,7 @@ export function HelpTab({ contactEmail }: Props) {
 
       {!isSfbl && (
       <details>
-        <summary>7. Player Attendance</summary>
+        <summary>{noBoxScores ? "6" : "7"}. Player Attendance</summary>
         <div className="help-body">
           <p>
             The <strong>Attendance</strong> tab has three views:
@@ -524,7 +534,7 @@ export function HelpTab({ contactEmail }: Props) {
       )}
 
       <details>
-        <summary>8. Tracking Payments</summary>
+        <summary>{noBoxScores ? "7" : "8"}. Tracking Payments</summary>
         <div className="help-body">
           <p>
             The <strong>Payments</strong> tab shows each player on your roster
@@ -555,7 +565,7 @@ export function HelpTab({ contactEmail }: Props) {
 
       {!isSfbl && (
       <details>
-        <summary>9. Push Notifications</summary>
+        <summary>{noBoxScores ? "8" : "9"}. Push Notifications</summary>
         <div className="help-body">
           <p>
             Push notifications ping you when something happens — no need to

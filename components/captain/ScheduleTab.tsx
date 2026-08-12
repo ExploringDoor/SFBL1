@@ -48,11 +48,18 @@ interface ScheduleTabProps {
   teamId: string;
 }
 
-/** Calendar subscription is off for COYBL: Google Calendar sync was never
- *  switched on for them, so the buttons promised something the league does
- *  not actually offer. */
+/** Calendar subscription is off for COYBL and Island.
+ *
+ *  COYBL: Google Calendar sync was never switched on for them, so the buttons
+ *  promised something the league does not actually offer.
+ *
+ *  Island: Adam asked for the subscribe/export controls to come off the site
+ *  entirely (2026-08-03). They were removed from the PUBLIC schedule then, but
+ *  the captain portal has its own copy and it was missed — so a coach still
+ *  saw "Subscribe to Calendar" on a league that does not run a calendar feed
+ *  (Adam, 2026-08-12). */
 function showCalendarSubscribe(leagueId: string) {
-  return leagueId !== "coybl";
+  return leagueId !== "coybl" && leagueId !== "island";
 }
 
 export function ScheduleTab({ leagueId, teamId }: ScheduleTabProps) {
