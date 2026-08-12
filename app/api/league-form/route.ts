@@ -686,6 +686,33 @@ export async function POST(req: Request) {
         )
         .catch(() => {});
     }
+  } else if (body.kind === "site_feedback") {
+    // AWAITED, not fire-and-forget. `void`ing this on Vercel is a coin flip:
+    // the response returns, the lambda is frozen, and a pending email is
+    // simply never sent. Next 14 has no after() and @vercel/functions is not
+    // installed, so there is no way to keep the function alive in the
+    // background — the only reliable option is to wait for it.
+    //
+    // Safe to wait here where it was not for registration: this is one small
+    // email on a two-field form, not the multi-send that once stranded a
+    // coach on "Submitting…" for 16 seconds. Capped anyway so a slow
+    // SendGrid cannot hang the submit, and the submission is already written,
+    // so a failed or slow email never loses the feedback.
+    try {
+      await Promise.race([
+        sendRegistrationEmails(
+          tenantId,
+          body.kind,
+          cleaned,
+          origin,
+          leagueName,
+          leagueAbbrev,
+        ),
+        new Promise((r) => setTimeout(r, 8000)),
+      ]);
+    } catch (err) {
+      console.error("[league-form] site_feedback notify threw:", err);
+    }
   } else {
     // Other tenants/kinds: best-effort confirmation email, fire-and-forget.
     void sendRegistrationEmails(
@@ -761,7 +788,9 @@ async function sendRegistrationEmails(
   origin: string,
   leagueName: string,
   leagueAbbrev: string,
-): Promise<void> {
+): Promise<
+  { notified: boolean; notifyTo: string; notifyError: string | null } | void
+> {
   // Site feedback goes to ADAM, not the league office (Adam, 2026-08-04).
   // Doug triages these in the admin panel and does not need an inbox for
   // them; Adam does, because "the standings page is broken" is his to fix.
@@ -774,7 +803,7 @@ async function sendRegistrationEmails(
     const f = (k: string) =>
       typeof data[k] === "string" ? (data[k] as string).trim() : "";
     const from = f("email");
-    await sendEmail({
+    const res = await sendEmail({
       to,
       subject: `${leagueAbbrev} site feedback: ${f("topic") || "suggestion"}`,
       html:
@@ -794,7 +823,17 @@ async function sendRegistrationEmails(
       // Reply lands on whoever wrote in, when they said who they are.
       replyTo: from || undefined,
     });
-    return;
+    // This path is fire-and-forget, so a failed send used to vanish with no
+    // trace anywhere: Adam expected an email per submission and had no way to
+    // tell a broken sender from a quiet week. Record the outcome on the
+    // submission so the admin panel can show it.
+    if (!res.ok) {
+      console.error(
+        `[league-form] site_feedback notify FAILED to=${to}:`,
+        res.skipped ? "email not configured" : res.error,
+      );
+    }
+    return { notified: res.ok, notifyTo: to, notifyError: res.ok ? null : (res.error ?? "not configured") };
   }
 
   // team_waiver used to fall out here. The waiver was written to Firestore and
