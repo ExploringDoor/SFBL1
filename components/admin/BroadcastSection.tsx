@@ -23,11 +23,22 @@ interface Counts {
   sms: number;
 }
 
+interface Recipient {
+  id: string;
+  name: string;
+  teamName: string;
+  email: string | null;
+  ageGroup: string | null;
+  source: "coaches" | "subscribers";
+  emailable: boolean;
+}
+
 interface Status {
   emailConfigured: boolean;
   smsConfigured: boolean;
   counts: Counts;
   sources?: { coaches: Counts; subscribers: Counts };
+  recipients?: Recipient[];
   ageGroups: string[];
 }
 
@@ -35,6 +46,13 @@ type Source = "all" | "coaches" | "subscribers";
 
 export function BroadcastSection({ leagueId, user }: Props) {
   const [status, setStatus] = useState<Status | null>(null);
+  // Ids the admin has unticked. "5 people will get it" with no way to see or
+  // change who is a blast nobody sends confidently (Adam, 2026-08-12).
+  const [excluded, setExcluded] = useState<Set<string>>(new Set());
+  const recipients = status?.recipients ?? [];
+  const emailableCount = recipients.filter(
+    (r) => r.emailable && !excluded.has(r.id),
+  ).length;
   const [source, setSource] = useState<Source>("all");
   const [ageGroup, setAgeGroup] = useState("");
   const [subject, setSubject] = useState("");
@@ -87,7 +105,7 @@ export function BroadcastSection({ leagueId, user }: Props) {
       !window.confirm(
         `Send this to ${
           [
-            sendEmail ? `${status?.counts.email ?? "?"} by email` : "",
+            sendEmail ? `${emailableCount} by email` : "",
             sendSms ? `${status?.counts.sms ?? "?"} by text` : "",
           ]
             .filter(Boolean)
@@ -116,6 +134,7 @@ export function BroadcastSection({ leagueId, user }: Props) {
           ageGroup: ageGroup || undefined,
           testEmail: test ? testEmail : undefined,
           testPhone: test ? testPhone : undefined,
+          excludeIds: [...excluded],
         }),
       });
       const data = (await res.json().catch(() => ({}))) as Record<string, any>;
@@ -250,6 +269,103 @@ export function BroadcastSection({ leagueId, user }: Props) {
           </div>
         )}
       </div>
+
+      {recipients.length > 0 && (
+        <div style={box}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "baseline",
+              justifyContent: "space-between",
+              gap: 12,
+              marginBottom: 10,
+            }}
+          >
+            <strong style={{ fontSize: 13 }}>
+              Who gets this ({emailableCount} of{" "}
+              {recipients.filter((r) => r.emailable).length})
+            </strong>
+            <span style={{ display: "flex", gap: 10 }}>
+              <button
+                type="button"
+                onClick={() => setExcluded(new Set())}
+                style={{ fontSize: 12, textDecoration: "underline" }}
+              >
+                Select all
+              </button>
+              <button
+                type="button"
+                onClick={() => setExcluded(new Set(recipients.map((r) => r.id)))}
+                style={{ fontSize: 12, textDecoration: "underline" }}
+              >
+                Clear all
+              </button>
+            </span>
+          </div>
+          <ul
+            style={{
+              listStyle: "none",
+              margin: 0,
+              padding: 0,
+              maxHeight: 260,
+              overflowY: "auto",
+              display: "grid",
+              gap: 2,
+            }}
+          >
+            {recipients.map((r) => {
+              const on = r.emailable && !excluded.has(r.id);
+              return (
+                <li key={r.id}>
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      padding: "7px 8px",
+                      borderRadius: 6,
+                      fontSize: 13,
+                      minHeight: 40,
+                      opacity: r.emailable ? 1 : 0.55,
+                      cursor: r.emailable ? "pointer" : "not-allowed",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={on}
+                      disabled={!r.emailable}
+                      onChange={() =>
+                        setExcluded((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(r.id)) next.delete(r.id);
+                          else next.add(r.id);
+                          return next;
+                        })
+                      }
+                    />
+                    <span style={{ fontWeight: 600 }}>{r.name}</span>
+                    {r.teamName && (
+                      <span style={{ color: "var(--muted)" }}>{r.teamName}</span>
+                    )}
+                    {r.ageGroup && (
+                      <span style={{ color: "var(--muted)" }}>{r.ageGroup}</span>
+                    )}
+                    <span
+                      style={{
+                        marginLeft: "auto",
+                        color: "var(--muted)",
+                        fontSize: 12,
+                      }}
+                    >
+                      {r.emailable ? r.email : "no email on file"}
+                    </span>
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
 
       {status && !status.emailConfigured && !status.smsConfigured && (
         <div

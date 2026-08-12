@@ -85,7 +85,17 @@ export default async function TeamsPage() {
   }
   const recordByTeam = new Map(standings.map((r) => [r.team_id, r]));
 
-  const teams: TeamCard[] = teamsSnap.docs.map((d) => {
+  // Deactivating a team in the admin writes active:false, and the confirm
+  // dialog promises the team "won't show up in roster lists" — but no public
+  // surface read that field, so a deactivated team stayed on this page.
+  // Adam hit it deactivating one (2026-08-12).
+  //
+  // Their GAMES are untouched, which is the other half of that promise: past
+  // results still render on Scores and Schedule, with the name still resolving
+  // from the team doc.
+  const teams: TeamCard[] = teamsSnap.docs
+    .filter((d) => d.data().active !== false)
+    .map((d) => {
     const data = d.data();
     const row = recordByTeam.get(d.id);
     return {

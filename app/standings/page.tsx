@@ -298,6 +298,10 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
   const records: Record<string, { w: number; l: number; t: number }> = {};
   for (const d of teamsSnap.docs) {
     const data = d.data();
+    // Deactivated teams drop out of the table. Their games are untouched and
+    // still render on Scores and Schedule — the admin's own confirm text draws
+    // that line: gone from roster lists, history intact.
+    if (data.active === false) continue;
     teams[d.id] = {
       name: String(data.name ?? d.id),
       abbrev: data.abbrev ? String(data.abbrev) : undefined,

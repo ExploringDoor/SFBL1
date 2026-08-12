@@ -29,6 +29,10 @@ export const maxDuration = 60;
 type Source = "coaches" | "subscribers" | "all";
 
 interface Contact {
+  /** Stable across reloads so the compose screen's ticks survive a refresh. */
+  id: string;
+  name: string;
+  teamName: string;
   email: string | null;
   phone: string | null;
   ageGroup: string | null;
@@ -60,6 +64,12 @@ async function loadContacts(
   for (const d of coaches?.docs ?? []) {
     const x = d.data();
     out.push({
+      id: `coach:${d.id}`,
+      name: [x.manager_first_name, x.manager_last_name]
+        .map((v) => (typeof v === "string" ? v.trim() : ""))
+        .filter(Boolean)
+        .join(" "),
+      teamName: typeof x.team_name === "string" ? x.team_name.trim() : "",
       email: typeof x.email === "string" ? x.email.trim() : null,
       phone: typeof x.phone === "string" ? x.phone.trim() : null,
       ageGroup: typeof x.age_group === "string" ? x.age_group : null,
@@ -78,6 +88,9 @@ async function loadContacts(
   for (const d of subs?.docs ?? []) {
     const x = d.data();
     out.push({
+      id: `sub:${d.id}`,
+      name: typeof x.name === "string" ? x.name.trim() : "",
+      teamName: "",
       email: typeof x.email === "string" ? x.email.trim() : null,
       phone: typeof x.phone === "string" ? x.phone.trim() : null,
       ageGroup: typeof x.age_group === "string" ? x.age_group : null,
@@ -102,10 +115,21 @@ function countsFor(contacts: Contact[]) {
   return { total: contacts.length, email: emails.length, sms: phones.length };
 }
 
-function audience(contacts: Contact[], ageGroup?: string | null) {
-  const inScope = ageGroup
-    ? contacts.filter((c) => c.ageGroup === ageGroup)
+function audience(
+  contacts: Contact[],
+  ageGroup?: string | null,
+  excludeIds?: Set<string>,
+) {
+  // "5 people will get it" with no way to see or change who is a blast nobody
+  // sends confidently. The compose screen lists them and unticks anyone it
+  // should not reach; those ids are dropped here, before any address is
+  // resolved (Adam, 2026-08-12).
+  const notExcluded = excludeIds?.size
+    ? contacts.filter((c) => !excludeIds.has(c.id))
     : contacts;
+  const inScope = ageGroup
+    ? notExcluded.filter((c) => c.ageGroup === ageGroup)
+    : notExcluded;
   // "both"/unset → email; "text"/"both" → sms.
   const emails = inScope
     .filter((c) => c.email && c.notifyBy !== "text")
@@ -170,11 +194,30 @@ export async function GET(req: Request) {
     smsConfigured: twilioConfigured(),
     counts: { total: selected.length, email: emails.length, sms: phones.length },
     // Per-source totals so the composer can label each audience option.
-    // Counts only — never ship the actual addresses to the browser.
     sources: {
       coaches: countsFor(bySource(all, "coaches")),
       subscribers: countsFor(bySource(all, "subscribers")),
     },
+    // WHO is about to be emailed. This used to be counts only, on the
+    // principle of never shipping addresses to the browser — but the person
+    // reading this screen is a league admin who can already see every coach's
+    // address in Form submissions, and "5 people will get it" with no way to
+    // check who is a blast nobody sends confidently (Adam, 2026-08-12).
+    //
+    // Reachability is stated per row so an unticked-looking list is not a
+    // mystery: a coach with no email cannot be emailed however the box looks.
+    recipients: (ageGroup
+      ? selected.filter((c) => c.ageGroup === ageGroup)
+      : selected
+    ).map((c) => ({
+      id: c.id,
+      name: c.name || c.teamName || c.email || "(no name)",
+      teamName: c.teamName,
+      email: c.email,
+      ageGroup: c.ageGroup,
+      source: c.source,
+      emailable: Boolean(c.email && c.notifyBy !== "text"),
+    })),
     ageGroups,
   });
 }
@@ -190,6 +233,8 @@ export async function POST(req: Request) {
     source?: unknown;
     testEmail?: unknown;
     testPhone?: unknown;
+    /** Recipient ids the admin unticked on the compose screen. */
+    excludeIds?: unknown;
   };
   try {
     body = await req.json();
@@ -239,7 +284,16 @@ export async function POST(req: Request) {
     if (testPhone) phones = [testPhone];
   } else {
     const contacts = bySource(await loadContacts(db, leagueId), source);
-    const aud = audience(contacts, ageGroup);
+    // Anyone the admin unticked on the compose screen is dropped before their
+    // address is ever resolved.
+    const excludeIds = new Set(
+      Array.isArray(body.excludeIds)
+        ? (body.excludeIds as unknown[]).filter(
+            (v): v is string => typeof v === "string",
+          )
+        : [],
+    );
+    const aud = audience(contacts, ageGroup, excludeIds);
     if (wantEmail) emails = aud.emails;
     if (wantSms) phones = aud.phones;
   }
