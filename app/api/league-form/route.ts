@@ -566,6 +566,10 @@ export async function POST(req: Request) {
   // The admin's "Create team from this registration" button stays as the
   // fallback: registrations taken before this, and any where provisioning
   // failed, still need a way through.
+  const cfgSelf = tenant?.config as { name?: string; abbrev?: string } | undefined;
+  const leagueName = cfgSelf?.name ?? "your league";
+  const leagueAbbrev = cfgSelf?.abbrev ?? cfgSelf?.name ?? "the league";
+
   if (
     AUTO_PROVISION_TEAMS.has(tenantId) &&
     body.kind === "team_registration"
@@ -593,7 +597,13 @@ export async function POST(req: Request) {
     // looked fine. The registration still succeeds regardless, but a failure
     // is now visible in the admin inbox instead of invisible everywhere.
     try {
-      await sendCoachCodeEmail(cleaned, origin, teamCode);
+      await sendCoachCodeEmail(
+        cleaned,
+        origin,
+        teamCode,
+        leagueName,
+        leagueAbbrev,
+      );
       await ref.set({ login_email_sent: true }, { merge: true });
     } catch (err) {
       const reason = err instanceof Error ? err.message : "unknown error";
@@ -618,7 +628,7 @@ export async function POST(req: Request) {
           `${cleaned.manager_first_name ?? ""} ${cleaned.manager_last_name ?? ""}`.trim();
         await sendEmail({
           to: notify,
-          subject: `New COYBL team registration: ${cleaned.team_name || who || "(no name)"}`,
+          subject: `New ${leagueAbbrev} team registration: ${cleaned.team_name || who || "(no name)"}`,
           html:
             `<p><strong>Team:</strong> ${esc(cleaned.team_name)}</p>` +
             `<p><strong>Age group:</strong> ${esc(cleaned.age_group)}</p>` +
@@ -656,31 +666,37 @@ export async function POST(req: Request) {
     }
   } else {
     // Other tenants/kinds: best-effort confirmation email, fire-and-forget.
-    const cfg = tenant?.config as
-      { name?: string; abbrev?: string } | undefined;
     void sendRegistrationEmails(
       tenantId,
       body.kind,
       cleaned,
       origin,
-      cfg?.name ?? "your league",
-      cfg?.abbrev ?? cfg?.name ?? "the league",
+      leagueName,
+      leagueAbbrev,
     ).catch(() => {});
   }
 
   return NextResponse.json({ ok: true, id: ref.id });
 }
 
-// Email a COYBL coach the code they type to get into their team page.
+// Email a coach the code they type to get into their team page.
 //
 // Replaces the old "set your password" flow (Adam, 2026-08-04). That created a
 // Firebase account and mailed a reset link, which meant a volunteer coach had
 // to click through, invent a password, and remember it. A coach and a manager
 // are the same person and they get exactly one credential: a 5-digit code.
+//
+// The league's name is passed in rather than written into the copy. This was
+// COYBL-only until Island was added to AUTO_PROVISION_TEAMS, and the first
+// Island coach to register got "Welcome to COYBL" from
+// noreply@islandfastpitch.com, signed off by the Central Ohio Youth Baseball
+// League. Adam caught it on his own test registration minutes after the switch.
 async function sendCoachCodeEmail(
   data: Record<string, unknown>,
   origin: string,
   teamCode: string | null,
+  leagueName: string,
+  leagueAbbrev: string,
 ): Promise<void> {
   const c = (k: string) =>
     typeof data[k] === "string" ? (data[k] as string).trim() : "";
@@ -713,15 +729,15 @@ async function sendCoachCodeEmail(
   for (const to of recipients) {
     await sendEmail({
       to,
-      subject: `Welcome to COYBL${team ? ` — ${team}` : ""}`,
+      subject: `Welcome to ${leagueAbbrev}${team ? ` — ${team}` : ""}`,
       html:
         `<p>Hi ${esc(who) || "Coach"},</p>` +
-        `<p>Thanks for registering${team ? ` <strong>${esc(team)}</strong>` : ""} with the ` +
-        `Central Ohio Youth Baseball League. We've got your registration.</p>` +
+        `<p>Thanks for registering${team ? ` <strong>${esc(team)}</strong>` : ""} with ` +
+        `${esc(leagueName)}. We've got your registration.</p>` +
         codeBlock +
         `<p>From there you can post your games, enter scores, log pitch counts, and upload your team logo.</p>` +
         `<p>A league director will confirm your division shortly. Questions? Just reply to this email.</p>` +
-        `<p>— COYBL</p>`,
+        `<p>— ${esc(leagueAbbrev)}</p>`,
       replyTo: notifyAddress() ?? undefined,
     });
   }
