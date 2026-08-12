@@ -441,6 +441,20 @@ export default async function RootLayout({
             <link rel="icon" type="image/png" sizes="192x192" href="/coybl/icon-192.png" />
             <link rel="icon" type="image/png" sizes="512x512" href="/coybl/icon-512.png" />
           </>
+        ) : leagueAbbrev === "IFP" ? (
+          /* Island was falling through to /icons/*, which is the SOUTH FLORIDA
+             BASEBALL logo — a different league's badge sitting in the browser
+             tab of Island's site, and on the home-screen tile of anyone who
+             saved it. Adam spotted it the morning of launch.
+             Built from the silver nav mark, not the navy master: the master is
+             navy-on-transparent and disappears entirely on a dark tile. */
+          <>
+            <link rel="icon" type="image/png" sizes="32x32" href="/island/favicon-32.png" />
+            <link rel="icon" type="image/png" sizes="16x16" href="/island/favicon-16.png" />
+            <link rel="apple-touch-icon" href="/island/apple-touch-icon.png" />
+            <link rel="icon" type="image/png" sizes="192x192" href="/island/icon-192.png" />
+            <link rel="icon" type="image/png" sizes="512x512" href="/island/icon-512.png" />
+          </>
         ) : leagueAbbrev === "LCYBL" ? (
           <>
             <link rel="icon" type="image/png" sizes="32x32" href="/lcybl/favicon-32.png" />
