@@ -820,6 +820,11 @@ html.tenant-island .cop-or,
    page. Only the white secondary buttons want dark text. */
 html.tenant-island .cop-btn:not(.cop-btn-primary),
 html.tenant-island .cop-prices,
+/* .cop-later is the "I'll pay later" line. It reads var(--muted), which this
+   tenant flips light for its dark pages — on the light payment card that is
+   near-white on near-white. Twelfth time this trap has fired; a new light
+   surface is not finished until it has a line here. */
+html.tenant-island .cop-later,
 html.tenant-island .sqc-wrap,
 html.tenant-island .sqc-amount,
 html.tenant-island .sqc-amount-total {

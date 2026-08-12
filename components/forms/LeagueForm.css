@@ -354,3 +354,27 @@
 @media (prefers-reduced-motion: reduce) {
   .le-form-flashy .le-form-cell { opacity: 1; transform: none; animation: none; }
 }
+
+/* "I'll pay later" — a quiet link under the payment options. Styled as text,
+   not a button, because it is a legitimate choice that should not compete with
+   Pay. */
+.cop-later {
+  margin: 18px 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted, #6b7280);
+}
+.cop-later button {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  /* Comfortable to hit on a phone without becoming a visual block. */
+  min-height: 44px;
+}
+.cop-later button:hover {
+  color: var(--text-strong, #111);
+}

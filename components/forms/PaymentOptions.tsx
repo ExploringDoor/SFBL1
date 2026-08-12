@@ -40,6 +40,13 @@ export function PaymentOptions({
 }) {
   const [paidReceipt, setPaidReceipt] = useState<string | null>(null);
   const [paid, setPaid] = useState(false);
+  // "I'll pay later". The registration is ALREADY saved by the time this block
+  // renders — payment is a separate step — so this is not a way out of
+  // anything, it is an honest exit for a coach who has to check with their
+  // club treasurer first. Without it the only options were pay now or close
+  // the tab, and closing the tab looks like failure to someone who just
+  // registered (Adam, 2026-08-12).
+  const [deferred, setDeferred] = useState(false);
   const [quote, setQuote] = useState<Quote | null>(null);
 
   const details = paymentDetailsFor(leagueId);
@@ -98,6 +105,40 @@ export function PaymentOptions({
   const noFeeMethods = [hasVenmo && "Venmo", hasCheck && "check"]
     .filter(Boolean)
     .join(" or ");
+
+  // Chose to pay later. Confirm the registration stuck and say exactly how to
+  // pay when they are ready, rather than leaving them to guess.
+  if (deferred) {
+    return (
+      <section className="cop-wrap">
+        <h3 className="cop-head">No problem — your spot is saved</h3>
+        <p className="cop-sub">
+          Your team is registered. Nothing else is needed right now.
+          {quote
+            ? ` Your team fee is ${money(quote.fee_dollars)}, due in full before the season begins.`
+            : " Your team fee is due in full before the season begins."}
+        </p>
+        {hasVenmo && (
+          <p className="cop-sub">
+            To pay by Venmo, send to{" "}
+            <strong>{details!.venmoHandle}</strong> and put your team name in
+            the note so the office can match it to your registration.
+          </p>
+        )}
+        <p className="cop-foot">
+          Prefer to pay by card? Just reply to your confirmation email and the
+          league office will send you a payment link.
+        </p>
+        <button
+          type="button"
+          className="cop-btn"
+          onClick={() => setDeferred(false)}
+        >
+          Actually, let me pay now
+        </button>
+      </section>
+    );
+  }
 
   return (
     <section className="cop-wrap">
@@ -180,6 +221,15 @@ export function PaymentOptions({
           </p>
         </>
       )}
+
+      {/* Deliberately last, quiet, and a link rather than a button: it is a
+          legitimate choice, not the one being encouraged. */}
+      <p className="cop-later">
+        Not ready to pay?{" "}
+        <button type="button" onClick={() => setDeferred(true)}>
+          I&rsquo;ll pay later
+        </button>
+      </p>
     </section>
   );
 }
