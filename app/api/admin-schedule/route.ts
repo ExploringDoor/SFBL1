@@ -23,6 +23,7 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { loadSeasonConfig } from "@/lib/season";
 import {
   fanoutPush,
   originFromRequest,
@@ -142,6 +143,13 @@ export async function POST(req: Request) {
     // can't compute the same max and silently overwrite each other
     // (audit M7).
     const doc = sanitizeGame(game, { isUpdate: false });
+    // Stamp the league's current season onto the new game so it belongs to
+    // the active season (e.g. games added after the Fall flip get Season 67).
+    // No-op for leagues that haven't set a current_season.
+    const seasonCfg = await loadSeasonConfig(db, leagueId);
+    if (seasonCfg.current) {
+      (doc as Record<string, unknown>).season = seasonCfg.current;
+    }
     let newId = "";
     let created = false;
     for (let attempt = 0; attempt < 6 && !created; attempt++) {

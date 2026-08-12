@@ -7,6 +7,11 @@ import { loadGamesAndTeamsSnaps } from "@/lib/league-cache";
 import { GameCard, type GameCardTeam } from "@/components/ui/GameCard";
 import { computeWeeks, pickActiveWeek } from "@/lib/season-weeks";
 import { computeStandings, type GameResult } from "@/lib/stats/shared";
+import {
+  loadSeasonConfig,
+  resolveActiveSeason,
+  inSeason,
+} from "@/lib/season";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { ScoresScheduleTabs, WeekRow } from "./tabs-and-weeks";
 import { DivisionFilter } from "@/components/ui/DivisionFilter";
@@ -40,7 +45,7 @@ interface ScoreGame {
 export default async function ScoresPage({
   searchParams,
 }: {
-  searchParams?: { week?: string; div?: string; team?: string };
+  searchParams?: { week?: string; div?: string; team?: string; season?: string };
 }) {
   const h = headers();
   const tenantId = h.get("x-tenant-id");
@@ -62,7 +67,9 @@ export default async function ScoresPage({
     );
   }
 
-  const { games, teams } = await loadScores(tenantId);
+  const seasonCfg = await loadSeasonConfig(getAdminDb(), tenantId);
+  const activeSeason = resolveActiveSeason(searchParams?.season, seasonCfg);
+  const { games, teams } = await loadScores(tenantId, activeSeason);
   const allFinal = games.filter(
     (g) => g.status === "final" || g.status === "approved",
   );
@@ -364,14 +371,19 @@ interface TeamMeta {
   division?: string | null;
 }
 
-async function loadScores(tenantId: string): Promise<{
+async function loadScores(
+  tenantId: string,
+  activeSeason: string | null,
+): Promise<{
   games: ScoreGame[];
   teams: Record<string, TeamMeta>;
 }> {
   const db = getAdminDb();
   const { gamesSnap, teamsSnap } = await loadGamesAndTeamsSnaps(db, tenantId);
 
-  const games: ScoreGame[] = gamesSnap.docs.map((d) => {
+  const games: ScoreGame[] = gamesSnap.docs
+    .filter((d) => inSeason(d.data().season, activeSeason))
+    .map((d) => {
     const data = d.data();
     // Combine date + time so preview cards show real start times
     // for not-yet-played games (same fix as /schedule, ticker,

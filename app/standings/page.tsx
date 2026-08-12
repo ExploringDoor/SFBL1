@@ -13,6 +13,11 @@ import {
   type StandingsRow,
 } from "@/lib/stats/shared";
 import { captainNoun, type PublicLeagueConfig } from "@/lib/tenants";
+import {
+  loadSeasonConfig,
+  resolveActiveSeason,
+  inSeason,
+} from "@/lib/season";
 import { formatGameDate } from "@/lib/format-time";
 import {
   StandingsTable,
@@ -28,7 +33,11 @@ export const metadata = {
   description: "Current league standings by division.",
 };
 
-export default async function StandingsPage() {
+export default async function StandingsPage({
+  searchParams,
+}: {
+  searchParams?: { season?: string };
+}) {
   const h = headers();
   const tenantId = h.get("x-tenant-id");
   const config = (() => {
@@ -58,7 +67,13 @@ export default async function StandingsPage() {
     throughDate,
     teamCount,
     hasFinalGames,
-  } = await loadStandings(tenantId, config);
+  } = await loadStandings(tenantId, config, searchParams?.season);
+
+  // Season switcher data. Renders nothing until a league has 2+ seasons
+  // configured (i.e. after the first season flip), so it's invisible while
+  // a league is still on a single season.
+  const seasonNav = await loadSeasonConfig(getAdminDb(), tenantId);
+  const activeSeason = resolveActiveSeason(searchParams?.season, seasonNav);
 
   const year = String(new Date().getFullYear());
 
@@ -105,6 +120,43 @@ export default async function StandingsPage() {
             : `${teamCount} team${teamCount === 1 ? "" : "s"} · season starts soon`}
         </p>
       </header>
+
+      {seasonNav.seasons.length >= 2 ? (
+        <nav
+          className="font-barlow"
+          aria-label="Season"
+          style={{
+            display: "flex",
+            gap: 8,
+            flexWrap: "wrap",
+            marginTop: -18,
+            marginBottom: 26,
+          }}
+        >
+          {seasonNav.seasons.map((s) => {
+            const on = s.id === activeSeason;
+            return (
+              <a
+                key={s.id}
+                href={`/standings?season=${encodeURIComponent(s.id)}`}
+                style={{
+                  fontSize: 13,
+                  fontWeight: 700,
+                  letterSpacing: "0.02em",
+                  padding: "6px 13px",
+                  borderRadius: 999,
+                  textDecoration: "none",
+                  border: "1px solid var(--border, rgba(0,0,0,0.12))",
+                  background: on ? "var(--brand-primary)" : "transparent",
+                  color: on ? "#fff" : "var(--text-strong)",
+                }}
+              >
+                {s.label}
+              </a>
+            );
+          })}
+        </nav>
+      ) : null}
 
       {hasFinalGames ? (
         <StandingsTable
@@ -194,9 +246,18 @@ function seasonLabel(year: string): string {
   return `${year} Season`;
 }
 
-async function loadStandings(tenantId: string, config: PublicLeagueConfig | null) {
+async function loadStandings(
+  tenantId: string,
+  config: PublicLeagueConfig | null,
+  requestedSeason?: string,
+) {
   const db = getAdminDb();
   const { gamesSnap, teamsSnap } = await loadGamesAndTeamsSnaps(db, tenantId);
+  const seasonCfg = await loadSeasonConfig(db, tenantId);
+  const activeSeason = resolveActiveSeason(requestedSeason, seasonCfg);
+  const seasonDocs = gamesSnap.docs.filter((d) =>
+    inSeason(d.data().season, activeSeason),
+  );
 
   const teams: Record<string, TeamMeta> = {};
   for (const d of teamsSnap.docs) {
@@ -213,7 +274,7 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
     };
   }
 
-  const games: GameResult[] = gamesSnap.docs.flatMap((d) => {
+  const games: GameResult[] = seasonDocs.flatMap((d) => {
     const data = d.data();
     // M7: a final game with missing scores must not be coerced to a 0-0
     // tie. Skip games whose scores aren't both present (matches

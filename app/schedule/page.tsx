@@ -8,6 +8,11 @@ import { PreviewCard, type PreviewCardTeam } from "@/components/ui/PreviewCard";
 import { GameCard, type GameCardTeam } from "@/components/ui/GameCard";
 import { computeWeeks, pickActiveWeek } from "@/lib/season-weeks";
 import { computeStandings, type GameResult } from "@/lib/stats/shared";
+import {
+  loadSeasonConfig,
+  resolveActiveSeason,
+  inSeason,
+} from "@/lib/season";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { ScoresScheduleTabs, WeekRow } from "../scores/tabs-and-weeks";
 import { SubscribeCalendar } from "@/components/SubscribeCalendar";
@@ -46,7 +51,7 @@ interface ScheduleGame {
 export default async function SchedulePage({
   searchParams,
 }: {
-  searchParams?: { week?: string; div?: string };
+  searchParams?: { week?: string; div?: string; season?: string };
 }) {
   const h = headers();
   const tenantId = h.get("x-tenant-id");
@@ -68,7 +73,9 @@ export default async function SchedulePage({
     );
   }
 
-  const { games, teams } = await loadSchedule(tenantId);
+  const seasonCfg = await loadSeasonConfig(getAdminDb(), tenantId);
+  const activeSeason = resolveActiveSeason(searchParams?.season, seasonCfg);
+  const { games, teams } = await loadSchedule(tenantId, activeSeason);
   // Show every game in the season — scheduled, final, postponed,
   // cancelled — so the schedule page is a real season-long calendar
   // instead of just "the 1 game still on the books." Cards render
@@ -306,14 +313,20 @@ interface TeamMeta {
   division?: string | null;
 }
 
-async function loadSchedule(tenantId: string): Promise<{
+async function loadSchedule(
+  tenantId: string,
+  activeSeason: string | null,
+): Promise<{
   games: ScheduleGame[];
   teams: Record<string, TeamMeta>;
 }> {
   const db = getAdminDb();
   const { gamesSnap, teamsSnap } = await loadGamesAndTeamsSnaps(db, tenantId);
+  const seasonDocs = gamesSnap.docs.filter((d) =>
+    inSeason(d.data().season, activeSeason),
+  );
 
-  const games: ScheduleGame[] = gamesSnap.docs.map((d) => {
+  const games: ScheduleGame[] = seasonDocs.map((d) => {
     const data = d.data();
     return {
       id: d.id,
@@ -331,7 +344,7 @@ async function loadSchedule(tenantId: string): Promise<{
   });
 
   // Records for the team-row subtitles on cards.
-  const standingsGames: GameResult[] = gamesSnap.docs.map((d) => {
+  const standingsGames: GameResult[] = seasonDocs.map((d) => {
     const data = d.data();
     return {
       home_team_id: String(data.home_team_id ?? ""),
