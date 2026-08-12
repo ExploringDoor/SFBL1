@@ -10,6 +10,8 @@
 // The amount a coach is charged is ALWAYS computed here from the saved
 // registration, never accepted from the browser.
 
+import { createHash } from "node:crypto";
+
 export const SQUARE_VERSION = "2025-01-23";
 
 /** 3.25% card processing fee, passed to the payer (per Doug). Card only —
@@ -180,4 +182,34 @@ export async function resolveLocationId(
     console.error("[square] locations lookup error", err);
     return null;
   }
+}
+
+/** Square's hard cap on `idempotency_key`. Exceed it and CreatePayment is
+ *  rejected outright with "Field must not be greater than 45 length" — the
+ *  payment never even reaches the card. */
+export const SQUARE_IDEMPOTENCY_MAX = 45;
+
+/**
+ * The idempotency key for one card attempt on one registration.
+ *
+ * Two jobs, and they pull against each other. It has to be STABLE so a
+ * double-click cannot charge a coach twice, and it has to CHANGE between card
+ * attempts so a declined card does not weld the registration to that decline
+ * forever (Square replays the stored result for a repeated key, so a second
+ * card would silently receive the first card's failure).
+ *
+ * Keying on the registration plus the single-use card nonce satisfies both.
+ * The readable form of that, `reg-${registrationId}-${sourceId.slice(-24)}`,
+ * ran to 49 characters against a 20-character Firestore id and broke every
+ * card payment on every tenant. A digest is the fix that cannot regress: it is
+ * the same length whatever the inputs are.
+ */
+export function idempotencyKey(
+  registrationId: string,
+  sourceId: string,
+): string {
+  return createHash("sha256")
+    .update(`${registrationId}:${sourceId}`)
+    .digest("hex")
+    .slice(0, SQUARE_IDEMPOTENCY_MAX);
 }

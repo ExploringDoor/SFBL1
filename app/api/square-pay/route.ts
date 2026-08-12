@@ -20,6 +20,7 @@ import {
   SQUARE_VERSION,
   chargeCents,
   feeFor,
+  idempotencyKey,
   resolveLocationId,
   squareApiBase,
 } from "@/lib/square";
@@ -117,7 +118,15 @@ export async function POST(req: Request) {
         // single-use and unique per card entry, so this is still stable across
         // a retry of the SAME submission (the double-click case) while a fresh
         // card attempt gets a fresh key.
-        idempotency_key: `reg-${registrationId}-${sourceId.slice(-24)}`,
+        //
+        // Hashed because Square caps idempotency_key at 45 characters and
+        // rejects the whole payment with "Field must not be greater than 45
+        // length" otherwise. The readable version of this
+        // (`reg-${registrationId}-${sourceId.slice(-24)}`) came to 49 with a
+        // 20-character Firestore id and broke every card payment on every
+        // tenant. A digest is a fixed 45 no matter how long the inputs get,
+        // which the string form could never promise.
+        idempotency_key: idempotencyKey(registrationId, sourceId),
         amount_money: { amount: amountCents, currency: "USD" },
         location_id: locationId,
         // Tenant id, not a hardcoded "COYBL 2027" — this string is what

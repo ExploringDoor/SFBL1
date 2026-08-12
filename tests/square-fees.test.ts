@@ -6,8 +6,10 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  SQUARE_IDEMPOTENCY_MAX,
   chargeCents,
   feeFor,
+  idempotencyKey,
   nyCompliantTotal,
   surchargeFor,
 } from "@/lib/square";
@@ -98,5 +100,46 @@ describe("New York compliance — the surcharge cannot exceed real cost", () => 
   it("beats a flat 3.25%, which would over-collect and be unlawful here", () => {
     const flat = Math.round(795 * 1.0325 * 100);
     expect(chargeCents("island", 795)).toBeLessThan(flat);
+  });
+});
+
+describe("idempotency key — Square rejects anything over 45 characters", () => {
+  // The regression this pins: `reg-${registrationId}-${sourceId.slice(-24)}`
+  // is 49 characters with a 20-char Firestore id. Square answered every card
+  // payment, on every tenant, with "Field must not be greater than 45 length".
+  // The card was never even attempted.
+  const FIRESTORE_ID = "aB3dE5gH7jK9mN1pQ3rS"; // 20 chars, the real shape
+  const NONCE =
+    "cnon:CA4SEHh1Q2xkZmFrZW5vbmNlZm9ydGVzdGluZ3B1cnBvc2VzT25seQ";
+
+  it("stays within the cap for a real Firestore id and nonce", () => {
+    const key = idempotencyKey(FIRESTORE_ID, NONCE);
+    expect(key.length).toBeLessThanOrEqual(SQUARE_IDEMPOTENCY_MAX);
+  });
+
+  it("stays within the cap no matter how long the inputs get", () => {
+    const key = idempotencyKey("x".repeat(500), "y".repeat(500));
+    expect(key.length).toBeLessThanOrEqual(SQUARE_IDEMPOTENCY_MAX);
+  });
+
+  it("is STABLE for the same card attempt, so a double-click cannot charge twice", () => {
+    expect(idempotencyKey(FIRESTORE_ID, NONCE)).toBe(
+      idempotencyKey(FIRESTORE_ID, NONCE),
+    );
+  });
+
+  it("CHANGES for a second card, so a decline does not lock the registration", () => {
+    // Square replays the stored result for a repeated key. Reusing it after a
+    // decline means the coach's second card silently receives the first
+    // card's failure, forever.
+    expect(idempotencyKey(FIRESTORE_ID, NONCE)).not.toBe(
+      idempotencyKey(FIRESTORE_ID, NONCE + "2"),
+    );
+  });
+
+  it("differs between two registrations paid with the same card", () => {
+    expect(idempotencyKey(FIRESTORE_ID, NONCE)).not.toBe(
+      idempotencyKey("zZ9yY8xX7wW6vV5uU4t", NONCE),
+    );
   });
 });
