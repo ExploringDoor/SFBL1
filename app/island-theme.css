@@ -649,6 +649,23 @@ html.tenant-island .bs-cap-scoreboard {
   color: #1a1a1a;
 }
 
+/* .le-form-success is in the restore list above, so its text is dark — but the
+ * list assumes each member PAINTS a light surface, and this one does not. Its
+ * base background is two TRANSLUCENT tints, 8% green over 6% navy
+ * (components/forms/LeagueForm.css:267), which over Island's dark page resolve
+ * to the dark page itself. The restored #1a1a1a then landed on near-black at
+ * 1.21:1 and "Your team is registered for Fall 2026" was invisible. Adam
+ * caught it in a live screenshot, 2026-08-11.
+ *
+ * Give it the same opaque #f5f5f5 card the payment block directly beneath it
+ * already uses, so the confirmation and the pay panel read as one surface, and
+ * keep a green edge so it still says success rather than just "a box". The
+ * heading's #047857 goes from 3.83:1 on the dark page to 5.1:1 here. */
+html.tenant-island .le-form-success {
+  background: #f5f5f5;
+  border-color: rgba(4, 120, 87, 0.4);
+}
+
 /* Those cards hardcode their own greys/darks rather than reading tokens, so
  * the block above cannot reach them. Restate against the light surface. */
 html.tenant-island .ssu-title,
