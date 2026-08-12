@@ -16,6 +16,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { User } from "firebase/auth";
 import { collection, getDocs } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
+import { feeFor } from "@/lib/fees";
 
 type Kind =
   | "player_registration"
@@ -779,10 +780,15 @@ function PaymentQuickRecord({
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  // What this team owes, mirroring the fee rules used at checkout.
-  const due =
-    (String(submission.insurance_option ?? "") === "option-2" ? 425 : 495) +
-    (String(submission.usssa_addon ?? "") === "yes" ? 50 : 0);
+  // What this team owes.
+  //
+  // This used to hardcode COYBL's insurance-option arithmetic with no tenant
+  // check, so recording a Venmo or cheque payment for an ISLAND team wrote
+  // $495 against a team that owes $795 — and then marked them paid in full,
+  // $300 short, with nothing to show anything was wrong. feeFor is the same
+  // function the card checkout uses, so the manual path and the card path can
+  // no longer disagree.
+  const due = feeFor(leagueId, submission as Record<string, unknown>);
 
   if (paidByCard) {
     return (
