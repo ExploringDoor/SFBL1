@@ -562,7 +562,11 @@ function content(tenantId: string) {
         "Submit this form and the league office will follow up about payment and rosters. Rosters must be on USSSA.",
       ],
       successMessage:
-        "Thanks! Your team is registered for Fall 2026. The league office will be in touch about fees and rosters.",
+        // Deliberately does NOT say "the office will be in touch about fees":
+        // the pay-now block renders directly beneath this, so promising a
+        // follow-up about money reads as a contradiction to the coach being
+        // asked to pay right there (Adam, 2026-08-12).
+        "Thanks! Your team is registered for Fall 2026. Your team fee can be paid below, or any time before the season begins.",
       footer: null,
     };
   }

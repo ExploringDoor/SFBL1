@@ -173,10 +173,16 @@ export function PaymentOptions({
               details?.cardFeeLabel
                 ? ""
                 : ", which is what the card processor charges us"
-            }${noFeeMethods ? `. ${noFeeMethods} have no fee` : ""}.`
+            }${
+              noFeeMethods
+                ? `. ${noFeeMethods} ${hasVenmo && hasCheck ? "have" : "has"} no fee`
+                : ""
+            }.`
           : details?.cardFeeLabel
             ? `Card payments add a ${details.cardFeeLabel} processing fee.${
-                noFeeMethods ? ` ${noFeeMethods} have no fee.` : ""
+                noFeeMethods
+                  ? ` ${noFeeMethods} ${hasVenmo && hasCheck ? "have" : "has"} no fee.`
+                  : ""
               }`
             : "Pay by card below."}
       </p>
