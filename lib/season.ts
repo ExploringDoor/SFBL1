@@ -30,7 +30,9 @@ export interface SeasonConfig {
 }
 
 const cache = new Map<string, { cfg: SeasonConfig; exp: number }>();
-const TTL_MS = 10 * 60_000;
+// Short TTL: season is a small single-doc read, and admins toggle the
+// active season / publish state and expect it to take effect promptly.
+const TTL_MS = 60_000;
 
 // Reads `current_season` + `seasons` off the league config doc, cached for
 // 10 min (so flipping the season is a one-field edit that takes effect

@@ -27,6 +27,7 @@ import { FormSubmissionsViewer } from "@/components/admin/FormSubmissionsViewer"
 import { TeamsManager } from "@/components/admin/TeamsManager";
 import { LeagueHealthDashboard } from "@/components/admin/LeagueHealthDashboard";
 import { ScheduleEditor } from "@/components/admin/ScheduleEditor";
+import { SeasonManager } from "@/components/admin/SeasonManager";
 import { PlayoffsManager } from "@/components/admin/PlayoffsManager";
 import { AlertsManager } from "@/components/admin/AlertsManager";
 import { SignupsReview } from "@/components/admin/SignupsReview";
@@ -46,6 +47,7 @@ type TabKey =
   | "health"
   | "scores"
   | "schedule"
+  | "seasons"
   | "playoffs"
   | "teams"
   | "signups"
@@ -69,6 +71,7 @@ const TABS: { key: TabKey; label: string; description: string }[] = [
   { key: "health", label: "Health", description: "League snapshot, pending submissions, rule violations." },
   { key: "scores", label: "Scores", description: "Quick batch score entry + resolve captain submission conflicts." },
   { key: "schedule", label: "Schedule", description: "Add games, reschedule, mark a date rained out, edit scores." },
+  { key: "seasons", label: "Seasons", description: "Switch the active season, reveal/hide seasons, and build the next season while the current one finishes." },
   { key: "playoffs", label: "Playoffs", description: "Build the playoff bracket — seed from standings, divisions, rounds, matchups, results. Toggle Active to publish it to /playoffs." },
   { key: "teams", label: "Teams", description: "Roster import, edit team metadata, manage divisions." },
   { key: "signups", label: "Signups", description: "Approve or reject players added by captains (walk-ons)." },
@@ -442,6 +445,7 @@ export default function AdminPage() {
         {activeTab === "schedule" && (
           <ScheduleEditor leagueId={tenantId} user={user} />
         )}
+        {activeTab === "seasons" && <SeasonManager leagueId={tenantId} />}
         {activeTab === "playoffs" && (
           <PlayoffsManager leagueId={tenantId} user={user} />
         )}
