@@ -35,6 +35,10 @@ interface Entry {
   receipt_url: string;
   /** When the office last emailed this team about the money. */
   reminder_sent_at: string;
+  /** The registration this payment came from. Needed to mint a Square
+   *  payment link for a team that skipped card at sign-up. Optional: teams
+   *  with no payment doc yet have no registration on file here. */
+  registration_id?: string;
 }
 
 const money = (n: number) =>
@@ -180,6 +184,7 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
         paid_at?: string;
         receipt_url?: string;
         reminder_sent_at?: string;
+        registration_id?: string;
       }[];
         player_payments?: {
           player_id: string;
@@ -193,6 +198,7 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
           amount_paid: p.amount_paid ? String(p.amount_paid) : "",
           amount_due: p.amount_due ? String(p.amount_due) : "",
           note: p.note ?? "",
+          registration_id: (p as { registration_id?: string }).registration_id ?? "",
           method: (p as { method?: string }).method ?? "",
           paid_at: (p as { paid_at?: string }).paid_at ?? "",
           receipt_url: p.receipt_url ?? "",
@@ -703,6 +709,14 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
                   <option value="other">Other</option>
                 </select>
                 <PaidBadge entry={tEntry} />
+                {/* A coach who picked Venmo or check at sign-up, then changed
+                    their mind, had no way back to card: the card form only
+                    ever appeared on the success screen right after
+                    registering. This mints the same Square payment link on
+                    demand so the office can send it. */}
+                {!Number(tEntry.amount_paid) && tEntry.registration_id && (
+                  <CardLinkButton registrationId={tEntry.registration_id} />
+                )}
                 {/* Card charges are fee-inclusive, so the raw figure looks
                     like an overpayment ("due 475, paid 490.44"). Spell out
                     where the extra went. */}
@@ -837,5 +851,68 @@ function Card({
         {value}
       </p>
     </div>
+  );
+}
+
+/** "Card link" — mints a Square payment link for a team that has not paid,
+ *  and copies it so the office can paste it into an email or a text.
+ *
+ *  Uses the SAME endpoint the registration form uses, so the amount (fee plus
+ *  the 3.25% surcharge) is computed server-side from the saved registration.
+ *  Nothing about the price is trusted from this screen. */
+function CardLinkButton({ registrationId }: { registrationId: string }) {
+  const [state, setState] = useState<"idle" | "working" | "done" | "error">("idle");
+  const [url, setUrl] = useState("");
+
+  async function make() {
+    setState("working");
+    try {
+      const res = await fetch("/api/square-checkout", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ registrationId }),
+      });
+      const j = (await res.json()) as { url?: string; error?: string };
+      if (!j.url) {
+        setState("error");
+        return;
+      }
+      setUrl(j.url);
+      try {
+        await navigator.clipboard.writeText(j.url);
+      } catch {
+        /* clipboard blocked — the link is still shown below */
+      }
+      setState("done");
+    } catch {
+      setState("error");
+    }
+  }
+
+  if (state === "done") {
+    return (
+      <span className="text-[11px]">
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-emerald-700 underline"
+        >
+          Card link copied
+        </a>
+      </span>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={make}
+      disabled={state === "working"}
+      className="rounded border border-slate-300 px-2 py-0.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+      title="Create a Square card-payment link for this team and copy it"
+    >
+      {state === "working" ? "…" : state === "error" ? "Try again" : "Card link"}
+    </button>
   );
 }

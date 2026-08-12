@@ -39,6 +39,7 @@ import { TeamChatTab } from "@/components/captain/TeamChatTab";
 import { CaptainsChatTab } from "@/components/captain/CaptainsChatTab";
 import { HelpTab } from "@/components/captain/HelpTab";
 import { MessageFamiliesTab } from "@/components/captain/MessageFamiliesTab";
+import { LeagueFeeCard } from "@/components/captain/LeagueFeeCard";
 import { PitchCountsTab } from "@/components/captain/PitchCountsTab";
 import { TeamLogoTab } from "@/components/captain/TeamLogoTab";
 import { QuickScoreInline } from "@/components/captain/QuickScoreInline";
@@ -760,6 +761,9 @@ function CaptainBody({
 
   return (
     <>
+      {/* Outstanding league fee, with pay-by-card. Renders nothing when the
+          team has paid, so a coach who is square never sees a prompt. */}
+      <LeagueFeeCard leagueId={leagueId} />
       <CaptainStatStrip
         record={stats.record}
         upcomingCount={upcoming.length}
