@@ -393,6 +393,38 @@ export async function POST(req: Request) {
     );
   }
 
+  // Island: the age group and the league have to be a pairing that exists.
+  //
+  // This is enforced here and not only in the dropdown because it decides a
+  // price. lib/square.ts charges $500 for 8U, which is really the fee for the
+  // "8U Weekend League" — the only league 8U plays. A registration posted as
+  // 8U + Weeknight is both a league that does not exist and, at $500, a $295
+  // hole. The client no longer offers that pairing; this closes the door to a
+  // direct POST as well.
+  //
+  // Unknown age groups pass. A new division Mike adds next season should not
+  // start rejecting real coaches because this list is stale.
+  if (tenantId === "island" && body.kind === "team_registration") {
+    const age = String(cleaned.age_group ?? "").trim();
+    const division = String(cleaned.division ?? "").trim();
+    const LEAGUES_BY_AGE: Record<string, string[]> = {
+      "8U": ["weekend"],
+      college: ["weeknight", "weekend"],
+    };
+    const allowed = LEAGUES_BY_AGE[age];
+    if (allowed && division && !allowed.includes(division)) {
+      return NextResponse.json(
+        {
+          error:
+            age === "8U"
+              ? "8U plays in the 8U Weekend League only. Please select Weekend."
+              : "Please choose a league offered for that age group.",
+        },
+        { status: 400 },
+      );
+    }
+  }
+
   // Honeypot defense — clients render a hidden "website" field; if a
   // bot fills it, drop the request silently with a 200 so we don't
   // give them a clear "you tripped the trap" signal.

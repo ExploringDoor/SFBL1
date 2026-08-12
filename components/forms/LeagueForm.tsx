@@ -11,6 +11,7 @@
 
 import { Fragment, useState } from "react";
 import { PaymentOptions } from "./PaymentOptions";
+import { optionsFor, prunedValue } from "@/lib/form-options";
 import "./LeagueForm.css";
 
 export type FieldType =
@@ -36,6 +37,16 @@ export interface FormField {
   placeholder?: string;
   /** For select/radio. */
   options?: { value: string; label: string }[];
+  /** Name of another field this one's options depend on. Island's "Which
+   *  league?" depends on "age_group": 8U plays a Weekend league and nothing
+   *  else, College plays weeknight or weekend. Two independent dropdowns let a
+   *  coach register for a league that does not exist, and at Island that
+   *  combination also mispriced the team ($500 is the 8U WEEKEND fee). */
+  dependsOn?: string;
+  /** Option list per value of `dependsOn`. A value with no entry here falls
+   *  back to `options`, so a parent value nobody thought about still renders a
+   *  usable dropdown rather than an empty one. */
+  optionsBy?: Record<string, { value: string; label: string }[]>;
   /** Two columns at desktop width, full width on mobile. */
   width?: "full" | "half";
 }
@@ -121,7 +132,19 @@ export function LeagueForm({
   const [submissionId, setSubmissionId] = useState<string | null>(null);
 
   function update(name: string, value: unknown) {
-    setData((d) => ({ ...d, [name]: value }));
+    setData((d) => {
+      const next = { ...d, [name]: value };
+      // Changing a parent can strand a child on a value it no longer offers:
+      // pick 10U then Weeknight, switch to 8U, and `division` silently stays
+      // "weeknight" — the exact invalid pairing the dependent options exist to
+      // prevent, now invisible because the dropdown no longer displays it.
+      // Clear any dependent whose current value has dropped out of range.
+      for (const f of fields) {
+        if (f.dependsOn !== name) continue;
+        next[f.name] = prunedValue(f, next);
+      }
+      return next;
+    });
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -238,7 +261,13 @@ export function LeagueForm({
 
         <div className="le-form-grid">
           {fields.map((f) => (
-            <Field key={f.name} field={f} value={data[f.name]} onChange={update} />
+            <Field
+              key={f.name}
+              field={f}
+              value={data[f.name]}
+              data={data}
+              onChange={update}
+            />
           ))}
         </div>
 
@@ -319,10 +348,14 @@ function FormHeader({
 function Field({
   field,
   value,
+  data,
   onChange,
 }: {
   field: FormField;
   value: unknown;
+  /** The whole form's current values, so a select with `dependsOn` can read
+   *  its parent. Every other field type ignores it. */
+  data: Record<string, unknown>;
   onChange: (name: string, v: unknown) => void;
 }) {
   const id = `lef-${field.name}`;
@@ -446,6 +479,11 @@ function Field({
   }
 
   if (field.type === "select") {
+    const opts = optionsFor(field, data);
+    // A dependent select before its parent is answered. Disabled rather than
+    // empty, so it reads as "not yet" instead of "broken".
+    const waiting =
+      Boolean(field.dependsOn) && !data[field.dependsOn as string];
     return (
       <div className={`le-form-cell ${widthClass}`}>
         <label htmlFor={id}>
@@ -457,9 +495,10 @@ function Field({
           value={typeof value === "string" ? value : ""}
           onChange={(e) => onChange(field.name, e.target.value)}
           required={field.required}
+          disabled={waiting}
         >
-          <option value="">— Select —</option>
-          {field.options?.map((o) => (
+          <option value="">{waiting ? "— Choose above first —" : "— Select —"}</option>
+          {opts.map((o) => (
             <option key={o.value} value={o.value}>
               {o.label}
             </option>

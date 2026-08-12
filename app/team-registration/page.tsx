@@ -300,6 +300,11 @@ const ISLAND_FIELDS: FormField[] = [
       { value: "12U", label: "12U — $795" },
       { value: "14U", label: "14U — $795" },
       { value: "16/18U", label: "16/18U — $795" },
+      // College was missing entirely, so a college team could not register at
+      // all — while the home banner says "18+" precisely because Island runs a
+      // College Division (Mike, via Adam 2026-08-10). The League page fee table
+      // lists "College Division $795".
+      { value: "college", label: "College — $795" },
     ],
   },
   {
@@ -308,9 +313,25 @@ const ISLAND_FIELDS: FormField[] = [
     type: "select",
     required: true,
     width: "half",
+    // Which leagues exist depends on the age, per Island's own League page:
+    //   Weeknight / Weekend / Sunday Night ... 10U, 12U, 14U, 16/18U
+    //   "8U Weekend League"      <- 8U plays this and nothing else
+    //   College Division         <- listed weeknight and weekend
+    // Left independent, the two dropdowns let a coach register for a league
+    // that does not exist (8U Weeknight), and lib/square.ts then charged them
+    // the $500 that is really the 8U WEEKEND price.
+    dependsOn: "age_group",
+    optionsBy: {
+      "8U": [{ value: "weekend", label: "8U Weekend League" }],
+      college: [
+        { value: "weeknight", label: "Weeknight" },
+        { value: "weekend", label: "Weekend (Saturdays and Sundays)" },
+      ],
+    },
+    // Every other age: all three. Also the fallback for any age value that has
+    // no explicit entry above, so a future age group is never stuck with an
+    // empty dropdown.
     options: [
-      // No prices here on purpose — see the note on age_group above. Every
-      // league is the same fee; the age is what changes it.
       { value: "weekend", label: "Weekend (Saturdays and Sundays)" },
       { value: "weeknight", label: "Weeknight" },
       { value: "sunday-night", label: "Sunday Night" },
