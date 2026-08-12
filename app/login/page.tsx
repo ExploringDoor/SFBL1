@@ -73,8 +73,14 @@ export default function LoginPage() {
     setResetMsg(null);
     setPwBusy(true);
     try {
-      await signInWithPassword(email, password);
-      router.push("/captain");
+      const user = await signInWithPassword(email, password);
+      // Route by role: a league admin lands on the admin dashboard, everyone
+      // else (coaches) on their captain page. Matches the magic-link finish
+      // flow, which also redirects by claim.
+      const token = await user.getIdTokenResult();
+      const leagues = (token.claims.leagues ?? {}) as Record<string, string>;
+      const isAdmin = Object.values(leagues).includes("admin");
+      router.push(isAdmin ? "/admin" : "/captain");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Sign-in failed.";
       // Firebase error codes → friendly copy.
