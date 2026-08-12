@@ -16,6 +16,7 @@ import { captainNoun, type PublicLeagueConfig } from "@/lib/tenants";
 import {
   loadSeasonConfig,
   resolveActiveSeason,
+  publicSeasons,
   inSeason,
 } from "@/lib/season";
 import { formatGameDate } from "@/lib/format-time";
@@ -74,6 +75,7 @@ export default async function StandingsPage({
   // a league is still on a single season.
   const seasonNav = await loadSeasonConfig(getAdminDb(), tenantId);
   const activeSeason = resolveActiveSeason(searchParams?.season, seasonNav);
+  const seasonTabs = publicSeasons(seasonNav);
 
   const year = String(new Date().getFullYear());
 
@@ -121,7 +123,7 @@ export default async function StandingsPage({
         </p>
       </header>
 
-      {seasonNav.seasons.length >= 2 ? (
+      {seasonTabs.length >= 2 ? (
         <nav
           className="font-barlow"
           aria-label="Season"
@@ -133,7 +135,7 @@ export default async function StandingsPage({
             marginBottom: 26,
           }}
         >
-          {seasonNav.seasons.map((s) => {
+          {seasonTabs.map((s) => {
             const on = s.id === activeSeason;
             return (
               <a

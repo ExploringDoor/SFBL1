@@ -19,6 +19,10 @@ import type { Firestore } from "firebase-admin/firestore";
 export interface SeasonOption {
   id: string;
   label: string;
+  // Draft seasons (published === false) can be built/assigned by admins and
+  // previewed via ?season=, but are hidden from the public season switcher.
+  // Absent = published (back-compat).
+  published?: boolean;
 }
 export interface SeasonConfig {
   current: string | null;
@@ -51,7 +55,14 @@ export async function loadSeasonConfig(
             (s: unknown): s is { id: unknown; label?: unknown } =>
               !!s && typeof s === "object" && typeof (s as { id?: unknown }).id === "string",
           )
-          .map((s) => ({ id: String(s.id), label: String(s.label ?? s.id) }))
+          .map((s) => {
+            const o = s as { id: unknown; label?: unknown; published?: unknown };
+            return {
+              id: String(o.id),
+              label: String(o.label ?? o.id),
+              published: o.published === false ? false : true,
+            };
+          })
       : [];
     cfg = { current, seasons };
   } catch {
@@ -70,6 +81,11 @@ export function resolveActiveSeason(
 ): string | null {
   if (requested && cfg.seasons.some((s) => s.id === requested)) return requested;
   return cfg.current;
+}
+
+// Seasons the public should see in the switcher — drafts excluded.
+export function publicSeasons(cfg: SeasonConfig): SeasonOption[] {
+  return cfg.seasons.filter((s) => s.published !== false);
 }
 
 // Fail-safe membership test (see file header). Pass a game's raw season

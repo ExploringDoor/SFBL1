@@ -143,12 +143,20 @@ export async function POST(req: Request) {
     // can't compute the same max and silently overwrite each other
     // (audit M7).
     const doc = sanitizeGame(game, { isUpdate: false });
-    // Stamp the league's current season onto the new game so it belongs to
-    // the active season (e.g. games added after the Fall flip get Season 67).
-    // No-op for leagues that haven't set a current_season.
+    // Season tag. The admin may target ANY configured season — including a
+    // future draft — so the next season can be built while the current one
+    // is still running (e.g. adding Fall/Season 67 games during Summer
+    // playoffs). Falls back to the league's current season, then no-op.
     const seasonCfg = await loadSeasonConfig(db, leagueId);
-    if (seasonCfg.current) {
-      (doc as Record<string, unknown>).season = seasonCfg.current;
+    const requestedSeason =
+      typeof (game as { season?: unknown }).season === "string"
+        ? (game as { season?: string }).season
+        : "";
+    const chosenSeason = seasonCfg.seasons.some((s) => s.id === requestedSeason)
+      ? requestedSeason
+      : seasonCfg.current;
+    if (chosenSeason) {
+      (doc as Record<string, unknown>).season = chosenSeason;
     }
     let newId = "";
     let created = false;
