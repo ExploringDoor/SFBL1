@@ -330,6 +330,13 @@ export default async function RootLayout({
         // home page, and the "Summer League standings (USSSA)" button on
         // Standings — so nothing is orphaned by dropping the nav entry.
         { label: "Rainout Alerts", href: "/alerts" },
+        // Past Seasons. Mike chose the archive option for the Fall rollover
+        // (via Adam, 2026-08-11): Scores, Schedule and Standings clear down to
+        // Fall, and Spring 2026 lives on here instead of disappearing. Fed by
+        // data/island/historical-standings.json + season-games-2026.json,
+        // which are static files, so this page keeps working after the live
+        // teams and games collections are cleared.
+        { label: "Past Seasons", href: "/history" },
         { label: "Sponsors", href: "/sponsors" },
         { label: "Umpire Evaluation", href: "/umpire-evaluation-form" },
         { label: "Coach Login", href: "/captain" },

@@ -1,0 +1,237 @@
+[
+  {
+    "season": "2026 Spring",
+    "game_type": "season",
+    "division": "10U Weekend",
+    "standings": [
+      {
+        "team": "Force 10U",
+        "w": 10,
+        "l": 0,
+        "t": 0,
+        "g": 10,
+        "pct": "1.000",
+        "p": 20
+      },
+      {
+        "team": "LI Crush 10U",
+        "w": 7,
+        "l": 3,
+        "t": 0,
+        "g": 10,
+        "pct": ".700",
+        "p": 14
+      },
+      {
+        "team": "LI Elite 10U",
+        "w": 7,
+        "l": 3,
+        "t": 0,
+        "g": 10,
+        "pct": ".700",
+        "p": 14
+      },
+      {
+        "team": "Brentwood Lady Warriors - B",
+        "w": 4,
+        "l": 6,
+        "t": 0,
+        "g": 10,
+        "pct": ".400",
+        "p": 8
+      },
+      {
+        "team": "Brentwood Lady Warriors - A",
+        "w": 2,
+        "l": 8,
+        "t": 0,
+        "g": 10,
+        "pct": ".200",
+        "p": 4
+      },
+      {
+        "team": "Hauppauge Eagles 10U",
+        "w": 0,
+        "l": 10,
+        "t": 0,
+        "g": 10,
+        "pct": ".000",
+        "p": 0
+      }
+    ]
+  },
+  {
+    "season": "2026 Spring",
+    "game_type": "season",
+    "division": "12U Weekend",
+    "standings": [
+      {
+        "team": "Phoenix Fire Steel 12U",
+        "w": 7,
+        "l": 2,
+        "t": 1,
+        "g": 10,
+        "pct": ".750",
+        "p": 15
+      },
+      {
+        "team": "LI Elite 12U",
+        "w": 5,
+        "l": 2,
+        "t": 3,
+        "g": 10,
+        "pct": ".650",
+        "p": 13
+      },
+      {
+        "team": "Phoenix Fire Silver 12U",
+        "w": 5,
+        "l": 3,
+        "t": 2,
+        "g": 10,
+        "pct": ".600",
+        "p": 12
+      },
+      {
+        "team": "Force 12U",
+        "w": 7,
+        "l": 5,
+        "t": 0,
+        "g": 12,
+        "pct": ".583",
+        "p": 14
+      },
+      {
+        "team": "Lady Cobras 12U",
+        "w": 4,
+        "l": 5,
+        "t": 1,
+        "g": 10,
+        "pct": ".450",
+        "p": 9
+      },
+      {
+        "team": "Phoenix Fire Gray 12U",
+        "w": 3,
+        "l": 5,
+        "t": 0,
+        "g": 8,
+        "pct": ".375",
+        "p": 6
+      },
+      {
+        "team": "Lady Diamond Pros 12U",
+        "w": 3,
+        "l": 7,
+        "t": 0,
+        "g": 10,
+        "pct": ".300",
+        "p": 6
+      },
+      {
+        "team": "Crush 12U",
+        "w": 2,
+        "l": 7,
+        "t": 1,
+        "g": 10,
+        "pct": ".250",
+        "p": 5
+      }
+    ]
+  },
+  {
+    "season": "2026 Spring",
+    "game_type": "season",
+    "division": "12U Weeknight",
+    "standings": [
+      {
+        "team": "Riverhead Waves 12U",
+        "w": 4,
+        "l": 1,
+        "t": 0,
+        "g": 5,
+        "pct": ".800",
+        "p": 8
+      },
+      {
+        "team": "Phoenix Fire Black 12U",
+        "w": 3,
+        "l": 2,
+        "t": 0,
+        "g": 5,
+        "pct": ".600",
+        "p": 6
+      },
+      {
+        "team": "Rage Goldberg 12U",
+        "w": 3,
+        "l": 2,
+        "t": 0,
+        "g": 5,
+        "pct": ".600",
+        "p": 6
+      },
+      {
+        "team": "Brentwood Lady Warriors 12U",
+        "w": 0,
+        "l": 5,
+        "t": 0,
+        "g": 5,
+        "pct": ".000",
+        "p": 0
+      }
+    ]
+  },
+  {
+    "season": "2026 Spring",
+    "game_type": "season",
+    "division": "14U Weekend",
+    "standings": [
+      {
+        "team": "Farmingdale GreenDogs 14U",
+        "w": 10,
+        "l": 0,
+        "t": 0,
+        "g": 10,
+        "pct": "1.000",
+        "p": 20
+      },
+      {
+        "team": "5 Star Lady Legends 14U",
+        "w": 4,
+        "l": 2,
+        "t": 0,
+        "g": 6,
+        "pct": ".667",
+        "p": 8
+      },
+      {
+        "team": "Riverhead Waves 14U",
+        "w": 5,
+        "l": 5,
+        "t": 0,
+        "g": 10,
+        "pct": ".500",
+        "p": 10
+      },
+      {
+        "team": "Lady Cobras 14U",
+        "w": 2,
+        "l": 8,
+        "t": 0,
+        "g": 10,
+        "pct": ".200",
+        "p": 4
+      },
+      {
+        "team": "Phoenix Fire Gray 14U",
+        "w": 1,
+        "l": 7,
+        "t": 0,
+        "g": 8,
+        "pct": ".125",
+        "p": 2
+      }
+    ]
+  }
+]
