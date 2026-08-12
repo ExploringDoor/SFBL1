@@ -47,6 +47,15 @@ async function runCheck(token: string, appId: string) {
   const base = squareApiBase();
   const pinnedLocation = process.env.SQUARE_LOCATION_ID ?? null;
 
+  // Shape of the token string, never the token. A secret pasted through a text
+  // message or an email gets clipped, or arrives carrying a newline, and the
+  // result is a 401 that looks exactly like a wrong-environment 401. Length and
+  // prefix separate the two in one look and give away nothing usable: Square
+  // access tokens are a known fixed shape, so this only confirms whether the
+  // value IS that shape.
+  const rawToken = process.env.SQUARE_ACCESS_TOKEN ?? "";
+  const trimmed = rawToken.trim();
+
   const result: Record<string, unknown> = {
     env,
     appIdEnvironment: appIdEnv(appId),
@@ -54,6 +63,17 @@ async function runCheck(token: string, appId: string) {
     // and Production credentials on near-identical tabs.
     appIdMatchesEnv: appIdEnv(appId) === env,
     locationIdPinnedByEnvVar: Boolean(pinnedLocation),
+    tokenLength: trimmed.length,
+    // Square production access tokens are 64 chars beginning EAAA. A shorter
+    // one is a clipped paste; that is a different fix from a wrong token.
+    tokenLengthLooksRight: trimmed.length === 64,
+    tokenPrefixLooksRight: trimmed.startsWith("EAAA"),
+    // .trim() above hides this from the request, so surface it: a stray newline
+    // or space is invisible in the Vercel UI and breaks the header silently.
+    tokenHadSurroundingWhitespace: rawToken !== trimmed,
+    // sq0csp- is the OAuth application SECRET, which is not an access token and
+    // is a genuinely easy thing to grab from the same page.
+    tokenLooksLikeAppSecret: trimmed.startsWith("sq0csp-"),
   };
 
   let res: Response;
@@ -61,7 +81,7 @@ async function runCheck(token: string, appId: string) {
     res = await fetch(`${base}/v2/locations`, {
       headers: {
         "Square-Version": SQUARE_VERSION,
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${token.trim()}`,
       },
       cache: "no-store",
     });
@@ -100,7 +120,7 @@ async function runCheck(token: string, appId: string) {
       const probe = await fetch(`${otherBase}/v2/locations`, {
         headers: {
           "Square-Version": SQUARE_VERSION,
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token.trim()}`,
         },
         cache: "no-store",
       });
