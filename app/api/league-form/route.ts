@@ -25,6 +25,7 @@ import { headers } from "next/headers";
 import { parseHost, resolveTenant } from "@/lib/tenants";
 import { provisionCoyblTeam } from "@/lib/provision-team";
 import { sendEmail, notifyAddress, esc } from "@/lib/email/send";
+import { coachCodeEmail, officeRegistrationEmail } from "@/lib/email/templates";
 
 export const runtime = "nodejs";
 
@@ -641,28 +642,18 @@ export async function POST(req: Request) {
           `${cleaned.manager_first_name ?? ""} ${cleaned.manager_last_name ?? ""}`.trim();
         await sendEmail({
           to: notify,
-          subject: `New ${leagueAbbrev} team registration: ${cleaned.team_name || who || "(no name)"}`,
-          html:
-            `<p><strong>Team:</strong> ${esc(cleaned.team_name)}</p>` +
-            `<p><strong>Age group:</strong> ${esc(cleaned.age_group)}</p>` +
-            `<p><strong>Coach:</strong> ${esc(who)}</p>` +
-            `<p><strong>Email:</strong> ${esc(cleaned.email)}</p>` +
-            `<p><strong>Phone:</strong> ${esc(cleaned.phone)}</p>` +
-            // "Option" is COYBL's insurance choice. Island never collects it,
-            // so the line rendered permanently blank, while the two things
-            // Mike actually needs — which league they picked, and the
-            // GameChanger link the site pulls schedules from — were missing.
-            (cleaned.insurance_option
-              ? `<p><strong>Option:</strong> ${esc(cleaned.insurance_option)}` +
-                `${cleaned.usssa_addon ? " (USSSA add-on)" : ""}</p>`
-              : "") +
-            (cleaned.division
-              ? `<p><strong>League:</strong> ${esc(cleaned.division)}</p>`
-              : "") +
-            (cleaned.gamechanger_link
-              ? `<p><strong>GameChanger:</strong> ${esc(cleaned.gamechanger_link)}</p>`
-              : "") +
-            `<p>View it in the admin Registrations tab.</p>`,
+          ...officeRegistrationEmail({
+            leagueAbbrev,
+            team: String(cleaned.team_name ?? ""),
+            who,
+            email: String(cleaned.email ?? ""),
+            phone: String(cleaned.phone ?? ""),
+            ageGroup: String(cleaned.age_group ?? ""),
+            division: String(cleaned.division ?? ""),
+            gamechangerLink: String(cleaned.gamechanger_link ?? ""),
+            insuranceOption: String(cleaned.insurance_option ?? ""),
+            usssaAddon: Boolean(cleaned.usssa_addon),
+          }),
         });
         await ref.set({ office_email_sent: true }, { merge: true });
       } else {
@@ -738,43 +729,20 @@ async function sendCoachCodeEmail(
   const recipients = [email];
   if (asst && asst.toLowerCase() !== email.toLowerCase()) recipients.push(asst);
 
-  // No code means provisioning failed upstream. Still confirm the
-  // registration, but do not promise a code we cannot supply.
-  const codeBlock = teamCode
-    ? `<p>Your team's sign-in code is:</p>` +
-      `<p style="font:700 34px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.18em;` +
-      `background:#f1f4f8;border:1px solid #d3dce7;border-radius:10px;padding:16px 22px;` +
-      `display:inline-block;color:#13284a;">${esc(teamCode)}</p>` +
-      `<p>Go to <a href="${esc(origin)}/captain">${esc(origin)}/captain</a>, pick ` +
-      `<strong>${esc(team) || "your team"}</strong> from the list, and type that code. ` +
-      `There is no account to create and no password to remember.</p>` +
-      `<p>Keep it to your coaching staff. Anyone with the code can enter scores for your team.</p>`
-    : `<p>Your team's sign-in code is being set up. The league office will send ` +
-      `it shortly. If you don't hear back in a day or two, just reply here.</p>`;
-
+  const built = coachCodeEmail({
+    who,
+    team,
+    teamCode,
+    origin,
+    leagueName,
+    leagueAbbrev,
+    tenantId,
+  });
   for (const to of recipients) {
     await sendEmail({
       to,
-      subject: `Welcome to ${leagueAbbrev}${team ? ` — ${team}` : ""}`,
-      html:
-        `<p>Hi ${esc(who) || "Coach"},</p>` +
-        `<p>Thanks for registering${team ? ` <strong>${esc(team)}</strong>` : ""} with ` +
-        `${esc(leagueName)}. We've got your registration.</p>` +
-        codeBlock +
-        // What this lists has to match the tabs app/captain/page.tsx actually
-        // renders for the tenant. "Log pitch counts" was promised to every
-        // league, but that tab is filtered to COYBL only and Island's config
-        // sets show_pitch_counts:false — so an Island coach was told to use a
-        // feature that is not on their screen. Adam caught it reading the
-        // email copy (2026-08-12). Pitch counts are a Little League baseball
-        // rule; this is girls fastpitch.
-        `<p>From there you can ${
-          tenantId === "coybl"
-            ? "post your games, enter scores, log pitch counts, and upload your team logo"
-            : "submit your scores, manage your roster and attendance, and upload your team logo"
-        }.</p>` +
-        `<p>A league director will confirm your division shortly. Questions? Just reply to this email.</p>` +
-        `<p>— ${esc(leagueAbbrev)}</p>`,
+      subject: built.subject,
+      html: built.html,
       replyTo: notifyAddress() ?? undefined,
     });
   }

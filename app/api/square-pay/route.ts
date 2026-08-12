@@ -16,7 +16,8 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { parseHost, resolveTenant } from "@/lib/tenants";
-import { sendEmail, notifyAddress, esc } from "@/lib/email/send";
+import { sendEmail, notifyAddress } from "@/lib/email/send";
+import { paymentReceiptEmail, officePaymentEmail } from "@/lib/email/templates";
 import {
   SQUARE_VERSION,
   chargeCents,
@@ -270,40 +271,25 @@ export async function POST(req: Request) {
   // work on a serverless function dies with the response. Wrapped, because the
   // card has ALREADY been charged and an email failure must never surface to
   // the coach as a failed payment.
-  const money = (cents: number) =>
-    (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
   try {
     const teamName = String(data.team_name ?? "your team");
-    const surcharge = amountCents - fee * 100;
-    const receiptLink = payment.receipt_url
-      ? `<p><a href="${esc(payment.receipt_url)}">View your Square receipt</a></p>`
-      : "";
     const payerEmail =
       typeof data.email === "string" && data.email.includes("@")
         ? data.email.trim()
         : "";
 
     if (payerEmail) {
+      const m = paymentReceiptEmail({
+        firstName: String(data.manager_first_name ?? ""),
+        team: teamName,
+        feeCents: fee * 100,
+        totalCents: amountCents,
+        receiptUrl: payment.receipt_url ?? null,
+      });
       await sendEmail({
         to: payerEmail,
-        subject: `Payment received — ${teamName}`,
-        html:
-          `<p>Hi ${esc(String(data.manager_first_name ?? "")) || "Coach"},</p>` +
-          `<p>Thanks — we have received your team fee for ` +
-          `<strong>${esc(teamName)}</strong>.</p>` +
-          `<table style="border-collapse:collapse;margin:14px 0">` +
-          `<tr><td style="padding:4px 18px 4px 0;color:#555">Team fee</td>` +
-          `<td style="padding:4px 0;text-align:right"><strong>${money(fee * 100)}</strong></td></tr>` +
-          (surcharge > 0
-            ? `<tr><td style="padding:4px 18px 4px 0;color:#555">Card processing fee</td>` +
-              `<td style="padding:4px 0;text-align:right">${money(surcharge)}</td></tr>`
-            : "") +
-          `<tr><td style="padding:8px 18px 4px 0;border-top:1px solid #ddd"><strong>Paid</strong></td>` +
-          `<td style="padding:8px 0 4px;text-align:right;border-top:1px solid #ddd">` +
-          `<strong>${money(amountCents)}</strong></td></tr>` +
-          `</table>` +
-          receiptLink +
-          `<p>Keep this for your records. Questions? Just reply to this email.</p>`,
+        subject: m.subject,
+        html: m.html,
         replyTo: notifyAddress() ?? undefined,
       });
       await ref.set({ receipt_email_sent: true }, { merge: true });
@@ -311,19 +297,19 @@ export async function POST(req: Request) {
 
     const notify = notifyAddress();
     if (notify) {
+      const m = officePaymentEmail({
+        team: teamName,
+        firstName: String(data.manager_first_name ?? ""),
+        lastName: String(data.manager_last_name ?? ""),
+        payerEmail,
+        feeCents: fee * 100,
+        totalCents: amountCents,
+        receiptUrl: payment.receipt_url ?? null,
+      });
       await sendEmail({
         to: notify,
-        subject: `Payment received: ${teamName} — ${money(amountCents)}`,
-        html:
-          `<p><strong>${esc(teamName)}</strong> has paid by card.</p>` +
-          `<p>Amount: <strong>${money(amountCents)}</strong> ` +
-          `(fee ${money(fee * 100)}${surcharge > 0 ? `, card ${money(surcharge)}` : ""})</p>` +
-          `<p>Coach: ${esc(String(data.manager_first_name ?? ""))} ` +
-          `${esc(String(data.manager_last_name ?? ""))}` +
-          (payerEmail ? ` &lt;${esc(payerEmail)}&gt;` : "") +
-          `</p>` +
-          receiptLink +
-          `<p>It is on the admin Payments tab.</p>`,
+        subject: m.subject,
+        html: m.html,
         replyTo: payerEmail || undefined,
       });
     }
