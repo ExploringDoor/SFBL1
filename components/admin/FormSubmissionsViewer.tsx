@@ -568,6 +568,9 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
                                 ),
                               )
                             }
+                            onCreated={(teamId) =>
+                              patchItem(it.id, { assigned_team_id: teamId })
+                            }
                           />
                         )}
                         {kind === "player_registration" && (
@@ -624,12 +627,14 @@ function TeamDivisionControl({
   submission,
   teams,
   onSaved,
+  onCreated,
 }: {
   leagueId: string;
   user: User;
   submission: Submission;
   teams: { id: string; name: string; division: string; ageGroup: string }[];
   onSaved: (division: string) => void;
+  onCreated: (teamId: string) => void;
 }) {
   const teamId = String(submission.assigned_team_id ?? "");
   const team = teams.find((t) => t.id === teamId);
@@ -641,12 +646,17 @@ function TeamDivisionControl({
   const [msg, setMsg] = useState<string | null>(null);
 
   if (!teamId) {
-    return (
-      <div className="mt-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-        No team was created for this registration, so there is nothing to
-        assign yet. Create it on the Teams tab.
-      </div>
-    );
+    // Used to be a dead end reading "Create it on the Teams tab". A team typed
+    // in by hand there is not connected to this registration, so the coach
+    // never gets a sign-in code, their contact never reaches the Captains
+    // view, and a card payment taken at signup stays filed under the
+    // registration while the new team reads as owing its full fee.
+    return <CreateTeamFromRegistration
+      leagueId={leagueId}
+      user={user}
+      submission={submission}
+      onCreated={onCreated}
+    />;
   }
 
   // Divisions already in use at this age group, so 10U does not offer 14U's.
@@ -1606,4 +1616,109 @@ function fmtTime(iso: string): string {
     month: "short",
     day: "numeric",
   });
+}
+
+
+// Create the team a registration is asking for, in one action.
+//
+// Island assigns teams by hand, so nothing creates them automatically the way
+// COYBL's registration handler does. This calls the same provisioning code
+// COYBL uses, so the team arrives complete: sign-in code minted, coach's login
+// bound, contact details filed where the Captains view reads them, ledger
+// seeded with what they owe, and any payment already taken moved off the
+// registration and onto the team.
+function CreateTeamFromRegistration({
+  leagueId,
+  user,
+  submission,
+  onCreated,
+}: {
+  leagueId: string;
+  user: User;
+  submission: Submission;
+  onCreated: (teamId: string) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [code, setCode] = useState<string | null>(null);
+
+  const teamName = String(submission.team_name ?? "").trim();
+  const ageGroup = String(submission.age_group ?? "").trim();
+  const division = String(submission.division ?? "").trim();
+  const paid =
+    (submission.payment as { status?: string } | undefined)?.status === "paid";
+
+  async function create() {
+    setBusy(true);
+    setMsg(null);
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch("/api/admin-provision-team", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ leagueId, submissionId: submission.id }),
+      });
+      const j = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        teamId?: string;
+        teamCode?: string | null;
+      };
+      if (!res.ok || !j.teamId) throw new Error(j.error ?? `HTTP ${res.status}`);
+      setCode(j.teamCode ?? null);
+      setMsg(`Created "${teamName}". It is on the Teams page now.`);
+      onCreated(j.teamId);
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Could not create the team");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!teamName || !ageGroup) {
+    return (
+      <div className="mt-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+        This registration has no {!teamName ? "team name" : "age group"}, so a
+        team cannot be created from it.
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-3 rounded-md border border-slate-300 bg-slate-50 px-3 py-3">
+      <p className="text-xs text-slate-700">
+        No team on the site yet for this registration.
+        {paid && (
+          <strong className="text-emerald-700">
+            {" "}
+            They have already paid, so creating the team also files their
+            payment against it.
+          </strong>
+        )}
+      </p>
+      <p className="mt-1 text-xs text-slate-600">
+        Will create <strong>{teamName}</strong>
+        {ageGroup ? ` · ${ageGroup}` : ""}
+        {division ? ` · ${division}` : ""}, mint their coach sign-in code and
+        connect the coach&rsquo;s login.
+      </p>
+      <button
+        type="button"
+        onClick={create}
+        disabled={busy}
+        className="mt-2 rounded-md bg-slate-900 px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+      >
+        {busy ? "Creating…" : "Create team from this registration"}
+      </button>
+      {msg && <p className="mt-2 text-xs font-semibold text-slate-800">{msg}</p>}
+      {code && (
+        <p className="mt-1 text-xs text-slate-700">
+          Coach sign-in code: <code className="font-bold">{code}</code> — send
+          this to {String(submission.email ?? "the coach")}.
+        </p>
+      )}
+    </div>
+  );
 }

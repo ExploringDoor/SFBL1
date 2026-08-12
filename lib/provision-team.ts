@@ -1,4 +1,11 @@
-// Turn a COYBL team registration into a real team the coach can use.
+// Turn a team registration into a real team the coach can use.
+//
+// Written for COYBL, which calls it automatically from the registration
+// handler, but nothing below is COYBL-specific any more: the fee comes from
+// lib/square.ts (the same function that decides what a card is charged) and
+// the division is taken from the registration when the league collects one.
+// Island calls it from the admin panel instead, because Mike assigns teams by
+// hand rather than auto-provisioning every signup.
 //
 // Doug's 2027 model (2026-08-02):
 //   - coaches register fresh; a returning coach is NOT reconnected to last
@@ -17,6 +24,7 @@
 
 import type { auth as AdminAuth } from "firebase-admin";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { feeFor } from "@/lib/square";
 import { initialsFromName } from "@/lib/team-initials";
 import { generateTeamCode } from "@/lib/team-code";
 
@@ -36,13 +44,7 @@ function ageOrderOf(ageGroup: string): number {
   return m ? Number(m[1]) : 999;
 }
 
-/** The registration fee this team owes, in dollars. Mirrors lib/square.ts. */
-function feeFor(data: Record<string, unknown>): number {
-  const base = String(data.insurance_option ?? "") === "option-2" ? 425 : 495;
-  return base + (String(data.usssa_addon ?? "") === "yes" ? 50 : 0);
-}
-
-export async function provisionCoyblTeam(
+export async function provisionTeamFromRegistration(
   leagueId: string,
   submissionId: string,
   data: Record<string, unknown>,
@@ -78,9 +80,12 @@ export async function provisionCoyblTeam(
       name: teamName,
       abbrev: initialsFromName(teamName),
       ageGroup,
-      // Doug assigns this in the admin panel after registration closes.
-      // Blank, not "TBD", so it sorts and filters as genuinely unset.
-      division: "",
+      // COYBL collects no division at signup — Doug assigns it in the admin
+      // panel after registration closes, and blank (not "TBD") keeps it
+      // sorting and filtering as genuinely unset. Island DOES ask which
+      // league, so use it rather than throwing the coach's answer away and
+      // making the office re-enter it.
+      division: str("division"),
       ageOrder: ageOrderOf(ageGroup),
       divOrder: 999,
       logo_url: null,
@@ -211,7 +216,7 @@ export async function provisionCoyblTeam(
     await db.doc(`leagues/${leagueId}/team_payments/${teamId}`).set(
       {
         team_name: teamName,
-        amount_due: feeFor(data),
+        amount_due: feeFor(leagueId, data),
         registration_id: submissionId,
       },
       { merge: true },
@@ -298,3 +303,6 @@ export async function provisionCoyblTeam(
 
   return { teamId, created, boundCoach, teamCode };
 }
+
+/** Old name, kept so the COYBL registration path reads as it always did. */
+export const provisionCoyblTeam = provisionTeamFromRegistration;
