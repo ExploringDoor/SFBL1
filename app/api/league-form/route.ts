@@ -95,6 +95,10 @@ const ALLOWED_FIELDS: Record<Kind, string[]> = {
     // COYBL asks for the team's HOME FIELD rather than an unlabelled address
     // (2026-08-02). These must be listed here or they are dropped before the
     // submission is written, and the field never reaches the Fields list.
+    // Island's yes/no home-field claim (the $200 discount the office confirms).
+    // Anything not on this list is dropped before the submission is written,
+    // so a field the form collects but this omits vanishes silently.
+    "home_field",
     "home_field_name",
     "home_field_street",
     "home_field_city",
@@ -653,6 +657,8 @@ export async function POST(req: Request) {
             gamechangerLink: String(cleaned.gamechanger_link ?? ""),
             insuranceOption: String(cleaned.insurance_option ?? ""),
             usssaAddon: Boolean(cleaned.usssa_addon),
+            homeField: String(cleaned.home_field ?? ""),
+            homeFieldName: String(cleaned.home_field_name ?? ""),
           }),
         });
         await ref.set({ office_email_sent: true }, { merge: true });

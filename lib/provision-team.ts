@@ -88,7 +88,20 @@ export async function provisionTeamFromRegistration(
       division: str("division"),
       ageOrder: ageOrderOf(ageGroup),
       divOrder: 999,
-      logo_url: null,
+      // The logo the coach uploaded during registration.
+      //
+      // This was hardcoded null, so a coach followed the form's promise —
+      // "upload a PNG and it appears next to your team on the scores, schedule
+      // and standings pages" — and their logo went into the submission and
+      // nowhere else. Same storage shape the captain portal's Team Logo tab
+      // uses: a client-resized PNG data URL on logo_url, no Storage bucket.
+      // Capped at the same 400KB /api/captain-team-logo enforces, since the
+      // teams collection is read whole on every public page.
+      logo_url:
+        str("team_logo").startsWith("data:image/") &&
+        str("team_logo").length <= 400_000
+          ? str("team_logo")
+          : null,
       organization: str("organization") || null,
       registration_id: submissionId,
       registered_email: email || null,

@@ -383,6 +383,42 @@ const ISLAND_FIELDS: FormField[] = [
   { name: "asst_first_name", label: "Assistant Coach First Name", type: "text", width: "half" },
   { name: "asst_last_name", label: "Assistant Coach Last Name", type: "text", width: "half" },
   { name: "asst_phone", label: "Assistant Coach Phone", type: "tel", width: "half" },
+  // The assistant's email was never collected, yet lib/provision-team.ts reads
+  // asst_email to add them to managers[] and the welcome email is addressed to
+  // both coaches. So naming an assistant recorded a person who could not be
+  // reached and never got the team's sign-in code (Adam, 2026-08-12).
+  {
+    name: "asst_email",
+    label: "Assistant Coach Email",
+    type: "email",
+    width: "half",
+    help: "Optional. If you add it, your assistant gets the team sign-in code too.",
+  },
+  // The $200 home-field discount is advertised on the League page and in this
+  // form's own intro, but nothing asked about it — so no coach could claim it
+  // and Mike had no way to know who qualified.
+  //
+  // Deliberately does NOT change the price. A discount a coach grants
+  // themselves at checkout is one that gets granted by teams who do not
+  // qualify; this records the claim and Mike applies it.
+  {
+    name: "home_field",
+    label: "Do you have a home field?",
+    type: "select",
+    width: "half",
+    options: [
+      { value: "no", label: "No" },
+      { value: "yes", label: "Yes — we can host at least half our games" },
+    ],
+    help: "Teams hosting at least half their games may qualify for a $200 discount. The league office confirms this.",
+  },
+  {
+    name: "home_field_name",
+    label: "Home Field Name and Town",
+    type: "text",
+    width: "half",
+    placeholder: "e.g. Smithtown Bull Run Field 3",
+  },
   { name: "notes", label: "Anything else we should know?", type: "textarea", width: "full" },
   {
     name: "agreed_to_terms",

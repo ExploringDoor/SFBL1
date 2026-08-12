@@ -81,6 +81,8 @@ export function officeRegistrationEmail(o: {
   gamechangerLink?: string;
   insuranceOption?: string;
   usssaAddon?: boolean;
+  homeField?: string;
+  homeFieldName?: string;
 }): Built {
   return {
     subject: `New ${o.leagueAbbrev} team registration: ${o.team || o.who || "(no name)"}`,
@@ -101,6 +103,13 @@ export function officeRegistrationEmail(o: {
       (o.division ? `<p><strong>League:</strong> ${esc(o.division)}</p>` : "") +
       (o.gamechangerLink
         ? `<p><strong>GameChanger:</strong> ${esc(o.gamechangerLink)}</p>`
+        : "") +
+      // The home-field claim is the whole reason the form asks. It does not
+      // change the price — the office confirms it and applies the discount.
+      (o.homeField === "yes"
+        ? `<p><strong>Home field:</strong> YES — ${
+            esc(o.homeFieldName) || "field not named"
+          } (may qualify for the $200 discount)</p>`
         : "") +
       `<p>View it in the admin Registrations tab.</p>`,
   };
