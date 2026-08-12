@@ -308,6 +308,12 @@ async function recentByMailbox(
 
 const MAILBOX_WINDOW_MS = 24 * 60 * 60 * 1000;
 const MAILBOX_LIMIT = 3;
+// Team registrations get their own, far higher ceiling. A club director
+// entering four age groups from one address is ordinary, not abuse, and the
+// old shared cap of 3 silently threw the fourth team away. Spam is caught by
+// the honeypot, the submit-timing check and the per-IP budget; this cap exists
+// only to stop a runaway loop.
+const MAILBOX_LIMIT_REGISTRATION = 15;
 
 // In-memory rate limiter — fine for single-instance Vercel/Next dev.
 // On production with multiple regions, swap to Redis or Edge Config.
@@ -456,23 +462,43 @@ export async function POST(req: Request) {
 
   const db = getAdminDb();
 
-  // Same-mailbox flood check. Silent 200 like the honeypot: telling a bot it
-  // was blocked just teaches it what to change.
+  // Same-mailbox flood check.
+  //
+  // This one hits real people, unlike the honeypot and the timing check, so it
+  // gets different treatment on both counts.
+  //
+  // COUNTING. A cap of 3 across four form kinds is wrong for team
+  // registration: one club director enters 10U, 12U, 14U and 16/18U from a
+  // single address, and the fourth team vanished. Registrations are counted
+  // against registrations only, at a ceiling a real director will not reach.
+  //
+  // TELLING THE TRUTH. It used to return a bare `{ ok: true }`, so the browser
+  // showed a green "Submission received" over a submission that was never
+  // saved. Adam hit exactly that testing Island: the success screen appeared,
+  // then the payment block had no amount and no Pay button, because there was
+  // no registration to quote. A silent 200 is right for a bot, which learns
+  // from being told. It is indefensible for a coach, who then believes their
+  // team is entered. Honeypot and timing checks keep the silent 200; this one
+  // says what happened and who to contact.
   const mailbox = normalizeEmail((cleaned as Record<string, unknown>).email);
   if (mailbox) {
+    const isRegistration = body.kind === "team_registration";
+    const kinds: Kind[] = isRegistration
+      ? ["team_registration"]
+      : ["team_registration", "player_registration", "site_feedback", "player_ad"];
+    const limit = isRegistration ? MAILBOX_LIMIT_REGISTRATION : MAILBOX_LIMIT;
     const since = new Date(Date.now() - MAILBOX_WINDOW_MS).toISOString();
-    const seen = await recentByMailbox(
-      db,
-      tenantId,
-      ["team_registration", "player_registration", "site_feedback", "player_ad"],
-      mailbox,
-      since,
-    );
-    if (seen >= MAILBOX_LIMIT) {
+    const seen = await recentByMailbox(db, tenantId, kinds, mailbox, since);
+    if (seen >= limit) {
       console.warn(
-        `[league-form] mailbox flood: ${mailbox} already has ${seen} in 24h — dropping`,
+        `[league-form] mailbox flood: ${mailbox} already has ${seen} ${kinds.join("/")} in 24h — dropping`,
       );
-      return NextResponse.json({ ok: true });
+      return NextResponse.json(
+        {
+          error: `We already have ${seen} submissions from this email address in the last 24 hours, so this one was not saved. If that is not what you expected, please contact the league office and we will enter it for you.`,
+        },
+        { status: 429 },
+      );
     }
   }
 
