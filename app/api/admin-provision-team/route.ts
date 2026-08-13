@@ -23,6 +23,8 @@
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { provisionTeamFromRegistration } from "@/lib/provision-team";
+import { sendEmail, notifyAddress } from "@/lib/email/send";
+import { coachCodeEmail } from "@/lib/email/templates";
 
 export const runtime = "nodejs";
 
@@ -43,7 +45,14 @@ export async function POST(req: Request) {
     );
   }
 
-  let body: { leagueId?: unknown; submissionId?: unknown };
+  let body: {
+    leagueId?: unknown;
+    submissionId?: unknown;
+    /** Also email the coach their sign-in code. Off by default: creating a
+     *  team and writing to a real coach are separate decisions, and the
+     *  office should be able to do the first without doing the second. */
+    sendCode?: unknown;
+  };
   try {
     body = await req.json();
   } catch {
@@ -149,6 +158,60 @@ export async function POST(req: Request) {
     });
   }
 
+  // Email the coach their code, when asked.
+  //
+  // Deliberately opt-in. Two coaches registered before the site provisioned
+  // teams automatically and were backfilled days later; putting their team on
+  // the site was safe to do unattended, writing to them was not.
+  //
+  // The code comes from _private/auth rather than the provision result, which
+  // is null on a re-run: a code the coach already has must never be rotated
+  // out from under them.
+  let codeEmailed: string | null = null;
+  if (body.sendCode === true) {
+    try {
+      const authDoc = await db
+        .doc(`leagues/${leagueId}/teams/${result.teamId}/_private/auth`)
+        .get();
+      const code = String(authDoc.data()?.captain_password ?? "").trim() || null;
+      const to = String(data.email ?? "").trim();
+      const asst = String(data.asst_email ?? "").trim();
+      const recipients = [to, asst].filter(
+        (e, i, a) => e && e.includes("@") && a.indexOf(e) === i,
+      );
+      if (recipients.length) {
+        const cfg = (await db.doc(`leagues/${leagueId}`).get()).data() ?? {};
+        const m = coachCodeEmail({
+          who: [data.manager_first_name, data.manager_last_name]
+            .map((v) => (typeof v === "string" ? v.trim() : ""))
+            .filter(Boolean)
+            .join(" "),
+          team: String(data.team_name ?? ""),
+          teamCode: code,
+          origin: new URL(req.url).origin,
+          leagueName: String(cfg.name ?? leagueId),
+          leagueAbbrev: String(cfg.abbrev ?? leagueId.toUpperCase()),
+          tenantId: leagueId,
+        });
+        for (const r of recipients) {
+          await sendEmail({
+            to: r,
+            subject: m.subject,
+            html: m.html,
+            replyTo: notifyAddress() ?? undefined,
+          });
+        }
+        await subRef.set({ login_email_sent: true }, { merge: true });
+        codeEmailed = recipients.join(", ");
+      }
+    } catch (err) {
+      console.error("[admin-provision-team] code email failed", err);
+      await subRef
+        .set({ login_email_sent: false }, { merge: true })
+        .catch(() => {});
+    }
+  }
+
   await db.collection(`leagues/${leagueId}/audit`).add({
     kind: "team_provisioned_from_registration",
     by_uid: decoded.uid,
@@ -167,5 +230,6 @@ export async function POST(req: Request) {
     created: result.created,
     // So the office can pass the coach their sign-in code straight away.
     teamCode: result.teamCode,
+    codeEmailed,
   });
 }
