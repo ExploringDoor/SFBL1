@@ -6856,13 +6856,27 @@ select:focus-visible {
    setting nobody on this side controls cannot turn the foot of the home page
    into a wall — and scroll rather than clip, so the last post is reachable
    instead of sliced in half. */
+/* Capping applies to the EMBEDS WE RENDER AS DOM (Elfsight's div, the
+   Instagram/TikTok blockquotes). Those genuinely grow with their content and
+   will happily render 1,200px of posts.
+   An <iframe> is NOT in that group: it is a fixed-size window onto another
+   document, so max-height plus overflow-y does not scroll it, it CLIPS it.
+   Adam's screenshot showed exactly that — the Facebook timeline cut off
+   mid-word. Facebook is given its height below and left alone. */
 .le-social-feeds-card > div:not(.le-social-feeds-label),
-.le-social-feeds-card > blockquote,
-.le-social-feeds-card > iframe {
+.le-social-feeds-card > blockquote {
   max-width: 100%;
   max-height: 460px;
   overflow-y: auto;
   overflow-x: hidden;
   /* Momentum scrolling inside the box on iOS rather than a dead area. */
   -webkit-overflow-scrolling: touch;
+}
+/* The Facebook plugin sizes itself. Constrain the width so it cannot escape
+   the rounded card, and let it own its height. */
+.le-social-feeds-card > iframe {
+  display: block;
+  width: 100% !important;
+  max-width: 100%;
+  border: 0;
 }

@@ -130,16 +130,21 @@ export function SocialFeeds({
             ) : key === "facebook" ? (
               // Facebook's own plugin. adapt_container_width makes it fill the
               // box; a fixed pixel width would overflow on a phone.
+              // scrolling="yes" on purpose. Facebook renders a timeline
+              // taller than whatever height you ask for, and with scrolling
+              // off the plugin simply cuts it off mid-post — which is what
+              // Adam's screenshot showed. Letting the iframe scroll means the
+              // box shows several posts instead of one clipped one.
               <iframe
                 title="Facebook"
                 src={
                   "https://www.facebook.com/plugins/page.php?href=" +
                   encodeURIComponent(value) +
-                  "&tabs=timeline&width=400&height=420&small_header=true" +
+                  "&tabs=timeline&width=500&height=460&small_header=true" +
                   "&adapt_container_width=true&hide_cover=false&show_facepile=false"
                 }
-                style={{ border: "none", overflow: "hidden", width: "100%", height: 420 }}
-                scrolling="no"
+                style={{ border: "none", width: "100%", height: 460 }}
+                scrolling="yes"
                 frameBorder="0"
                 allow="clipboard-write; encrypted-media; picture-in-picture; web-share"
               />
