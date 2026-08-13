@@ -54,9 +54,14 @@ const isElfsightId = (v: string) => /^[0-9a-f-]{20,60}$/i.test(v.trim());
 
 export function SocialFeeds({
   widgets,
+  links,
   heading = "Follow along",
 }: {
   widgets?: SocialWidgets | null;
+  /** The league's profile URLs, for the "Follow us" link on each box. Separate
+   *  from `widgets` because a widget value is not a profile: TikTok's is an
+   *  Elfsight id and Instagram's may be a single post. */
+  links?: { instagram?: string; facebook?: string; tiktok?: string } | null;
   heading?: string;
 }) {
   const ref = useRef<HTMLElement | null>(null);
@@ -124,7 +129,19 @@ export function SocialFeeds({
       <div className="le-social-feeds-grid">
         {entries.map(([key, value]) => (
           <div key={key} className="le-social-feeds-card">
-            <div className="le-social-feeds-label">{LABELS[key]}</div>
+            <div className="le-social-feeds-label">
+              <span>{LABELS[key]}</span>
+              {links?.[key] && (
+                <a
+                  className="le-social-feeds-follow"
+                  href={links[key]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Follow us
+                </a>
+              )}
+            </div>
             {!load ? (
               <div className="le-social-feeds-skeleton" aria-hidden="true" />
             ) : key === "facebook" ? (

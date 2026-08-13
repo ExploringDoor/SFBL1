@@ -404,7 +404,10 @@ export default async function HomePage() {
           parent who opened the site to check one score. Mike asked for the
           feeds here rather than on Standings (via Adam, 2026-08-13). */}
       <section className="container">
-        <SocialFeeds widgets={config?.social_widgets} />
+        <SocialFeeds
+          widgets={config?.social_widgets}
+          links={config?.social}
+        />
       </section>
     </main>
   );

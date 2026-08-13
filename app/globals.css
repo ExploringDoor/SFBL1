@@ -6880,3 +6880,27 @@ select:focus-visible {
   max-width: 100%;
   border: 0;
 }
+
+/* "Follow us" beside each platform name. The feed shows the posts; this is
+   the only thing on the card that asks for the follow, so it sits in the
+   header rather than under a feed nobody scrolls to the end of. */
+.le-social-feeds-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.le-social-feeds-follow {
+  color: #7fb2ff;
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  /* Comfortable to hit on a phone without making the header taller. */
+  padding: 4px 2px;
+}
+.le-social-feeds-follow:hover,
+.le-social-feeds-follow:focus-visible {
+  color: #a9ccff;
+  text-decoration: underline;
+}
