@@ -41,12 +41,14 @@ const URL_RE = /^https?:\/\//i;
     const ok =
       key === "facebook" ? URL_RE.test(v) :
       key === "tiktok"   ? UUID.test(v) || URL_RE.test(v) :
+      key === "instagram"? UUID.test(v) || URL_RE.test(v) :
                            UUID.test(v);
     if (!ok) {
       console.error(
         `${env} looks wrong for ${key}. ` +
         (key === "facebook" ? "Expected the public page URL."
           : key === "tiktok" ? "Expected an Elfsight widget id or a tiktok.com video URL."
+          : key === "instagram" ? "Expected an Elfsight widget id or an instagram.com post URL."
           : "Expected an Elfsight widget id."),
       );
       process.exit(1);

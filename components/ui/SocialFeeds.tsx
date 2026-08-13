@@ -8,9 +8,12 @@
 // EACH NETWORK USES A DIFFERENT MECHANISM, on purpose, because what each one
 // costs and requires is wildly different:
 //
-//   instagram — an Elfsight widget id. Instagram killed Basic Display in Dec
-//               2024, so a live feed needs a paid provider or a Meta app
-//               review. Paying is cheaper than the review.
+//   instagram — an Elfsight widget id (paid live feed) OR a single POST URL
+//               rendered with Instagram's free official embed. Instagram
+//               killed Basic Display in Dec 2024, and the Graph API route
+//               needs the Business account authorised THROUGH its linked
+//               Facebook page — the same thing Adam cannot do, since the
+//               Facebook is Mike's. So free means one hand-picked post.
 //   facebook  — the PAGE URL, rendered with Facebook's own free Page Plugin.
 //               No provider, no fee, and critically no account connection:
 //               Elfsight's Facebook widget wanted Adam to link Mike's personal
@@ -32,7 +35,7 @@
 import { useEffect, useRef, useState } from "react";
 
 export interface SocialWidgets {
-  /** Elfsight widget id. */
+  /** Elfsight widget id, OR a single instagram.com post URL. */
   instagram?: string;
   /** Public Facebook page URL, e.g. https://www.facebook.com/islandfastpitch */
   facebook?: string;
@@ -68,6 +71,9 @@ export function SocialFeeds({
   );
   const needsTikTokScript = entries.some(
     ([k, v]) => k === "tiktok" && !isElfsightId(v),
+  );
+  const needsInstagramScript = entries.some(
+    ([k, v]) => k === "instagram" && !isElfsightId(v),
   );
 
   useEffect(() => {
@@ -107,7 +113,8 @@ export function SocialFeeds({
     // today is this one, and the mismatch just leaves the box empty.
     if (needsElfsight) add("https://elfsightcdn.com/platform.js");
     if (needsTikTokScript) add("https://www.tiktok.com/embed.js");
-  }, [load, needsElfsight, needsTikTokScript]);
+    if (needsInstagramScript) add("https://www.instagram.com/embed.js");
+  }, [load, needsElfsight, needsTikTokScript, needsInstagramScript]);
 
   if (!entries.length) return null;
 
@@ -135,6 +142,16 @@ export function SocialFeeds({
                 scrolling="no"
                 frameBorder="0"
                 allow="clipboard-write; encrypted-media; picture-in-picture; web-share"
+              />
+            ) : key === "instagram" && !isElfsightId(value) ? (
+              // Free single-post embed. Instagram's script turns this into
+              // the real post. Light-background by design and Instagram gives
+              // no dark option, so the card keeps its own dark frame around it.
+              <blockquote
+                className="instagram-media"
+                data-instgrm-permalink={value}
+                data-instgrm-version="14"
+                style={{ margin: 0, width: "100%", minWidth: 0, background: "#fff" }}
               />
             ) : key === "tiktok" && !isElfsightId(value) ? (
               // Free single-video embed. TikTok's script turns this blockquote
