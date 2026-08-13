@@ -1,28 +1,42 @@
 "use client";
 
-// Three social feed boxes (Instagram, Facebook, TikTok), rendered by Elfsight.
+// Three social feed boxes at the bottom of the home page.
 //
-// Mike had two social apps on the old Wix site and asked for the same thing
-// here, on the standings page (via Adam, 2026-08-13).
+// Mike ran two social apps on the old Wix site and asked for the same here
+// (via Adam, 2026-08-13).
 //
-// WHY LAZY, AND WHY IT MATTERS HERE. Standings is the page parents refresh on
-// a Saturday between games, on cellular, in a car park. It currently loads in
-// under a second and three social embeds typically add half a megabyte. So
-// Elfsight's platform script is not loaded with the page: an IntersectionObserver
-// injects it only once someone actually scrolls near the boxes, and it is
-// injected once no matter how many widgets are on screen.
+// EACH NETWORK USES A DIFFERENT MECHANISM, on purpose, because what each one
+// costs and requires is wildly different:
 //
-// WHY CONFIG-DRIVEN. The widget ids come from the tenant config, so swapping a
-// feed, adding a fourth network or moving to another provider is a config edit
-// rather than a deploy. With no ids configured this renders NOTHING — which is
-// what ships today, before the Elfsight account exists, so the page is never
-// left with three empty boxes waiting on someone's subscription.
+//   instagram — an Elfsight widget id. Instagram killed Basic Display in Dec
+//               2024, so a live feed needs a paid provider or a Meta app
+//               review. Paying is cheaper than the review.
+//   facebook  — the PAGE URL, rendered with Facebook's own free Page Plugin.
+//               No provider, no fee, and critically no account connection:
+//               Elfsight's Facebook widget wanted Adam to link Mike's personal
+//               Facebook, which he cannot do. The plugin only needs a public
+//               page.
+//   tiktok    — either an Elfsight widget id (live feed, paid) or a single
+//               VIDEO URL rendered with TikTok's free official embed. TikTok
+//               publishes no profile-feed embed at all, so free means one
+//               hand-picked video.
+//
+// The type of each value decides the mechanism, so switching TikTok from a
+// paid live feed to a free pinned video is a config edit, not a deploy.
+//
+// LAZY, because of where it sits. Nothing here loads with the page: an
+// IntersectionObserver pulls the scripts in only once someone scrolls near the
+// boxes. A parent who opens the site to check one score never pays for them —
+// which also means they never spend an Elfsight view.
 
 import { useEffect, useRef, useState } from "react";
 
 export interface SocialWidgets {
+  /** Elfsight widget id. */
   instagram?: string;
+  /** Public Facebook page URL, e.g. https://www.facebook.com/islandfastpitch */
   facebook?: string;
+  /** Elfsight widget id, OR a single tiktok.com video URL. */
   tiktok?: string;
 }
 
@@ -31,6 +45,9 @@ const LABELS: Record<keyof SocialWidgets, string> = {
   facebook: "Facebook",
   tiktok: "TikTok",
 };
+
+/** Elfsight ids are UUIDs; anything with a slash is a URL. */
+const isElfsightId = (v: string) => /^[0-9a-f-]{20,60}$/i.test(v.trim());
 
 export function SocialFeeds({
   widgets,
@@ -44,14 +61,19 @@ export function SocialFeeds({
 
   const entries = (
     Object.entries(widgets ?? {}) as [keyof SocialWidgets, string][]
-  ).filter(([, id]) => typeof id === "string" && id.trim().length > 0);
+  ).filter(([, v]) => typeof v === "string" && v.trim().length > 0);
+
+  const needsElfsight = entries.some(
+    ([k, v]) => (k === "instagram" || k === "tiktok") && isElfsightId(v),
+  );
+  const needsTikTokScript = entries.some(
+    ([k, v]) => k === "tiktok" && !isElfsightId(v),
+  );
 
   useEffect(() => {
     if (!entries.length || load) return;
     const el = ref.current;
     if (!el) return;
-    // No IntersectionObserver (very old browser) — just load it rather than
-    // leaving empty boxes.
     if (typeof IntersectionObserver === "undefined") {
       setLoad(true);
       return;
@@ -63,8 +85,8 @@ export function SocialFeeds({
           io.disconnect();
         }
       },
-      // Start fetching slightly before they scroll into view so the boxes are
-      // filling in by the time they arrive, rather than popping in late.
+      // Early enough that the boxes are filling in on arrival rather than
+      // popping in once you get there.
       { rootMargin: "400px" },
     );
     io.observe(el);
@@ -73,14 +95,19 @@ export function SocialFeeds({
 
   useEffect(() => {
     if (!load) return;
-    const SRC = "https://static.elfsight.com/platform/platform.js";
-    // One script for all three widgets, and never twice.
-    if (document.querySelector(`script[src="${SRC}"]`)) return;
-    const s = document.createElement("script");
-    s.src = SRC;
-    s.async = true;
-    document.body.appendChild(s);
-  }, [load]);
+    const add = (src: string) => {
+      if (document.querySelector(`script[src="${src}"]`)) return;
+      const s = document.createElement("script");
+      s.src = src;
+      s.async = true;
+      document.body.appendChild(s);
+    };
+    // Elfsight's CURRENT cdn. Their older docs say
+    // static.elfsight.com/platform/platform.js; the embed code they hand you
+    // today is this one, and the mismatch just leaves the box empty.
+    if (needsElfsight) add("https://elfsightcdn.com/platform.js");
+    if (needsTikTokScript) add("https://www.tiktok.com/embed.js");
+  }, [load, needsElfsight, needsTikTokScript]);
 
   if (!entries.length) return null;
 
@@ -88,18 +115,40 @@ export function SocialFeeds({
     <section ref={ref} className="le-social-feeds" aria-label={heading}>
       <h2 className="le-social-feeds-head">{heading}</h2>
       <div className="le-social-feeds-grid">
-        {entries.map(([key, id]) => (
+        {entries.map(([key, value]) => (
           <div key={key} className="le-social-feeds-card">
             <div className="le-social-feeds-label">{LABELS[key]}</div>
-            {load ? (
-              // Elfsight's own lazy attribute stays on as a second line of
-              // defence; the observer above is what stops the SCRIPT loading.
-              <div
-                className={`elfsight-app-${id}`}
-                data-elfsight-app-lazy
-              />
-            ) : (
+            {!load ? (
               <div className="le-social-feeds-skeleton" aria-hidden="true" />
+            ) : key === "facebook" ? (
+              // Facebook's own plugin. adapt_container_width makes it fill the
+              // box; a fixed pixel width would overflow on a phone.
+              <iframe
+                title="Facebook"
+                src={
+                  "https://www.facebook.com/plugins/page.php?href=" +
+                  encodeURIComponent(value) +
+                  "&tabs=timeline&width=400&height=420&small_header=true" +
+                  "&adapt_container_width=true&hide_cover=false&show_facepile=false"
+                }
+                style={{ border: "none", overflow: "hidden", width: "100%", height: 420 }}
+                scrolling="no"
+                frameBorder="0"
+                allow="clipboard-write; encrypted-media; picture-in-picture; web-share"
+              />
+            ) : key === "tiktok" && !isElfsightId(value) ? (
+              // Free single-video embed. TikTok's script turns this blockquote
+              // into a player.
+              <blockquote
+                className="tiktok-embed"
+                cite={value}
+                data-video-id={value.split("/video/")[1]?.split(/[?#]/)[0] ?? ""}
+                style={{ maxWidth: "100%", minWidth: 0, margin: 0 }}
+              >
+                <section />
+              </blockquote>
+            ) : (
+              <div className={`elfsight-app-${value}`} data-elfsight-app-lazy />
             )}
           </div>
         ))}

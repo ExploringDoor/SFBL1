@@ -20,7 +20,13 @@ if (!TENANT) { console.error("TENANT required"); process.exit(1); }
 const sa = JSON.parse(readFileSync(SA_PATH, "utf8")) as { project_id: string };
 initializeApp({ credential: cert(SA_PATH), projectId: sa.project_id });
 
+// Each network accepts a different KIND of value, because each costs and
+// requires something different:
+//   IG  Elfsight widget id (paid — Instagram has no free live feed since 2024)
+//   FB  the public page URL (free, Facebook's own Page Plugin, no login)
+//   TT  Elfsight widget id (paid live feed) OR one tiktok video URL (free)
 const UUID = /^[0-9a-fA-F-]{20,60}$/;
+const URL_RE = /^https?:\/\//i;
 (async () => {
   const ref = getFirestore().doc(`leagues/${TENANT}`);
   if (process.env.CLEAR === "1") {
@@ -32,7 +38,19 @@ const UUID = /^[0-9a-fA-F-]{20,60}$/;
   for (const [key, env] of [["instagram","IG"],["facebook","FB"],["tiktok","TT"]] as const) {
     const v = (process.env[env] ?? "").trim();
     if (!v) continue;
-    if (!UUID.test(v)) { console.error(`${env} does not look like an Elfsight widget id: ${v}`); process.exit(1); }
+    const ok =
+      key === "facebook" ? URL_RE.test(v) :
+      key === "tiktok"   ? UUID.test(v) || URL_RE.test(v) :
+                           UUID.test(v);
+    if (!ok) {
+      console.error(
+        `${env} looks wrong for ${key}. ` +
+        (key === "facebook" ? "Expected the public page URL."
+          : key === "tiktok" ? "Expected an Elfsight widget id or a tiktok.com video URL."
+          : "Expected an Elfsight widget id."),
+      );
+      process.exit(1);
+    }
     next[key] = v;
   }
   if (!Object.keys(next).length) { console.error("nothing to set — pass IG=, FB= and/or TT="); process.exit(1); }
