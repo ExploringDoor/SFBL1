@@ -6822,6 +6822,10 @@ select:focus-visible {
      query. minmax(0,…) so a wide embed cannot push the column open. */
   grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
   gap: 12px;
+  /* Each box keeps its own height. Grid stretches rows to the tallest item by
+     default, so one chatty feed made all three 1,199px tall — measured on the
+     live page the first time the TikTok widget loaded. */
+  align-items: start;
 }
 .le-social-feeds-card {
   background: #0e1420;
@@ -6847,7 +6851,18 @@ select:focus-visible {
   height: 280px;
   background: linear-gradient(135deg, #16233a, #0f1826);
 }
-.le-social-feeds-card > div:not(.le-social-feeds-label) {
+/* A third-party feed decides its own height, and a widget configured to show
+   a dozen posts will happily render 1,200px of them. Cap it so a provider
+   setting nobody on this side controls cannot turn the foot of the home page
+   into a wall — and scroll rather than clip, so the last post is reachable
+   instead of sliced in half. */
+.le-social-feeds-card > div:not(.le-social-feeds-label),
+.le-social-feeds-card > blockquote,
+.le-social-feeds-card > iframe {
   max-width: 100%;
-  overflow-x: auto;
+  max-height: 460px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Momentum scrolling inside the box on iOS rather than a dead area. */
+  -webkit-overflow-scrolling: touch;
 }
