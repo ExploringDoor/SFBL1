@@ -33,6 +33,8 @@
 // which also means they never spend an Elfsight view.
 
 import { useEffect, useRef, useState } from "react";
+import { SocialPostCard } from "@/components/ui/SocialPostCard";
+import type { SocialPost } from "@/lib/social/meta";
 
 export interface SocialWidgets {
   /** Elfsight widget id, OR a single instagram.com post URL. */
@@ -70,9 +72,15 @@ const isElfsightId = (v: string) => /^[0-9a-f-]{20,60}$/i.test(v.trim());
 export function SocialFeeds({
   widgets,
   links,
+  posts,
   heading = "Follow along",
 }: {
   widgets?: SocialWidgets | null;
+  /** Posts already fetched server-side from Meta's Graph API. When a network
+   *  has these, they WIN over any embed or widget: they render in the site's
+   *  own styling, cost no third-party script, and cannot go stale the way a
+   *  hand-picked embed does. */
+  posts?: { instagram?: SocialPost[]; facebook?: SocialPost[] } | null;
   /** The league's profile URLs, for the "Follow us" link on each box. Separate
    *  from `widgets` because a widget value is not a profile: TikTok's is an
    *  Elfsight id and Instagram's may be a single post. */
@@ -82,18 +90,27 @@ export function SocialFeeds({
   const ref = useRef<HTMLElement | null>(null);
   const [load, setLoad] = useState(false);
 
-  const entries = (
-    Object.entries(widgets ?? {}) as [keyof SocialWidgets, string][]
-  ).filter(([, v]) => typeof v === "string" && v.trim().length > 0);
+  const native: Partial<Record<keyof SocialWidgets, SocialPost[]>> = {
+    instagram: posts?.instagram?.length ? posts.instagram : undefined,
+    facebook: posts?.facebook?.length ? posts.facebook : undefined,
+  };
+
+  // A box appears if we have real posts for it OR an embed configured. Order
+  // is fixed rather than derived from object keys, so the row does not
+  // reshuffle when a network is added or a fetch comes back empty.
+  const ORDER: (keyof SocialWidgets)[] = ["instagram", "facebook", "tiktok"];
+  const entries = ORDER.filter(
+    (k) => native[k]?.length || (widgets?.[k] ?? "").trim().length > 0,
+  ).map((k) => [k, (widgets?.[k] ?? "").trim()] as [keyof SocialWidgets, string]);
 
   const needsElfsight = entries.some(
-    ([k, v]) => (k === "instagram" || k === "tiktok") && isElfsightId(v),
+    ([k, v]) => !native[k] && (k === "instagram" || k === "tiktok") && isElfsightId(v),
   );
   const needsTikTokScript = entries.some(
-    ([k, v]) => k === "tiktok" && !isElfsightId(v),
+    ([k, v]) => !native[k] && k === "tiktok" && v && !isElfsightId(v),
   );
   const needsInstagramScript = entries.some(
-    ([k, v]) => k === "instagram" && !isElfsightId(v),
+    ([k, v]) => !native[k] && k === "instagram" && v && !isElfsightId(v),
   );
 
   useEffect(() => {
@@ -157,7 +174,16 @@ export function SocialFeeds({
                 </a>
               )}
             </div>
-            {!load ? (
+            {native[key]?.length ? (
+              // Real posts, rendered by us. No script, no iframe, no lazy gate
+              // — these are just images and text, so they cost almost nothing
+              // and are visible immediately.
+              <div className="le-post-list">
+                {native[key]!.slice(0, 2).map((p) => (
+                  <SocialPostCard key={p.id} post={p} />
+                ))}
+              </div>
+            ) : !load ? (
               <div className="le-social-feeds-skeleton" aria-hidden="true" />
             ) : key === "facebook" ? (
               // Facebook's own plugin. adapt_container_width makes it fill the

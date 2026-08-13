@@ -1,6 +1,18 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { SocialFeeds } from "@/components/ui/SocialFeeds";
+import { fetchSocialPosts } from "@/lib/social/meta";
+import { unstable_cache } from "next/cache";
+
+// Meta rate-limits, and the home page must not make an outbound API call per
+// visitor. Fifteen minutes is far fresher than a league posts and costs one
+// request per quarter hour no matter the traffic.
+const cachedSocialPosts = (tenantId: string) =>
+  unstable_cache(
+    () => fetchSocialPosts(tenantId),
+    ["social-posts", tenantId],
+    { revalidate: 900, tags: [`social:${tenantId}`] },
+  )();
 import {
   getCachedGamesSnap,
   getCachedTeamsSnap,
@@ -47,6 +59,12 @@ interface ScheduleItem {
 export default async function HomePage() {
   const h = headers();
   const tenantId = h.get("x-tenant-id");
+  // Never allowed to break the home page: fetchSocialPosts already swallows
+  // its own errors, and this catch covers the cache layer itself.
+  const socialPosts = tenantId
+    ? await cachedSocialPosts(tenantId).catch(() => null)
+    : null;
+
   const config = (() => {
     const raw = h.get("x-tenant-config-json");
     if (!raw) return null;
@@ -407,6 +425,7 @@ export default async function HomePage() {
         <SocialFeeds
           widgets={config?.social_widgets}
           links={config?.social}
+          posts={socialPosts}
         />
       </section>
     </main>

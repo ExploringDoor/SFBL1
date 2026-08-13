@@ -6906,3 +6906,60 @@ select:focus-visible {
   color: #a9ccff;
   text-decoration: underline;
 }
+
+/* Posts pulled through the Graph API and rendered by us — see
+   components/ui/SocialPostCard.tsx. Dark by design so a feed looks like part
+   of the page rather than a panel borrowed from Facebook. */
+.le-post-list {
+  display: grid;
+  gap: 1px;
+  background: #1e2939;
+}
+.le-post {
+  display: block;
+  background: #0e1420;
+  padding: 0 0 10px;
+  text-decoration: none;
+  color: inherit;
+}
+.le-post:hover {
+  background: #131b2b;
+}
+.le-post-media {
+  display: block;
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: #0b1018;
+}
+.le-post-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.le-post-play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+}
+.le-post-text {
+  display: block;
+  padding: 10px 12px 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #c7d2e0;
+}
+.le-post-when {
+  display: block;
+  padding: 6px 12px 0;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #7c8798;
+}
