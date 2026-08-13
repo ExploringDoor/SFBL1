@@ -24,6 +24,7 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { headers } from "next/headers";
 import { parseHost, resolveTenant } from "@/lib/tenants";
 import { sendEmail, notifyAddress, esc } from "@/lib/email/send";
+import { ageFromDob } from "@/lib/age";
 
 export const runtime = "nodejs";
 
@@ -311,6 +312,22 @@ async function sendRegistrationEmails(
   // 2) Heads-up to the league office.
   const notify = notifyAddress();
   if (notify) {
+    // Player-registration extras the league office wants at a glance
+    // (Nelson, 2026-08): phone, city, age, and the positions they play.
+    const phone = c("phone");
+    const city = c("city");
+    const ageNum = ageFromDob(c("dob"));
+    const age = ageNum != null ? String(ageNum) : c("age");
+    const positions = [c("primary_position"), c("secondary_position")]
+      .filter(Boolean)
+      .join(", ");
+    const extras =
+      kind === "player_registration"
+        ? (phone ? `Phone: ${esc(phone)}<br/>` : "") +
+          (city ? `City: ${esc(city)}<br/>` : "") +
+          (age ? `Age: ${esc(age)}<br/>` : "") +
+          (positions ? `Positions: ${esc(positions)}<br/>` : "")
+        : "";
     await sendEmail({
       to: notify,
       subject: `New ${label}: ${who || "(no name)"}`,
@@ -318,6 +335,7 @@ async function sendRegistrationEmails(
         `<p><strong>${esc(label)}</strong></p>` +
         `<p>Name: ${esc(who) || "—"}<br/>` +
         `Email: ${esc(email) || "—"}<br/>` +
+        extras +
         (division ? `Division: ${esc(division)}<br/>` : "") +
         (team ? `Team: ${esc(team)}<br/>` : "") +
         `</p><p>See it in Admin → Form intake.</p>`,
