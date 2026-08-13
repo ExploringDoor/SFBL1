@@ -157,10 +157,19 @@ export function SocialFeeds({
                 src={
                   "https://www.facebook.com/plugins/page.php?href=" +
                   encodeURIComponent(value) +
-                  "&tabs=timeline&width=500&height=460&small_header=true" +
-                  "&adapt_container_width=true&hide_cover=false&show_facepile=false"
+                  // hide_cover=true. With the cover shown, the plugin renders
+                  // an empty bordered band above the page name and then clips
+                  // the name beneath it — Adam screenshotted "Island Fastpitch"
+                  // sliced in half twice. Hiding the cover removes that band
+                  // and the name sits properly.
+                  //
+                  // The card already has its own FACEBOOK header with a Follow
+                  // us link, so the plugin's header is duplicated chrome; this
+                  // keeps it to the smallest it offers.
+                  "&tabs=timeline&width=500&height=520&small_header=true" +
+                  "&adapt_container_width=true&hide_cover=true&show_facepile=false"
                 }
-                style={{ border: "none", width: "100%", height: 460 }}
+                style={{ border: "none", width: "100%", height: 520 }}
                 scrolling="yes"
                 frameBorder="0"
                 allow="clipboard-write; encrypted-media; picture-in-picture; web-share"
