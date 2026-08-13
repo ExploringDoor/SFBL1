@@ -178,6 +178,8 @@ export interface LeagueConfig {
   /** Overrides the month-derived season heading ("Fall 2026"). Needed by any
    *  league whose registration month and playing season disagree. */
   season_label?: string;
+  /** Elfsight widget ids for the social feed boxes. See SocialFeeds.tsx. */
+  social_widgets?: { instagram?: string; facebook?: string; tiktok?: string };
 
   /** Footer licence credit for third-party artwork. CC BY sources (JFK's
    *  game-icons.net team mascots) require visible attribution on a

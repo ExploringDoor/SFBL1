@@ -6796,3 +6796,58 @@ select:focus-visible {
 .le-demo-banner strong {
   font-weight: 800;
 }
+
+/* Social feed boxes — see components/ui/SocialFeeds.tsx.
+ *
+ * Colours are literal rather than tokens. This sits on Island's dark page and
+ * on light tenants, and a card that needs a line in each tenant's dark-theme
+ * restore list is a card that will one day be invisible on the tenant that
+ * needs it (that trap has fired a dozen times on this platform already).
+ */
+.le-social-feeds {
+  margin: 32px 0 8px;
+}
+.le-social-feeds-head {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin: 0 0 14px;
+  color: var(--text-strong);
+}
+.le-social-feeds-grid {
+  display: grid;
+  /* Three across on desktop, stacking to one on a phone without a media
+     query. minmax(0,…) so a wide embed cannot push the column open. */
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+  gap: 12px;
+}
+.le-social-feeds-card {
+  background: #0e1420;
+  border: 1px solid #1e2939;
+  border-radius: 12px;
+  overflow: hidden;
+  /* Third-party embeds size themselves; contain them rather than let them
+     stretch the grid. */
+  min-width: 0;
+}
+.le-social-feeds-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #9aa4b2;
+  padding: 10px 12px;
+  border-bottom: 1px solid #1e2939;
+}
+/* Reserves the height the widget will occupy, so the page does not jump when
+   the feed arrives. */
+.le-social-feeds-skeleton {
+  height: 280px;
+  background: linear-gradient(135deg, #16233a, #0f1826);
+}
+.le-social-feeds-card > div:not(.le-social-feeds-label) {
+  max-width: 100%;
+  overflow-x: auto;
+}

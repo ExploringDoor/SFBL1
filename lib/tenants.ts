@@ -46,6 +46,10 @@ export interface PublicLeagueConfig {
   // league that registers in August for a September season needs to say
   // "Fall 2026" in August, and no calendar heuristic can know that.
   season_label?: string;
+  /** Elfsight widget ids for the social feed boxes, per network. Config-driven
+   *  so a feed can be swapped, added or moved to another provider without a
+   *  deploy. Absent = the section does not render at all. */
+  social_widgets?: { instagram?: string; facebook?: string; tiktok?: string };
   // Outside-provider rankings embed. See LeagueConfig["power_rankings"].
   // Safe to forward: it is just a public embed URL and layout hints.
   power_rankings?: LeagueConfig["power_rankings"];
@@ -112,6 +116,7 @@ export function toPublicConfig(c: LeagueConfig): PublicLeagueConfig {
     tournaments: c.tournaments,
     season_year: c.season_year,
     season_label: c.season_label,
+    social_widgets: c.social_widgets,
     power_rankings: c.power_rankings,
     captain: c.captain,
     // Strip `admin.password` — only forward whether passwordless is
