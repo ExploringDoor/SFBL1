@@ -49,6 +49,12 @@ const LABELS: Record<keyof SocialWidgets, string> = {
   tiktok: "TikTok",
 };
 
+// How tall Facebook's own header is, and how tall we want the visible box.
+// The header is cropped off the top (see the Facebook branch below), so the
+// iframe is rendered FB_HEADER_H taller than the window that shows it.
+const FB_HEADER_H = 64;
+const FB_BOX_H = 460;
+
 /** Elfsight ids are UUIDs; anything with a slash is a URL. */
 const isElfsightId = (v: string) => /^[0-9a-f-]{20,60}$/i.test(v.trim());
 
@@ -147,33 +153,51 @@ export function SocialFeeds({
             ) : key === "facebook" ? (
               // Facebook's own plugin. adapt_container_width makes it fill the
               // box; a fixed pixel width would overflow on a phone.
-              // scrolling="yes" on purpose. Facebook renders a timeline
-              // taller than whatever height you ask for, and with scrolling
-              // off the plugin simply cuts it off mid-post — which is what
-              // Adam's screenshot showed. Letting the iframe scroll means the
-              // box shows several posts instead of one clipped one.
-              <iframe
-                title="Facebook"
-                src={
-                  "https://www.facebook.com/plugins/page.php?href=" +
-                  encodeURIComponent(value) +
-                  // hide_cover=true. With the cover shown, the plugin renders
-                  // an empty bordered band above the page name and then clips
-                  // the name beneath it — Adam screenshotted "Island Fastpitch"
-                  // sliced in half twice. Hiding the cover removes that band
-                  // and the name sits properly.
-                  //
-                  // The card already has its own FACEBOOK header with a Follow
-                  // us link, so the plugin's header is duplicated chrome; this
-                  // keeps it to the smallest it offers.
-                  "&tabs=timeline&width=500&height=520&small_header=true" +
-                  "&adapt_container_width=true&hide_cover=true&show_facepile=false"
-                }
-                style={{ border: "none", width: "100%", height: 520 }}
-                scrolling="yes"
-                frameBorder="0"
-                allow="clipboard-write; encrypted-media; picture-in-picture; web-share"
-              />
+              // Facebook's header, cropped away.
+              //
+              // The plugin has no "no header" option, and with it on, the page
+              // name renders cut in half — Adam screenshotted it three times,
+              // through small_header and hide_cover, and it never came right.
+              // So the iframe is pulled up inside a clipping window by exactly
+              // the header's height and made that much taller to compensate.
+              //
+              // scrolling="no" is required for this: if the frame scrolled,
+              // the header would scroll away and the crop would start eating
+              // the posts instead. A fixed window means the crop always lands
+              // in the same place.
+              //
+              // The card already says FACEBOOK and carries a Follow us link,
+              // so nothing is lost — that header was duplicated chrome.
+              <div
+                className="le-social-feeds-fb"
+                style={{
+                  position: "relative",
+                  height: FB_BOX_H,
+                  overflow: "hidden",
+                }}
+              >
+                <iframe
+                  title="Facebook"
+                  src={
+                    "https://www.facebook.com/plugins/page.php?href=" +
+                    encodeURIComponent(value) +
+                    `&tabs=timeline&width=500&height=${FB_BOX_H + FB_HEADER_H}` +
+                    "&small_header=true&adapt_container_width=true" +
+                    "&hide_cover=true&show_facepile=false"
+                  }
+                  style={{
+                    position: "absolute",
+                    top: -FB_HEADER_H,
+                    left: 0,
+                    border: "none",
+                    width: "100%",
+                    height: FB_BOX_H + FB_HEADER_H,
+                  }}
+                  scrolling="no"
+                  frameBorder="0"
+                  allow="clipboard-write; encrypted-media; picture-in-picture; web-share"
+                />
+              </div>
             ) : key === "instagram" && !isElfsightId(value) ? (
               // Free single-post embed. Instagram's script turns this into
               // the real post. Light-background by design and Instagram gives

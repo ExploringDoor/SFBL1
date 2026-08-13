@@ -6863,7 +6863,9 @@ select:focus-visible {
    document, so max-height plus overflow-y does not scroll it, it CLIPS it.
    Adam's screenshot showed exactly that — the Facebook timeline cut off
    mid-word. Facebook is given its height below and left alone. */
-.le-social-feeds-card > div:not(.le-social-feeds-label),
+/* :not([style*="position: relative"]) skips the Facebook crop wrapper, which
+   sizes itself deliberately and must not gain a scrollbar. */
+.le-social-feeds-card > div:not(.le-social-feeds-label):not(.le-social-feeds-fb),
 .le-social-feeds-card > blockquote {
   max-width: 100%;
   max-height: 460px;
