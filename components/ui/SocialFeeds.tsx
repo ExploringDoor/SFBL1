@@ -52,7 +52,16 @@ const LABELS: Record<keyof SocialWidgets, string> = {
 // How tall Facebook's own header is, and how tall we want the visible box.
 // The header is cropped off the top (see the Facebook branch below), so the
 // iframe is rendered FB_HEADER_H taller than the window that shows it.
-const FB_HEADER_H = 64;
+//
+// 115 is measured, not chosen: at 64 the page name still showed, cut in half,
+// sitting just below the cut. Facebook publishes no height for this and the
+// plugin markup carries no fixed value to read, so the number came from
+// screenshots. Slightly over-cropping is the safe direction — it eats
+// whitespace above the first post, where under-cropping leaves a severed
+// line of text that looks like a broken page.
+//
+// If Facebook ever changes that header, this is the one number to move.
+const FB_HEADER_H = 115;
 const FB_BOX_H = 460;
 
 /** Elfsight ids are UUIDs; anything with a slash is a URL. */
