@@ -8,24 +8,26 @@
 // EACH NETWORK USES A DIFFERENT MECHANISM, on purpose, because what each one
 // costs and requires is wildly different:
 //
-//   instagram — an Elfsight widget id (paid live feed) OR a single POST URL
-//               rendered with Instagram's free official embed. Instagram
-//               killed Basic Display in Dec 2024, and the Graph API route
-//               needs the Business account authorised THROUGH its linked
-//               Facebook page — the same thing Adam cannot do, since the
-//               Facebook is Mike's. So free means one hand-picked post.
-//   facebook  — the PAGE URL, rendered with Facebook's own free Page Plugin.
-//               No provider, no fee, and critically no account connection:
-//               Elfsight's Facebook widget wanted Adam to link Mike's personal
-//               Facebook, which he cannot do. The plugin only needs a public
-//               page.
-//   tiktok    — either an Elfsight widget id (live feed, paid) or a single
-//               VIDEO URL rendered with TikTok's free official embed. TikTok
-//               publishes no profile-feed embed at all, so free means one
-//               hand-picked video.
+//   instagram — posts pulled server-side from Meta's Graph API (lib/social/meta)
+//               and rendered by us. Free, live, and styled like the rest of the
+//               site. Falls back to an Elfsight widget id or a single post URL
+//               if no credentials are stored.
+//   facebook  — the same Graph API pull. Falls back to the free Page Plugin,
+//               which works with no login but forces a header we can only hide
+//               by cropping the iframe.
+//   tiktok    — an Elfsight widget id. TikTok publishes no profile-feed embed
+//               and is not in Meta's Graph API, so this is the one network with
+//               no free live option; it is what the Elfsight subscription buys.
+//               Falls back to a single video URL via TikTok's own embed.
 //
-// The type of each value decides the mechanism, so switching TikTok from a
-// paid live feed to a free pinned video is a config edit, not a deploy.
+// `posts` WINS over `widgets` wherever both exist: a real feed beats an embed
+// that goes stale, and rendering it ourselves means no third-party script and
+// nothing to crop.
+//
+// Earlier this file said Instagram and Facebook could only be embeds because
+// authorising the Graph API needs Mike's Facebook. That was true of Elfsight's
+// connect flow; it is not a reason the API cannot be used. Mike authorises a
+// Meta app once, Adam owns the app, and the site reads the posts from then on.
 //
 // LAZY, because of where it sits. Nothing here loads with the page: an
 // IntersectionObserver pulls the scripts in only once someone scrolls near the
