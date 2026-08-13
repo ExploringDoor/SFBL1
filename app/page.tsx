@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { headers } from "next/headers";
+import { SocialFeeds } from "@/components/ui/SocialFeeds";
 import {
   getCachedGamesSnap,
   getCachedTeamsSnap,
@@ -396,6 +397,14 @@ export default async function HomePage() {
             )}
           </aside>
         </div>
+      </section>
+
+      {/* Last thing on the home page, and lazy — the script only loads if
+          someone scrolls the whole way down, so the fold stays fast for the
+          parent who opened the site to check one score. Mike asked for the
+          feeds here rather than on Standings (via Adam, 2026-08-13). */}
+      <section className="container">
+        <SocialFeeds widgets={config?.social_widgets} />
       </section>
     </main>
   );

@@ -5,7 +5,6 @@
 
 import { headers } from "next/headers";
 import { DemoDataBanner } from "@/components/ui/DemoDataBanner";
-import { SocialFeeds } from "@/components/ui/SocialFeeds";
 import Link from "next/link";
 import {
   getCachedGamesSnap,
@@ -262,13 +261,6 @@ export default async function StandingsPage() {
           View league history →
         </a>
       </p>
-
-      {/* Below the table on purpose. Standings is what parents refresh on a
-          Saturday between games on cellular; the feeds must never be in the
-          way of the thing they came for. SocialFeeds renders nothing until
-          widget ids are configured, and lazy-loads the provider script only
-          when someone scrolls this far. */}
-      <SocialFeeds widgets={config?.social_widgets} />
     </main>
   );
 }
