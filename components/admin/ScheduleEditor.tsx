@@ -644,7 +644,6 @@ function GameForm({
     initial?.home_score == null ? "" : String(initial.home_score),
   );
   const [isPlayoff, setIsPlayoff] = useState(initial?.is_playoff ?? false);
-  const [season, setSeason] = useState(initial?.season ?? currentSeason ?? "");
 
   // Auto-fill division from the picked teams (so admin doesn't have
   // to retype "28+" if both teams are in 28+).
@@ -669,37 +668,24 @@ function GameForm({
       away_score: showScores && awayScore !== "" ? Number(awayScore) : null,
       home_score: showScores && homeScore !== "" ? Number(homeScore) : null,
     };
-    // Only new games carry a season here (editing a game preserves its
-    // existing season server-side via merge).
-    if (mode === "create" && season) patch.season = season;
+    // New games are filed under the season currently being viewed (the
+    // Season dropdown above). Editing a game preserves its existing season
+    // server-side via merge.
+    if (mode === "create" && currentSeason) patch.season = currentSeason;
     await onSubmit(patch);
   }
 
   return (
     <div className="border-t border-slate-200 bg-amber-50/40 px-3 py-3 space-y-3">
-      {mode === "create" && (seasons?.length ?? 0) > 0 && (
-        <label className="block rounded-md border border-blue-200 bg-blue-50 px-3 py-2">
-          <span className="block text-xs font-semibold text-slate-700 mb-1">
-            Season
-          </span>
-          <select
-            value={season}
-            onChange={(e) => setSeason(e.target.value)}
-            disabled={busy}
-            className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-          >
-            {seasons!.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.label}
-              </option>
-            ))}
-          </select>
-          <span className="mt-1 block text-[11px] text-slate-500">
-            Which season this game counts toward. Pick a future season to build
-            its schedule ahead of time — those games stay off the current
-            season&apos;s standings/schedule until you make it active.
-          </span>
-        </label>
+      {mode === "create" && (seasons?.length ?? 0) > 0 && currentSeason && (
+        <div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-slate-700">
+          Adding to{" "}
+          <strong>
+            {seasons?.find((s) => s.id === currentSeason)?.label ?? currentSeason}
+          </strong>
+          . To build a different season, change the <strong>Season</strong>{" "}
+          dropdown at the top.
+        </div>
       )}
       <div className="grid gap-3 sm:grid-cols-3">
         <label className="block">
