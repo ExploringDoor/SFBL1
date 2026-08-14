@@ -6822,10 +6822,13 @@ select:focus-visible {
      query. minmax(0,…) so a wide embed cannot push the column open. */
   grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
   gap: 12px;
-  /* Each box keeps its own height. Grid stretches rows to the tallest item by
-     default, so one chatty feed made all three 1,199px tall — measured on the
-     live page the first time the TikTok widget loaded. */
-  align-items: start;
+  /* All three the same height, so the row ends on one line.
+     This was align-items:start, because an uncapped feed once rendered a dozen
+     posts and dragged all three boxes to 1,199px. That cannot happen now: the
+     embeds are capped at 460px below, and our own boxes hold exactly one post
+     at a fixed ratio with a two-line caption. The tallest possible card is
+     about 500px, so stretching to it is safe and the bottoms line up. */
+  align-items: stretch;
 }
 .le-social-feeds-card {
   background: #0e1420;
@@ -6835,6 +6838,15 @@ select:focus-visible {
   /* Third-party embeds size themselves; contain them rather than let them
      stretch the grid. */
   min-width: 0;
+  /* Column, so the content area below the label can grow into whatever height
+     the tallest card in the row sets. */
+  display: flex;
+  flex-direction: column;
+}
+/* The content area takes the leftover height. Without this the card stretches
+   and its contents do not, which just moves the ragged edge inside the box. */
+.le-social-feeds-card > *:not(.le-social-feeds-label) {
+  flex: 1 1 auto;
 }
 .le-social-feeds-label {
   font-size: 12px;
@@ -6879,6 +6891,15 @@ select:focus-visible {
   overflow-x: hidden;
   /* Momentum scrolling inside the box on iOS rather than a dead area. */
   -webkit-overflow-scrolling: touch;
+  /* Now that the cards stretch to a common height, a short widget would sit at
+     the top of its box with a band of dead space beneath it. Centre it instead,
+     so the extra height reads as padding rather than as something missing.
+     `safe` matters: plain centring on a box whose content overflows pushes the
+     first lines above the scroll origin, where they cannot be reached. With
+     safe, an overflowing widget falls back to top aligned. */
+  display: flex;
+  flex-direction: column;
+  justify-content: safe center;
 }
 /* The Facebook plugin sizes itself. Constrain the width so it cannot escape
    the rounded card, and let it own its height. */
