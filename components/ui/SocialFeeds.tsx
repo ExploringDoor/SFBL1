@@ -180,8 +180,16 @@ export function SocialFeeds({
               // Real posts, rendered by us. No script, no iframe, no lazy gate
               // — these are just images and text, so they cost almost nothing
               // and are visible immediately.
+              // ONE post, which is what Mike asked for ("he just wants the
+              // latest post to be shown on each", via Adam 2026-08-13).
+              //
+              // It was two, and the second was always sliced: the card caps its
+              // content at 460px, two posts run past that, and the crop landed
+              // mid-photo so the box ended on a headless torso. Showing one is
+              // both the fix and the brief — a second post cannot be cut off if
+              // it is not rendered.
               <div className="le-post-list">
-                {native[key]!.slice(0, 2).map((p) => (
+                {native[key]!.slice(0, 1).map((p) => (
                   <SocialPostCard key={p.id} post={p} />
                 ))}
               </div>

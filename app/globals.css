@@ -6864,8 +6864,14 @@ select:focus-visible {
    Adam's screenshot showed exactly that — the Facebook timeline cut off
    mid-word. Facebook is given its height below and left alone. */
 /* :not([style*="position: relative"]) skips the Facebook crop wrapper, which
-   sizes itself deliberately and must not gain a scrollbar. */
-.le-social-feeds-card > div:not(.le-social-feeds-label):not(.le-social-feeds-fb),
+   sizes itself deliberately and must not gain a scrollbar.
+   :not(.le-post-list) skips OUR OWN posts. The cap exists because a provider
+   decides how many posts to render and nobody on this side controls it. We do
+   control ours — SocialFeeds renders exactly one — so capping them only ever
+   sliced a post we had already chosen to show, which is what Adam screenshotted
+   on 2026-08-13: a photo cut off mid-body at the foot of the card. */
+.le-social-feeds-card
+  > div:not(.le-social-feeds-label):not(.le-social-feeds-fb):not(.le-post-list),
 .le-social-feeds-card > blockquote {
   max-width: 100%;
   max-height: 460px;
@@ -6928,7 +6934,14 @@ select:focus-visible {
 .le-post-media {
   display: block;
   position: relative;
-  aspect-ratio: 16 / 10;
+  /* Square, because social photos are not landscape. Instagram shoots 4:5 and
+     1:1, and a phone held upright produces neither. At 16/10 with object-fit
+     cover, a portrait action shot lost its top and bottom — Adam's screenshot
+     on 2026-08-13 was a batter with no head, which is the one crop a softball
+     league cannot ship. 1:1 is what Instagram's own grid uses and it keeps the
+     card a sane height; going to a true 4/5 would be truer to the source but
+     makes these boxes much taller than the TikTok one beside them. */
+  aspect-ratio: 1 / 1;
   overflow: hidden;
   background: #0b1018;
 }
