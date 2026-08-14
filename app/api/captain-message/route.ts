@@ -28,7 +28,7 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
-import { esc, notifyAddress, sendEmail } from "@/lib/email/send";
+import { esc, notifyOffice, sendEmail } from "@/lib/email/send";
 
 export const runtime = "nodejs";
 
@@ -239,19 +239,15 @@ export async function POST(req: Request) {
   // Copy to the league office. Best-effort: a failure here must not make a
   // successful send to families look broken.
   try {
-    const office = notifyAddress();
-    if (office) {
-      await sendEmail({
-        to: office,
-        subject: `[copy] ${teamName} messaged their families: ${subject}`,
-        html:
-          `<p style="color:#475569;font-size:13px">Copy for the league record. ` +
-          `Sent to ${sent} famil${sent === 1 ? "y" : "ies"} by ` +
-          `${esc(fromName || "a coach")}${fromEmail ? ` &lt;${esc(fromEmail)}&gt;` : ""}.</p>` +
-          html,
-        replyTo: fromEmail || undefined,
-      });
-    }
+    await notifyOffice({
+      subject: `[copy] ${teamName} messaged their families: ${subject}`,
+      html:
+        `<p style="color:#475569;font-size:13px">Copy for the league record. ` +
+        `Sent to ${sent} famil${sent === 1 ? "y" : "ies"} by ` +
+        `${esc(fromName || "a coach")}${fromEmail ? ` &lt;${esc(fromEmail)}&gt;` : ""}.</p>` +
+        html,
+      replyTo: fromEmail || undefined,
+    });
   } catch (err) {
     console.error("[captain-message] office copy failed", err);
   }

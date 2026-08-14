@@ -24,7 +24,7 @@ import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { headers } from "next/headers";
 import { parseHost, resolveTenant } from "@/lib/tenants";
 import { provisionCoyblTeam } from "@/lib/provision-team";
-import { sendEmail, notifyAddress, esc } from "@/lib/email/send";
+import { sendEmail, notifyAddress, notifyOffice, esc } from "@/lib/email/send";
 import { coachCodeEmail, officeRegistrationEmail } from "@/lib/email/templates";
 
 export const runtime = "nodejs";
@@ -640,27 +640,25 @@ export async function POST(req: Request) {
     // of a registration was to go look in the admin inbox. Best-effort: a
     // failed notification must never fail the coach's registration.
     try {
-      const notify = notifyAddress();
-      if (notify) {
-        const who =
-          `${cleaned.manager_first_name ?? ""} ${cleaned.manager_last_name ?? ""}`.trim();
-        await sendEmail({
-          to: notify,
-          ...officeRegistrationEmail({
-            leagueAbbrev,
-            team: String(cleaned.team_name ?? ""),
-            who,
-            email: String(cleaned.email ?? ""),
-            phone: String(cleaned.phone ?? ""),
-            ageGroup: String(cleaned.age_group ?? ""),
-            division: String(cleaned.division ?? ""),
-            gamechangerLink: String(cleaned.gamechanger_link ?? ""),
-            insuranceOption: String(cleaned.insurance_option ?? ""),
-            usssaAddon: Boolean(cleaned.usssa_addon),
-            homeField: String(cleaned.home_field ?? ""),
-            homeFieldName: String(cleaned.home_field_name ?? ""),
-          }),
-        });
+      const who =
+        `${cleaned.manager_first_name ?? ""} ${cleaned.manager_last_name ?? ""}`.trim();
+      const sentTo = await notifyOffice(
+        officeRegistrationEmail({
+          leagueAbbrev,
+          team: String(cleaned.team_name ?? ""),
+          who,
+          email: String(cleaned.email ?? ""),
+          phone: String(cleaned.phone ?? ""),
+          ageGroup: String(cleaned.age_group ?? ""),
+          division: String(cleaned.division ?? ""),
+          gamechangerLink: String(cleaned.gamechanger_link ?? ""),
+          insuranceOption: String(cleaned.insurance_option ?? ""),
+          usssaAddon: Boolean(cleaned.usssa_addon),
+          homeField: String(cleaned.home_field ?? ""),
+          homeFieldName: String(cleaned.home_field_name ?? ""),
+        }),
+      );
+      if (sentTo > 0) {
         await ref.set({ office_email_sent: true }, { merge: true });
       } else {
         // No EMAIL_NOTIFY configured, so nobody was told. Say so on the
@@ -894,20 +892,16 @@ async function sendRegistrationEmails(
     });
   }
 
-  // 2) Heads-up to the league office.
-  const notify = notifyAddress();
-  if (notify) {
-    await sendEmail({
-      to: notify,
-      subject: `New ${label}: ${who || "(no name)"}`,
-      html:
-        `<p><strong>${esc(label)}</strong></p>` +
-        `<p>Name: ${esc(who) || "—"}<br/>` +
-        `Email: ${esc(email) || "—"}<br/>` +
-        (division ? `Division: ${esc(division)}<br/>` : "") +
-        (team ? `Team: ${esc(team)}<br/>` : "") +
-        `</p><p>See it in Admin → Form intake.</p>`,
-      replyTo: email || undefined,
-    });
-  }
+  // 2) Heads-up to the league office — all of it, not just the first inbox.
+  await notifyOffice({
+    subject: `New ${label}: ${who || "(no name)"}`,
+    html:
+      `<p><strong>${esc(label)}</strong></p>` +
+      `<p>Name: ${esc(who) || "—"}<br/>` +
+      `Email: ${esc(email) || "—"}<br/>` +
+      (division ? `Division: ${esc(division)}<br/>` : "") +
+      (team ? `Team: ${esc(team)}<br/>` : "") +
+      `</p><p>See it in Admin → Form intake.</p>`,
+    replyTo: email || undefined,
+  });
 }

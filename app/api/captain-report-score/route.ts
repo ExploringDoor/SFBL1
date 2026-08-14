@@ -22,7 +22,7 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
-import { sendEmail, notifyAddress, esc } from "@/lib/email/send";
+import { notifyOffice, esc } from "@/lib/email/send";
 import { invalidateGeneratedRecap } from "@/lib/stats-off-recap";
 
 export const runtime = "nodejs";
@@ -234,12 +234,14 @@ export async function POST(req: Request) {
       created_at: now,
     });
 
-    const to = notifyAddress();
-    if (to) {
+    // EVERY office inbox, not just the first. A disputed score pulls a result
+    // off the site and stays down until someone rules on it, so it is the one
+    // notification that must not sit unread in one person's inbox. Mike runs
+    // Island with an assistant and both asked to get these (2026-08-13).
+    {
       const a = `${outcome.other.away_score}-${outcome.other.home_score}`;
       const b = `${away}-${home}`;
-      await sendEmail({
-        to,
+      await notifyOffice({
         subject: `Score discrepancy: ${label}${date ? ` (${date})` : ""}`,
         html:
           `<p><strong>The two teams reported different scores, so the result has been ` +

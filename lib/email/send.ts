@@ -65,10 +65,73 @@ export async function sendEmail(opts: {
   }
 }
 
-/** League-office inbox for new-submission notifications, or null. */
+/**
+ * Every league-office inbox that should be told about a registration, a
+ * payment, a captain's message or a disputed score.
+ *
+ * EMAIL_NOTIFY takes a comma or semicolon separated list, because a league
+ * office is rarely one person — Mike runs Island with an assistant and both
+ * need the score disputes (asked 2026-08-13).
+ *
+ * This used to be a single address tested against EMAIL_RE, and putting two in
+ * it FAILED SILENTLY: the comma broke the regex, notifyAddress() returned null,
+ * and every call site treats null as "no office configured" and sends nothing.
+ * So the obvious thing to try turned all office email off with no error.
+ *
+ * Duplicates are dropped so the same person is not mailed twice when a list
+ * has been pasted together from two places.
+ */
+export function notifyAddresses(): string[] {
+  return (process.env.EMAIL_NOTIFY ?? "")
+    .split(/[,;]/)
+    .map((s) => s.trim())
+    .filter((s, i, a) => EMAIL_RE.test(s) && a.indexOf(s) === i);
+}
+
+/**
+ * The FIRST league-office inbox, or null.
+ *
+ * For Reply-To, which takes one address. When choosing who RECEIVES something,
+ * use notifyAddresses() — otherwise everyone after the first is silently
+ * dropped, which is the bug this pair exists to prevent.
+ */
 export function notifyAddress(): string | null {
-  const v = process.env.EMAIL_NOTIFY;
-  return v && EMAIL_RE.test(v) ? v : null;
+  return notifyAddresses()[0] ?? null;
+}
+
+/**
+ * Send one message to EVERY league-office inbox, and report how many landed.
+ *
+ * Every office notification goes through here rather than each route reading
+ * the address itself, so adding a second recipient is one env var and not a
+ * hunt through five call sites for the one that still says `to: notify`.
+ *
+ * Best-effort by design: office mail must never fail the thing that triggered
+ * it. A coach's registration, a card payment and a score report all succeed
+ * whether or not the office hears about it, so a bad address for one recipient
+ * cannot stop the others being told.
+ *
+ * Returns 0 when no office is configured, which callers use to decide whether
+ * to stamp an "email sent" flag.
+ */
+export async function notifyOffice(opts: {
+  subject: string;
+  html: string;
+  replyTo?: string;
+}): Promise<number> {
+  let sent = 0;
+  for (const to of notifyAddresses()) {
+    try {
+      const r = await sendEmail({ ...opts, to });
+      if (r.ok) sent++;
+      else if (!r.skipped) {
+        console.error("[email] office notify failed", { to, error: r.error });
+      }
+    } catch (err) {
+      console.error("[email] office notify threw", { to, err });
+    }
+  }
+  return sent;
 }
 
 /** Minimal HTML escape for interpolating user input into email bodies. */

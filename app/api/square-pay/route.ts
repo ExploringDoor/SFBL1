@@ -16,7 +16,7 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { parseHost, resolveTenant } from "@/lib/tenants";
-import { sendEmail, notifyAddress } from "@/lib/email/send";
+import { sendEmail, notifyAddress, notifyOffice } from "@/lib/email/send";
 import { paymentReceiptEmail, officePaymentEmail } from "@/lib/email/templates";
 import {
   SQUARE_VERSION,
@@ -295,8 +295,7 @@ export async function POST(req: Request) {
       await ref.set({ receipt_email_sent: true }, { merge: true });
     }
 
-    const notify = notifyAddress();
-    if (notify) {
+    {
       const m = officePaymentEmail({
         team: teamName,
         firstName: String(data.manager_first_name ?? ""),
@@ -306,8 +305,7 @@ export async function POST(req: Request) {
         totalCents: amountCents,
         receiptUrl: payment.receipt_url ?? null,
       });
-      await sendEmail({
-        to: notify,
+      await notifyOffice({
         subject: m.subject,
         html: m.html,
         replyTo: payerEmail || undefined,
