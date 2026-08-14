@@ -53,6 +53,49 @@ const LABELS: Record<keyof SocialWidgets, string> = {
   tiktok: "TikTok",
 };
 
+// Brand glyphs, inline so a network is recognisable before the word is read.
+// SVG rather than emoji, per the house rule — an emoji renders as a different
+// picture on every platform and none of them are the brand.
+//
+// currentColor throughout, so they take the label's colour and shift with it
+// on hover without a second rule.
+const ICONS: Record<keyof SocialWidgets, JSX.Element> = {
+  instagram: (
+    <>
+      <rect x="2" y="2" width="20" height="20" rx="5.5" />
+      <circle cx="12" cy="12" r="4.2" />
+      <circle cx="17.6" cy="6.4" r="1.2" fill="currentColor" stroke="none" />
+    </>
+  ),
+  facebook: (
+    <path d="M14.5 8.5V6.8c0-.8.2-1.3 1.4-1.3h1.5V2.6c-.3 0-1.2-.1-2.2-.1-2.2 0-3.7 1.3-3.7 3.8v2.2H9v3h2.5V21h3v-8.5H17l.4-3z" />
+  ),
+  tiktok: (
+    <path d="M16.5 2.5c.3 1.9 1.4 3.4 3.2 3.9v3.1a7.1 7.1 0 0 1-3.9-1.3v5.9a5.9 5.9 0 1 1-5.9-5.9c.3 0 .6 0 .9.1v3.1a2.9 2.9 0 1 0 2 2.8V2.5z" />
+  ),
+};
+
+function NetworkIcon({ network }: { network: keyof SocialWidgets }) {
+  // Facebook and TikTok are solid shapes; Instagram is a line drawing, so it
+  // needs the stroke and must NOT be filled.
+  const outline = network === "instagram";
+  return (
+    <svg
+      className="le-social-feeds-icon"
+      viewBox="0 0 24 24"
+      width="15"
+      height="15"
+      aria-hidden="true"
+      focusable="false"
+      fill={outline ? "none" : "currentColor"}
+      stroke={outline ? "currentColor" : "none"}
+      strokeWidth={outline ? 1.9 : 0}
+    >
+      {ICONS[network]}
+    </svg>
+  );
+}
+
 // How tall Facebook's own header is, and how tall we want the visible box.
 // The header is cropped off the top (see the Facebook branch below), so the
 // iframe is rendered FB_HEADER_H taller than the window that shows it.
@@ -164,7 +207,10 @@ export function SocialFeeds({
         {entries.map(([key, value]) => (
           <div key={key} className="le-social-feeds-card">
             <div className="le-social-feeds-label">
-              <span>{LABELS[key]}</span>
+              <span className="le-social-feeds-name">
+                <NetworkIcon network={key} />
+                {LABELS[key]}
+              </span>
               {links?.[key] && (
                 <a
                   className="le-social-feeds-follow"

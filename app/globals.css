@@ -6898,6 +6898,19 @@ select:focus-visible {
   justify-content: space-between;
   gap: 10px;
 }
+/* Platform name with its brand glyph. The row of three boxes is scanned, not
+   read, and the icon lands before the word does. */
+.le-social-feeds-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.le-social-feeds-icon {
+  /* Never squeezed by a long platform name on a narrow phone column. */
+  flex: 0 0 auto;
+  /* Optically centred against uppercase text, which sits high in its line box. */
+  margin-top: -1px;
+}
 .le-social-feeds-follow {
   color: #7fb2ff;
   text-decoration: none;
@@ -6934,14 +6947,14 @@ select:focus-visible {
 .le-post-media {
   display: block;
   position: relative;
-  /* Square, because social photos are not landscape. Instagram shoots 4:5 and
-     1:1, and a phone held upright produces neither. At 16/10 with object-fit
-     cover, a portrait action shot lost its top and bottom — Adam's screenshot
-     on 2026-08-13 was a batter with no head, which is the one crop a softball
-     league cannot ship. 1:1 is what Instagram's own grid uses and it keeps the
-     card a sane height; going to a true 4/5 would be truer to the source but
-     makes these boxes much taller than the TikTok one beside them. */
-  aspect-ratio: 1 / 1;
+  /* 4:5, which is Instagram's portrait size and what a phone held upright
+     actually produces. Two earlier goes at this were both wrong in the same
+     direction, too landscape: 16/10 with object-fit cover sliced the top and
+     bottom off an action shot and left a batter with no head, and 1:1 fixed
+     the crop but left these two boxes visibly shorter than the TikTok video
+     beside them, which is 9:16. 4:5 crops least and stands nearest that
+     height, so the row reads as three of the same thing. */
+  aspect-ratio: 4 / 5;
   overflow: hidden;
   background: #0b1018;
 }
@@ -6962,7 +6975,14 @@ select:focus-visible {
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
 }
 .le-post-text {
-  display: block;
+  /* Two lines, hard. The caption is already trimmed to 140 characters in
+     SocialPostCard, but a wordy post still ran to three lines and pushed these
+     cards past the TikTok box next to them. Capping the text is what keeps the
+     three the same height whatever Mike writes. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
   padding: 10px 12px 0;
   font-size: 13px;
   line-height: 1.5;
