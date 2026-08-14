@@ -47,6 +47,31 @@ export interface StandingsTableProps {
   /** Highlight this team's row (full variant) — used on the team page's
    *  division-standings tab to mark the team you're viewing. */
   highlightTeamId?: string;
+  /** Show a leading rank column (1..N) and give the top row a
+   *  division-leader treatment (gold accent + trophy). Opt-in per tenant
+   *  (LCYBL) so stats-off leagues that only have W-L-T still read as a
+   *  finished, ranked table. Default off — no other tenant changes. */
+  showRank?: boolean;
+}
+
+// Division-leader trophy (rank 1). Inline SVG, no emoji, currentColor.
+function LeaderTrophy() {
+  return (
+    <svg
+      className="le-rank-trophy"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M6 3h12v4a6 6 0 0 1-12 0z" />
+      <path d="M6 5H4a2 2 0 0 0 0 4h2M18 5h2a2 2 0 0 1 0 4h-2" />
+      <path d="M9 21h6M12 15v6" />
+    </svg>
+  );
 }
 
 export function StandingsTable({
@@ -57,6 +82,7 @@ export function StandingsTable({
   showExtras = true,
   showRecentForm = true,
   highlightTeamId,
+  showRank = false,
 }: StandingsTableProps) {
   const multi = groups.length > 1;
   // Hide T / RS / RA / DIFF columns unless someone actually has data
@@ -151,6 +177,7 @@ export function StandingsTable({
           <table className="le-s-tbl">
             <thead>
               <tr>
+                {showRank && <th className="le-rank-h">#</th>}
                 <th>Team</th>
                 <th>W</th>
                 <th>L</th>
@@ -178,13 +205,21 @@ export function StandingsTable({
                 return (
                   <tr
                     key={r.team_id}
-                    className={i === 0 ? "leader" : ""}
+                    className={
+                      (i === 0 ? "leader" : "") +
+                      (showRank && i === 0 ? " le-champ" : "")
+                    }
                     style={
                       isHighlight
                         ? { background: "rgba(0,45,114,0.06)", fontWeight: 700 }
                         : undefined
                     }
                   >
+                    {showRank && (
+                      <td className="le-rank">
+                        {i === 0 ? <LeaderTrophy /> : <span>{i + 1}</span>}
+                      </td>
+                    )}
                     <td>
                       <span className="le-team-cell">
                         {/* Compact sidebar drops the logo to save space.

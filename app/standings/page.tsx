@@ -221,6 +221,7 @@ export default async function StandingsPage() {
                 variant="full"
                 showExtras={!storedRecordsMode}
                 showRecentForm={false}
+                showRank={tenantId === "lcybl"}
               />
             </section>
           ))}
@@ -233,6 +234,7 @@ export default async function StandingsPage() {
           variant="full"
           showExtras={!storedRecordsMode}
           showRecentForm={config?.abbrev !== "SFBL" && tenantId !== "sfbl"}
+          showRank={tenantId === "lcybl"}
         />
       )}
 

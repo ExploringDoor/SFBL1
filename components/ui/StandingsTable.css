@@ -352,3 +352,47 @@
     margin-left: 4px;
   }
 }
+
+/* ── Rank column + division-leader treatment (opt-in `showRank`, LCYBL) ──
+ * Stats-off leagues only have W-L-T, so a numbered, leader-marked table is
+ * what makes a finished season read as a real standings page rather than a
+ * plain list. The top row gets a gold trophy + accent; every other row is
+ * numbered. Scoped by the prop, so no other tenant is affected. */
+.le-s-tbl th.le-rank-h,
+.le-s-tbl td.le-rank {
+  width: 34px;
+  text-align: center;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+.le-s-tbl td.le-rank {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--muted, #6b7280);
+}
+.le-s-tbl tr.le-champ td.le-rank {
+  color: var(--brand-accent, #c9a227);
+}
+.le-rank-trophy {
+  width: 17px;
+  height: 17px;
+  color: var(--brand-accent, #c9a227);
+  vertical-align: middle;
+}
+/* Gold left accent + faint wash on the division leader row. Layered under
+ * the existing `.leader` name color, not replacing it. */
+.le-s-tbl tr.le-champ td {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--brand-accent, #c9a227) 12%, transparent),
+    transparent 60%
+  );
+}
+.le-s-tbl tr.le-champ td:first-child {
+  box-shadow: inset 3px 0 0 0 var(--brand-accent, #c9a227);
+}
+@media (max-width: 700px) {
+  .le-s-tbl th.le-rank-h,
+  .le-s-tbl td.le-rank { width: 26px; padding-left: 10px; }
+  .le-rank-trophy { width: 15px; height: 15px; }
+}
