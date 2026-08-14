@@ -122,7 +122,10 @@ async function get<T>(path: string, params: Record<string, string>): Promise<T> 
     }
   }
 
-  if (!pageIds.length) {
+  // Bound to a const rather than indexed inline: under noUncheckedIndexedAccess
+  // pageIds[0] is string | undefined however recently length was checked.
+  const targetPageId = pageIds[0];
+  if (!targetPageId) {
     console.error("no Facebook page on this token — is the token owner an admin of the PAGE?");
     process.exit(1);
   }
@@ -134,7 +137,7 @@ async function get<T>(path: string, params: Record<string, string>): Promise<T> 
     name: string;
     access_token: string;
     instagram_business_account?: { id: string };
-  }>(pageIds[0], {
+  }>(targetPageId, {
     fields: "id,name,access_token,instagram_business_account",
     access_token: userToken,
   });
