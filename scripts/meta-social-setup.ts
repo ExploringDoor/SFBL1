@@ -80,18 +80,68 @@ async function get<T>(path: string, params: Record<string, string>): Promise<T> 
 
   // The PAGE token is what reads page posts, and page tokens derived from a
   // long-lived user token do not expire while the user token is valid.
-  const pages = await get<{ data?: { id: string; name: string; access_token: string }[] }>(
+  //
+  // me/accounts is the documented way to list them and it CANNOT BE TRUSTED.
+  // When the user grants page permissions one page at a time — which is what
+  // Meta's own consent dialog now asks for, and what Mike did — the grant is
+  // recorded as a granular scope against that page id and me/accounts comes
+  // back as a flat empty array. No error, no warning, just `{"data": []}`,
+  // which reads exactly like "this person administers nothing".
+  //
+  // The page ids ARE knowable: debug_token reports them under granular_scopes,
+  // and a direct query on an id returns the page and its token normally. So
+  // when the list is empty, ask the token what it was granted rather than
+  // believing the empty list.
+  //
+  // PAGE_ID overrides both, for the case where an account administers several
+  // pages and the first one is not the league's.
+  const listed = await get<{ data?: { id: string; name: string; access_token: string }[] }>(
     "me/accounts",
     { access_token: userToken, fields: "id,name,access_token" },
   );
-  const page = pages.data?.[0];
-  if (!page) { console.error("no Facebook page on this account — is Mike an admin of the PAGE?"); process.exit(1); }
 
-  // The Instagram business account hangs off the page.
-  const linked = await get<{ instagram_business_account?: { id: string } }>(page.id, {
-    fields: "instagram_business_account",
-    access_token: page.access_token,
+  let pageIds = (listed.data ?? []).map((p) => p.id);
+  if (process.env.PAGE_ID) {
+    pageIds = [process.env.PAGE_ID];
+  } else if (!pageIds.length) {
+    const dbg = await get<{
+      data?: { granular_scopes?: { scope: string; target_ids?: string[] }[] };
+    }>("debug_token", {
+      input_token: userToken,
+      access_token: `${APP_ID}|${APP_SECRET}`,
+    });
+    pageIds = [
+      ...new Set(
+        (dbg.data?.granular_scopes ?? [])
+          .filter((g) => g.scope.startsWith("pages_"))
+          .flatMap((g) => g.target_ids ?? []),
+      ),
+    ];
+    if (pageIds.length) {
+      console.log(`me/accounts was empty; recovered ${pageIds.length} page id(s) from the token's granular scopes`);
+    }
+  }
+
+  if (!pageIds.length) {
+    console.error("no Facebook page on this token — is the token owner an admin of the PAGE?");
+    process.exit(1);
+  }
+
+  // One query per id: name and page token, plus the Instagram business account
+  // that hangs off the page, which is the only route to Instagram media.
+  const page = await get<{
+    id: string;
+    name: string;
+    access_token: string;
+    instagram_business_account?: { id: string };
+  }>(pageIds[0], {
+    fields: "id,name,access_token,instagram_business_account",
+    access_token: userToken,
   });
+  if (pageIds.length > 1) {
+    console.log(`note: ${pageIds.length} pages granted, using "${page.name}". Set PAGE_ID to pick another.`);
+  }
+  const linked = page;
 
   const next = {
     fb_page_id: page.id,
