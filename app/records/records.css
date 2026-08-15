@@ -1,0 +1,187 @@
+/* LCYBL Record Book. Same design language as the rest of the site:
+   Barlow Condensed display type, navy/gold, division-card tables. */
+
+.rb-head {
+  margin-bottom: 26px;
+}
+.rb-eyebrow {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--brand-primary);
+  margin: 0 0 6px;
+}
+.rb-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(36px, 5vw, 54px);
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+  color: var(--text-strong);
+  margin: 0;
+}
+.rb-sub {
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.rb-sec {
+  margin: 34px 0 0;
+}
+.rb-h2 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 26px;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: var(--brand-primary);
+  border-bottom: 3px solid var(--brand-primary);
+  padding-bottom: 6px;
+  margin: 0 0 6px;
+}
+.rb-note {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0 0 14px;
+}
+
+/* Title Tracker podium: top-3 gold cards */
+.rb-podium {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin: 14px 0 18px;
+}
+@media (max-width: 720px) {
+  .rb-podium { grid-template-columns: 1fr; }
+}
+.rb-champ-card {
+  position: relative;
+  border-radius: 14px;
+  padding: 18px 18px 16px;
+  background:
+    linear-gradient(145deg,
+      color-mix(in srgb, var(--brand-accent, #c9a227) 16%, #fff),
+      #fff 55%);
+  border: 1px solid color-mix(in srgb, var(--brand-accent, #c9a227) 45%, transparent);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+}
+.rb-champ-rank {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 15px;
+  color: var(--brand-accent, #c9a227);
+  letter-spacing: 0.08em;
+}
+.rb-champ-count {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 46px;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--brand-primary);
+}
+.rb-champ-count small {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-left: 6px;
+  text-transform: uppercase;
+}
+.rb-champ-team {
+  margin-top: 6px;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-strong);
+}
+.rb-champ-years {
+  margin-top: 4px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* Generic record table */
+.rb-card {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.rb-scroll { overflow-x: auto; }
+.rb-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.rb-tbl th {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: left;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.03);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+  white-space: nowrap;
+}
+.rb-tbl td {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  white-space: nowrap;
+}
+.rb-tbl tr:last-child td { border-bottom: none; }
+.rb-tbl .num { text-align: right; font-variant-numeric: tabular-nums; }
+.rb-tbl th.num { text-align: right; }
+.rb-tbl .team { font-weight: 700; color: var(--text-strong); }
+.rb-tbl tr.first td {
+  background: color-mix(in srgb, var(--brand-accent, #c9a227) 10%, transparent);
+}
+.rb-perfect-badge {
+  display: inline-block;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand-primary);
+  background: var(--brand-accent, #c9a227);
+  border-radius: 20px;
+  padding: 2px 9px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+/* Dynasty chips */
+.rb-dyn {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+.rb-dyn-chip {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px 14px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+}
+.rb-dyn-team {
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--text-strong);
+}
+.rb-dyn-run {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.rb-dyn-run b { color: var(--brand-accent, #c9a227); }
