@@ -7017,3 +7017,72 @@ select:focus-visible {
   text-transform: uppercase;
   color: #7c8798;
 }
+
+/* ── LCYBL "Get Game Alerts" homepage band ──────────────────────────────
+ * Front door to /alerts (the email signup for rainouts, schedule changes,
+ * scores). Gold-accented navy band, distinct from the navy Register CTA so
+ * the two do not read as the same button. LCYBL-scoped in the JSX. */
+.le-home-alert-cta {
+  background: var(--brand-primary);
+  color: #fff;
+  border-top: 3px solid var(--brand-accent, #c9a227);
+}
+.le-home-alert-cta-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+.le-home-alert-cta-text {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.le-home-alert-cta-bell {
+  flex: 0 0 auto;
+  display: inline-flex;
+  color: var(--brand-accent, #c9a227);
+}
+.le-home-alert-cta-bell svg {
+  width: 30px;
+  height: 30px;
+}
+.le-home-alert-cta-eyebrow {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0;
+  color: var(--brand-accent, #c9a227);
+}
+.le-home-alert-cta-head {
+  margin: 2px 0 0;
+  font-size: clamp(18px, 2.4vw, 24px);
+  font-weight: 800;
+  line-height: 1.2;
+}
+.le-home-alert-cta-btn {
+  display: inline-block;
+  background: var(--brand-accent, #c9a227);
+  color: var(--brand-primary);
+  font-weight: 800;
+  font-size: 15px;
+  padding: 12px 22px;
+  border-radius: 8px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.le-home-alert-cta-btn:hover,
+.le-home-alert-cta-btn:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+}
+@media (max-width: 640px) {
+  .le-home-alert-cta-text { gap: 10px; }
+  .le-home-alert-cta-btn { width: 100%; text-align: center; }
+}

@@ -195,6 +195,41 @@ export default async function HomePage() {
           hero instead — see above.) */}
       {tenantId !== "coybl" && <HomepageNews leagueId={tenantId} />}
 
+      {/* LCYBL: "Get Game Alerts" band — surfaces the /alerts email signup
+          so families can opt into rainouts, schedule changes, and scores.
+          The signup page already exists; this is its front door on the
+          homepage. Scoped to LCYBL, so no other tenant renders it. */}
+      {tenantId === "lcybl" && (
+        <section className="le-home-alert-cta">
+          <div className="container le-home-alert-cta-inner">
+            <div className="le-home-alert-cta-text">
+              <span className="le-home-alert-cta-bell" aria-hidden>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg>
+              </span>
+              <div>
+                <p className="le-home-alert-cta-eyebrow">Never miss a game</p>
+                <p className="le-home-alert-cta-head">
+                  Get rainouts, schedule changes, and scores by email.
+                </p>
+              </div>
+            </div>
+            <Link href="/alerts" className="le-home-alert-cta-btn">
+              Get Game Alerts
+            </Link>
+          </div>
+        </section>
+      )}
+
       {/* "About" intro for first-time visitors — renders only when the
           tenant config sets `about`. */}
       {config?.about && (
