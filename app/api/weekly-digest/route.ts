@@ -23,6 +23,7 @@
 import { NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { sendGridBroadcast, sendGridConfigured } from "@/lib/email/sendgrid";
+import { loadAlertEmails } from "@/lib/email/alert-recipients";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -82,25 +83,6 @@ function prettyDate(iso: string): string {
 function pct(t: TeamRow): number {
   const gp = t.w + t.l + t.t;
   return gp > 0 ? (t.w + 0.5 * t.t) / gp : 0;
-}
-
-async function loadRecipients(
-  db: FirebaseFirestore.Firestore,
-  leagueId: string,
-): Promise<string[]> {
-  // Opt-in alert list only. These people asked for league alerts; the
-  // team_registration list is coaches, not the general alert audience.
-  const snap = await db
-    .collection(`leagues/${leagueId}/form_submissions/alerts_signup/items`)
-    .get();
-  const emails: string[] = [];
-  for (const doc of snap.docs) {
-    const x = doc.data() as { email?: unknown; notify_by?: unknown };
-    const email = typeof x.email === "string" ? x.email.trim() : "";
-    // "text"-only subscribers are not on the email list.
-    if (email && x.notify_by !== "text") emails.push(email.toLowerCase());
-  }
-  return [...new Set(emails)];
 }
 
 function buildDigestHtml(opts: {
@@ -314,7 +296,7 @@ export async function GET(req: Request) {
   let firstHtml = "";
   for (const leagueId of leagueIds) {
     const digest = await digestForLeague(db, leagueId, refNow, days);
-    const recipients = await loadRecipients(db, leagueId);
+    const recipients = await loadAlertEmails(db, leagueId);
     if (!firstHtml) firstHtml = digest.html;
 
     if (dryRun) {

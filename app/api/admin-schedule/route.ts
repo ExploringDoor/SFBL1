@@ -23,6 +23,8 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { sendGridBroadcast } from "@/lib/email/sendgrid";
+import { loadAlertEmails } from "@/lib/email/alert-recipients";
 import {
   fanoutPush,
   originFromRequest,
@@ -300,12 +302,65 @@ export async function POST(req: Request) {
       }
     }
 
+    // Email blast to the opted-in alerts list (same audience as the weekly
+    // digest). One email for the whole date, not one per game. Best-effort:
+    // a mail failure never un-postpones the games. Silently a no-op until
+    // the league has signups and SENDGRID_* is configured.
+    let emailsSent = 0;
+    if (body.notify !== false) {
+      try {
+        const recipients = await loadAlertEmails(db, leagueId);
+        if (recipients.length > 0) {
+          const leagueDoc = await db.doc(`leagues/${leagueId}`).get();
+          const cfg = (leagueDoc.data() ?? {}) as {
+            name?: string;
+            brand?: { primary?: string };
+            site_url?: string;
+          };
+          const leagueName = cfg.name ?? leagueId.toUpperCase();
+          const siteUrl = cfg.site_url ?? `https://${leagueId}.vercel.app`;
+          const navy = cfg.brand?.primary ?? "#14213d";
+          const prettyDate = formatDateForPush(date);
+          const gamesWord = targets.length === 1 ? "game" : "games";
+          const send = await sendGridBroadcast({
+            recipients,
+            subject: `Rainout: ${prettyDate} ${gamesWord} postponed`,
+            html: `<!doctype html><html><body style="margin:0;background:#f4f5f7;padding:24px 0">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+    <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:92%;background:#fff;border-radius:12px;overflow:hidden">
+      <tr><td style="background:${navy};padding:22px 28px">
+        <p style="margin:0;font:800 20px/1.1 Arial,sans-serif;color:#fff">${leagueName}</p>
+        <p style="margin:4px 0 0;font:700 12px/1.2 Arial,sans-serif;color:#c9a227;text-transform:uppercase;letter-spacing:.12em">Rainout Alert</p>
+      </td></tr>
+      <tr><td style="padding:24px 28px">
+        <p style="margin:0 0 10px;font:800 18px/1.3 Arial,sans-serif;color:${navy}">All ${targets.length} ${gamesWord} on ${prettyDate} are postponed.</p>
+        <p style="margin:0 0 18px;font:400 15px/1.55 Arial,sans-serif;color:#333">Make-up dates are TBD and will be posted on the schedule as soon as they are set.</p>
+        <table role="presentation" cellpadding="0" cellspacing="0" style="margin:4px auto 6px"><tr><td style="background:#c9a227;border-radius:8px">
+          <a href="${siteUrl}/schedule" style="display:inline-block;padding:12px 26px;font:800 15px/1 Arial,sans-serif;color:${navy};text-decoration:none">View the Schedule</a>
+        </td></tr></table>
+      </td></tr>
+      <tr><td style="padding:14px 28px 22px;border-top:1px solid #eee">
+        <p style="margin:0;font:400 12px/1.5 Arial,sans-serif;color:#999">You are receiving this because you signed up for ${leagueName} alerts. Reply to this email to be removed.</p>
+      </td></tr>
+    </table>
+  </td></tr></table>
+</body></html>`,
+          });
+          emailsSent = send.sent;
+        }
+      } catch (e) {
+        // Best-effort — a mail failure never blocks the rain out itself.
+        console.warn("[admin-schedule] rain_out email failed:", e);
+      }
+    }
+
     return NextResponse.json({
       ok: true,
       date,
       affected: targets.length,
       affected_game_ids: targets.map((d) => d.id),
       push_sent: pushSent,
+      emails_sent: emailsSent,
     });
   }
 
