@@ -1,4 +1,8 @@
 {
+  "crons": [
+    { "path": "/api/nightly-reminder", "schedule": "0 22 * * *" },
+    { "path": "/api/weekly-digest", "schedule": "0 22 * * 0" }
+  ],
   "headers": [
     {
       "source": "/:tenant/headers/:file",
