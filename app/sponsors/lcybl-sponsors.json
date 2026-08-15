@@ -1,0 +1,47 @@
+{
+  "_source": "LCYBL sponsorship packages drafted for the site launch. Prices are placeholders for the board to confirm; edit freely. Reach figures come from the league's own numbers (185 teams / 23 clubs / est. 1954).",
+  "_assets": "partners[] is empty until the league signs sponsors. Logos added through Admin > Sponsors appear on this page and in the sitewide footer strip. Host logo files under public/lcybl/sponsors/ and reference them by path for the cleanest result.",
+
+  "intro": "Put your business in front of thousands of Lancaster County baseball families. LCYBL has served the county since 1954, and today 185 teams across 23 member clubs take the field every season. Every sponsorship goes straight back into the fields, the equipment, and the awards the kids take home.",
+
+  "reach": [
+    { "stat": "185", "label": "teams across the county" },
+    { "stat": "23", "label": "member clubs" },
+    { "stat": "Since 1954", "label": "74 seasons of Lancaster County baseball" },
+    { "stat": "Thousands", "label": "of local families every season" }
+  ],
+
+  "tiers": [
+    {
+      "name": "Grand Slam Sponsor",
+      "price": "$1,000 / year",
+      "popular": true,
+      "impressions": "Top billing across the whole league",
+      "benefits": [
+        "Your logo on the homepage sponsor strip, sitewide on every page",
+        "A featured spot at the top of this sponsors page",
+        "Recognition in league announcements and at the season awards"
+      ]
+    },
+    {
+      "name": "Home Run Sponsor",
+      "price": "$500 / year",
+      "impressions": "League-wide exposure all season",
+      "benefits": [
+        "Your logo in the sitewide sponsor strip",
+        "A listing on this sponsors page with a link to your site"
+      ]
+    },
+    {
+      "name": "Team Sponsor",
+      "price": "$250 / team",
+      "impressions": "Back one team for the season",
+      "benefits": [
+        "Your business named as the sponsor right on your team's page",
+        "Support one team's uniforms and equipment for the year"
+      ]
+    }
+  ],
+
+  "partners": []
+}

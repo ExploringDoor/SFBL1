@@ -17,6 +17,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import islandSponsors from "./island-sponsors.json";
+import lcyblSponsors from "./lcybl-sponsors.json";
 import "./sponsors.css";
 
 export const dynamic = "force-dynamic";
@@ -52,6 +53,7 @@ interface Partner {
 
 interface SponsorData {
   duration?: string | null;
+  intro?: string;
   reach?: { stat: string; label: string }[];
   tiers?: Tier[];
   partners?: Partner[];
@@ -94,7 +96,11 @@ export default async function SponsorsPage() {
 
   const leagueName = config?.name ?? "the league";
   const data: SponsorData =
-    tenantId === "island" ? (islandSponsors as SponsorData) : {};
+    tenantId === "island"
+      ? (islandSponsors as SponsorData)
+      : tenantId === "lcybl"
+        ? (lcyblSponsors as SponsorData)
+        : {};
   const tiers = data.tiers ?? [];
   const partners = data.partners ?? [];
   const reach = data.reach ?? [];
@@ -123,11 +129,15 @@ export default async function SponsorsPage() {
           Sponsors
         </h1>
         <p className="spn-intro">
-          Put your business in front of thousands of Long Island families,
-          athletes and coaches. {leagueName} reaches them every month through
-          tournaments, live streams and social, and every sponsorship goes
-          straight back into the fields, the equipment and the awards the girls
-          take home.
+          {data.intro ?? (
+            <>
+              Put your business in front of thousands of Long Island families,
+              athletes and coaches. {leagueName} reaches them every month
+              through tournaments, live streams and social, and every
+              sponsorship goes straight back into the fields, the equipment and
+              the awards the girls take home.
+            </>
+          )}
         </p>
       </header>
 
