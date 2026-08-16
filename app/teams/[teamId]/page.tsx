@@ -15,7 +15,7 @@ import {
   type GameLogLine,
   type TeamHistory,
 } from "@/lib/team-history";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { TeamBadge } from "@/components/TeamBadge";
 import { SubscribeCalendar } from "@/components/SubscribeCalendar";
@@ -34,6 +34,7 @@ import {
   type TeamMeta,
 } from "@/components/ui/StandingsTable";
 import { TeamTabs } from "@/components/ui/TeamTabs";
+import { TeamsHiddenNotice } from "@/components/ui/TeamsHiddenNotice";
 import { recordsToStandings } from "@/lib/age-standings";
 
 export const dynamic = "force-dynamic";
@@ -113,13 +114,18 @@ export default async function TeamDetailPage({
 
   // While the field is under wraps, a team's own page is the leak the listing
   // page is not: the URL is stable and shareable, so hiding the index alone
-  // would leave every team one guessed id away from public. See the same flag
-  // in app/teams/page.tsx.
+  // would leave every team one guessed id away from public.
   //
-  // Redirect rather than 404, so anyone with an old link lands on the notice
-  // that says when the list is coming instead of a dead end.
+  // Rendered in place rather than redirected. See TeamsHiddenNotice for why:
+  // the layout has already streamed by the time this runs, so redirect() gets
+  // downgraded to a client-side hop and the server sends a 200 with an empty
+  // body. Serving the notice itself needs no JavaScript to stay private.
   if (config?.flags?.hide_teams === true) {
-    redirect("/teams");
+    return (
+      <TeamsHiddenNotice
+        registrationOpen={config?.flags?.registration_open === true}
+      />
+    );
   }
 
   const db = getAdminDb();

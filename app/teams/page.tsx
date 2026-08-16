@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { DemoDataBanner } from "@/components/ui/DemoDataBanner";
+import { TeamsHiddenNotice } from "@/components/ui/TeamsHiddenNotice";
 import {
   getCachedGamesSnap,
   getCachedTeamsSnap,
@@ -58,6 +59,34 @@ export default async function TeamsPage() {
       <main className="container py-12">
         <p>Visit a tenant subdomain.</p>
       </main>
+    );
+  }
+
+  // Who has signed up is not public yet.
+  //
+  // Mike asked for this on 2026-08-14: the office sees who has registered, the
+  // public does not, until the schedule is released. A league announces its
+  // field on its own terms.
+  //
+  // A NOTICE, not a 404. The URL is guessable and gets shared, and "this page
+  // does not exist" reads as a broken site. Saying the list is coming is both
+  // true and better marketing.
+  //
+  // The nav still links here, deliberately. nav.hide does not actually filter
+  // the rendered nav (sponsors and history have sat in island's hide list for
+  // weeks and still render), and a link to an explanation beats a menu item
+  // that silently vanishes.
+  //
+  // Checked BEFORE the Firestore reads below: there is no point costing a
+  // teams-and-games fetch to render a fixed paragraph.
+  //
+  // The admin is untouched. It reads Firestore behind its own auth check, so
+  // nothing here narrows what the office can see.
+  if (config?.flags?.hide_teams === true) {
+    return (
+      <TeamsHiddenNotice
+        registrationOpen={config?.flags?.registration_open === true}
+      />
     );
   }
 
@@ -171,57 +200,6 @@ export default async function TeamsPage() {
       .map(([ageGroup, list]) => ({ ageGroup, divisions: divisionsOf(list) }));
   } else {
     sections = [{ ageGroup: null, divisions: divisionsOf(teams) }];
-  }
-
-  // Who has signed up is not public yet.
-  //
-  // Mike asked for this on 2026-08-14: the office can see the roster of teams
-  // in the admin, but nobody outside should know who is in until the schedule
-  // is released. A league announces its field on its own terms.
-  //
-  // A NOTICE, not a 404. The link is dropped from the nav too, but the URL is
-  // guessable and shared, and "this page does not exist" reads as a broken
-  // site. Saying the list is coming is both true and better marketing.
-  //
-  // The admin is untouched. It reads Firestore directly behind an auth check,
-  // so nothing here narrows what the office can see.
-  if (config?.flags?.hide_teams === true) {
-    return (
-      <main className="container py-10">
-        <header className="mb-8">
-          <h1 className="font-display" style={{ fontSize: "clamp(34px, 5vw, 52px)" }}>
-            <span style={{ color: "var(--text-strong)" }}>League</span>{" "}
-            <span style={{ color: "var(--brand-primary)" }}>Teams</span>
-          </h1>
-        </header>
-        <p style={{ fontSize: 18, lineHeight: 1.6, maxWidth: "46ch", color: "var(--text-muted)" }}>
-          The team list goes up when the schedule is released. Registration is
-          open until then.
-        </p>
-        {config?.flags?.registration_open && (
-          <p style={{ marginTop: 20 }}>
-            <Link
-              href="/team-registration"
-              className="le-cap-btn-primary"
-              style={{
-                display: "inline-block",
-                padding: "12px 26px",
-                background: "var(--brand-primary)",
-                color: "#fff",
-                borderRadius: 10,
-                fontWeight: 800,
-                letterSpacing: ".04em",
-                textTransform: "uppercase",
-                textDecoration: "none",
-                fontSize: 14,
-              }}
-            >
-              Register your team
-            </Link>
-          </p>
-        )}
-      </main>
-    );
   }
 
   return (
