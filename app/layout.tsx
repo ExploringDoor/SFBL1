@@ -353,16 +353,16 @@ export default async function RootLayout({
         { label: "Sponsors", href: "/sponsors" },
         { label: "Umpire Evaluation", href: "/umpire-evaluation-form" },
         { label: "Coach Login", href: "/captain" },
-        // Admin is NOT listed. Removed 2026-08-14 (Adam).
+        // Admin STAYS. Removed on 2026-08-14 and put straight back at Adam's
+        // call the same day, so: do not take it out again.
         //
-        // It was never a leak — /admin renders a sign-in gate and loads no
-        // league data until someone authenticates, which was checked before
-        // removing it. It is off the menu because a parent looking for the
-        // schedule should not be offered the league's back office, and an
-        // advertised admin door invites people to rattle the handle.
-        //
-        // Mike and Kaitlin reach it by bookmarking /admin. Coaches want
-        // "Coach Login" above, which is the door they actually need.
+        // The case for removing it was thin. /admin renders a sign-in gate and
+        // loads no league data until someone authenticates — checked against
+        // the live site, an anonymous visit shows zero real names or emails —
+        // so hiding it buys obscurity on a door that is already locked.
+        // Against that, Mike and Kaitlin are in here most days and a menu item
+        // they can see beats a URL they have to remember.
+        { label: "Admin", href: "/admin" },
       ],
     },
     { label: "Contact", href: "/content/contact" },
