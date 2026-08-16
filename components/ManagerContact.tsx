@@ -55,7 +55,16 @@ export function ManagerContact({
       const arr = Array.isArray(data?.managers)
         ? (data!.managers as unknown[]).map((m) => {
             const o = (m ?? {}) as Record<string, unknown>;
-            return { name: String(o.name ?? ""), email: String(o.email ?? "") };
+            // Spread FIRST. Rebuilding from name + email alone is what hid
+            // the phone, role and address on load — the same mistake the
+            // save had, so an edit round-trip erased them twice over.
+            return {
+              ...o,
+              name: String(o.name ?? ""),
+              email: String(o.email ?? ""),
+              phone: String(o.phone ?? ""),
+              address: String(o.address ?? ""),
+            } as Mgr;
           })
         : [];
       setMgrs(arr);
@@ -246,6 +255,22 @@ export function ManagerContact({
               ) : (
                 <span style={{ color: "#b45309" }}> — no email on file</span>
               )}
+              {/* Phone and address were collected at registration and shown
+                  nowhere: the office had to open Form submissions per team to
+                  read either one. */}
+              {m.role ? (
+                <span style={{ color: "#64748b", fontSize: 12 }}> · {m.role}</span>
+              ) : null}
+              {m.phone ? (
+                <div style={{ fontSize: 13 }}>
+                  <a href={`tel:${String(m.phone).replace(/[^0-9+]/g, "")}`} style={{ color: "var(--brand-primary, #002d72)" }}>
+                    {m.phone}
+                  </a>
+                </div>
+              ) : null}
+              {m.address ? (
+                <div style={{ fontSize: 13, color: "#475569" }}>{m.address}</div>
+              ) : null}
             </li>
           ))}
         </ul>
