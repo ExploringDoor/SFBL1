@@ -51,6 +51,16 @@ const TEAMS = [
   { id: "demo-12u-b", name: "Sample Team D", abbrev: "STD", ageGroup: "12U", division: "Weekend", ageOrder: 12, color: "#4c1d95" },
   { id: "demo-14u-a", name: "Sample Team E", abbrev: "STE", ageGroup: "14U", division: "Weeknight", ageOrder: 14, color: "#9a3412" },
   { id: "demo-14u-b", name: "Sample Team F", abbrev: "STF", ageGroup: "14U", division: "Weeknight", ageOrder: 14, color: "#155e75" },
+  // 16/18U added 2026-08-14. The age filters on Teams and Standings are built
+  // from the age groups that actually have teams, so with nothing seeded here
+  // the bracket had no button and read as missing rather than empty. Adam
+  // checked that morning and there was none.
+  //
+  // "16/18U" verbatim, matching what a real registration writes — a "16U" here
+  // would split the bracket in two and put the demo teams in a group of their
+  // own next to the real one.
+  { id: "demo-1618u-a", name: "Sample Team G", abbrev: "STG", ageGroup: "16/18U", division: "Weeknight", ageOrder: 16, color: "#713f12" },
+  { id: "demo-1618u-b", name: "Sample Team H", abbrev: "STH", ageGroup: "16/18U", division: "Weeknight", ageOrder: 16, color: "#3f6212" },
 ];
 
 // A mix of played and upcoming, so Scores has finals, Schedule has fixtures,
@@ -67,6 +77,13 @@ const GAMES = [
   { id: "demo-g7", date: "2026-09-27", time: "09:00", home: "demo-10u-a", away: "demo-10u-b", field: "Sample Field 1" },
   { id: "demo-g8", date: "2026-09-27", time: "12:30", home: "demo-12u-a", away: "demo-12u-b", field: "Sample Field 2" },
   { id: "demo-g9", date: "2026-09-30", time: "18:00", home: "demo-14u-a", away: "demo-14u-b", field: "Sample Field 1" },
+  // 16/18U. Deliberately a 1-1 split with lopsided run differential, so the
+  // bracket demonstrates the tiebreak: both teams sit on .500 and H is placed
+  // above G on runs. A 2-0 blowout would have shown nothing the 12U group does
+  // not already show.
+  { id: "demo-g10", date: "2026-09-16", time: "19:30", home: "demo-1618u-a", away: "demo-1618u-b", hs: 3, as: 2, field: "Sample Field 3" },
+  { id: "demo-g11", date: "2026-09-23", time: "19:30", home: "demo-1618u-b", away: "demo-1618u-a", hs: 7, as: 1, field: "Sample Field 3" },
+  { id: "demo-g12", date: "2026-09-30", time: "19:30", home: "demo-1618u-a", away: "demo-1618u-b", field: "Sample Field 3" },
 ] as { id: string; date: string; time: string; home: string; away: string; hs?: number; as?: number; field: string }[];
 
 async function remove() {
