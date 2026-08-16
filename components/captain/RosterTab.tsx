@@ -18,6 +18,7 @@
 // can't write directly from the browser. The endpoint enforces team
 // scoping (captain of team_a can't touch team_b's players).
 
+import { formatPhone } from "@/lib/format-phone";
 import { useEffect, useState } from "react";
 import {
   collection,
@@ -290,7 +291,7 @@ export function RosterTab({ leagueId, teamId }: RosterTabProps) {
                     </div>
                     <div className="cap-pending-meta">
                       {p.email || "no email"}
-                      {p.phone ? ` · ${p.phone}` : ""}
+                      {p.phone ? ` · ${formatPhone(p.phone)}` : ""}
                     </div>
                   </div>
                   <div className="cap-pending-actions">

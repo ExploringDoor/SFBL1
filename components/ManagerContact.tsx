@@ -15,6 +15,7 @@
 
 import { useEffect, useState } from "react";
 import { doc, getDoc, setDoc } from "firebase/firestore";
+import { formatPhone, telHref } from "@/lib/format-phone";
 import { getDb } from "@/lib/firebase";
 
 interface Mgr {
@@ -263,8 +264,8 @@ export function ManagerContact({
               ) : null}
               {m.phone ? (
                 <div style={{ fontSize: 13 }}>
-                  <a href={`tel:${String(m.phone).replace(/[^0-9+]/g, "")}`} style={{ color: "var(--brand-primary, #002d72)" }}>
-                    {m.phone}
+                  <a href={`tel:${telHref(m.phone)}`} style={{ color: "var(--brand-primary, #002d72)" }}>
+                    {formatPhone(m.phone)}
                   </a>
                 </div>
               ) : null}

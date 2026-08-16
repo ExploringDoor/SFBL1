@@ -9,6 +9,7 @@
 // missing players. Click "Edit" to open the metadata form, or click
 // the row's chevron to toggle the roster.
 
+import { formatPhone } from "@/lib/format-phone";
 import { useEffect, useState } from "react";
 import type { User } from "firebase/auth";
 import { collection, getDocs, query, where, limit } from "firebase/firestore";
@@ -1319,7 +1320,7 @@ function RosterRow({
             {player.email || (
               <span className="italic text-slate-400">no email</span>
             )}
-            {player.phone ? ` · ${player.phone}` : ""}
+            {player.phone ? ` · ${formatPhone(player.phone)}` : ""}
           </div>
         </div>
         <button
