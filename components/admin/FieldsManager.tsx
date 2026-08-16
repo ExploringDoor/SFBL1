@@ -33,6 +33,10 @@ interface FieldEntry {
 }
 
 export function FieldsManager({ leagueId }: Props) {
+  // Team names for the home-field picker. Doug could add a field but had no
+  // way to say whose home field it was: the team showed as a read-only chip,
+  // set once from the registration and uneditable afterwards.
+  const [teamNames, setTeamNames] = useState<string[]>([]);
   const [fields, setFields] = useState<FieldEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -80,9 +84,24 @@ export function FieldsManager({ leagueId }: Props) {
     return () => {
       alive = false;
     };
+    (async () => {
+      try {
+        const { getDocs, collection } = await import("firebase/firestore");
+        const snap = await getDocs(
+          collection(getDb(), `leagues/${leagueId}/teams`),
+        );
+        const names = snap.docs
+          .map((d) => String((d.data() as { name?: unknown }).name ?? ""))
+          .filter(Boolean)
+          .sort((a, b) => a.localeCompare(b));
+        setTeamNames(names);
+      } catch {
+        /* picker just falls back to free text */
+      }
+    })();
   }, [leagueId]);
 
-  function edit(i: number, key: "name" | "address", val: string) {
+  function edit(i: number, key: "name" | "address" | "team", val: string) {
     setFields((cur) => cur.map((f, idx) => (idx === i ? { ...f, [key]: val } : f)));
     setSaved(false);
   }
@@ -176,14 +195,26 @@ export function FieldsManager({ leagueId }: Props) {
                   placeholder="Full address (street, city, state ZIP)"
                   className="w-full flex-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
                 />
-                {f.team && (
-                  <span
-                    className="self-center whitespace-nowrap rounded-full bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-600"
-                    title="Home field for this team"
-                  >
-                    {f.team}
-                  </span>
-                )}
+                <select
+                  value={f.team ?? ""}
+                  onChange={(e) => edit(i, "team", e.target.value)}
+                  className="self-center rounded-md border border-slate-300 px-2 py-1.5 text-xs text-slate-700"
+                  title="Whose home field is this?"
+                  aria-label="Home field for team"
+                >
+                  <option value="">Home field for…</option>
+                  {/* A team set from a registration that no longer matches a
+                      team name would otherwise vanish from the picker, so keep
+                      it as an option. */}
+                  {f.team && !teamNames.includes(f.team) && (
+                    <option value={f.team}>{f.team}</option>
+                  )}
+                  {teamNames.map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
                 {f.mapsUrl ? (
                   <a
                     href={f.mapsUrl}
