@@ -15,7 +15,7 @@ import {
   type GameLogLine,
   type TeamHistory,
 } from "@/lib/team-history";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { TeamBadge } from "@/components/TeamBadge";
 import { SubscribeCalendar } from "@/components/SubscribeCalendar";
@@ -46,8 +46,19 @@ export async function generateMetadata({
 }: {
   params: { teamId: string };
 }): Promise<Metadata> {
-  const tenantId = headers().get("x-tenant-id");
+  const h = headers();
+  const tenantId = h.get("x-tenant-id");
   if (!tenantId) return {};
+  // Metadata is the sneakiest leak of all: the page below redirects, but a
+  // title and og:image are what a pasted link unfurls into. Publishing the
+  // team's name and logo there would announce exactly what the flag is meant
+  // to keep quiet.
+  try {
+    const cfg = JSON.parse(h.get("x-tenant-config-json") ?? "{}") as PublicLeagueConfig;
+    if (cfg?.flags?.hide_teams === true) return {};
+  } catch {
+    /* no config header — fall through and render normally */
+  }
   const snap = await getAdminDb()
     .doc(`leagues/${tenantId}/teams/${params.teamId}`)
     .get();
@@ -98,6 +109,17 @@ export default async function TeamDetailPage({
         <p>Visit a tenant subdomain.</p>
       </main>
     );
+  }
+
+  // While the field is under wraps, a team's own page is the leak the listing
+  // page is not: the URL is stable and shareable, so hiding the index alone
+  // would leave every team one guessed id away from public. See the same flag
+  // in app/teams/page.tsx.
+  //
+  // Redirect rather than 404, so anyone with an old link lands on the notice
+  // that says when the list is coming instead of a dead end.
+  if (config?.flags?.hide_teams === true) {
+    redirect("/teams");
   }
 
   const db = getAdminDb();
