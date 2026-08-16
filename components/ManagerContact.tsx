@@ -20,6 +20,15 @@ import { getDb } from "@/lib/firebase";
 interface Mgr {
   name: string;
   email: string;
+  /** Set at registration. Was NOT editable here, and worse, was silently
+   *  destroyed on save because the draft rebuilt each manager from name and
+   *  email alone. */
+  phone?: string;
+  /** "head coach" | "assistant coach", set at registration. Same problem. */
+  role?: string;
+  /** Coach's mailing address. Doug asked for these on 2026-08-15: the league
+   *  posts cheques and awards, and he had nowhere to record one. */
+  address?: string;
 }
 
 export function ManagerContact({
@@ -77,12 +86,19 @@ export function ManagerContact({
     setBusy(true);
     setMsg(null);
     try {
+      // Spread FIRST so anything this editor does not render survives. The
+      // previous version rebuilt each manager from name + email only, which
+      // wiped the phone and role captured at registration the moment an admin
+      // touched a contact.
       const managers = draft
         .map((m) => ({
+          ...m,
           name: m.name.trim(),
           email: m.email.trim().toLowerCase(),
+          phone: (m.phone ?? "").trim(),
+          address: (m.address ?? "").trim(),
         }))
-        .filter((m) => m.name || m.email);
+        .filter((m) => m.name || m.email || m.phone || m.address);
       await setDoc(
         doc(getDb(), `leagues/${leagueId}/teams/${teamId}/_private/contact`),
         { managers, updated_at: new Date().toISOString() },
@@ -152,6 +168,22 @@ export function ManagerContact({
               }
               style={{ flex: "2 1 180px", minWidth: 0, padding: "6px 8px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 13 }}
             />
+            <input
+              value={m.phone ?? ""}
+              placeholder="Phone"
+              onChange={(e) =>
+                setDraft((d) => d.map((x, j) => (j === i ? { ...x, phone: e.target.value } : x)))
+              }
+              style={{ flex: "1 1 120px", minWidth: 0, padding: "6px 8px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 13 }}
+            />
+            <input
+              value={m.address ?? ""}
+              placeholder="Home address (street, city, state ZIP)"
+              onChange={(e) =>
+                setDraft((d) => d.map((x, j) => (j === i ? { ...x, address: e.target.value } : x)))
+              }
+              style={{ flex: "3 1 240px", minWidth: 0, padding: "6px 8px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 13 }}
+            />
             <button
               type="button"
               onClick={() => setDraft((d) => d.filter((_, j) => j !== i))}
@@ -164,7 +196,7 @@ export function ManagerContact({
         ))}
         <button
           type="button"
-          onClick={() => setDraft((d) => [...d, { name: "", email: "" }])}
+          onClick={() => setDraft((d) => [...d, { name: "", email: "", phone: "", address: "" }])}
           style={{ ...btn, marginTop: 2 }}
         >
           + Add another

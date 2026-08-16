@@ -164,13 +164,16 @@ export async function provisionTeamFromRegistration(
       phone: string;
       role: string;
       source: string;
+      /** Coach's mailing address, joined from the registration's street /
+       *  city / state / ZIP. Doug posts cheques and awards. */
+      address?: string;
     }[] = [];
     if (email || who) {
       managers.push({
         name: who || email,
         email,
         phone: str("phone"),
-        role: "head coach",
+        role: "head coach", address: [str("address"), str("city"), str("state"), str("zip")].filter(Boolean).join(", "),
         source: "registration",
       });
     }
