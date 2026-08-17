@@ -7017,3 +7017,108 @@ select:focus-visible {
   text-transform: uppercase;
   color: #7c8798;
 }
+
+/* Upcoming tournaments on the home page — see
+   components/ui/UpcomingTournaments.tsx. Sits above the social feeds, which
+   is the last thing on the page, so this is the final piece of league
+   business a visitor sees before the follow-us row.
+
+   Dark card on the same palette as the social boxes rather than the light
+   surfaces higher up the page: by this point the page has gone dark, and a
+   white card here would read as a different site. */
+.le-upcoming {
+  margin: 32px 0 8px;
+}
+.le-upcoming-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 0 0 14px;
+}
+.le-upcoming-title {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin: 0;
+  color: var(--text-strong);
+}
+.le-upcoming-all {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--brand-accent, #35afea);
+}
+.le-upcoming-all:hover,
+.le-upcoming-all:focus-visible {
+  text-decoration: underline;
+}
+.le-upcoming-grid {
+  display: grid;
+  /* Three across on a desktop, stacking on a phone with no media query.
+     minmax(0,…) so a long tournament name cannot force the column wider. */
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  gap: 12px;
+}
+.le-upcoming-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #0e1420;
+  border: 1px solid #1e2939;
+  border-radius: 12px;
+  padding: 16px 16px 14px;
+  min-width: 0;
+}
+.le-upcoming-date {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand-accent, #35afea);
+}
+.le-upcoming-name {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.15;
+  margin: 0;
+  color: #f1f5f9;
+}
+.le-upcoming-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.le-upcoming-chip {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #16233a;
+  color: #9aa4b2;
+  white-space: nowrap;
+}
+.le-upcoming-chip-cost {
+  background: #14532d;
+  color: #bbf7d0;
+}
+.le-upcoming-reg {
+  /* Pushed to the bottom so the three buttons line up even when one
+     tournament's name wraps to two lines and the others do not. */
+  margin-top: auto;
+  padding-top: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--brand-accent, #35afea);
+}
+.le-upcoming-reg:hover,
+.le-upcoming-reg:focus-visible {
+  text-decoration: underline;
+}

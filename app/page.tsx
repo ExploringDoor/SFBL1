@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { SocialFeeds } from "@/components/ui/SocialFeeds";
+import { UpcomingTournaments } from "@/components/ui/UpcomingTournaments";
 import { fetchSocialPosts } from "@/lib/social/meta";
 import { unstable_cache } from "next/cache";
 
@@ -416,6 +417,20 @@ export default async function HomePage() {
           </aside>
         </div>
       </section>
+
+      {/* Next three tournaments. Island only: the component reads Island's
+          checked-in slate file, and no other tenant has one. Mike asked for
+          this (via Adam, 2026-08-14) — tournaments are the paid side of the
+          business and were reachable only from the nav, so a parent who came
+          for a score never saw there was anything to enter.
+
+          Above the social feeds deliberately: this is league business and
+          those are the follow-us row, so it should not be the last thing. */}
+      {tenantId === "island" && config?.flags?.show_tournaments && (
+        <section className="container">
+          <UpcomingTournaments />
+        </section>
+      )}
 
       {/* Last thing on the home page, and lazy — the script only loads if
           someone scrolls the whole way down, so the fold stays fast for the
