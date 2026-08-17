@@ -225,6 +225,22 @@ export default async function HomePage() {
           because other call sites in this file reference it; just
           not rendered. */}
 
+      {/* Next three tournaments. Island only: the component reads Island's
+          checked-in slate file, and no other tenant has one. Mike asked for
+          this (via Adam, 2026-08-14) — tournaments are the paid side of the
+          business and were reachable only from the nav, so a parent who came
+          for a score never saw there was anything to enter.
+
+          ABOVE Recent Results, at Adam's call (2026-08-14). It started at the
+          foot of the page above the social feeds and almost nobody scrolls
+          that far. Tournaments sell; scores are what people come back for
+          anyway and will scroll to find. */}
+      {tenantId === "island" && config?.flags?.show_tournaments && (
+        <section className="container">
+          <UpcomingTournaments />
+        </section>
+      )}
+
       <section className="sec">
         <div className="le-home-grid">
           {/* MAIN COLUMN: recent scores + upcoming schedule */}
@@ -417,20 +433,6 @@ export default async function HomePage() {
           </aside>
         </div>
       </section>
-
-      {/* Next three tournaments. Island only: the component reads Island's
-          checked-in slate file, and no other tenant has one. Mike asked for
-          this (via Adam, 2026-08-14) — tournaments are the paid side of the
-          business and were reachable only from the nav, so a parent who came
-          for a score never saw there was anything to enter.
-
-          Above the social feeds deliberately: this is league business and
-          those are the follow-us row, so it should not be the last thing. */}
-      {tenantId === "island" && config?.flags?.show_tournaments && (
-        <section className="container">
-          <UpcomingTournaments />
-        </section>
-      )}
 
       {/* Last thing on the home page, and lazy — the script only loads if
           someone scrolls the whole way down, so the fold stays fast for the
