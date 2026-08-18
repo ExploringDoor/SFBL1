@@ -7151,7 +7151,12 @@ select:focus-visible {
   border-radius: 999px;
   background: #16233a;
   color: #9aa4b2;
-  white-space: nowrap;
+  /* Wraps. It was nowrap, which was fine when the chip had the full card
+     width; with the logo now beside it the column is roughly 230px and Never
+     Forget's six age groups ran off the edge into the card's overflow:hidden,
+     reading as "10U, 11U, 12U, 14U, 16U, 1". A two-line pill is not as tidy
+     as one line but it is the whole list. */
+  white-space: normal;
 }
 .le-upcoming-chip-cost {
   background: #14532d;
