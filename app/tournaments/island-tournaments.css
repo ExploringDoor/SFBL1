@@ -290,13 +290,17 @@
   opacity: 0.28;
 }
 
-/* On a phone the row already collapses; drop the art rather than spend a
-   third of a narrow screen on it. */
+/* Phone. The art STAYS — hiding it was wrong, Adam went looking for it.
+   64px because the row has already collapsed to a single column by here, so
+   the logo is its own band; at 80px it started to read as a banner.
+
+   Note what the removed version of this block also did: it re-set
+   grid-template-columns to three columns, and being further down the file it
+   beat the mobile rule above that collapses the row to 1fr. So it did not
+   merely hide the logo, it silently undid the page's whole phone layout. */
 @media (max-width: 640px) {
   .ift-logo {
-    display: none;
-  }
-  .ift-event {
-    grid-template-columns: 92px 1fr auto;
+    width: 64px;
+    height: 64px;
   }
 }
