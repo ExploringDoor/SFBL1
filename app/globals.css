@@ -7066,8 +7066,12 @@ select:focus-visible {
 }
 .le-upcoming-card {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  /* Logo left, details beside it. Stacked left a wide empty band to the right
+     of the art: these cards render near 490px on a desktop and the logo is
+     176, so two thirds of the row was doing nothing. */
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 14px;
   background: #0e1420;
   border: 1px solid #1e2939;
   border-radius: 12px;
@@ -7076,21 +7080,16 @@ select:focus-visible {
   min-width: 0;
 }
 
-/* Logo above the date and name.
-   At 44px these sat on one line; at 4x that the text would have had about
-   55px to live in, so the card stacks again. */
-.le-upcoming-top {
+/* Everything that is not the logo. min-width:0 so a long tournament name
+   wraps inside the column rather than pushing the card wider. */
+.le-upcoming-body {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
+  gap: 8px;
+  flex: 1 1 auto;
   min-width: 0;
-}
-.le-upcoming-headings {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
+  /* Matches the art, which has no top offset of its own. */
+  padding-top: 2px;
 }
 
 /* Logo. 176px, which is the 44px badge at the 4x Adam asked for.
@@ -7171,4 +7170,13 @@ select:focus-visible {
 .le-upcoming-reg:hover,
 .le-upcoming-reg:focus-visible {
   text-decoration: underline;
+}
+
+/* On a phone the grid is a single column, so the row layout still holds, but
+   176px is half the screen. Shrink the art rather than stack it, which would
+   put the register link a full screen below the name. */
+@media (max-width: 560px) {
+  .le-upcoming-art {
+    width: 108px;
+  }
 }

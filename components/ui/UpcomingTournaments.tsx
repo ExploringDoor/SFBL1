@@ -92,54 +92,48 @@ export function UpcomingTournaments({ limit = 3 }: { limit?: number }) {
       <div className="le-upcoming-grid">
         {upcoming.map((e) => (
           <article key={`${e.name}-${e.start}`} className="le-upcoming-card">
-            {/* Logo as a small badge beside the date, not a poster.
-                It shipped full-bleed square, roughly 220px, and Adam wanted it
-                "ALOT ALOT smaller" — at that size the art was the card and the
-                tournament name was an afterthought, when the name and date are
-                what someone is scanning for.
-                Each logo keeps the background it was drawn on: they arrive
-                flattened, navy for Never Forget and light grey for Labor Day,
-                so there is nothing to cut out. At badge size that reads as a
-                crest rather than as a mismatched panel.
-                Events with no art get the league mark, dimmed, so the text in
-                every card still starts at the same x. */}
-            <div className="le-upcoming-top">
-              <span className="le-upcoming-art">
-                <img
-                  src={e.logo || "/island/logo.png"}
-                  alt=""
-                  loading="lazy"
-                  decoding="async"
-                  className={
-                    e.logo
-                      ? "le-upcoming-art-img"
-                      : "le-upcoming-art-img le-upcoming-art-fallback"
-                  }
-                />
-              </span>
-              <div className="le-upcoming-headings">
-                <span className="le-upcoming-date">{dateLabel(e)}</span>
-                <h3 className="le-upcoming-name">{e.name}</h3>
+            {/* Logo LEFT, everything else beside it.
+                It was stacked, logo above the text, which left a wide empty
+                band to the right of the art on a desktop card — these render
+                near 490px wide and the logo is 176. Adam flagged the gap.
+                Side by side spends that width on the name, the ages and the
+                register link instead. */}
+            <span className="le-upcoming-art">
+              <img
+                src={e.logo || "/island/logo.png"}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                className={
+                  e.logo
+                    ? "le-upcoming-art-img"
+                    : "le-upcoming-art-img le-upcoming-art-fallback"
+                }
+              />
+            </span>
+
+            <div className="le-upcoming-body">
+              <span className="le-upcoming-date">{dateLabel(e)}</span>
+              <h3 className="le-upcoming-name">{e.name}</h3>
+              <div className="le-upcoming-meta">
+                {e.ages && <span className="le-upcoming-chip">{e.ages}</span>}
+                {e.cost && (
+                  <span className="le-upcoming-chip le-upcoming-chip-cost">
+                    {e.cost}
+                  </span>
+                )}
               </div>
-            </div>
-            <div className="le-upcoming-meta">
-              {e.ages && <span className="le-upcoming-chip">{e.ages}</span>}
-              {e.cost && (
-                <span className="le-upcoming-chip le-upcoming-chip-cost">
-                  {e.cost}
-                </span>
+              {e.usssa_event && (
+                <a
+                  className="le-upcoming-reg"
+                  href={usssaUrl(e.usssa_event)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Register on USSSA <span aria-hidden>→</span>
+                </a>
               )}
             </div>
-            {e.usssa_event && (
-              <a
-                className="le-upcoming-reg"
-                href={usssaUrl(e.usssa_event)}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Register on USSSA <span aria-hidden>→</span>
-              </a>
-            )}
           </article>
         ))}
       </div>

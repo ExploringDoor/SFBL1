@@ -61,6 +61,7 @@
     },
     {
       "name": "Queen of the Hill",
+      "logo": "/island/tournaments/queen-of-the-hill.png",
       "subtitle": "13th annual",
       "start": "2026-09-19",
       "end": "2026-09-20",
@@ -72,6 +73,7 @@
     },
     {
       "name": "Island Invitational",
+      "logo": "/island/tournaments/island-invitational.png",
       "subtitle": "12th annual",
       "start": "2026-09-26",
       "end": "2026-09-27",
@@ -83,6 +85,7 @@
     },
     {
       "name": "Diamonds are a Girls Best Friend",
+      "logo": "/island/tournaments/diamonds-are-a-girls-best-friend.png",
       "subtitle": "12th annual",
       "start": "2026-10-03",
       "end": "2026-10-04",
@@ -94,6 +97,7 @@
     },
     {
       "name": "USSSA Play Pink",
+      "logo": "/island/tournaments/usssa-play-pink.png",
       "subtitle": "Annual tournament",
       "start": "2026-10-10",
       "end": "2026-10-11",
@@ -128,6 +132,7 @@
     },
     {
       "name": "Field of Screams",
+      "logo": "/island/tournaments/field-of-screams.png",
       "subtitle": "13th annual Halloween tournament. Our biggest and most festive of the year, so bring your A game and your costume.",
       "start": "2026-10-24",
       "end": "2026-10-25",
