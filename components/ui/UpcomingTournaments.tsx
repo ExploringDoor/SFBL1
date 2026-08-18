@@ -31,6 +31,9 @@ interface SlateEvent {
   guarantee?: string;
   cost?: string;
   usssa_event?: string;
+  /** Poster art for the event, served from /public. Optional: Mike sends
+   *  these as he has them, so most of the slate has none yet. */
+  logo?: string;
 }
 
 function asDate(iso: string): Date {
@@ -89,6 +92,29 @@ export function UpcomingTournaments({ limit = 3 }: { limit?: number }) {
       <div className="le-upcoming-grid">
         {upcoming.map((e) => (
           <article key={`${e.name}-${e.start}`} className="le-upcoming-card">
+            {/* Poster tile.
+                Each logo arrives on its OWN opaque background — Never Forget
+                is navy, Labor Day is light grey — so they are shown as square
+                tiles keeping that background rather than cut out onto the
+                card. Trying to blend them would fight artwork we do not have
+                the layers for.
+                object-fit: cover with a square box and square source means no
+                crop and no distortion; it is `cover` rather than `contain`
+                only so a stray off-square file still fills the tile.
+                Missing logos fall back to the league mark, so a card without
+                art is the same height as one with it and the row stays even.
+                Mike has sent two of thirteen. */}
+            <span className="le-upcoming-art">
+              <img
+                src={e.logo || "/island/logo.png"}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                className={
+                  e.logo ? "le-upcoming-art-img" : "le-upcoming-art-img le-upcoming-art-fallback"
+                }
+              />
+            </span>
             <span className="le-upcoming-date">{dateLabel(e)}</span>
             <h3 className="le-upcoming-name">{e.name}</h3>
             <div className="le-upcoming-meta">

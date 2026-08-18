@@ -25,6 +25,7 @@
   "events": [
     {
       "name": "Labor Day Lash Out",
+      "logo": "/island/tournaments/labor-day-lash-out.png",
       "subtitle": "Fall season opening tournament",
       "start": "2026-09-05",
       "end": "2026-09-06",
@@ -36,6 +37,7 @@
     },
     {
       "name": "Never Forget",
+      "logo": "/island/tournaments/never-forget.png",
       "subtitle": "3rd annual, sponsored by Scrappy Sports",
       "start": "2026-09-12",
       "end": "2026-09-13",

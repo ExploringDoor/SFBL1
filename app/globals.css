@@ -7071,8 +7071,39 @@ select:focus-visible {
   background: #0e1420;
   border: 1px solid #1e2939;
   border-radius: 12px;
-  padding: 16px 16px 14px;
+  /* No top padding: the poster tile runs to the card edges. */
+  padding: 0 16px 14px;
+  overflow: hidden;
   min-width: 0;
+}
+
+/* Poster art. Square, full bleed to the card edges, and each logo keeps the
+   background it was drawn on — Never Forget is navy, Labor Day is light grey.
+   Cutting them out is not an option, they arrive flattened.
+
+   Square rather than a wide strip because the source files are 500x500 and a
+   letterbox crop would slice the tournament name off its own logo. */
+.le-upcoming-art {
+  display: block;
+  margin: 0 -16px 4px;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: #0b1018;
+}
+.le-upcoming-art-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* No art yet for this event, so the league mark stands in. Contained and
+   inset, because the Island logo is not square and would be cropped by the
+   cover rule above; dimmed so a placeholder never competes with a real
+   poster sitting next to it. */
+.le-upcoming-art-fallback {
+  object-fit: contain;
+  padding: 18%;
+  opacity: 0.35;
 }
 .le-upcoming-date {
   font-size: 12px;
