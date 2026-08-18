@@ -7071,22 +7071,39 @@ select:focus-visible {
   background: #0e1420;
   border: 1px solid #1e2939;
   border-radius: 12px;
-  /* No top padding: the poster tile runs to the card edges. */
-  padding: 0 16px 14px;
+  padding: 16px 16px 14px;
   overflow: hidden;
   min-width: 0;
 }
 
-/* Poster art. Square, full bleed to the card edges, and each logo keeps the
-   background it was drawn on — Never Forget is navy, Labor Day is light grey.
-   Cutting them out is not an option, they arrive flattened.
+/* Logo badge + date + name on one line. */
+.le-upcoming-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.le-upcoming-headings {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
 
-   Square rather than a wide strip because the source files are 500x500 and a
-   letterbox crop would slice the tournament name off its own logo. */
+/* Logo badge. 44px, sat beside the date rather than filling the card.
+   It was a 220px full-bleed poster and swamped everything else; the name and
+   date are what someone scans for, so the art is now a crest next to them.
+
+   Square because the sources are 500x500 — a letterbox crop would slice the
+   tournament name off its own logo. Each keeps the background it was drawn
+   on: they arrive flattened, so there is nothing to cut out, and at this size
+   the differing backgrounds read as crests rather than mismatched panels. */
 .le-upcoming-art {
   display: block;
-  margin: 0 -16px 4px;
-  aspect-ratio: 1 / 1;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
   overflow: hidden;
   background: #0b1018;
 }
@@ -7102,8 +7119,8 @@ select:focus-visible {
    poster sitting next to it. */
 .le-upcoming-art-fallback {
   object-fit: contain;
-  padding: 18%;
-  opacity: 0.35;
+  padding: 14%;
+  opacity: 0.3;
 }
 .le-upcoming-date {
   font-size: 12px;
@@ -7114,7 +7131,7 @@ select:focus-visible {
 }
 .le-upcoming-name {
   font-family: var(--font-barlow), sans-serif;
-  font-size: 19px;
+  font-size: 17px;
   font-weight: 800;
   line-height: 1.15;
   margin: 0;
