@@ -24,6 +24,7 @@ interface IslandEvent {
   guarantee?: string;
   cost?: string;
   usssa_event?: string;
+  logo?: string;
   contact?: string;
 }
 
@@ -161,6 +162,21 @@ export function IslandSlate() {
                   <span className="ift-date-day">{dayLabel(e)}</span>
                   <span className="ift-date-dow">{dowLabel(e)}</span>
                 </div>
+
+                {/* Event art, between the date rail and the details.
+                    Mike has sent two of the thirteen, so events without art
+                    get the league mark dimmed. That keeps every row's title
+                    on the same vertical line, which is the whole reason the
+                    date rail is a fixed 92px in the first place. */}
+                <span className="ift-logo">
+                  <img
+                    src={e.logo || "/island/logo.png"}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    className={e.logo ? "ift-logo-img" : "ift-logo-img ift-logo-fallback"}
+                  />
+                </span>
 
                 <div>
                   <h3 className="font-display ift-name">{e.name}</h3>
