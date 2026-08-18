@@ -52,6 +52,8 @@ export function PasswordlessCaptainPicker({
         );
         if (cancelled) return;
         const list: TeamOption[] = snap.docs
+          // Deactivated teams are locked out — don't offer them for login.
+          .filter((d) => d.data().active !== false)
           .map((d) => {
             const data = d.data();
             return {

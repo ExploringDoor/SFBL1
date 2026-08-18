@@ -202,6 +202,24 @@ export async function POST(req: Request) {
     );
   }
 
+  // A DEACTIVATED team's manager can no longer sign in — deactivating a
+  // team locks its manager out (Nelson, 2026-08). Checked after the team
+  // is resolved so it covers every entry path (picker, deep link, legacy
+  // single-field). The team stays in the DB with its history intact; it
+  // just can't be claimed.
+  const resolvedTeam = await db
+    .doc(`leagues/${leagueId}/teams/${teamId}`)
+    .get();
+  if (resolvedTeam.exists && resolvedTeam.data()?.active === false) {
+    return NextResponse.json(
+      {
+        error:
+          "This team is no longer active for the current season. Contact the league office.",
+      },
+      { status: 403 },
+    );
+  }
+
   // Mint a custom token with the captain claim. The synthetic uid is
   // shared across all visitors who pick the same team — Firebase
   // doesn't mind a re-issued token. We tag the user as

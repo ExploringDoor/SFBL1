@@ -61,6 +61,7 @@ interface TeamSnap {
   color?: string;
   logoUrl?: string | null;
   division?: string;
+  active?: boolean;
 }
 
 interface PlayerSnap {
@@ -139,6 +140,7 @@ export default function CaptainHomePage() {
           color: d.color ? String(d.color) : undefined,
           logoUrl: d.logo_url ? String(d.logo_url) : null,
           division: d.division ? String(d.division) : undefined,
+          active: d.active !== false,
         });
       }
       setRoster(
@@ -479,6 +481,36 @@ export default function CaptainHomePage() {
     .sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""))
     .slice(0, 6);
   const submittable = games.filter((g) => g.status === "scheduled");
+
+  // A manager whose team was deactivated mid-session is locked out too —
+  // matches the login block (Nelson, 2026-08). History stays intact; the
+  // portal just closes.
+  if (team && team.active === false) {
+    return (
+      <CaptainShell>
+        <div style={{ maxWidth: 480, textAlign: "center", margin: "0 auto" }}>
+          <div aria-hidden style={{ fontSize: 48, marginBottom: 10 }}>
+            🔒
+          </div>
+          <h2
+            style={{
+              fontFamily: "var(--font-barlow), sans-serif",
+              fontSize: 22,
+              fontWeight: 800,
+              color: "var(--text-strong)",
+            }}
+          >
+            This team is no longer active
+          </h2>
+          <p style={{ color: "var(--muted)", marginTop: 8 }}>
+            Your team has been deactivated for the current season, so the
+            manager portal is closed. Contact the league office if you think
+            this is a mistake.
+          </p>
+        </div>
+      </CaptainShell>
+    );
+  }
 
   return (
     <main className="le-cap-shell">
