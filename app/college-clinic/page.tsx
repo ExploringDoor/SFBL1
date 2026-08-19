@@ -28,7 +28,7 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "College Clinic",
   description:
-    "Island Fastpitch College Clinic, October 12 2026 at St John the Baptist HS. Nine college programs in attendance. Open to 14U, 16U and 18U.",
+    "Island Fastpitch College Clinic, October 12 2026 at St John the Baptist HS. Ten college programs in attendance. Open to 14U, 16U and 18U.",
 };
 
 const AGE_GROUPS = [
@@ -174,7 +174,9 @@ export default async function CollegeClinicPage() {
         <LeagueForm
           kind="clinic_registration"
           title="Register a player"
-          eyebrow={`${left} of ${CLINIC.capacity} places left`}
+          // "40 of 40 places left" parses as a fraction and reads wrong when
+          // the clinic is empty, which is exactly when it is first seen.
+          eyebrow={`${left} places left of ${CLINIC.capacity}`}
           intro={[
             <>
               One form per player. The fee is <strong>${CLINIC.fee}</strong> and
