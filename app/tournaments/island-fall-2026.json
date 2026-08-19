@@ -110,6 +110,7 @@
     },
     {
       "name": "Unbreakable Spirit",
+      "logo": "/island/tournaments/unbreakable-spirit.png",
       "subtitle": "2nd annual",
       "start": "2026-10-17",
       "end": "2026-10-18",
@@ -121,6 +122,7 @@
     },
     {
       "name": "Boo Ya",
+      "logo": "/island/tournaments/boo-ya.png",
       "subtitle": "Hosted by CYA",
       "start": "2026-10-17",
       "end": "2026-10-18",
@@ -167,6 +169,7 @@
     },
     {
       "name": "Toys for Tots Championship",
+      "logo": "/island/tournaments/toys-for-tots-championship.png",
       "subtitle": "Annual tournament and toy drive. Championship at Lasorda Legacy Park (Baseball Heaven).",
       "start": "2026-11-14",
       "end": "2026-11-15",
