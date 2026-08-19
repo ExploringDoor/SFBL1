@@ -458,12 +458,37 @@ export async function POST(req: Request) {
     }
   }
 
-  // Honeypot defense — clients render a hidden "website" field; if a
-  // bot fills it, drop the request silently with a 200 so we don't
-  // give them a clear "you tripped the trap" signal.
+  // ---- bot signals: FLAG, never silently drop -----------------------------
+  //
+  // Both of these used to `return NextResponse.json({ ok: true })` and throw
+  // the submission away. A 200 is exactly what makes the client print
+  // "Submission received", so a real coach saw a green tick, believed they
+  // were registered, and nothing existed. That happened: LI Rebels Blue 12U
+  // on 2026-08-17 sent a screenshot of the success screen and had no record
+  // anywhere. It cost an evening to find because the site said yes.
+  //
+  // Neither signal is trustworthy enough to destroy a registration on:
+  //
+  //   honeypot  the field is an off-screen text input NAMED "website".
+  //             autoComplete="off" is advisory and Chrome and every password
+  //             manager ignore it. A coach with 1Password fills it without
+  //             ever seeing it.
+  //   too fast  under four seconds. That is a bot, or it is anyone whose
+  //             browser autofilled the form in one click — which is most
+  //             likely on a SECOND registration, when every field is already
+  //             remembered.
+  //
+  // So they are recorded on the document and surfaced to the office instead.
+  // A junk registration takes one click to delete. A silently discarded real
+  // one costs a paying customer and the league's credibility.
+  const spamFlags: string[] = [];
+
   const honeypot = (body.data as Record<string, unknown>).website;
   if (typeof honeypot === "string" && honeypot.length > 0) {
-    return NextResponse.json({ ok: true });
+    console.warn(
+      `[league-form] honeypot filled tenant=${tenantId} kind=${body.kind} ip=${ip} — FLAGGING, not dropping`,
+    );
+    spamFlags.push("honeypot");
   }
 
   // The submission write is the whole point of the request, so it gets real
@@ -477,9 +502,9 @@ export async function POST(req: Request) {
   const formMs = Number((body as unknown as Record<string, unknown>).form_ms);
   if (Number.isFinite(formMs) && formMs >= 0 && formMs < 4000) {
     console.warn(
-      `[league-form] submitted in ${formMs}ms (too fast) tenant=${tenantId} kind=${body.kind} ip=${ip} — dropping`,
+      `[league-form] submitted in ${formMs}ms (too fast) tenant=${tenantId} kind=${body.kind} ip=${ip} — FLAGGING, not dropping`,
     );
-    return NextResponse.json({ ok: true });
+    spamFlags.push(`too_fast_${Math.round(formMs)}ms`);
   }
   if (!Number.isFinite(formMs)) {
     console.warn(
@@ -539,6 +564,10 @@ export async function POST(req: Request) {
         mailbox,
         ip,
         user_agent: h.get("user-agent") ?? null,
+        // Empty for an ordinary submission. When set, the office is told in
+        // the subject line so a human decides, rather than this route
+        // deciding on their behalf and destroying the evidence.
+        ...(spamFlags.length ? { spam_flags: spamFlags } : {}),
       });
     // Count this SUCCESSFUL save against the per-IP rate budget (the check at
     // the top of the handler only reads it). Rejected attempts never reach
@@ -642,8 +671,7 @@ export async function POST(req: Request) {
     try {
       const who =
         `${cleaned.manager_first_name ?? ""} ${cleaned.manager_last_name ?? ""}`.trim();
-      const sentTo = await notifyOffice(
-        officeRegistrationEmail({
+      const built = officeRegistrationEmail({
           leagueAbbrev,
           team: String(cleaned.team_name ?? ""),
           who,
@@ -656,8 +684,24 @@ export async function POST(req: Request) {
           usssaAddon: Boolean(cleaned.usssa_addon),
           homeField: String(cleaned.home_field ?? ""),
           homeFieldName: String(cleaned.home_field_name ?? ""),
-        }),
-      );
+      });
+      // A flagged registration is still a registration. Say so in the subject
+      // so it cannot be missed, and explain WHY at the top of the body — the
+      // office needs to know the trap is unreliable, otherwise "flagged as a
+      // bot" reads as "safe to delete".
+      const sentTo = await notifyOffice({
+        subject: spamFlags.length
+          ? `NEEDS REVIEW — ${built.subject}`
+          : built.subject,
+        html: spamFlags.length
+          ? `<p style="background:#fff4e5;border:1px solid #f0b37e;padding:10px 12px;border-radius:8px">` +
+            `<strong>This registration tripped an automatic bot check (${esc(spamFlags.join(", "))}).</strong><br/>` +
+            `It has been saved in full and the team was set up as normal. These checks catch real people: ` +
+            `a password manager filling a hidden field, or a browser autofilling the form in one click, both ` +
+            `look like a bot. Treat this as a real registration unless something in it is obviously junk.` +
+            `</p>` + built.html
+          : built.html,
+      });
       if (sentTo > 0) {
         await ref.set({ office_email_sent: true }, { merge: true });
       } else {
