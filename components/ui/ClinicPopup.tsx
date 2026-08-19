@@ -86,7 +86,7 @@ export function ClinicPopup() {
         className="le-clinic-pop"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="le-clinic-pop-title"
+        aria-label="Island Fastpitch College Clinic"
       >
         <button
           ref={closeRef}
@@ -98,26 +98,22 @@ export function ClinicPopup() {
           ×
         </button>
 
-        <p className="le-clinic-pop-eyebrow">Island Fastpitch</p>
-        <h2 id="le-clinic-pop-title" className="le-clinic-pop-title font-display">
-          College Clinic
-        </h2>
+        {/* Mike's own flyer, rather than a text version of it. It already
+            carries the date, the price, the cap and all ten college marks,
+            and it is what families have seen on Instagram and on paper, so
+            recognising it is half the job. Plain <img>: it is a static asset
+            we resized ourselves, so there is nothing for next/image to do.
 
-        <ul className="le-clinic-pop-facts">
-          <li>
-            <strong>{CLINIC.dateLabel}</strong> · {CLINIC.timeLabel}
-          </li>
-          <li>Open to {CLINIC.ages}</li>
-          <li>
-            <strong>${CLINIC.fee}</strong> per player · {CLINIC.capacity} player max
-          </li>
-          <li>{CLINIC.venue}, West Islip</li>
-        </ul>
-
-        <p className="le-clinic-pop-colleges">
-          {CLINIC.colleges.length} college programs in attendance, including
-          St John&rsquo;s, LIU, Wagner and Brooklyn College.
-        </p>
+            The flyer's printed "REGISTER AT ISLANDFASTPITCH.COM" is not
+            clickable, which is exactly why the buttons stay underneath it. */}
+        <img
+          className="le-clinic-pop-flyer"
+          src={CLINIC.flyer}
+          alt={`Island Fastpitch College Clinic, ${CLINIC.dateLabel}, ${CLINIC.timeLabel}, ${CLINIC.ages}, $${CLINIC.fee} per player, at ${CLINIC.venue}`}
+          width={800}
+          height={1200}
+          decoding="async"
+        />
 
         <div className="le-clinic-pop-actions">
           <Link

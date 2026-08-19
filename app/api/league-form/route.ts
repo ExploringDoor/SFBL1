@@ -945,6 +945,71 @@ async function sendRegistrationEmails(
     return { notified: res.ok, notifyTo: to, notifyError: res.ok ? null : (res.error ?? "not configured") };
   }
 
+  // College Clinic. Its own branch rather than a case in the generic path
+  // below, because that path reads manager_* names and labels everything it
+  // does not recognise a "Team registration" — a clinic sign-up would have
+  // reached Mike as "New Team registration: (no name)".
+  //
+  // Before this existed, clinic_registration fell straight through the gate
+  // underneath and NOBODY was emailed: not the parent, not the office. Adam
+  // asked for exactly this ("make sure mike gets emails about sign ups",
+  // 2026-08-19).
+  if (kind === "clinic_registration") {
+    const g = (k: string) =>
+      typeof data[k] === "string" ? (data[k] as string).trim() : "";
+    const player = `${g("player_first_name")} ${g("player_last_name")}`.trim();
+    const parent = `${g("parent_first_name")} ${g("parent_last_name")}`.trim();
+    const parentEmail = g("email");
+
+    if (parentEmail) {
+      await sendEmail({
+        to: parentEmail,
+        subject: `${leagueAbbrev} College Clinic — ${player || "registration received"}`,
+        html:
+          `<p>Hi ${esc(parent) || "there"},</p>` +
+          `<p>Thanks for registering <strong>${esc(player)}</strong> for the ` +
+          `${esc(leagueName)} College Clinic.</p>` +
+          `<p><strong>${esc(CLINIC.dateLabel)}</strong>, ${esc(CLINIC.timeLabel)}<br/>` +
+          `${esc(CLINIC.venue)}, ${esc(CLINIC.address)}</p>` +
+          // The place is not theirs until the money lands, and saying so once
+          // here is kinder than telling them at the gate on the day.
+          `<p>The fee is <strong>$${CLINIC.fee}</strong>. A place is held once it is ` +
+          `paid, and places are capped at ${CLINIC.capacity}. If you have not paid yet you ` +
+          `can still do it from the registration page, or reply here and the office ` +
+          `will send a link.</p>` +
+          `<p>Bring a glove, bat, helmet, cleats and water. Wear your travel team ` +
+          `uniform if you have one.</p>` +
+          `<p>Questions about the day: Mike on ${esc(CLINIC.phone)}.</p>` +
+          `<p>— ${esc(leagueAbbrev)}</p>`,
+        replyTo: notifyAddress() ?? undefined,
+      });
+    }
+
+    await notifyOffice({
+      subject: `College Clinic: ${player || "(no name)"}${g("grad_year") ? ` (${g("grad_year")})` : ""}`,
+      html:
+        `<p><strong>College Clinic registration</strong></p>` +
+        `<p><strong>Player:</strong> ${esc(player)}<br/>` +
+        `<strong>Age group:</strong> ${esc(g("age_group"))}<br/>` +
+        // Grad year and position first: these are what a college coach asks
+        // and what the day is organised around.
+        `<strong>Grad year:</strong> ${esc(g("grad_year"))}<br/>` +
+        `<strong>Position:</strong> ${esc(g("primary_position"))}` +
+        (g("secondary_position") ? ` / ${esc(g("secondary_position"))}` : "") +
+        `</p>` +
+        (g("high_school") ? `<p><strong>High school:</strong> ${esc(g("high_school"))}</p>` : "") +
+        (g("current_team") ? `<p><strong>Travel team:</strong> ${esc(g("current_team"))}</p>` : "") +
+        `<p><strong>Parent:</strong> ${esc(parent)}<br/>` +
+        `<strong>Email:</strong> ${esc(parentEmail)}<br/>` +
+        `<strong>Phone:</strong> ${esc(g("phone"))}</p>` +
+        (g("notes") ? `<p><strong>Notes:</strong> ${esc(g("notes"))}</p>` : "") +
+        `<p>Payment is separate — check the Payments tab to see whether this ` +
+        `place is actually held.</p>`,
+      replyTo: parentEmail || undefined,
+    });
+    return;
+  }
+
   // team_waiver used to fall out here. The waiver was written to Firestore and
   // NOBODY was emailed — the coach had no confirmation their signed waiver
   // arrived, and the office was never told to look. Adam asked where waivers

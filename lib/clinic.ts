@@ -15,12 +15,32 @@
 // `over` below and stops showing itself. The page stays up so anyone with the
 // link still lands somewhere sensible rather than a 404.
 
+const DATE = "2026-10-12";
+
+/** "Monday, October 12", DERIVED from the date rather than typed beside it.
+ *
+ *  It was typed, and it said Sunday. The flyer prints only "OCTOBER 12" with
+ *  no weekday, so the wrong day was invented here and shipped to a popup on
+ *  the front page. Adam caught it. A weekday sitting next to the date it
+ *  describes is a fact waiting to disagree with itself, so now it cannot.
+ *
+ *  Noon UTC for the reason the tournaments page documents: a date-only string
+ *  slips to the previous day in any negative-offset timezone. */
+const DATE_LABEL = new Date(`${DATE}T12:00:00Z`).toLocaleDateString("en-US", {
+  weekday: "long",
+  month: "long",
+  day: "numeric",
+  timeZone: "UTC",
+});
+
 export const CLINIC = {
   /** Used to generate the graduation-year dropdown. */
   year: 2027,
   /** ISO, for the "has it happened yet" check. */
-  date: "2026-10-12",
-  dateLabel: "Sunday, October 12",
+  date: DATE,
+  dateLabel: DATE_LABEL,
+  /** The flyer, as Mike printed it. Shown in the arrival popup. */
+  flyer: "/island/clinic/flyer.jpg",
   timeLabel: "9:00 AM to 2:00 PM",
   ages: "14U, 16U and 18U",
   fee: 175,
@@ -48,5 +68,5 @@ export const CLINIC = {
  *  tournaments page documents: a date-only string slips to the previous day
  *  in any negative-offset timezone, and Long Island is one. */
 export function clinicIsOver(now: Date = new Date()): boolean {
-  return now.getTime() > new Date(`${CLINIC.date}T23:59:59Z`).getTime();
+  return now.getTime() > new Date(`${DATE}T23:59:59Z`).getTime();
 }

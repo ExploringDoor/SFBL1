@@ -7295,7 +7295,10 @@ select:focus-visible {
 }
 .le-clinic-pop {
   position: relative;
-  width: min(460px, 100%);
+  /* Narrower than the text version was: the flyer is 2:3 portrait, so width
+     drives height and 400px already makes a 600px tall dialog before the
+     buttons. */
+  width: min(400px, 100%);
   background: linear-gradient(150deg, #0b1730 0%, #13284a 62%, #7f1d2b 165%);
   color: #fff;
   border: 1px solid #2a3d5f;
@@ -7327,6 +7330,15 @@ select:focus-visible {
 .le-clinic-pop-x:focus-visible {
   opacity: 1;
   background: rgba(255, 255, 255, 0.1);
+}
+/* The flyer fills the dialog edge to edge above the buttons. Its own margins
+   are part of the artwork, so the card adds none of its own. */
+.le-clinic-pop-flyer {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  margin: 0 0 16px;
 }
 .le-clinic-pop-eyebrow {
   font-size: 11px;
