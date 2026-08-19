@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     );
   }
 
-  let body: { registrationId?: unknown; sourceId?: unknown };
+  let body: { registrationId?: unknown; sourceId?: unknown; kind?: unknown };
   try {
     body = (await req.json()) as typeof body;
   } catch {
@@ -66,10 +66,17 @@ export async function POST(req: Request) {
   if (!sourceId) {
     return NextResponse.json({ error: "sourceId required" }, { status: 400 });
   }
+  // Which form the payment belongs to. Allow-listed rather than interpolated,
+  // because this string becomes part of a Firestore path.
+  const PAYABLE_KINDS = new Set(["team_registration", "clinic_registration"]);
+  const kind =
+    typeof body.kind === "string" && PAYABLE_KINDS.has(body.kind)
+      ? body.kind
+      : "team_registration";
 
   const db = getAdminDb();
   const ref = db.doc(
-    `leagues/${leagueId}/form_submissions/team_registration/items/${registrationId}`,
+    `leagues/${leagueId}/form_submissions/${kind}/items/${registrationId}`,
   );
   const snap = await ref.get();
   if (!snap.exists) {
@@ -88,7 +95,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const fee = feeFor(leagueId, data);
+  const fee = feeFor(leagueId, data, kind);
   const amountCents = chargeCents(leagueId, fee);
   const base = squareApiBase();
 
@@ -139,7 +146,10 @@ export async function POST(req: Request) {
           : {}),
         // Tenant id, not a hardcoded "COYBL 2027" — this string is what
         // shows on the Square receipt and in the seller dashboard.
-        note: `${leagueId} registration: ${String(data.team_name ?? "Team")}`,
+        note:
+          kind === "clinic_registration"
+            ? `${leagueId} College Clinic: ${String(data.player_first_name ?? "")} ${String(data.player_last_name ?? "")}`.trim()
+            : `${leagueId} registration: ${String(data.team_name ?? "Team")}`,
       }),
     });
   } catch (err) {

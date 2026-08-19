@@ -61,7 +61,8 @@ export interface LeagueFormProps {
     | "alerts_signup"
     | "player_ad"
     | "site_feedback"
-    | "player_waiver";
+    | "player_waiver"
+    | "clinic_registration";
   title: string;
   description?: string;
   /** Optional intro paragraph(s) — shown above the form. Each entry
@@ -217,7 +218,19 @@ export function LeagueForm({
         {/* Optional post-submit block, e.g. COYBL's pay-now options. Gets
             the saved submission id so it can start a card checkout. */}
         {afterSuccess && leagueId && (
-          <PaymentOptions submissionId={submissionId} leagueId={leagueId} />
+          <PaymentOptions
+            submissionId={submissionId}
+            leagueId={leagueId}
+            // The clinic is a different collection and a per-player price, so
+            // the quote and the charge both have to be told which form this
+            // is. Without it a $175 place is quoted and charged $795.
+            kind={
+              kind === "clinic_registration"
+                ? "clinic_registration"
+                : "team_registration"
+            }
+            noun={kind === "clinic_registration" ? "clinic fee" : "team fee"}
+          />
         )}
       </main>
     );

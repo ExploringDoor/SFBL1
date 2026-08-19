@@ -7185,3 +7185,216 @@ select:focus-visible {
     width: 108px;
   }
 }
+
+/* ── College Clinic ──────────────────────────────────────────────────────
+   Registration page and the arrival popup. See lib/clinic.ts and
+   components/ui/ClinicPopup.tsx. The page is Island only and the popup
+   takes itself down after the event date. */
+
+.le-clinic-hero {
+  background: linear-gradient(135deg, #0b1730 0%, #13284a 55%, #7f1d2b 100%);
+  color: #fff;
+  padding: 44px 0 38px;
+}
+.le-clinic-hero-inner {
+  max-width: 760px;
+}
+.le-clinic-eyebrow {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.75;
+  margin: 0 0 6px;
+}
+.le-clinic-title {
+  font-size: clamp(38px, 7vw, 66px);
+  line-height: 0.95;
+  margin: 0 0 18px;
+  text-transform: uppercase;
+}
+.le-clinic-facts {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  font-size: 16px;
+}
+.le-clinic-facts li::after {
+  content: "·";
+  margin-left: 18px;
+  opacity: 0.45;
+}
+.le-clinic-facts li:last-child::after {
+  content: "";
+  margin: 0;
+}
+.le-clinic-where {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  opacity: 0.92;
+}
+
+.le-clinic-colleges,
+.le-clinic-full {
+  padding: 30px 0 6px;
+}
+.le-clinic-h2 {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin: 0 0 14px;
+  color: var(--text-strong);
+}
+.le-clinic-college-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+  gap: 8px 18px;
+  font-size: 15px;
+  color: var(--text-strong);
+}
+.le-clinic-college-list li::before {
+  content: "▸";
+  color: var(--brand-primary);
+  margin-right: 8px;
+}
+.le-clinic-note {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* ── the arrival popup ──────────────────────────────────────────────── */
+
+.le-clinic-pop-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(4, 8, 16, 0.72);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Padding, not centring alone: on a short phone in landscape the dialog
+     must be able to scroll rather than have its buttons off-screen. */
+  padding: 20px;
+  overflow-y: auto;
+  animation: le-clinic-fade 0.18s ease-out;
+}
+@keyframes le-clinic-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.le-clinic-pop {
+  position: relative;
+  width: min(460px, 100%);
+  background: linear-gradient(150deg, #0b1730 0%, #13284a 62%, #7f1d2b 165%);
+  color: #fff;
+  border: 1px solid #2a3d5f;
+  border-radius: 16px;
+  padding: 26px 24px 22px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+  animation: le-clinic-rise 0.22s ease-out;
+}
+@keyframes le-clinic-rise {
+  from { transform: translateY(10px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.le-clinic-pop-x {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.65;
+}
+.le-clinic-pop-x:hover,
+.le-clinic-pop-x:focus-visible {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+}
+.le-clinic-pop-eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.75;
+  margin: 0 0 4px;
+}
+.le-clinic-pop-title {
+  font-size: clamp(30px, 8vw, 40px);
+  line-height: 1;
+  text-transform: uppercase;
+  margin: 0 0 16px;
+}
+.le-clinic-pop-facts {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 15px;
+  line-height: 1.4;
+}
+.le-clinic-pop-colleges {
+  font-size: 13px;
+  line-height: 1.5;
+  opacity: 0.85;
+  margin: 0 0 20px;
+}
+.le-clinic-pop-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.le-clinic-pop-cta {
+  display: block;
+  text-align: center;
+  padding: 14px 20px;
+  border-radius: 10px;
+  background: #fff;
+  color: #0b1730;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+.le-clinic-pop-cta:hover,
+.le-clinic-pop-cta:focus-visible {
+  background: #e8eef8;
+}
+/* Deliberately quiet, but a real button with a real hit area. An "x" in the
+   corner as the only way past a popup is what makes people leave a site. */
+.le-clinic-pop-skip {
+  display: block;
+  width: 100%;
+  padding: 12px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 10px;
+  background: transparent;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.le-clinic-pop-skip:hover,
+.le-clinic-pop-skip:focus-visible {
+  background: rgba(255, 255, 255, 0.1);
+}

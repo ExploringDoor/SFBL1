@@ -36,6 +36,10 @@ const USSSA_ADDON = 50;
 const ISLAND_FEE_DEFAULT = 795;
 const ISLAND_FEE_8U = 500;
 
+// College Clinic, 2026-10-12. Per PLAYER, not per team, which is why it
+// cannot be derived from the age group like everything else above.
+export const ISLAND_CLINIC_FEE = 175;
+
 // What Square actually charges for an online card payment. The surcharge is
 // derived from this rather than being a round number, which is a legal
 // requirement in New York, not a preference — see nyCompliantTotal().
@@ -73,9 +77,15 @@ export function nyCompliantTotal(fee: number): number {
 export function feeFor(
   leagueId: string,
   data: Record<string, unknown>,
+  /** Which form this came from. Defaults to a team registration, which is
+   *  what every caller meant before the clinic existed. Passed explicitly by
+   *  square-pay so a $175 clinic place is never charged a team's $795. */
+  kind: string = "team_registration",
 ): number {
   const testFee = testFeeOverride();
   if (testFee !== null) return testFee;
+
+  if (kind === "clinic_registration") return ISLAND_CLINIC_FEE;
 
   if (leagueId === "island") {
     // 8U Weekend is the only cheaper tier; every other age and league is $795.

@@ -27,6 +27,7 @@ import { loadTickerGames } from "@/lib/site-data";
 import "./globals.css";
 import "./fx.css";
 import "./island-theme.css";
+import { ClinicPopup } from "@/components/ui/ClinicPopup";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -329,6 +330,10 @@ export default async function RootLayout({
     { label: "Standings", href: "/standings" },
     { label: "Teams", href: "/teams" },
     { label: "Events & Clinics", href: "/content/events-clinics" },
+    // The flyer says "REGISTER AT ISLANDFASTPITCH.COM", so someone who
+    // dismisses the arrival popup still has to be able to find this. Remove
+    // the entry after 12 October; the page itself can stay.
+    { label: "College Clinic", href: "/college-clinic" },
     { label: "Shop", href: "/store" },
     { label: "Fields", href: "/fields" },
     {
@@ -595,6 +600,12 @@ export default async function RootLayout({
           )}
           <div className="site-content">{children}</div>
           {modal}
+          {/* College Clinic offer on arrival. Island only, and the component
+              stops showing itself after the event date with nothing to
+              remember and nothing to deploy. It also skips /college-clinic,
+              since interrupting someone to offer the page they are already
+              reading is how a popup becomes a joke. */}
+          {tenantId === "island" ? <ClinicPopup /> : null}
           {tenantId ? <SiteFooter /> : null}
           {/* PWA bottom tab bar — gates itself on standalone display
               mode (regular browser tabs see nothing). DVSL pattern. */}

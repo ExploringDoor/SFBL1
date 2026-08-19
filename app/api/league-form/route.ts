@@ -29,6 +29,11 @@ import { coachCodeEmail, officeRegistrationEmail } from "@/lib/email/templates";
 
 export const runtime = "nodejs";
 
+// Capacity comes from lib/clinic so the page, the popup and this check can
+// never disagree about how many places exist.
+import { CLINIC } from "@/lib/clinic";
+const CLINIC_CAPACITY = CLINIC.capacity;
+
 type Kind =
   | "team_registration"
   | "player_registration"
@@ -37,7 +42,8 @@ type Kind =
   | "alerts_signup"
   | "player_ad"
   | "site_feedback"
-  | "player_waiver";
+  | "player_waiver"
+  | "clinic_registration";
 
 interface SubmissionBody {
   kind: Kind;
@@ -75,6 +81,26 @@ const ALLOWED_FIELDS: Record<Kind, string[]> = {
     "medical_notes",
     "signature",
     "signature_date",
+    "agreed_to_terms",
+  ],
+  // College Clinic, 2026-10-12. One PLAYER per submission, $175 each, capped
+  // at 40. Grad year and high school are in here because the point of the day
+  // is college coaches watching, and a recruiter's first two questions are
+  // what position and what year.
+  clinic_registration: [
+    "player_first_name",
+    "player_last_name",
+    "age_group",
+    "grad_year",
+    "high_school",
+    "current_team",
+    "primary_position",
+    "secondary_position",
+    "parent_first_name",
+    "parent_last_name",
+    "email",
+    "phone",
+    "notes",
     "agreed_to_terms",
   ],
   // "Suggest a change" — anyone using the site can report something broken,
@@ -208,6 +234,18 @@ const REQUIRED: Record<Kind, string[]> = {
     "email",
     "phone",
     "signature",
+    "agreed_to_terms",
+  ],
+  clinic_registration: [
+    "player_first_name",
+    "player_last_name",
+    "age_group",
+    "grad_year",
+    "primary_position",
+    "parent_first_name",
+    "parent_last_name",
+    "email",
+    "phone",
     "agreed_to_terms",
   ],
   site_feedback: ["message"],
@@ -550,6 +588,35 @@ export async function POST(req: Request) {
           error: `We already have ${seen} submissions from this email address in the last 24 hours, so this one was not saved. If that is not what you expected, please contact the league office and we will enter it for you.`,
         },
         { status: 429 },
+      );
+    }
+  }
+
+  // The clinic is capped, and the cap is real: 40 places, one player each.
+  //
+  // Counted at submit time rather than trusted from a page that may have been
+  // open for an hour. Only PAID places hold a spot — a registration that never
+  // paid is not occupying anything, and treating it as occupied would let a
+  // handful of abandoned forms close a clinic that is half empty.
+  //
+  // Not a transaction. Two people submitting in the same second could both
+  // pass a 39/40 check, and the honest trade is one over rather than a
+  // distributed lock on a form Mike runs twice a year. He can seat 41.
+  if (body.kind === "clinic_registration") {
+    const taken = await db
+      .collection(`leagues/${tenantId}/form_submissions/clinic_registration/items`)
+      .get();
+    const paid = taken.docs.filter(
+      (d) => (d.data().payment as { status?: string } | undefined)?.status === "paid",
+    ).length;
+    if (paid >= CLINIC_CAPACITY) {
+      return NextResponse.json(
+        {
+          error:
+            `The College Clinic is full — all ${CLINIC_CAPACITY} places are taken. ` +
+            `Email the league office to be added to the waiting list in case of a drop out.`,
+        },
+        { status: 409 },
       );
     }
   }

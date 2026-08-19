@@ -77,9 +77,15 @@ function usd(cents: number): string {
 export function SquareCardForm({
   registrationId,
   onPaid,
+  kind = "team_registration",
 }: {
   registrationId: string | null;
   onPaid: (receiptUrl: string | null) => void;
+  /** Which form is being paid for. Forwarded to both the quote and the
+   *  charge: the College Clinic lives in its own collection and is priced
+   *  per player, so without this a $175 place quotes and charges a team's
+   *  $795. */
+  kind?: "team_registration" | "clinic_registration";
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const cardRef = useRef<SquareCard | null>(null);
@@ -129,7 +135,7 @@ export function SquareCardForm({
             const q = await fetch("/api/square-quote", {
               method: "POST",
               headers: { "content-type": "application/json" },
-              body: JSON.stringify({ registrationId }),
+              body: JSON.stringify({ registrationId, kind }),
             }).then((r) => (r.ok ? r.json() : null));
             if (!cancelled && q && typeof q.total_cents === "number") {
               setQuote(q);
@@ -188,7 +194,7 @@ export function SquareCardForm({
       const res = await fetch("/api/square-pay", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ registrationId, sourceId: result.token }),
+        body: JSON.stringify({ registrationId, sourceId: result.token, kind }),
       });
       const j = (await res.json().catch(() => ({}))) as {
         ok?: boolean;

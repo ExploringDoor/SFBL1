@@ -35,6 +35,13 @@ export async function POST(req: Request) {
   }
   const registrationId =
     typeof body.registrationId === "string" ? body.registrationId : "";
+  // Allow-listed: this string becomes part of a Firestore path.
+  const PAYABLE_KINDS = new Set(["team_registration", "clinic_registration"]);
+  const kind =
+    typeof (body as { kind?: unknown }).kind === "string" &&
+    PAYABLE_KINDS.has((body as { kind: string }).kind)
+      ? (body as { kind: string }).kind
+      : "team_registration";
   if (!registrationId || !/^[A-Za-z0-9_-]+$/.test(registrationId)) {
     return NextResponse.json(
       { error: "registrationId required" },
@@ -44,7 +51,7 @@ export async function POST(req: Request) {
 
   const snap = await getAdminDb()
     .doc(
-      `leagues/${leagueId}/form_submissions/team_registration/items/${registrationId}`,
+      `leagues/${leagueId}/form_submissions/${kind}/items/${registrationId}`,
     )
     .get();
   if (!snap.exists) {
@@ -54,7 +61,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const fee = feeFor(leagueId, snap.data() ?? {});
+  const fee = feeFor(leagueId, snap.data() ?? {}, kind);
   const total = chargeCents(leagueId, fee);
   const surchargeCents = total - fee * 100;
   return NextResponse.json({

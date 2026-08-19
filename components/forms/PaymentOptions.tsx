@@ -34,9 +34,18 @@ const money = (n: number) =>
 export function PaymentOptions({
   submissionId,
   leagueId,
+  kind = "team_registration",
+  noun = "team fee",
 }: {
   submissionId: string | null;
   leagueId: string;
+  /** Which form this payment settles. The College Clinic stores its
+   *  submissions in a different collection and is priced per player, so both
+   *  the quote and the charge have to be told which one they are looking at. */
+  kind?: "team_registration" | "clinic_registration";
+  /** What to call the money on screen. "team fee" is wrong for a clinic
+   *  place bought by one family. */
+  noun?: string;
 }) {
   const [paidReceipt, setPaidReceipt] = useState<string | null>(null);
   const [paid, setPaid] = useState(false);
@@ -64,7 +73,7 @@ export function PaymentOptions({
         const res = await fetch("/api/square-quote", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ registrationId: submissionId }),
+          body: JSON.stringify({ registrationId: submissionId, kind }),
         });
         if (!res.ok) return;
         const j = (await res.json()) as Quote;
@@ -76,7 +85,7 @@ export function PaymentOptions({
     return () => {
       cancelled = true;
     };
-  }, [submissionId]);
+  }, [submissionId, kind]);
 
   // Paid by card — replace the whole block with a receipt, so nobody pays
   // twice by also sending a Venmo.
@@ -115,7 +124,7 @@ export function PaymentOptions({
         <p className="cop-sub">
           Your team is registered. Nothing else is needed right now.
           {quote
-            ? ` Your team fee is ${money(quote.fee_dollars)}, due in full before the season begins.`
+            ? ` Your ${noun} is ${money(quote.fee_dollars)}, due in full before the season begins.`
             : " Your team fee is due in full before the season begins."}
         </p>
         {hasVenmo && (
@@ -189,6 +198,7 @@ export function PaymentOptions({
 
       <SquareCardForm
         registrationId={submissionId}
+        kind={kind}
         onPaid={(receipt) => {
           setPaidReceipt(receipt);
           setPaid(true);
