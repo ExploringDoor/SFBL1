@@ -24,12 +24,17 @@ type Kind =
   | "team_waiver"
   | "umpire_evaluation"
   | "site_feedback"
-  | "player_waiver";
+  | "player_waiver"
+  | "clinic_registration";
 
 const KIND_TABS: { key: Kind; label: string }[] = [
   { key: "player_registration", label: "Player registration" },
   { key: "team_registration", label: "Team registration" },
   { key: "team_waiver", label: "Team waiver" },
+  // College Clinic. Without this tab Mike gets the email and has nowhere to
+  // see the list, which is how a registration becomes "did anyone write that
+  // down?" on the morning of the event.
+  { key: "clinic_registration", label: "College Clinic" },
   { key: "umpire_evaluation", label: "Umpire evaluation" },
   { key: "player_waiver", label: "Signed waivers" },
   { key: "site_feedback", label: "Site feedback" },
@@ -979,6 +984,22 @@ function summaryLine(kind: Kind, s: Submission): string {
   if (kind === "team_waiver") {
     return String(s.team_name ?? "(unnamed team)") +
       (s.signature ? ` — signed by ${s.signature}` : "");
+  }
+  if (kind === "clinic_registration") {
+    // Grad year and position lead, because that is what the day is for and
+    // what Mike will be grouping players by.
+    const player = `${s.player_first_name ?? ""} ${s.player_last_name ?? ""}`.trim();
+    const grad = s.grad_year ? `'${String(s.grad_year).slice(-2)}` : "";
+    const pos = s.primary_position ?? "";
+    const age = s.age_group ?? "";
+    return [
+      player || "(unnamed player)",
+      grad && `· ${grad}`,
+      age && `· ${age}`,
+      pos && `· ${pos}`,
+    ]
+      .filter(Boolean)
+      .join(" ");
   }
   if (kind === "umpire_evaluation") {
     const ev = s.evaluator_name ?? "";

@@ -16,6 +16,9 @@ const ALLOWED_KINDS = new Set([
   "team_registration",
   "player_registration",
   "team_waiver",
+  // Without this the College Clinic tab in the admin returns
+  // "unknown kind" and Mike sees an error where the list should be.
+  "clinic_registration",
   "umpire_evaluation",
   "site_feedback",
   "player_waiver",
