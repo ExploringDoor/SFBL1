@@ -30,6 +30,7 @@ import { combineDateTime } from "@/lib/format-time";
 import { GameCard, type GameCardTeam } from "@/components/ui/GameCard";
 import { PreviewCard, type PreviewCardTeam } from "@/components/ui/PreviewCard";
 import { Hero as DvslHero } from "@/components/ui/Hero";
+import { HeroWindmill } from "@/components/HeroWindmill";
 import { HomepageBanner } from "@/components/ui/HomepageBanner";
 import { HomepageLiveGames } from "@/components/ui/HomepageLiveGames";
 import { HomepageNews } from "@/components/ui/HomepageNews";
@@ -114,27 +115,42 @@ export default async function HomePage() {
           that have no banner image to replace them. Island Fastpitch's header
           banner already carries the league name and tagline, so the text hero
           under it was saying the same thing twice. */}
-      {!config?.flags?.hide_page_titles && !config?.flags?.hide_home_hero && (
-        <DvslHero
-          title={`${big} ${season}`}
-          accentWord={season}
-          subtitle={leagueName}
-          logoUrl={
-            config?.theme?.banner_url ?? config?.theme?.logo_url ?? null
-          }
-          ctas={
-            config?.flags?.registration_open
-              ? [
-                  {
-                    label: "Register Your Team →",
-                    href: "/team-registration",
-                    variant: "primary",
-                  },
-                ]
-              : []
-          }
-        />
-      )}
+      {!config?.flags?.hide_page_titles &&
+        !config?.flags?.hide_home_hero &&
+        (tenantId === "windmill" ? (
+          // Windmill keeps the full-bleed photo hero + stat bar from its static
+          // site; the shared logo-mode hero boxed its cinematic banner into a
+          // small card (Adam, 2026-08-20).
+          <HeroWindmill
+            bannerUrl={
+              config?.theme?.banner_url ??
+              config?.theme?.logo_url ??
+              "/windmill/banner.png"
+            }
+            seasonYear={season}
+            registrationOpen={!!config?.flags?.registration_open}
+          />
+        ) : (
+          <DvslHero
+            title={`${big} ${season}`}
+            accentWord={season}
+            subtitle={leagueName}
+            logoUrl={
+              config?.theme?.banner_url ?? config?.theme?.logo_url ?? null
+            }
+            ctas={
+              config?.flags?.registration_open
+                ? [
+                    {
+                      label: "Register Your Team →",
+                      href: "/team-registration",
+                      variant: "primary",
+                    },
+                  ]
+                : []
+            }
+          />
+        ))}
       {/* Registration CTA for tenants whose hero is suppressed.
           The "Register Your Team" button lives INSIDE DvslHero, so a tenant
           that hides the hero (COYBL hides it because its banner images already
