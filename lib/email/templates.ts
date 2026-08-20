@@ -175,6 +175,87 @@ export function officePaymentEmail(o: {
   };
 }
 
+/** The parent's receipt after a clinic place is paid for by card.
+ *
+ *  Separate from paymentReceiptEmail rather than a mode on it. That one is a
+ *  COACH receipt: it opens "Hi Coach", thanks them for a team fee, and names a
+ *  team. Sending it to a parent produced a receipt addressed to a coach, for a
+ *  team fee, for a team called "your team", naming no player, which Mike then
+ *  could not match to a child. Two audiences, two templates, and the team one
+ *  stays untouched for every other tenant. */
+export function clinicReceiptEmail(o: {
+  parentFirstName: string;
+  player: string;
+  feeCents: number;
+  totalCents: number;
+  receiptUrl?: string | null;
+}): Built {
+  const surcharge = o.totalCents - o.feeCents;
+  const who = o.player || "your player";
+  return {
+    subject: `College Clinic place confirmed, ${who}`,
+    html:
+      `<p>Hi ${esc(o.parentFirstName) || "there"},</p>` +
+      `<p>Thank you. <strong>${esc(who)}</strong> has a place at the College Clinic ` +
+      `and the fee is paid.</p>` +
+      `<table style="border-collapse:collapse;margin:14px 0">` +
+      `<tr><td style="padding:4px 18px 4px 0;color:#555">Clinic fee</td>` +
+      `<td style="padding:4px 0;text-align:right"><strong>${money(o.feeCents)}</strong></td></tr>` +
+      (surcharge > 0
+        ? `<tr><td style="padding:4px 18px 4px 0;color:#555">Card processing fee</td>` +
+          `<td style="padding:4px 0;text-align:right">${money(surcharge)}</td></tr>`
+        : "") +
+      `<tr><td style="padding:8px 18px 4px 0;border-top:1px solid #ddd"><strong>Paid</strong></td>` +
+      `<td style="padding:8px 0 4px;text-align:right;border-top:1px solid #ddd">` +
+      `<strong>${money(o.totalCents)}</strong></td></tr>` +
+      `</table>` +
+      (o.receiptUrl
+        ? `<p><a href="${esc(o.receiptUrl)}">View your Square receipt</a></p>`
+        : "") +
+      `<p>Bring a glove, bat, helmet, cleats and water. Wear your travel team ` +
+      `uniform if you have one.</p>` +
+      `<p>Keep this for your records. Questions, just reply to this email.</p>`,
+  };
+}
+
+/** What the office gets when a clinic place is paid for.
+ *
+ *  Leads with the player, the grad year and the age group, because those are
+ *  the three things Mike groups the day by, and the team version led with a
+ *  team name that for a clinic is always empty. */
+export function officeClinicPaymentEmail(o: {
+  player: string;
+  gradYear?: string;
+  ageGroup?: string;
+  parent: string;
+  payerEmail?: string;
+  feeCents: number;
+  totalCents: number;
+  receiptUrl?: string | null;
+}): Built {
+  const surcharge = o.totalCents - o.feeCents;
+  const who = o.player || "(unnamed player)";
+  return {
+    subject: `College Clinic PAID: ${who}${o.gradYear ? ` (${o.gradYear})` : ""} ${money(o.totalCents)}`,
+    html:
+      `<p><strong>${esc(who)}</strong> has a paid place at the College Clinic.</p>` +
+      `<p>` +
+      (o.gradYear ? `Grad year: ${esc(o.gradYear)}<br/>` : "") +
+      (o.ageGroup ? `Age group: ${esc(o.ageGroup)}<br/>` : "") +
+      `Parent: ${esc(o.parent)}` +
+      (o.payerEmail ? ` &lt;${esc(o.payerEmail)}&gt;` : "") +
+      `</p>` +
+      `<p>Amount: <strong>${money(o.totalCents)}</strong> ` +
+      `(fee ${money(o.feeCents)}${surcharge > 0 ? `, card ${money(surcharge)}` : ""})</p>` +
+      (o.receiptUrl
+        ? `<p><a href="${esc(o.receiptUrl)}">View the Square receipt</a></p>`
+        : "") +
+      `<p>It is on the College Clinic tab in Admin, Form intake. Clinic places ` +
+      `are not on the Payments tab: that is the team ledger, and a clinic place ` +
+      `is not a team.</p>`,
+  };
+}
+
 /** Confirmation that a signed team waiver arrived. */
 export function waiverConfirmationEmail(o: {
   who: string;

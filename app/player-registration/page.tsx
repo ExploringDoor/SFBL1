@@ -6,11 +6,14 @@
 // (Saturday + Boomers 60/70).
 //
 // Server component — hydrates the Team dropdown with the league's
-// actual teams so admins don't have to fuzzy-match free-text inputs.
+// actual teams so admins don't have to fuzzy-match free-text inputs,
+// unless the tenant has flags.hide_teams on, in which case the coach types
+// the name. This page was rendering the full roster into view-source while
+// /teams was showing the private notice. See lib/team-options.ts.
 
 import { headers } from "next/headers";
 import { LeagueForm, type FormField } from "@/components/forms/LeagueForm";
-import { getAdminDb } from "@/lib/firebase-admin";
+import { loadTeamOptions, teamNameField, teamsHidden } from "@/lib/team-options";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 
 export const dynamic = "force-dynamic";
@@ -133,25 +136,6 @@ function tenantConfig(
   };
 }
 
-async function loadTeamOptions(tenantId: string | null) {
-  if (!tenantId) return [] as { value: string; label: string }[];
-  try {
-    const snap = await getAdminDb()
-      .collection(`leagues/${tenantId}/teams`)
-      .get();
-    return snap.docs
-      .map((d) => {
-        const name = String(d.data().name ?? d.id);
-        return { value: name, label: name };
-      })
-      .sort((a, b) => a.label.localeCompare(b.label));
-  } catch {
-    // Firestore quota / network — fall back to a free-text-ish empty
-    // dropdown rather than crashing the whole form.
-    return [];
-  }
-}
-
 export default async function PlayerRegistrationPage() {
   const h = headers();
   const tenantId = h.get("x-tenant-id") ?? "";
@@ -165,14 +149,8 @@ export default async function PlayerRegistrationPage() {
     }
   })();
   const cfg = tenantConfig(tenantId, config);
-  const teams = await loadTeamOptions(tenantId || null);
-
-  const teamOptions = [
-    { value: FREE_AGENT, label: FREE_AGENT },
-    ...teams,
-    { value: NEW_TEAM, label: NEW_TEAM },
-    { value: OTHER, label: OTHER },
-  ];
+  const hidden = teamsHidden(config);
+  const teams = await loadTeamOptions(tenantId || null, config);
 
   const FIELDS: FormField[] = [
     { name: "first_name", label: "First Name", type: "text", required: true, width: "half" },
@@ -206,15 +184,29 @@ export default async function PlayerRegistrationPage() {
           },
         ] satisfies FormField[])
       : []),
-    {
+    // Free Agent and Starting a new team are intents the office reads, not
+    // team docs, so while the field is private they move into the hint and the
+    // player types the answer. Nothing keys on the exact sentinel strings:
+    // /api/admin-free-agent decides free agency from an admin click that sets
+    // free_agent_status, and /api/free-agents passes this value straight
+    // through to captains as free-text team_pref.
+    teamNameField({
       name: "team_name",
       label: "Team",
-      type: "select",
+      teams,
+      hidden,
       required: true,
-      options: teamOptions,
       width: "full",
+      leadingOptions: [{ value: FREE_AGENT, label: FREE_AGENT }],
+      trailingOptions: [
+        { value: NEW_TEAM, label: NEW_TEAM },
+        { value: OTHER, label: OTHER },
+      ],
       help: "Pick your team, \"Free Agent\" if you don't have one yet, or \"Starting a new team.\"",
-    },
+      hiddenHelp:
+        "Type your team name, or type \"Free Agent\" if you do not have one yet. The team list goes up when the schedule is released.",
+      placeholder: "Your team name",
+    }),
     { name: "notes", label: "Anything else we should know?", type: "textarea", width: "full" },
     // Agreement checkbox only renders when this tenant has a waiver.
     // LBDC has none → no checkbox, no waiver block.

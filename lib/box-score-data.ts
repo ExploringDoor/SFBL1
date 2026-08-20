@@ -3,6 +3,7 @@
 // Firestore reads and shapes into BoxScoreContent's prop type.
 
 import { getAdminDb } from "./firebase-admin";
+import { teamLogoSrc } from "./team-logo";
 import type {
   BoxScoreContentProps,
   BoxTeam,
@@ -144,7 +145,13 @@ async function loadTenantBoxAggregates(
       name: String(data.name ?? d.id),
       abbrev: data.abbrev ? String(data.abbrev) : undefined,
       color: data.color ? String(data.color) : undefined,
-      logoUrl: data.logo_url ? String(data.logo_url) : null,
+      // Reaches ShareCard, a client component, through GameShareSection, so a
+      // data: logo is RSC payload on both /games/[id] and the intercepted modal
+      // that opens on every score card click. Island renders the share graphic
+      // inline rather than behind a button (stats_enabled is false), so it pays
+      // for both teams every time. ShareCard's safeImageSrc accepts same origin
+      // "/" paths, so /api/team-logo still draws and toBlob stays untainted.
+      logoUrl: teamLogoSrc(tenantId, d.id, data.logo_url),
       record: data.record ? String(data.record) : undefined,
     };
   }

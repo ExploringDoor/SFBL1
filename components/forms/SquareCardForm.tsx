@@ -78,6 +78,7 @@ export function SquareCardForm({
   registrationId,
   onPaid,
   kind = "team_registration",
+  feeLabel = "Team fee",
 }: {
   registrationId: string | null;
   onPaid: (receiptUrl: string | null) => void;
@@ -86,6 +87,11 @@ export function SquareCardForm({
    *  per player, so without this a $175 place quotes and charges a team's
    *  $795. */
   kind?: "team_registration" | "clinic_registration";
+  /** What the line item is called in the amount breakdown. A parent buying
+   *  one clinic place for one girl was shown "Team fee $175.00", which is not
+   *  what they are buying and not a phrase they can reconcile against their
+   *  card statement. Defaulted so every existing caller is unchanged. */
+  feeLabel?: string;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const cardRef = useRef<SquareCard | null>(null);
@@ -230,7 +236,7 @@ export function SquareCardForm({
       {quote && (
         <dl className="sqc-amount">
           <div>
-            <dt>Team fee</dt>
+            <dt>{feeLabel}</dt>
             <dd>{usd(quote.fee_dollars * 100)}</dd>
           </div>
           <div>

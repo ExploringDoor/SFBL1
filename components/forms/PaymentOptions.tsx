@@ -21,6 +21,7 @@
 import { useEffect, useState } from "react";
 import { SquareCardForm } from "./SquareCardForm";
 import { paymentDetailsFor } from "@/lib/league-payment";
+import { CLINIC } from "@/lib/clinic";
 
 interface Quote {
   fee_dollars: number;
@@ -95,9 +96,16 @@ export function PaymentOptions({
   if (paid) {
     return (
       <section className="cop-wrap">
-        <h3 className="cop-head">Payment received</h3>
+        <h3 className="cop-head">
+          {isClinic ? "The place is confirmed" : "Payment received"}
+        </h3>
         <p className="cop-sub">
-          Thanks. Your team fee is paid and your registration is complete.
+          {/* A parent who has just bought ONE place for ONE girl was told her
+              team fee was paid and her registration was complete. Neither noun
+              is hers. */}
+          {isClinic
+            ? "Thanks. The clinic fee is paid and the place is held. A confirmation is on its way to the email address on the form."
+            : "Thanks. Your team fee is paid and your registration is complete."}
           {paidReceipt ? " A receipt is available below." : ""}
         </p>
         {paidReceipt && (
@@ -153,8 +161,15 @@ export function PaymentOptions({
               </p>
             )}
             <p className="cop-foot">
-              Prefer to pay by card? Reply to your confirmation email and the
-              league office will send a payment link.
+              {/* THE CARD LINK DOES NOT EXIST FOR A CLINIC.
+                  /api/square-checkout reads form_submissions/team_registration
+                  and nothing else, so there is no link for the office to send
+                  and no way to record one if they sent it. Promising it is the
+                  same class of lie as "pay from the registration page", which
+                  is what sent one family round the form three times.
+                  When a signed pay-later link exists, this is where it goes. */}
+              Prefer to pay by card? Use the button below to come back, or call
+              Mike on {CLINIC.phone}.
             </p>
           </>
         ) : (
@@ -192,7 +207,9 @@ export function PaymentOptions({
 
   return (
     <section className="cop-wrap">
-      <h3 className="cop-head">Now pay your team fee</h3>
+      <h3 className="cop-head">
+        {isClinic ? "Now pay the clinic fee" : "Now pay your team fee"}
+      </h3>
 
       {/* The two prices, side by side, before the coach chooses. This is the
           NY-compliant presentation: not a fee bolted on at the end. */}
@@ -249,6 +266,13 @@ export function PaymentOptions({
       <SquareCardForm
         registrationId={submissionId}
         kind={kind}
+        // Derived from `noun`, not from isClinic. This component ALREADY takes
+        // the caller's word for what the money is called: LeagueForm passes
+        // "clinic fee" or "team fee", and until now that prop was read only in
+        // the deferred team branch, which is exactly why the card form still
+        // said "Team fee" over a $175 clinic place. One source, capitalised for
+        // a <dt>, so a future tenant with a different noun gets it for free.
+        feeLabel={noun.charAt(0).toUpperCase() + noun.slice(1)}
         onPaid={(receipt) => {
           setPaidReceipt(receipt);
           setPaid(true);
@@ -282,8 +306,12 @@ export function PaymentOptions({
             )}
           </div>
           <p className="cop-foot">
-            Paying by {noFeeMethods}? Put your team name in the note so the
-            office can match it to your registration.
+            {/* THERE IS NO TEAM. Telling a parent to put a team name on their
+                Venmo is how Mike ends up with a $175 payment from a stranger
+                and no idea which girl it belongs to. */}
+            {isClinic
+              ? `Paying by ${noFeeMethods}? Put the player's name in the note so the office can match it to this registration.`
+              : `Paying by ${noFeeMethods}? Put your team name in the note so the office can match it to your registration.`}
           </p>
         </>
       )}

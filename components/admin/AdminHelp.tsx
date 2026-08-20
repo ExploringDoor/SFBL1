@@ -242,14 +242,22 @@ export function AdminHelp() {
             </li>
             <li>
               <strong>Rain out a whole day:</strong> click{" "}
-              <strong>Rain Out Day</strong>, set the date, click Rain out this
-              date.
+              <strong>Rain Out Day</strong>, check the date, click Rain out this
+              date, then confirm the popup.
             </li>
           </ul>
+          <p className="ah-note">
+            The box opens on <strong>today</strong> in league time, and the
+            amber line tells you how many scheduled games sit on that date
+            before you click. The confirm names the date in full and the number
+            of games, so a wrong date is caught before anything moves rather
+            than after.
+          </p>
           <p className="ah-warn">
-            <strong>Check the date on a rain-out after 8pm.</strong> The date
-            box can open on tomorrow&rsquo;s date late in the evening, so a 9pm
-            Friday rain-out will offer you Saturday. Read it before you click.
+            <strong>Nobody is told automatically.</strong> Marking a day rained
+            out updates the website, and that is all it does. No email and no
+            text goes to any coach or parent. Follow it with the{" "}
+            <strong>Send Message</strong> tab, or they will drive to the field.
           </p>
           <ul>
             <li>

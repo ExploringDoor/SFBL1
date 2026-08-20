@@ -16,6 +16,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { User } from "firebase/auth";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
+import { leagueToday } from "@/lib/format-time";
 import {
   eligibleUmpires,
   findUmpireIssues,
@@ -173,8 +174,10 @@ export function UmpiresManager({ leagueId, user }: Props) {
   }
 
   // Only games from today forward need assigning; a season of past games would
-  // bury the ones that matter.
-  const today = new Date().toISOString().slice(0, 10);
+  // bury the ones that matter. "Today" is the LEAGUE's calendar day: the UTC
+  // day rolls over at 8pm Eastern, which dropped that evening's games off the
+  // assignment board while they were still being played.
+  const today = leagueToday();
   const upcoming = useMemo(
     () => games.filter((g) => g.date >= today).slice(0, 120),
     [games, today],

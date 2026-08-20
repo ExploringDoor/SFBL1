@@ -22,6 +22,11 @@ const ALLOWED_KINDS = new Set([
   "team_registration",
   "player_registration",
   "team_waiver",
+  // Same omission as the status route: the College Clinic tab shipped with a
+  // Delete button that returned "unknown kind". The two duplicate rows sitting
+  // in Island's clinic collection right now cannot be tidied without this, and
+  // this is a SOFT delete, so nothing is destroyed either way.
+  "clinic_registration",
   "umpire_evaluation",
   "site_feedback",
   "player_waiver",

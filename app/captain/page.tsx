@@ -46,13 +46,12 @@ import { QuickScoreInline } from "@/components/captain/QuickScoreInline";
 import { PasswordlessCaptainPicker } from "@/components/captain/PasswordlessCaptainPicker";
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
 
-// Box Score (full manual AB/R/H + pitcher lines) is hidden for COYBL for now
-// (Adam, 2026-08-04): coaches report the final only, via Quick Score. SFBL and
-// Island keep it — their captains do enter full stat lines. Hiding the button
-// rather than deleting the feature, so turning it back on is one line.
-function showsBoxScore(leagueId: string): boolean {
-  return leagueId !== "coybl";
-}
+// Was a local showsBoxScore(leagueId) that returned leagueId !== "coybl".
+// Its comment claimed "Island keeps it, their captains do enter full stat
+// lines", which was never true: Island has always run stats off, so this
+// function sent Island coaches to an editor with no columns in it. The rule is
+// a config flag now, in lib/tenant-flags.ts, and no tenant is named here.
+import { boxScoreEnabled } from "@/lib/tenant-flags";
 import { ManagerContact } from "@/components/ManagerContact";
 import { getDb } from "@/lib/firebase";
 import { useTenant } from "@/lib/tenant-context";
@@ -690,6 +689,32 @@ function CaptainBody({
   nextGameRsvps: Record<string, "yes" | "maybe" | "no">;
 }) {
   const [tab] = useCaptainTab();
+  const { config } = useTenant();
+  const boxScores = boxScoreEnabled(config);
+
+  // Every game row on the dashboard offers the same one action, so decide it
+  // once instead of repeating the ternary at three call sites. Three copies is
+  // exactly how the old showsBoxScore() gate drifted out of sync with the two
+  // score buttons on this page that had no gate at all.
+  function gameRowActions(g: GameSnap): {
+    primary?: { label: string; href: string };
+  } {
+    if (boxScores)
+      return {
+        primary: {
+          label: "Box Score",
+          href: `/captain/box-score?game=${g.id}`,
+        },
+      };
+    // Stats off. A finished game has nothing left to submit, and a "Submit
+    // Score" button on one invites a coach to overwrite a result the office
+    // already has: the Submit Score tab lists recent games too, and
+    // /api/captain-submit merges a fresh score onto the game doc with no
+    // "already final" guard. Recent Games rows stay bare, which is what they
+    // look like today.
+    if (g.status === "final" || g.status === "approved") return {};
+    return { primary: { label: "Submit Score", href: "#scores" } };
+  }
 
   if (tab === "roster")
     return <RosterTab leagueId={leagueId} teamId={teamId} />;
@@ -720,7 +745,25 @@ function CaptainBody({
         leagueId={leagueId}
         teamId={teamId}
         teamNames={teamNames}
-        games={upcoming.concat(recent)}
+        // `upcoming` is status === "scheduled" only and `recent` is final or
+        // approved, so a game a coach marked postponed (api/captain-schedule
+        // lets captains set "postponed" and "cancelled") fell into neither and
+        // vanished from this tab, while still showing on the "Submit your
+        // score" card above. That card now sends the coach here, so a game it
+        // lists has to be in this list. Anything unfinished and not cancelled
+        // belongs. The three filters are disjoint by status, so nothing is
+        // listed twice.
+        games={upcoming
+          .concat(
+            games.filter(
+              (g) =>
+                g.status !== "scheduled" &&
+                g.status !== "final" &&
+                g.status !== "approved" &&
+                g.status !== "cancelled",
+            ),
+          )
+          .concat(recent)}
       />
     );
   if (tab === "announcements") {
@@ -823,14 +866,7 @@ function CaptainBody({
                     game={g}
                     myTeamId={teamId}
                     teamNames={teamNames}
-                    {...(showsBoxScore(leagueId)
-                      ? {
-                          primary: {
-                            label: "Box Score",
-                            href: `/captain/box-score?game=${g.id}`,
-                          },
-                        }
-                      : {})}
+                    {...gameRowActions(g)}
                   />
                 ))}
               </ul>
@@ -846,14 +882,7 @@ function CaptainBody({
                     game={g}
                     myTeamId={teamId}
                     teamNames={teamNames}
-                    {...(showsBoxScore(leagueId)
-                      ? {
-                          primary: {
-                            label: "Box Score",
-                            href: `/captain/box-score?game=${g.id}`,
-                          },
-                        }
-                      : {})}
+                    {...gameRowActions(g)}
                   />
                 ))}
               </ul>
@@ -880,14 +909,7 @@ function CaptainBody({
                     game={g}
                     myTeamId={teamId}
                     teamNames={teamNames}
-                    {...(showsBoxScore(leagueId)
-                      ? {
-                          primary: {
-                            label: "Box Score",
-                            href: `/captain/box-score?game=${g.id}`,
-                          },
-                        }
-                      : {})}
+                    {...gameRowActions(g)}
                   />
                 ))}
               </ul>
@@ -1046,6 +1068,22 @@ function AwaitingScoreCard({
   teamNames: Record<string, string>;
   myTeamId: string;
 }) {
+  const { config } = useTenant();
+  // This is the loudest score button on the dashboard, and it was the entry
+  // point with no league gate at all. COYBL and Island coaches were both sent
+  // to a box-score editor their league does not use, and on COYBL the route
+  // itself then refused them, so the biggest button on the page was a dead end.
+  const boxScores = boxScoreEnabled(config);
+  const cta: React.CSSProperties = {
+    background: "var(--brand-primary)",
+    color: "white",
+    padding: "10px 18px",
+    borderRadius: 8,
+    textDecoration: "none",
+    fontWeight: 700,
+    fontSize: 14,
+    whiteSpace: "nowrap",
+  };
   return (
     <section
       className="le-cap-awaiting"
@@ -1129,21 +1167,22 @@ function AwaitingScoreCard({
                   {dateLabel}
                 </div>
               </div>
-              <Link
-                href={`/captain/box-score?game=${game.id}`}
-                style={{
-                  background: "var(--brand-primary)",
-                  color: "white",
-                  padding: "10px 18px",
-                  borderRadius: 8,
-                  textDecoration: "none",
-                  fontWeight: 700,
-                  fontSize: 14,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Submit Score →
-              </Link>
+              {boxScores ? (
+                <Link
+                  href={`/captain/box-score?game=${game.id}`}
+                  style={cta}
+                >
+                  Submit Score →
+                </Link>
+              ) : (
+                // Hash target, so a native <a>. next/link moves a hash with
+                // history.pushState, which never fires hashchange, and the tab
+                // router only listens for hashchange, so a <Link href="#scores">
+                // renders a button that visibly does nothing.
+                <a href="#scores" style={cta}>
+                  Submit Score →
+                </a>
+              )}
             </li>
           );
         })}
@@ -1175,7 +1214,7 @@ function NextGameSpotlight({
   // SFBL hides attendance/RSVP (no player logins → always empty); COYBL hides
   // it too (Attendance isn't used in youth baseball — Adam, 2026-07). Other
   // leagues keep it.
-  const { tenantId } = useTenant();
+  const { tenantId, config } = useTenant();
   const isSfbl = tenantId === "sfbl";
   const hideRsvp = isSfbl || tenantId === "coybl";
   const isHome = game.home_team_id === myTeamId;
@@ -1249,9 +1288,14 @@ function NextGameSpotlight({
             📋 Attendance
           </a>
         )}
-        {tenantId === "coybl" ? (
-          // Score-only league → land on the Submit Score tab (Quick Score),
+        {!boxScoreEnabled(config) ? (
+          // Score only league, so land on the Submit Score tab (Quick Score),
           // not the full box-score page.
+          //
+          // This gate said tenantId === "coybl" while its own comment said
+          // "score only league". That gap is the whole bug: Island is a score
+          // only league too, and nobody came back to add the second slug. Read
+          // the flag, and the next one is right by default.
           <a href="#scores" className="le-cap-btn-primary">
             ⚾ Submit Score
           </a>
@@ -1354,6 +1398,8 @@ function SubmitScoreTab({
   games: GameSnap[];
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
+  const { config } = useTenant();
+  const boxScores = boxScoreEnabled(config);
   return (
     <div className="cap-tab">
       <div className="cap-section-head">
@@ -1361,7 +1407,7 @@ function SubmitScoreTab({
         <p className="cap-section-sub">
           {/* Hiding the Box Score buttons left this sentence describing one
               that is no longer there. */}
-          {showsBoxScore(leagueId) ? (
+          {boxScores ? (
             <>
               Tap <strong>Quick Score</strong> on a game for just the final, or{" "}
               <strong>Box Score</strong> for the full lineup + stats. Both
@@ -1392,7 +1438,7 @@ function SubmitScoreTab({
                   game={g}
                   myTeamId={teamId}
                   teamNames={teamNames}
-                  {...(showsBoxScore(leagueId)
+                  {...(boxScores
                     ? {
                         primary: {
                           label: "Box Score",
@@ -1405,10 +1451,14 @@ function SubmitScoreTab({
                       }
                     : {
                         // Only one way to report a score here, so it gets the
-                        // primary slot instead of sitting in the quieter one.
+                        // primary look instead of sitting in the quieter slot.
+                        // The comment already said this and the code did not do
+                        // it: the one button a coach needs, on a phone, at a
+                        // field, was rendered in the secondary style.
                         secondary: {
                           label: open ? "✕ Close" : "⚡ Quick Score",
                           onClick: () => setOpenId(open ? null : g.id),
+                          prominent: true,
                         },
                       })}
                 />
@@ -1442,10 +1492,20 @@ function CaptainGameRow({
   game: GameSnap;
   myTeamId: string;
   teamNames?: Record<string, string>;
-  /** Optional: COYBL hides Box Score, which leaves some rows with no
-   *  action button at all rather than a button that goes nowhere. */
+  /** Main action for the row. An href starting with "#" is rendered as a
+   *  native <a>, same rule as `secondary` below, because stats off leagues put
+   *  the Submit Score tab link here. Still optional: a finished game on a
+   *  stats off league has no action, so those rows carry no button. */
   primary?: { label: string; href: string };
-  secondary?: { label: string; href?: string; onClick?: () => void };
+  /** `prominent` promotes this to the primary button style. Set it when this
+   *  IS the only action on the row (Quick Score on a stats off league), so the
+   *  button the coach guide tells them to tap does not look optional. */
+  secondary?: {
+    label: string;
+    href?: string;
+    onClick?: () => void;
+    prominent?: boolean;
+  };
 }) {
   const isHome = game.home_team_id === myTeamId;
   const opponentId = isHome ? game.away_team_id : game.home_team_id;
@@ -1487,11 +1547,19 @@ function CaptainGameRow({
         </span>
       )}
       <div className="le-cap-game-actions">
-        {primary && (
-          <Link href={primary.href} className="le-cap-btn-primary">
-            {primary.label}
-          </Link>
-        )}
+        {primary &&
+          (primary.href.startsWith("#") ? (
+            // Hash targets MUST be a native <a>, same reason as `secondary`
+            // below: next/link pushes a hash with history.pushState, which does
+            // not fire hashchange, and the tab router listens for nothing else.
+            <a href={primary.href} className="le-cap-btn-primary">
+              {primary.label}
+            </a>
+          ) : (
+            <Link href={primary.href} className="le-cap-btn-primary">
+              {primary.label}
+            </Link>
+          ))}
         {secondary &&
           (secondary.onClick ? (
             // Button variant — used by Quick Score to toggle an inline
@@ -1499,7 +1567,11 @@ function CaptainGameRow({
             <button
               type="button"
               onClick={secondary.onClick}
-              className="le-cap-btn-secondary"
+              className={
+                secondary.prominent
+                  ? "le-cap-btn-primary"
+                  : "le-cap-btn-secondary"
+              }
             >
               {secondary.label}
             </button>
@@ -1561,7 +1633,7 @@ function GameDayHero({
   rosterCount: number;
 }) {
   // SFBL hides RSVP totals (no player logins → always empty). (Adam, 2026-06.)
-  const { tenantId } = useTenant();
+  const { tenantId, config } = useTenant();
   const isSfbl = tenantId === "sfbl";
   const isHome = game.home_team_id === myTeamId;
   const oppId = isHome ? game.away_team_id : game.home_team_id;
@@ -1620,12 +1692,25 @@ function GameDayHero({
       )}
 
       <div className="cap-gameday-actions">
-        <Link
-          href={`/captain/box-score?game=${game.id}`}
-          className="cap-gameday-btn cap-gameday-btn-primary"
-        >
-          ✏ Box Score
-        </Link>
+        {boxScoreEnabled(config) ? (
+          <Link
+            href={`/captain/box-score?game=${game.id}`}
+            className="cap-gameday-btn cap-gameday-btn-primary"
+          >
+            ✏ Box Score
+          </Link>
+        ) : (
+          // Game day, phone in hand, at the field, and this is the biggest
+          // button on the screen. A stats off league has no box score to fill
+          // in, so it goes where the coach guide sends them. Native <a>, since
+          // a hash through next/link never fires hashchange.
+          <a
+            href="#scores"
+            className="cap-gameday-btn cap-gameday-btn-primary"
+          >
+            Submit Score
+          </a>
+        )}
         <Link
           href={`/captain/lineup?game=${game.id}`}
           className="cap-gameday-btn cap-gameday-btn-secondary"

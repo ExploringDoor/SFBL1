@@ -29,6 +29,11 @@ const ALLOWED_KINDS = new Set([
   "team_registration",
   "player_registration",
   "team_waiver",
+  // The College Clinic tab was added to the admin without being added here, so
+  // "Start review" and "Mark done" returned "unknown kind: clinic_registration"
+  // on every row. /api/admin-form-submissions was updated at the time and these
+  // two were missed, which is the shape this bug always takes.
+  "clinic_registration",
   "umpire_evaluation",
   "site_feedback",
   "player_waiver",

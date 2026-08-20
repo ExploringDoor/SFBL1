@@ -1,5 +1,5 @@
 // POST /api/captain-team-logo — a captain sets (or clears) their team's logo
-// from the coach portal. The logo is a client-resized PNG data URL stored on
+// from the coach portal. The logo is a client-resized WebP data URL stored on
 // the team doc's `logo_url` (no Storage bucket needed); TeamBadge renders it
 // everywhere the team shows. Team scope comes from the captain's claim
 // (captain:<teamId>); admins pass { teamId }. Same auth shape as
@@ -9,11 +9,12 @@
 //       { leagueId, teamId?, clear: true }  — remove the logo
 
 import { NextResponse } from "next/server";
+import { isAllowedLogoDataUrl } from "@/lib/team-logo";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 
 export const runtime = "nodejs";
 
-// ~400KB cap on the data URL. The client resizes to ≤320px (~40-60KB), so this
+// ~400KB cap on the data URL. The client resizes to ≤320px (~40 to 60KB), so this
 // is a generous ceiling that still keeps the team doc well under Firestore's
 // 1MB limit.
 const MAX_LOGO_BYTES = 400_000;
@@ -82,6 +83,17 @@ export async function POST(req: Request) {
   if (typeof logo !== "string" || !logo.startsWith("data:image/")) {
     return NextResponse.json(
       { error: "logo must be an image data URL (or pass clear: true)" },
+      { status: 400 },
+    );
+  }
+  // "data:image/" is not enough: svg+xml passes it, and an SVG is a document
+  // that can carry script. Stored here, it would later be served from the
+  // league's own origin by /api/team-logo. The portal's canvas re-encode would
+  // never produce one, but this is a plain POST and a coach is not the only
+  // thing that can call it.
+  if (!isAllowedLogoDataUrl(logo)) {
+    return NextResponse.json(
+      { error: "Logos must be PNG, JPEG, WEBP or GIF." },
       { status: 400 },
     );
   }

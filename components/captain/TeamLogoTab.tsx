@@ -28,7 +28,14 @@ function resizeToDataUrl(file: File, max: number): Promise<string> {
         const ctx = canvas.getContext("2d");
         if (!ctx) return resolve(String(reader.result));
         ctx.drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL("image/png"));
+        // PNG is lossless, so a 320px photographic or gradient heavy logo comes
+        // out at 250 to 400KB, not the 40 to 60KB the 400,000 byte cap in
+        // /api/captain-team-logo was sized against. That is how Island ended up
+        // with two logos just under 400KB that passed the cap and then blew up
+        // the home page payload. WebP at 0.85 puts the same art in the 15 to
+        // 25KB range with alpha intact. A browser that cannot encode webp falls
+        // back to PNG silently, per spec, so there is nothing to feature detect.
+        resolve(canvas.toDataURL("image/webp", 0.85));
       };
       img.src = String(reader.result);
     };

@@ -20,6 +20,7 @@ import {
   query,
 } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
+import { leagueToday } from "@/lib/format-time";
 import { comparePotwDesc } from "@/lib/potw";
 import { RichEditor } from "./RichEditor";
 
@@ -43,8 +44,11 @@ interface Props {
   user: User;
 }
 
+// The LEAGUE's calendar day, not the browser's UTC day. After 8pm Eastern the
+// UTC date is already tomorrow, which stamped tomorrow's date on an award
+// written up the night of the game.
 function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  return leagueToday();
 }
 
 const EMPTY: PotwEntry = {

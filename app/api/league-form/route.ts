@@ -24,15 +24,23 @@ import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { headers } from "next/headers";
 import { parseHost, resolveTenant } from "@/lib/tenants";
 import { provisionCoyblTeam } from "@/lib/provision-team";
-import { sendEmail, notifyAddress, notifyOffice, esc } from "@/lib/email/send";
+import {
+  sendEmail,
+  notifyAddress,
+  notifyAddresses,
+  notifyOffice,
+  esc,
+} from "@/lib/email/send";
 import { coachCodeEmail, officeRegistrationEmail } from "@/lib/email/templates";
 import { isPhoneField, normalizePhone } from "@/lib/phone";
 
 export const runtime = "nodejs";
 
-// Capacity comes from lib/clinic so the page, the popup and this check can
-// never disagree about how many places exist.
-import { CLINIC } from "@/lib/clinic";
+// Capacity, the date and the phone number come from lib/clinic so the page,
+// the popup and this check can never disagree about them.
+import { CLINIC, clinicIsOver } from "@/lib/clinic";
+import { paidClinicPlaces } from "@/lib/clinic-count";
+import { paymentDetailsFor } from "@/lib/league-payment";
 const CLINIC_CAPACITY = CLINIC.capacity;
 
 type Kind =
@@ -383,6 +391,49 @@ const MAILBOX_LIMIT = 3;
 // only to stop a runaway loop.
 const MAILBOX_LIMIT_REGISTRATION = 15;
 
+// How long a submitter waits on the mail before we give up on it.
+//
+// Vercel freezes the lambda the moment the response is returned, so anything
+// not awaited here may simply never be sent. Waiting is the only way to be
+// sure, and this cap is the price: a hung provider costs eight seconds and a
+// recorded failure, never a submit button that spins forever.
+const MAIL_TIMEOUT_MS = 8000;
+
+// Kinds whose mail is sent BEFORE the response and stamped on the document.
+//
+// player_registration and non auto provision team_registration are NOT in
+// here, and the reason is volume, not size. They run the same one
+// confirmation plus N office sends as team_waiver, so awaiting them would be
+// no slower per submission. What stops it is LCYBL, where 185 teams register
+// in a burst and every added second is paid 185 times, and it is 23 days to
+// the season. They stay on the fire and forget path below until that can be
+// measured rather than guessed. COYBL's and Island's team registrations are
+// already awaited and recorded in their own branch above.
+const MAIL_RECORDED_KINDS = new Set<Kind>([
+  "site_feedback",
+  "clinic_registration",
+  "team_waiver",
+  "umpire_evaluation",
+  "player_ad",
+  "alerts_signup",
+]);
+
+// What actually went out, merged onto the submission so a failed send is
+// visible in the admin inbox instead of nowhere at all. The names match
+// login_email_sent / office_email_sent on a team registration so the office
+// reads one vocabulary across every form.
+//
+// Only ever built with DEFINED values: the Admin SDK here is not initialised
+// with ignoreUndefinedProperties, so a stray `undefined` throws on write and
+// would take the flag write down with it.
+interface MailFlags {
+  confirmation_email_sent?: boolean;
+  confirmation_email_error?: string;
+  office_email_sent?: boolean;
+  office_email_error?: string;
+  office_email_to?: string;
+}
+
 // In-memory rate limiter — fine for single-instance Vercel/Next dev.
 // On production with multiple regions, swap to Redis or Edge Config.
 const rate = new Map<string, { count: number; reset: number }>();
@@ -484,8 +535,13 @@ export async function POST(req: Request) {
   }
 
   // Required-field check.
+  // Trimmed, because a required field that accepts " " is not required. Every
+  // required free-text field on these forms has always had this hole, the
+  // signature on the team waiver included; nothing trims on the way in (see
+  // pickAllowed above). Turning the team dropdowns into text inputs for a
+  // tenant hiding its roster just made it easier to reach.
   const missing = REQUIRED[body.kind].filter(
-    (f) => cleaned[f] == null || cleaned[f] === "",
+    (f) => cleaned[f] == null || String(cleaned[f]).trim() === "",
   );
   if (missing.length > 0) {
     return NextResponse.json(
@@ -617,9 +673,15 @@ export async function POST(req: Request) {
   const mailbox = normalizeEmail((cleaned as Record<string, unknown>).email);
   if (mailbox) {
     const isRegistration = body.kind === "team_registration";
+    // team_registration is counted ONLY against itself. Leaving it in the
+    // other bucket meant a club director who entered three teams in the
+    // morning, which is explicitly allowed and well under the registration
+    // ceiling, was refused when he came back that afternoon to file the team
+    // waiver, which is mandatory before the first game. His three legitimate
+    // registrations filled a cap of three that the waiver then hit.
     const kinds: Kind[] = isRegistration
       ? ["team_registration"]
-      : ["team_registration", "player_registration", "site_feedback", "player_ad"];
+      : ["player_registration", "site_feedback", "player_ad"];
     const limit = isRegistration ? MAILBOX_LIMIT_REGISTRATION : MAILBOX_LIMIT;
     const since = new Date(Date.now() - MAILBOX_WINDOW_MS).toISOString();
     const seen = await recentByMailbox(db, tenantId, kinds, mailbox, since);
@@ -636,29 +698,91 @@ export async function POST(req: Request) {
     }
   }
 
-  // The clinic is capped, and the cap is real: 40 places, one player each.
-  //
-  // Counted at submit time rather than trusted from a page that may have been
-  // open for an hour. Only PAID places hold a spot — a registration that never
-  // paid is not occupying anything, and treating it as occupied would let a
-  // handful of abandoned forms close a clinic that is half empty.
-  //
-  // Not a transaction. Two people submitting in the same second could both
-  // pass a 39/40 check, and the honest trade is one over rather than a
-  // distributed lock on a form Mike runs twice a year. He can seat 41.
   if (body.kind === "clinic_registration") {
-    const taken = await db
-      .collection(`leagues/${tenantId}/form_submissions/clinic_registration/items`)
-      .get();
-    const paid = taken.docs.filter(
-      (d) => (d.data().payment as { status?: string } | undefined)?.status === "paid",
-    ).length;
+    // THE EVENT IS OVER. This endpoint used to accept a clinic registration on
+    // any date forever, which is half of how a parent could be charged $175 on
+    // 13 October for a clinic held on the 12th.
+    if (clinicIsOver()) {
+      return NextResponse.json(
+        {
+          error:
+            `The College Clinic on ${CLINIC.dateLabel} has already taken place, so this form was not saved. ` +
+            `Call Mike on ${CLINIC.phone} to hear about the next one.`,
+        },
+        { status: 410 },
+      );
+    }
+
+    // THE SAME PLAYER, AGAIN. Alyssa S. submitted this form three times in
+    // twelve minutes on 2026-08-20 and never paid. There is no way to come
+    // back later and pay a registration you already made, so re-submitting is
+    // the only move the site leaves you, and she made it twice looking for the
+    // payment step. Until a signed pay-later link exists, say plainly that we
+    // already have her and how to pay.
+    //
+    // Matched on player name AND mailbox, never mailbox alone. Two sisters
+    // registering from one parent's address is ordinary, which is exactly why
+    // the mailbox flood check above does not cover this kind.
+    //
+    // Both sides trimmed and lowercased because they have to be: the earliest
+    // of those three live documents stores the first name as "Alyssa " with a
+    // trailing space.
+    const first = String(cleaned.player_first_name ?? "").trim().toLowerCase();
+    const last = String(cleaned.player_last_name ?? "").trim().toLowerCase();
+    if (mailbox && first && last) {
+      const prior = await db
+        .collection(`leagues/${tenantId}/form_submissions/clinic_registration/items`)
+        .where("mailbox", "==", mailbox)
+        .get()
+        .catch(() => null);
+      const dupe = (prior?.docs ?? []).find((d) => {
+        const x = d.data();
+        return (
+          x.deleted !== true &&
+          String(x.player_first_name ?? "").trim().toLowerCase() === first &&
+          String(x.player_last_name ?? "").trim().toLowerCase() === last
+        );
+      });
+      if (dupe) {
+        const already =
+          (dupe.data().payment as { status?: string } | undefined)?.status ===
+          "paid";
+        const venmo = paymentDetailsFor(tenantId)?.venmoHandle;
+        const name = String(cleaned.player_first_name ?? "").trim();
+        return NextResponse.json(
+          {
+            error: already
+              ? `${name} is already registered and paid for the College Clinic, so this second form was not saved. Nothing else is needed. Questions, call Mike on ${CLINIC.phone}.`
+              : `${name} is already registered for the College Clinic, so this second form was not saved. The place is held once the fee is paid. ` +
+                (venmo
+                  ? `Send $${CLINIC.fee} on Venmo to ${venmo} with the player's name in the note, `
+                  : "") +
+                `or call Mike on ${CLINIC.phone}.`,
+          },
+          { status: 409 },
+        );
+      }
+    }
+
+    // The clinic is capped, and the cap is real: 40 places, one player each.
+    //
+    // Counted here rather than trusted from a page that may have been open for
+    // an hour. Only PAID places hold a spot. A registration that never paid is
+    // not occupying anything, and treating it as occupied would let a handful
+    // of abandoned forms close a clinic that is half empty.
+    //
+    // THIS CHECK IS NOT THE ONE THAT MATTERS. Registration is free and
+    // unlimited, so 60 families can pass this line while paid is still 0 and
+    // then all 60 can pay. The check that holds the line is the one in
+    // /api/square-pay, immediately before the money moves. This one exists so
+    // nobody fills in seventeen fields for a place that is already gone.
+    const paid = await paidClinicPlaces(db, tenantId);
     if (paid >= CLINIC_CAPACITY) {
       return NextResponse.json(
         {
           error:
-            `The College Clinic is full — all ${CLINIC_CAPACITY} places are taken. ` +
-            `Email the league office to be added to the waiting list in case of a drop out.`,
+            `The College Clinic is full. All ${CLINIC_CAPACITY} places are paid for. ` +
+            `Call Mike on ${CLINIC.phone} to go on the waiting list in case of a drop out.`,
         },
         { status: 409 },
       );
@@ -754,7 +878,11 @@ export async function POST(req: Request) {
     // looked fine. The registration still succeeds regardless, but a failure
     // is now visible in the admin inbox instead of invisible everywhere.
     try {
-      await sendCoachCodeEmail(
+      // sendEmail NEVER throws, it returns { ok: false }, so the catch below
+      // could not see a refused send and this wrote login_email_sent: true
+      // over the top of one. The flag exists precisely to catch a login email
+      // that vanished, so it has to read the result.
+      const res = await sendCoachCodeEmail(
         cleaned,
         origin,
         teamCode,
@@ -762,7 +890,15 @@ export async function POST(req: Request) {
         leagueAbbrev,
         tenantId,
       );
-      await ref.set({ login_email_sent: true }, { merge: true });
+      await ref.set(
+        res.ok
+          ? { login_email_sent: true }
+          : {
+              login_email_sent: false,
+              login_email_error: res.error ?? "unknown error",
+            },
+        { merge: true },
+      );
     } catch (err) {
       const reason = err instanceof Error ? err.message : "unknown error";
       console.error("[league-form] coach code email failed", reason);
@@ -812,6 +948,11 @@ export async function POST(req: Request) {
             `look like a bot. Treat this as a real registration unless something in it is obviously junk.` +
             `</p>` + built.html
           : built.html,
+        // Hitting reply reaches the coach who registered rather than the
+        // noreply sender. Every other office notification in this file
+        // already does this; the registration one was the exception, so the
+        // one email the office actually answers was the one they could not.
+        replyTo: String(cleaned.email ?? "") || undefined,
       });
       if (sentTo > 0) {
         await ref.set({ office_email_sent: true }, { merge: true });
@@ -839,20 +980,27 @@ export async function POST(req: Request) {
         )
         .catch(() => {});
     }
-  } else if (body.kind === "site_feedback") {
+  } else if (MAIL_RECORDED_KINDS.has(body.kind)) {
     // AWAITED, not fire-and-forget. `void`ing this on Vercel is a coin flip:
     // the response returns, the lambda is frozen, and a pending email is
     // simply never sent. Next 14 has no after() and @vercel/functions is not
     // installed, so there is no way to keep the function alive in the
-    // background — the only reliable option is to wait for it.
+    // background, the only reliable option is to wait for it.
     //
-    // Safe to wait here where it was not for registration: this is one small
-    // email on a two-field form, not the multi-send that once stranded a
-    // coach on "Submitting…" for 16 seconds. Capped anyway so a slow
-    // SendGrid cannot hang the submit, and the submission is already written,
-    // so a failed or slow email never loses the feedback.
+    // Safe to wait for these kinds where it was not for registration: at most
+    // three short messages on forms nobody submits in bulk. Capped anyway so a
+    // slow SendGrid cannot hang the submit, and the submission is already
+    // written, so a failed or slow email never loses a clinic place, a signed
+    // waiver or a free agent ad.
+    //
+    // The outcome is stamped on the document. sendEmail NEVER throws, it
+    // returns { ok: false }, and that result used to be dropped on the floor:
+    // a SendGrid 401 or a quota block left no flag, no log and no clue, and
+    // the first person to find out would have been a parent who paid $175 and
+    // never got a confirmation.
+    let flags: MailFlags;
     try {
-      await Promise.race([
+      const raced = await Promise.race([
         sendRegistrationEmails(
           tenantId,
           body.kind,
@@ -861,10 +1009,32 @@ export async function POST(req: Request) {
           leagueName,
           leagueAbbrev,
         ),
-        new Promise((r) => setTimeout(r, 8000)),
+        // Resolves a sentinel rather than undefined so a timeout is RECORDED
+        // as a timeout. Resolving nothing would be indistinguishable from a
+        // clean send that had nothing to report, which is the same silence
+        // this whole change exists to remove.
+        new Promise<"timeout">((r) =>
+          setTimeout(() => r("timeout"), MAIL_TIMEOUT_MS),
+        ),
       ]);
+      flags =
+        raced === "timeout"
+          ? {
+              office_email_sent: false,
+              office_email_error: `no answer from the email provider in ${
+                MAIL_TIMEOUT_MS / 1000
+              }s, the message may or may not have gone out`,
+            }
+          : raced;
     } catch (err) {
-      console.error("[league-form] site_feedback notify threw:", err);
+      const reason = err instanceof Error ? err.message : "unknown error";
+      console.error(`[league-form] ${body.kind} notify threw:`, reason);
+      flags = { office_email_sent: false, office_email_error: reason };
+    }
+    if (Object.keys(flags).length > 0) {
+      // Best effort in both directions: the submission is already saved, and
+      // failing to write the flag must never fail the submission.
+      await ref.set(flags, { merge: true }).catch(() => {});
     }
   } else {
     // Other tenants/kinds: best-effort confirmation email, fire-and-forget.
@@ -900,11 +1070,11 @@ async function sendCoachCodeEmail(
   leagueName: string,
   leagueAbbrev: string,
   tenantId: string,
-): Promise<void> {
+): Promise<{ ok: boolean; error?: string }> {
   const c = (k: string) =>
     typeof data[k] === "string" ? (data[k] as string).trim() : "";
   const email = c("email");
-  if (!email) return;
+  if (!email) return { ok: false, error: "no email on the registration" };
   const who = [c("manager_first_name"), c("manager_last_name")]
     .filter(Boolean)
     .join(" ");
@@ -924,14 +1094,32 @@ async function sendCoachCodeEmail(
     leagueAbbrev,
     tenantId,
   });
+  // The COACH's copy decides the flag. An assistant's address bouncing does
+  // not stop the coach getting into their team, and treating it as a failure
+  // would send the office chasing a problem that is not there.
+  let outcome: { ok: boolean; error?: string } = {
+    ok: false,
+    error: "no recipients",
+  };
   for (const to of recipients) {
-    await sendEmail({
+    const res = await sendEmail({
       to,
       subject: built.subject,
       html: built.html,
       replyTo: notifyAddress() ?? undefined,
     });
+    if (to === email) {
+      outcome = res.ok
+        ? { ok: true }
+        : {
+            ok: false,
+            error: res.skipped
+              ? "email not configured"
+              : (res.error ?? "unknown error"),
+          };
+    }
   }
+  return outcome;
 }
 
 async function sendRegistrationEmails(
@@ -941,9 +1129,7 @@ async function sendRegistrationEmails(
   origin: string,
   leagueName: string,
   leagueAbbrev: string,
-): Promise<
-  { notified: boolean; notifyTo: string; notifyError: string | null } | void
-> {
+): Promise<MailFlags> {
   // Site feedback goes to ADAM, not the league office (Adam, 2026-08-04).
   // Doug triages these in the admin panel and does not need an inbox for
   // them; Adam does, because "the standings page is broken" is his to fix.
@@ -976,17 +1162,32 @@ async function sendRegistrationEmails(
       // Reply lands on whoever wrote in, when they said who they are.
       replyTo: from || undefined,
     });
-    // This path is fire-and-forget, so a failed send used to vanish with no
-    // trace anywhere: Adam expected an email per submission and had no way to
-    // tell a broken sender from a quiet week. Record the outcome on the
-    // submission so the admin panel can show it.
+    // A failed send used to vanish with no trace: Adam expected an email per
+    // submission and had no way to tell a broken sender from a quiet week.
+    // The outcome was computed here and then discarded by the caller, which
+    // is the same silence with extra steps. It is now merged onto the
+    // submission and shows in the admin panel.
+    //
+    // office_email_to is recorded because this kind is the exception: site
+    // feedback goes to ADAM, not the league office, so a row that only said
+    // "Office notified: Yes" would be telling Kaitlin something untrue.
     if (!res.ok) {
       console.error(
         `[league-form] site_feedback notify FAILED to=${to}:`,
         res.skipped ? "email not configured" : res.error,
       );
     }
-    return { notified: res.ok, notifyTo: to, notifyError: res.ok ? null : (res.error ?? "not configured") };
+    return {
+      office_email_to: to,
+      office_email_sent: res.ok,
+      ...(res.ok
+        ? {}
+        : {
+            office_email_error: res.skipped
+              ? "email not configured"
+              : (res.error ?? "unknown error"),
+          }),
+    };
   }
 
   // College Clinic. Its own branch rather than a case in the generic path
@@ -1004,9 +1205,18 @@ async function sendRegistrationEmails(
     const player = `${g("player_first_name")} ${g("player_last_name")}`.trim();
     const parent = `${g("parent_first_name")} ${g("parent_last_name")}`.trim();
     const parentEmail = g("email");
+    // Where to send the money, from the one place that knows. Not a literal:
+    // a second copy of a Venmo handle is how half a league pays the wrong
+    // account. Undefined for any tenant with no entry, which the copy below
+    // handles rather than inventing a handle to pay.
+    const venmoHandle = paymentDetailsFor(tenantId)?.venmoHandle;
 
+    // Recorded, not merely attempted. A parent who registers a player for a
+    // $175 clinic and hears nothing cannot tell a missing email from a
+    // missing registration, and until now neither could the office.
+    const flags: MailFlags = {};
     if (parentEmail) {
-      await sendEmail({
+      const res = await sendEmail({
         to: parentEmail,
         subject: `${leagueAbbrev} College Clinic — ${player || "registration received"}`,
         html:
@@ -1017,19 +1227,40 @@ async function sendRegistrationEmails(
           `${esc(CLINIC.venue)}, ${esc(CLINIC.address)}</p>` +
           // The place is not theirs until the money lands, and saying so once
           // here is kinder than telling them at the gate on the day.
-          `<p>The fee is <strong>$${CLINIC.fee}</strong>. A place is held once it is ` +
-          `paid, and places are capped at ${CLINIC.capacity}. If you have not paid yet you ` +
-          `can still do it from the registration page, or reply here and the office ` +
-          `will send a link.</p>` +
+          // "You can still do it from the registration page" was not true.
+          // Re-opening /college-clinic starts a NEW registration, it does not
+          // return you to the one you just made, and there is no signed
+          // pay-later link in this codebase. Alyssa S. submitted three times
+          // in twelve minutes on 2026-08-20 hunting for the payment step this
+          // sentence promised. Only say what the site can actually do.
+          `<p>The fee is <strong>$${CLINIC.fee}</strong> and places are capped at ` +
+          `${CLINIC.capacity}. The place is held once the fee is paid.</p>` +
+          (venmoHandle
+            ? `<p>To pay by Venmo, send <strong>$${CLINIC.fee}</strong> to ` +
+              `<strong>${esc(venmoHandle)}</strong> and put <strong>${esc(player)}</strong> ` +
+              `in the note so the office can match it. Do not fill the form in again, ` +
+              `we have the registration.</p>`
+            : `<p>Reply to this email and the office will tell you how to pay. ` +
+              `Do not fill the form in again, we have the registration.</p>`) +
           `<p>Bring a glove, bat, helmet, cleats and water. Wear your travel team ` +
           `uniform if you have one.</p>` +
           `<p>Questions about the day: Mike on ${esc(CLINIC.phone)}.</p>` +
           `<p>— ${esc(leagueAbbrev)}</p>`,
         replyTo: notifyAddress() ?? undefined,
       });
+      flags.confirmation_email_sent = res.ok;
+      if (!res.ok) {
+        flags.confirmation_email_error = res.skipped
+          ? "email not configured"
+          : (res.error ?? "unknown error");
+        console.error(
+          `[league-form] clinic confirmation FAILED to=${parentEmail}:`,
+          flags.confirmation_email_error,
+        );
+      }
     }
 
-    await notifyOffice({
+    const sentTo = await notifyOffice({
       subject: `College Clinic: ${player || "(no name)"}${g("grad_year") ? ` (${g("grad_year")})` : ""}`,
       html:
         `<p><strong>College Clinic registration</strong></p>` +
@@ -1047,23 +1278,155 @@ async function sendRegistrationEmails(
         `<strong>Email:</strong> ${esc(parentEmail)}<br/>` +
         `<strong>Phone:</strong> ${esc(g("phone"))}</p>` +
         (g("notes") ? `<p><strong>Notes:</strong> ${esc(g("notes"))}</p>` : "") +
-        `<p>Payment is separate — check the Payments tab to see whether this ` +
-        `place is actually held.</p>`,
+        // NOT the Payments tab. That is the TEAM ledger and a clinic place is
+        // not a team, so /api/square-pay no longer writes a row there for one
+        // and the Venmo path never did. Sending Mike to a tab that will always
+        // be empty for a clinic is how he concludes nobody has paid.
+        `<p>Payment is separate. Open Admin, Form submissions, College Clinic to see ` +
+        `whether this place is paid for, and to record a Venmo or a check.</p>`,
       replyTo: parentEmail || undefined,
     });
-    return;
+    flags.office_email_sent = sentTo > 0;
+    if (sentTo === 0) {
+      // Two very different problems that look identical on the document
+      // unless they are named: nobody is configured to be told, or SendGrid
+      // refused everyone who is. The admin badge reads these strings to
+      // decide between amber and red, so do not reword them here without
+      // changing MAIL_NOT_CONFIGURED in FormSubmissionsViewer.tsx.
+      flags.office_email_error =
+        notifyAddresses().length === 0
+          ? "no notify address configured"
+          : "the email provider accepted none of the office addresses";
+      console.error(
+        "[league-form] clinic office notify reached nobody:",
+        flags.office_email_error,
+      );
+    }
+    return flags;
+  }
+
+  // player_ad, umpire_evaluation and alerts_signup fell through the gate below
+  // and emailed NOBODY. All three are silent in a way that costs something
+  // real:
+  //
+  //   player_ad          the poster is told their post is "reviewed before it
+  //                      appears". Nothing told a reviewer one was waiting, so
+  //                      keeping that promise depended on somebody opening the
+  //                      board tab of their own accord.
+  //   umpire_evaluation  a complaint about an official, filed and unread.
+  //   alerts_signup      a family asking to be told about rain outs, with
+  //                      nobody told that they had asked.
+  //
+  // Office only, no confirmation to the submitter: none of these is a
+  // transaction anyone is waiting on, and mailing a poster back would read as
+  // approval of a post that has not been reviewed yet.
+  if (
+    kind === "player_ad" ||
+    kind === "umpire_evaluation" ||
+    kind === "alerts_signup"
+  ) {
+    const f = (k: string) =>
+      typeof data[k] === "string" ? (data[k] as string).trim() : "";
+    const from = f("email");
+    let subject: string;
+    let html: string;
+    if (kind === "player_ad") {
+      // ONE kind, TWO boards. Island runs this as a free agent board
+      // (posted_by is coach or player). COYBL runs the identical form as its
+      // umpire board (umpire or team_ump), see the isCoybl branch in
+      // app/player-ads/page.tsx. A subject hardcoded to "Player ad" would
+      // reach Doug about an umpire looking for games.
+      const posted = f("posted_by");
+      const noun =
+        posted === "umpire" || posted === "team_ump"
+          ? "Umpire post"
+          : "Player ad";
+      const who = f("contact_name") || "(no name)";
+      subject = `${noun} waiting for review: ${who}`;
+      html =
+        `<p><strong>A post has been submitted and is waiting for review.</strong> ` +
+        `Nothing is public until it is approved in Admin, Player ads.</p>` +
+        `<p><strong>Posted by:</strong> ${esc(f("posted_by"))}<br/>` +
+        `<strong>Contact:</strong> ${esc(f("contact_name"))}<br/>` +
+        `<strong>Email:</strong> ${esc(from)}<br/>` +
+        `<strong>Phone:</strong> ${esc(f("phone"))}</p>` +
+        (f("age_group") || f("position") || f("town") || f("team_name")
+          ? `<p>${[f("age_group"), f("position"), f("town"), f("team_name")]
+              .filter(Boolean)
+              .map((s) => esc(s))
+              .join(" &middot; ")}</p>`
+          : "") +
+        `<p style="white-space:pre-wrap">${esc(f("message"))}</p>` +
+        `<p style="color:#555;font-size:13px">The contact details above are ` +
+        `private and stay in the admin. The public ad carries the age group, ` +
+        `position, town, team and message only.</p>`;
+    } else if (kind === "umpire_evaluation") {
+      subject =
+        `Umpire evaluation: ${f("visiting_team") || "?"} at ${f("home_team") || "?"}` +
+        (f("game_date") ? ` (${f("game_date")})` : "");
+      html =
+        `<p><strong>Umpire evaluation</strong></p>` +
+        `<p><strong>Game:</strong> ${esc(f("visiting_team"))} at ${esc(f("home_team"))}` +
+        (f("game_date") ? `, ${esc(f("game_date"))}` : "") +
+        (f("game_time") ? ` ${esc(f("game_time"))}` : "") +
+        (f("field") ? `<br/><strong>Field:</strong> ${esc(f("field"))}` : "") +
+        `</p>` +
+        `<p><strong>From:</strong> ${esc(f("evaluator_name"))}` +
+        (f("team_affiliation") ? `, ${esc(f("team_affiliation"))}` : "") +
+        (f("phone") ? `<br/><strong>Phone:</strong> ${esc(f("phone"))}` : "") +
+        `</p>` +
+        (f("plate_umpire_name") || f("plate_umpire_rating")
+          ? `<p><strong>Plate:</strong> ${esc(f("plate_umpire_name"))} ${esc(f("plate_umpire_rating"))}` +
+            `<br/><span style="white-space:pre-wrap">${esc(f("plate_umpire_comments"))}</span></p>`
+          : "") +
+        (f("field_umpire_name") || f("field_umpire_rating")
+          ? `<p><strong>Bases:</strong> ${esc(f("field_umpire_name"))} ${esc(f("field_umpire_rating"))}` +
+            `<br/><span style="white-space:pre-wrap">${esc(f("field_umpire_comments"))}</span></p>`
+          : "") +
+        (f("general_comments")
+          ? `<p style="white-space:pre-wrap">${esc(f("general_comments"))}</p>`
+          : "") +
+        `<p>See it in Admin, Form submissions, Umpire evaluation.</p>`;
+    } else {
+      subject = `Alerts sign-up: ${f("name") || from || "(no name)"}`;
+      html =
+        `<p><strong>Someone signed up for league alerts.</strong></p>` +
+        `<p><strong>Name:</strong> ${esc(f("name"))}<br/>` +
+        `<strong>Email:</strong> ${esc(from)}<br/>` +
+        `<strong>Phone:</strong> ${esc(f("phone"))}` +
+        (f("age_group") ? `<br/><strong>Age group:</strong> ${esc(f("age_group"))}` : "") +
+        (f("notify_by") ? `<br/><strong>Notify by:</strong> ${esc(f("notify_by"))}` : "") +
+        `</p>` +
+        `<p>They are on the list the admin Broadcast tool sends to. Nothing to ` +
+        `do unless you want to welcome them.</p>`;
+    }
+    const sentTo = await notifyOffice({
+      subject,
+      html,
+      // Reply reaches the person who wrote in rather than a noreply mailbox.
+      replyTo: from || undefined,
+    });
+    if (sentTo > 0) return { office_email_sent: true };
+    const why =
+      notifyAddresses().length === 0
+        ? "no notify address configured"
+        : "the email provider accepted none of the office addresses";
+    console.error(`[league-form] ${kind} office notify reached nobody: ${why}`);
+    return { office_email_sent: false, office_email_error: why };
   }
 
   // team_waiver used to fall out here. The waiver was written to Firestore and
   // NOBODY was emailed — the coach had no confirmation their signed waiver
   // arrived, and the office was never told to look. Adam asked where waivers
   // go (2026-08-12); the answer was "into the admin panel, silently".
+  // Anything still here sends nothing. player_waiver is the only kind that
+  // reaches this line, and it is unreachable in the UI (see ALLOWED_FIELDS).
   if (
     kind !== "player_registration" &&
     kind !== "team_registration" &&
     kind !== "team_waiver"
   )
-    return;
+    return {};
 
   const c = (k: string) =>
     typeof data[k] === "string" ? (data[k] as string).trim() : "";
@@ -1089,8 +1452,9 @@ async function sendRegistrationEmails(
         : "Team registration";
 
   // 1) Confirmation to the registrant.
+  const flags: MailFlags = {};
   if (email) {
-    await sendEmail({
+    const res = await sendEmail({
       to: email,
       subject:
         kind === "team_waiver"
@@ -1110,10 +1474,20 @@ async function sendRegistrationEmails(
         `<p>— ${esc(leagueAbbrev)}</p>`,
       replyTo: notifyAddress() ?? undefined,
     });
+    flags.confirmation_email_sent = res.ok;
+    if (!res.ok) {
+      flags.confirmation_email_error = res.skipped
+        ? "email not configured"
+        : (res.error ?? "unknown error");
+      console.error(
+        `[league-form] ${kind} confirmation FAILED to=${email}:`,
+        flags.confirmation_email_error,
+      );
+    }
   }
 
   // 2) Heads-up to the league office — all of it, not just the first inbox.
-  await notifyOffice({
+  const sentTo = await notifyOffice({
     subject: `New ${label}: ${who || "(no name)"}`,
     html:
       `<p><strong>${esc(label)}</strong></p>` +
@@ -1121,7 +1495,19 @@ async function sendRegistrationEmails(
       `Email: ${esc(email) || "—"}<br/>` +
       (division ? `Division: ${esc(division)}<br/>` : "") +
       (team ? `Team: ${esc(team)}<br/>` : "") +
-      `</p><p>See it in Admin → Form intake.</p>`,
+      `</p><p>See it in Admin → Form submissions.</p>`,
     replyTo: email || undefined,
   });
+  flags.office_email_sent = sentTo > 0;
+  if (sentTo === 0) {
+    flags.office_email_error =
+      notifyAddresses().length === 0
+        ? "no notify address configured"
+        : "the email provider accepted none of the office addresses";
+    console.error(
+      `[league-form] ${kind} office notify reached nobody:`,
+      flags.office_email_error,
+    );
+  }
+  return flags;
 }

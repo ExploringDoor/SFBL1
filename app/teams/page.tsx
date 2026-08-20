@@ -10,6 +10,7 @@ import {
   getCachedTeamsSnap,
 } from "@/lib/league-cache";
 import { TeamBadge } from "@/components/TeamBadge";
+import { teamLogoSrc } from "@/lib/team-logo";
 import {
   computeStandings,
   computePoints,
@@ -136,7 +137,11 @@ export default async function TeamsPage() {
       ageOrder: typeof data.ageOrder === "number" ? data.ageOrder : 999,
       divOrder: typeof data.divOrder === "number" ? data.divOrder : 999,
       color: data.color ? String(data.color) : undefined,
-      logoUrl: data.logo_url ? String(data.logo_url) : null,
+      // Server rendered, so this inlines into HTML rather than the RSC payload,
+      // but eighteen cards of inlined base64 is the same bytes on the wire.
+      // Island reads clean today only because hide_teams renders a notice
+      // instead of the grid.
+      logoUrl: teamLogoSrc(tenantId, d.id, data.logo_url),
       // Stats-off leagues store the exact league record on the team doc
       // (see standings page) — prefer it so cards match the standings.
       record: data.record

@@ -21,7 +21,8 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { LeagueForm, type FormField } from "@/components/forms/LeagueForm";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { CLINIC } from "@/lib/clinic";
+import { CLINIC, clinicIsOver } from "@/lib/clinic";
+import { paidClinicPlaces } from "@/lib/clinic-count";
 
 export const dynamic = "force-dynamic";
 
@@ -100,17 +101,12 @@ const FIELDS: FormField[] = [
   },
 ];
 
-/** Places already sold. Only PAID registrations hold a spot — an abandoned
- *  form is not occupying anything, and counting it would close a clinic that
- *  is half empty. Mirrors the check in /api/league-form. */
+/** Places already sold. The filter itself lives in lib/clinic-count so the
+ *  page, the intake API and the card charge cannot drift into three different
+ *  answers to one question. */
 async function placesTaken(tenantId: string): Promise<number> {
   try {
-    const snap = await getAdminDb()
-      .collection(`leagues/${tenantId}/form_submissions/clinic_registration/items`)
-      .get();
-    return snap.docs.filter(
-      (d) => (d.data().payment as { status?: string } | undefined)?.status === "paid",
-    ).length;
+    return await paidClinicPlaces(getAdminDb(), tenantId);
   } catch {
     // A count is a nicety. If Firestore is unhappy, show the form rather than
     // an error page: a registration we can take is worth more than a number.
@@ -122,7 +118,13 @@ export default async function CollegeClinicPage() {
   const tenantId = headers().get("x-tenant-id");
   if (tenantId !== "island") notFound();
 
-  const taken = await placesTaken(tenantId);
+  // AFTER 2 PM ON 12 OCTOBER the form comes down. Not the page: an old link, a
+  // printed flyer and a search result all still land here, and they should land
+  // on an explanation rather than a 404. What comes down is the ability to
+  // register and be charged $175 plus surcharge for an event that has already
+  // happened, which this page would otherwise have gone on offering forever.
+  const over = clinicIsOver();
+  const taken = over ? 0 : await placesTaken(tenantId);
   const left = Math.max(0, CLINIC.capacity - taken);
   const full = left === 0;
 
@@ -161,7 +163,17 @@ export default async function CollegeClinicPage() {
         </p>
       </section>
 
-      {full ? (
+      {over ? (
+        <section className="container le-clinic-full">
+          <h2 className="le-clinic-h2">This clinic has finished</h2>
+          <p>
+            The College Clinic on {CLINIC.dateLabel} has already taken place, so
+            registration is closed. Call Mike on{" "}
+            <a href={`tel:${CLINIC.phone.replace(/\D/g, "")}`}>{CLINIC.phone}</a>{" "}
+            to hear about the next one.
+          </p>
+        </section>
+      ) : full ? (
         <section className="container le-clinic-full">
           <h2 className="le-clinic-h2">This clinic is full</h2>
           <p>

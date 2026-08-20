@@ -40,7 +40,31 @@ interface FanoutOpts {
   imageDataUrl?: string;
 }
 
-export async function fanoutPush(opts: FanoutOpts): Promise<void> {
+/** What actually went out.
+ *
+ * Callers that report delivery back to a human must not infer success from
+ * "the fetch did not throw". This function catches its own errors, so it
+ * never throws, and send-notification answers 200 with sent: 0 whenever the
+ * league has no matching tokens, which is every league whose deployment has
+ * no NEXT_PUBLIC_FIREBASE_VAPID_KEY. The Rain Out Day panel reported "push
+ * sent" on exactly that path for a full season. Callers that genuinely fire
+ * and forget (captain-submit, captain-schedule) can keep ignoring this.
+ *
+ * ok:false means the request was rejected: a 403 from the role gate in
+ * /api/send-notification, a 400 from category or url validation, or a
+ * network failure. That is NOT the same as ok:true with sent:0, which means
+ * the send worked and nobody was subscribed. Anything that shows this to a
+ * human has to keep the two apart, or it swaps one wrong answer for another. */
+export interface FanoutResult {
+  /** The send-notification call completed and was accepted. */
+  ok: boolean;
+  /** Devices FCM accepted the message for. 0 is a normal answer. */
+  sent: number;
+  /** Subscribed tokens that matched the filters before sending. */
+  total: number;
+}
+
+export async function fanoutPush(opts: FanoutOpts): Promise<FanoutResult> {
   const {
     origin,
     bearerToken,
@@ -51,7 +75,7 @@ export async function fanoutPush(opts: FanoutOpts): Promise<void> {
     ...rest
   } = opts;
   try {
-    await fetch(`${origin}/api/send-notification`, {
+    const res = await fetch(`${origin}/api/send-notification`, {
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -65,11 +89,27 @@ export async function fanoutPush(opts: FanoutOpts): Promise<void> {
         ...rest,
       }),
     });
+    const data = (await res.json().catch(() => null)) as {
+      sent?: number;
+      total?: number;
+    } | null;
+    if (!res.ok || !data) {
+      console.warn(
+        `[server-fanout] push rejected (category=${category}, status=${res.status})`,
+      );
+      return { ok: false, sent: 0, total: 0 };
+    }
+    return {
+      ok: true,
+      sent: Number(data.sent ?? 0),
+      total: Number(data.total ?? 0),
+    };
   } catch (e) {
     console.warn(
       `[server-fanout] push failed (category=${category}):`,
       e instanceof Error ? e.message : e,
     );
+    return { ok: false, sent: 0, total: 0 };
   }
 }
 

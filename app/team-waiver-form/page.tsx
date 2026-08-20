@@ -6,31 +6,21 @@
 // Server component (async) so the Team field hydrates from the real
 // roster — managers can pick their team instead of free-typing it
 // (which used to leave admins guessing about spelling).
+//
+// Unless the tenant is hiding its field. This page shipped all ten Island team
+// names in view-source for six days while /teams was showing the "list goes up
+// with the schedule" notice, because the dropdown was built from Firestore
+// with no idea the flag existed. lib/team-options.ts owns that decision now.
 
 import { headers } from "next/headers";
 import { LeagueForm, type FormField } from "@/components/forms/LeagueForm";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { loadTeamOptions, teamNameField, teamsHidden } from "@/lib/team-options";
+import type { PublicLeagueConfig } from "@/lib/tenants";
 
 export const dynamic = "force-dynamic";
 
 const OTHER = "Other / Not listed";
-
-async function loadTeamOptions(tenantId: string | null) {
-  if (!tenantId) return [] as { value: string; label: string }[];
-  try {
-    const snap = await getAdminDb()
-      .collection(`leagues/${tenantId}/teams`)
-      .get();
-    return snap.docs
-      .map((d) => {
-        const name = String(d.data().name ?? d.id);
-        return { value: name, label: name };
-      })
-      .sort((a, b) => a.label.localeCompare(b.label));
-  } catch {
-    return [];
-  }
-}
 
 // Default waiver text. Tenants override it with page_content/waiver, because
 // this copy is SFBL-specific in two ways that matter legally: it names the
@@ -64,31 +54,42 @@ export default async function TeamWaiverPage() {
   const tenantId = h.get("x-tenant-id");
   // Eyebrow + intro copy must name THIS league. LeagueForm used to default the
   // eyebrow to "SFBL", so every other tenant showed another league's name.
-  let abbrev = "";
-  try {
-    const cfg = JSON.parse(h.get("x-tenant-config-json") ?? "{}") as {
-      abbrev?: string;
-      name?: string;
-    };
-    abbrev = cfg.abbrev ?? cfg.name ?? "";
-  } catch {
-    abbrev = "";
-  }
+  //
+  // Parsed as the whole config rather than picking two fields off it, because
+  // the Team field below needs flags.hide_teams from the same header.
+  const config = (() => {
+    const raw = h.get("x-tenant-config-json");
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as PublicLeagueConfig;
+    } catch {
+      return null;
+    }
+  })();
+  const abbrev = config?.abbrev ?? config?.name ?? "";
+  const hidden = teamsHidden(config);
   const [teams, waiverText] = await Promise.all([
-    loadTeamOptions(tenantId),
+    loadTeamOptions(tenantId, config),
     loadWaiverText(tenantId),
   ]);
-  const teamOptions = [...teams, { value: OTHER, label: OTHER }];
 
   const FIELDS: FormField[] = [
-    {
+    // Typed, not picked, while the field is private. The waiver is mandatory
+    // before the first game, so this field is not allowed to fail shut, and a
+    // dropdown stripped to "Other / Not listed" would file every waiver under
+    // a team name that identifies nobody.
+    teamNameField({
       name: "team_name",
       label: "Team",
-      type: "select",
+      teams,
+      hidden,
       required: true,
-      options: teamOptions,
       width: "full",
-    },
+      trailingOptions: [{ value: OTHER, label: OTHER }],
+      placeholder: "Your team name",
+      hiddenHelp:
+        "Type your team name exactly as you registered it. The team list goes up when the schedule is released.",
+    }),
     { name: "manager_first_name", label: "Manager First Name", type: "text", required: true, width: "half" },
     { name: "manager_last_name", label: "Manager Last Name", type: "text", required: true, width: "half" },
     { name: "email", label: "Manager Email", type: "email", required: true, width: "half" },

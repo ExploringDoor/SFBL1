@@ -26,6 +26,9 @@ import {
   resolveLocationId,
   squareApiBase,
 } from "@/lib/square";
+import { CLINIC, clinicIsOver } from "@/lib/clinic";
+import { paidClinicPlaces } from "@/lib/clinic-count";
+import { clinicReceiptEmail, officeClinicPaymentEmail } from "@/lib/email/templates";
 
 export const runtime = "nodejs";
 
@@ -95,6 +98,53 @@ export async function POST(req: Request) {
     );
   }
 
+  // THE CLINIC'S TWO HARD LIMITS, CHECKED WHERE THE MONEY IS.
+  //
+  // Both used to be checked only at REGISTRATION, which is the wrong moment
+  // for either. Registering is free and unlimited: 60 families can clear the
+  // cap check in /api/league-form while paid is still 0, and then all 60 can
+  // come here and pay. And nothing at all closed after 12 October, so a parent
+  // could be charged $175 plus surcharge on the 13th, and the 14th, forever.
+  //
+  // NOT A TRANSACTION, deliberately. Reserving a place would need a lease, an
+  // expiry, and a release on every failure path including the ones where
+  // Square times out after taking the card, on an event Mike runs once a year.
+  // Two people tokenizing in the same second can still both pass at 39 of 40
+  // and the clinic seats 41. That is the documented, accepted trade. A 20-over
+  // is what this prevents, and only a check at this line can prevent it.
+  if (kind === "clinic_registration") {
+    if (clinicIsOver()) {
+      return NextResponse.json(
+        {
+          error:
+            `The College Clinic on ${CLINIC.dateLabel} has already taken place, so no payment was taken and your card has not been charged. ` +
+            `Call Mike on ${CLINIC.phone} to hear about the next one.`,
+        },
+        { status: 410 },
+      );
+    }
+    const sold = await paidClinicPlaces(db, leagueId);
+    if (sold >= CLINIC.capacity) {
+      return NextResponse.json(
+        {
+          error:
+            `All ${CLINIC.capacity} places at the College Clinic were paid for before this one, so no payment was taken and your card has not been charged. ` +
+            `Call Mike on ${CLINIC.phone} to go on the waiting list in case of a drop out.`,
+        },
+        { status: 409 },
+      );
+    }
+  }
+
+  // Built once, and whitespace COLLAPSED rather than merely trimmed. The live
+  // clinic data already holds a first name stored as "Alyssa " with a trailing
+  // space, and `${first} ${last}`.trim() leaves "Alyssa  Schroeder" with two
+  // spaces in the middle. This string goes on a card statement, in a receipt
+  // subject line and in the subject line Mike reads.
+  const playerName = `${String(data.player_first_name ?? "")} ${String(data.player_last_name ?? "")}`
+    .replace(/\s+/g, " ")
+    .trim();
+
   const fee = feeFor(leagueId, data, kind);
   const amountCents = chargeCents(leagueId, fee);
   const base = squareApiBase();
@@ -144,11 +194,21 @@ export async function POST(req: Request) {
         ...(typeof data.email === "string" && data.email.includes("@")
           ? { buyer_email_address: data.email.trim() }
           : {}),
-        // Tenant id, not a hardcoded "COYBL 2027" — this string is what
-        // shows on the Square receipt and in the seller dashboard.
+        // What shows on the Square receipt and in the seller dashboard.
+        //
+        // The clinic line used the tenant SLUG, so a parent's receipt read
+        // "island College Clinic: Alyssa Schroeder". "island" is an internal
+        // id, it is not a name anyone has ever seen, and on a card statement
+        // an unrecognised name is what a chargeback starts as. The league's
+        // own name is the one on the flyer. Not the abbrev: a parent has never
+        // seen "IFP" either.
+        //
+        // The team line is left alone on purpose. It reads the same way for
+        // every tenant and fixing it changes COYBL, LMLL and LCYBL receipts,
+        // which is a separate decision from this batch.
         note:
           kind === "clinic_registration"
-            ? `${leagueId} College Clinic: ${String(data.player_first_name ?? "")} ${String(data.player_last_name ?? "")}`.trim()
+            ? `${tenant?.config?.name ?? leagueId} College Clinic: ${playerName}`
             : `${leagueId} registration: ${String(data.team_name ?? "Team")}`,
       }),
     });
@@ -242,7 +302,23 @@ export async function POST(req: Request) {
     const teamId =
       typeof data.assigned_team_id === "string" ? data.assigned_team_id : "";
     const ledgerId = teamId || `reg-${registrationId}`;
-    {
+    // A CLINIC PLACE IS NOT A TEAM, and team_payments is the TEAM ledger.
+    //
+    // Every paid clinic registration used to write a row here with team_name
+    // "", so the Payments tab would have filled with up to 40 phantom
+    // "(no name)" teams at $180.53 each, mixed in among the real ones Mike is
+    // trying to reconcile, and PaymentsAdmin would have offered a "card link"
+    // button on each of them. Worse, admin-payment-reminders reads the whole
+    // team_payments collection and treats a row with nothing paid as a team
+    // that owes money.
+    //
+    // A clinic payment is recorded on the SUBMISSION, in the payment block
+    // written just above, which is already the single source of truth: the cap
+    // reads it, the page's "places left" reads it, /api/admin-clinic-payment
+    // writes it for Venmo, and the College Clinic tab in the admin shows it.
+    // It does not belong in league_payments either, which is keyed on roster
+    // players and would invent 40 of those instead.
+    if (kind !== "clinic_registration") {
       await db.doc(`leagues/${leagueId}/team_payments/${ledgerId}`).set(
         {
           team_name: String(data.team_name ?? ""),
@@ -289,13 +365,28 @@ export async function POST(req: Request) {
         : "";
 
     if (payerEmail) {
-      const m = paymentReceiptEmail({
-        firstName: String(data.manager_first_name ?? ""),
-        team: teamName,
-        feeCents: fee * 100,
-        totalCents: amountCents,
-        receiptUrl: payment.receipt_url ?? null,
-      });
+      // A CLINIC RECEIPT IS NOT A TEAM RECEIPT. The team template opens "Hi
+      // Coach", thanks them for a team fee, and names a team, which for a
+      // clinic resolves to the literal string "your team". So a parent got a
+      // receipt addressed to a coach, for a team fee, for a team called "your
+      // team", naming no player at all, which left Mike with a $180.53 payment
+      // he could not match to a child.
+      const m =
+        kind === "clinic_registration"
+          ? clinicReceiptEmail({
+              parentFirstName: String(data.parent_first_name ?? ""),
+              player: playerName,
+              feeCents: fee * 100,
+              totalCents: amountCents,
+              receiptUrl: payment.receipt_url ?? null,
+            })
+          : paymentReceiptEmail({
+              firstName: String(data.manager_first_name ?? ""),
+              team: teamName,
+              feeCents: fee * 100,
+              totalCents: amountCents,
+              receiptUrl: payment.receipt_url ?? null,
+            });
       await sendEmail({
         to: payerEmail,
         subject: m.subject,
@@ -306,7 +397,23 @@ export async function POST(req: Request) {
     }
 
     {
-      const m = officePaymentEmail({
+      // Mike's copy has to name the PLAYER. His is the only inbox that has to
+      // turn a Square line into a girl standing on a field on 12 October.
+      const m =
+        kind === "clinic_registration"
+          ? officeClinicPaymentEmail({
+              player: playerName,
+              gradYear: String(data.grad_year ?? ""),
+              ageGroup: String(data.age_group ?? ""),
+              parent: `${String(data.parent_first_name ?? "")} ${String(data.parent_last_name ?? "")}`
+                .replace(/\s+/g, " ")
+                .trim(),
+              payerEmail,
+              feeCents: fee * 100,
+              totalCents: amountCents,
+              receiptUrl: payment.receipt_url ?? null,
+            })
+          : officePaymentEmail({
         team: teamName,
         firstName: String(data.manager_first_name ?? ""),
         lastName: String(data.manager_last_name ?? ""),

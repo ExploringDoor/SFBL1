@@ -5,85 +5,79 @@
 //
 // Server component (async) so we hydrate the three team-name fields
 // (Your Team / Visiting / Home) with real roster data. Matches the
-// player-registration pattern.
+// player-registration pattern, including the part where a tenant hiding its
+// field gets typed names instead: this page carried the roster three times
+// over in view-source while /teams was showing the private notice.
 
 import { headers } from "next/headers";
 import { LeagueForm, type FormField } from "@/components/forms/LeagueForm";
-import { getAdminDb } from "@/lib/firebase-admin";
+import { loadTeamOptions, teamNameField, teamsHidden } from "@/lib/team-options";
+import type { PublicLeagueConfig } from "@/lib/tenants";
 
 export const dynamic = "force-dynamic";
 
 const OTHER = "Other / Not listed";
 
-async function loadTeamOptions(tenantId: string | null) {
-  if (!tenantId) return [] as { value: string; label: string }[];
-  try {
-    const snap = await getAdminDb()
-      .collection(`leagues/${tenantId}/teams`)
-      .get();
-    return snap.docs
-      .map((d) => {
-        const name = String(d.data().name ?? d.id);
-        return { value: name, label: name };
-      })
-      .sort((a, b) => a.label.localeCompare(b.label));
-  } catch {
-    // Firestore quota / network — fall back to a one-option dropdown
-    // so the form still works (the user picks Other and types in
-    // the general comments).
-    return [];
-  }
-}
-
 export default async function UmpireEvaluationPage() {
   const h = headers();
   const tenantId = h.get("x-tenant-id");
-  let abbrev = "";
-  try {
-    const cfg = JSON.parse(h.get("x-tenant-config-json") ?? "{}") as {
-      abbrev?: string;
-      name?: string;
-    };
-    abbrev = cfg.abbrev ?? cfg.name ?? "";
-  } catch {
-    abbrev = "";
-  }
-  const teams = await loadTeamOptions(tenantId);
-  const teamOptions = [
-    ...teams,
-    { value: OTHER, label: OTHER },
-  ];
+  // The whole config, not just the abbrev: the three team fields below need
+  // flags.hide_teams off the same header.
+  const config = (() => {
+    const raw = h.get("x-tenant-config-json");
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as PublicLeagueConfig;
+    } catch {
+      return null;
+    }
+  })();
+  const abbrev = config?.abbrev ?? config?.name ?? "";
+  const hidden = teamsHidden(config);
+  const teams = await loadTeamOptions(tenantId, config);
 
   const FIELDS: FormField[] = [
     { name: "evaluator_name", label: "Your Name", type: "text", required: true, width: "half" },
-    {
+    // All three are required, so a sentinel-only dropdown would land every
+    // evaluation in the admin as "Other / Not listed @ Other / Not listed",
+    // which is the only index the office has for these (see summaryLine in
+    // components/admin/FormSubmissionsViewer.tsx). Typed names instead.
+    teamNameField({
       name: "team_affiliation",
       label: "Your Team",
-      type: "select",
+      teams,
+      hidden,
       required: true,
-      options: teamOptions,
       width: "half",
-    },
+      trailingOptions: [{ value: OTHER, label: OTHER }],
+      placeholder: "Your team name",
+      hiddenHelp:
+        "Type the team names. The team list goes up when the schedule is released.",
+    }),
     { name: "phone", label: "Cell Phone", type: "tel", width: "half" },
     { name: "game_date", label: "Game Date", type: "date", required: true, width: "half" },
     { name: "game_time", label: "Game Time", type: "text", placeholder: "e.g. 9:30 AM", width: "half" },
     { name: "field", label: "Field", type: "text", width: "half" },
-    {
+    teamNameField({
       name: "visiting_team",
       label: "Visiting Team",
-      type: "select",
+      teams,
+      hidden,
       required: true,
-      options: teamOptions,
       width: "half",
-    },
-    {
+      trailingOptions: [{ value: OTHER, label: OTHER }],
+      placeholder: "Team name",
+    }),
+    teamNameField({
       name: "home_team",
       label: "Home Team",
-      type: "select",
+      teams,
+      hidden,
       required: true,
-      options: teamOptions,
       width: "half",
-    },
+      trailingOptions: [{ value: OTHER, label: OTHER }],
+      placeholder: "Team name",
+    }),
 
     // ── Plate umpire ─────────────────────────────────────────────
     { name: "plate_umpire_name", label: "Home Plate Umpire", type: "text", width: "half" },

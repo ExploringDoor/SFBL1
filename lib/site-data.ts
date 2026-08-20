@@ -3,6 +3,7 @@
 // the layout doesn't need bespoke fetches.
 
 import { getAdminDb } from "./firebase-admin";
+import { teamLogoSrc } from "./team-logo";
 import type { TickerGame } from "@/components/ui/Ticker";
 import { computeStandings, type GameResult } from "./stats/shared";
 import { combineDateTime } from "./format-time";
@@ -77,7 +78,14 @@ export async function loadTickerGames(tenantId: string): Promise<TickerGame[]> {
       name: String(data.name ?? d.id),
       abbrev: data.abbrev ? String(data.abbrev) : undefined,
       color: data.color ? String(data.color) : undefined,
-      logoUrl: data.logo_url ? String(data.logo_url) : null,
+      // WORST OF THE LOT, and the easiest to miss. This meta is copied whole
+      // into every TickerGame below, Ticker hands `games` to TickerTrack, and
+      // TickerTrack is a client component. app/layout.tsx calls loadTickerGames
+      // on EVERY page of EVERY tenant, so an unrouted data: logo here is not a
+      // one page problem, it is a whole site problem. Island read clean on
+      // 2026-08-20 only because all twelve of its games belonged to demo teams.
+      // Fall play starts 2026-09-12.
+      logoUrl: teamLogoSrc(tenantId, d.id, data.logo_url),
       division: data.division ? String(data.division) : null,
       ageGroup: data.ageGroup ? String(data.ageGroup) : undefined,
     };

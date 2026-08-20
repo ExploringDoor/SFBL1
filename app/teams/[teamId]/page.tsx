@@ -68,7 +68,16 @@ export async function generateMetadata({
   const data = snap.data() ?? {};
   const teamName = String(data.name ?? params.teamId);
   const division = String(data.division ?? "");
-  const logo = String(data.logo_url ?? "");
+  // The last data: URL on this page. Crawlers cannot fetch a data: URL at all,
+  // so a base64 logo here was both an unusable og:image and up to 800KB of
+  // base64 in <head> on every team page of every tenant whose captains upload
+  // logos. Absolute, because og:image is read by a crawler that has no origin
+  // to resolve a path against.
+  const origin = h.get("x-forwarded-proto") && h.get("host")
+    ? `${h.get("x-forwarded-proto")}://${h.get("host")}`
+    : "";
+  const rel = teamLogoSrc(tenantId, params.teamId, data.logo_url);
+  const logo = rel ? (rel.startsWith("/") ? `${origin}${rel}` : rel) : "";
   const description = `${teamName}${division ? ` — ${division} division` : ""}. Roster, schedule, recent games, and team stats.`;
   return {
     title: teamName,

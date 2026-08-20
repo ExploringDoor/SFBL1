@@ -8,6 +8,7 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { statsEnabled } from "@/lib/tenant-flags";
 import { numericStatsOrEmpty } from "@/lib/safe-stats";
 import { TeamBadge } from "@/components/TeamBadge";
+import { teamLogoSrc } from "@/lib/team-logo";
 import { formatIP } from "@/lib/stats/ip";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import {
@@ -91,7 +92,9 @@ export default async function PlayersPage() {
       name: String(data.name ?? d.id),
       abbrev: data.abbrev ? String(data.abbrev) : undefined,
       color: data.color ? String(data.color) : undefined,
-      logoUrl: data.logo_url ? String(data.logo_url) : null,
+      // Every roster row and leaderboard row carries its team badge, so an
+      // inlined logo repeats down the page.
+      logoUrl: teamLogoSrc(tenantId, d.id, data.logo_url),
     };
   }
 

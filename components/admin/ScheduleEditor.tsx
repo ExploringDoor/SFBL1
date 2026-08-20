@@ -20,6 +20,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { User } from "firebase/auth";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
+import { leagueToday } from "@/lib/format-time";
 
 interface GameRow {
   id: string;
@@ -188,15 +189,39 @@ export function ScheduleEditor({ leagueId, user }: Props) {
       const data = (await res.json().catch(() => ({}))) as {
         error?: string;
         affected?: number;
+        push_attempted?: boolean;
+        push_ok?: boolean;
+        push_sent?: number;
       };
       if (!res.ok) {
         setError(data.error ?? `HTTP ${res.status}`);
         return false;
       }
+      // Only rain_out_day returns the push fields, so the create, update and
+      // delete banners are byte identical to before.
+      //
+      // Three outcomes, not two. "Nobody is subscribed" and "the send was
+      // rejected" are different problems with different fixes, and this panel
+      // already shipped one season of telling admins "push sent" when neither
+      // was true. send-notification answers 403 when the caller's claim does
+      // not name the league and 400 on a bad category or url, so a zero here
+      // does not by itself mean an empty subscriber list.
+      let pushNote = "";
+      if (data.push_attempted === true) {
+        if (data.push_ok === false) {
+          pushNote =
+            " Push could not be sent, so nobody was notified. Use the Send Message tab to email coaches and the alert list.";
+        } else if (data.push_sent) {
+          pushNote = ` Push reached ${data.push_sent} device${data.push_sent === 1 ? "" : "s"}.`;
+        } else {
+          pushNote =
+            " No devices are signed up for push, so nobody was notified. Use the Send Message tab to email coaches and the alert list.";
+        }
+      }
       setSuccess(
-        data.affected != null
+        (data.affected != null
           ? `${successMsg} (${data.affected} game${data.affected === 1 ? "" : "s"} affected)`
-          : successMsg,
+          : successMsg) + pushNote,
       );
       await load();
       return true;
@@ -238,6 +263,26 @@ export function ScheduleEditor({ leagueId, user }: Props) {
     }
     return m;
   }, [filteredGames]);
+
+  // How many games a rain out will actually touch. Counted off `games` (the
+  // full load) and NOT `filteredGames`, because the status, division and team
+  // filters above are a viewing aid, and a count that quietly shrank because a
+  // filter was left on would be worse than no count at all. Mirrors the
+  // server's rule, date matches exactly and status is still "scheduled".
+  function scheduledOnDate(iso: string): number {
+    // KNOWN LIMIT, left deliberately. The server matches with an equality on
+    // the STORED date (app/api/admin-schedule/route.ts), and provision-seeded
+    // tenants such as Windmill, Helena and LCYBL store a full ISO datetime
+    // rather than a plain day, so that equality already matched nothing there
+    // long before this count existed. On those tenants this number can read 6
+    // where the server will move 0. It cannot go the other way, so the count
+    // never under-promises and the confirm never hides a bigger action than it
+    // names. Island, COYBL and SFBL all store plain YYYY-MM-DD and are exact.
+    // The real fix is a range query on the server, which needs a composite
+    // index, so it is not a thing to change three weeks before a season.
+    return games.filter((g) => g.date === iso && g.status === "scheduled")
+      .length;
+  }
 
   const allDivisions = useMemo(() => {
     // Merge divisions seen on games + on teams so brand-new leagues
@@ -364,11 +409,28 @@ export function ScheduleEditor({ leagueId, user }: Props) {
       {showRainOut && (
         <RainOutForm
           busy={busy}
+          scheduledOnDate={scheduledOnDate}
           onCancel={() => setShowRainOut(false)}
           onSubmit={async (date, notify) => {
+            // The only control on this page that changes many games at once,
+            // and there is no undo. Putting a day back means editing every
+            // game by hand. Confirm with the date SPELLED OUT and the count,
+            // so a wrong date, pre-filled or mistyped, is caught before it
+            // fires rather than after. Same guard the per-game Delete has.
+            const n = scheduledOnDate(date);
+            const headline =
+              n === 0
+                ? `No scheduled games found on ${formatDate(date)}.`
+                : `Postpone all ${n} scheduled game${n === 1 ? "" : "s"} on ${formatDate(date)}?`;
+            if (
+              !window.confirm(
+                `${headline}\n\nThis cannot be undone. Each game has to be put back one at a time.`,
+              )
+            )
+              return;
             const ok = await call(
               { action: "rain_out_day", date, notify },
-              `Rained out ${date}`,
+              `Rained out ${formatDate(date)}`,
             );
             if (ok) setShowRainOut(false);
           }}
@@ -838,15 +900,32 @@ function GameForm({
 
 function RainOutForm({
   busy,
+  scheduledOnDate,
   onCancel,
   onSubmit,
 }: {
   busy: boolean;
+  scheduledOnDate: (date: string) => number;
   onCancel: () => void;
   onSubmit: (date: string, notify: boolean) => Promise<void>;
 }) {
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [notify, setNotify] = useState(true);
+  // Push needs NEXT_PUBLIC_FIREBASE_VAPID_KEY on the deployment before a
+  // single device can register a token, so a deploy without one can never
+  // reach anybody. This panel used to promise delivery and pre-tick the box
+  // regardless. On Island that was a promise to zero devices for the whole
+  // first season. Read the key itself rather than a per-tenant flag, so the
+  // checkbox comes back on its own the moment a key is set, with no code
+  // change. Keep this as a whole-expression reference: NEXT_PUBLIC_* is
+  // substituted at build time and a computed process.env[name] lookup would
+  // not be. Same read as lib/notifications/fcm-client.ts:82.
+  const pushConfigured = Boolean(process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY);
+  // The LEAGUE's calendar day, not the browser's UTC day. Opened from a field
+  // at 9:15pm Friday Eastern the UTC date has already rolled to Saturday, and
+  // the box came up pre-set to TOMORROW, one tap from postponing a day that
+  // was never rained out.
+  const [date, setDate] = useState(() => leagueToday());
+  const [notify, setNotify] = useState(pushConfigured);
+  const count = scheduledOnDate(date);
 
   return (
     <div className="rounded-md border border-amber-300 bg-amber-50 p-3 space-y-3">
@@ -856,7 +935,8 @@ function RainOutForm({
       <p className="text-xs text-amber-900">
         Marks every <strong>scheduled</strong> game on the chosen date as
         postponed. Final, cancelled, and already-postponed games are not
-        touched. A single push notification goes to all subscribers.
+        touched. There is no undo, so check the date and the count below
+        before you run it.
       </p>
       <div className="flex items-center gap-3 flex-wrap">
         <label className="flex items-center gap-2 text-xs font-semibold text-slate-700">
@@ -869,16 +949,28 @@ function RainOutForm({
             className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
           />
         </label>
-        <label className="flex items-center gap-2 text-xs font-semibold text-slate-700">
-          <input
-            type="checkbox"
-            checked={notify}
-            onChange={(e) => setNotify(e.target.checked)}
-            disabled={busy}
-          />
-          Send push notification
-        </label>
+        <span className="text-xs font-semibold text-amber-900">
+          {count} scheduled game{count === 1 ? "" : "s"} on this date
+        </span>
+        {pushConfigured && (
+          <label className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+            <input
+              type="checkbox"
+              checked={notify}
+              onChange={(e) => setNotify(e.target.checked)}
+              disabled={busy}
+            />
+            Send push notification
+          </label>
+        )}
       </div>
+      {!pushConfigured && (
+        <p className="text-xs text-amber-900">
+          Push notifications are not set up on this site, so nobody is told
+          automatically. To tell people, use the <strong>Send Message</strong>{" "}
+          tab to email your coaches and alert list.
+        </p>
+      )}
       <div className="flex gap-2">
         <button
           type="button"

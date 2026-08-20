@@ -7,6 +7,7 @@ import {
   getCachedGamesSnap,
   getCachedTeamsSnap,
 } from "@/lib/league-cache";
+import { teamLogoSrc } from "@/lib/team-logo";
 import { GameCard, type GameCardTeam } from "@/components/ui/GameCard";
 import { computeWeeks, pickActiveWeek } from "@/lib/season-weeks";
 import { computeStandings, type GameResult } from "@/lib/stats/shared";
@@ -399,7 +400,8 @@ async function loadScores(tenantId: string): Promise<{
       name: String(data.name ?? d.id),
       abbrev: data.abbrev ? String(data.abbrev) : undefined,
       color: data.color ? String(data.color) : undefined,
-      logoUrl: data.logo_url ? String(data.logo_url) : null,
+      // Feeds GameCard, a client component. See app/page.tsx for the incident.
+      logoUrl: teamLogoSrc(tenantId, d.id, data.logo_url),
       record: data.record ? String(data.record) : recordByTeam.get(d.id),
       ageGroup: data.ageGroup ? String(data.ageGroup) : undefined,
     };

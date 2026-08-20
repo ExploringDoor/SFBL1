@@ -41,10 +41,15 @@ export function TeamBadge({
             : size === "card"
               ? 112
               : 168;
-    // Coach-uploaded logos are stored as data: URLs (see /api/captain-team-logo),
-    // which next/image can't optimize — render those with a plain <img>. Regular
-    // URL/path logos still go through next/image.
-    const isDataUrl = logoUrl.startsWith("data:");
+    // Coach uploaded logos are stored as data: URLs (see /api/captain-team-logo),
+    // which next/image cannot optimize, so those render with a plain <img>.
+    // /api/team-logo is the same case for a different reason: it already serves
+    // the exact bytes with an immutable cache header, so routing it through
+    // next/image would add an optimization hop and a per tenant billing unit for
+    // no gain. Regular URL and path logos (SFBL's /logos/*.png) still go through
+    // next/image.
+    const isRaw =
+      logoUrl.startsWith("data:") || logoUrl.startsWith("/api/team-logo/");
     return (
       <span
         // le-logo-badge: Island gives logos a dark "coin" backing (see fx.css)
@@ -54,7 +59,7 @@ export function TeamBadge({
         className={`le-logo-badge inline-flex flex-shrink-0 items-center justify-center ${SIZE_CLASSES[size]}`}
         title={name}
       >
-        {isDataUrl ? (
+        {isRaw ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={logoUrl}

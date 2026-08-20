@@ -249,10 +249,18 @@ export async function POST(req: Request) {
       return s === "scheduled";
     });
     if (targets.length === 0) {
+      // Shape-consistent with the success return below. A reader of
+      // push_attempted should never have to work out whether the field is
+      // missing because push was skipped or because the request took this
+      // branch, and the admin panel reads it to decide what to say about
+      // delivery.
       return NextResponse.json({
         ok: true,
         date,
         affected: 0,
+        push_attempted: false,
+        push_ok: true,
+        push_sent: 0,
         message: "No scheduled games on that date.",
       });
     }
@@ -281,10 +289,26 @@ export async function POST(req: Request) {
     }
 
     // Single push (not one-per-game) so subscribers don't get spammed.
-    let pushSent = false;
+    //
+    // push_sent used to be a boolean flipped to true whenever the call did not
+    // throw. fanoutPush catches its own errors and returns, so the catch
+    // branch was unreachable and the admin was told "push sent" on tenants
+    // with no VAPID key and zero notification_tokens, which is Island's whole
+    // first season. Report the device count FCM actually accepted, and report
+    // ok separately so the panel can tell "nobody subscribed" apart from "the
+    // send was rejected". Those two need different things from the admin.
+    //
+    // The try/catch stays even though fanoutPush cannot throw today.
+    // Everything from batch.commit() down has already written, and there is no
+    // outer handler in this POST, so an exception here would 500 a rain out
+    // that DID happen and send the admin off to run it a second time.
+    let pushSent = 0;
+    let pushOk = true;
+    let pushAttempted = false;
     if (body.notify !== false) {
+      pushAttempted = true;
       try {
-        await fanoutPush({
+        const fanout = await fanoutPush({
           origin: originFromRequest(req),
           bearerToken: idToken,
           leagueId,
@@ -293,9 +317,13 @@ export async function POST(req: Request) {
           body: `All ${targets.length} games on ${formatDateForPush(date)} are postponed. Make-up dates TBD.`,
           url: "/schedule",
         });
-        pushSent = true;
+        // Optional chaining is deliberate: the house test mocks for
+        // server-fanout resolve to undefined, so the first admin-schedule
+        // test written against them would TypeError here otherwise.
+        pushSent = fanout?.sent ?? 0;
+        pushOk = fanout?.ok ?? false;
       } catch (e) {
-        // Best-effort — don't fail the rain out if push fails.
+        pushOk = false;
         console.warn("[admin-schedule] rain_out push failed:", e);
       }
     }
@@ -305,6 +333,10 @@ export async function POST(req: Request) {
       date,
       affected: targets.length,
       affected_game_ids: targets.map((d) => d.id),
+      push_attempted: pushAttempted,
+      push_ok: pushOk,
+      // Device count, not a boolean. Grep confirms no other reader of
+      // push_sent in this repo as of 2026-08-20; the admin panel prints it.
       push_sent: pushSent,
     });
   }

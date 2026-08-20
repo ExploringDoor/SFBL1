@@ -35,6 +35,7 @@ import {
 } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useTenant } from "@/lib/tenant-context";
+import { boxScoreEnabled } from "@/lib/tenant-flags";
 import {
   useCaptainTeam,
   useLeagueRole,
@@ -448,10 +449,17 @@ export default function BoxScoreEditorPage() {
         </Link>
       </main>
     );
-  // Box scores are off for COYBL for now — coaches report the final only.
+  // Box scores are off wherever the league keeps no stats
+  // (flags.stats_enabled === false). It is not a preference there, the editor
+  // cannot work: filterCols() returns nothing for stat_columns: [], so the
+  // batting table has no columns to type into, and the pitching table below it
+  // ignores config entirely and shows ten columns for a league whose config
+  // says pitching is not tracked.
+  //
   // The buttons are hidden on the captain dashboard, but the route has to
-  // refuse too, or "hidden" just means "one bookmark away".
-  if (tenantId === "coybl")
+  // refuse too, or "hidden" just means "one bookmark away". This named "coybl"
+  // until 2026-08-20, which is exactly how Island coaches kept reaching it.
+  if (!boxScoreEnabled(config))
     return (
       <main className="container py-16">
         <p>Box scores aren&rsquo;t turned on for this league yet.</p>

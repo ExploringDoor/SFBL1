@@ -12,8 +12,9 @@
 // dismissed it in August still meets it again in September, but it does not
 // reappear while they are checking a score for the third time this morning.
 //
-// IT TAKES ITSELF DOWN. clinicIsOver() stops it after 12 October with nothing
-// to remember and nothing to deploy. The page stays reachable so an old link
+// IT TAKES ITSELF DOWN. clinicIsOver() stops it at 2 PM Eastern on 12 October,
+// the same instant the page and the card path close, with nothing to remember
+// and nothing to deploy. The page stays reachable so an old link
 // still lands somewhere sensible.
 //
 // Deliberately NOT shown on /college-clinic itself. Interrupting someone to

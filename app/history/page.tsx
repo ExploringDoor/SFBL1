@@ -23,6 +23,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { teamLogoSrc } from "@/lib/team-logo";
 import { HistoryView } from "./HistoryView";
 import type {
   ArchivedGame,
@@ -197,7 +198,12 @@ async function loadTeamMeta(tenantId: string): Promise<TeamMeta[]> {
         id: d.id,
         name: String(data.name ?? d.id),
         color: data.color ? String(data.color) : null,
-        logoUrl: data.logo_url ? String(data.logo_url) : null,
+        // Same trap as the home page. This meta goes to HistoryView, a client
+        // component, so raw data: logos land in the RSC payload. /history was
+        // 1,561,854 bytes on 2026-08-20 with the identical eight blobs, and none
+        // of them were drawn either: Island has no historical archive, so no
+        // team name ever matches and nothing renders a logo.
+        logoUrl: teamLogoSrc(tenantId, d.id, data.logo_url),
       };
     });
   } catch {

@@ -17,6 +17,7 @@ import type { User } from "firebase/auth";
 import { collection, getDocs } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { feeFor } from "@/lib/fees";
+import { CLINIC } from "@/lib/clinic";
 
 type Kind =
   | "player_registration"
@@ -475,6 +476,7 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
             <ul className="divide-y divide-slate-200 border border-slate-200 rounded-md overflow-hidden">
               {filtered.map((it) => {
                 const st = statusOf(it);
+                const mail = mailState(it);
                 const isDeleted = it.deleted === true;
                 return (
                   <li
@@ -511,6 +513,36 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
                             </>
                           )}
                         </span>
+                        {mail && (
+                          <span
+                            className={
+                              "inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold rounded uppercase tracking-wider border whitespace-nowrap " +
+                              (mail === "failed"
+                                ? "bg-red-100 text-red-800 border-red-200"
+                                : "bg-amber-100 text-amber-800 border-amber-200")
+                            }
+                            // A timeout is NOT a failure and must not be
+                            // labelled one. When the provider does not answer
+                            // inside the race, the message may well have gone
+                            // out; the parent may already be holding the
+                            // confirmation. Telling Kaitlin it "did not go
+                            // out" is how she re-sends, or tells a family
+                            // nothing was sent while it sits in their inbox.
+                            title={
+                              mail === "failed"
+                                ? "An email for this submission did not go out. Open the row for the reason."
+                                : mail === "unknown"
+                                  ? "The email provider did not answer in time. The message may still have gone out. Open the row before re-sending."
+                                  : "No league office address is configured, so nobody was notified. Set EMAIL_NOTIFY on this site."
+                            }
+                          >
+                            {mail === "failed"
+                              ? "Email failed"
+                              : mail === "unknown"
+                                ? "Email unconfirmed"
+                                : "No office email set"}
+                          </span>
+                        )}
                         <span
                           className={
                             "flex-1 min-w-0 truncate font-semibold " +
@@ -576,6 +608,16 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
                             }
                             onCreated={(teamId) =>
                               patchItem(it.id, { assigned_team_id: teamId })
+                            }
+                          />
+                        )}
+                        {kind === "clinic_registration" && (
+                          <ClinicPaymentControl
+                            leagueId={leagueId}
+                            user={user}
+                            submission={it}
+                            onRecorded={(payment) =>
+                              patchItem(it.id, { payment })
                             }
                           />
                         )}
@@ -868,6 +910,144 @@ function PaymentQuickRecord({
   );
 }
 
+// Mark a College Clinic place paid, for the way most families actually pay it.
+//
+// THE FIELD IS THE POINT. The cap in /api/league-form and the "N places left"
+// line on /college-clinic both count payment.status === "paid" on this
+// submission, and until /api/admin-clinic-payment existed only the card path
+// ever wrote it. The payment screen RECOMMENDS Venmo, so a family doing as
+// they were told consumed no place and the clinic oversold by exactly that
+// number. This writes the same field the card writes.
+//
+// NOT PaymentQuickRecord, which sits a few lines above and looks like the
+// obvious reuse. That one posts to /api/admin-team-payment, which writes
+// team_payments/{teamId}: a TEAM ledger row, keyed on a team a clinic
+// registration does not have, and it never touches the submission. It would
+// have produced a phantom $175 team and STILL left the place unsold.
+function ClinicPaymentControl({
+  leagueId,
+  user,
+  submission,
+  onRecorded,
+}: {
+  leagueId: string;
+  user: User;
+  submission: Submission;
+  onRecorded: (payment: Record<string, unknown>) => void;
+}) {
+  const pay = submission.payment as
+    | { status?: string; method?: string; amount_cents?: number }
+    | undefined;
+  const paid = pay?.status === "paid";
+  const byCard = paid && pay?.method === "card";
+  const due = feeFor(
+    leagueId,
+    submission as Record<string, unknown>,
+    "clinic_registration",
+  );
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [places, setPlaces] = useState<number | null>(null);
+
+  async function send(action: "paid" | "clear", method?: string) {
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await fetch("/api/admin-clinic-payment", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${await user.getIdToken()}`,
+        },
+        body: JSON.stringify({ leagueId, id: submission.id, action, method }),
+      });
+      const j = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        paid_places?: number;
+        capacity?: number;
+      };
+      if (!res.ok) {
+        setErr(j.error ?? `HTTP ${res.status}`);
+        return;
+      }
+      if (typeof j.paid_places === "number") setPlaces(j.paid_places);
+      onRecorded(
+        action === "paid"
+          ? { status: "paid", method, amount_cents: due * 100 }
+          : { status: "unpaid" },
+      );
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not record it");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-3">
+      <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-600">
+        Clinic place · ${due}
+      </div>
+      {paid ? (
+        <>
+          <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+            Paid by {pay?.method ?? "card"}. This place is counted against the{" "}
+            {CLINIC.capacity} and the page shows one fewer left.
+          </p>
+          {/* Undo, for the mis-click and for the Venmo that turns out to be
+              someone else's. Card payments are refused server side: Square has
+              the money and the parent has a receipt, so clearing the flag here
+              would make the site deny a charge that really happened. */}
+          {!byCard && (
+            <button
+              type="button"
+              onClick={() => send("clear")}
+              disabled={busy}
+              className="mt-2 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:opacity-60"
+            >
+              {busy ? "…" : "Not paid after all"}
+            </button>
+          )}
+        </>
+      ) : (
+        <>
+          <p className="mb-2 text-[11px] text-slate-500">
+            The place is not held until this is recorded. Venmo goes to the
+            league account with the player&rsquo;s name in the note.
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            {(["venmo", "check", "cash"] as const).map((mth) => (
+              <button
+                key={mth}
+                type="button"
+                onClick={() => send("paid", mth)}
+                disabled={busy}
+                className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 disabled:opacity-60"
+              >
+                Mark paid by {mth}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+      {places !== null && (
+        <p
+          className={
+            "mt-2 text-[11px] " +
+            (places > CLINIC.capacity ? "font-semibold text-red-700" : "text-slate-600")
+          }
+        >
+          {places} of {CLINIC.capacity} places paid.
+          {places > CLINIC.capacity
+            ? " That is over the cap. Nothing was blocked, the money is real, but the day is oversold."
+            : ""}
+        </p>
+      )}
+      {err && <p className="mt-2 text-xs text-red-700">{err}</p>}
+    </div>
+  );
+}
+
 // Filter pill row. Counts derived from the unfiltered list so even
 // when the "Done" tab is empty Adam can see at a glance that 8
 // total submissions exist.
@@ -962,6 +1142,57 @@ function filterLabel(f: FilterMode): string {
 
 // One-line preview per submission kind. Surfaces the most useful
 // identifying field(s) so the admin can scan a list of 50 at a glance.
+// What the office still needs to know about the mail on this submission.
+//
+// The flags come from /api/league-form, which stopped firing mail into the
+// void on Vercel and started recording the result. Surfaced on the ROW and not
+// only inside the expanded detail, because nobody expands a row that looks
+// fine, and a clinic parent who never got their confirmation is exactly the
+// case nobody thinks to go looking for.
+//
+// TWO states, not one. "Nobody is configured to be told" is a settings problem,
+// and a league that never set EMAIL_NOTIFY would otherwise have every single
+// row painted red, which is how a warning colour stops meaning anything before
+// the first real failure arrives. Only a provider that REFUSED a send is red.
+//
+// These strings are written by notifyOffice callers in
+// app/api/league-form/route.ts. Reword them there and this stops matching.
+const MAIL_NOT_CONFIGURED = new Set([
+  "no notify address configured",
+  "email not configured",
+]);
+
+// The timeout sentinel written by /api/league-form when the provider does not
+// answer inside the race. Matched on a substring because the message carries
+// the elapsed seconds.
+const MAIL_TIMED_OUT = "may or may not have gone out";
+
+function mailState(
+  s: Submission,
+): "failed" | "unknown" | "unconfigured" | null {
+  const pairs: [unknown, unknown][] = [
+    [s.office_email_sent, s.office_email_error],
+    [s.confirmation_email_sent, s.confirmation_email_error],
+    [s.login_email_sent, s.login_email_error],
+  ];
+  let unconfigured = false;
+  let timedOut = false;
+  for (const [sent, err] of pairs) {
+    // Strict === false, so the hundreds of documents written before any of
+    // this existed carry no flag and stay unmarked.
+    if (sent !== false) continue;
+    const text = String(err ?? "");
+    if (MAIL_NOT_CONFIGURED.has(text)) unconfigured = true;
+    // A timeout is genuinely unknown, not failed. The provider went quiet;
+    // the message may already be in the family's inbox. Ranked below "failed"
+    // so a row carrying both still reads as the definite problem.
+    else if (text.includes(MAIL_TIMED_OUT)) timedOut = true;
+    else return "failed";
+  }
+  if (timedOut) return "unknown";
+  return unconfigured ? "unconfigured" : null;
+}
+
 function summaryLine(kind: Kind, s: Submission): string {
   if (kind === "player_registration") {
     const fn = s.first_name ?? "";
@@ -1567,6 +1798,21 @@ function humanLabel(key: string): string {
     gamechanger_link: "GameChanger",
     assigned_team_id: "Team record",
     login_email_sent: "Login email sent",
+    login_email_error: "Login email error",
+    // Written by /api/league-form. "No" here means the message did not go
+    // out, and there is nowhere else it can be seen.
+    office_email_sent: "Office notified",
+    office_email_error: "Office email error",
+    // Site feedback goes to Adam, not the league office, so the row names the
+    // address rather than leaving "Office notified: Yes" to imply Mike.
+    // "Notification address", not "sent to". The field is written whether or
+    // not the send succeeded, so a failed one used to render "Notification
+    // sent to: adam@…" directly above "Office notified: No", with the row
+    // contradicting itself. The address is the useful fact; the adjacent
+    // Office notified row is what says whether it arrived.
+    office_email_to: "Notification address",
+    confirmation_email_sent: "Confirmation sent",
+    confirmation_email_error: "Confirmation error",
     manager_first_name: "Manager first",
     manager_last_name: "Manager last",
     evaluator_name: "Evaluator",

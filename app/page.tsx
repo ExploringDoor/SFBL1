@@ -19,6 +19,7 @@ import {
   getCachedGamesSnap,
   getCachedTeamsSnap,
 } from "@/lib/league-cache";
+import { teamLogoSrc } from "@/lib/team-logo";
 import {
   computeStandings,
   sortByPoints,
@@ -341,6 +342,11 @@ export default async function HomePage() {
                       gameId={g.id}
                       date={g.date}
                       field={g.field}
+                      fieldHref={
+                        tenantId === "windmill" && g.field
+                          ? `/fields?f=${encodeURIComponent(g.field)}`
+                          : null
+                      }
                       away={previewTeamData(g.away_team_id, teams)}
                       home={previewTeamData(g.home_team_id, teams)}
                       isNext={i === 0}
@@ -398,7 +404,10 @@ export default async function HomePage() {
               // Age-grouped tenants (COYBL): show the youngest age's
               // standings inline and switch between ages in place (no
               // navigation). Only "Full standings →" leaves the homepage.
-              <HomeAgeStandings ages={ageStandings} teamMeta={teams} />
+              <HomeAgeStandings
+                ages={ageStandings}
+                teamMeta={standingsTeamMeta(ageStandings, teams)}
+              />
             ) : standingsHasGames(divisionGroups) ? (
               <StandingsTable
                 groups={divisionGroups}
@@ -526,7 +535,17 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
       name: String(data.name ?? d.id),
       abbrev: data.abbrev ? String(data.abbrev) : undefined,
       color: data.color ? String(data.color) : undefined,
-      logoUrl: data.logo_url ? String(data.logo_url) : null,
+      // This map is handed whole to HomeAgeStandings, a client component, so
+      // every value in it is serialized into the RSC payload whether or not it
+      // gets drawn. On 2026-08-20 that meant eight coach uploaded data: URLs,
+      // 1.43MB, on every home page load, and not one of them was drawn:
+      // HomeAgeStandings uses StandingsTable's compact variant, which renders no
+      // logo at all. The page was 1,568,793 bytes and sat behind the
+      // app/loading.tsx skeleton until the last blob arrived. teamLogoSrc swaps
+      // a data: URL for a cacheable route, path logos pass through unchanged.
+      // The same map feeds GameCard and PreviewCard below, which do draw logos,
+      // so this one line covers all three consumers.
+      logoUrl: teamLogoSrc(tenantId, d.id, data.logo_url),
       division: data.division ? String(data.division) : undefined,
     };
     if (data.ageGroup) {
@@ -751,6 +770,41 @@ function BareApex() {
       </p>
     </main>
   );
+}
+
+// Only the teams that actually have a standings row.
+//
+// HomeAgeStandings is a Client Component, so whatever is handed to its
+// teamMeta prop is serialised into this page's flight payload whether it is
+// rendered or not. Passing the whole map put every team in the league, name,
+// abbrev, division, colour, logo and record, into view-source on the busiest
+// page on the site. On Island Fastpitch on 2026-08-20 that was all ten real
+// teams, in plain sight, while flags.hide_teams was on and /teams was showing
+// the "list goes up with the schedule" notice. The three public forms were
+// found and fixed the same day; this was the bigger half.
+//
+// Narrowed by referenced id rather than gated on the flag, on purpose. The
+// table only ever looks up ids it holds rows for, so every tenant renders the
+// identical standings off a smaller payload, and a tenant that turns the flag
+// on next season is already covered without anyone remembering this file.
+//
+// NOT a privacy guarantee once real games are played: a team with a row is a
+// team whose name the table is about to print. The flag has never gated the
+// homepage standings.
+function standingsTeamMeta(
+  ages: { divisionGroups: DivisionGroup[] }[],
+  teams: Record<string, TeamMeta>,
+): Record<string, TeamMeta> {
+  const out: Record<string, TeamMeta> = {};
+  for (const age of ages) {
+    for (const group of age.divisionGroups) {
+      for (const row of group.rows) {
+        const t = teams[row.team_id];
+        if (t) out[row.team_id] = t;
+      }
+    }
+  }
+  return out;
 }
 
 // Reduce the rich TeamMeta map to the subset HomepageLiveGames needs

@@ -10,6 +10,7 @@ import {
   getCachedGamesSnap,
   getCachedTeamsSnap,
 } from "@/lib/league-cache";
+import { teamLogoSrc } from "@/lib/team-logo";
 import {
   computeStandings,
   sortByPoints,
@@ -306,7 +307,10 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
       name: String(data.name ?? d.id),
       abbrev: data.abbrev ? String(data.abbrev) : undefined,
       color: data.color ? String(data.color) : undefined,
-      logoUrl: data.logo_url ? String(data.logo_url) : null,
+      // Reads zero base64 today only because the teams holding logos have no
+      // games and so never reach a standings row. Fall play starts 2026-09-12
+      // and that accident expires. Route the bytes now.
+      logoUrl: teamLogoSrc(tenantId, d.id, data.logo_url),
       division: data.division ? String(data.division) : undefined,
     };
     teamExtra[d.id] = {
