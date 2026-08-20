@@ -41,6 +41,14 @@ export function ClinicPopup() {
     // firing on /admin (2026-08-19).
     if (pathname?.startsWith("/admin")) return;
     if (pathname?.startsWith("/captain")) return;
+    // Nor over a payment. /pay/{id} is reached by following a link the office
+    // texted or emailed about money that is owed, so the person arriving has
+    // already decided what they came to do. Covering that with a flyer for a
+    // different event is the worst moment on the site to interrupt, and it
+    // covered the "this payment link is not valid" message too, which is the
+    // one screen where the visitor most needs to read what it says.
+    // Verified on production 2026-08-20.
+    if (pathname?.startsWith("/pay/")) return;
     try {
       if (sessionStorage.getItem(SEEN_KEY)) return;
     } catch {
