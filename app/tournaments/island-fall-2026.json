@@ -146,8 +146,10 @@
       "usssa_event": "418147"
     },
     {
-      "name": "Fight Against Heart Disease",
-      "subtitle": "Annual tournament",
+      "name": "Phantom on the Diamond",
+      "logo": "/island/tournaments/phantom-on-the-diamond.png",
+      "former_name": "Fight Against Heart Disease",
+      "subtitle": "Halloween weekend, wear your costumes",
       "start": "2026-10-31",
       "end": "2026-11-01",
       "ages": "10U, 12U, 14U, 16U, 18U",
