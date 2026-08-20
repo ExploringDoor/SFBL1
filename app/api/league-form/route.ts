@@ -26,6 +26,7 @@ import { parseHost, resolveTenant } from "@/lib/tenants";
 import { provisionCoyblTeam } from "@/lib/provision-team";
 import { sendEmail, notifyAddress, notifyOffice, esc } from "@/lib/email/send";
 import { coachCodeEmail, officeRegistrationEmail } from "@/lib/email/templates";
+import { isPhoneField, normalizePhone } from "@/lib/phone";
 
 export const runtime = "nodejs";
 
@@ -148,6 +149,20 @@ const ALLOWED_FIELDS: Record<Kind, string[]> = {
     "asst_email",
     "agreed_to_terms",
     "notes",
+    // Windmill Fastpitch (youth fastpitch): rec/club lead contacts, skill
+    // level, home-field address, and scheduling requests. Team-level only —
+    // no player/minor data. Not on this list = dropped before the write.
+    "new_or_returning_team",
+    "new_or_returning_coach",
+    "lead_name",
+    "lead_phone",
+    "lead_email",
+    "level",
+    "age_or_grade",
+    "experience",
+    "home_field_address",
+    "blackout_dates",
+    "home_date_requests",
   ],
   player_registration: [
     "first_name",
@@ -438,6 +453,35 @@ export async function POST(req: Request) {
   }
 
   const cleaned = pickAllowed(body.kind, body.data);
+
+  // PHONE NUMBERS: checked, and stored in one shape.
+  //
+  // These were free text. Alyssa Schroeder's clinic registration on
+  // 2026-08-19 stored an 11-digit number that was neither a 10-digit number
+  // nor a country code plus one, and it will not dial. The single purpose of
+  // this field is letting the league ring a parent.
+  //
+  // Refused rather than flagged, which is the opposite of the bot checks
+  // below, and the difference is who is standing there: a bad number is
+  // caught while the person still has the form open and can fix it in five
+  // seconds. A dropped submission is a customer lost.
+  //
+  // Empty optional fields are left alone; the required-field check owns those.
+  for (const key of Object.keys(cleaned)) {
+    if (!isPhoneField(key)) continue;
+    const raw = cleaned[key];
+    if (raw == null || String(raw).trim() === "") continue;
+    const r = normalizePhone(raw);
+    if (!r.ok) {
+      return NextResponse.json(
+        { error: `${r.reason} (${key.replace(/_/g, " ")})` },
+        { status: 400 },
+      );
+    }
+    // Stored normalised, so every number in the admin and every CSV export
+    // reads the same way regardless of how it was typed.
+    cleaned[key] = r.value;
+  }
 
   // Required-field check.
   const missing = REQUIRED[body.kind].filter(

@@ -11,6 +11,7 @@
 
 import { Fragment, useState } from "react";
 import { PaymentOptions } from "./PaymentOptions";
+import { isPhoneField, normalizePhone } from "@/lib/phone";
 import { optionsFor, prunedValue } from "@/lib/form-options";
 import "./LeagueForm.css";
 
@@ -174,6 +175,24 @@ export function LeagueForm({
         );
         return;
       }
+    }
+
+    // Phone numbers, checked here so the message arrives before the round
+    // trip and the field can be corrected in place. The SERVER checks the
+    // same thing with the same module, so this is convenience and that is
+    // the authority; they cannot disagree about what is valid.
+    for (const f of fields) {
+      if (f.type !== "tel" && !isPhoneField(f.name)) continue;
+      const v = data[f.name];
+      if (v == null || String(v).trim() === "") continue; // optional, and empty
+      const r = normalizePhone(v);
+      if (!r.ok) {
+        setError(`${f.label}: ${r.reason}`);
+        return;
+      }
+      // Normalised before sending, so what the coach sees confirmed back to
+      // them matches what the league office will read.
+      data[f.name] = r.value;
     }
 
     setSubmitting(true);
