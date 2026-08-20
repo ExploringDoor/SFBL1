@@ -86,6 +86,10 @@ export async function POST(req: Request) {
   const fee = feeFor(leagueId, data);
   const amountCents = chargeCents(leagueId, fee);
   const teamName = String(data.team_name ?? "Team");
+  // What the payer sees above the amount. resolveTenant already gave us the
+  // league, so the name comes from the league being paid rather than from
+  // whichever league this route was originally written for.
+  const leagueLabel = tenant?.config?.abbrev ?? tenant?.config?.name ?? "League";
 
   const base =
     process.env.SQUARE_ENV === "production"
@@ -116,7 +120,11 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         idempotency_key: crypto.randomUUID(),
         quick_pay: {
-          name: `COYBL 2027 Registration: ${teamName}`,
+          // Was hardcoded "COYBL 2027 Registration", which is a different
+          // league in Ohio. Island coaches clicking a payment link from their
+          // own league's admin were shown someone else's name above the
+          // amount, which is the moment a parent stops and rings you.
+          name: `${leagueLabel} Registration: ${teamName}`,
           price_money: { amount: amountCents, currency: "USD" },
           location_id: locationId,
         },

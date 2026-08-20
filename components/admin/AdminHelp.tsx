@@ -290,11 +290,10 @@ export function AdminHelp() {
             click one Save, and only that row is kept. Sending reminders
             reloads the table and loses anything unsaved.
           </p>
-          <p className="ah-warn">
-            <strong>Do not use the small &ldquo;Card link&rdquo; button.</strong>{" "}
-            It still builds a payment page titled for a different league in
-            Ohio. The amount is right but the wording is wrong. Ask {office} to
-            fix it before you send one to a coach.
+          <p>
+            The small <strong>Card link</strong> button builds a Square payment
+            page for that team and copies the link, ready to text or email to a
+            coach. It is titled with our own league name and the correct amount.
           </p>
           <ul>
             <li>

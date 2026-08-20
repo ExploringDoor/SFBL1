@@ -34,6 +34,11 @@ export function PasswordlessCaptainPicker({
   // Once `pickedTeam` is set, render the password field. "Back"
   // resets to null.
   const [pickedTeam, setPickedTeam] = useState<TeamOption | null>(null);
+  // Leagues whose captain credential is a five-digit CODE emailed on
+  // registration, not a password the coach chose. Labelling it "Password"
+  // sends coaches hunting for something they never made, and it is the single
+  // most common support call — it leads Island's coach guide for that reason.
+  const usesCode = leagueId === "coybl" || leagueId === "island";
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -195,8 +200,8 @@ export function PasswordlessCaptainPicker({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={busy}
-            placeholder={leagueId === "coybl" ? "5-digit code" : "Password"}
-            aria-label="Team password"
+            placeholder={usesCode ? "5-digit code" : "Password"}
+            aria-label={usesCode ? "Team sign-in code" : "Team password"}
             autoFocus
             style={{
               width: "100%",
@@ -261,7 +266,9 @@ export function PasswordlessCaptainPicker({
         >
           {leagueId === "coybl"
             ? "Don't know your code? It was emailed to you when you registered. The league office can look it up."
-            : "Don't know the password? Ask your commissioner."}
+            : usesCode
+              ? "Lost your code? Email the league office and they will read it back to you."
+              : "Don't know the password? Ask your commissioner."}
         </p>
       </div>
     );

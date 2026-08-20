@@ -93,7 +93,11 @@ export function TeamLogoTab({
     if (!file) return;
     const url = await resizeToDataUrl(file, 320);
     if (!url) {
-      setError("Couldn't read that image — try a PNG or JPG.");
+      setError(
+        "This browser couldn't read that picture. If it came from an iPhone, " +
+          "take a screenshot of it and upload the screenshot instead — that " +
+          "converts it to a format every browser understands.",
+      );
       return;
     }
     setPending(url);
@@ -183,7 +187,17 @@ export function TeamLogoTab({
         </div>
 
         <div style={{ minWidth: 0 }}>
-          <input type="file" accept="image/png,image/jpeg,image/webp" onChange={onPick} />
+          <input
+            type="file"
+            // image/* rather than a list of three types. The list left iPhone
+            // photos greyed out in the picker, and iPhones save HEIC by
+            // default, so the most common photo a coach owns could not even be
+            // selected. Safari decodes HEIC natively, so on the device this
+            // actually matters it now works; anything a browser genuinely
+            // cannot decode is caught below with an instruction that works.
+            accept="image/*"
+            onChange={onPick}
+          />
           <div style={{ marginTop: 12, display: "flex", gap: 10 }}>
             <button
               type="button"

@@ -17,8 +17,11 @@
 // against a screenshot nobody remembers to retake, and they carry no
 // player names.
 
-/** Signing in: pick the team, type the five digits. The single thing coaches
- *  get wrong, because the box is labelled Password. */
+/** Signing in: pick the team, type the five digits.
+ *
+ *  This used to be the single thing coaches got wrong, because the box was
+ *  labelled Password and no coach ever chose one. The label now reads
+ *  "5-digit code", so the guide describes the fix rather than the trap. */
 function SignInDiagram() {
   return (
     <svg viewBox="0 0 560 150" className="ih-fig" role="img"
@@ -30,7 +33,7 @@ function SignInDiagram() {
       <text x="32" y="57" fontSize="11" fill="#e2e8f0" fontFamily="system-ui">1. Pick your team ▾</text>
 
       <rect x="20" y="78" width="230" height="30" rx="6" fill="#16233a" stroke="#2a3d5f" />
-      <text x="32" y="97" fontSize="11" fill="#e2e8f0" fontFamily="system-ui">2. • • • • •</text>
+      <text x="32" y="97" fontSize="11" fill="#64748b" fontFamily="system-ui">2. 5-digit code</text>
 
       <rect x="20" y="118" width="110" height="24" rx="6" fill="#fff" />
       <text x="75" y="134" textAnchor="middle" fontSize="10" fill="#0b1730" fontWeight="700" fontFamily="system-ui">Sign in</text>
@@ -42,10 +45,10 @@ function SignInDiagram() {
         </marker>
       </defs>
       <rect x="300" y="60" width="242" height="66" rx="6" fill="#16233a" stroke="#7fb2ff" strokeDasharray="3 2" />
-      <text x="312" y="80" fontSize="10" fill="#e2e8f0" fontWeight="700" fontFamily="system-ui">The box says Password.</text>
-      <text x="312" y="96" fontSize="10" fill="#c7d2e0" fontFamily="system-ui">It is the 5-digit code the league</text>
-      <text x="312" y="110" fontSize="10" fill="#c7d2e0" fontFamily="system-ui">emailed you when you registered.</text>
-      <text x="312" y="121" fontSize="10" fill="#c7d2e0" fontFamily="system-ui">You never chose a password.</text>
+      <text x="312" y="82" fontSize="10" fill="#e2e8f0" fontWeight="700" fontFamily="system-ui">Five digits, from your</text>
+      <text x="312" y="98" fontSize="10" fill="#c7d2e0" fontFamily="system-ui">welcome email. There is no</text>
+      <text x="312" y="112" fontSize="10" fill="#c7d2e0" fontFamily="system-ui">password and no account to</text>
+      <text x="312" y="124" fontSize="10" fill="#c7d2e0" fontFamily="system-ui">create.</text>
     </svg>
   );
 }
@@ -108,10 +111,9 @@ export function IslandHelp({
               to you when your team registered.
             </li>
           </ul>
-          <p className="ih-warn">
-            The box is labelled <strong>Password</strong>, but you never chose
-            one. It is the five digit code from your welcome email. Search your
-            inbox for &ldquo;Island Fastpitch&rdquo;.
+          <p className="ih-note">
+            Search your inbox for &ldquo;Island Fastpitch&rdquo; if you cannot
+            find the code. It was sent the moment your team registered.
           </p>
           <ul>
             <li>
@@ -226,12 +228,11 @@ export function IslandHelp({
               and the button stays greyed out until you have chosen one.
             </li>
           </ul>
-          <p className="ih-warn">
-            <strong>Photos straight off an iPhone often will not work.</strong>{" "}
-            iPhones save as HEIC and this only takes PNG, JPG or WEBP. If the
-            picker will not show your image, or you get &ldquo;couldn&rsquo;t
-            read that image&rdquo;, screenshot the picture and upload the
-            screenshot instead. That converts it.
+          <p className="ih-note">
+            <strong>iPhone photos work.</strong> If you ever do get a message
+            saying the picture could not be read, screenshot it and upload the
+            screenshot instead. That converts it to a format any browser
+            understands.
           </p>
           <p>
             A square logo looks best. It is shrunk down for the site, so a big
