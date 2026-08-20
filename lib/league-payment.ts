@@ -51,6 +51,18 @@ const DETAILS: Record<string, LeaguePaymentDetails> = {
     venmoHandle: "@mikeislandusssa",
     venmoUrl: "https://venmo.com/u/mikeislandusssa",
   },
+
+  // Windmill Fastpitch. Flat $325, no card surcharge (the league absorbs it, so
+  // no cardFeeLabel). Venmo handle + check payable-to come from the league's own
+  // site; the exact check mailing address is still TODO from Ken, so the check
+  // block points coaches at the office until he confirms it.
+  windmill: {
+    venmoHandle: "@WindmillFastpitch",
+    venmoUrl: "https://venmo.com/u/WindmillFastpitch",
+    checkPayableTo: "Windmill Fastpitch Softball",
+    checkAddress:
+      "Give your check to your league contact, or email Windmill_Softball@hotmail.com for where to send it.",
+  },
 };
 
 export function paymentDetailsFor(

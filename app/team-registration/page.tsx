@@ -530,7 +530,112 @@ const LCYBL_FIELDS: FormField[] = [
   },
 ];
 
+// Windmill Fastpitch (youth girls fastpitch, WI). Team-level info only — no
+// player/minor data. Field names in this set that are NOT already whitelisted
+// in app/api/league-form/route.ts ALLOWED_FIELDS.team_registration are added
+// there in the same change, or they'd be dropped before the doc is written.
+const WINDMILL_DIVISIONS = [
+  "8U Machine",
+  "8U Live",
+  "10U",
+  "10U USA",
+  "12U",
+  "14U",
+  "High School",
+];
+const WINDMILL_FIELDS: FormField[] = [
+  { name: "team_name", label: "Team Name", type: "text", required: true, width: "half" },
+  {
+    name: "division",
+    label: "Division",
+    type: "select",
+    required: true,
+    width: "half",
+    options: WINDMILL_DIVISIONS.map((d) => ({ value: d, label: d })),
+  },
+  {
+    name: "new_or_returning_team",
+    label: "New or Returning Team?",
+    type: "select",
+    required: true,
+    width: "half",
+    options: [
+      { value: "returning", label: "Returning team" },
+      { value: "new", label: "New team" },
+    ],
+  },
+  {
+    name: "new_or_returning_coach",
+    label: "New or Returning Coach?",
+    type: "select",
+    required: true,
+    width: "half",
+    options: [
+      { value: "returning", label: "Returning coach" },
+      { value: "new", label: "New coach" },
+    ],
+  },
+  { name: "manager_first_name", label: "Head Coach First Name", type: "text", required: true, width: "half" },
+  { name: "manager_last_name", label: "Head Coach Last Name", type: "text", required: true, width: "half" },
+  { name: "phone", label: "Head Coach Phone", type: "tel", required: true, width: "half" },
+  { name: "email", label: "Head Coach Email", type: "email", required: true, width: "half" },
+  { name: "lead_name", label: "Rec / Club Lead Name", type: "text", width: "half", help: "The recreation or club lead for your program." },
+  { name: "lead_phone", label: "Rec / Club Lead Phone", type: "tel", width: "half" },
+  { name: "lead_email", label: "Rec / Club Lead Email", type: "email", width: "half" },
+  {
+    name: "level",
+    label: "Level of Competition",
+    type: "select",
+    required: true,
+    width: "half",
+    help: "Teams that are not fully recreational typically enter at D2 or D3.",
+    options: [
+      { value: "D1", label: "D1 — Competitive" },
+      { value: "D2", label: "D2 — Upper Intermediate" },
+      { value: "D3", label: "D3 — Intermediate" },
+      { value: "D4", label: "D4 — Developmental" },
+    ],
+  },
+  { name: "age_or_grade", label: "Age or Grade", type: "text", width: "half", placeholder: "e.g. 5th grade, 10 years old" },
+  {
+    name: "experience",
+    label: "Team Experience",
+    type: "select",
+    width: "half",
+    options: [
+      { value: "first_year", label: "Majority first year" },
+      { value: "second_plus", label: "Majority second year and beyond" },
+    ],
+  },
+  { name: "home_field_name", label: "Home Field Name", type: "text", width: "half" },
+  { name: "home_field_address", label: "Home Field Address", type: "text", width: "half" },
+  { name: "blackout_dates", label: "Blackout Dates", type: "textarea", width: "full", help: "Dates your team cannot host or play." },
+  { name: "home_date_requests", label: "Home-Date Requests", type: "textarea", width: "full", help: "Any preferred home dates or scheduling conflicts." },
+  { name: "notes", label: "Anything else we should know?", type: "textarea", width: "full" },
+  {
+    name: "agreed_to_terms",
+    label:
+      "I confirm the information above is accurate and our team will follow Windmill Fastpitch rules and policies.",
+    type: "checkbox",
+    required: true,
+    width: "full",
+  },
+];
+
 function content(tenantId: string) {
+  if (tenantId === "windmill") {
+    return {
+      fields: WINDMILL_FIELDS,
+      description: "Register your team for Windmill Fastpitch Softball.",
+      intro: [
+        "Complete one form per team. It captures your team, division, skill level, head coach and rec/club lead contacts, home field, and any scheduling requests so the league can build the schedule.",
+        "The team fee is $325, which covers game balls, scorebooks, awards, and the End-of-Year Tournament. After you submit, you can pay by card, Venmo, or check on the next screen, or choose to pay later — your spot is reserved either way.",
+      ],
+      successMessage:
+        "Thanks! Your team is registered. Your $325 team fee can be paid below, or any time before the season begins.",
+      footer: null,
+    };
+  }
   if (tenantId === "lcybl") {
     return {
       fields: LCYBL_FIELDS,

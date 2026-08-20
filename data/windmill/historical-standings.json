@@ -1,0 +1,1043 @@
+[
+  {
+    "season": "Summer 2026",
+    "game_type": "season",
+    "division": "U8 Live",
+    "standings": [
+      {
+        "team": "Waterloo - Hennessy",
+        "w": 6,
+        "l": 2,
+        "t": 0,
+        "g": 8,
+        "pct": 0.75,
+        "p": 12
+      },
+      {
+        "team": "BDYBS Rookies Gold - Caves",
+        "w": 5,
+        "l": 2,
+        "t": 0,
+        "g": 7,
+        "pct": 0.714,
+        "p": 10
+      },
+      {
+        "team": "McFarland Spartans White - Schuchardt",
+        "w": 5,
+        "l": 3,
+        "t": 0,
+        "g": 8,
+        "pct": 0.625,
+        "p": 10
+      },
+      {
+        "team": "McFarland Spartans Blue - McCullick",
+        "w": 5,
+        "l": 3,
+        "t": 0,
+        "g": 8,
+        "pct": 0.625,
+        "p": 10
+      },
+      {
+        "team": "JC Yellow Jackets - Tonies",
+        "w": 3,
+        "l": 2,
+        "t": 0,
+        "g": 5,
+        "pct": 0.6,
+        "p": 6
+      },
+      {
+        "team": "Wisconsin Outlawz - Damon",
+        "w": 4,
+        "l": 4,
+        "t": 0,
+        "g": 8,
+        "pct": 0.5,
+        "p": 8
+      },
+      {
+        "team": "LM Rec BLM - Zimmermann",
+        "w": 4,
+        "l": 4,
+        "t": 0,
+        "g": 8,
+        "pct": 0.5,
+        "p": 8
+      },
+      {
+        "team": "Columbus Red - Farrington",
+        "w": 4,
+        "l": 4,
+        "t": 0,
+        "g": 8,
+        "pct": 0.5,
+        "p": 8
+      },
+      {
+        "team": "LM Rec BLM - Schultz",
+        "w": 4,
+        "l": 4,
+        "t": 0,
+        "g": 8,
+        "pct": 0.5,
+        "p": 8
+      },
+      {
+        "team": "Columbus White - Breitsprecker",
+        "w": 4,
+        "l": 4,
+        "t": 0,
+        "g": 8,
+        "pct": 0.5,
+        "p": 8
+      },
+      {
+        "team": "Cambridge - Becker",
+        "w": 4,
+        "l": 4,
+        "t": 0,
+        "g": 8,
+        "pct": 0.5,
+        "p": 8
+      },
+      {
+        "team": "BD Tornados - Panetti",
+        "w": 3,
+        "l": 3,
+        "t": 0,
+        "g": 6,
+        "pct": 0.5,
+        "p": 6
+      },
+      {
+        "team": "Stoughton – Schroerluke",
+        "w": 3,
+        "l": 5,
+        "t": 0,
+        "g": 8,
+        "pct": 0.375,
+        "p": 6
+      },
+      {
+        "team": "Marshall - Lannoy",
+        "w": 3,
+        "l": 5,
+        "t": 0,
+        "g": 8,
+        "pct": 0.375,
+        "p": 6
+      },
+      {
+        "team": "Johnson Creek Yellow Jackets - Fredrick",
+        "w": 2,
+        "l": 4,
+        "t": 0,
+        "g": 6,
+        "pct": 0.333,
+        "p": 4
+      },
+      {
+        "team": "Clyman - McFarland",
+        "w": 2,
+        "l": 4,
+        "t": 0,
+        "g": 6,
+        "pct": 0.333,
+        "p": 4
+      },
+      {
+        "team": "Columbus Firebirds - Volesky",
+        "w": 2,
+        "l": 6,
+        "t": 0,
+        "g": 8,
+        "pct": 0.25,
+        "p": 4
+      }
+    ]
+  },
+  {
+    "season": "Summer 2026",
+    "game_type": "season",
+    "division": "U10",
+    "standings": [
+      {
+        "team": "Cambridge Blue - Becker",
+        "w": 10,
+        "l": 4,
+        "t": 0,
+        "g": 14,
+        "pct": 0.714,
+        "p": 20
+      },
+      {
+        "team": "Milton Wildcats - Lanser",
+        "w": 9,
+        "l": 5,
+        "t": 0,
+        "g": 14,
+        "pct": 0.643,
+        "p": 18
+      },
+      {
+        "team": "Columbus Firebirds - Guerrero",
+        "w": 9,
+        "l": 5,
+        "t": 0,
+        "g": 14,
+        "pct": 0.643,
+        "p": 18
+      },
+      {
+        "team": "Marshall - Sellnow; Nate Kleinschmidt",
+        "w": 10,
+        "l": 6,
+        "t": 0,
+        "g": 16,
+        "pct": 0.625,
+        "p": 20
+      },
+      {
+        "team": "Waunakee 3 - O'Connell",
+        "w": 10,
+        "l": 6,
+        "t": 0,
+        "g": 16,
+        "pct": 0.625,
+        "p": 20
+      },
+      {
+        "team": "CG White - Nelson",
+        "w": 10,
+        "l": 6,
+        "t": 0,
+        "g": 16,
+        "pct": 0.625,
+        "p": 20
+      },
+      {
+        "team": "Columbus Red - Simerson",
+        "w": 10,
+        "l": 6,
+        "t": 0,
+        "g": 16,
+        "pct": 0.625,
+        "p": 20
+      },
+      {
+        "team": "Watertown Thunder - Kleine",
+        "w": 10,
+        "l": 6,
+        "t": 0,
+        "g": 16,
+        "pct": 0.625,
+        "p": 20
+      },
+      {
+        "team": "Marshall - Altenberger",
+        "w": 9,
+        "l": 7,
+        "t": 0,
+        "g": 16,
+        "pct": 0.563,
+        "p": 18
+      },
+      {
+        "team": "Johnson Creek Bluejays - Goulet",
+        "w": 9,
+        "l": 7,
+        "t": 0,
+        "g": 16,
+        "pct": 0.563,
+        "p": 18
+      },
+      {
+        "team": "Waunakee Purple - Hoffman",
+        "w": 9,
+        "l": 7,
+        "t": 0,
+        "g": 16,
+        "pct": 0.563,
+        "p": 18
+      },
+      {
+        "team": "LM Rec BLM - Boettcher",
+        "w": 8,
+        "l": 8,
+        "t": 0,
+        "g": 16,
+        "pct": 0.5,
+        "p": 16
+      },
+      {
+        "team": "Jefferson - Pratt",
+        "w": 8,
+        "l": 8,
+        "t": 0,
+        "g": 16,
+        "pct": 0.5,
+        "p": 16
+      },
+      {
+        "team": "Wauankee 4 - Koga",
+        "w": 8,
+        "l": 8,
+        "t": 0,
+        "g": 16,
+        "pct": 0.5,
+        "p": 16
+      },
+      {
+        "team": "Waunakee White - Schneider",
+        "w": 8,
+        "l": 8,
+        "t": 0,
+        "g": 16,
+        "pct": 0.5,
+        "p": 16
+      },
+      {
+        "team": "BDYBS Gold - Cederna",
+        "w": 8,
+        "l": 8,
+        "t": 0,
+        "g": 16,
+        "pct": 0.5,
+        "p": 16
+      },
+      {
+        "team": "Clyman - Quest",
+        "w": 7,
+        "l": 7,
+        "t": 0,
+        "g": 14,
+        "pct": 0.5,
+        "p": 14
+      },
+      {
+        "team": "Oregon Orange - Hegg",
+        "w": 7,
+        "l": 7,
+        "t": 0,
+        "g": 14,
+        "pct": 0.5,
+        "p": 14
+      },
+      {
+        "team": "Waunakee 2 - Hoffmann",
+        "w": 7,
+        "l": 9,
+        "t": 0,
+        "g": 16,
+        "pct": 0.438,
+        "p": 14
+      },
+      {
+        "team": "CG Navy - Waltz",
+        "w": 7,
+        "l": 9,
+        "t": 0,
+        "g": 16,
+        "pct": 0.438,
+        "p": 14
+      },
+      {
+        "team": "Jefferson - Messman",
+        "w": 7,
+        "l": 9,
+        "t": 0,
+        "g": 16,
+        "pct": 0.438,
+        "p": 14
+      },
+      {
+        "team": "Cambridge White - Johnson",
+        "w": 6,
+        "l": 8,
+        "t": 0,
+        "g": 14,
+        "pct": 0.429,
+        "p": 12
+      },
+      {
+        "team": "Deerfield - Judkins",
+        "w": 6,
+        "l": 8,
+        "t": 0,
+        "g": 14,
+        "pct": 0.429,
+        "p": 12
+      },
+      {
+        "team": "Fort JBS - Starks",
+        "w": 5,
+        "l": 7,
+        "t": 0,
+        "g": 12,
+        "pct": 0.417,
+        "p": 10
+      },
+      {
+        "team": "East Madison - Kratz",
+        "w": 6,
+        "l": 10,
+        "t": 0,
+        "g": 16,
+        "pct": 0.375,
+        "p": 12
+      },
+      {
+        "team": "Windsor Heat Ignite - Grundahl",
+        "w": 6,
+        "l": 10,
+        "t": 0,
+        "g": 16,
+        "pct": 0.375,
+        "p": 12
+      },
+      {
+        "team": "LM Rec BLM - White",
+        "w": 6,
+        "l": 10,
+        "t": 0,
+        "g": 16,
+        "pct": 0.375,
+        "p": 12
+      },
+      {
+        "team": "Waunakee 1 - Sheahan",
+        "w": 6,
+        "l": 10,
+        "t": 0,
+        "g": 16,
+        "pct": 0.375,
+        "p": 12
+      },
+      {
+        "team": "BD Tornados Gold - Schaalma",
+        "w": 6,
+        "l": 10,
+        "t": 0,
+        "g": 16,
+        "pct": 0.375,
+        "p": 12
+      },
+      {
+        "team": "Waterloo - Zimmermann",
+        "w": 6,
+        "l": 10,
+        "t": 0,
+        "g": 16,
+        "pct": 0.375,
+        "p": 12
+      },
+      {
+        "team": "Oregon Black - Sweeny",
+        "w": 5,
+        "l": 9,
+        "t": 0,
+        "g": 14,
+        "pct": 0.357,
+        "p": 10
+      }
+    ]
+  },
+  {
+    "season": "Summer 2026",
+    "game_type": "season",
+    "division": "U10 USA",
+    "standings": [
+      {
+        "team": "BD Tornados - Panetti",
+        "w": 8,
+        "l": 6,
+        "t": 0,
+        "g": 14,
+        "pct": 0.571,
+        "p": 16
+      },
+      {
+        "team": "Rock River Stix - Pryne",
+        "w": 6,
+        "l": 6,
+        "t": 0,
+        "g": 12,
+        "pct": 0.5,
+        "p": 12
+      },
+      {
+        "team": "Edgerton - Bilhorn",
+        "w": 6,
+        "l": 6,
+        "t": 0,
+        "g": 12,
+        "pct": 0.5,
+        "p": 12
+      },
+      {
+        "team": "Waunakee - Riek",
+        "w": 6,
+        "l": 6,
+        "t": 0,
+        "g": 12,
+        "pct": 0.5,
+        "p": 12
+      },
+      {
+        "team": "Wisconsin Outlawz - Travis",
+        "w": 6,
+        "l": 8,
+        "t": 0,
+        "g": 14,
+        "pct": 0.429,
+        "p": 12
+      }
+    ]
+  },
+  {
+    "season": "Summer 2026",
+    "game_type": "season",
+    "division": "U12",
+    "standings": [
+      {
+        "team": "Milton Wildcats - Popp",
+        "w": 11,
+        "l": 5,
+        "t": 0,
+        "g": 16,
+        "pct": 0.688,
+        "p": 22
+      },
+      {
+        "team": "Fort JBS - Telfer",
+        "w": 11,
+        "l": 5,
+        "t": 0,
+        "g": 16,
+        "pct": 0.688,
+        "p": 22
+      },
+      {
+        "team": "Marshall - Peterson",
+        "w": 10,
+        "l": 6,
+        "t": 0,
+        "g": 16,
+        "pct": 0.625,
+        "p": 20
+      },
+      {
+        "team": "Deerfield - Brobston",
+        "w": 10,
+        "l": 6,
+        "t": 0,
+        "g": 16,
+        "pct": 0.625,
+        "p": 20
+      },
+      {
+        "team": "SP Savage - Hansbro",
+        "w": 10,
+        "l": 6,
+        "t": 0,
+        "g": 16,
+        "pct": 0.625,
+        "p": 20
+      },
+      {
+        "team": "Lakeside - Dremler",
+        "w": 10,
+        "l": 6,
+        "t": 0,
+        "g": 16,
+        "pct": 0.625,
+        "p": 20
+      },
+      {
+        "team": "Edgerton Red - Knoeck",
+        "w": 10,
+        "l": 6,
+        "t": 0,
+        "g": 16,
+        "pct": 0.625,
+        "p": 20
+      },
+      {
+        "team": "Jefferson Maroon - Havill",
+        "w": 10,
+        "l": 6,
+        "t": 0,
+        "g": 16,
+        "pct": 0.625,
+        "p": 20
+      },
+      {
+        "team": "Clyman - Niemuth",
+        "w": 9,
+        "l": 7,
+        "t": 0,
+        "g": 16,
+        "pct": 0.563,
+        "p": 18
+      },
+      {
+        "team": "Columbus Firebirds - Rentmeester",
+        "w": 9,
+        "l": 7,
+        "t": 0,
+        "g": 16,
+        "pct": 0.563,
+        "p": 18
+      },
+      {
+        "team": "Watertown Thunder Blue - Johnson",
+        "w": 9,
+        "l": 7,
+        "t": 0,
+        "g": 16,
+        "pct": 0.563,
+        "p": 18
+      },
+      {
+        "team": "East Madison - Muir",
+        "w": 9,
+        "l": 7,
+        "t": 0,
+        "g": 16,
+        "pct": 0.563,
+        "p": 18
+      },
+      {
+        "team": "Verona Wildcats - Beringer",
+        "w": 8,
+        "l": 8,
+        "t": 0,
+        "g": 16,
+        "pct": 0.5,
+        "p": 16
+      },
+      {
+        "team": "Janesville Cyclones - Klemencic",
+        "w": 8,
+        "l": 8,
+        "t": 0,
+        "g": 16,
+        "pct": 0.5,
+        "p": 16
+      },
+      {
+        "team": "Columbus Firebirds 11U - Wiemer",
+        "w": 8,
+        "l": 8,
+        "t": 0,
+        "g": 16,
+        "pct": 0.5,
+        "p": 16
+      },
+      {
+        "team": "Edgerton Black - Ames",
+        "w": 8,
+        "l": 8,
+        "t": 0,
+        "g": 16,
+        "pct": 0.5,
+        "p": 16
+      },
+      {
+        "team": "Verona Wildcats - Borelli",
+        "w": 8,
+        "l": 8,
+        "t": 0,
+        "g": 16,
+        "pct": 0.5,
+        "p": 16
+      },
+      {
+        "team": "Waunakee Purple - Endres",
+        "w": 8,
+        "l": 8,
+        "t": 0,
+        "g": 16,
+        "pct": 0.5,
+        "p": 16
+      },
+      {
+        "team": "LM Rec BLM - Boettcher",
+        "w": 8,
+        "l": 8,
+        "t": 0,
+        "g": 16,
+        "pct": 0.5,
+        "p": 16
+      },
+      {
+        "team": "Jefferson Gold - Smith",
+        "w": 8,
+        "l": 8,
+        "t": 0,
+        "g": 16,
+        "pct": 0.5,
+        "p": 16
+      },
+      {
+        "team": "Verona - Hand",
+        "w": 8,
+        "l": 8,
+        "t": 0,
+        "g": 16,
+        "pct": 0.5,
+        "p": 16
+      },
+      {
+        "team": "Farmington Flames",
+        "w": 8,
+        "l": 8,
+        "t": 0,
+        "g": 16,
+        "pct": 0.5,
+        "p": 16
+      },
+      {
+        "team": "Oregon Orange - Madden",
+        "w": 7,
+        "l": 9,
+        "t": 0,
+        "g": 16,
+        "pct": 0.438,
+        "p": 14
+      },
+      {
+        "team": "Siren Softball - Ashwill",
+        "w": 7,
+        "l": 9,
+        "t": 0,
+        "g": 16,
+        "pct": 0.438,
+        "p": 14
+      },
+      {
+        "team": "LM Rec BLM - Tellefson",
+        "w": 7,
+        "l": 9,
+        "t": 0,
+        "g": 16,
+        "pct": 0.438,
+        "p": 14
+      },
+      {
+        "team": "Waterloo - Skalitzky",
+        "w": 7,
+        "l": 9,
+        "t": 0,
+        "g": 16,
+        "pct": 0.438,
+        "p": 14
+      },
+      {
+        "team": "Cambridge - Rehr",
+        "w": 7,
+        "l": 9,
+        "t": 0,
+        "g": 16,
+        "pct": 0.438,
+        "p": 14
+      },
+      {
+        "team": "Johnson Creek Bluejays - Toebe",
+        "w": 6,
+        "l": 10,
+        "t": 0,
+        "g": 16,
+        "pct": 0.375,
+        "p": 12
+      },
+      {
+        "team": "BDYBS Gold - Devitt",
+        "w": 5,
+        "l": 11,
+        "t": 0,
+        "g": 16,
+        "pct": 0.313,
+        "p": 10
+      },
+      {
+        "team": "Fort JBS - Grady",
+        "w": 5,
+        "l": 11,
+        "t": 0,
+        "g": 16,
+        "pct": 0.313,
+        "p": 10
+      },
+      {
+        "team": "Milton Wildcats - Palan",
+        "w": 4,
+        "l": 12,
+        "t": 0,
+        "g": 16,
+        "pct": 0.25,
+        "p": 8
+      },
+      {
+        "team": "Cottage Grove - Mordini",
+        "w": 3,
+        "l": 13,
+        "t": 0,
+        "g": 16,
+        "pct": 0.188,
+        "p": 6
+      }
+    ]
+  },
+  {
+    "season": "Summer 2026",
+    "game_type": "season",
+    "division": "U14",
+    "standings": [
+      {
+        "team": "Windsor Heat Inferno - Prusakiewicz",
+        "w": 12,
+        "l": 4,
+        "t": 0,
+        "g": 16,
+        "pct": 0.75,
+        "p": 24
+      },
+      {
+        "team": "Farmington Flames - Gates",
+        "w": 11,
+        "l": 5,
+        "t": 0,
+        "g": 16,
+        "pct": 0.688,
+        "p": 22
+      },
+      {
+        "team": "Jefferson - Lipshetz",
+        "w": 10,
+        "l": 6,
+        "t": 0,
+        "g": 16,
+        "pct": 0.625,
+        "p": 20
+      },
+      {
+        "team": "Deerfield - Fankhauser",
+        "w": 10,
+        "l": 6,
+        "t": 0,
+        "g": 16,
+        "pct": 0.625,
+        "p": 20
+      },
+      {
+        "team": "Watertown Thunder - Hisel",
+        "w": 10,
+        "l": 6,
+        "t": 0,
+        "g": 16,
+        "pct": 0.625,
+        "p": 20
+      },
+      {
+        "team": "Edgerton - Ducher",
+        "w": 9,
+        "l": 7,
+        "t": 0,
+        "g": 16,
+        "pct": 0.563,
+        "p": 18
+      },
+      {
+        "team": "Oregon Black - Hubert",
+        "w": 9,
+        "l": 7,
+        "t": 0,
+        "g": 16,
+        "pct": 0.563,
+        "p": 18
+      },
+      {
+        "team": "BD Tornados - Meyers",
+        "w": 8,
+        "l": 8,
+        "t": 0,
+        "g": 16,
+        "pct": 0.5,
+        "p": 16
+      },
+      {
+        "team": "Marshall - Fisher",
+        "w": 8,
+        "l": 8,
+        "t": 0,
+        "g": 16,
+        "pct": 0.5,
+        "p": 16
+      },
+      {
+        "team": "Janesville Cougars - Forrest",
+        "w": 8,
+        "l": 8,
+        "t": 0,
+        "g": 16,
+        "pct": 0.5,
+        "p": 16
+      },
+      {
+        "team": "Deerfield - Halverson",
+        "w": 8,
+        "l": 8,
+        "t": 0,
+        "g": 16,
+        "pct": 0.5,
+        "p": 16
+      },
+      {
+        "team": "Janesville Cyclones - Forest",
+        "w": 8,
+        "l": 8,
+        "t": 0,
+        "g": 16,
+        "pct": 0.5,
+        "p": 16
+      },
+      {
+        "team": "BDYBS Juniors Gold - Pogorelec",
+        "w": 7,
+        "l": 9,
+        "t": 0,
+        "g": 16,
+        "pct": 0.438,
+        "p": 14
+      },
+      {
+        "team": "Siren Softball - Roe",
+        "w": 7,
+        "l": 9,
+        "t": 0,
+        "g": 16,
+        "pct": 0.438,
+        "p": 14
+      },
+      {
+        "team": "Columbus Firebirds - Berget",
+        "w": 6,
+        "l": 10,
+        "t": 0,
+        "g": 16,
+        "pct": 0.375,
+        "p": 12
+      },
+      {
+        "team": "East Madison - Mueller",
+        "w": 6,
+        "l": 10,
+        "t": 0,
+        "g": 16,
+        "pct": 0.375,
+        "p": 12
+      },
+      {
+        "team": "Verona Wildcats - Brooks",
+        "w": 5,
+        "l": 11,
+        "t": 0,
+        "g": 16,
+        "pct": 0.313,
+        "p": 10
+      },
+      {
+        "team": "Fort JBS - Unate",
+        "w": 2,
+        "l": 14,
+        "t": 0,
+        "g": 16,
+        "pct": 0.125,
+        "p": 4
+      }
+    ]
+  },
+  {
+    "season": "Summer 2026",
+    "game_type": "season",
+    "division": "uHigh",
+    "standings": [
+      {
+        "team": "Waterloo - Schaumann",
+        "w": 4,
+        "l": 2,
+        "t": 0,
+        "g": 6,
+        "pct": 0.667,
+        "p": 8
+      },
+      {
+        "team": "Jefferson - Smith",
+        "w": 4,
+        "l": 2,
+        "t": 0,
+        "g": 6,
+        "pct": 0.667,
+        "p": 8
+      },
+      {
+        "team": "Verona Wildcats - Graber",
+        "w": 3,
+        "l": 3,
+        "t": 0,
+        "g": 6,
+        "pct": 0.5,
+        "p": 6
+      },
+      {
+        "team": "Hartford Velocity - Lecher",
+        "w": 3,
+        "l": 3,
+        "t": 0,
+        "g": 6,
+        "pct": 0.5,
+        "p": 6
+      },
+      {
+        "team": "Fort JBS - Fehrman",
+        "w": 3,
+        "l": 3,
+        "t": 0,
+        "g": 6,
+        "pct": 0.5,
+        "p": 6
+      },
+      {
+        "team": "Watertown Thunder - Hisel",
+        "w": 3,
+        "l": 3,
+        "t": 0,
+        "g": 6,
+        "pct": 0.5,
+        "p": 6
+      },
+      {
+        "team": "Lake Country Thunder White - Merritt",
+        "w": 2,
+        "l": 4,
+        "t": 0,
+        "g": 6,
+        "pct": 0.333,
+        "p": 4
+      },
+      {
+        "team": "Columbus - Rake",
+        "w": 2,
+        "l": 4,
+        "t": 0,
+        "g": 6,
+        "pct": 0.333,
+        "p": 4
+      }
+    ]
+  }
+]

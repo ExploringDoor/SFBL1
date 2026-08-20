@@ -1,0 +1,184 @@
+{
+  "league": {
+    "slug": "windmill",
+    "name": "Windmill Fastpitch Softball",
+    "abbrev": "WFS",
+    "sport": "softball",
+    "innings": 7,
+    "ruleset": "fastpitch",
+    "linescore_innings": 7,
+    "stat_columns": [],
+    "pitching": {
+      "tracked": false
+    },
+    "rules_flags": {
+      "dropped_third_strike": true,
+      "balks": false,
+      "infield_fly": true
+    },
+    "flags": {
+      "stats_enabled": false,
+      "ticker_scroll": true,
+      "show_tournaments": true,
+      "registration_open": true
+    },
+    "theme": {
+      "primary": "#0e3d34",
+      "accent": "#c58a1a",
+      "secondary": "#e8a33d",
+      "logo_url": "/windmill/logo.png",
+      "banner_url": "/windmill/banner.png",
+      "og_image_url": "/windmill/og.png"
+    },
+    "billing": {
+      "status": "trial",
+      "paid_through": null,
+      "last_payment": null,
+      "notes": "Ken Walters committed at $40/team (Aug 2026); invoice pending"
+    },
+    "fields": [
+      "100 S Wuthering Hills Dr Janesville Wi 53546",
+      "100 S Wuthering Hills Dr Janesville, WI 53546",
+      "1001 W Burnett St Beaver Dam, WI 53916",
+      "300 Simonson Blvd, Deerfield, WI 53531",
+      "504 De Clark St Beaver Dam, WI 53916",
+      "504 De Clark St Beaver Dam. WI 53916",
+      "504 Declark St Beaver Dam, WI 53916",
+      "Brandt Quirk",
+      "Brandt-Quirk Park - 800 Carriage Hill Dr, Watertown, WI 53098",
+      "Brandt-Quirk Park, 800 Carriage Hill Dr, Watertown, WI 53098",
+      "Cambridge High School - 403 Blue Jay Way, Cambridge",
+      "Cambridge High School or Deefield Community Parks",
+      "Cambridge High School, 403 Blue Jay Way",
+      "Concord Field W1185 Concord Center Dr, Sullivan, WI 53178",
+      "Concord Field: W1240 Concord Center Dr., Sullivan, WI",
+      "Converse Park 408 Beat Built Pkwy Marshall, WI",
+      "Converse Park 408 Best Built Pkwy Marshall, WI",
+      "Converse Park 408 Best Built Pkwy. Marshall, WI",
+      "DeForest Athletic Complex - Kwik Trip 6751 River Rd, DeForest, WI 53532",
+      "DeForest Athletic Complex - Kwik Trip Field 6751 River Rd, DeForest, WI 53532",
+      "Deerfield Community Park North Field 310 S Industrial Park Rd, Deerfield, WI 53531",
+      "Deerfield Fireman's Park Softball Field 5, Park Dr, Deerfield, WI 53531",
+      "Deerfield High School Softball Field 300 Simonson Blvd, Deerfield, WI 53531",
+      "Doubledays 4568 Baxter Rd Cottage Grove, WI 53527",
+      "Doubledays 4586 Baxter Rd Cottage Grove, WI 53527",
+      "Doubledays 4586 Baxter Rd, Cottage Grove, WI 53527",
+      "East Madison Little League 1010 North St, Madison, WI 53704",
+      "East Madison Little League; 1010 North St, Madison, WI 53704",
+      "Farmington Fields",
+      "Farmington W3027 CTY B, Watertown",
+      "Field of Dreams 710 Lone Pine Way, Verona, WI 53593",
+      "Fort Atkinson High School 925 Lexington Blvd",
+      "Ihde Field 810 Morgan St. - Clyman, WI 53016",
+      "Ihde Field 810 Morgan St. Clyman, WI 53016",
+      "Independence Park 808 S Wilson Ave, Hartford, WI 53027",
+      "Jaycee Park 275 N Perry Parkway Oregon, WI 53575",
+      "Jaycee Park 275 N. Perry Parkway Oregon, WI 53575",
+      "Jefferson River Front Park",
+      "Johnson Creek High School 455 Aztalan St. Johnson Creek, WI 53039",
+      "Johnson Creek High School, 455 Aztalan St, Johnson Creek, WI",
+      "Johnson Creek High School, 455 Aztalan St. Johnson Creek, WI",
+      "Lake Country Lutheran High School 401 campus dr hartland wi 53029",
+      "LakeView Park 1001 North St. Beaver Dam, WI 53916",
+      "Lakeside Lutheran 231 Woodland Beach Rd Lake Mills, WI 53551",
+      "Lakeview Park 817 North Street Beaver Dam, WI 53916",
+      "Lakeview Park North St. Beaver Dam",
+      "Meister Park 337 Middleton St, Columbus, WI 53925",
+      "Northlawn Park 900 N Parkview St. Cottage Grove, WI 53527",
+      "Oregon Jaycee Park 275 N Perry Pkwy Oregon, WI 53575",
+      "Oregon Jaycee Park, Field #2 275 N Perry Pkwy, Oregon, WI 53575",
+      "Racetrack Park Racetrack Road Stoughton, WI 53589",
+      "Racetrack Park, 900 Stoughton Rd, Edgerton, WI 53534",
+      "Riverfront Park 588-729 Wisconsin Drive, Jefferson",
+      "Riverfront Park 589-729 S Wisconsin Dr Jefferson 53549",
+      "Riverfront Park S. Wisconsin Dr",
+      "Riverfront Park, Diamond 2",
+      "Riverfront Park. 729 S. Wisconsin Drive",
+      "Rotary Park 191 Sandy Beach Rd, Lake Mills, WI 53551",
+      "Rotary Park 191 Sandy Beach Rd. Lake Mills, WI 53551",
+      "South Goodrich Park 700 E High Street Milton, WI 53563",
+      "Stoughton JV Park",
+      "Stueber Field 810 Morgan St - Clyman, WI 53016",
+      "Stueber Field 810 Morgan St. - Clyman, WI 53016",
+      "Waterloo Fireman's Park 500 Park Avenue Waterloo, WI 53594",
+      "Waubesa Intermediate School Softball Complex 5605 Red Oak Trail McFarland, WI 53558",
+      "Waunakee HIgh School softball fields Simon Crestway Waunakee WI",
+      "Waunakee High School 1001 South Street Waunakee, WI 53597",
+      "Waunakee High School Softball Fields 1001 South Street Waunakee, WI 53597"
+    ],
+    "captain": {
+      "passwordless": true,
+      "require_password": true
+    },
+    "admin": {
+      "passwordless": true
+    },
+    "minors": {
+      "age_of_majority": 18,
+      "cutoff": "12-31",
+      "public_age": false,
+      "requires_consent": true
+    },
+    "standings": {
+      "scoring": "pct",
+      "tiebreaker": "rd",
+      "exclude_divisions": [
+        "U8 Mach"
+      ]
+    },
+    "season_year": 2027,
+    "season_label": "Summer 2027",
+    "about": "Youth girls fastpitch softball serving Lake Mills and the surrounding southern Wisconsin communities since 1997. Age divisions from 8U through high school, grouped regionally to keep drive times short.",
+    "nav": {
+      "hide": [
+        "SFBL",
+        "Stats",
+        "Team Stats",
+        "Player of the Week",
+        "Player Registration",
+        "Store",
+        "Pay Online",
+        "Availability"
+      ],
+      "add": [
+        {
+          "label": "Fields",
+          "href": "/fields"
+        },
+        {
+          "label": "Divisions",
+          "href": "/content/divisions"
+        },
+        {
+          "label": "Parents",
+          "href": "/content/parents"
+        },
+        {
+          "label": "Rules",
+          "href": "/rules"
+        },
+        {
+          "label": "Alerts",
+          "href": "/alerts"
+        }
+      ]
+    },
+    "tournaments": {
+      "banner_url": "/windmill/tournament-banner.png",
+      "events": [
+        {
+          "name": "30th Annual End-of-Year Tournament",
+          "when": "July 30 to August 1, 2027",
+          "location": "Brandt Quirk Park, Watertown"
+        }
+      ]
+    }
+  },
+  "teams_csv": "./teams.csv",
+  "schedule_csv": "./schedule.csv",
+  "admins": [
+    "adam.miller.22@gmail.com",
+    "Windmill_Softball@hotmail.com",
+    "walters_barbara@hotmail.com"
+  ]
+}

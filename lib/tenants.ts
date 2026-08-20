@@ -202,6 +202,13 @@ const HOST_ALIAS_BASELINE: Record<string, string> = {
   // DNS stays at GoDaddy precisely so none of that has to move.
   "islandfastpitch.com": "island",
   "www.islandfastpitch.com": "island",
+  // Windmill Fastpitch reuses its existing Vercel project (windmill-site),
+  // so the tenant is served from the project's own *.vercel.app URL rather
+  // than a leagueengine.com subdomain or a custom domain (yet). Hardcoded on
+  // the reliable baseline like the others so it resolves without an env var.
+  // When Ken's .com lands, add it (apex + www) right here, inert until DNS
+  // points at Vercel, then attach it to the windmill-site project.
+  "windmill-site.vercel.app": "windmill",
 };
 const HOST_ALIASES: Record<string, string> = (() => {
   const out: Record<string, string> = { ...HOST_ALIAS_BASELINE };

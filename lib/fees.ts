@@ -36,6 +36,10 @@ const USSSA_ADDON = 50;
 const ISLAND_FEE_DEFAULT = 795;
 const ISLAND_FEE_8U = 500;
 
+// Windmill Fastpitch (youth): one flat $325 team fee, every division and level.
+// Covers game balls, scorebooks, awards, and the End-of-Year Tournament.
+const WINDMILL_FEE = 325;
+
 // College Clinic, 2026-10-12. Per PLAYER, not per team, which is why it
 // cannot be derived from the age group like everything else above.
 export const ISLAND_CLINIC_FEE = 175;
@@ -94,6 +98,9 @@ export function feeFor(
       : ISLAND_FEE_DEFAULT;
   }
 
+  // Windmill: flat, regardless of any form answers.
+  if (leagueId === "windmill") return WINDMILL_FEE;
+
   const option = String(data.insurance_option ?? "");
   const usssa = String(data.usssa_addon ?? "");
   // option-2 is "we provide our own insurance"; anything else falls back to
@@ -110,6 +117,8 @@ export function chargeCents(leagueId: string, feeDollars: number): number {
   if (leagueId === "island") {
     return Math.round(nyCompliantTotal(feeDollars) * 100);
   }
+  // Windmill absorbs the card fee — teams pay a flat $325 by any method.
+  if (leagueId === "windmill") return Math.round(feeDollars * 100);
   return Math.round(feeDollars * (1 + CARD_SURCHARGE) * 100);
 }
 

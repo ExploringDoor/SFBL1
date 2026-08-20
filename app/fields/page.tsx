@@ -20,6 +20,7 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { FieldsDirectory, type Field } from "@/components/FieldsDirectory";
 import { FieldsByClub } from "@/components/FieldsByClub";
 import { FieldsMap } from "@/components/FieldsMap";
+import FieldsWindmill, { type WindmillField } from "@/components/FieldsWindmill";
 
 export const dynamic = "force-dynamic";
 
@@ -99,6 +100,15 @@ export default async function FieldsPage() {
   }
 
   const fields = await loadFields(tenantId);
+
+  // Windmill gets its own town-grouped compact directory (union-find dedup,
+  // home-plate count badges, search, town chips, ?f= deep-link) ported from its
+  // static site. It renders its own full-width hero, so return before the
+  // standard page header. Data carries extra { town, teams, variants } keys that
+  // loadFields passes through untouched (other tenants' rows lack them).
+  if (tenantId === "windmill") {
+    return <FieldsWindmill fields={fields as unknown as WindmillField[]} />;
+  }
 
   const clubGrouped =
     fields.filter((f) => (f.location ?? "").trim()).length >= 20;

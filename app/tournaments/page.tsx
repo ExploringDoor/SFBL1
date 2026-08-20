@@ -86,15 +86,32 @@ function EventsView({
   intro,
   eyebrow,
   hideTitle,
+  bannerUrl,
 }: {
   events: TournamentEvent[];
   fallbackUrl?: string;
   intro?: string;
   eyebrow?: string;
   hideTitle?: boolean;
+  bannerUrl?: string;
 }) {
   return (
     <main className="container py-10">
+      {bannerUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={bannerUrl}
+          alt="Tournament banner"
+          style={{
+            display: "block",
+            width: "100%",
+            height: "auto",
+            borderRadius: 14,
+            marginBottom: 24,
+            boxShadow: "0 2px 12px rgba(0,0,0,0.1)",
+          }}
+        />
+      )}
       <header className="mb-8">
         {!hideTitle && (
           <>
@@ -310,6 +327,7 @@ export default async function TournamentsPage() {
         intro={config?.tournaments?.intro}
         eyebrow={config?.name}
         hideTitle={config?.flags?.hide_page_titles}
+        bannerUrl={config?.tournaments?.banner_url}
       />
     );
   }

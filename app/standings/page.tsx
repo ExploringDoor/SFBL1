@@ -352,6 +352,18 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
     );
   }
 
+  // Divisions a tenant never shows a standings table for (e.g. Windmill's 8U
+  // Machine, which keeps no score — blind-draw tournament seeding). Config-driven
+  // so it's not a hardcoded tenant check.
+  const excludeDivisions = new Set(
+    (config?.standings?.exclude_divisions ?? []).map(String),
+  );
+  if (excludeDivisions.size) {
+    standings = standings.filter(
+      (r) => !excludeDivisions.has(teams[r.team_id]?.division ?? ""),
+    );
+  }
+
   const divisionGroups = groupByDivision(standings, teams);
   // Age-grouped tenants (COYBL): build Age Group -> Division sections. Flat
   // tenants (SFBL/LBDC) have no team.ageGroup, so hasAge is false.

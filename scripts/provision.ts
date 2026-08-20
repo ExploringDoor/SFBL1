@@ -282,7 +282,14 @@ const isoSlug = /^[a-z0-9][a-z0-9_-]*$/;
 // ── Stage builders ──────────────────────────────────────────────────
 interface StageResult {
   errors: string[];
-  writes: { path: string; data: Record<string, unknown> }[];
+  writes: {
+    path: string;
+    data: Record<string, unknown>;
+    /** A plain upcoming game row (no explicit status/score in the CSV). run()
+     *  drops these before writing if the LIVE game has moved past "scheduled",
+     *  so a re-provision never resets a result entered through the admin. */
+    guardScore?: boolean;
+  }[];
 }
 
 function loadCsvIfPresent(
@@ -621,6 +628,11 @@ function stageSchedule(): StageResult {
         home_score: homeScoreNum ?? 0,
         updated_at: new Date().toISOString(),
       },
+      // Plain upcoming row — no status or score in the CSV. run() will hold this
+      // write back if the live game has already been scored/finalized/postponed
+      // in the admin, so a re-provision can't reset an entered result.
+      guardScore:
+        status === "scheduled" && awayScoreNum == null && homeScoreNum == null,
     });
 
     // Synthetic /box_scores doc for imported finals/approved games.
@@ -743,8 +755,39 @@ async function run() {
     return;
   }
 
+  // Score-preservation: a re-provision must NEVER reset a game that's already
+  // been scored/finalized (or postponed/cancelled) through the admin. Rows the
+  // CSV leaves as plain upcoming carry guardScore; here we read the LIVE games
+  // and drop any such write whose game has moved past "scheduled", so the entered
+  // result survives untouched. On an initial provision the games collection is
+  // empty, so nothing is dropped. Runs only below the dry-run early-return.
+  let allWrites = stages.flatMap((s) => s.result.writes);
+  if (allWrites.some((w) => w.guardScore)) {
+    const liveStatus = new Map<string, string>();
+    const gamesSnap = await db.collection(`leagues/${leagueId}/games`).get();
+    for (const d of gamesSnap.docs) {
+      liveStatus.set(
+        d.id,
+        String((d.data() as { status?: unknown }).status ?? "scheduled"),
+      );
+    }
+    const before = allWrites.length;
+    allWrites = allWrites.filter((w) => {
+      if (!w.guardScore) return true;
+      const id = w.path.split("/").pop() ?? "";
+      const s = liveStatus.get(id);
+      // Keep the write unless the live game is no longer "scheduled".
+      return !(s !== undefined && s !== "scheduled");
+    });
+    const dropped = before - allWrites.length;
+    if (dropped) {
+      console.log(
+        `[provision] score-preservation: left ${dropped} already-played/finalized game(s) untouched — a re-provision won't reset entered scores.`,
+      );
+    }
+  }
+
   // Write — batched in chunks of 400 to stay under the 500-op limit.
-  const allWrites = stages.flatMap((s) => s.result.writes);
   let written = 0;
   for (let i = 0; i < allWrites.length; i += 400) {
     const chunk = allWrites.slice(i, i + 400);

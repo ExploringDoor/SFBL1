@@ -68,6 +68,9 @@ export interface LeagueStandingsConfig {
   scoring?: "pct" | "points";
   points_per?: { win: number; tie: number; loss: number };
   tiebreaker?: "pct" | "rd";
+  /** Divisions never shown a standings table — e.g. a no-score/blind-draw
+   *  division like Windmill's 8U Machine. Matched against the team `division`. */
+  exclude_divisions?: string[];
 }
 
 export interface NavAddLink {
@@ -159,6 +162,9 @@ export interface LeagueConfig {
      *  charity events (proceeds to Nationwide Children's), not "tournaments
      *  our teams compete in", so the framing has to come from config. */
     intro?: string;
+    /** Wide promotional banner shown at the top of /tournaments (e.g. Windmill's
+     *  "30th Annual End-of-Year Tournament" graphic). Path under public/{slug}/. */
+    banner_url?: string;
     events?: {
       name: string;
       when?: string;

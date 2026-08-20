@@ -632,6 +632,9 @@ function CaptainTabNav() {
             t.key === "notifications")
         ),
     )
+    // Windmill is youth fastpitch: hide Free Agents (an adult open-player pickup
+    // market the coaches don't use). (Adam, 2026-08.)
+    .filter((t) => !(tenantId === "windmill" && t.key === "freeagents"))
     .filter((t) => !(t.key === "pitchcounts" && tenantId !== "coybl"))
     // COYBL only: its rosters carry a parent/guardian email, which is what
     // this sends to. Other tenants have no family addresses to reach.
