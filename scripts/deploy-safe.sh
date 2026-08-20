@@ -88,20 +88,40 @@ echo
 echo "Checking every import resolves to a COMMITTED file…"
 python3 - <<'PY'
 import subprocess, re, os, sys
-tracked = set(subprocess.run(["git","ls-files"],capture_output=True,text=True).stdout.split())
+# Read the COMMITTED tree, not the working directory.
+#
+# This used to list tracked files and then open() them off disk, which asks a
+# different question from the one that matters: it reports what the working
+# tree imports, while the deploy ships HEAD. With two sessions in this repo
+# that is a false alarm waiting to happen, and it happened — one session had
+# an uncommitted edit to app/fields/page.tsx importing an uncommitted
+# component, and the check blocked an UNRELATED deploy of already-committed
+# work in another session.
+#
+# git ls-tree + git show read HEAD exactly as the clone below will see it.
+tracked = set(subprocess.run(
+    ["git","ls-tree","-r","HEAD","--name-only"],
+    capture_output=True,text=True).stdout.split())
+
+def read_committed(path):
+    r = subprocess.run(["git","show",f"HEAD:{path}"],capture_output=True,text=True)
+    return r.stdout if r.returncode == 0 else None
 EXT = (".ts",".tsx",".js",".jsx")
 def resolve(spec, frm):
     if spec.startswith("@/"): base = spec[2:]
     elif spec.startswith("."): base = os.path.normpath(os.path.join(os.path.dirname(frm), spec))
     else: return None
     for c in [base+e for e in EXT] + [base+"/index"+e for e in EXT] + [base]:
-        if os.path.isfile(c): return c
+        # `in tracked`, not os.path.isfile: an import that resolves only
+        # because the file happens to be on this machine is precisely the
+        # failure this check exists to catch.
+        if c in tracked: return c
     return None
 missing = {}
 for f in tracked:
     if not f.endswith((".ts",".tsx")): continue
-    try: src = open(f, encoding="utf-8").read()
-    except Exception: continue
+    src = read_committed(f)
+    if src is None: continue
     for m in re.finditer(r'from\s+["\']([^"\']+)["\']|import\(["\']([^"\']+)["\']\)', src):
         r = resolve(m.group(1) or m.group(2), f)
         if r and r not in tracked:
