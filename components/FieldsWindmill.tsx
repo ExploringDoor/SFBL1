@@ -172,13 +172,13 @@ export default function FieldsWindmill({ fields }: { fields: WindmillField[] }) 
                   <i>{r.teams.length === 1 ? "team" : "teams"}</i>
                 </span>
               </div>
-              <a className="wf-dir" href={mapsUrl(r.name)} target="_blank" rel="noopener noreferrer">
-                <PinIcon /> Get directions
-              </a>
               <div className="wf-teams">
                 <span className="wf-lab">Plays here</span>
                 {r.teams.join(", ")}
               </div>
+              <a className="wf-dir" href={mapsUrl(r.name)} target="_blank" rel="noopener noreferrer">
+                <PinIcon /> Get directions
+              </a>
             </article>
           ))}
         </div>
