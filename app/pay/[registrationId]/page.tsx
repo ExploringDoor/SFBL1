@@ -36,7 +36,6 @@
 
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { notFound } from "next/navigation";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { PaymentOptions } from "@/components/forms/PaymentOptions";
 import { CLINIC, clinicIsOver } from "@/lib/clinic";
@@ -63,6 +62,28 @@ const ID_RE = /^[A-Za-z0-9_-]{16,128}$/;
 const RESERVED_ID_RE = /^__.*__$/;
 const KINDS = ["team_registration", "clinic_registration"] as const;
 
+/** The ONE answer for every link we cannot honour: unknown id, malformed id,
+ *  reserved id, another league's id, or a read that failed. Identical wording
+ *  and identical shape in all five cases, so the page cannot be used to
+ *  confirm whether a registration exists.
+ *
+ *  Rendered rather than notFound(), because notFound() here streams the root
+ *  layout first and lands the visitor on an EMPTY page: verified on production
+ *  2026-08-20, /pay/abc returned 200 with nothing at all inside <main>. A coach
+ *  holding a mistyped link deserves a sentence telling him what to do, not a
+ *  blank screen. Same reason TeamsHiddenNotice exists instead of a redirect.
+ *
+ *  The path is excluded from robots.txt, so answering 200 costs no indexing. */
+function UnknownLink({ office }: { office: string }) {
+  return (
+    <Notice title="This payment link is not valid">
+      It may have been mistyped, or it may belong to a different league. Check
+      the link in the message you were sent, or contact the league office at{" "}
+      <a href={`mailto:${office}`}>{office}</a> and they will send you a new one.
+    </Notice>
+  );
+}
+
 function Notice({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <main className="container py-10">
@@ -79,18 +100,18 @@ export default async function PayPage({
 }) {
   const tenantId = headers().get("x-tenant-id");
   const id = params.registrationId;
-  if (!tenantId || !ID_RE.test(id) || RESERVED_ID_RE.test(id)) notFound();
+  const office = "mike.islandusssa@gmail.com";
+  if (!tenantId || !ID_RE.test(id) || RESERVED_ID_RE.test(id))
+    return <UnknownLink office={office} />;
 
   const db = getAdminDb();
   let kind: (typeof KINDS)[number] | null = null;
   let data: Record<string, unknown> | null = null;
-  // Wrapped, and notFound() is deliberately OUTSIDE the try. Firestore can
-  // reject an id shape we did not anticipate at the SERVER, which throws
-  // rather than returning exists:false, and a public page that answers 500 to
-  // a probe both writes an error row per hit and tells the prober that this id
-  // is different from the others. Everything unknown ends at the same 404.
-  // notFound() throws a Next control-flow signal, so catching it here would
-  // swallow the 404 itself.
+  // Wrapped because Firestore can reject an id shape we did not anticipate at
+  // the SERVER, which throws rather than returning exists:false. A public page
+  // that answers 500 to a probe writes an error row per hit and tells the
+  // prober that this id is different from the others. A failed read leaves
+  // kind and data null, so it ends at the same UnknownLink as everything else.
   try {
     for (const k of KINDS) {
       const snap = await db
@@ -106,9 +127,7 @@ export default async function PayPage({
     kind = null;
     data = null;
   }
-  // The SAME 404 for "no such id" and "that id belongs to another league".
-  // Telling the two apart would turn this page into an oracle.
-  if (!kind || !data) notFound();
+  if (!kind || !data) return <UnknownLink office={office} />;
 
   const isClinic = kind === "clinic_registration";
 
