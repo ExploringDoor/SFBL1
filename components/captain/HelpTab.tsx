@@ -1,6 +1,7 @@
 "use client";
 
 import { useTenant } from "@/lib/tenant-context";
+import { IslandHelp } from "./IslandHelp";
 
 // Help tab — verbatim port of DVSL captain.html:1009-1242 (sec-help)
 // with text adjusted for LE-specific UX:
@@ -316,6 +317,11 @@ export function HelpTab({ contactEmail }: Props) {
   // COYBL's portal is a different shape from SFBL's, so it gets its own guide
   // rather than a pile of conditionals inside one.
   if (tenantId === "coybl") return <CoyblHelp support={support} />;
+  // Island gets its own guide for the same reason COYBL does: its portal is a
+  // different shape. Stats off, no calendar feed, no pitch counts, and three
+  // of the tabs the shared guide describes are switched off here. Coaches
+  // were reading instructions for a portal they do not have.
+  if (tenantId === "island") return <IslandHelp supportEmail={support?.email} />;
   return (
     <div className="cap-tab cap-help">
       <div className="cap-section-head">

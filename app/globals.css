@@ -7555,3 +7555,34 @@ select:focus-visible {
 /* Amber, not red: these are "this will surprise you", not "you broke it". */
 .ah-warn { background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; }
 .ah-ok   { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
+
+/* ── Coach guide (Island) ────────────────────────────────────────────────
+   Sits inside .cap-help, so it inherits the accordion. .ih only adds the
+   diagrams and the three callout tones. Dark, because the coach portal is. */
+.ih .help-body h4 {
+  font-size: 13px;
+  font-weight: 800;
+  margin: 14px 0 4px;
+  color: #e2e8f0;
+}
+.ih-fig {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 4px 0 14px;
+  border-radius: 8px;
+}
+.ih-note,
+.ih-warn,
+.ih-ok {
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+.ih-note { background: #16233a; border: 1px solid #2a3d5f; color: #c7d2e0; }
+/* Amber for "this will surprise you", green for "you cannot get this wrong". */
+.ih-warn { background: #2a1f0b; border: 1px solid #a16207; color: #fde68a; }
+.ih-ok   { background: #0f2a19; border: 1px solid #15803d; color: #bbf7d0; }
+.ih a { color: #7fb2ff; }
