@@ -8,7 +8,9 @@
 // clears filters, scrolls to it, and pulses a highlight. Data comes from the seeded
 // leagues/windmill/site_config/fields ({ name, town, teams[], variants[] }).
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { shortFieldName } from "@/lib/field-label";
 import "./FieldsWindmill.css";
 
 export interface WindmillField {
@@ -51,7 +53,14 @@ function SearchIcon() {
   );
 }
 
-export default function FieldsWindmill({ fields }: { fields: WindmillField[] }) {
+export default function FieldsWindmill({
+  fields,
+  teamIndex,
+}: {
+  fields: WindmillField[];
+  /** id + name for every team, so the "Plays here" names link to team pages. */
+  teamIndex?: Array<{ id: string; name: string }>;
+}) {
   const rows: Row[] = useMemo(
     () =>
       fields
@@ -74,11 +83,40 @@ export default function FieldsWindmill({ fields }: { fields: WindmillField[] }) 
     () => Array.from(new Set(rows.map((r) => r.town).filter(Boolean))).sort(),
     [rows],
   );
+  // norm(team name) -> team id, so the "Plays here" names can link to team pages.
+  const teamId = useMemo(() => {
+    const m = new Map<string, string>();
+    (teamIndex ?? []).forEach((t) => m.set(norm(t.name), t.id));
+    return m;
+  }, [teamIndex]);
+  // The complete field list for the jump-to index at the top, by venue name.
+  const indexRows = useMemo(
+    () =>
+      rows
+        .slice()
+        .sort((a, b) =>
+          shortFieldName(a.name).localeCompare(shortFieldName(b.name)),
+        ),
+    [rows],
+  );
 
   const [q, setQ] = useState("");
   const [town, setTown] = useState("all");
   const [hit, setHit] = useState<string | null>(null);
   const didDeepLink = useRef(false);
+
+  // Jump-to from the top index: clear filters so the card is visible, then
+  // scroll to it and pulse the highlight (same effect as the ?f= deep-link).
+  const jumpTo = (id: string) => {
+    setTown("all");
+    setQ("");
+    setHit(id);
+    window.setTimeout(() => {
+      document
+        .getElementById(id)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 60);
+  };
 
   const visible = rows.filter((r) => {
     const okTown = town === "all" || r.town.toLowerCase() === town;
@@ -159,6 +197,21 @@ export default function FieldsWindmill({ fields }: { fields: WindmillField[] }) 
       </div>
 
       <div className="wf-directory">
+        <nav className="wf-index" aria-label="All fields">
+          <span className="wf-index-lab">All {rows.length} fields</span>
+          <div className="wf-index-list">
+            {indexRows.map((r) => (
+              <button
+                key={r.id}
+                type="button"
+                className="wf-index-item"
+                onClick={() => jumpTo(r.id)}
+              >
+                {shortFieldName(r.name)}
+              </button>
+            ))}
+          </div>
+        </nav>
         <div className="wf-grid">
           {visible.map((r) => (
             <article key={r.id} id={r.id} className={"wf-card" + (hit === r.id ? " hit" : "")}>
@@ -174,7 +227,21 @@ export default function FieldsWindmill({ fields }: { fields: WindmillField[] }) 
               </div>
               <div className="wf-teams">
                 <span className="wf-lab">Plays here</span>
-                {r.teams.join(", ")}
+                {r.teams.map((tm, i) => {
+                  const id = teamId.get(norm(tm));
+                  return (
+                    <span key={tm}>
+                      {i > 0 ? ", " : ""}
+                      {id ? (
+                        <Link href={`/teams/${id}`} className="wf-teamlink">
+                          {tm}
+                        </Link>
+                      ) : (
+                        tm
+                      )}
+                    </span>
+                  );
+                })}
               </div>
               <a className="wf-dir" href={mapsUrl(r.name)} target="_blank" rel="noopener noreferrer">
                 <PinIcon /> Get directions

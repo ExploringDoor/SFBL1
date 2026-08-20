@@ -107,7 +107,22 @@ export default async function FieldsPage() {
   // standard page header. Data carries extra { town, teams, variants } keys that
   // loadFields passes through untouched (other tenants' rows lack them).
   if (tenantId === "windmill") {
-    return <FieldsWindmill fields={fields as unknown as WindmillField[]} />;
+    // Team names on each field card link to their team page; pass a lightweight
+    // id+name index (name field only) for the component to match against.
+    const teamsSnap = await getAdminDb()
+      .collection(`leagues/${tenantId}/teams`)
+      .select("name")
+      .get();
+    const teamIndex = teamsSnap.docs.map((d) => ({
+      id: d.id,
+      name: String((d.data() as { name?: unknown }).name ?? d.id),
+    }));
+    return (
+      <FieldsWindmill
+        fields={fields as unknown as WindmillField[]}
+        teamIndex={teamIndex}
+      />
+    );
   }
 
   const clubGrouped =

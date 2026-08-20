@@ -46,6 +46,16 @@
 .wfields .wf-count b { color: var(--wf-ink); font-weight: 700; }
 /* one compact grid of all fields */
 .wfields .wf-directory { max-width: 1120px; margin: clamp(1rem, 2.5vw, 1.6rem) auto 3.4rem; padding: 0 var(--wf-gutter); }
+/* complete field list (jump-to index) at the top of the directory */
+.wfields .wf-index { background: var(--wf-card); border: 1px solid var(--wf-line); border-radius: 12px; padding: 0.85rem 1rem 0.95rem; margin-bottom: 1rem; box-shadow: var(--wf-shadow); }
+.wfields .wf-index-lab { display: block; font-family: "Inter", sans-serif; font-weight: 700; font-size: 0.64rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--wf-green-3); margin-bottom: 0.55rem; }
+.wfields .wf-index-list { columns: 4 165px; column-gap: 1.2rem; }
+.wfields .wf-index-item { display: block; width: 100%; text-align: left; background: none; border: 0; padding: 0.22rem 0; font-family: "Inter", sans-serif; font-size: 0.85rem; line-height: 1.25; color: var(--wf-green-2); cursor: pointer; break-inside: avoid; transition: color 0.12s; }
+.wfields .wf-index-item:hover { color: var(--wf-accent); text-decoration: underline; }
+.wfields .wf-index-item:focus-visible { outline: none; color: var(--wf-accent); text-decoration: underline; }
+/* clickable team names in "Plays here" */
+.wfields .wf-teamlink { color: var(--wf-green-3); text-decoration: none; font-weight: 600; }
+.wfields .wf-teamlink:hover { color: var(--wf-accent); text-decoration: underline; }
 .wfields .wf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(238px, 1fr)); gap: 0.7rem; }
 .wfields .wf-card { position: relative; display: flex; flex-direction: column; background: var(--wf-card); border: 1px solid var(--wf-line); border-radius: 12px; padding: 0.85rem 0.95rem 0.95rem; box-shadow: var(--wf-shadow); scroll-margin-top: calc(var(--header-height, 62px) + 76px); transition: transform 0.16s, box-shadow 0.16s, border-color 0.16s; }
 .wfields .wf-card:hover { transform: translateY(-2px); border-color: #d7e6df; box-shadow: var(--wf-shadow-lg); }
