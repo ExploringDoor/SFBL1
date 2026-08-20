@@ -40,6 +40,7 @@ import { ChatModerator } from "@/components/admin/ChatModerator";
 import { PhotosManager } from "@/components/admin/PhotosManager";
 import { ScoresManager } from "@/components/admin/ScoresManager";
 import { SponsorsManager } from "@/components/admin/SponsorsManager";
+import { TournamentLogosManager } from "@/components/admin/TournamentLogosManager";
 import { NewsManager } from "@/components/admin/NewsManager";
 import { PlayerOfWeekManager } from "@/components/admin/PlayerOfWeekManager";
 import { PaymentsAdmin } from "@/components/admin/PaymentsAdmin";
@@ -68,6 +69,7 @@ type TabKey =
   | "pages"
   | "photos"
   | "sponsors"
+  | "tournament_logos"
   | "branding"
   | "notifications"
   | "calendar"
@@ -99,6 +101,7 @@ const TABS: { key: TabKey; label: string; description: string }[] = [
   { key: "pages", label: "Pages", description: "Edit Rules, News, Register, Sponsors, and other content pages." },
   { key: "photos", label: "Photos", description: "Upload photos to the public gallery at /photos." },
   { key: "sponsors", label: "Sponsors", description: "Manage the sponsor logo strip in the site footer." },
+  { key: "tournament_logos", label: "Tournament logos", description: "Change the artwork on any tournament. Goes live straight away, no waiting on a developer." },
   { key: "branding", label: "Branding", description: "League logo, colors, and theming." },
   { key: "notifications", label: "Notifications", description: "Send push announcements to players." },
   { key: "calendar", label: "Calendar", description: "Subscription URLs (Google / Apple / Outlook) per team or league-wide." },
@@ -120,6 +123,7 @@ const MORE_KEYS: TabKey[] = [
   "news",
   "photos",
   "sponsors",
+  "tournament_logos",
   "branding",
   "audit",
   "potw",
@@ -513,6 +517,11 @@ export default function AdminPage() {
         )}
         {activeTab === "sponsors" && (
           <SponsorsManager leagueId={tenantId} user={user} />
+        )}
+        {/* Island only: the panel reads Island's checked-in tournament slate,
+            and no other tenant has one. */}
+        {activeTab === "tournament_logos" && tenantId === "island" && (
+          <TournamentLogosManager leagueId={tenantId} user={user} />
         )}
         {activeTab === "branding" && (
           <BrandingSection leagueId={tenantId} user={user} />

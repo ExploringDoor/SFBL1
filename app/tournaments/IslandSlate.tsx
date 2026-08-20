@@ -13,6 +13,7 @@
 // place for it to drift.
 
 import islandData from "./island-fall-2026.json";
+import { tournamentSlug } from "@/lib/tournament-slug";
 
 interface IslandEvent {
   name: string;
@@ -93,7 +94,12 @@ const ICON_ARROW = "M5 12h13M13 6l6 6-6 6";
 
 const HL_ICONS = [ICON_WHISTLE, ICON_TROPHY, ICON_BALL, ICON_STAR];
 
-export function IslandSlate() {
+export function IslandSlate({
+  logos,
+}: {
+  /** Admin-uploaded logos by slug, which beat the checked-in art. */
+  logos?: Record<string, string>;
+} = {}) {
   const data = islandData as {
     season: string;
     intro: string;
@@ -170,11 +176,15 @@ export function IslandSlate() {
                     date rail is a fixed 92px in the first place. */}
                 <span className="ift-logo">
                   <img
-                    src={e.logo || "/island/logo.png"}
+                    src={logos?.[tournamentSlug(e.name)] || e.logo || "/island/logo.png"}
                     alt=""
                     loading="lazy"
                     decoding="async"
-                    className={e.logo ? "ift-logo-img" : "ift-logo-img ift-logo-fallback"}
+                    className={
+                      logos?.[tournamentSlug(e.name)] || e.logo
+                        ? "ift-logo-img"
+                        : "ift-logo-img ift-logo-fallback"
+                    }
                   />
                 </span>
 

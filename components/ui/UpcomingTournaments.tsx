@@ -20,6 +20,7 @@
 
 import Link from "next/link";
 import islandData from "@/app/tournaments/island-fall-2026.json";
+import { tournamentSlug } from "@/lib/tournament-slug";
 
 interface SlateEvent {
   name: string;
@@ -60,7 +61,15 @@ function usssaUrl(eventId: string): string {
   return `https://www.usssa.com/fastpitch/TournamentMain/#/?eventID=${eventId}&gdSport=16`;
 }
 
-export function UpcomingTournaments({ limit = 3 }: { limit?: number }) {
+export function UpcomingTournaments({
+  limit = 3,
+  logos,
+}: {
+  limit?: number;
+  /** Admin-uploaded logos by slug. These BEAT the checked-in art, so Mike can
+   *  change a logo without waiting for a deploy. See lib/tournament-logos. */
+  logos?: Record<string, string>;
+}) {
   const all = (islandData as { events: SlateEvent[] }).events ?? [];
 
   // Midnight UTC today, compared against each event's last day. Comparing ISO
@@ -100,12 +109,12 @@ export function UpcomingTournaments({ limit = 3 }: { limit?: number }) {
                 register link instead. */}
             <span className="le-upcoming-art">
               <img
-                src={e.logo || "/island/logo.png"}
+                src={logos?.[tournamentSlug(e.name)] || e.logo || "/island/logo.png"}
                 alt=""
                 loading="lazy"
                 decoding="async"
                 className={
-                  e.logo
+                  logos?.[tournamentSlug(e.name)] || e.logo
                     ? "le-upcoming-art-img"
                     : "le-upcoming-art-img le-upcoming-art-fallback"
                 }

@@ -16,6 +16,7 @@ import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { IslandSlate } from "./IslandSlate";
+import { loadTournamentLogos } from "@/lib/tournament-logos";
 import "./island-tournaments.css";
 
 export const dynamic = "force-dynamic";
@@ -295,7 +296,7 @@ export default async function TournamentsPage() {
   // (COYBL) buries the dates, which is the one thing a coach is scanning for.
   // See IslandSlate for why the data is a checked-in file.
   if (tenantId === "island") {
-    return <IslandSlate />;
+    return <IslandSlate logos={await loadTournamentLogos(tenantId)} />;
   }
 
   // Config-driven event list (e.g. COYBL's Five Tool charity slate).

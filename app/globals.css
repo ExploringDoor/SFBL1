@@ -7410,3 +7410,106 @@ select:focus-visible {
 .le-clinic-pop-skip:focus-visible {
   background: rgba(255, 255, 255, 0.1);
 }
+
+/* ── Admin: tournament logos ─────────────────────────────────────────────
+   Lets the office change tournament artwork without a deploy. See
+   components/admin/TournamentLogosManager.tsx. */
+.le-tlogos-h2 {
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0 0 6px;
+}
+.le-tlogos-intro {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-muted, #64748b);
+  margin: 0 0 16px;
+  max-width: 62ch;
+}
+.le-tlogos-err,
+.le-tlogos-ok {
+  font-size: 14px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin: 0 0 14px;
+}
+.le-tlogos-err { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
+.le-tlogos-ok  { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
+.le-tlogos-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.le-tlogos-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 10px;
+  background: var(--card, #fff);
+}
+.le-tlogos-thumb {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0f1626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.le-tlogos-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.le-tlogos-none { font-size: 10px; color: #94a3b8; text-align: center; }
+.le-tlogos-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 700;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.le-tlogos-badge {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1e40af;
+}
+.le-tlogos-actions {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+}
+.le-tlogos-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--brand-primary, #13284a);
+  background: var(--brand-primary, #13284a);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.le-tlogos-btn:disabled { opacity: 0.55; cursor: default; }
+.le-tlogos-btn-quiet {
+  background: transparent;
+  color: var(--text-muted, #64748b);
+  border-color: var(--border, #cbd5e1);
+}
+/* One column on a phone, so the buttons are not squeezed to nothing. */
+@media (max-width: 560px) {
+  .le-tlogos-row { flex-wrap: wrap; }
+  .le-tlogos-name { flex-basis: calc(100% - 70px); }
+  .le-tlogos-actions { flex-basis: 100%; }
+  .le-tlogos-btn { flex: 1 1 auto; }
+}

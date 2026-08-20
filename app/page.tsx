@@ -2,6 +2,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { SocialFeeds } from "@/components/ui/SocialFeeds";
 import { UpcomingTournaments } from "@/components/ui/UpcomingTournaments";
+import { loadTournamentLogos } from "@/lib/tournament-logos";
 import { fetchSocialPosts } from "@/lib/social/meta";
 import { unstable_cache } from "next/cache";
 
@@ -237,7 +238,7 @@ export default async function HomePage() {
           anyway and will scroll to find. */}
       {tenantId === "island" && config?.flags?.show_tournaments && (
         <section className="container">
-          <UpcomingTournaments />
+          <UpcomingTournaments logos={await loadTournamentLogos(tenantId)} />
         </section>
       )}
 
