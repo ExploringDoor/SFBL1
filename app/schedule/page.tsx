@@ -285,6 +285,7 @@ export default async function SchedulePage({
               isFirstUpcomingDay={date === upcomingDayGroups[0]?.[0]}
               compact={config?.flags?.stats_enabled === false}
               lmllStyle={lmllStyle}
+              linkFields={tenantId === "windmill"}
             />
           ))}
           {upcomingDayGroups.length > 0 && pastDayGroups.length > 0 && (
@@ -313,6 +314,7 @@ export default async function SchedulePage({
               isFirstUpcomingDay={false}
               compact={config?.flags?.stats_enabled === false}
               lmllStyle={lmllStyle}
+              linkFields={tenantId === "windmill"}
             />
           ))}
             </div>
@@ -462,6 +464,7 @@ function DaySection({
   isFirstUpcomingDay,
   compact,
   lmllStyle,
+  linkFields,
 }: {
   date: string;
   list: ScheduleGame[];
@@ -469,6 +472,7 @@ function DaySection({
   isFirstUpcomingDay: boolean;
   compact: boolean;
   lmllStyle: boolean;
+  linkFields: boolean;
 }) {
   return (
     <section>
@@ -517,6 +521,11 @@ function DaySection({
               gameId={g.id}
               date={dateLabel}
               field={g.field}
+              fieldHref={
+                linkFields && g.field
+                  ? `/fields?f=${encodeURIComponent(g.field)}`
+                  : null
+              }
               away={teamCardData(g.away_team_id, teams)}
               home={teamCardData(g.home_team_id, teams)}
               isNext={isFirstUpcomingDay && idx === 0 && g.status === "scheduled"}

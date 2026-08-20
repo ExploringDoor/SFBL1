@@ -10,6 +10,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { parseGameDate } from "@/lib/format-time";
+import { shortFieldName } from "@/lib/field-label";
 import "./PreviewCard.css";
 
 export interface PreviewCardTeam {
@@ -87,7 +88,7 @@ export function PreviewCard({
               className="le-preview-fieldlink"
               onClick={(e) => e.stopPropagation()}
             >
-              {field}
+              {shortFieldName(field)}
             </Link>
           </>
         )}
