@@ -226,6 +226,39 @@ function buildNameIndex(teams: TeamMeta[]): Record<string, TeamMeta> {
   return idx;
 }
 
+/** The subset of the name index the CLIENT can actually use.
+ *
+ *  buildNameIndex maps every CURRENT team name to its meta, which is right for
+ *  the server: deriveChampions and loadExplicitChampions both need to resolve
+ *  any historical name against the whole club list. It is wrong to then ship
+ *  that whole map to the browser. HistoryView looks nameIdx up in exactly one
+ *  place (StandingsTable, keyed by a historical standings row's team string),
+ *  so every key it can ever reach is a name already present in `all`. The rest
+ *  are pure payload.
+ *
+ *  On Island on 2026-08-20 that was all ten current Fall team names in the
+ *  flight payload of a page that rendered none of them, while flags.hide_teams
+ *  was on and /teams was showing the "list goes up with the schedule" notice.
+ *
+ *  Narrowed by reference rather than gated on the flag, matching
+ *  standingsTeamMeta in app/page.tsx: every tenant renders identical history
+ *  off a smaller payload, and a tenant that turns the flag on later is covered
+ *  without anyone remembering this file. */
+function narrowNameIndex(
+  nameIdx: Record<string, TeamMeta>,
+  all: StandingsBlock[],
+): Record<string, TeamMeta> {
+  const out: Record<string, TeamMeta> = {};
+  for (const block of all) {
+    for (const row of block.standings) {
+      const key = row.team.trim().toLowerCase();
+      const hit = nameIdx[key];
+      if (hit) out[key] = hit;
+    }
+  }
+  return out;
+}
+
 function deriveChampions(
   all: StandingsBlock[],
   nameIdx: Record<string, TeamMeta>,
@@ -434,7 +467,9 @@ export default async function HistoryPage() {
   const props: HistoryViewProps = {
     all,
     archivedGames: loadArchivedGames(tenantId),
-    nameIdx,
+    // The server used the full index above. The browser gets only the names it
+    // can look up. See narrowNameIndex.
+    nameIdx: narrowNameIndex(nameIdx, all),
     champions,
     championsLb,
     winsLb,

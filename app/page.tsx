@@ -27,6 +27,7 @@ import {
   type StandingsRow,
 } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
+import { teamsHidden } from "@/lib/team-options";
 import { combineDateTime } from "@/lib/format-time";
 import { GameCard, type GameCardTeam } from "@/components/ui/GameCard";
 import { PreviewCard, type PreviewCardTeam } from "@/components/ui/PreviewCard";
@@ -204,7 +205,19 @@ export default async function HomePage() {
           scorekeeper taps. Hidden when no games are live. */}
       <HomepageLiveGames
         leagueId={tenantId}
-        teamLabels={teamLabelsForLive(teams)}
+        // Gated on the flag, unlike the standings map above, and it has to be.
+        // That one is narrowed to the ids the table already holds rows for,
+        // which is strictly better because it needs no flag. Here the ids
+        // arrive from an onSnapshot in the browser, so the server cannot know
+        // which labels will be wanted and can only send all of them or none.
+        // All of them is what put ten real team names in view-source while
+        // /teams was showing the "list goes up with the schedule" notice.
+        //
+        // The component falls back to the raw team id, so a live game during
+        // the hidden window shows an opaque id rather than a name. Correct
+        // trade: the window is pre-season, and the office asked for the field
+        // to be private.
+        teamLabels={teamsHidden(config) ? {} : teamLabelsForLive(teams)}
       />
 
       {/* From-the-commissioner News & Events strip. Renders nothing
