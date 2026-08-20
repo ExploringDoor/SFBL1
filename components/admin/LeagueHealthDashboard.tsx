@@ -11,7 +11,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { User } from "firebase/auth";
-import { useTenant } from "@/lib/tenant-context";
 
 interface Health {
   teams: { active: number; total: number };
@@ -65,10 +64,11 @@ interface Props {
 }
 
 export function LeagueHealthDashboard({ leagueId, user, onReviewForms }: Props) {
-  // A league with stats switched off keeps no player rosters, so every
-  // roster-shaped warning below is noise it can never act on.
-  const { config } = useTenant();
-  const usesRosters = config?.flags?.stats_enabled !== false;
+  // NOT gated on stats_enabled. That was a wrong reading: stats off means no
+  // batting averages, NOT no rosters. Island has stats off and 36 players
+  // across three teams, so gating on it hid warnings the office could act on.
+  // The original problem was the WORDING, which pointed at a CSV importer
+  // that does not exist and at a file in the repository. That is fixed below.
   const [health, setHealth] = useState<Health | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -247,7 +247,6 @@ export function LeagueHealthDashboard({ leagueId, user, onReviewForms }: Props) 
             // CSV import tab in this admin. A warning that can never be
             // cleared teaches people to ignore the warning box.
             if (
-              usesRosters &&
               health.teams.active > 0 &&
               health.players.active === 0
             ) {
@@ -256,7 +255,6 @@ export function LeagueHealthDashboard({ leagueId, user, onReviewForms }: Props) 
               );
             }
             if (
-              usesRosters &&
               health.players.active > 0 &&
               health.players.with_email === 0
             ) {
@@ -265,7 +263,6 @@ export function LeagueHealthDashboard({ leagueId, user, onReviewForms }: Props) 
               );
             }
             if (
-              usesRosters &&
               health.players.linked_to_auth === 0 &&
               health.players.with_email > 0
             ) {

@@ -473,9 +473,10 @@ export function AdminHelp() {
             </li>
           </ul>
           <p>
-            The <strong>Players</strong> count on the Health tab will always
-            read 0. We are a scores-and-standings league and do not keep player
-            rosters. That is correct, not a fault.
+            <strong>Player stats are off, but rosters are not.</strong> Coaches
+            can add their players under Roster in the coach portal, and several
+            already have. What is switched off is batting averages and player
+            leaderboards, so the site shows scores and standings only.
           </p>
         </div>
       </details>
