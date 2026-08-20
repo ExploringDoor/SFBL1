@@ -131,8 +131,26 @@ service cloud.firestore {
         }
       }
 
+      // Roster. Read is SIGNED-IN ONLY, deliberately.
+      //
+      // Every public surface that shows a player (/players, /players/{id},
+      // /teams/{id}, /leaders and the print pages) is server-rendered through
+      // the Admin SDK, which never consults these rules, so nothing on the
+      // public website reads this collection from a browser. What public read
+      // actually bought was bulk enumeration: with the public web API key
+      // anyone could list every player in a league, and because doc ids are
+      // name slugs (players/abigail-amundson) the path itself carries a
+      // child's name. Audit 2026-08-20 found 36 Island minors indexed to
+      // their teams that way while the office believed flags.hide_teams was
+      // keeping the roster private.
+      //
+      // Signed-in is the right bar here rather than a role check. The browser
+      // readers are the captain portal, the admin panel, and /profile's
+      // availability panel, and a player who links through /api/player-link
+      // gets no league claim at all, so a role check would lock them out.
+      // PII is unaffected either way: it lives in _private, below.
       match /players/{playerId} {
-        allow read: if true;
+        allow read: if request.auth != null;
         allow write: if isAdmin(leagueId);
 
         match /_private/{doc} {

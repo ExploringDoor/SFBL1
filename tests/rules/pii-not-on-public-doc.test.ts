@@ -52,14 +52,26 @@ beforeEach(async () => {
 });
 
 describe("PII discipline — email/phone live in /_private/contact only", () => {
-  it("anonymous can read public player doc — but it has no PII", async () => {
+  it("anonymous CANNOT read a player doc at all", async () => {
+    // Changed 2026-08-20. This used to assert anonymous read succeeded.
+    // Player docs are minors' names, and public read let anyone with the
+    // web API key enumerate them; the public website never needed it
+    // because every player-facing page is rendered with the Admin SDK.
     const anon = env.unauthenticatedContext();
     const ref = doc(anon.firestore(), "leagues/sfbl/players/p_alice");
+    await assertFails(getDoc(ref));
+  });
+
+  it("a signed-in reader gets the player doc — and it has no PII", async () => {
+    const cap = env.authenticatedContext(uid("captain"), {
+      leagues: { sfbl: "captain:team_a" },
+    });
+    const ref = doc(cap.firestore(), "leagues/sfbl/players/p_alice");
     const snap = await assertSucceeds(getDoc(ref));
     const data = snap.data() ?? {};
-    // The public doc carries name, jersey, position, team — but
-    // never email or phone. Regression alarm: if these are present,
-    // a writer somewhere has re-introduced PII on the public doc.
+    // The doc carries name, jersey, position, team, never email or phone.
+    // Regression alarm: if these are present, a writer somewhere has
+    // re-introduced PII onto the doc the whole portal can read.
     expect(data.email).toBeUndefined();
     expect(data.phone).toBeUndefined();
     expect(data.name).toBe("Alice Example");

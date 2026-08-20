@@ -25,7 +25,7 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
-import { esc, sendEmail } from "@/lib/email/send";
+import { esc, notifyAddress, sendEmail } from "@/lib/email/send";
 import { paymentDetailsFor } from "@/lib/league-payment";
 import { surchargeFor } from "@/lib/square";
 
@@ -74,8 +74,16 @@ function reminderHtml(
       : pay?.cardFeeLabel
         ? `adds a ${pay.cardFeeLabel} processing fee`
         : "";
+  // NOT a link to /team-registration. That is the blank NEW TEAM form and it
+  // cannot settle an existing registration: a coach who follows it and fills it
+  // in gets a duplicate team on the public schedule and standings, a second
+  // balance row in Payments, and his sign-in claim repointed at the duplicate,
+  // so his real roster and scores vanish from his portal. He still has not
+  // paid. Until a per-team card link is minted here, the honest instruction is
+  // to ask, which is what the payment screen already tells coaches. The
+  // Reply-To on this message is the league office, so replying works.
   methods.push(
-    `<li><strong>Card</strong> at <a href="${esc(origin)}/team-registration">${esc(origin)}/team-registration</a>${cardFee ? ` (${cardFee})` : ""}</li>`,
+    `<li><strong>Card</strong>: reply to this email and we will send you a payment link${cardFee ? ` (${cardFee})` : ""}</li>`,
   );
   if (pay?.venmoUrl && pay?.venmoHandle) {
     methods.push(
@@ -292,6 +300,10 @@ export async function POST(req: Request) {
         to: r.email,
         subject: `${leagueName}: registration payment for ${r.teamName}`,
         html: reminderHtml(r, leagueName, origin, leagueId),
+        // This message asks the coach to reply, twice: to request a card link
+        // and to flag a payment we have already been sent. Without a Reply-To
+        // both go to the unattended sending address and nobody sees them.
+        ...(notifyAddress() ? { replyTo: notifyAddress()! } : {}),
       });
       if (res.ok) {
         sent++;
