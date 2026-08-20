@@ -853,7 +853,27 @@ export async function POST(req: Request) {
 
   if (
     AUTO_PROVISION_TEAMS.has(tenantId) &&
-    body.kind === "team_registration"
+    body.kind === "team_registration" &&
+    // NOT WHEN A BOT CHECK FIRED. The submission is still saved and the office
+    // is still emailed, which is the whole point of flagging rather than
+    // dropping: a real coach caught by a password manager or a browser
+    // autofill must never vanish. But "saved for review" and "given a team on
+    // the public site" are different promises, and this code was making both.
+    //
+    // 2026-08-20, the day flagging replaced dropping: a bot put four
+    // submissions into Island inside six hours, and the team_registration one
+    // provisioned team 51WLwx5NFNkXMDKaambw named "DRjxknBQmludnVaJiixdNjRo",
+    // a real team doc with a real sign-in code. It reached the office as
+    // "NEEDS REVIEW" while already being a team, so there was nothing left to
+    // review. The bot had also been reading real team names off the public
+    // waiver dropdown, which is why three of its submissions carry
+    // "Chiefs Fastpitch - Lorento".
+    //
+    // The office already has the button for the other half of this:
+    // /api/admin-provision-team, wired into the Registrations tab, turns a
+    // reviewed registration into a real team and mints the coach's code. A
+    // flagged signup now waits there, which is what its email always said.
+    spamFlags.length === 0
   ) {
     // Record whether the coach's login email actually went out. This used to
     // be an empty catch, which is how a Firebase "Domain not allowlisted"
@@ -935,7 +955,8 @@ export async function POST(req: Request) {
       // A flagged registration is still a registration. Say so in the subject
       // so it cannot be missed, and explain WHY at the top of the body — the
       // office needs to know the trap is unreliable, otherwise "flagged as a
-      // bot" reads as "safe to delete".
+      // bot" reads as "safe to delete". The wording also has to be honest that
+      // nothing was provisioned, because a flagged signup now waits for a human.
       const sentTo = await notifyOffice({
         subject: spamFlags.length
           ? `NEEDS REVIEW — ${built.subject}`
@@ -943,9 +964,14 @@ export async function POST(req: Request) {
         html: spamFlags.length
           ? `<p style="background:#fff4e5;border:1px solid #f0b37e;padding:10px 12px;border-radius:8px">` +
             `<strong>This registration tripped an automatic bot check (${esc(spamFlags.join(", "))}).</strong><br/>` +
-            `It has been saved in full and the team was set up as normal. These checks catch real people: ` +
-            `a password manager filling a hidden field, or a browser autofilling the form in one click, both ` +
-            `look like a bot. Treat this as a real registration unless something in it is obviously junk.` +
+            `It has been saved in full, but <strong>no team was created</strong> and the coach has not been ` +
+            `sent a sign-in code. Nothing happens until you decide.` +
+            `</p><p style="background:#fff4e5;border:1px solid #f0b37e;padding:10px 12px;border-radius:8px">` +
+            `These checks catch real people: a password manager filling a hidden field, or a browser ` +
+            `autofilling the form in one click, both look like a bot. If it is a real team, open ` +
+            `<strong>Registrations</strong> in the admin and click ` +
+            `<strong>Create team from this registration</strong>, which sets it up and emails the coach ` +
+            `their sign-in code. If it is junk, delete it.` +
             `</p>` + built.html
           : built.html,
         // Hitting reply reaches the coach who registered rather than the
