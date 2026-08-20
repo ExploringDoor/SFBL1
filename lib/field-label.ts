@@ -12,7 +12,9 @@ export function shortFieldName(full: string | null | undefined): string {
   if (colon > 0) s = s.slice(0, colon);
   // Venue name = text before the first street-number token.
   const m = s.match(/^(.+?)[,\s]+\d/);
-  let name = (m?.[1] ?? s).replace(/[,\s]+$/, "").trim();
+  // Trim trailing separators (space, comma, semicolon, colon, dash) so names
+  // like "Cambridge High School -" read clean.
+  let name = (m?.[1] ?? s).replace(/[\s,;:\-]+$/, "").trim();
   // Address-only (starts with a street number or directional like "N123"):
   // no venue name to pull, so use the leading segment before the first comma.
   if (!name || /^\d/.test(name) || /^[NSEW]\d/.test(name)) {
