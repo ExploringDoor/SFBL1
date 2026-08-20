@@ -34,6 +34,12 @@ export function ClinicPopup() {
   useEffect(() => {
     if (clinicIsOver()) return;
     if (pathname?.startsWith("/college-clinic")) return;
+    // Not on the logged-in work surfaces. The admin is where Mike and Kaitlin
+    // run the league and the captain portal is where a coach submits a score
+    // after a game; neither is a place to be sold a clinic. Adam found it
+    // firing on /admin (2026-08-19).
+    if (pathname?.startsWith("/admin")) return;
+    if (pathname?.startsWith("/captain")) return;
     try {
       if (sessionStorage.getItem(SEEN_KEY)) return;
     } catch {

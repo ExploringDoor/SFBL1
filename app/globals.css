@@ -7513,3 +7513,13 @@ select:focus-visible {
   .le-tlogos-actions { flex-basis: 100%; }
   .le-tlogos-btn { flex: 1 1 auto; }
 }
+
+/* Said beside "I'll pay later" on a clinic, where deferring genuinely costs
+   something: the cap is 40 and places are held in payment order. */
+.cop-later-note {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #b45309;
+}

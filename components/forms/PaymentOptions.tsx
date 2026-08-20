@@ -58,6 +58,9 @@ export function PaymentOptions({
   const [deferred, setDeferred] = useState(false);
   const [quote, setQuote] = useState<Quote | null>(null);
 
+  // A clinic place is capped and held in payment order, so several strings
+  // below have to say something different from the team-fee wording.
+  const isClinic = kind === "clinic_registration";
   const details = paymentDetailsFor(leagueId);
   const hasVenmo = Boolean(details?.venmoUrl && details?.venmoHandle);
   const hasCheck = Boolean(details?.checkPayableTo && details?.checkAddress);
@@ -120,24 +123,62 @@ export function PaymentOptions({
   if (deferred) {
     return (
       <section className="cop-wrap">
-        <h3 className="cop-head">No problem — your spot is saved</h3>
-        <p className="cop-sub">
-          Your team is registered. Nothing else is needed right now.
-          {quote
-            ? ` Your ${noun} is ${money(quote.fee_dollars)}, due in full before the season begins.`
-            : " Your team fee is due in full before the season begins."}
-        </p>
-        {hasVenmo && (
-          <p className="cop-sub">
-            To pay by Venmo, send to{" "}
-            <strong>{details!.venmoHandle}</strong> and put your team name in
-            the note so the office can match it to your registration.
-          </p>
+        {/* A CLINIC PLACE IS NOT SAVED UNTIL IT IS PAID, and this screen used
+            to say the opposite.
+            Every line of the team copy was wrong for a clinic: "your spot is
+            saved" when the cap is 40 and places go in payment order, "your
+            team is registered" for a single player, "before the season
+            begins" for a one-day event, and "put your team name in the note"
+            when there is no team.
+            Alyssa Schroeder submitted three times in twelve minutes on
+            2026-08-20 and never paid. This screen telling her nothing else
+            was needed is the most likely reason. */}
+        {isClinic ? (
+          <>
+            <h3 className="cop-head">Your place is not held yet</h3>
+            <p className="cop-sub">
+              We have the registration, but the clinic is capped and places are
+              held in the order they are paid for.
+              {quote
+                ? ` The fee is ${money(quote.fee_dollars)}.`
+                : ""}{" "}
+              Pay when you are ready and the place is locked in.
+            </p>
+            {hasVenmo && (
+              <p className="cop-sub">
+                To pay by Venmo, send to{" "}
+                <strong>{details!.venmoHandle}</strong> and put the{" "}
+                <strong>player&rsquo;s name</strong> in the note so the office
+                can match it to this registration.
+              </p>
+            )}
+            <p className="cop-foot">
+              Prefer to pay by card? Reply to your confirmation email and the
+              league office will send a payment link.
+            </p>
+          </>
+        ) : (
+          <>
+            <h3 className="cop-head">No problem — your spot is saved</h3>
+            <p className="cop-sub">
+              Your team is registered. Nothing else is needed right now.
+              {quote
+                ? ` Your ${noun} is ${money(quote.fee_dollars)}, due in full before the season begins.`
+                : " Your team fee is due in full before the season begins."}
+            </p>
+            {hasVenmo && (
+              <p className="cop-sub">
+                To pay by Venmo, send to{" "}
+                <strong>{details!.venmoHandle}</strong> and put your team name in
+                the note so the office can match it to your registration.
+              </p>
+            )}
+            <p className="cop-foot">
+              Prefer to pay by card? Just reply to your confirmation email and the
+              league office will send you a payment link.
+            </p>
+          </>
         )}
-        <p className="cop-foot">
-          Prefer to pay by card? Just reply to your confirmation email and the
-          league office will send you a payment link.
-        </p>
         <button
           type="button"
           className="cop-btn"
@@ -171,14 +212,23 @@ export function PaymentOptions({
       )}
 
       <p className="cop-sub">
-        Your spot is saved.{" "}
+        {/* For a team, registering IS the spot. For a clinic it is not: the
+            cap is 40 and places go in payment order, so promising a saved
+            spot here would be the same lie as the deferred screen told. */}
+        {isClinic
+          ? "We have the registration. Paying now locks the place in. "
+          : "Your spot is saved. "}
         {quote
           ? // "which is what the processor charges us" is only TRUE where the
             // surcharge is derived from real cost. Island's is; COYBL's flat
             // 3.25% over-collects slightly, so claiming it there would be a
             // false statement about someone else's money. Tenants that quote a
-            // fixed percentage get the plain wording.
-            `Paying by card adds ${money(quote.surcharge_cents / 100)}${
+            // fixed percentage get the plain wording. And a zero-surcharge
+            // tenant (the league absorbs the card fee) cannot say the processor
+            // charges $0 — every method is simply the flat price.
+            quote.surcharge_cents === 0
+            ? "There's no added fee for any payment method."
+            : `Paying by card adds ${money(quote.surcharge_cents / 100)}${
               details?.cardFeeLabel
                 ? ""
                 : ", which is what the card processor charges us"
@@ -241,10 +291,18 @@ export function PaymentOptions({
       {/* Deliberately last, quiet, and a link rather than a button: it is a
           legitimate choice, not the one being encouraged. */}
       <p className="cop-later">
-        Not ready to pay?{" "}
+        {isClinic ? "Not ready to pay? " : "Not ready to pay? "}
         <button type="button" onClick={() => setDeferred(true)}>
           I&rsquo;ll pay later
         </button>
+        {/* Said at the point of choosing, not afterwards. Someone deferring a
+            clinic place needs to know it is not being held for them. */}
+        {isClinic && (
+          <span className="cop-later-note">
+            {" "}
+            The place is not held until it is paid.
+          </span>
+        )}
       </p>
     </section>
   );
