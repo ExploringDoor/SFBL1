@@ -203,10 +203,29 @@ export function ScoresManager({ leagueId, user }: Props) {
 
   async function saveOne(g: GameRow) {
     const draft = drafts[g.id];
-    const aScore = draft?.away !== undefined ? Number(draft.away) : g.away_score;
-    const hScore = draft?.home !== undefined ? Number(draft.home) : g.home_score;
+    // An EMPTY box is a missing score, not a zero.
+    //
+    // This read `draft.away !== undefined`, and a box the user typed into and
+    // then cleared holds "". Number("") is 0 and Number.isFinite(0) is true,
+    // so clearing a score and pressing Enter silently saved 0 to 0 and marked
+    // the game final. saveAll already filtered empties; only this path did not,
+    // so the two buttons on the same screen disagreed about what blank meant.
+    const rawAway = draft?.away;
+    const rawHome = draft?.home;
+    const aScore =
+      rawAway !== undefined && rawAway.trim() !== ""
+        ? Number(rawAway)
+        : rawAway !== undefined
+          ? NaN
+          : g.away_score;
+    const hScore =
+      rawHome !== undefined && rawHome.trim() !== ""
+        ? Number(rawHome)
+        : rawHome !== undefined
+          ? NaN
+          : g.home_score;
     if (!Number.isFinite(aScore) || !Number.isFinite(hScore)) {
-      setError(`Both scores required for ${g.id}`);
+      setError("Enter both scores before saving.");
       return;
     }
     setSavingId(g.id);

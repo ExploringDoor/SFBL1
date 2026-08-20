@@ -11,6 +11,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { User } from "firebase/auth";
+import { useTenant } from "@/lib/tenant-context";
 
 interface Health {
   teams: { active: number; total: number };
@@ -64,6 +65,10 @@ interface Props {
 }
 
 export function LeagueHealthDashboard({ leagueId, user, onReviewForms }: Props) {
+  // A league with stats switched off keeps no player rosters, so every
+  // roster-shaped warning below is noise it can never act on.
+  const { config } = useTenant();
+  const usesRosters = config?.flags?.stats_enabled !== false;
   const [health, setHealth] = useState<Health | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -233,15 +238,25 @@ export function LeagueHealthDashboard({ leagueId, user, onReviewForms }: Props) 
                 "No active teams. Provision the league or check the Teams section below.",
               );
             }
+            // ROSTER ADVICE, only for leagues that keep rosters.
+            //
+            // Island is score-only (flags.stats_enabled === false): coaches
+            // report a final score and no player is ever entered. It sat on a
+            // permanent amber warning telling the office to "run roster CSV
+            // import", which is both irrelevant and impossible — there is no
+            // CSV import tab in this admin. A warning that can never be
+            // cleared teaches people to ignore the warning box.
             if (
+              usesRosters &&
               health.teams.active > 0 &&
               health.players.active === 0
             ) {
               flags.push(
-                "Teams exist but no players. Run roster CSV import or have captains add players.",
+                "Teams exist but no players. Have captains add players to their rosters.",
               );
             }
             if (
+              usesRosters &&
               health.players.active > 0 &&
               health.players.with_email === 0
             ) {
@@ -250,11 +265,14 @@ export function LeagueHealthDashboard({ leagueId, user, onReviewForms }: Props) 
               );
             }
             if (
+              usesRosters &&
               health.players.linked_to_auth === 0 &&
               health.players.with_email > 0
             ) {
+              // Was "see docs/onboarding-emails.md", a file in the repository.
+              // The person reading this runs a softball league.
               flags.push(
-                "No players have signed in yet. Send the captain welcome email (see docs/onboarding-emails.md).",
+                "No players have signed in yet. Send the coaches their sign-in codes from the Captains tab.",
               );
             }
             if (

@@ -191,7 +191,11 @@ export async function GET(req: Request) {
       at: when(x.created_at ?? x.submitted_at),
       title: `New board post: ${x.kind ?? "ad"}`,
       detail: String(x.message ?? x.note ?? "").slice(0, 90),
-      tab: "player-ads",
+      // "playerads", not "player-ads". The admin's tab keys have no hyphen
+      // here, so the old value set an unknown tab: the panel under the strip
+      // rendered nothing and the description line vanished. Clicking Open on a
+      // board post blanked the admin.
+      tab: "playerads",
     });
   }
 
