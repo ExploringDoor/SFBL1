@@ -24,6 +24,9 @@ export interface PreviewCardProps {
   gameId: string;
   date: string | null;
   field?: string | null;
+  /** When set (windmill homepage), the field label in the eyebrow becomes a
+   *  link to the field directory (/fields?f=...) instead of plain text. */
+  fieldHref?: string | null;
   away: PreviewCardTeam;
   home: PreviewCardTeam;
   /** Renders the navy left-border accent. */
@@ -41,13 +44,16 @@ export function PreviewCard({
   gameId,
   date,
   field,
+  fieldHref,
   away,
   home,
   isNext = false,
   status,
   ageGroup,
 }: PreviewCardProps) {
-  const timeLabel = formatTimeLabel(date, field);
+  // When the field is a link, keep it OUT of the joined time string so it can
+  // render as its own <Link>; otherwise it stays inline plain text as before.
+  const timeLabel = formatTimeLabel(date, fieldHref ? null : field);
   const router = useRouter();
   const badge = statusBadge(status);
   const muted =
@@ -71,6 +77,20 @@ export function PreviewCard({
     >
       <div className="le-preview-time">
         {timeLabel}
+        {fieldHref && field && (
+          <>
+            {" · "}
+            {/* stopPropagation so the field click opens the field directory
+                instead of the card's game link. */}
+            <Link
+              href={fieldHref}
+              className="le-preview-fieldlink"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {field}
+            </Link>
+          </>
+        )}
         {ageGroup && (
           <span
             style={{

@@ -1,6 +1,7 @@
 "use client";
 
 import { useTenant } from "@/lib/tenant-context";
+import { boxScoreEnabled } from "@/lib/tenant-flags";
 import { IslandHelp } from "./IslandHelp";
 
 // Help tab — verbatim port of DVSL captain.html:1009-1242 (sec-help)
@@ -299,16 +300,24 @@ export function HelpTab({ contactEmail }: Props) {
   // SFBL doesn't use attendance (teams poll on WhatsApp) or push
   // notifications, so those Help sections are hidden for it. Other
   // leagues see the full guide. (Adam, 2026-06.)
-  const { tenantId } = useTenant();
+  const { tenantId, config } = useTenant();
   const isSfbl = tenantId === "sfbl";
   // Island runs no calendar feed — Adam had the subscribe/export controls
   // taken off the site (2026-08-03) and the captain portal's copy was missed,
   // so Help still explained a button that is not there.
-  const noCalendarFeed = tenantId === "island" || tenantId === "coybl";
-  // Island keeps stats off (flags.stats_enabled === false), so coaches submit
-  // a score, not a box score. "Building your lineup" described tapping players
-  // into a batting order they never see (Adam, 2026-08-12).
-  const noBoxScores = tenantId === "island";
+  const noCalendarFeed =
+    tenantId === "island" || tenantId === "coybl" || tenantId === "windmill";
+  // A league that keeps no stats submits a score, not a box score. "Building
+  // your lineup" described tapping players into a batting order they never see
+  // (Adam, 2026-08-12).
+  //
+  // This said tenantId === "island" and was dead the day it was written:
+  // Island returns <IslandHelp /> a few lines below, before any of the five
+  // places that read this, so it was always false wherever it mattered. The
+  // leagues that actually reach this guide with stats off are LCYBL, Windmill
+  // and Helena, and they were reading a Box Score section for a button their
+  // portal does not have. Read the flag.
+  const noBoxScores = !boxScoreEnabled(config);
   // An explicit prop wins; otherwise the league's own office, if it has one.
   const support = contactEmail
     ? { name: "the league office", email: contactEmail }
@@ -426,27 +435,48 @@ export function HelpTab({ contactEmail }: Props) {
       <details>
         <summary>4. Submitting a Score</summary>
         <div className="help-body">
-          <p>
-            After a game, go to <strong>Submit Score</strong>. Two options:
-          </p>
-          <ul>
-            <li>
-              <strong>📊 Box Score</strong> — full manual entry. AB / R / H /
-              2B / 3B / HR / RBI / BB / K per player, plus pitcher lines.
-              Takes ~5 minutes if you've got a paper scoresheet in front of
-              you. The system reconciles your entry with the opposing
-              captain's.
-            </li>
-            <li>
-              <strong>📝 Score Only</strong> — fastest option. Just enter the
-              final away/home runs, hit submit, done. No individual stats. Use
-              this when nobody tracked the game and you only know the final.
-            </li>
-          </ul>
-          <p>
-            You only need <strong>one</strong> of these. Make sure somebody on
-            your team submits something after each game.
-          </p>
+          {/* This section described two buttons. A stats off league has one,
+              and after 2026-08-20 the Box Score one is not rendered for it at
+              all, so the guide has to say so. */}
+          {noBoxScores ? (
+            <>
+              <p>
+                After a game, go to <strong>Submit Score</strong>, tap{" "}
+                <strong>Quick Score</strong> on the game, and enter the final
+                runs for both teams.
+              </p>
+              <p>
+                This league keeps no individual stats, so there is nothing else
+                to fill in. Either coach can submit. If the two of you report
+                different scores, the league office sorts it out.
+              </p>
+            </>
+          ) : (
+            <>
+              <p>
+                After a game, go to <strong>Submit Score</strong>. Two options:
+              </p>
+              <ul>
+                <li>
+                  <strong>📊 Box Score</strong> — full manual entry. AB / R / H
+                  / 2B / 3B / HR / RBI / BB / K per player, plus pitcher lines.
+                  Takes ~5 minutes if you've got a paper scoresheet in front of
+                  you. The system reconciles your entry with the opposing
+                  captain's.
+                </li>
+                <li>
+                  <strong>📝 Score Only</strong> — fastest option. Just enter
+                  the final away/home runs, hit submit, done. No individual
+                  stats. Use this when nobody tracked the game and you only
+                  know the final.
+                </li>
+              </ul>
+              <p>
+                You only need <strong>one</strong> of these. Make sure somebody
+                on your team submits something after each game.
+              </p>
+            </>
+          )}
         </div>
       </details>
 

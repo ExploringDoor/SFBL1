@@ -65,6 +65,18 @@
   text-overflow: ellipsis;
 }
 
+/* Windmill: the field portion of the eyebrow links to the field directory.
+ * Keep it reading like the eyebrow text (not a default blue link); underline
+ * on hover so it's discoverable as clickable. */
+.le-preview-fieldlink {
+  color: inherit;
+  text-decoration: none;
+}
+.le-preview-fieldlink:hover {
+  text-decoration: underline;
+  color: var(--brand-primary, #0e3d34);
+}
+
 .le-preview-teams {
   display: flex;
   flex-direction: column;

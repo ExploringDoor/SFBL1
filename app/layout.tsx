@@ -28,6 +28,7 @@ import "./globals.css";
 import "./fx.css";
 import "./island-theme.css";
 import { ClinicPopup } from "@/components/ui/ClinicPopup";
+import { clinicIsOver } from "@/lib/clinic";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -331,9 +332,17 @@ export default async function RootLayout({
     { label: "Teams", href: "/teams" },
     { label: "Events & Clinics", href: "/content/events-clinics" },
     // The flyer says "REGISTER AT ISLANDFASTPITCH.COM", so someone who
-    // dismisses the arrival popup still has to be able to find this. Remove
-    // the entry after 12 October; the page itself can stay.
-    { label: "College Clinic", href: "/college-clinic" },
+    // dismisses the arrival popup still has to be able to find this.
+    //
+    // It takes ITSELF down at 2 PM Eastern on 12 October, on the same switch
+    // as the popup, the page and the charge. The old note here said to remove
+    // the entry by hand after the clinic, which is a deploy nobody was going
+    // to remember to do, on a link that would otherwise have gone on selling a
+    // finished event indefinitely. The page stays reachable either way, so an
+    // old link still lands on an explanation.
+    ...(clinicIsOver()
+      ? []
+      : [{ label: "College Clinic", href: "/college-clinic" }]),
     { label: "Shop", href: "/store" },
     { label: "Fields", href: "/fields" },
     {
@@ -481,6 +490,17 @@ export default async function RootLayout({
             <link rel="apple-touch-icon" href="/lcybl/apple-touch-icon.png" />
             <link rel="icon" type="image/png" sizes="192x192" href="/lcybl/icon-192.png" />
             <link rel="icon" type="image/png" sizes="512x512" href="/lcybl/icon-512.png" />
+          </>
+        ) : leagueAbbrev === "WFS" ? (
+          /* Windmill was falling through to /icons/* (the SFBL brand mark),
+             so the SFBL badge sat in Windmill's browser tab + home-screen
+             tile. Point every icon slot at the Windmill set. (Adam, 2026-08-20.) */
+          <>
+            <link rel="icon" type="image/png" sizes="32x32" href="/windmill/favicon-32.png" />
+            <link rel="icon" type="image/png" sizes="16x16" href="/windmill/favicon-16.png" />
+            <link rel="apple-touch-icon" href="/windmill/apple-touch-icon.png" />
+            <link rel="icon" type="image/png" sizes="192x192" href="/windmill/icon-192.png" />
+            <link rel="icon" type="image/png" sizes="512x512" href="/windmill/icon-512.png" />
           </>
         ) : (
           <>

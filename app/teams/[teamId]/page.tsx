@@ -19,6 +19,7 @@ import { notFound } from "next/navigation";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { TeamBadge } from "@/components/TeamBadge";
 import { SubscribeCalendar } from "@/components/SubscribeCalendar";
+import { teamLogoSrc } from "@/lib/team-logo";
 import {
   computePoints,
   computeStandings,
@@ -162,7 +163,8 @@ export default async function TeamDetailPage({
   const division = t.division ? String(t.division) : null;
   const abbrev = t.abbrev ? String(t.abbrev) : undefined;
   const color = t.color ? String(t.color) : undefined;
-  const logoUrl = t.logo_url ? String(t.logo_url) : null;
+  // The 168px hero badge. A 386KB logo inlined here is most of the page.
+  const logoUrl = teamLogoSrc(tenantId, params.teamId, t.logo_url);
   // Only http(s) is accepted. A team doc is admin-editable, and rendering an
   // unvalidated string into href would allow a javascript: URL.
   const gamechangerUrl = (() => {
@@ -199,7 +201,7 @@ export default async function TeamDetailPage({
       name: String(data.name ?? d.id),
       abbrev: data.abbrev ? String(data.abbrev) : undefined,
       color: data.color ? String(data.color) : undefined,
-      logoUrl: data.logo_url ? String(data.logo_url) : null,
+      logoUrl: teamLogoSrc(tenantId, d.id, data.logo_url),
     };
   }
 
@@ -469,7 +471,7 @@ export default async function TeamDetailPage({
         name: String(data.name ?? d.id),
         abbrev: data.abbrev ? String(data.abbrev) : undefined,
         color: data.color ? String(data.color) : undefined,
-        logoUrl: data.logo_url ? String(data.logo_url) : null,
+        logoUrl: teamLogoSrc(tenantId, d.id, data.logo_url),
         division,
       };
       if (typeof data.w === "number" && typeof data.l === "number") {
@@ -690,7 +692,7 @@ export default async function TeamDetailPage({
                   today — but the only games in it right now are last Summer's,
                   so a coach who subscribed would pull a calendar of finished
                   games. Delete this condition once Fall games are published. */}
-              {tenantId !== "island" && tenantId !== "coybl" && (
+              {tenantId !== "island" && tenantId !== "coybl" && tenantId !== "windmill" && (
                 <div style={{ marginTop: 14 }}>
                   <SubscribeCalendar teamId={params.teamId} />
                 </div>
