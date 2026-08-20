@@ -41,6 +41,7 @@ import { PhotosManager } from "@/components/admin/PhotosManager";
 import { ScoresManager } from "@/components/admin/ScoresManager";
 import { SponsorsManager } from "@/components/admin/SponsorsManager";
 import { TournamentLogosManager } from "@/components/admin/TournamentLogosManager";
+import { AdminHelp } from "@/components/admin/AdminHelp";
 import { NewsManager } from "@/components/admin/NewsManager";
 import { PlayerOfWeekManager } from "@/components/admin/PlayerOfWeekManager";
 import { PaymentsAdmin } from "@/components/admin/PaymentsAdmin";
@@ -70,6 +71,7 @@ type TabKey =
   | "photos"
   | "sponsors"
   | "tournament_logos"
+  | "how_to"
   | "branding"
   | "notifications"
   | "calendar"
@@ -79,6 +81,7 @@ type TabKey =
   | "audit";
 
 const TABS: { key: TabKey; label: string; description: string }[] = [
+  { key: "how_to", label: "How to", description: "Step by step guide to running the site. Start here." },
   { key: "health", label: "Health", description: "League snapshot, pending submissions, rule violations." },
   { key: "activity", label: "Activity", description: "Everything happening in the league, newest first — registrations, payments, scores, rosters, coach messages." },
   { key: "scores", label: "Scores", description: "Quick batch score entry + resolve captain submission conflicts." },
@@ -520,6 +523,10 @@ export default function AdminPage() {
         )}
         {/* Island only: the panel reads Island's checked-in tournament slate,
             and no other tenant has one. */}
+        {/* Island only for now: the content names Island's tabs, its fees and
+            its own switched-off features. A generic version would be worse
+            than none. */}
+        {activeTab === "how_to" && tenantId === "island" && <AdminHelp />}
         {activeTab === "tournament_logos" && tenantId === "island" && (
           <TournamentLogosManager leagueId={tenantId} user={user} />
         )}

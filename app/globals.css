@@ -7523,3 +7523,35 @@ select:focus-visible {
   font-weight: 600;
   color: #b45309;
 }
+
+/* ── Admin how-to ────────────────────────────────────────────────────────
+   Reuses the coach portal's .cap-help accordion so the two guides feel like
+   one product; .ah only adds the diagram and callout styles. */
+.ah .help-body h4 {
+  font-size: 14px;
+  font-weight: 800;
+  margin: 14px 0 6px;
+  color: var(--text-strong, #0f172a);
+}
+/* Drawn, not screenshotted: admin screens carry coaches' emails and phone
+   numbers, and anything in /public is world readable. */
+.ah-fig {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 12px 0 14px;
+  border-radius: 8px;
+}
+.ah-note,
+.ah-warn,
+.ah-ok {
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+.ah-note { background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; }
+/* Amber, not red: these are "this will surprise you", not "you broke it". */
+.ah-warn { background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; }
+.ah-ok   { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
