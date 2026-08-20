@@ -299,9 +299,28 @@ export function AdminHelp() {
             reloads the table and loses anything unsaved.
           </p>
           <p>
-            The small <strong>Card link</strong> button builds a Square payment
-            page for that team and copies the link, ready to text or email to a
-            coach. It is titled with our own league name and the correct amount.
+            {/* The old Card link button minted a Square hosted payment link
+                and recorded nothing when it was paid, so a team who paid
+                through it stayed on this tab as unpaid and got chased by the
+                reminder emailer. Replaced 2026-08-20 by Copy pay link, which
+                points at our own /pay page and does record. */}
+            <strong>Copy pay link</strong> on an unpaid row copies that
+            team&rsquo;s own payment page, ready to paste into a text or an
+            email. The page shows the fee, the card fee and the total before
+            any card is entered, and a payment made there lands on this tab
+            straight away.
+          </p>
+          <p className="ah-note">
+            Coaches can also pay themselves, without a link, on the{" "}
+            <strong>My Team</strong> tab of the coach portal.
+          </p>
+          <p className="ah-warn">
+            <strong>Some teams cannot be paid by card.</strong> If the office
+            has already recorded any money against a team, or has changed what
+            that team owes, the page refuses the card and says to contact the
+            office. That is on purpose: the card would charge the full original
+            fee, not the balance. Take those by Venmo or cheque and record them
+            here.
           </p>
           <ul>
             <li>

@@ -14,7 +14,7 @@
 //
 // Raw card numbers never touch our server or our database.
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 const SDK_PROD = "https://web.squarecdn.com/v1/square.js";
 const SDK_SANDBOX = "https://sandbox.web.squarecdn.com/v1/square.js";
@@ -79,6 +79,11 @@ export function SquareCardForm({
   onPaid,
   kind = "team_registration",
   feeLabel = "Team fee",
+  presetQuote = null,
+  leagueId,
+  getAuthToken,
+  unavailableNote,
+  onNetworkFailure,
 }: {
   registrationId: string | null;
   onPaid: (receiptUrl: string | null) => void;
@@ -92,6 +97,37 @@ export function SquareCardForm({
    *  what they are buying and not a phrase they can reconcile against their
    *  card statement. Defaulted so every existing caller is unchanged. */
   feeLabel?: string;
+  /** A quote the caller ALREADY has, so this component does not fetch a
+   *  second one. The coach portal gets its quote from /api/captain-fee, which
+   *  had to read the ledger anyway to know the coach owes anything; asking
+   *  /api/square-quote for the same number is a round trip the coach spends
+   *  staring at an empty panel. Both come from the same feeFor/chargeCents so
+   *  they cannot disagree. DISPLAY ONLY: it is never sent to the charge.
+   *  Callers must hold this in state, not rebuild it per render, or the Square
+   *  iframe remounts under the payer's fingers. */
+  presetQuote?: {
+    fee_dollars: number;
+    surcharge_cents: number;
+    total_cents: number;
+  } | null;
+  /** Sent with the charge, alongside getAuthToken, so /api/square-pay can
+   *  check the registration belongs to the signed-in coach's team and can
+   *  find the office's own ledger row. Both or neither: square-pay ignores
+   *  one without the other. */
+  leagueId?: string;
+  /** Called at SUBMIT time, not at mount. A Firebase id token lasts an hour
+   *  and a coach may leave this open longer than that, so the token has to be
+   *  fetched when it is used rather than captured when the form appeared. */
+  getAuthToken?: () => Promise<string | null>;
+  /** Shown when Square is not configured. The default points at "Venmo or
+   *  check below", which is true on the registration success screen and false
+   *  in the coach portal, where there is nothing below. */
+  unavailableNote?: ReactNode;
+  /** Last resort after a network failure that happened AFTER the card was
+   *  tokenised, where the money may have moved and the response never
+   *  arrived. Return true if you established the payment did land, and no
+   *  error is shown. */
+  onNetworkFailure?: () => Promise<boolean>;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const cardRef = useRef<SquareCard | null>(null);
@@ -105,7 +141,7 @@ export function SquareCardForm({
     fee_dollars: number;
     surcharge_cents: number;
     total_cents: number;
-  } | null>(null);
+  } | null>(presetQuote);
 
   useEffect(() => {
     let cancelled = false;
@@ -136,7 +172,9 @@ export function SquareCardForm({
         // both a bad way to treat someone and, where the fee is passed on, the
         // thing New York GBL 518 specifically forbids: the total has to be
         // disclosed BEFORE checkout. No price, no button.
-        if (registrationId) {
+        // Skipped when the caller already supplied one. Still fatal when it
+        // is needed and fails, for the reason in the note above.
+        if (!presetQuote && registrationId) {
           try {
             const q = await fetch("/api/square-quote", {
               method: "POST",
@@ -197,10 +235,24 @@ export function SquareCardForm({
         return;
       }
 
+      // NO AMOUNT IS SENT, and there is no field here that could carry one.
+      // /api/square-pay recomputes it from the saved registration and, on the
+      // coach path, clamps it to the office's own ledger row. The quote above
+      // is display only.
+      const token =
+        getAuthToken && leagueId ? await getAuthToken().catch(() => null) : null;
       const res = await fetch("/api/square-pay", {
         method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ registrationId, sourceId: result.token, kind }),
+        headers: {
+          "content-type": "application/json",
+          ...(token ? { authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          registrationId,
+          sourceId: result.token,
+          kind,
+          ...(token && leagueId ? { leagueId } : {}),
+        }),
       });
       const j = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
@@ -214,17 +266,37 @@ export function SquareCardForm({
       }
       onPaid(j.receipt_url ?? null);
     } catch {
+      // A network failure HERE is the one case where the card may already have
+      // been charged and the answer never reached us. "Please try again" is
+      // then the worst possible instruction. Ask the caller to check the
+      // ledger before saying anything: /api/square-pay writes the team_payments
+      // row in the same breath as the charge.
+      if (onNetworkFailure) {
+        const settled = await onNetworkFailure().catch(() => false);
+        if (settled) return;
+      }
       setError("Something went wrong taking the payment. Please try again.");
       setState("ready");
     }
   }
 
   if (state === "unavailable") {
+    // Wrapped in .sqc-wrap deliberately. This <p> reads var(--muted), and
+    // Island flips the colour tokens light at the tenant root, so a bare
+    // .cop-note-block renders near-white text on the light panel it sits in.
+    // .sqc-wrap is already in the restore list in app/island-theme.css, so
+    // wrapping fixes it without adding a thirteenth entry to that list.
     return (
-      <p className="cop-note-block">
-        Card payment isn&apos;t available right now. Please use Venmo or check
-        below, or contact the league office.
-      </p>
+      <div className="sqc-wrap">
+        <p className="cop-note-block">
+          {unavailableNote ?? (
+            <>
+              Card payment isn&apos;t available right now. Please use Venmo or
+              check below, or contact the league office.
+            </>
+          )}
+        </p>
+      </div>
     );
   }
 

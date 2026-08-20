@@ -27,9 +27,11 @@ import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { esc, notifyAddress, sendEmail } from "@/lib/email/send";
 import { paymentDetailsFor } from "@/lib/league-payment";
-import { surchargeFor } from "@/lib/square";
+import { chargeCents, feeFor, surchargeFor } from "@/lib/square";
 
 export const runtime = "nodejs";
+
+import { cardBlockReason } from "@/lib/fee-ledger";
 
 const TEAM_ID_RE = /^[A-Za-z0-9_-]{1,128}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -41,6 +43,22 @@ interface Recipient {
   email: string;
   name: string;
   balance: number;
+  /** The registration this team's fee sits on, and ONLY when a /pay link for it
+   *  would actually work: the document still exists, nothing is recorded paid,
+   *  and the ledger's amount_due agrees with the fee the registration derives.
+   *  Empty means no link goes in the email.
+   *
+   *  Two reasons it can be empty on live data. Island's ledger carries a
+   *  registration_id for a deleted honeypot test row, and a reminder linking to
+   *  a 404 is worse than one that asks the coach to reply. And a row the office
+   *  has re-priced or part settled is one /pay will refuse, so mailing its link
+   *  would promise a payment the page then declines. */
+  registrationId: string;
+  /** Priced from the registration, in cents, by the same functions /pay and
+   *  /api/square-pay use, so this email cannot quote a total the payment page
+   *  then refuses. Zero when there is no linkable registration. */
+  feeCents: number;
+  cardTotalCents: number;
 }
 
 const money = (n: number) =>
@@ -74,17 +92,41 @@ function reminderHtml(
       : pay?.cardFeeLabel
         ? `adds a ${pay.cardFeeLabel} processing fee`
         : "";
-  // NOT a link to /team-registration. That is the blank NEW TEAM form and it
-  // cannot settle an existing registration: a coach who follows it and fills it
-  // in gets a duplicate team on the public schedule and standings, a second
-  // balance row in Payments, and his sign-in claim repointed at the duplicate,
-  // so his real roster and scores vanish from his portal. He still has not
-  // paid. Until a per-team card link is minted here, the honest instruction is
-  // to ask, which is what the payment screen already tells coaches. The
-  // Reply-To on this message is the league office, so replying works.
-  methods.push(
-    `<li><strong>Card</strong>: reply to this email and we will send you a payment link${cardFee ? ` (${cardFee})` : ""}</li>`,
-  );
+  // THE LINK IS BACK, and it now points somewhere that can actually settle this
+  // fee.
+  //
+  // It was removed because it pointed at /team-registration, the blank NEW TEAM
+  // form, which cannot settle an existing registration: a coach who followed it
+  // and filled it in got a duplicate team on the schedule and the standings, a
+  // second balance row in Payments, and his sign-in claim repointed at the
+  // duplicate, so his real roster and scores vanished from his portal, and he
+  // still had not paid. "Reply to this email" was the honest stopgap until a per
+  // team link existed. /pay/{registrationId} is that link.
+  //
+  // ONLY FOR A CLEAN ROW. r.registrationId is set upstream only when the
+  // registration exists, nothing is recorded paid, and the ledger price agrees
+  // with the registration price. Anything else keeps the old wording, because
+  // /pay would refuse the payment this line is inviting.
+  //
+  // NY GBL 518 wants the card price disclosed before the payer commits. The
+  // page is the checkout and shows the cash price, the exact surcharge and the
+  // total; showing all three here as well means the choice is informed before
+  // the coach even clicks.
+  const payUrl = r.registrationId ? `${origin}/pay/${r.registrationId}` : "";
+  if (payUrl && r.cardTotalCents > 0) {
+    methods.push(
+      `<li><strong>Card</strong>: <a href="${esc(payUrl)}">pay online here</a>, ` +
+        `${money(r.feeCents / 100)} fee plus ` +
+        `${money((r.cardTotalCents - r.feeCents) / 100)} card processing, ` +
+        `<strong>${money(r.cardTotalCents / 100)}</strong> total</li>`,
+    );
+  } else {
+    // Nothing a link could settle. Asking beats sending a coach to a 404 or to
+    // a page that will decline them.
+    methods.push(
+      `<li><strong>Card</strong>: reply to this email and we will send you a payment link${cardFee ? ` (${cardFee})` : ""}</li>`,
+    );
+  }
   if (pay?.venmoUrl && pay?.venmoHandle) {
     methods.push(
       `<li><strong>Venmo</strong> to <a href="${esc(pay.venmoUrl)}">${esc(pay.venmoHandle)}</a> (no fee)</li>`,
@@ -195,6 +237,14 @@ export async function POST(req: Request) {
   const pay = new Map<string, Record<string, unknown>>();
   for (const d of paySnap.docs) pay.set(d.id, d.data());
 
+  // Every team registration, by id. Filled from the SAME read the paid-fold
+  // below already performs, so the per recipient /pay link and the amounts
+  // beside it cost no extra Firestore reads. It is also the existence check:
+  // Island's ledger still carries a registration_id for a honeypot test row
+  // whose registration is gone, and emailing a link to a 404 is worse than
+  // emailing an ask.
+  const regById = new Map<string, Record<string, unknown>>();
+
   // Fold in payments recorded on the REGISTRATION but not yet on the ledger.
   //
   // /api/square-pay writes the payment onto the submission in the same breath
@@ -210,6 +260,9 @@ export async function POST(req: Request) {
       .get();
     for (const d of regSnap.docs) {
       const x = d.data();
+      // Recorded for EVERY registration, before the paid filter. The unpaid ones
+      // are the whole point: they are who this email goes to.
+      regById.set(d.id, x);
       const paid = (x.payment ?? {}) as Record<string, unknown>;
       if (paid.status !== "paid") continue;
       const teamId =
@@ -284,7 +337,40 @@ export async function POST(req: Request) {
       skipped.push({ teamId: d.id, teamName, reason: "no email on file" });
       return;
     }
-    recipients.push({ teamId: d.id, teamName, email, name, balance });
+    // Priced from the REGISTRATION, because that is what /api/square-pay will
+    // charge, and linked ONLY when the page will honour it.
+    //
+    // cardBlockReason is the same predicate /pay and /api/square-pay use. Any
+    // row it blocks, a part payment or a fee the office has re-priced, keeps the
+    // "reply to this email" wording instead of a link that would 409. Quoting
+    // the ledger balance here instead would be worse than useless: the email
+    // already prints that balance, and the page would charge a different number.
+    const regId =
+      typeof p.registration_id === "string" && TEAM_ID_RE.test(p.registration_id)
+        ? p.registration_id
+        : "";
+    const reg = regId ? regById.get(regId) : undefined;
+    const feeDollars = reg ? feeFor(leagueId, reg) : 0;
+    const linkable =
+      reg &&
+      !cardBlockReason({
+        ledgerDue: Number(p.amount_due ?? 0),
+        ledgerPaid: Number(p.amount_paid ?? 0),
+        registrationFee: feeDollars,
+        testFeeActive: Boolean(
+          process.env.LEAGUE_TEST_FEE ?? process.env.COYBL_TEST_FEE,
+        ),
+      });
+    recipients.push({
+      teamId: d.id,
+      teamName,
+      email,
+      name,
+      balance,
+      registrationId: linkable ? regId : "",
+      feeCents: linkable ? Math.round(feeDollars * 100) : 0,
+      cardTotalCents: linkable ? chargeCents(leagueId, feeDollars) : 0,
+    });
   });
 
   if (action === "preview") {
@@ -300,9 +386,14 @@ export async function POST(req: Request) {
         to: r.email,
         subject: `${leagueName}: registration payment for ${r.teamName}`,
         html: reminderHtml(r, leagueName, origin, leagueId),
-        // This message asks the coach to reply, twice: to request a card link
-        // and to flag a payment we have already been sent. Without a Reply-To
-        // both go to the unattended sending address and nobody sees them.
+        // This message asks the coach to reply, on two different paths, and
+        // without a Reply-To both land on the unattended sending address.
+        // Every recipient is told "already sent it? reply so we can get the
+        // ledger straight". And a recipient whose row cannot take a card, one
+        // with money already recorded or a price the office has changed, gets
+        // the fallback wording asking him to reply for a link the office then
+        // has to arrange by hand. That second path is the one that fails
+        // silently if nobody is reading the replies.
         ...(notifyAddress() ? { replyTo: notifyAddress()! } : {}),
       });
       if (res.ok) {

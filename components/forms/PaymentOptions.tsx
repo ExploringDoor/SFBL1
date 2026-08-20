@@ -37,6 +37,7 @@ export function PaymentOptions({
   leagueId,
   kind = "team_registration",
   noun = "team fee",
+  allowDefer = true,
 }: {
   submissionId: string | null;
   leagueId: string;
@@ -47,6 +48,13 @@ export function PaymentOptions({
   /** What to call the money on screen. "team fee" is wrong for a clinic
    *  place bought by one family. */
   noun?: string;
+  /** Whether to offer "I'll pay later".
+   *
+   *  True on the registration success screen, where the registration has just
+   *  been saved and deferring is an honest choice. FALSE on /pay/{id}, which IS
+   *  later: somebody who deferred at sign up and came back on the link is the
+   *  last person who should be offered the same exit again. */
+  allowDefer?: boolean;
 }) {
   const [paidReceipt, setPaidReceipt] = useState<string | null>(null);
   const [paid, setPaid] = useState(false);
@@ -160,17 +168,24 @@ export function PaymentOptions({
                 can match it to this registration.
               </p>
             )}
-            <p className="cop-foot">
-              {/* THE CARD LINK DOES NOT EXIST FOR A CLINIC.
-                  /api/square-checkout reads form_submissions/team_registration
-                  and nothing else, so there is no link for the office to send
-                  and no way to record one if they sent it. Promising it is the
-                  same class of lie as "pay from the registration page", which
-                  is what sent one family round the form three times.
-                  When a signed pay-later link exists, this is where it goes. */}
-              Prefer to pay by card? Use the button below to come back, or call
-              Mike on {CLINIC.phone}.
-            </p>
+            {/* THE CARD LINK NOW EXISTS FOR A CLINIC, which is what this note
+                used to say it did not. The old hosted checkout read
+                form_submissions/team_registration and nothing else, so there
+                was no link for the office to send and no way to record one if
+                they had. /pay/{id} resolves the kind itself, and
+                /api/square-pay has taken clinic_registration since the clinic
+                shipped, cap and close date enforced immediately before the
+                charge. Alyssa Schroeder submitted three times in twelve minutes
+                on 2026-08-20 and never paid, which is what having no route back
+                looks like from the parent's side. */}
+            {submissionId && (
+              <p className="cop-foot">
+                Prefer to pay by card?{" "}
+                <a href={`/pay/${submissionId}`}>Open your payment page</a>{" "}
+                whenever you are ready, or call Mike on {CLINIC.phone}. Remember
+                the place is not held until it is paid.
+              </p>
+            )}
           </>
         ) : (
           <>
@@ -188,10 +203,21 @@ export function PaymentOptions({
                 the note so the office can match it to your registration.
               </p>
             )}
-            <p className="cop-foot">
-              Prefer to pay by card? Just reply to your confirmation email and the
-              league office will send you a payment link.
-            </p>
+            {/* THE LINK, HANDED OVER AT THE MOMENT OF DEFERRING. "Reply to your
+                confirmation email" was true and useless: it made paying by card
+                a favour the office had to perform, and the office performed it
+                by minting a Square hosted link that recorded nothing anyone
+                read. This is the coach's own registration, and the page it
+                opens takes the card and records the payment. */}
+            {submissionId && (
+              <p className="cop-foot">
+                Prefer to pay by card? This is your own payment link, and it
+                works whenever you are ready:{" "}
+                <a href={`/pay/${submissionId}`}>open your payment page</a>. Keep
+                it, or reply to your confirmation email and the league office
+                will help.
+              </p>
+            )}
           </>
         )}
         <button
@@ -317,8 +343,10 @@ export function PaymentOptions({
       )}
 
       {/* Deliberately last, quiet, and a link rather than a button: it is a
-          legitimate choice, not the one being encouraged. */}
-      <p className="cop-later">
+          legitimate choice, not the one being encouraged.
+          Suppressed on /pay/{id}, which IS the "later" this offers. */}
+      {allowDefer && (
+        <p className="cop-later">
         {isClinic ? "Not ready to pay? " : "Not ready to pay? "}
         <button type="button" onClick={() => setDeferred(true)}>
           I&rsquo;ll pay later
@@ -330,8 +358,9 @@ export function PaymentOptions({
             {" "}
             The place is not held until it is paid.
           </span>
-        )}
-      </p>
+          )}
+        </p>
+      )}
     </section>
   );
 }

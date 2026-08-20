@@ -8,13 +8,18 @@
 // The amount is computed HERE from the saved registration (fee + the 3.25%
 // card surcharge). A client cannot influence what it is charged.
 //
-// Idempotency: the key is derived from the registration id, so a double-click
-// or a retry of the same registration will not double-charge — Square returns
-// the original payment instead of creating a second one.
+// Idempotency: the key is derived from (registrationId, sourceId). A literal
+// retransmission of the same request body is safe, because Square returns the
+// original payment. It does NOT protect against a coach tapping twice or
+// paying from two tabs: each attempt tokenizes a NEW card nonce, so the key
+// differs and Square sees a genuinely new payment. What stops a double charge
+// today is cardBlockReason refusing once any money is recorded, which is a
+// check on the PREVIOUS payment, not on a concurrent one. A lease or a
+// transaction is what would close the concurrent case.
 
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { getAdminDb } from "@/lib/firebase-admin";
+import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { parseHost, resolveTenant } from "@/lib/tenants";
 import { sendEmail, notifyAddress, notifyOffice } from "@/lib/email/send";
 import { paymentReceiptEmail, officePaymentEmail } from "@/lib/email/templates";
@@ -28,6 +33,7 @@ import {
 } from "@/lib/square";
 import { CLINIC, clinicIsOver } from "@/lib/clinic";
 import { paidClinicPlaces } from "@/lib/clinic-count";
+import { cardBlockReason } from "@/lib/fee-ledger";
 import { clinicReceiptEmail, officeClinicPaymentEmail } from "@/lib/email/templates";
 
 export const runtime = "nodejs";
@@ -51,7 +57,15 @@ export async function POST(req: Request) {
     );
   }
 
-  let body: { registrationId?: unknown; sourceId?: unknown; kind?: unknown };
+  let body: {
+    registrationId?: unknown;
+    sourceId?: unknown;
+    kind?: unknown;
+    // Present only when the coach portal is paying. Paired with an
+    // `authorization: Bearer <firebase id token>` header; see the captain
+    // block below for what the pair is and is not worth.
+    leagueId?: unknown;
+  };
   try {
     body = (await req.json()) as typeof body;
   } catch {
@@ -96,6 +110,53 @@ export async function POST(req: Request) {
       { error: "This registration is already paid." },
       { status: 409 },
     );
+  }
+
+  // AND what the LEDGER says, which the check above cannot see.
+  //
+  // PaymentQuickRecord and the Payments tab record Venmo, check and cash on
+  // team_payments and never touch the submission, so a team the office has
+  // already settled sails past the guard above. That was survivable while the
+  // only routes here were the success screen and a hosted link minted on demand
+  // and used within the hour. /pay/{registrationId} lives in a coach's text
+  // thread forever, so the state of the ledger months later is now part of the
+  // money question.
+  //
+  // NOT "fully settled only". THE AMOUNT BELOW IS ALWAYS THE WHOLE FEE: it is
+  // feeFor(leagueId, data, kind) off the saved registration, and nothing in
+  // this route ever reads a balance. So letting a PART paid team through does
+  // not finish their balance, it charges the entire fee a second time. On
+  // Island that is the normal case, not an edge one: lib/fees.ts records that
+  // the $200 home field discount is applied by Mike by hand after registration,
+  // and the only editable money box on a team row is "Team paid $", so a
+  // discounted team reads as due 795, paid 595. There is no refund path in this
+  // codebase.
+  //
+  // Clinic places are excluded: they are recorded on the submission by both
+  // this route and /api/admin-clinic-payment, so the guard above already covers
+  // them, and they deliberately write no team_payments row at all.
+  if (kind === "team_registration") {
+    const ledgerId =
+      typeof data.assigned_team_id === "string" && data.assigned_team_id
+        ? data.assigned_team_id
+        : `reg-${registrationId}`;
+    const ledger = (
+      await db.doc(`leagues/${leagueId}/team_payments/${ledgerId}`).get()
+    ).data();
+    const blocked = cardBlockReason({
+      ledgerDue: Number(ledger?.amount_due ?? 0),
+      ledgerPaid: Number(ledger?.amount_paid ?? 0),
+      registrationFee: feeFor(leagueId, data, kind),
+      // Without this a $1.33 LEAGUE_TEST_FEE run is refused for disagreeing
+      // with a ledger that still says 795, which would block the one way to
+      // test this path end to end for 34 cents.
+      testFeeActive: Boolean(
+        process.env.LEAGUE_TEST_FEE ?? process.env.COYBL_TEST_FEE,
+      ),
+    });
+    if (blocked) {
+      return NextResponse.json({ error: blocked }, { status: 409 });
+    }
   }
 
   // THE CLINIC'S TWO HARD LIMITS, CHECKED WHERE THE MONEY IS.
@@ -145,6 +206,137 @@ export async function POST(req: Request) {
     .replace(/\s+/g, " ")
     .trim();
 
+  // OPTIONAL CAPTAIN IDENTITY, and an honest account of what it buys.
+  //
+  // This route takes a registrationId from the body and checks nobody. That is
+  // unavoidable on the public path: the registration success screen and the
+  // College Clinic both pay from a page where the payer has no account at all.
+  // So the check below cannot be MANDATORY, and an attacker can simply omit
+  // the header. Worth saying plainly, because what it does buy is narrower
+  // than it looks and still worth having:
+  //
+  //   1. /api/captain-fee now hands a coach their own registration id. This
+  //      binds that id to the claim it came from.
+  //   2. It resolves the office's OWN ledger row. That row is where a
+  //      hand-applied discount lives, and it is the row the Payments tab and
+  //      /api/admin-payment-reminders read. See ledgerRowId below.
+  //   3. It closes a live double-pay hole the submission alone cannot see: a
+  //      coach who paid by Venmo has amount_paid on the ledger row and NOTHING
+  //      on the submission, so the data.payment check above would happily
+  //      charge them a second time.
+  //
+  // What it is worth as a barrier on its own: little, and that was assessed
+  // rather than assumed. A registration id is a 20-character Firestore id,
+  // confirmed against live data; /leagues/*/form_submissions and
+  // /leagues/*/team_payments have no rule in firestore.rules and fall to the
+  // default deny at the bottom of it; and /api/captain-fee returns only the
+  // caller's own. The worst an attacker holding one could do is pay a
+  // stranger's league fee with their own card.
+  let ledgerDue: number | null = null;
+  let ledgerRowId: string | null = null;
+  const authHeader = req.headers.get("authorization");
+  const claimedLeagueId = typeof body.leagueId === "string" ? body.leagueId : "";
+  if (authHeader?.startsWith("Bearer ") && claimedLeagueId) {
+    // A token for league A must not be spent on league B's host.
+    if (claimedLeagueId !== leagueId) {
+      return NextResponse.json({ error: "Wrong league." }, { status: 403 });
+    }
+    // A clinic place is bought by a parent, not a coach, and there is no team
+    // ledger behind it. Refused rather than silently ignored.
+    if (kind !== "team_registration") {
+      return NextResponse.json(
+        { error: "Wrong payment type." },
+        { status: 400 },
+      );
+    }
+    let decoded;
+    try {
+      decoded = await getAdminAuth().verifyIdToken(authHeader.slice(7).trim());
+    } catch {
+      return NextResponse.json({ error: "Session expired." }, { status: 401 });
+    }
+    const claim = (decoded.leagues as Record<string, string> | undefined)?.[
+      leagueId
+    ];
+    const claimedTeamId =
+      typeof claim === "string" && claim.startsWith("captain:")
+        ? claim.slice("captain:".length)
+        : "";
+    if (!claimedTeamId) {
+      return NextResponse.json(
+        { error: "You need to be signed in as a coach for this team." },
+        { status: 403 },
+      );
+    }
+    const row = (
+      await db.doc(`leagues/${leagueId}/team_payments/${claimedTeamId}`).get()
+    ).data();
+    if (!row || String(row.registration_id ?? "") !== registrationId) {
+      return NextResponse.json(
+        { error: "That registration does not belong to your team." },
+        { status: 403 },
+      );
+    }
+    if (Number(row.amount_paid ?? 0) > 0) {
+      return NextResponse.json(
+        { error: "The league office has already recorded this team as paid." },
+        { status: 409 },
+      );
+    }
+    // THE ROW THE OFFICE ACTUALLY READS.
+    //
+    // The ledger write further down keys on data.assigned_team_id, and
+    // /api/admin-payment-reminders keys on the TEAM document id. Wherever
+    // those two disagree the charge marks a row nobody looks at: the coach
+    // pays $819.05, the Payments tab still says unpaid, and the reminder tool
+    // keeps emailing them, which is the precise failure this whole change
+    // exists to end. They agree on all ten live Island registrations today,
+    // but leagues/island/team_payments already holds a row pointing at a
+    // registration that does not exist, so the two ids are not welded
+    // together and should not be assumed to be.
+    ledgerRowId = claimedTeamId;
+    const due = Number(row.amount_due ?? 0);
+    if (due > 0) ledgerDue = due;
+  }
+
+  // THE LEDGER IS THE AUTHORITY, THE PRICE LIST IS THE CEILING.
+  //
+  // feeFor() reads the REGISTRATION, and tests/square-fees.test.ts pins the
+  // reason it must: Island's $200 home-field discount is deliberately not
+  // self-claimable at checkout, because teams that do not qualify claim it.
+  // Mike applies it by hand on the Payments tab afterwards, which edits
+  // amount_due on the team_payments row and touches nothing on the
+  // registration. Charge feeFor() and a team the office discounted to $595 is
+  // billed $819.05.
+  //
+  // min(), not the ledger outright, so a balance mistyped ABOVE the published
+  // fee can never charge a coach more than the price list says. What the
+  // office is still owed in that case is preserved by the ledger write below,
+  // which writes ledgerDue and NOT this clamped figure.
+  //
+  // A no-op for every existing caller: ledgerDue stays null unless a captain
+  // token was verified, and for a team with no adjustment the two numbers are
+  // identical anyway. All eleven live Island team rows read 795, which is
+  // exactly feeFor.
+  // NO CLAMP HERE, and that is deliberate rather than an omission.
+  //
+  // A min(price list, ledger) clamp lived here and could never run:
+  // cardBlockReason has already refused, at the top of this route, ANY team
+  // whose ledger amount_due differs from feeFor at all. A re-priced team never
+  // reaches this line, so the clamp was dead code that three comment blocks
+  // described as live.
+  //
+  // What that means today, stated plainly because it is a real gap: a team the
+  // office has discounted CANNOT pay by card. It is refused with "the league
+  // office has adjusted the fee for this team", and the office takes the money
+  // by Venmo, cheque or cash and records it by hand. Safe, because the
+  // alternative shapes both overcharge: charging feeFor bills a $595 team
+  // $819.05, and relaxing the block without also reading the ledger on the
+  // PUBLIC /pay path would charge the full fee there while the coach believed
+  // he was paying the discount.
+  //
+  // Making discounts card-payable means reading the ledger on both paths and
+  // pricing from it. That is new money behaviour and belongs in its own change.
   const fee = feeFor(leagueId, data, kind);
   const amountCents = chargeCents(leagueId, fee);
   const base = squareApiBase();
@@ -301,7 +493,14 @@ export async function POST(req: Request) {
   try {
     const teamId =
       typeof data.assigned_team_id === "string" ? data.assigned_team_id : "";
-    const ledgerId = teamId || `reg-${registrationId}`;
+    // ledgerRowId wins when the captain block above resolved one, because that
+    // is the row the coach's own portal reads and the row
+    // /api/admin-payment-reminders counts (it keys on the TEAM document id).
+    // Marking amount_paid anywhere else leaves a coach who has paid being
+    // chased for the money, which is the exact bug the hosted link caused.
+    // assigned_team_id stays the right answer on the public path, where there
+    // is no signed-in coach to ask.
+    const ledgerId = ledgerRowId || teamId || `reg-${registrationId}`;
     // A CLINIC PLACE IS NOT A TEAM, and team_payments is the TEAM ledger.
     //
     // Every paid clinic registration used to write a row here with team_name
@@ -324,9 +523,17 @@ export async function POST(req: Request) {
           team_name: String(data.team_name ?? ""),
           registration_id: registrationId,
           // False when the row is keyed on the registration because no team
-          // exists yet. Assignment flips it.
-          team_assigned: Boolean(teamId),
-          amount_due: fee,
+          // exists yet. Assignment flips it. A captain-resolved row is by
+          // definition a team row, so it counts here too.
+          team_assigned: Boolean(teamId || ledgerRowId),
+          // NOT `fee`. `fee` is what the CARD was charged, and on the captain
+          // path that is min(price list, ledger). Echoing it back would let a
+          // balance the office raised ABOVE the published fee be silently
+          // rewritten DOWN to the published fee, erasing the shortfall they
+          // are still owed and are relying on the Payments tab to show them.
+          // Keep the office's own number; the gap between due and paid is the
+          // report.
+          amount_due: ledgerDue ?? fee,
           amount_paid: amountCents / 100,
           // Structured, not prose. The UI renders "Card · Aug 4" from these;
           // it used to write a sentence into the free-text note, which read

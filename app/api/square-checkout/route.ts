@@ -1,216 +1,76 @@
-// POST /api/square-checkout — start a Square hosted checkout for a team's
-// registration. The amount is computed SERVER-SIDE from the saved submission
-// (never trusted from the client), the 3.25% card surcharge Doug asked for is
-// added, and a Square Payment Link is created; the browser redirects to it.
+// POST /api/square-checkout. RETIRED 2026-08-20. Answers 410 Gone and nothing
+// else: it takes no money, creates nothing at Square, and writes nothing.
 //
-// Square credentials come from env (Vercel), NEVER the repo:
-//   SQUARE_ACCESS_TOKEN            (required)
-//   SQUARE_ENV  sandbox|production (defaults to sandbox)
-//   SQUARE_LOCATION_ID             (optional — auto-detected from the token)
-// With no access token the endpoint degrades gracefully (503) so the form
-// keeps offering Venmo/check. Money lands in the league's own Square account.
+// What it used to do, and why that was worse than useless. It minted a Square
+// HOSTED payment link (quick_pay) and then wrote exactly one thing to
+// Firestore, card.initiated_at. Nothing in this codebase has ever read that
+// field and there is no Square webhook, so a coach who followed the link and
+// paid stayed unpaid everywhere the office looks: the Payments tab,
+// /api/captain-fee, and /api/admin-payment-reminders, which then emailed him
+// chasing money he had already sent. No receipt was sent either. And the
+// idempotency key was crypto.randomUUID(), so a second tap minted a second
+// link and Square could take the money a second time.
 //
-// Adapted from the original (branch coybl-tenant, commit 068e667), which read
-// a `registrations` collection and a stored `fee` field. The live registration
-// flow writes to form_submissions/team_registration/items and stores NO fee —
-// the amount is derived here from the option the coach picked.
+// It was also an unauthenticated write. It took a registrationId straight from
+// an anonymous request body, called Square, and wrote to Firestore, with no
+// identity check of any kind, on two live production domains.
+//
+// The evidence at the moment of retirement, from a read only Firestore audit.
+// Island: 10 team registrations, ZERO carrying card.initiated_at, so no link
+// was ever minted there. COYBL: 3 carrying it with no payment recorded. The
+// names, amounts and timestamps are in docs/hosted-link-reconciliation.md
+// rather than here, because that is the office's worklist and it will be
+// closed out long before this comment is.
+//
+// The replacement is /api/square-pay, the embedded card form's endpoint. It
+// computes the amount server side from the saved registration, keys
+// idempotency on (registrationId, sourceId) so a retry returns the original
+// payment instead of charging twice, writes the payment block and the
+// team_payments row, and emails a receipt to the payer and to the office.
+//
+// KEPT as a 410 rather than deleted, deliberately. A browser tab left open
+// across the deploy still holds the old bundle and will POST here. A deleted
+// route answers that with a Next 404 HTML page, which reads to the office as a
+// broken site. This answers in the JSON shape both old callers already parse,
+// with NO `url` key, so each falls into its existing error branch and no money
+// moves. Delete this file once the warning below has been silent for a full
+// registration cycle.
+//
+// LINKS ALREADY MINTED AT SQUARE ARE STILL PAYABLE. Retiring this route does
+// not reach them, because it never stored the payment link id. They have to be
+// deleted by hand in the Square dashboard. See
+// docs/hosted-link-reconciliation.md.
 
 import { NextResponse } from "next/server";
-import { headers } from "next/headers";
-import { getAdminDb } from "@/lib/firebase-admin";
-import { parseHost, resolveTenant } from "@/lib/tenants";
-import { chargeCents, feeFor } from "@/lib/square";
 
 export const runtime = "nodejs";
 
-const SQUARE_VERSION = "2025-01-23";
-
-// Fee + surcharge come from lib/square.ts, NOT a private copy.
-//
-// This route used to carry its own duplicate of COYBL's fee table and a flat
-// 3.25% surcharge. Two copies of a price is a bug waiting to happen — and it
-// became one the moment a second league arrived: the copy here would have
-// charged Island teams COYBL's $495 and applied a surcharge that is unlawful
-// in New York, while /api/square-pay charged them correctly. Same
-// registration, two different prices, depending on which route ran.
-
+// Reads the host off the Request rather than next/headers() on purpose. This
+// route no longer needs a tenant, and taking the plain Request means the
+// retirement test can call POST directly with no module mock at all.
 export async function POST(req: Request) {
-  // Resolve the tenant from the Host, NOT from x-tenant-id: middleware skips
-  // /api/* entirely, so that header never reaches an API route. (The original
-  // version of this file read the header and would have failed every request
-  // with "Unknown league".) Same pattern as /api/league-form.
-  const h = headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
-  const tenant = await resolveTenant(parseHost(host));
-  const leagueId = tenant?.id ?? null;
-  if (!leagueId || !/^[a-z0-9_-]+$/.test(leagueId)) {
-    return NextResponse.json({ error: "Unknown league" }, { status: 400 });
-  }
-
-  const token = process.env.SQUARE_ACCESS_TOKEN;
-  if (!token) {
-    return NextResponse.json(
-      { error: "Card payment isn't set up yet — please pay by Venmo or check." },
-      { status: 503 },
-    );
-  }
-
-  let body: { registrationId?: unknown };
-  try {
-    body = (await req.json()) as { registrationId?: unknown };
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-  }
-  const registrationId =
-    typeof body.registrationId === "string" ? body.registrationId : "";
-  if (!registrationId || !/^[A-Za-z0-9_-]+$/.test(registrationId)) {
-    return NextResponse.json(
-      { error: "registrationId required" },
-      { status: 400 },
-    );
-  }
-
-  const db = getAdminDb();
-  const ref = db.doc(
-    `leagues/${leagueId}/form_submissions/team_registration/items/${registrationId}`,
-  );
-  const snap = await ref.get();
-  if (!snap.exists) {
-    return NextResponse.json(
-      { error: "Registration not found" },
-      { status: 404 },
-    );
-  }
-  const data = snap.data() ?? {};
-
-  const fee = feeFor(leagueId, data);
-  const amountCents = chargeCents(leagueId, fee);
-  const teamName = String(data.team_name ?? "Team");
-  // What the payer sees above the amount. resolveTenant already gave us the
-  // league, so the name comes from the league being paid rather than from
-  // whichever league this route was originally written for.
-  const leagueLabel = tenant?.config?.abbrev ?? tenant?.config?.name ?? "League";
-
-  const base =
-    process.env.SQUARE_ENV === "production"
-      ? "https://connect.squareup.com"
-      : "https://connect.squareupsandbox.com";
-
-  // Location ID is optional in env — if unset we ask Square for the account's
-  // locations and use the first active one (cached). Most leagues have a
-  // single location, so this "just works" from the access token alone.
-  const locationId =
-    process.env.SQUARE_LOCATION_ID ?? (await resolveLocationId(token, base));
-  if (!locationId) {
-    return NextResponse.json(
-      { error: "Couldn't find a Square location for this account." },
-      { status: 502 },
-    );
-  }
-
-  let res: Response;
-  try {
-    res = await fetch(`${base}/v2/online-checkout/payment-links`, {
-      method: "POST",
-      headers: {
-        "Square-Version": SQUARE_VERSION,
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        idempotency_key: crypto.randomUUID(),
-        quick_pay: {
-          // Was hardcoded "COYBL 2027 Registration", which is a different
-          // league in Ohio. Island coaches clicking a payment link from their
-          // own league's admin were shown someone else's name above the
-          // amount, which is the moment a parent stops and rings you.
-          name: `${leagueLabel} Registration: ${teamName}`,
-          price_money: { amount: amountCents, currency: "USD" },
-          location_id: locationId,
-        },
-      }),
-    });
-  } catch (err) {
-    console.error("[square-checkout] network error", err);
-    return NextResponse.json(
-      {
-        error:
-          "Couldn't reach the card processor. Try again, or pay by Venmo or check.",
-      },
-      { status: 502 },
-    );
-  }
-
-  if (!res.ok) {
-    console.error(
-      "[square-checkout] Square error",
-      res.status,
-      await res.text().catch(() => ""),
-    );
-    return NextResponse.json(
-      {
-        error:
-          "Couldn't start card payment. Try again, or pay by Venmo or check.",
-      },
-      { status: 502 },
-    );
-  }
-
-  const json = (await res.json()) as { payment_link?: { url?: string } };
-  const url = json.payment_link?.url;
-  if (!url) {
-    return NextResponse.json({ error: "No checkout URL returned." }, { status: 502 });
-  }
-
-  // Record that card payment was started (amount includes the surcharge) so
-  // the office can reconcile it against the Payments tab.
-  await ref.set(
+  // Loud, and named, because after this batch the only way to reach this line
+  // is a stale browser tab or a caller we believed we had removed. No money
+  // moves either way, so this is a signal and not an incident.
+  console.warn(
+    "[square-checkout] RETIRED endpoint was called. Check for a caller we missed.",
     {
-      card: {
-        initiated_at: new Date().toISOString(),
-        amount_cents: amountCents,
-        fee_dollars: fee,
-      },
+      host: req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? "",
+      referer: req.headers.get("referer") ?? "",
     },
-    { merge: true },
   );
-
-  return NextResponse.json({ url, amount_cents: amountCents });
-}
-
-// Resolve a Square location from the access token when SQUARE_LOCATION_ID
-// isn't set. Picks the first ACTIVE location (falls back to the first) and
-// caches per token+base so we only hit /v2/locations once per server boot.
-const locationCache = new Map<string, string>();
-async function resolveLocationId(
-  token: string,
-  base: string,
-): Promise<string | null> {
-  const cacheKey = `${base}:${token.slice(-8)}`;
-  const cached = locationCache.get(cacheKey);
-  if (cached) return cached;
-
-  try {
-    const res = await fetch(`${base}/v2/locations`, {
-      headers: {
-        "Square-Version": SQUARE_VERSION,
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    if (!res.ok) {
-      console.error("[square-checkout] locations lookup failed", res.status);
-      return null;
-    }
-    const json = (await res.json()) as {
-      locations?: { id?: string; status?: string }[];
-    };
-    const locs = json.locations ?? [];
-    const chosen = locs.find((l) => l.status === "ACTIVE") ?? locs[0];
-    const id = chosen?.id ?? null;
-    if (id) locationCache.set(cacheKey, id);
-    return id;
-  } catch (err) {
-    console.error("[square-checkout] locations lookup error", err);
-    return null;
-  }
+  return NextResponse.json(
+    {
+      // Deliberately NOT naming a surface. Nothing in this repo calls this
+      // route any more, so the only readers are a stale browser tab or a
+      // caller we missed, and neither is known to be on a particular screen.
+      // Naming one would send somebody to the wrong place.
+      error:
+        "Card payment links have been retired. Refresh this page and use the card payment shown there, or contact the league office.",
+      // Stable and machine readable, so the test and any future caller key on
+      // this rather than on prose a copy edit will move.
+      code: "square_checkout_retired",
+    },
+    { status: 410 },
+  );
 }

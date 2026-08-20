@@ -35,9 +35,9 @@ interface Entry {
   receipt_url: string;
   /** When the office last emailed this team about the money. */
   reminder_sent_at: string;
-  /** The registration this payment came from. Needed to mint a Square
-   *  payment link for a team that skipped card at sign-up. Optional: teams
-   *  with no payment doc yet have no registration on file here. */
+  /** The registration this payment came from. It is what /pay/{id} is keyed
+   *  on, so Copy pay link is only offered for a team that has one. Optional:
+   *  teams with no payment doc yet have no registration on file here. */
   registration_id?: string;
 }
 
@@ -712,10 +712,15 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
                 {/* A coach who picked Venmo or check at sign-up, then changed
                     their mind, had no way back to card: the card form only
                     ever appeared on the success screen right after
-                    registering. This mints the same Square payment link on
-                    demand so the office can send it. */}
+                    registering. This is that form, on a URL the office can
+                    text. It replaces a Square hosted link that recorded
+                    nothing anyone read.
+                    The !amount_paid guard matters more than it did: the page
+                    itself refuses any team with money already recorded, so
+                    showing the button on one would be offering a link that
+                    only says no. */}
                 {!Number(tEntry.amount_paid) && tEntry.registration_id && (
-                  <CardLinkButton registrationId={tEntry.registration_id} />
+                  <PayLinkButton registrationId={tEntry.registration_id} />
                 )}
                 {/* Card charges are fee-inclusive, so the raw figure looks
                     like an overpayment ("due 475, paid 490.44"). Spell out
@@ -854,65 +859,58 @@ function Card({
   );
 }
 
-/** "Card link" — mints a Square payment link for a team that has not paid,
- *  and copies it so the office can paste it into an email or a text.
+/** "Copy pay link" — the per team URL the office pastes into a text or an
+ *  email so a coach can settle by card.
  *
- *  Uses the SAME endpoint the registration form uses, so the amount (fee plus
- *  the 3.25% surcharge) is computed server-side from the saved registration.
- *  Nothing about the price is trusted from this screen. */
-function CardLinkButton({ registrationId }: { registrationId: string }) {
-  const [state, setState] = useState<"idle" | "working" | "done" | "error">("idle");
-  const [url, setUrl] = useState("");
-
-  async function make() {
-    setState("working");
-    try {
-      const res = await fetch("/api/square-checkout", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ registrationId }),
-      });
-      const j = (await res.json()) as { url?: string; error?: string };
-      if (!j.url) {
-        setState("error");
-        return;
-      }
-      setUrl(j.url);
-      try {
-        await navigator.clipboard.writeText(j.url);
-      } catch {
-        /* clipboard blocked — the link is still shown below */
-      }
-      setState("done");
-    } catch {
-      setState("error");
-    }
-  }
-
-  if (state === "done") {
-    return (
-      <span className="text-[11px]">
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-semibold text-emerald-700 underline"
-        >
-          Card link copied
-        </a>
-      </span>
-    );
-  }
+ *  WAS "Card link", which POSTed to /api/square-checkout and minted a Square
+ *  HOSTED payment link. Nothing in this codebase ever read the result: there is
+ *  no Square webhook, that route recorded only card.initiated_at, and no
+ *  surface reads that field. So the old button either sent a coach somewhere
+ *  that took money the office never saw or somewhere that took none, and from
+ *  in here the two look identical. Worse, it used crypto.randomUUID() as its
+ *  idempotency key, so tapping it twice minted two live links and a coach could
+ *  be charged twice.
+ *
+ *  This mints NOTHING. It builds the /pay/{registrationId} URL, which mounts
+ *  the embedded card form and posts to /api/square-pay: the endpoint that
+ *  records the payment, writes the ledger row and sends a receipt. No network
+ *  call, no Square call, nothing written, so the office can tap it as often as
+ *  it likes and the link stays valid for as long as the fee is outstanding. */
+function PayLinkButton({ registrationId }: { registrationId: string }) {
+  const [copied, setCopied] = useState(false);
+  // Relative, so the anchor is correct during SSR. The absolute form is built
+  // in the click handler, where window exists.
+  const path = `/pay/${registrationId}`;
 
   return (
-    <button
-      type="button"
-      onClick={make}
-      disabled={state === "working"}
-      className="rounded border border-slate-300 px-2 py-0.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-      title="Create a Square card-payment link for this team and copy it"
-    >
-      {state === "working" ? "…" : state === "error" ? "Try again" : "Card link"}
-    </button>
+    <span className="inline-flex items-center gap-1">
+      <button
+        type="button"
+        onClick={async () => {
+          try {
+            await navigator.clipboard.writeText(
+              `${window.location.origin}${path}`,
+            );
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2500);
+          } catch {
+            /* clipboard blocked: the "open" link beside this still works */
+          }
+        }}
+        className="rounded border border-slate-300 px-2 py-0.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50"
+        title="Copy this team's payment link, to paste into a text or an email"
+      >
+        {copied ? "Copied" : "Copy pay link"}
+      </button>
+      <a
+        href={path}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-[11px] font-semibold text-slate-500 underline"
+        title="Open this team's payment page"
+      >
+        open
+      </a>
+    </span>
   );
 }

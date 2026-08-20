@@ -35,6 +35,13 @@ export async function GET() {
     "Disallow: /captain/",
     "Disallow: /profile",
     "Disallow: /api/",
+    // TRAILING SLASH REQUIRED. Robots matching is a prefix match, so a bare
+    // "Disallow: /pay" would also block /pay-online, which is a real public page
+    // (app/pay-online) that LBDC and SFBL rely on being found. This blocks
+    // /pay/{id} only. Those pages carry a name and an amount and there is a
+    // Firestore read behind each one, so neither indexing nor crawling them is
+    // wanted.
+    "Disallow: /pay/",
     "Disallow: /print/",
     "Disallow: /_platform",
     "Disallow: /login",

@@ -657,11 +657,11 @@ function content(tenantId: string) {
         "Register your team for the Central Ohio Youth Baseball League.",
       intro: [
         "Choose your registration option below: Option 1 is $495 (includes team insurance plus Five Tool Youth registration); Option 2 is $425 (your team provides proof of its own insurance, plus Five Tool Youth registration). USSSA membership is an optional +$50 add-on.",
-        // Card checkout now exists (/api/square-checkout, Square Payment
-        // Link), and the pay options appear on the confirmation screen right
-        // after submitting. If the Square access token is ever missing from
-        // the environment, that button reports it and Venmo/check still work,
-        // so this copy stays true either way.
+        // Card payment happens in an embedded form on the confirmation screen
+        // right after submitting (/api/square-pay), not on a Square hosted page.
+        // If the Square access token is ever missing from the environment, the
+        // form reports it and Venmo/check still work, so this copy stays true
+        // either way.
         "After you submit, you can pay right away by card, Venmo, or check. Card payments add a 3.25 percent processing fee; Venmo and check have none.",
         // GameChanger info (Doug's copy). Rich node so the numbered steps
         // render as a real list; the required gamechanger_link field is below.
