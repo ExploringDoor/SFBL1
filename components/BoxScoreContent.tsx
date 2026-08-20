@@ -18,6 +18,7 @@ import { formatIP } from "@/lib/stats/ip";
 import { buildRecap } from "@/lib/stats/recap";
 import { initialsFromName } from "@/lib/team-initials";
 import { formatGameDate, formatTime12 } from "@/lib/format-time";
+import { shortFieldName } from "@/lib/field-label";
 import { sanitizeHtml } from "@/lib/markdown";
 import { BoxScoreTabs } from "@/components/ui/BoxScoreTabs";
 
@@ -98,11 +99,17 @@ export interface BoxScoreContentProps {
    *  no linescore, and no batting/pitching tables. `recapOverrideHtml`
    *  carries the recap (AI-generated or template) in this mode. */
   recapOnly?: boolean;
+  /** Windmill: when set, the field renders as a short venue name linked to the
+   *  field directory instead of the full street address. Only set for windmill,
+   *  so every other tenant is byte-for-byte unchanged. */
+  fieldHref?: string | null;
 }
 
 export function BoxScoreContent(props: BoxScoreContentProps) {
   const { gameId, date, time, field, status, innings, away, home, playerNames } =
     props;
+  // Short, linked venue name for windmill; the raw field string everywhere else.
+  const fieldLabel = props.fieldHref ? shortFieldName(field) : field;
   const view = props.view ?? "box";
   const isFinal = status === "final" || status === "approved";
 
@@ -110,8 +117,21 @@ export function BoxScoreContent(props: BoxScoreContentProps) {
   if (!isFinal) {
     return (
       <div className="bs-root">
-        <PreviewHero away={away} home={home} date={date} time={time} field={field} />
-        <PreviewBlurb away={away} home={home} date={date} time={time} field={field} />
+        <PreviewHero
+          away={away}
+          home={home}
+          date={date}
+          time={time}
+          field={fieldLabel}
+          fieldHref={props.fieldHref}
+        />
+        <PreviewBlurb
+          away={away}
+          home={home}
+          date={date}
+          time={time}
+          field={fieldLabel}
+        />
       </div>
     );
   }
@@ -164,7 +184,14 @@ export function BoxScoreContent(props: BoxScoreContentProps) {
 
   return (
     <div className="bs-root">
-      <FinalHeader away={away} home={home} date={date} time={time} field={field} />
+      <FinalHeader
+        away={away}
+        home={home}
+        date={date}
+        time={time}
+        field={fieldLabel}
+        fieldHref={props.fieldHref}
+      />
 
       {/* Tabs flip between two pre-rendered bodies via client state.
           Initial tab honours ?tab=recap on the URL so deep links still
@@ -307,12 +334,14 @@ function FinalHeader({
   date,
   time,
   field,
+  fieldHref,
 }: {
   away: BoxTeam;
   home: BoxTeam;
   date: string | null;
   time: string | null;
   field: string | null;
+  fieldHref?: string | null;
 }) {
   const aWin = away.score > home.score;
   const hWin = home.score > away.score;
@@ -350,7 +379,17 @@ function FinalHeader({
         )}
         {field && (
           <span>
-            <span aria-hidden>📍</span> {field}
+            <span aria-hidden>📍</span>{" "}
+            {fieldHref ? (
+              <Link
+                href={fieldHref}
+                style={{ color: "inherit", textDecoration: "underline" }}
+              >
+                {field}
+              </Link>
+            ) : (
+              field
+            )}
           </span>
         )}
       </div>
@@ -517,12 +556,14 @@ function PreviewHero({
   date,
   time,
   field,
+  fieldHref,
 }: {
   away: BoxTeam;
   home: BoxTeam;
   date: string | null;
   time: string | null;
   field: string | null;
+  fieldHref?: string | null;
 }) {
   // Audit H1: stable local calendar day; prefer the separate time
   // field (no Date()/TZ math) so LBDC's Pacific preview doesn't skew.
@@ -547,7 +588,16 @@ function PreviewHero({
         )}
         {field && (
           <span className="bs-final" style={{ marginTop: 2 }}>
-            {field}
+            {fieldHref ? (
+              <Link
+                href={fieldHref}
+                style={{ color: "inherit", textDecoration: "underline" }}
+              >
+                {field}
+              </Link>
+            ) : (
+              field
+            )}
           </span>
         )}
       </div>

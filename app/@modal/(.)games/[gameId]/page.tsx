@@ -89,6 +89,11 @@ export default async function GameModalRoute({
         view={view}
         recapOnly={recapOnly}
         recapOverrideHtml={recapHtml}
+        fieldHref={
+          tenantId === "windmill" && data.field
+            ? `/fields?f=${encodeURIComponent(data.field)}`
+            : null
+        }
       />
       <GameShareSection data={data} config={config} />
     </Modal>

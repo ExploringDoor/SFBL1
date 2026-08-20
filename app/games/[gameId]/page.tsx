@@ -178,6 +178,11 @@ export default async function GameDetailPage({
         view={view}
         recapOnly={recapOnly}
         recapOverrideHtml={recapHtml}
+        fieldHref={
+          tenantId === "windmill" && data.field
+            ? `/fields?f=${encodeURIComponent(data.field)}`
+            : null
+        }
         recapEditor={
           <RecapEditor
             leagueId={tenantId}
