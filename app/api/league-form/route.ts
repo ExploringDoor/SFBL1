@@ -853,27 +853,7 @@ export async function POST(req: Request) {
 
   if (
     AUTO_PROVISION_TEAMS.has(tenantId) &&
-    body.kind === "team_registration" &&
-    // NOT WHEN A BOT CHECK FIRED. The submission is still saved and the office
-    // is still emailed, which is the whole point of flagging rather than
-    // dropping: a real coach caught by a password manager or a browser
-    // autofill must never vanish. But "saved for review" and "given a team on
-    // the public site" are different promises, and this code was making both.
-    //
-    // 2026-08-20, the day flagging replaced dropping: a bot put four
-    // submissions into Island inside six hours, and the team_registration one
-    // provisioned team 51WLwx5NFNkXMDKaambw named "DRjxknBQmludnVaJiixdNjRo",
-    // a real team doc with a real sign-in code. It reached the office as
-    // "NEEDS REVIEW" while already being a team, so there was nothing left to
-    // review. The bot had also been reading real team names off the public
-    // waiver dropdown, which is why three of its submissions carry
-    // "Chiefs Fastpitch - Lorento".
-    //
-    // The office already has the button for the other half of this:
-    // /api/admin-provision-team, wired into the Registrations tab, turns a
-    // reviewed registration into a real team and mints the coach's code. A
-    // flagged signup now waits there, which is what its email always said.
-    spamFlags.length === 0
+    body.kind === "team_registration"
   ) {
     // Record whether the coach's login email actually went out. This used to
     // be an empty catch, which is how a Firebase "Domain not allowlisted"
@@ -884,12 +864,30 @@ export async function POST(req: Request) {
     // Create the team FIRST, because that is what mints the sign-in code the
     // coach's welcome email has to contain. Idempotent, and never allowed to
     // fail the registration itself.
+    //
+    // NOT WHEN A BOT CHECK FIRED. "Saved for review" and "given a team on the
+    // public site with a working sign-in code" are different promises, and
+    // this made both: on 2026-08-20 a bot provisioned team
+    // 51WLwx5NFNkXMDKaambw named "DRjxknBQmludnVaJiixdNjRo", then the office
+    // was emailed NEEDS REVIEW about a team that already existed.
+    //
+    // GATE ONLY THIS, and the coach's welcome email below with it. The first
+    // attempt gated the whole surrounding block, which silently took the
+    // NEEDS REVIEW office email out with it: a flagged signup fell through to
+    // the plain fallback notification, so the office got a routine looking
+    // "New Team registration" with no warning, no team, and nothing saying
+    // anything was needed. That is worse than the bug it was fixing, because a
+    // REAL coach caught by a password manager would be waiting for a code
+    // nobody knew to send. Caught live at 22:56 the same evening.
+    const flagged = spamFlags.length > 0;
     let teamCode: string | null = null;
-    try {
-      const res = await provisionCoyblTeam(tenantId, ref.id, cleaned);
-      teamCode = res.teamCode;
-    } catch (err) {
-      console.error("[league-form] team provisioning failed", err);
+    if (!flagged) {
+      try {
+        const res = await provisionCoyblTeam(tenantId, ref.id, cleaned);
+        teamCode = res.teamCode;
+      } catch (err) {
+        console.error("[league-form] team provisioning failed", err);
+      }
     }
 
     // Email the coach their team's sign-in code. Recorded either way: this
@@ -897,6 +895,21 @@ export async function POST(req: Request) {
     // allowlisted" error silently ate every login email while registrations
     // looked fine. The registration still succeeds regardless, but a failure
     // is now visible in the admin inbox instead of invisible everywhere.
+    // Nothing to send while flagged: no team means no sign-in code, and mailing
+    // one would confirm to a bot that it landed. The office decides first, and
+    // /api/admin-provision-team sends the code when it does. Recorded so the
+    // admin row shows WHY the coach has not heard, rather than reading as a
+    // bounce.
+    if (flagged) {
+      await ref
+        .set(
+          { login_email_sent: false, login_email_error: "held for review" },
+          { merge: true },
+        )
+        .catch(() => {
+          /* best-effort; never fail the registration over a flag */
+        });
+    } else {
     try {
       // sendEmail NEVER throws, it returns { ok: false }, so the catch below
       // could not see a refused send and this wrote login_email_sent: true
@@ -930,6 +943,7 @@ export async function POST(req: Request) {
         .catch(() => {
           /* flagging is best-effort; never fail the registration over it */
         });
+    }
     }
     // Tell the league office a team just registered. This branch used to
     // return without notifying anyone, so the only way the director learned
