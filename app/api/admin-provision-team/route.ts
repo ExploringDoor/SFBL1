@@ -201,7 +201,15 @@ export async function POST(req: Request) {
             replyTo: notifyAddress() ?? undefined,
           });
         }
-        await subRef.set({ login_email_sent: true }, { merge: true });
+        // Clear the error with it. A held registration carries
+        // login_email_error "held for review", and merging only the true flag
+        // left the admin detail row reading "LOGIN EMAIL SENT: Yes" directly
+        // above "LOGIN EMAIL ERROR: held for review". Emilio Estevez and
+        // Mariah Salvatto both look like that right now.
+        await subRef.set(
+          { login_email_sent: true, login_email_error: null },
+          { merge: true },
+        );
         codeEmailed = recipients.join(", ");
       }
     } catch (err) {
