@@ -47,6 +47,26 @@ function esc(s: unknown): string {
     .replace(/>/g, "&gt;");
 }
 
+/** Whether a submission may appear in a send list at all.
+ *
+ *  Neither collection below was filtered, which had two consequences nobody
+ *  had noticed. A submission the office trashed stayed reachable forever,
+ *  because a soft delete sets `deleted` and nothing here read it. And a
+ *  submission the spam filter caught was still offered as a recipient: on
+ *  2026-08-20 Adam opened Send Message on COYBL and found three bot signups
+ *  from 8 August sitting in the list, two of them the same Gmail mailbox
+ *  wearing different dots.
+ *
+ *  Mailing those addresses is not just untidy. Every league here sends through
+ *  ONE shared SendGrid account, so bouncing mail at a bot costs the sender
+ *  reputation of every other client on it.
+ */
+function isSendable(x: FirebaseFirestore.DocumentData): boolean {
+  if (x.deleted === true) return false;
+  if (Array.isArray(x.spam_flags) && x.spam_flags.length > 0) return false;
+  return true;
+}
+
 async function loadContacts(
   db: ReturnType<typeof getAdminDb>,
   leagueId: string,
@@ -63,6 +83,7 @@ async function loadContacts(
     .catch(() => null);
   for (const d of coaches?.docs ?? []) {
     const x = d.data();
+    if (!isSendable(x)) continue;
     out.push({
       id: `coach:${d.id}`,
       name: [x.manager_first_name, x.manager_last_name]
@@ -87,6 +108,7 @@ async function loadContacts(
     .catch(() => null);
   for (const d of subs?.docs ?? []) {
     const x = d.data();
+    if (!isSendable(x)) continue;
     out.push({
       id: `sub:${d.id}`,
       name: typeof x.name === "string" ? x.name.trim() : "",
