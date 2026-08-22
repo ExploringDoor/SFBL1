@@ -280,15 +280,36 @@ export function LeagueForm({
             every field instantly. Checked server-side. */}
         <input type="hidden" name="form_opened_at" value={openedAt} readOnly />
 
-        {/* Honeypot — hidden from real users, bots fill it. */}
+        {/* Honeypot — hidden from real users, bots that fill every field get
+            caught.
+
+            THE NAME IS THE WHOLE DESIGN. This was `name="website"` until
+            2026-08-22, and `website` is precisely what 1Password, LastPass and
+            Chrome autofill drop the site URL into, because that is the field
+            they store beside a login. autoComplete="off" does not stop them;
+            password managers override it on purpose. So the trap caught
+            coaches who use a password manager and nothing else.
+
+            Measured over Island's first three weeks: this check caught ZERO
+            bots and THREE real teams (LI Rebels 12u Blue, Lindenhurst
+            Bulldogs, Long Island Rebels 14U White). Every actual bot was
+            caught by the submit-timing check instead, 16 for 16. Emilio
+            Estevez registered with a logo, a GameChanger link and a note about
+            which turf field they might get, and sat for 18 hours with no
+            sign-in code.
+
+            `le_hp` matches no autofill heuristic: not url, website, address,
+            email, name, phone, username or password. Keep it meaningless. If
+            you ever rename it, rename the server check in
+            /api/league-form with it. */}
         <input
           type="text"
-          name="website"
+          name="le_hp"
           autoComplete="off"
           tabIndex={-1}
           aria-hidden="true"
           style={{ position: "absolute", left: "-9999px", height: 0 }}
-          onChange={(e) => update("website", e.target.value)}
+          onChange={(e) => update("le_hp", e.target.value)}
         />
 
         <div className="le-form-grid">

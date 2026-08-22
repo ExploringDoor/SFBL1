@@ -1166,6 +1166,10 @@ const MAIL_NOT_CONFIGURED = new Set([
 // answer inside the race. Matched on a substring because the message carries
 // the elapsed seconds.
 const MAIL_TIMED_OUT = "may or may not have gone out";
+// Not a failure at all: we chose not to send, because the registration is
+// waiting on the office. Rendering it as "EMAIL FAILED" told Mike something
+// had broken and sent him looking for a fault that did not exist.
+const MAIL_HELD = "held for review";
 
 function mailState(
   s: Submission,
@@ -1182,6 +1186,7 @@ function mailState(
     // this existed carry no flag and stay unmarked.
     if (sent !== false) continue;
     const text = String(err ?? "");
+    if (text === MAIL_HELD) continue;
     if (MAIL_NOT_CONFIGURED.has(text)) unconfigured = true;
     // A timeout is genuinely unknown, not failed. The provider went quiet;
     // the message may already be in the family's inbox. Ranked below "failed"
