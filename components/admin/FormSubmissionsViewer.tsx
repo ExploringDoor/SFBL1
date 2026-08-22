@@ -1919,6 +1919,21 @@ function CreateTeamFromRegistration({
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [code, setCode] = useState<string | null>(null);
+  // Default ON, and that is the whole point of this control.
+  //
+  // /api/admin-provision-team only emails the coach when the caller passes
+  // sendCode: true, and until 2026-08-22 NOTHING in this codebase ever passed
+  // it. The button created the team, minted a sign-in code, and told nobody.
+  // The panel copy below even promised it would "mint their coach sign-in code
+  // and connect the coach's login", which reads as though the coach had been
+  // told. Emilio Estevez and Mariah Salvatto were each one click away from a
+  // team they still could not log in to.
+  //
+  // Left as a CHOICE rather than hardcoded, because the route is opt-in for a
+  // real reason: backfilling an old registration should not mail somebody out
+  // of the blue months later. Recent signups are the common case, so it starts
+  // ticked.
+  const [emailCode, setEmailCode] = useState(true);
 
   const teamName = String(submission.team_name ?? "").trim();
   const ageGroup = String(submission.age_group ?? "").trim();
@@ -1937,7 +1952,11 @@ function CreateTeamFromRegistration({
           "content-type": "application/json",
           authorization: `Bearer ${idToken}`,
         },
-        body: JSON.stringify({ leagueId, submissionId: submission.id }),
+        body: JSON.stringify({
+          leagueId,
+          submissionId: submission.id,
+          sendCode: emailCode,
+        }),
       });
       const j = (await res.json().catch(() => ({}))) as {
         error?: string;
@@ -1982,6 +2001,20 @@ function CreateTeamFromRegistration({
         {division ? ` · ${division}` : ""}, mint their coach sign-in code and
         connect the coach&rsquo;s login.
       </p>
+      <label className="mt-2 flex items-start gap-2 text-xs text-slate-700">
+        <input
+          type="checkbox"
+          checked={emailCode}
+          onChange={(e) => setEmailCode(e.target.checked)}
+          className="mt-0.5"
+        />
+        <span>
+          <strong>Email the coach their sign-in code.</strong> Without this they
+          get a team but no way to log in, and nobody tells them. Untick only
+          when you are tidying up an old registration and do not want to write
+          to them.
+        </span>
+      </label>
       <button
         type="button"
         onClick={create}
