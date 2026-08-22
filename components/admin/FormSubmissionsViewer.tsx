@@ -12,7 +12,7 @@
 // Reads via /api/admin-form-submissions which gates on the admin
 // claim. Same auth pattern as the audit-log + signups viewers.
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { User } from "firebase/auth";
 import { collection, getDocs } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
@@ -40,6 +40,23 @@ const KIND_TABS: { key: Kind; label: string }[] = [
   { key: "player_waiver", label: "Signed waivers" },
   { key: "site_feedback", label: "Site feedback" },
 ];
+
+// The College Clinic is one league's event, not a capability every league has.
+// Adam, 2026-08-20: "why is college clinic in admin for COYBL?"
+//
+// Leaving it in the strip gave every other league a tab that could only ever
+// be empty, and fetchTabCounts below asked the API for a kind those leagues
+// will never hold, once per admin load, forever.
+const TENANT_ONLY_KINDS: Partial<Record<Kind, string>> = {
+  clinic_registration: "island",
+};
+
+function kindTabsFor(leagueId: string) {
+  return KIND_TABS.filter((t) => {
+    const only = TENANT_ONLY_KINDS[t.key];
+    return !only || only === leagueId;
+  });
+}
 
 // Three states a submission can occupy. Missing status field on
 // existing docs is treated as "new" — pre-workflow submissions
@@ -104,6 +121,9 @@ interface Props {
 
 export function FormSubmissionsViewer({ leagueId, user }: Props) {
   const [kind, setKind] = useState<Kind>("player_registration");
+  // Filtered per league, so a tenant never sees (or fetches counts for) a
+  // submission kind it cannot hold.
+  const kindTabs = useMemo(() => kindTabsFor(leagueId), [leagueId]);
   const [items, setItems] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -279,7 +299,7 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
     try {
       const idToken = await user.getIdToken();
       const entries = await Promise.all(
-        KIND_TABS.map(async (t) => {
+        kindTabs.map(async (t) => {
           const params = new URLSearchParams({
             leagueId,
             kind: t.key,
@@ -301,7 +321,7 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
     } catch {
       // leave the previous badges in place
     }
-  }, [user, leagueId]);
+  }, [user, leagueId, kindTabs]);
 
   useEffect(() => {
     fetchTabCounts();
@@ -401,7 +421,7 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
       </div>
 
       <div className="flex gap-1 overflow-x-auto pb-1">
-        {KIND_TABS.map((t) => (
+        {kindTabs.map((t) => (
           <button
             key={t.key}
             type="button"

@@ -10,7 +10,7 @@
 // Developer-only sections (smoke test, recalc) live under "Tools"
 // so they're available but out of the way.
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { signOut, useLeagueRole, useUser } from "@/lib/auth-client";
 import { getDb } from "@/lib/firebase";
 import { useTenant } from "@/lib/tenant-context";
@@ -138,13 +138,42 @@ const MORE_TABS = MORE_KEYS.map((k) => TABS.find((t) => t.key === k)).filter(
   (t): t is (typeof TABS)[number] => !!t,
 );
 
+// Tabs whose CONTENT is already gated to one tenant further down this file.
+// The strip was not gated to match, so every other league got a tab that
+// opened an empty panel. Adam, 2026-08-20: "why is HOW TO in here for COYBL?
+// these are island specific."
+//
+// He was right, and it was worse than a stray tab. AdminHelp is written for
+// one league by name — it talks about Mike and Kaitlin and tells the reader to
+// sign in at islandfastpitch.com — so the only thing that kept it off Doug's
+// screen was the render guard. The tab itself was visible to everyone.
+//
+// Keyed by tenant id rather than a feature flag on purpose: this is not a
+// capability some league could switch on, it is content addressed to one
+// customer. A league that gets its own written guide gets its own entry here.
+const TENANT_ONLY_TABS: Partial<Record<TabKey, string>> = {
+  how_to: "island",
+  tournament_logos: "island",
+};
+
+function visibleTabs(list: typeof TABS, tenantId: string | null | undefined) {
+  return list.filter((t) => {
+    const only = TENANT_ONLY_TABS[t.key];
+    return !only || only === tenantId;
+  });
+}
+
 export default function AdminPage() {
   const { tenantId, config } = useTenant();
   const user = useUser();
   const role = useLeagueRole(tenantId);
   const [activeTab, setActiveTab] = useState<TabKey>("health");
   const [moreOpen, setMoreOpen] = useState(false);
-  const moreActive = MORE_SET.has(activeTab);
+  const topTabs = useMemo(() => visibleTabs(TOP_TABS, tenantId), [tenantId]);
+  const moreTabs = useMemo(() => visibleTabs(MORE_TABS, tenantId), [tenantId]);
+  // Only count the dropdown as active for a tab this tenant can actually see,
+  // so a hidden tab can never leave "More" highlighted with nothing under it.
+  const moreActive = moreTabs.some((t) => t.key === activeTab);
 
   if (user === undefined || role === "loading") {
     return <Shell heading={config?.name ?? "Admin"}>Checking your access…</Shell>;
@@ -207,7 +236,7 @@ export default function AdminPage() {
           swipeable row is much better. */}
       <div className="le-admin-tabbar">
         <nav className="le-admin-tabs">
-          {TOP_TABS.map((t) => (
+          {topTabs.map((t) => (
             <button
               key={t.key}
               type="button"
@@ -254,7 +283,7 @@ export default function AdminPage() {
                 onClick={() => setMoreOpen(false)}
               />
               <div className="le-admin-more-menu" role="menu">
-                {MORE_TABS.map((t) => (
+                {moreTabs.map((t) => (
                   <button
                     key={t.key}
                     type="button"

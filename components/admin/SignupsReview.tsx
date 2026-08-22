@@ -141,6 +141,64 @@ export function SignupsReview({ leagueId, user }: Props) {
     }
   }
 
+  // Approve every pending signup in one go. Adam, 2026-08-20: "for sign ups in
+  // admin, i want an accept all buttton".
+  //
+  // Sequential, not Promise.all: each approval is a write against the same
+  // league, and firing twenty at once is how you get contention on the roster
+  // count for no gain on a list this size.
+  //
+  // Partial success is reported honestly rather than rolled back. Approving is
+  // not destructive and each player is independent, so eleven of twelve
+  // succeeding is a real outcome worth keeping, and the failed one stays in
+  // the list to be retried on its own.
+  async function approveAll() {
+    const n = pending.length;
+    if (!n) return;
+    if (
+      !window.confirm(
+        `Approve all ${n} pending signup${n === 1 ? "" : "s"}? They will all be added to their rosters.`,
+      )
+    )
+      return;
+
+    setBusy("all");
+    setError(null);
+    setSuccess(null);
+    let ok = 0;
+    const failed: string[] = [];
+    try {
+      const idToken = await user.getIdToken();
+      for (const p of pending) {
+        try {
+          const res = await fetch("/api/admin-walkon-review", {
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+              authorization: `Bearer ${idToken}`,
+            },
+            body: JSON.stringify({ leagueId, playerId: p.id, action: "approve" }),
+          });
+          if (res.ok) ok += 1;
+          else failed.push(p.name);
+        } catch {
+          failed.push(p.name);
+        }
+      }
+      if (ok) setSuccess(`Approved ${ok} of ${n}.`);
+      if (failed.length) {
+        setError(
+          `Could not approve ${failed.length}: ${failed.slice(0, 5).join(", ")}${
+            failed.length > 5 ? "…" : ""
+          }. They are still listed below.`,
+        );
+      }
+      await load();
+    } finally {
+      setBusy(null);
+    }
+  }
+
   const teamName = (id: string) =>
     teams.find((t) => t.id === id)?.name ?? id;
 
@@ -154,14 +212,28 @@ export function SignupsReview({ leagueId, user }: Props) {
             include them on the roster, reject to soft-delete.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={load}
-          disabled={loading}
-          className="rounded-md border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-        >
-          {loading ? "…" : "Refresh"}
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Only rendered when there is something to approve, so the button
+            * is never a no-op the admin has to reason about. */}
+          {pending.length > 0 && (
+            <button
+              type="button"
+              onClick={approveAll}
+              disabled={busy != null || loading}
+              className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+            >
+              {busy === "all" ? "Approving…" : `✓ Approve all (${pending.length})`}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={load}
+            disabled={loading}
+            className="rounded-md border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          >
+            {loading ? "…" : "Refresh"}
+          </button>
+        </div>
       </div>
 
       {error && (
