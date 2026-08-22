@@ -452,7 +452,24 @@ function pickAllowed(
   const allow = new Set(ALLOWED_FIELDS[kind]);
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(raw)) {
-    if (allow.has(k)) out[k] = v;
+    if (!allow.has(k)) continue;
+    // TRIM EVERY STRING ON THE WAY IN. Phone keyboards and autofill both leave
+    // a trailing space, and a stored one is invisible everywhere it is
+    // displayed while quietly breaking every exact match against it. Island
+    // 2026-08-22: 38 fields across 20 records, including team_name
+    // "Lindenhurst Bulldogs " and a clinic registrant stored as "Alyssa ",
+    // whose name then rendered as "Alyssa  Schroeder" with two spaces on a
+    // card statement. Looking a team up by name simply missed.
+    //
+    // ENDS ONLY, never internal runs. Two of these records are `notes` fields
+    // carrying real line breaks, "Please include Jackie Barth on
+    // notifications... \nCell 631-807-3961\nemail ...", and collapsing
+    // whitespace would flatten a coach's message into one line.
+    //
+    // Ordering note: this runs before the REQUIRED check below, which already
+    // trims before testing, so a whitespace-only answer fails exactly as it
+    // did before. Nothing else changes.
+    out[k] = typeof v === "string" ? v.trim() : v;
   }
   return out;
 }
