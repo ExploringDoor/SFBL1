@@ -661,6 +661,18 @@ export async function POST(req: Request) {
   // the bot that hit COYBL submitted instantly. Only rejects when the client
   // actually reported a time — a missing value is logged, not blocked, so a
   // cached older page or a non-standard client is never punished for it.
+  // TWO THRESHOLDS, not one, and the gap between them is the whole design.
+  //
+  // Under CERTAIN_BOT_MS nothing human is possible. A coach fills seventeen
+  // fields; a clinic parent fills fourteen. Measured across Island's first 27
+  // flagged submissions the SLOWEST bot was 722ms and the median was 255ms,
+  // while every genuine submission ran to tens of seconds. 1500ms leaves
+  // roughly double the headroom over the worst bot ever seen here and is still
+  // an order of magnitude under a real person.
+  //
+  // Between the two it is a judgement call, so it stays a flag: saved, mailed
+  // to the office as NEEDS REVIEW, and a human decides.
+  const CERTAIN_BOT_MS = 1500;
   const formMs = Number((body as unknown as Record<string, unknown>).form_ms);
   if (Number.isFinite(formMs) && formMs >= 0 && formMs < 4000) {
     console.warn(
@@ -668,6 +680,15 @@ export async function POST(req: Request) {
     );
     spamFlags.push(`too_fast_${Math.round(formMs)}ms`);
   }
+  // Quarantined, NOT dropped. The document is still written in full and can be
+  // read in the admin's Spam filter, because the promise not to silently
+  // discard a real person still holds and always will. What it does not do is
+  // reach the office: 27 of these arrived in six days from 19 different IPs,
+  // across all five public forms, and the cost of that is not the junk itself.
+  // It is Mike learning to delete anything that looks automated, on the day a
+  // real coach lands in the same pile.
+  const certainBot =
+    Number.isFinite(formMs) && formMs >= 0 && formMs < CERTAIN_BOT_MS;
   if (!Number.isFinite(formMs)) {
     console.warn(
       `[league-form] no form_ms tenant=${tenantId} kind=${body.kind} ip=${ip} (direct POST or stale client)`,
@@ -827,6 +848,7 @@ export async function POST(req: Request) {
         // the subject line so a human decides, rather than this route
         // deciding on their behalf and destroying the evidence.
         ...(spamFlags.length ? { spam_flags: spamFlags } : {}),
+        ...(certainBot ? { spam: true } : {}),
       });
     // Count this SUCCESSFUL save against the per-IP rate budget (the check at
     // the top of the handler only reads it). Rejected attempts never reach
@@ -1009,7 +1031,7 @@ export async function POST(req: Request) {
       // office needs to know the trap is unreliable, otherwise "flagged as a
       // bot" reads as "safe to delete". The wording also has to be honest that
       // nothing was provisioned, because a flagged signup now waits for a human.
-      const sentTo = await notifyOffice({
+      const sentTo = certainBot ? 0 : await notifyOffice({
         subject: spamFlags.length
           ? `NEEDS REVIEW — ${built.subject}`
           : built.subject,

@@ -104,13 +104,17 @@ const NEXT_LABEL: Record<Status, string> = {
 // All all hide deleted), and the Deleted pill is the only place to
 // see them. Restoring from Deleted brings the row back wherever it
 // would have lived.
-type FilterMode = "actionable" | "all" | "deleted" | Status;
+type FilterMode = "actionable" | "all" | "deleted" | "spam" | Status;
 
 interface Submission {
   id: string;
   submitted_at: string;
   status?: Status;
   deleted?: boolean;
+  /** Written by /api/league-form when a submission arrives faster than any
+   *  human can type. Quarantined rather than deleted: still here, still
+   *  readable, just not in the office's way and never emailed. */
+  spam?: boolean;
   [k: string]: unknown;
 }
 
@@ -312,7 +316,7 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
           if (!res.ok) return [t.key, 0] as const;
           const data = (await res.json()) as { items?: Submission[] };
           const n = (data.items ?? []).filter(
-            (s) => !s.deleted && (s.status ?? "new") !== "done",
+            (s) => !s.deleted && !s.spam && (s.status ?? "new") !== "done",
           ).length;
           return [t.key, n] as const;
         }),
@@ -333,7 +337,7 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
     setTabCounts((cur) => ({
       ...cur,
       [kind]: items.filter(
-        (s) => !s.deleted && (s.status ?? "new") !== "done",
+        (s) => !s.deleted && !s.spam && (s.status ?? "new") !== "done",
       ).length,
     }));
   }, [items, kind]);
@@ -1082,7 +1086,7 @@ function StatusFilterBar({
 }) {
   // Live items only — deleted submissions have their own bucket
   // and shouldn't pollute the status counts.
-  const live = items.filter((s) => s.deleted !== true);
+  const live = items.filter((s) => s.deleted !== true && s.spam !== true);
   const counts = {
     new: live.filter((s) => (s.status ?? "new") === "new").length,
     in_progress: live.filter((s) => s.status === "in_progress").length,
@@ -1091,6 +1095,7 @@ function StatusFilterBar({
   const actionable = counts.new + counts.in_progress;
   const all = live.length;
   const deleted = items.filter((s) => s.deleted === true).length;
+  const spam = items.filter((s) => s.spam === true).length;
 
   // Filter labels use the same icons as the row pills so the bar
   // and the row state map 1:1 visually.
@@ -1104,6 +1109,7 @@ function StatusFilterBar({
     },
     { key: "done", label: `${STATUS_ICON.done} Done`, count: counts.done },
     { key: "all", label: "All", count: all },
+    { key: "spam", label: "Spam", count: spam },
     { key: "deleted", label: "🗑️ Deleted", count: deleted },
   ];
 
@@ -1144,8 +1150,11 @@ function filterItems(
   statusOf: (s: Submission) => Status,
 ): Submission[] {
   if (filter === "deleted") return items.filter((s) => s.deleted === true);
-  // Every non-deleted filter excludes trashed items.
-  const live = items.filter((s) => s.deleted !== true);
+  if (filter === "spam") return items.filter((s) => s.spam === true);
+  // Every other filter excludes trashed AND quarantined items. Spam earns its
+  // own bucket for the same reason Deleted has one: it is still evidence, and
+  // a false positive has to be findable.
+  const live = items.filter((s) => s.deleted !== true && s.spam !== true);
   if (filter === "all") return live;
   if (filter === "actionable") {
     return live.filter((s) => statusOf(s) !== "done");
@@ -1157,6 +1166,7 @@ function filterLabel(f: FilterMode): string {
   if (f === "actionable") return "Actionable";
   if (f === "all") return "All";
   if (f === "deleted") return "Deleted";
+  if (f === "spam") return "Spam";
   return STATUS_LABEL[f];
 }
 
