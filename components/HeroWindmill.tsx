@@ -66,6 +66,22 @@ export function HeroWindmill({
           </div>
         </div>
       </div>
+      {/* Big welcome band across the screen under the banner (Adam/Ken, for
+          promotion). This is the site's single welcome, so config.about is
+          cleared to avoid a duplicate smaller block below. */}
+      <div className="wm-welcome">
+        <div className="wm-welcome-in">
+          <span className="wm-welcome-kick">Welcome</span>
+          <h2 className="wm-welcome-h">
+            Girls Youth Softball across South Central Wisconsin
+          </h2>
+          <p className="wm-welcome-sub">
+            Serving Lake Mills and the surrounding communities since 1997. Age
+            divisions from 8U through high school, grouped regionally to keep
+            drive times short.
+          </p>
+        </div>
+      </div>
     </section>
   );
 }
