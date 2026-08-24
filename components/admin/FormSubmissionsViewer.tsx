@@ -26,7 +26,8 @@ type Kind =
   | "umpire_evaluation"
   | "site_feedback"
   | "player_waiver"
-  | "clinic_registration";
+  | "clinic_registration"
+  | "alerts_signup";
 
 const KIND_TABS: { key: Kind; label: string }[] = [
   { key: "player_registration", label: "Player registration" },
@@ -39,6 +40,9 @@ const KIND_TABS: { key: Kind; label: string }[] = [
   { key: "umpire_evaluation", label: "Umpire evaluation" },
   { key: "player_waiver", label: "Signed waivers" },
   { key: "site_feedback", label: "Site feedback" },
+  // Alerts sign-ups feed the Send Message recipient list directly. Without a
+  // tab here they could be seen there and deleted from nowhere.
+  { key: "alerts_signup", label: "Alerts sign-ups" },
 ];
 
 // The College Clinic is one league's event, not a capability every league has.
@@ -1250,6 +1254,11 @@ function summaryLine(kind: Kind, s: Submission): string {
   if (kind === "team_waiver") {
     return String(s.team_name ?? "(unnamed team)") +
       (s.signature ? ` — signed by ${s.signature}` : "");
+  }
+  if (kind === "alerts_signup") {
+    const who = String(s.name ?? "").trim() || "(no name)";
+    const age = s.age_group ? ` · ${s.age_group}` : "";
+    return `${who} — ${s.email ?? "no email"}${age}`;
   }
   if (kind === "clinic_registration") {
     // Grad year and position lead, because that is what the day is for and

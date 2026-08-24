@@ -37,6 +37,10 @@ const ALLOWED_KINDS = new Set([
   "umpire_evaluation",
   "site_feedback",
   "player_waiver",
+  // Alerts sign-ups. They feed the Send Message list and had no admin surface
+  // at all, so a bot signup could be seen in Send Message and removed from
+  // nowhere. Doug, forwarded 2026-08-23: "How can I delete this one ?"
+  "alerts_signup",
 ]);
 
 const ALLOWED_STATUSES = new Set(["new", "in_progress", "done"]);

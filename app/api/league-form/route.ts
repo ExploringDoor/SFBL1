@@ -1108,6 +1108,7 @@ export async function POST(req: Request) {
           origin,
           leagueName,
           leagueAbbrev,
+          certainBot,
         ),
         // Resolves a sentinel rather than undefined so a timeout is RECORDED
         // as a timeout. Resolving nothing would be indistinguishable from a
@@ -1145,6 +1146,7 @@ export async function POST(req: Request) {
       origin,
       leagueName,
       leagueAbbrev,
+      certainBot,
     ).catch(() => {});
   }
 
@@ -1229,7 +1231,33 @@ async function sendRegistrationEmails(
   origin: string,
   leagueName: string,
   leagueAbbrev: string,
+  certainBot = false,
 ): Promise<MailFlags> {
+  // A submission that could not have been typed by a person sends NOTHING.
+  //
+  // The team_registration path already did this at its own notifyOffice call.
+  // These three did not, so on 2026-08-23 a bot filled the alerts form in
+  // 283ms and the umpire board in 431ms, from two Tor exit addresses in
+  // 185.220.101.x, and Doug got an email for each inside the same minute. He
+  // forwarded them both asking "How can I delete this one?" and "spam?".
+  //
+  // The submission is still written and still visible under the admin's Spam
+  // filter, so the promise never to silently discard a real person holds. What
+  // stops is the mail.
+  //
+  // Both directions, deliberately. Suppressing only the office copy would
+  // still send a confirmation to the address the bot supplied, and every
+  // league here shares ONE SendGrid account, so mailing a throwaway address
+  // spends every other client's sender reputation to answer a robot.
+  if (certainBot) {
+    console.warn(
+      `[league-form] certain bot — no mail sent tenant=${tenantId} kind=${kind}`,
+    );
+    return {
+      office_email_sent: false,
+      office_email_error: "quarantined as a certain bot, no mail sent",
+    };
+  }
   // Site feedback goes to ADAM, not the league office (Adam, 2026-08-04).
   // Doug triages these in the admin panel and does not need an inbox for
   // them; Adam does, because "the standings page is broken" is his to fix.
