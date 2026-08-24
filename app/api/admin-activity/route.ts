@@ -101,8 +101,30 @@ export async function GET(req: Request) {
 
   const items: Item[] = [];
 
+  // Adam, 2026-08-23: "in activity in admin, no neeed to show what you suspect
+  // as the spam entries...keep them seperate, right?"
+  //
+  // Right. This feed is the answer to "what is happening in my league", and a
+  // bot filling the alerts form at 3am is not that. Worse, it trains the reader
+  // to skim past a feed that is supposed to be worth reading.
+  //
+  // Kept rather than dropped: these are still in the submissions viewer under
+  // the Spam filter, which is where a false positive gets rescued. This only
+  // decides what earns a line in the timeline. Counted, so the feed can say how
+  // many it is holding back instead of quietly editing history.
+  let hiddenSpam = 0;
+  const listed = (x: FirebaseFirestore.DocumentData): boolean => {
+    const spam =
+      x.deleted === true ||
+      x.spam === true ||
+      (Array.isArray(x.spam_flags) && x.spam_flags.length > 0);
+    if (spam) hiddenSpam += 1;
+    return !spam;
+  };
+
   for (const d of regs.docs) {
     const x = d.data();
+    if (!listed(x)) continue;
     const who = [x.manager_first_name, x.manager_last_name].filter(Boolean).join(" ");
     items.push({
       id: `reg:${d.id}`,
@@ -173,6 +195,7 @@ export async function GET(req: Request) {
 
   for (const d of feedback.docs) {
     const x = d.data();
+    if (!listed(x)) continue;
     items.push({
       id: `fb:${d.id}`,
       kind: "feedback",
@@ -185,6 +208,7 @@ export async function GET(req: Request) {
 
   for (const d of ads.docs) {
     const x = d.data();
+    if (!listed(x)) continue;
     items.push({
       id: `ad:${d.id}`,
       kind: "ad",
@@ -230,5 +254,7 @@ export async function GET(req: Request) {
     .sort((a, b) => b.at.localeCompare(a.at))
     .slice(0, 400);
 
-  return NextResponse.json({ ok: true, items: feed });
+  // hidden_spam lets the UI say what it is holding back. Silence would be a
+  // feed that edits history without telling the reader.
+  return NextResponse.json({ ok: true, items: feed, hidden_spam: hiddenSpam });
 }

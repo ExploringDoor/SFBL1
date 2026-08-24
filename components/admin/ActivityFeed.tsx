@@ -62,6 +62,9 @@ export function ActivityFeed({ leagueId, onNavigate }: Props) {
   const [err, setErr] = useState("");
   const [filter, setFilter] = useState("");
   const [read, setRead] = useState<Set<string>>(new Set());
+  // How many entries the API held back as spam. Shown rather than swallowed:
+  // a feed that quietly edits history is worse than one with junk in it.
+  const [hiddenSpam, setHiddenSpam] = useState(0);
 
   const KEY = `le-activity-read:${leagueId}`;
 
@@ -94,10 +97,11 @@ export function ActivityFeed({ leagueId, onNavigate }: Props) {
           `/api/admin-activity?leagueId=${encodeURIComponent(leagueId)}`,
           { headers: { authorization: `Bearer ${token}` } },
         );
-        const j = (await res.json()) as { items?: Item[]; error?: string };
+        const j = (await res.json()) as { items?: Item[]; error?: string; hidden_spam?: number };
         if (dead) return;
         if (j.error) setErr(j.error);
         setItems(j.items ?? []);
+        setHiddenSpam(Number(j.hidden_spam ?? 0));
       } catch {
         if (!dead) {
           setErr("Couldn't load activity.");
@@ -130,6 +134,12 @@ export function ActivityFeed({ leagueId, onNavigate }: Props) {
         <span className="text-sm font-semibold text-slate-700">
           {unread ? `${unread} new` : "All caught up"}
         </span>
+        {hiddenSpam > 0 && (
+          <span className="text-xs text-slate-500">
+            {hiddenSpam} suspected spam {hiddenSpam === 1 ? "entry" : "entries"}{" "}
+            hidden. See Form submissions, Spam.
+          </span>
+        )}
         {unread > 0 && (
           <button
             type="button"
