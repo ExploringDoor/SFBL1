@@ -157,8 +157,28 @@ const TENANT_ONLY_TABS: Partial<Record<TabKey, string | string[]>> = {
   tournament_logos: "island",
 };
 
+// Tabs hidden for a specific tenant — platform features the league never asked
+// for, kept off their admin to reduce clutter. Windmill (Adam, for Ken): a
+// simple youth league that only needs the day-to-day tools.
+const TENANT_HIDDEN_TABS: Record<string, TabKey[]> = {
+  windmill: [
+    "schedule-gen",
+    "arbiter",
+    "umpires",
+    "notifications",
+    "calendar",
+    "potw",
+    "playerads",
+    "branding",
+    "sponsors",
+    "audit",
+  ],
+};
+
 function visibleTabs(list: typeof TABS, tenantId: string | null | undefined) {
+  const hidden = new Set(TENANT_HIDDEN_TABS[tenantId ?? ""] ?? []);
   return list.filter((t) => {
+    if (hidden.has(t.key)) return false;
     const only = TENANT_ONLY_TABS[t.key];
     if (!only) return true;
     return Array.isArray(only)
