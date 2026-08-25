@@ -1,7 +1,9 @@
 // Windmill's own admin "How to" tab. The shared AdminHelp is written for
-// Island (magic-link logins, its own URL), so Windmill gets a version matching
-// its real setup: shared admin password, per-team captain codes, Venmo/check
-// payments. Mirrors the Windmill Admin Guide PDF. Screenshots to be added.
+// Island; Windmill gets a version matching its real setup (shared admin
+// password, per-team captain codes, Venmo/check payments) with a screenshot
+// of each screen. Mirrors the Windmill Admin Guide PDF. Screenshots live in
+// public/windmill/help/ (Captains is cropped above the code table so codes
+// never appear on a public URL).
 
 const CHEAT: [string, string][] = [
   ["Put in game scores", "Scores"],
@@ -21,12 +23,14 @@ interface Step {
   tab?: string;
   steps: string[];
   note?: string;
+  img?: string;
 }
 
 const STEPS: Step[] = [
   {
     n: 1,
     title: "Getting in",
+    img: "/windmill/help/login.png",
     steps: [
       "Go to windmill-site.vercel.app/admin.",
       "Enter the league admin password (Adam has it; it can be changed anytime).",
@@ -37,6 +41,7 @@ const STEPS: Step[] = [
     n: 2,
     title: "Entering game scores",
     tab: "Scores",
+    img: "/windmill/help/scores.png",
     steps: [
       "Open Scores.",
       "Find the game, type the two final scores, and press Enter or Save.",
@@ -56,6 +61,7 @@ const STEPS: Step[] = [
     n: 4,
     title: "Changing the schedule",
     tab: "Schedule",
+    img: "/windmill/help/schedule.png",
     steps: [
       "Open Schedule and find the game.",
       "To move it: change the date, time, or field, then save.",
@@ -67,9 +73,10 @@ const STEPS: Step[] = [
     n: 5,
     title: "Coaches and their login codes",
     tab: "Captains",
+    img: "/windmill/help/captains.png",
     steps: [
       "Every team has its own code, a club word plus four digits (e.g. tornados4821). Coaches sign in at windmill-site.vercel.app/captain by picking their team and entering the code.",
-      "Open Captains to see each team's code, whether it is set, and when the coach last logged in.",
+      "Open Captains to see each team's code, whether it is set, and when the coach last logged in. Click a row to view or copy that team's code.",
       "To reset a code: open the team and set a new one.",
     ],
     note: "Once email is switched on, you can email a coach their code from this tab. Until then, copy the code and send it yourself.",
@@ -78,9 +85,10 @@ const STEPS: Step[] = [
     n: 6,
     title: "Registrations",
     tab: "Form submissions",
+    img: "/windmill/help/registrations.png",
     steps: [
       "Open Form submissions to see every team that registered online, with coach and rec/club-lead contacts, division, and skill level.",
-      "Use Signups to approve any players a coach added.",
+      "Use the buttons to switch between Team registration, Player registration, waivers, and alert sign-ups.",
       "Nothing is ever lost. Every submission is saved, even one flagged by the spam check.",
     ],
   },
@@ -88,9 +96,10 @@ const STEPS: Step[] = [
     n: 7,
     title: "Payments",
     tab: "Payments",
+    img: "/windmill/help/payments.png",
     steps: [
       "Open Payments to see who has paid, per team, with running totals.",
-      "To log a Venmo, check, or cash payment: type the amount for that team and click Mark paid.",
+      "To log a Venmo, check, or cash payment: type the amount for that team and click Save.",
       "You can send a team its own card-payment link to paste into a text or email.",
     ],
     note: "Card payments made on the registration form appear here automatically. A payment in your own Square app does NOT sync, record those by hand. Accepting cards on the site needs Ken's Square account connected; Venmo, check, and pay-later work today.",
@@ -99,6 +108,7 @@ const STEPS: Step[] = [
     n: 8,
     title: "Posting a homepage alert",
     tab: "Alerts",
+    img: "/windmill/help/alerts.png",
     steps: [
       "Open Alerts.",
       "Type a title and message, choose a level (info, warning, or critical), and publish.",
@@ -109,6 +119,7 @@ const STEPS: Step[] = [
     n: 9,
     title: "Messaging coaches",
     tab: "Send Message",
+    img: "/windmill/help/message.png",
     steps: [
       "Open Send Message.",
       "Pick who gets it: everyone, registered coaches, or your alert sign-up list.",
@@ -130,8 +141,8 @@ export function WindmillAdminHelp() {
       <div>
         <h2 className="text-xl font-bold text-slate-900">Running the site</h2>
         <p className="mt-1 text-sm text-slate-600">
-          A plain-English walkthrough of the day-to-day tasks. Nothing here can
-          lose data. (Step-by-step screenshots are being added.)
+          A plain-English walkthrough of the day-to-day tasks, with a picture of
+          each screen. Nothing here can lose data.
         </p>
       </div>
 
@@ -156,7 +167,7 @@ export function WindmillAdminHelp() {
       </div>
 
       {/* steps */}
-      <div className="space-y-5">
+      <div className="space-y-6">
         {STEPS.map((s) => (
           <section key={s.n} className="rounded-lg border border-slate-200 p-4">
             <h3 className="flex items-baseline gap-2 text-base font-bold text-slate-900">
@@ -177,6 +188,15 @@ export function WindmillAdminHelp() {
               <p className="mt-3 rounded border-l-4 border-amber-400 bg-amber-50 px-3 py-2 text-[13px] text-slate-700">
                 {s.note}
               </p>
+            )}
+            {s.img && (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={s.img}
+                alt={`${s.title} screen`}
+                loading="lazy"
+                className="mt-3 w-full rounded-lg border border-slate-200 shadow-sm"
+              />
             )}
           </section>
         ))}
