@@ -42,6 +42,7 @@ import { ScoresManager } from "@/components/admin/ScoresManager";
 import { SponsorsManager } from "@/components/admin/SponsorsManager";
 import { TournamentLogosManager } from "@/components/admin/TournamentLogosManager";
 import { AdminHelp } from "@/components/admin/AdminHelp";
+import { WindmillAdminHelp } from "@/components/admin/WindmillAdminHelp";
 import { NewsManager } from "@/components/admin/NewsManager";
 import { PlayerOfWeekManager } from "@/components/admin/PlayerOfWeekManager";
 import { PaymentsAdmin } from "@/components/admin/PaymentsAdmin";
@@ -151,15 +152,18 @@ const MORE_TABS = MORE_KEYS.map((k) => TABS.find((t) => t.key === k)).filter(
 // Keyed by tenant id rather than a feature flag on purpose: this is not a
 // capability some league could switch on, it is content addressed to one
 // customer. A league that gets its own written guide gets its own entry here.
-const TENANT_ONLY_TABS: Partial<Record<TabKey, string>> = {
-  how_to: "island",
+const TENANT_ONLY_TABS: Partial<Record<TabKey, string | string[]>> = {
+  how_to: ["island", "windmill"],
   tournament_logos: "island",
 };
 
 function visibleTabs(list: typeof TABS, tenantId: string | null | undefined) {
   return list.filter((t) => {
     const only = TENANT_ONLY_TABS[t.key];
-    return !only || only === tenantId;
+    if (!only) return true;
+    return Array.isArray(only)
+      ? only.includes(tenantId ?? "")
+      : only === tenantId;
   });
 }
 
@@ -556,6 +560,7 @@ export default function AdminPage() {
             its own switched-off features. A generic version would be worse
             than none. */}
         {activeTab === "how_to" && tenantId === "island" && <AdminHelp />}
+        {activeTab === "how_to" && tenantId === "windmill" && <WindmillAdminHelp />}
         {activeTab === "tournament_logos" && tenantId === "island" && (
           <TournamentLogosManager leagueId={tenantId} user={user} />
         )}

@@ -17,6 +17,7 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { formatGameDate, formatTime12 } from "@/lib/format-time";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -163,7 +164,12 @@ export async function GET(req: Request) {
         kind: "score",
         at: scored,
         title: `Final: ${away} ${x.away_score} at ${home} ${x.home_score}`,
-        detail: String(x.date ?? ""),
+        detail: formatGameDate(x.date, x.time, {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }),
         tab: "scores",
       });
     }
@@ -174,7 +180,17 @@ export async function GET(req: Request) {
         kind: "game",
         at: made,
         title: `Game posted: ${away} at ${home}`,
-        detail: [x.date, x.time, x.field].filter(Boolean).join(" · "),
+        detail: [
+          formatGameDate(x.date, x.time, {
+            weekday: "short",
+            month: "short",
+            day: "numeric",
+          }),
+          formatTime12(x.time),
+          x.field,
+        ]
+          .filter(Boolean)
+          .join(" · "),
         tab: "schedule",
       });
     }
