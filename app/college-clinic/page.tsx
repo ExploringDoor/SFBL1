@@ -1,4 +1,4 @@
-// College Clinic registration — 12 October 2026. Venue not published.
+// College Clinic registration — 12 October 2026, St John the Baptist HS.
 //
 // Mike ran this off a flyer with "REGISTER AT ISLANDFASTPITCH.COM" printed on
 // it and nothing behind it (via Adam, 2026-08-18). This is that page.
@@ -29,7 +29,7 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "College Clinic",
   description:
-    "Island Fastpitch College Clinic, October 12 2026. Ten college programs in attendance. Open to 14U, 16U and 18U.",
+    "Island Fastpitch College Clinic, October 12 2026 at St John the Baptist HS. Nine college programs in attendance. Open to 14U, 16U and 18U.",
 };
 
 const AGE_GROUPS = [
@@ -141,10 +141,11 @@ export default async function CollegeClinicPage() {
             <li><strong>${CLINIC.fee}</strong> per player</li>
             <li>{CLINIC.capacity} player max</li>
           </ul>
-          {/* Venue removed 2026-08-23. Deliberately renders NOTHING rather
-              than "Location TBA": the clinic is eight weeks out and a promise
-              to announce something is a promise somebody then has to keep.
-              Families who ask get told by the office. See lib/clinic.ts. */}
+          <p className="le-clinic-where">
+            <strong>{CLINIC.venue}</strong>
+            <br />
+            {CLINIC.address}
+          </p>
         </div>
       </section>
 

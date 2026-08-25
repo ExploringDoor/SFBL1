@@ -56,28 +56,31 @@ export const CLINIC = {
   ages: "14U, 16U and 18U",
   fee: 175,
   capacity: 40,
-  /** VENUE AND FLYER REMOVED 2026-08-23, on Adam's instruction.
+  venue: "St John the Baptist HS",
+  address: "1170 Montauk Hwy, West Islip, NY",
+  /** THE FLYER IS DOWN, and the venue above is NOT the reason.
    *
-   *  They come as a pair. The printed flyer has "LOCATION: ST. JOHN THE
-   *  BAPTIST HS" across it, so taking the venue out of the text while still
-   *  showing the flyer would have published the same claim in a picture, where
-   *  nobody would think to look for it. The address went with it for the same
-   *  reason: 1170 Montauk Hwy IS that school, so leaving it named the venue
-   *  without saying so.
+   *  Removed 2026-08-23 on a misread: "remove St John from the clinic info"
+   *  meant St John's UNIVERSITY, a college that is no longer attending, not
+   *  St John the Baptist HS, which is still the venue. The venue is restored.
    *
-   *  Note the colleges list below still contains "St John's University". That
-   *  is a college attending, not the venue, and it stays.
+   *  The flyer stays down because of the college, not the venue. Mike's
+   *  printed flyer carries ten logos under "COLLEGES IN ATTENDANCE" and one of
+   *  them is ST JOHN'S UNIVERSITY. Publishing it now would advertise a program
+   *  that is not coming, to parents paying $175 partly to be seen by it, and
+   *  a picture is the one place that claim cannot be quietly corrected.
    *
-   *  To put a venue back, add `venue` and `address` here and restore the
-   *  block in app/college-clinic/page.tsx and the line in the confirmation
-   *  email in /api/league-form. Everything else reads from this file. */
+   *  To put it back: get a reprint from Mike without the St John's logo, drop
+   *  it at public/island/clinic/flyer.jpg, add `flyer` here, and restore the
+   *  <img> in components/ui/ClinicPopup.tsx in place of the text block. */
   phone: "631-831-4793",
   /** Reads naturally in the success message whichever player it is. */
   playerNoun: "Your player",
   colleges: [
     "Wagner College",
     "LIU",
-    "St John's University",
+    // St John's University was here until 2026-08-23. No longer attending.
+    // The count in the popup reads colleges.length, so it corrected itself.
     "Mount Saint Vincent",
     "Dominican College",
     "CCNY, The City College of New York",
