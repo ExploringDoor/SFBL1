@@ -7295,9 +7295,9 @@ select:focus-visible {
 }
 .le-clinic-pop {
   position: relative;
-  /* Narrower than the text version was: the flyer is 2:3 portrait, so width
-     drives height and 400px already makes a 600px tall dialog before the
-     buttons. */
+  /* 400px was chosen when a 2:3 flyer drove the height. The flyer is gone and
+     the text that replaced it is far shorter, so the same width now reads as a
+     compact card rather than a poster. Kept deliberately. */
   width: min(400px, 100%);
   background: linear-gradient(150deg, #0b1730 0%, #13284a 62%, #7f1d2b 165%);
   color: #fff;
@@ -7333,12 +7333,39 @@ select:focus-visible {
 }
 /* The flyer fills the dialog edge to edge above the buttons. Its own margins
    are part of the artwork, so the card adds none of its own. */
-.le-clinic-pop-flyer {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 10px;
-  margin: 0 0 16px;
+/* Replaced the flyer image 2026-08-23. The dialog used to be sized around a
+   2:3 portrait picture; this is the text that took its place. */
+.le-clinic-pop-head {
+  margin: 0 0 18px;
+}
+.le-clinic-pop-kicker {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7fb2ff;
+}
+.le-clinic-pop-title {
+  margin: 4px 0 14px;
+  font-size: clamp(1.7rem, 6vw, 2.1rem);
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.le-clinic-pop-facts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 0.95rem;
+  color: #dbe6f2;
+}
+.le-clinic-pop-facts strong {
+  color: #fff;
 }
 .le-clinic-pop-eyebrow {
   font-size: 11px;

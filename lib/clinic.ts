@@ -52,14 +52,25 @@ export const CLINIC = {
   /** ISO, for the "has it happened yet" check. */
   date: DATE,
   dateLabel: DATE_LABEL,
-  /** The flyer, as Mike printed it. Shown in the arrival popup. */
-  flyer: "/island/clinic/flyer.jpg",
   timeLabel: "9:00 AM to 2:00 PM",
   ages: "14U, 16U and 18U",
   fee: 175,
   capacity: 40,
-  venue: "St John the Baptist HS",
-  address: "1170 Montauk Hwy, West Islip, NY",
+  /** VENUE AND FLYER REMOVED 2026-08-23, on Adam's instruction.
+   *
+   *  They come as a pair. The printed flyer has "LOCATION: ST. JOHN THE
+   *  BAPTIST HS" across it, so taking the venue out of the text while still
+   *  showing the flyer would have published the same claim in a picture, where
+   *  nobody would think to look for it. The address went with it for the same
+   *  reason: 1170 Montauk Hwy IS that school, so leaving it named the venue
+   *  without saying so.
+   *
+   *  Note the colleges list below still contains "St John's University". That
+   *  is a college attending, not the venue, and it stays.
+   *
+   *  To put a venue back, add `venue` and `address` here and restore the
+   *  block in app/college-clinic/page.tsx and the line in the confirmation
+   *  email in /api/league-form. Everything else reads from this file. */
   phone: "631-831-4793",
   /** Reads naturally in the success message whichever player it is. */
   playerNoun: "Your player",

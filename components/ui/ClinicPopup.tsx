@@ -113,22 +113,32 @@ export function ClinicPopup() {
           ×
         </button>
 
-        {/* Mike's own flyer, rather than a text version of it. It already
-            carries the date, the price, the cap and all ten college marks,
-            and it is what families have seen on Instagram and on paper, so
-            recognising it is half the job. Plain <img>: it is a static asset
-            we resized ourselves, so there is nothing for next/image to do.
+        {/* The flyer used to be here, as Mike printed it. Taken down
+            2026-08-23 with the venue, because it has "LOCATION: ST. JOHN THE
+            BAPTIST HS" printed across it and an image is the one place a stale
+            claim can sit unnoticed.
 
-            The flyer's printed "REGISTER AT ISLANDFASTPITCH.COM" is not
-            clickable, which is exactly why the buttons stay underneath it. */}
-        <img
-          className="le-clinic-pop-flyer"
-          src={CLINIC.flyer}
-          alt={`Island Fastpitch College Clinic, ${CLINIC.dateLabel}, ${CLINIC.timeLabel}, ${CLINIC.ages}, $${CLINIC.fee} per player, at ${CLINIC.venue}`}
-          width={800}
-          height={1200}
-          decoding="async"
-        />
+            Replaced with the same facts in text rather than deleted outright.
+            A popup that interrupts someone and then shows only two buttons has
+            not earned the interruption, and this is still the first thing a
+            visitor sees. Everything here reads from lib/clinic.ts, so it
+            cannot drift from the registration page the way a picture can. */}
+        <div className="le-clinic-pop-head">
+          <p className="le-clinic-pop-kicker">Island Fastpitch</p>
+          <h2 className="le-clinic-pop-title">College Clinic</h2>
+          <ul className="le-clinic-pop-facts">
+            <li>
+              <strong>{CLINIC.dateLabel}</strong>
+            </li>
+            <li>{CLINIC.timeLabel}</li>
+            <li>Open to {CLINIC.ages}</li>
+            <li>
+              <strong>${CLINIC.fee}</strong> per player &middot;{" "}
+              {CLINIC.capacity} player max
+            </li>
+            <li>{CLINIC.colleges.length} college programs attending</li>
+          </ul>
+        </div>
 
         <div className="le-clinic-pop-actions">
           <Link

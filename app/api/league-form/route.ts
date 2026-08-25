@@ -1351,8 +1351,10 @@ async function sendRegistrationEmails(
           `<p>Hi ${esc(parent) || "there"},</p>` +
           `<p>Thanks for registering <strong>${esc(player)}</strong> for the ` +
           `${esc(leagueName)} College Clinic.</p>` +
-          `<p><strong>${esc(CLINIC.dateLabel)}</strong>, ${esc(CLINIC.timeLabel)}<br/>` +
-          `${esc(CLINIC.venue)}, ${esc(CLINIC.address)}</p>` +
+          // Venue and address removed 2026-08-23 with the flyer. This is the
+          // confirmation a parent keeps and turns up with, so it must not
+          // carry a location the league has stopped standing behind.
+          `<p><strong>${esc(CLINIC.dateLabel)}</strong>, ${esc(CLINIC.timeLabel)}</p>` +
           // The place is not theirs until the money lands, and saying so once
           // here is kinder than telling them at the gate on the day.
           // "You can still do it from the registration page" was not true.
