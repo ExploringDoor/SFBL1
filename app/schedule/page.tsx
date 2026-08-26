@@ -15,7 +15,6 @@ import {
 } from "@/lib/season";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { ScoresScheduleTabs, WeekRow } from "../scores/tabs-and-weeks";
-import { SubscribeCalendar } from "@/components/SubscribeCalendar";
 import { DivisionFilter } from "@/components/ui/DivisionFilter";
 import { combineDateTime } from "@/lib/format-time";
 
@@ -161,33 +160,12 @@ export default async function SchedulePage({
 
   return (
     <main className="container py-10">
-      <header className="mb-6 flex items-end justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="font-display" style={{ fontSize: "clamp(40px, 6vw, 64px)" }}>
-            <span style={{ color: "var(--text-strong)" }}>Season</span>{" "}
-            <span style={{ color: "var(--brand-primary)" }}>Schedule</span>
-          </h1>
-          {config?.name && <p className="sec-eyebrow mt-1">{config.name}</p>}
-        </div>
-        <div className="flex flex-col items-end gap-2">
-          <SubscribeCalendar />
-          {/* Flat CSV of the whole schedule — opens straight in Excel /
-              Sheets. For the umpire assigner etc. (Adam, 2026-06). */}
-          <a
-            href="/api/schedule.csv"
-            className="font-barlow text-xs font-bold uppercase tracking-wider hover:underline"
-            style={{ color: "var(--brand-primary)" }}
-          >
-            ⬇ Download for Excel (CSV)
-          </a>
-          <a
-            href="/print/schedule"
-            className="font-barlow text-xs font-bold uppercase tracking-wider hover:underline"
-            style={{ color: "var(--brand-primary)" }}
-          >
-            🖨 Print schedule
-          </a>
-        </div>
+      <header className="mb-6">
+        <h1 className="font-display" style={{ fontSize: "clamp(40px, 6vw, 64px)" }}>
+          <span style={{ color: "var(--text-strong)" }}>Season</span>{" "}
+          <span style={{ color: "var(--brand-primary)" }}>Schedule</span>
+        </h1>
+        {config?.name && <p className="sec-eyebrow mt-1">{config.name}</p>}
       </header>
 
       <ScoresScheduleTabs active="schedule" />

@@ -16,7 +16,6 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
-import { SubscribeCalendar } from "@/components/SubscribeCalendar";
 import { combineDateTime, formatTime12 } from "@/lib/format-time";
 
 interface GameRow {
@@ -128,22 +127,8 @@ export function ScheduleTab({ leagueId, teamId }: ScheduleTabProps) {
       <div className="cap-section-head">
         <h2 className="cap-section-title">Schedule</h2>
         <p className="cap-section-sub">
-          Your team's upcoming + past games. Subscribe to your team's
-          schedule so the calendar app on your phone updates as games
-          shift.
+          Your team&apos;s upcoming + past games.
         </p>
-      </div>
-
-      <div
-        style={{
-          marginBottom: 22,
-          display: "flex",
-          gap: 10,
-          flexWrap: "wrap",
-          alignItems: "center",
-        }}
-      >
-        <SubscribeCalendar teamId={teamId} />
       </div>
 
       {loading ? (
