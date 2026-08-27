@@ -26,6 +26,10 @@ const ALLOWED_KINDS = new Set([
   // at all, so a bot signup could be seen in Send Message and removed from
   // nowhere. Doug, forwarded 2026-08-23: "How can I delete this one ?"
   "alerts_signup",
+  // COYBL umpire registration. Doug runs this every year and the entry number
+  // is the umpire's registration number, so these rows are referenced by
+  // people, not just counted.
+  "umpire_registration",
 ]);
 
 export async function GET(req: Request) {

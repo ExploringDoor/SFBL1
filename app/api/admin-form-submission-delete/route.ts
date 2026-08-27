@@ -36,6 +36,10 @@ const ALLOWED_KINDS = new Set([
   // allow-list rejected it. Adam, 2026-08-20, on three of them sitting in
   // COYBL's list: "yes delete them".
   "alerts_signup",
+  // COYBL umpire registration. Doug runs this every year and the entry number
+  // is the umpire's registration number, so these rows are referenced by
+  // people, not just counted.
+  "umpire_registration",
 ]);
 
 interface Body {

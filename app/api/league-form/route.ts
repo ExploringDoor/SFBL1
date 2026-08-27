@@ -52,7 +52,8 @@ type Kind =
   | "player_ad"
   | "site_feedback"
   | "player_waiver"
-  | "clinic_registration";
+  | "clinic_registration"
+  | "umpire_registration";
 
 interface SubmissionBody {
   kind: Kind;
@@ -96,6 +97,35 @@ const ALLOWED_FIELDS: Record<Kind, string[]> = {
   // at 40. Grad year and high school are in here because the point of the day
   // is college coaches watching, and a recruiter's first two questions are
   // what position and what year.
+  // COYBL umpire registration. Doug's own form is at
+  // coybl.sportngin.com/register/form/123104747 and re-runs EVERY YEAR: "Umpires
+  // must register each year." Free to register, and a current OHSAA license is
+  // a separate requirement he states on the welcome page.
+  //
+  // Field names mirror the league's umpire roster (name / level / email /
+  // phone in components/admin/UmpiresManager.tsx) so a registration can be
+  // promoted onto the roster without a translation layer.
+  umpire_registration: [
+    "first_name",
+    "last_name",
+    "email",
+    "phone",
+    "address",
+    "city",
+    "state",
+    "zip",
+    "level",
+    "ohsaa_licensed",
+    "ohsaa_number",
+    "years_experience",
+    "age_groups",
+    "travel_radius",
+    "shirt_size",
+    "emergency_name",
+    "emergency_phone",
+    "notes",
+    "agreed_to_terms",
+  ],
   clinic_registration: [
     "player_first_name",
     "player_last_name",
@@ -246,6 +276,18 @@ const ALLOWED_FIELDS: Record<Kind, string[]> = {
 };
 
 const REQUIRED: Record<Kind, string[]> = {
+  // Deliberately short. Doug's stated purpose is "to send updates and info to
+  // you and to contact you in case of an issue at a COYBL event", so the only
+  // hard requirements are who you are and how to reach you. Everything else
+  // helps him assign games and is optional, because a half-filled registration
+  // from a real umpire beats a bounced one.
+  umpire_registration: [
+    "first_name",
+    "last_name",
+    "email",
+    "phone",
+    "agreed_to_terms",
+  ],
   player_waiver: [
     "player_first_name",
     "player_last_name",
@@ -835,6 +877,49 @@ export async function POST(req: Request) {
   }
 
   let ref;
+  // COYBL umpires get a NUMBER, not just a record. Doug's own form says so:
+  // "Your Registration Entry number will be your 2026 COYBL Umpire
+  // registration number as it is a special number assigned to you." On
+  // SportsEngine that number falls out of the entry sequence, so moving to a
+  // Firestore document id would have quietly taken away something he has been
+  // handing to umpires for years.
+  //
+  // Sequential per league per SEASON, because "umpires must register each
+  // year" — the counter is keyed on the season so 2027 starts at 1 again
+  // rather than continuing 2026's run.
+  //
+  // A transaction, not a collection count: two umpires submitting in the same
+  // second would both read the same count and be issued the same number, and
+  // the number is the thing that identifies them.
+  let registrationNumber: number | null = null;
+  if (body.kind === "umpire_registration" && !certainBot) {
+    try {
+      // The league's OWN season_year, not the calendar year. Doug opened the
+      // "2026 Umpire Registration" on 1 September 2025, so an umpire signing up
+      // that autumn belongs to the 2026 run. new Date().getFullYear() would
+      // have filed them under 2025 and restarted the numbering in January,
+      // mid-season, handing two umpires the same number.
+      const leagueDoc = await db.doc(`leagues/${tenantId}`).get();
+      const season =
+        Number(leagueDoc.data()?.season_year) || new Date().getFullYear();
+      const counter = db.doc(
+        `leagues/${tenantId}/counters/umpire_registration_${season}`,
+      );
+      registrationNumber = await db.runTransaction(async (tx) => {
+        const snap = await tx.get(counter);
+        const next = Number(snap.data()?.next ?? 1);
+        tx.set(counter, { next: next + 1, updated_at: new Date().toISOString() }, { merge: true });
+        return next;
+      });
+    } catch (e) {
+      // Never fail the registration over the number. An umpire who filled the
+      // form in must be recorded either way; the office can assign a number by
+      // hand from the admin far more easily than that umpire can be persuaded
+      // to fill it in twice.
+      console.error("[league-form] umpire number transaction failed:", e);
+    }
+  }
+
   try {
     ref = await db
       .collection(`leagues/${tenantId}/form_submissions/${body.kind}/items`)
@@ -844,6 +929,9 @@ export async function POST(req: Request) {
         mailbox,
         ip,
         user_agent: h.get("user-agent") ?? null,
+        ...(registrationNumber != null
+          ? { registration_number: registrationNumber }
+          : {}),
         // Empty for an ordinary submission. When set, the office is told in
         // the subject line so a human decides, rather than this route
         // deciding on their behalf and destroying the evidence.
@@ -1109,6 +1197,7 @@ export async function POST(req: Request) {
           leagueName,
           leagueAbbrev,
           certainBot,
+          registrationNumber,
         ),
         // Resolves a sentinel rather than undefined so a timeout is RECORDED
         // as a timeout. Resolving nothing would be indistinguishable from a
@@ -1147,10 +1236,21 @@ export async function POST(req: Request) {
       leagueName,
       leagueAbbrev,
       certainBot,
+      registrationNumber,
     ).catch(() => {});
   }
 
-  return NextResponse.json({ ok: true, id: ref.id });
+  // registration_number goes back to the browser so the success screen can
+  // show it. Doug's umpires are told this number IS their COYBL registration
+  // number, so it has to be on screen the moment they finish, not only in an
+  // email that may bounce or land in spam.
+  return NextResponse.json({
+    ok: true,
+    id: ref.id,
+    ...(registrationNumber != null
+      ? { registration_number: registrationNumber }
+      : {}),
+  });
 }
 
 // Email a coach the code they type to get into their team page.
@@ -1232,6 +1332,9 @@ async function sendRegistrationEmails(
   leagueName: string,
   leagueAbbrev: string,
   certainBot = false,
+  /** Assigned in POST, not derivable here: the number lives on a per-season
+   *  counter and is issued once, inside a transaction. */
+  registrationNumber: number | null = null,
 ): Promise<MailFlags> {
   // A submission that could not have been typed by a person sends NOTHING.
   //
@@ -1450,6 +1553,93 @@ async function sendRegistrationEmails(
   // Office only, no confirmation to the submitter: none of these is a
   // transaction anyone is waiting on, and mailing a poster back would read as
   // approval of a post that has not been reviewed yet.
+  // Umpire registration. Its own branch because the generic builder below
+  // reads manager_first_name and would have addressed every umpire as "Hi
+  // there" and told them the office would "follow up with payment", on a
+  // registration Doug states three times is free.
+  //
+  // The confirmation email is not a courtesy here, it is load-bearing. Doug's
+  // own welcome page, in capitals: "IF YOU DO NOT GET AN EMAIL CONFIRMING YOUR
+  // REGISTRATION, YOU DID NOT COMPLETE IT PROPERLY AND WILL NEED TO REDO IT."
+  // So the email has to arrive, has to be recognisable as the confirmation,
+  // and has to carry the number.
+  if (kind === "umpire_registration") {
+    const f = (k: string) =>
+      typeof data[k] === "string" ? (data[k] as string).trim() : "";
+    const name = `${f("first_name")} ${f("last_name")}`.trim();
+    const email = f("email");
+    const num =
+      typeof registrationNumber === "number" ? String(registrationNumber) : "";
+    const flags: MailFlags = {};
+
+    if (email) {
+      const res = await sendEmail({
+        to: email,
+        subject: `Your ${leagueAbbrev} umpire registration is confirmed${num ? ` (#${num})` : ""}`,
+        html:
+          `<p>Hi ${esc(name) || "there"},</p>` +
+          `<p>Your umpire registration with ${esc(leagueName)} is complete. ` +
+          `This email is your confirmation, so keep it.</p>` +
+          (num
+            ? `<p style="background:#f1f5f9;border:1px solid #cbd5e1;padding:12px 14px;border-radius:8px">` +
+              `<strong style="font-size:18px">Your registration number is ${esc(num)}.</strong><br/>` +
+              `This is your ${esc(leagueAbbrev)} umpire registration number for the season.` +
+              `</p>`
+            : "") +
+          `<p>There is no cost to register. A current OHSAA licence is a ` +
+          `separate requirement and is also needed to work ${esc(leagueAbbrev)} games.</p>` +
+          `<p>Registration runs every year, so you will be asked to do this ` +
+          `again next season.</p>`,
+        replyTo: notifyAddress() ?? undefined,
+      });
+      flags.confirmation_email_sent = res.ok;
+      if (!res.ok) {
+        flags.confirmation_email_error = res.skipped
+          ? "email not configured"
+          : (res.error ?? "unknown error");
+        // Loud, because Doug tells umpires that a missing confirmation means
+        // the registration did not take. A silent failure here sends a
+        // correctly registered official back to fill the form in again.
+        console.error(
+          `[league-form] umpire confirmation FAILED to=${email}:`,
+          flags.confirmation_email_error,
+        );
+      }
+    }
+
+    const sentTo = await notifyOffice({
+      subject: `Umpire registration${num ? ` #${num}` : ""}: ${name || "(no name)"}`,
+      html:
+        `<p><strong>An umpire registered.</strong></p>` +
+        (num ? `<p><strong>Registration number:</strong> ${esc(num)}</p>` : "") +
+        `<p><strong>Name:</strong> ${esc(name)}<br/>` +
+        `<strong>Email:</strong> ${esc(email)}<br/>` +
+        `<strong>Phone:</strong> ${esc(f("phone"))}` +
+        (f("level") ? `<br/><strong>Level:</strong> ${esc(f("level"))}` : "") +
+        (f("ohsaa_licensed")
+          ? `<br/><strong>OHSAA licensed:</strong> ${esc(f("ohsaa_licensed"))}`
+          : "") +
+        (f("ohsaa_number")
+          ? `<br/><strong>OHSAA number:</strong> ${esc(f("ohsaa_number"))}`
+          : "") +
+        (f("years_experience")
+          ? `<br/><strong>Years:</strong> ${esc(f("years_experience"))}`
+          : "") +
+        (f("age_groups")
+          ? `<br/><strong>Age groups:</strong> ${esc(f("age_groups"))}`
+          : "") +
+        `</p>` +
+        (f("notes") ? `<p><strong>Notes:</strong> ${esc(f("notes"))}</p>` : "") +
+        `<p>See it in Admin, Form submissions, Umpire registration.</p>`,
+      replyTo: email || undefined,
+    });
+    flags.office_email_sent = sentTo > 0;
+    if (sentTo === 0) {
+      flags.office_email_error = "no office recipient accepted the message";
+    }
+    return flags;
+  }
+
   if (
     kind === "player_ad" ||
     kind === "umpire_evaluation" ||

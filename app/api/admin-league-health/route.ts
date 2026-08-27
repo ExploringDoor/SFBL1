@@ -178,6 +178,7 @@ export async function GET(req: Request) {
     // he finds out any is waiting.
     "site_feedback",
     "player_waiver",
+    "umpire_registration",
   ] as const;
   const formSnaps = await Promise.all(
     FORM_KINDS.map((k) =>

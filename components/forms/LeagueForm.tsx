@@ -63,7 +63,8 @@ export interface LeagueFormProps {
     | "player_ad"
     | "site_feedback"
     | "player_waiver"
-    | "clinic_registration";
+    | "clinic_registration"
+    | "umpire_registration";
   title: string;
   description?: string;
   /** Optional intro paragraph(s) — shown above the form. Each entry
@@ -132,6 +133,10 @@ export function LeagueForm({
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submissionId, setSubmissionId] = useState<string | null>(null);
+  // COYBL issues umpires a registration NUMBER, and tells them it is their
+  // registration number for the season. It has to be on screen the instant
+  // they finish, not only in an email that can bounce or land in spam.
+  const [registrationNumber, setRegistrationNumber] = useState<number | null>(null);
 
   function update(name: string, value: unknown) {
     setData((d) => {
@@ -210,6 +215,7 @@ export function LeagueForm({
       const j = (await res.json().catch(() => ({}))) as {
         error?: string;
         id?: string;
+        registration_number?: number;
       };
       if (!res.ok) {
         setError(j.error ?? `HTTP ${res.status}`);
@@ -218,6 +224,9 @@ export function LeagueForm({
       // Keep the submission id so the success screen can offer payment
       // (the card checkout looks the saved registration up by this id).
       setSubmissionId(j.id ?? null);
+      setRegistrationNumber(
+        typeof j.registration_number === "number" ? j.registration_number : null,
+      );
       setDone(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "submission failed");
@@ -233,6 +242,48 @@ export function LeagueForm({
         <div className="le-form-success">
           <h2>✓ Submission received</h2>
           <p>{successMessage}</p>
+          {/* Only rendered when the server issued one. Inline styles rather
+            * than a token, for the same reason LeagueFeeCard hardcodes its
+            * colours: tenants flip the palette at the root, and a card built
+            * from tokens renders invisible on some of them. */}
+          {registrationNumber != null && (
+            <div
+              style={{
+                marginTop: 14,
+                padding: "14px 16px",
+                border: "1px solid #cbd5e1",
+                background: "#f8fafc",
+                borderRadius: 10,
+                textAlign: "center",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  letterSpacing: ".06em",
+                  textTransform: "uppercase",
+                  color: "#475569",
+                }}
+              >
+                Your registration number
+              </div>
+              <div
+                style={{
+                  fontSize: 34,
+                  fontWeight: 800,
+                  lineHeight: 1.1,
+                  margin: "4px 0 6px",
+                  color: "#0f172a",
+                }}
+              >
+                {registrationNumber}
+              </div>
+              <div style={{ fontSize: 13, color: "#475569" }}>
+                Write this down. It is also in your confirmation email.
+              </div>
+            </div>
+          )}
         </div>
         {/* Optional post-submit block, e.g. COYBL's pay-now options. Gets
             the saved submission id so it can start a card checkout. */}

@@ -27,7 +27,8 @@ type Kind =
   | "site_feedback"
   | "player_waiver"
   | "clinic_registration"
-  | "alerts_signup";
+  | "alerts_signup"
+  | "umpire_registration";
 
 const KIND_TABS: { key: Kind; label: string }[] = [
   { key: "player_registration", label: "Player registration" },
@@ -43,6 +44,7 @@ const KIND_TABS: { key: Kind; label: string }[] = [
   // Alerts sign-ups feed the Send Message recipient list directly. Without a
   // tab here they could be seen there and deleted from nowhere.
   { key: "alerts_signup", label: "Alerts sign-ups" },
+  { key: "umpire_registration", label: "Umpire registration" },
 ];
 
 // The College Clinic is one league's event, not a capability every league has.
@@ -53,6 +55,7 @@ const KIND_TABS: { key: Kind; label: string }[] = [
 // will never hold, once per admin load, forever.
 const TENANT_ONLY_KINDS: Partial<Record<Kind, string>> = {
   clinic_registration: "island",
+  umpire_registration: "coybl",
 };
 
 function kindTabsFor(leagueId: string) {
@@ -1254,6 +1257,15 @@ function summaryLine(kind: Kind, s: Submission): string {
   if (kind === "team_waiver") {
     return String(s.team_name ?? "(unnamed team)") +
       (s.signature ? ` — signed by ${s.signature}` : "");
+  }
+  if (kind === "umpire_registration") {
+    // Number first. Doug's umpires ARE their registration number, so that is
+    // what he will be searching this list for.
+    const who = `${s.first_name ?? ""} ${s.last_name ?? ""}`.trim() || "(unnamed)";
+    const num = s.registration_number != null ? `#${s.registration_number} ` : "";
+    const lvl = s.level ? ` · ${s.level}` : "";
+    const ohsaa = s.ohsaa_licensed ? ` · OHSAA ${s.ohsaa_licensed}` : "";
+    return `${num}${who}${lvl}${ohsaa}`;
   }
   if (kind === "alerts_signup") {
     const who = String(s.name ?? "").trim() || "(no name)";
