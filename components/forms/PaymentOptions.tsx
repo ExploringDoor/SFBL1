@@ -44,7 +44,11 @@ export function PaymentOptions({
   /** Which form this payment settles. The College Clinic stores its
    *  submissions in a different collection and is priced per player, so both
    *  the quote and the charge have to be told which one they are looking at. */
-  kind?: "team_registration" | "clinic_registration";
+  kind?:
+    | "team_registration"
+    | "clinic_registration"
+    | "tournament_registration"
+    | "baseball_order";
   /** What to call the money on screen. "team fee" is wrong for a clinic
    *  place bought by one family. */
   noun?: string;

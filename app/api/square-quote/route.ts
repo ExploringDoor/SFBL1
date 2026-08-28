@@ -36,7 +36,13 @@ export async function POST(req: Request) {
   const registrationId =
     typeof body.registrationId === "string" ? body.registrationId : "";
   // Allow-listed: this string becomes part of a Firestore path.
-  const PAYABLE_KINDS = new Set(["team_registration", "clinic_registration"]);
+  const PAYABLE_KINDS = new Set([
+    "team_registration",
+    "clinic_registration",
+    // COYBL takes card for its own tournaments and its baseball orders.
+    "tournament_registration",
+    "baseball_order",
+  ]);
   const kind =
     typeof (body as { kind?: unknown }).kind === "string" &&
     PAYABLE_KINDS.has((body as { kind: string }).kind)

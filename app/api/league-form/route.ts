@@ -1666,7 +1666,7 @@ async function sendRegistrationEmails(
       (pay?.checkPayableTo && pay?.checkAddress
         ? `<li>Cheque payable to <strong>${esc(pay.checkPayableTo)}</strong>, posted to ${esc(pay.checkAddress)}.</li>`
         : "") +
-      `<li>To pay by card, reply to this email and the league office will arrange it. A processing fee applies.</li>` +
+      `<li>By card, on the confirmation screen on the website. A processing fee applies.</li>` +
       `</ul>`;
 
     if (email) {
@@ -1686,7 +1686,8 @@ async function sendRegistrationEmails(
               `</p>`
             : "") +
           payHtml +
-          `<p>Nothing is confirmed until payment reaches the league. ` +
+          `<p>You can still pay by card on the website: reopen the page and finish there, ` +
+          `or use any option above. Nothing is confirmed until payment reaches the league. ` +
           `Questions go to ${esc(notifyAddress() ?? "the league office")}.</p>`,
         replyTo: notifyAddress() ?? undefined,
       });
@@ -1729,7 +1730,8 @@ async function sendRegistrationEmails(
             `${esc(f("city"))} ${esc(f("state"))} ${esc(f("zip"))}</p>`
           : "") +
         (f("notes") ? `<p><strong>Notes:</strong> ${esc(f("notes"))}</p>` : "") +
-        `<p>Payment is NOT taken on the site, so mark it off by hand when it arrives.</p>`,
+        `<p>If they paid by card on the site it is already recorded on the submission. ` +
+        `Venmo and cheque still need marking off by hand.</p>`,
       replyTo: email || undefined,
     });
     flags.office_email_sent = sentTo > 0;

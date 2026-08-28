@@ -307,12 +307,27 @@ export function LeagueForm({
             // The clinic is a different collection and a per-player price, so
             // the quote and the charge both have to be told which form this
             // is. Without it a $175 place is quoted and charged $795.
+            // Pass the real kind through. This used to collapse everything
+            // that was not a clinic to "team_registration", which was true
+            // while those were the only two payable forms and became wrong the
+            // moment COYBL's tournaments and baseball orders could be paid for:
+            // a $104 order would have been quoted and charged a team's $495.
             kind={
-              kind === "clinic_registration"
-                ? "clinic_registration"
+              kind === "clinic_registration" ||
+              kind === "tournament_registration" ||
+              kind === "baseball_order"
+                ? kind
                 : "team_registration"
             }
-            noun={kind === "clinic_registration" ? "clinic fee" : "team fee"}
+            noun={
+              kind === "clinic_registration"
+                ? "clinic fee"
+                : kind === "tournament_registration"
+                  ? "entry fee"
+                  : kind === "baseball_order"
+                    ? "order total"
+                    : "team fee"
+            }
           />
         )}
       </main>

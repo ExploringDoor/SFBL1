@@ -10,23 +10,27 @@
 // is the whole answer.
 //
 // HIDDEN ON PURPOSE, per Doug 2026-08-27: no nav entry and no indexing until
-// he has reviewed it. Nothing here takes money, so a stranger with the link
-// costs nothing.
+// he has reviewed it. It CAN take a card, so a stranger with the link could
+// order baseballs — which is an order Doug fulfils or refunds, not a loss.
 //
-// Payment is NOT charged on this page. Venmo, cheque, or card by arrangement,
-// exactly as his form works today.
+// Card IS taken here, through Square, on the confirmation screen. His form
+// says: "we will need to arrange a time (email me to set that up) for a call to
+// collect your info to include: Name on Card, Card number, Exp date, Zip code."
+// That has him reading card numbers down the phone at 3.75%, and it is the one
+// thing about these forms worth not rebuilding. Venmo and cheque stay.
 //
-// ⚠ His card route is worth replacing. His form says: "we will need to arrange
-// a time (email me to set that up) for a call to collect your info to include:
-// Name on Card, Card number, Exp date, Zip code." He reads card numbers over
-// the phone. The site already takes cards through Square on team registration.
-// Raised with Adam 2026-08-27; kept as-is for this first pass because he asked
-// for a like-for-like rebuild.
+// The total is priced from the quantity and the delivery choice, so both are
+// required and the minimum is enforced on the server as well as here.
 
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { LeagueForm, type FormField } from "@/components/forms/LeagueForm";
 import { paymentDetailsFor } from "@/lib/league-payment";
+import {
+  BASEBALL_MIN_DOZENS,
+  BASEBALL_PRICE_PER_DOZEN,
+  BASEBALL_SHIPPING_PER_DOZEN,
+} from "@/lib/fees";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 
 export const dynamic = "force-dynamic";
@@ -36,11 +40,11 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-// His numbers, in one place so the copy and the confirmation email cannot
-// drift apart.
-const PRICE_PER_DOZEN = 52;
-const SHIPPING_PER_DOZEN = 5;
-const MIN_DOZENS = 2;
+// From lib/fees.ts, which is what actually prices the card. Re-declaring them
+// here would be two numbers to change and one of them would get missed.
+const PRICE_PER_DOZEN = BASEBALL_PRICE_PER_DOZEN;
+const SHIPPING_PER_DOZEN = BASEBALL_SHIPPING_PER_DOZEN;
+const MIN_DOZENS = BASEBALL_MIN_DOZENS;
 
 export default function BaseballOrderPage() {
   const h = headers();
@@ -123,7 +127,7 @@ export default function BaseballOrderPage() {
   if (pay?.checkPayableTo && pay?.checkAddress) {
     payLines.push(`Cheque payable to ${pay.checkPayableTo}, posted to ${pay.checkAddress}.`);
   }
-  payLines.push("Credit card by arrangement. Email the league office and we will set it up. A processing fee is added.");
+  payLines.push("Or pay by card on the confirmation screen as soon as you order.");
 
   return (
     <LeagueForm
@@ -136,12 +140,14 @@ export default function BaseballOrderPage() {
         "The only difference between this RHSCCTB ball and the R100-HS is the NFHS stamp, which Rawlings pays a royalty to print. The ball is otherwise the same: full-grain leather cover, raised seams, cushioned cork centre, 15 percent wool windings, 9 inch.",
         `Our price is $${PRICE_PER_DOZEN} per dozen, all in. This ball retails at $75 and up, on sale, plus tax and shipping.`,
         `Minimum order is ${MIN_DOZENS} dozen. Shipping to your home is $${SHIPPING_PER_DOZEN} per dozen, or collect from the league at no extra cost.`,
-        `Payment is not taken on this page. ${payLines.join(" ")}`,
+        `How to pay: ${payLines.join(" ")}`,
         "Any refunds, returns or issues are the responsibility of COYBL and should be directed to the league office.",
       ]}
       fields={FIELDS}
       submitLabel="Place Order"
-      successMessage="Your order is in. We have emailed you a copy along with how to pay. Nothing ships until payment reaches the league."
+      successMessage="Your order is in, and we have emailed you a copy. Pay below by card, or use Venmo or cheque. Nothing ships until payment reaches the league."
+      afterSuccess="payment"
+      leagueId={tenantId}
     />
   );
 }

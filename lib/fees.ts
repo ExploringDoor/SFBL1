@@ -1,3 +1,4 @@
+import { COYBL_TOURNAMENTS, tournamentFeeFor } from "@/lib/coybl-tournaments";
 // Fee and surcharge rules. No network, no crypto, no server-only imports —
 // this is imported by CLIENT components (the admin's manual payment recorder)
 // as well as by the API routes, and lib/square.ts pulls in node:crypto, which
@@ -43,6 +44,13 @@ const WINDMILL_FEE = 325;
 // College Clinic, 2026-10-12. Per PLAYER, not per team, which is why it
 // cannot be derived from the age group like everything else above.
 export const ISLAND_CLINIC_FEE = 175;
+
+// Rawlings baseballs, from Doug's own order form. Exported so the page copy,
+// the confirmation email and the charge all read the same numbers: three
+// hardcoded 52s is how a league ends up quoting one price and taking another.
+export const BASEBALL_PRICE_PER_DOZEN = 52;
+export const BASEBALL_SHIPPING_PER_DOZEN = 5;
+export const BASEBALL_MIN_DOZENS = 2;
 
 // What Square actually charges for an online card payment. The surcharge is
 // derived from this rather than being a round number, which is a legal
@@ -90,6 +98,34 @@ export function feeFor(
   if (testFee !== null) return testFee;
 
   if (kind === "clinic_registration") return ISLAND_CLINIC_FEE;
+
+  // COYBL's own tournaments. Priced by age group, per event, from the same
+  // list the entry page renders from — so the price a coach reads and the
+  // price the card is charged cannot drift apart.
+  //
+  // Returns 0 for an unknown tournament or an unpriced age group rather than
+  // guessing, and square-pay refuses a zero fee. Charging a default would mean
+  // billing a team a price nobody published.
+  if (kind === "tournament_registration") {
+    const t = COYBL_TOURNAMENTS.find(
+      (x) => x.name === String(data.tournament ?? "").trim(),
+    );
+    if (!t) return 0;
+    return tournamentFeeFor(t, String(data.team_age ?? ""));
+  }
+
+  // Rawlings baseballs: quantity times price, plus shipping if they want them
+  // posted. Minimum two dozen, enforced at submission and again here — a
+  // single dozen is not a price, it is an order Doug has to decline.
+  if (kind === "baseball_order") {
+    const dozens = Math.floor(Number(data.dozens ?? 0));
+    if (!Number.isFinite(dozens) || dozens < BASEBALL_MIN_DOZENS) return 0;
+    const ship = String(data.ship_to_home ?? "") === "Yes";
+    return (
+      dozens * BASEBALL_PRICE_PER_DOZEN +
+      (ship ? dozens * BASEBALL_SHIPPING_PER_DOZEN : 0)
+    );
+  }
 
   if (leagueId === "island") {
     // 8U Weekend is the only cheaper tier; every other age and league is $795.

@@ -7,19 +7,30 @@
 // HIDDEN ON PURPOSE. Doug, 2026-08-27: "Can you keep them all hidden for the
 // time being and let me review them for changes once they are done?" So there
 // is no nav entry, and the page asks search engines not to index it. It is
-// reachable by anyone with the link, which is what makes it reviewable, and
-// nothing here takes money, so a stranger finding it costs nothing.
+// reachable by anyone with the link, which is what makes it reviewable.
 //
-// Payment is NOT charged here. Doug takes Venmo, cheque, and card by
-// arrangement, so the form collects the entry and the confirmation email
-// carries the payment instructions. That mirrors what his SportsEngine form
-// does today, which is what Adam asked for on this first pass.
+// It CAN take a card, so a stranger with the link could pay an entry fee for a
+// tournament. That is a real entry Doug can refund or accept, not a loss, and
+// unlisted-plus-noindex is the same protection his SportsEngine links had.
+//
+// Card IS taken here, through Square, on the confirmation screen — the same
+// checkout team registration uses. Doug's SportsEngine form made a coach email
+// him to arrange a phone call and read out a card number, at 3.75%. Venmo,
+// Zelle and cheque stay for anyone who prefers them, and the confirmation
+// email carries those details.
+//
+// The entry fee is priced from the age group, which is why that field is a
+// dropdown here and free text on his form.
 
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { LeagueForm, type FormField } from "@/components/forms/LeagueForm";
 import { paymentDetailsFor } from "@/lib/league-payment";
-import { COYBL_TOURNAMENTS, tournamentBySlug } from "@/lib/coybl-tournaments";
+import {
+  COYBL_TOURNAMENTS,
+  tournamentAgeFees,
+  tournamentBySlug,
+} from "@/lib/coybl-tournaments";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 
 export const dynamic = "force-dynamic";
@@ -69,16 +80,30 @@ export default function TournamentRegistrationPage({
   if (t.payment.check && pay?.checkPayableTo && pay?.checkAddress) {
     payLines.push(`Cheque payable to ${pay.checkPayableTo}, posted to ${pay.checkAddress}.`);
   }
-  if (t.payment.cardFeeLabel) {
-    payLines.push(`Credit card by arrangement. Email the league office and we will set it up. A ${t.payment.cardFeeLabel} processing fee is added.`);
-  }
+  // Card is offered on every event now, not only the ones his SportsEngine
+  // form mentioned: it is the site's own checkout rather than something Doug
+  // has to arrange by hand, so there is nothing per-event to switch on.
+  payLines.push("Or pay by card on the confirmation screen as soon as you submit.");
 
   const feeLine = t.fees.map((f) => `${f.label} is ${f.amount}`).join(", ");
 
   const FIELDS: FormField[] = [
     { name: "team_name", label: "Team Name", type: "text", required: true, width: "half" },
-    { name: "team_age", label: "Team Age", type: "text", required: true, width: "half",
-      placeholder: "e.g. 10U" },
+    // A DROPDOWN, not the free text his form uses, because the card is priced
+    // from this answer. Typing "10u " or "12U Red" would price at zero and be
+    // refused at checkout, after the coach had already filled the form in.
+    // Options come from the same table the fee is read from.
+    {
+      name: "team_age",
+      label: "Team Age",
+      type: "select",
+      required: true,
+      width: "half",
+      options: tournamentAgeFees(t).map((a) => ({
+        value: a.age,
+        label: `${a.age} — $${a.fee}`,
+      })),
+    },
     { name: "first_name", label: "First Name", type: "text", required: true, width: "half" },
     { name: "last_name", label: "Last Name", type: "text", required: true, width: "half" },
     { name: "email", label: "Email", type: "email", required: true, width: "half",
@@ -142,11 +167,16 @@ export default function TournamentRegistrationPage({
               `Please note: the dates and fees above are carried over from last season and are being confirmed. The league office will confirm both when it accepts your entry.`,
             ]
           : []),
-        `Payment is not taken on this page. ${payLines.join(" ")}`,
+        `How to pay: ${payLines.join(" ")}`,
       ]}
       fields={FIELDS}
       submitLabel="Submit Entry"
-      successMessage={`Your entry is in. We have emailed you a copy along with how to pay. Nothing is confirmed until payment reaches the league.`}
+      successMessage={`Your entry is in, and we have emailed you a copy. Pay below by card, or use Venmo${t.payment.zelle ? ", Zelle" : ""} or cheque. Nothing is confirmed until payment reaches the league.`}
+      // Card is taken on the page through Square, the same as team
+      // registration. His SportsEngine form made a coach email him to arrange
+      // a phone call and read out a card number.
+      afterSuccess="payment"
+      leagueId={tenantId}
       // The tournament this entry is for. Sent as a hidden value rather than
       // asked, so a coach cannot enter the wrong event from the right page.
       hiddenValues={{ tournament: t.name }}

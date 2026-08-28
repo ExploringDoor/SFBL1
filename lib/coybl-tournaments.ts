@@ -95,3 +95,33 @@ export const COYBL_TOURNAMENTS: CoyblTournament[] = [
 export function tournamentBySlug(slug: string): CoyblTournament | null {
   return COYBL_TOURNAMENTS.find((t) => t.slug === slug) ?? null;
 }
+
+/** Every age group this tournament prices, one entry each, with its fee in
+ *  whole dollars.
+ *
+ *  His fee LABELS group ages ("10U and 12U"), which reads well on the page but
+ *  cannot be charged. This flattens them, and it is the ONLY place that
+ *  splitting happens: the entry form builds its age dropdown from this, and
+ *  lib/fees.ts prices the card from it, so a coach cannot pick an age the
+ *  pricing does not know. An earlier draft parsed the labels separately in
+ *  both places, which is exactly how a form comes to offer an option that
+ *  prices at zero. */
+export function tournamentAgeFees(
+  t: CoyblTournament,
+): { age: string; fee: number }[] {
+  const out: { age: string; fee: number }[] = [];
+  for (const band of t.fees) {
+    const fee = Number(band.amount.replace(/[^0-9.]/g, "")) || 0;
+    for (const age of band.label.split(/\s*(?:and|,|\/)\s*/i)) {
+      const a = age.trim().toUpperCase();
+      if (a) out.push({ age: a, fee });
+    }
+  }
+  return out;
+}
+
+/** The entry fee for one age group, or 0 if this tournament does not price it. */
+export function tournamentFeeFor(t: CoyblTournament, age: string): number {
+  const a = String(age ?? "").trim().toUpperCase();
+  return tournamentAgeFees(t).find((x) => x.age === a)?.fee ?? 0;
+}

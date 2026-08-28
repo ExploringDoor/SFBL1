@@ -85,7 +85,13 @@ export async function POST(req: Request) {
   }
   // Which form the payment belongs to. Allow-listed rather than interpolated,
   // because this string becomes part of a Firestore path.
-  const PAYABLE_KINDS = new Set(["team_registration", "clinic_registration"]);
+  const PAYABLE_KINDS = new Set([
+    "team_registration",
+    "clinic_registration",
+    // COYBL takes card for its own tournaments and its baseball orders.
+    "tournament_registration",
+    "baseball_order",
+  ]);
   const kind =
     typeof body.kind === "string" && PAYABLE_KINDS.has(body.kind)
       ? body.kind
@@ -338,6 +344,22 @@ export async function POST(req: Request) {
   // Making discounts card-payable means reading the ledger on both paths and
   // pricing from it. That is new money behaviour and belongs in its own change.
   const fee = feeFor(leagueId, data, kind);
+  // feeFor returns 0 when it cannot price the submission — an unknown
+  // tournament, an age group with no published fee, an order under the
+  // minimum. Refused loudly rather than sent to Square, which would either
+  // reject a zero amount or, worse, take one.
+  if (!Number.isFinite(fee) || fee <= 0) {
+    console.error(
+      `[square-pay] unpriceable submission league=${leagueId} kind=${kind} id=${registrationId}`,
+    );
+    return NextResponse.json(
+      {
+        error:
+          "We could not work out the amount for this. No payment was taken and your card has not been charged. Please contact the league office.",
+      },
+      { status: 409 },
+    );
+  }
   const amountCents = chargeCents(leagueId, fee);
   const base = squareApiBase();
 
@@ -517,7 +539,19 @@ export async function POST(req: Request) {
     // writes it for Venmo, and the College Clinic tab in the admin shows it.
     // It does not belong in league_payments either, which is keyed on roster
     // players and would invent 40 of those instead.
-    if (kind !== "clinic_registration") {
+    // ONLY a team registration writes a team_payments row.
+    //
+    // This read `kind !== "clinic_registration"`, which was true of every kind
+    // that existed when it was written. Adding COYBL's tournament entries and
+    // baseball orders made it wrong: each one would have invented a ledger row
+    // in the league's Payments tab, and admin-payment-reminders reads that
+    // whole collection and treats a row with nothing paid as a team that owes
+    // money. Doug would have been chasing teams for baseballs they had already
+    // bought.
+    //
+    // Those two record their payment on the SUBMISSION, in the payment block
+    // written just above, exactly as the clinic does.
+    if (kind === "team_registration") {
       await db.doc(`leagues/${leagueId}/team_payments/${ledgerId}`).set(
         {
           team_name: String(data.team_name ?? ""),

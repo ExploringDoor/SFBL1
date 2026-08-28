@@ -91,7 +91,11 @@ export function SquareCardForm({
    *  charge: the College Clinic lives in its own collection and is priced
    *  per player, so without this a $175 place quotes and charges a team's
    *  $795. */
-  kind?: "team_registration" | "clinic_registration";
+  kind?:
+    | "team_registration"
+    | "clinic_registration"
+    | "tournament_registration"
+    | "baseball_order";
   /** What the line item is called in the amount breakdown. A parent buying
    *  one clinic place for one girl was shown "Team fee $175.00", which is not
    *  what they are buying and not a phrase they can reconcile against their
