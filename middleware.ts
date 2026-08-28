@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { parseHost, resolveTenant, toPublicConfig } from "./lib/tenants";
+// A plain array, no Firestore, so it is safe to pull into the Edge bundle.
+import { COYBL_TOURNAMENTS } from "./lib/coybl-tournaments";
 
 // Cookie + query-param names for the tenant-override preview flow.
 // Letting a developer/admin point at a staging tenant from a
@@ -61,7 +63,33 @@ const DOMAIN_HANDOFF: Record<string, string> = {
 export async function middleware(req: NextRequest) {
   const host = req.headers.get("host") ?? "";
 
-  const handoff = DOMAIN_HANDOFF[host.split(":")[0]!.toLowerCase()];
+  const bareHost = host.split(":")[0]!.toLowerCase();
+
+  // SportsEngine still has www.coybl.org recorded as the old site's primary
+  // domain, so its "HQ" button sends Doug to https://www.coybl.org/site_admin
+  // — which is this site now, and 404s. Until they change that setting, catch
+  // the old site's own paths here and hand them back to it.
+  //
+  // Safe because none of these exist on this site: /site_admin and
+  // /page/show/... are SportsEngine routes and 404 here either way. This also
+  // rescues anyone following an old bookmark or an old link in an email.
+  if (bareHost === "coybl.org" || bareHost === "www.coybl.org") {
+    const p = req.nextUrl.pathname;
+    if (
+      p === "/site_admin" ||
+      p.startsWith("/site_admin/") ||
+      p.startsWith("/page/show/") ||
+      p.startsWith("/page/nav/") ||
+      p.startsWith("/session/")
+    ) {
+      return NextResponse.redirect(
+        "https://coybl.sportngin.com" + p + req.nextUrl.search,
+        307,
+      );
+    }
+  }
+
+  const handoff = DOMAIN_HANDOFF[bareHost];
   if (handoff) {
     // 307, not 308: this is a decision the league could reverse, and a
     // permanent redirect would stay cached in browsers long after we changed
@@ -154,6 +182,49 @@ export async function middleware(req: NextRequest) {
       `Tenant not found for host: ${parsed.hostname} (kind=${parsed.kind} slug=${parsed.slug ?? "-"})\n`,
       { status: 404, headers: { "content-type": "text/plain; charset=utf-8" } },
     );
+  }
+
+  // Routes that belong to ONE league, refused here rather than in the page.
+  //
+  // The pages already call notFound() for the wrong tenant, and that renders
+  // the right thing but returns HTTP 200. These are dynamic routes that read
+  // headers(), so the layout shell has already begun streaming by the time
+  // notFound() throws and the status can no longer be changed. Confirmed on
+  // 2026-08-27: /tournament-registration/<unknown-slug> served the not-found
+  // page with a 200.
+  //
+  // Middleware runs before any of that, so a redirect or a rewrite here is the
+  // only place a real 404 can still be produced. The in-page notFound() calls
+  // stay as a second line of defence: this list is easy to forget to update,
+  // and a page that renders for the wrong tenant is worse than one that
+  // 404s twice.
+  const TENANT_ONLY_PATHS: { prefix: string; tenant: string }[] = [
+    { prefix: "/umpire-registration", tenant: "coybl" },
+    { prefix: "/tournament-registration", tenant: "coybl" },
+    { prefix: "/baseball-order", tenant: "coybl" },
+  ];
+  for (const r of TENANT_ONLY_PATHS) {
+    if (
+      req.nextUrl.pathname.startsWith(r.prefix) &&
+      tenant.id !== r.tenant
+    ) {
+      return new NextResponse("Not found", {
+        status: 404,
+        headers: { "content-type": "text/plain; charset=utf-8" },
+      });
+    }
+  }
+
+  // An unknown tournament slug, for the same streaming reason: the page calls
+  // notFound() and it renders correctly but answers 200.
+  if (req.nextUrl.pathname.startsWith("/tournament-registration/")) {
+    const slug = req.nextUrl.pathname.split("/")[2] ?? "";
+    if (slug && !COYBL_TOURNAMENTS.some((t) => t.slug === slug)) {
+      return new NextResponse("Not found", {
+        status: 404,
+        headers: { "content-type": "text/plain; charset=utf-8" },
+      });
+    }
   }
 
   const requestHeaders = new Headers(req.headers);
