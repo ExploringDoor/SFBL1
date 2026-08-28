@@ -471,7 +471,7 @@ export function NotificationsPanel({ leagueId }: Props) {
         <div className="cap-pending-card">
           <div className="cap-pending-row">
             <div>
-              <strong>🔔 Install the app to enable push notifications</strong>
+              <strong>Install the app to enable push notifications</strong>
               <p
                 style={{
                   fontSize: 13,

@@ -25,7 +25,7 @@ const TABS: { key: string; label: string }[] = [
   // are kept below; restore this line to bring the tab back.
   // { key: "teamchat", label: "💬 Team Chat" },
   { key: "inbox", label: "📨 Inbox" },
-  { key: "notif", label: "🔔 Notifications" },
+  { key: "notif", label: "Notifications" },
   { key: "account", label: "Account" },
 ];
 

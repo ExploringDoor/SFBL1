@@ -420,7 +420,7 @@ export async function POST(req: Request) {
             leagueId,
             category: "admin",
             adminOnly: true,
-            title: `🔔 Score conflict: ${awayName} @ ${homeName}`,
+            title: `Score conflict: ${awayName} @ ${homeName}`,
             body:
               `Captains disagree on ${
                 sub.opp_side === "home" ? homeName : awayName

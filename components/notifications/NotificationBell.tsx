@@ -169,7 +169,20 @@ export function NotificationBell({ leagueId }: Props) {
             : "Notifications"
         }
       >
-        <span aria-hidden>🔔</span>
+        <svg
+          aria-hidden
+          viewBox="0 0 24 24"
+          width={19}
+          height={19}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.7}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M18 8a6 6 0 1 0-12 0c0 6-2.5 7.5-2.5 7.5h17S18 14 18 8z" />
+          <path d="M10.3 20a2 2 0 0 0 3.4 0" />
+        </svg>
         {unreadCount > 0 && (
           <span className="notif-bell-badge">
             {unreadCount > 99 ? "99+" : unreadCount}
