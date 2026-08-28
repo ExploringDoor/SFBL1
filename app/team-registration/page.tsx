@@ -629,7 +629,7 @@ function content(tenantId: string) {
       description: "Register your team for Windmill Fastpitch Softball.",
       intro: [
         "Complete one form per team. It captures your team, division, skill level, head coach and rec/club lead contacts, home field, and any scheduling requests so the league can build the schedule.",
-        "The team fee is $325, which covers game balls, scorebooks, awards, and the End-of-Year Tournament. After you submit, you can pay by card, Venmo, or check on the next screen, or choose to pay later — your spot is reserved either way.",
+        "The team fee is $325, which covers game balls, scorebooks, awards, and the End-of-Year Tournament. After you submit, you can pay by credit card, Venmo, or check on the next screen, or choose to pay later. Your spot is reserved either way.",
       ],
       successMessage:
         "Thanks! Your team is registered. Your $325 team fee can be paid below, or any time before the season begins.",
