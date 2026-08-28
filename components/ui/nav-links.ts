@@ -147,9 +147,45 @@ export function computeNavLinks(
   // Tenant-added links (config.nav.add) — insert before the first
   // dropdown (Register/More) so they read as primary nav items.
   if (addLinks && addLinks.length) {
-    const idx = result.findIndex((l) => l.children && l.children.length > 0);
-    const at = idx === -1 ? result.length : idx;
-    return [...result.slice(0, at), ...addLinks, ...result.slice(at)];
+    // An added entry whose label matches an EXISTING dropdown EXTENDS it
+    // rather than creating a second menu with the same name.
+    //
+    // Doug, 2026-08-27, on the new umpire form: "Is there a way to put it on
+    // the registrations tab?" There was not. Register is a shared default, so
+    // adding the child there would have put a link on every other league's nav
+    // pointing at a route that 404s for them, and adding it through nav.add
+    // gave COYBL a second dropdown also called Register, in a different place,
+    // because added entries land ahead of the first dropdown rather than in it.
+    //
+    // Only merges when BOTH sides are dropdowns, so a plain added link never
+    // silently disappears into a menu of the same name. Deduped on href, so
+    // re-running config that already names a child cannot double it up.
+    const merged = [...result];
+    const extra: NavLink[] = [];
+    for (const add of addLinks) {
+      const i = merged.findIndex(
+        (l) =>
+          l.label.toLowerCase() === add.label.toLowerCase() &&
+          l.children &&
+          l.children.length > 0,
+      );
+      if (i !== -1 && add.children && add.children.length > 0) {
+        const have = new Set((merged[i]!.children ?? []).map((c) => c.href));
+        merged[i] = {
+          ...merged[i]!,
+          children: [
+            ...(merged[i]!.children ?? []),
+            ...add.children.filter((c) => !have.has(c.href)),
+          ],
+        };
+      } else {
+        extra.push(add);
+      }
+    }
+    if (!extra.length) return merged;
+    const idx = merged.findIndex((l) => l.children && l.children.length > 0);
+    const at = idx === -1 ? merged.length : idx;
+    return [...merged.slice(0, at), ...extra, ...merged.slice(at)];
   }
   return result;
 }
