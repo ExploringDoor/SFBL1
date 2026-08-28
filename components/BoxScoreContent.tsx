@@ -6,7 +6,7 @@
 // lines 1755+). Three regions stacked vertically:
 //
 //   1. HERO   — two team blocks + big centered score + FINAL badge
-//               + meta row (📅 date · 📍 field).
+//               + meta row (date · field).
 //   2. TABS   — BOX SCORE | RECAP. Routed via ?tab=recap so the
 //               server stays the source of truth (matches the page
 //               at @modal/(.)games/[gameId] which passes `view`).
@@ -367,7 +367,21 @@ function FinalHeader({
       <div className="bs-meta">
         {date && (
           <span>
-            <span aria-hidden>🗓</span>{" "}
+            <svg
+              aria-hidden
+              viewBox="0 0 24 24"
+              width={13}
+              height={13}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.8}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ verticalAlign: "-1px" }}
+            >
+              <rect x="3" y="4.5" width="18" height="16" rx="2" />
+              <path d="M3 9.5h18M8 2.5v4M16 2.5v4" />
+            </svg>{" "}
             {/* Audit H1/H5: stable local calendar day. This is the
                 public box score shared in iMessage links — it was
                 showing the prior day for LBDC's Pacific readers. */}
@@ -379,7 +393,21 @@ function FinalHeader({
         )}
         {field && (
           <span>
-            <span aria-hidden>📍</span>{" "}
+            <svg
+              aria-hidden
+              viewBox="0 0 24 24"
+              width={13}
+              height={13}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.8}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ verticalAlign: "-1px" }}
+            >
+              <path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11z" />
+              <circle cx="12" cy="10" r="2.4" />
+            </svg>{" "}
             {fieldHref ? (
               <Link
                 href={fieldHref}

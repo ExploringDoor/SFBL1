@@ -1673,7 +1673,7 @@ function PitcherPicker({
   return (
     <div className="bs-pitcher-picker">
       <div className="bs-pitcher-head">
-        <span className="bs-pitcher-title">⚾ Pitcher</span>
+        <span className="bs-pitcher-title">Pitcher</span>
         <span className="bs-pitcher-hint">
           Pick from your roster — stats go on the next step
         </span>
@@ -1993,7 +1993,7 @@ function StatsStep(props: {
           aria-selected={!scoreOnly[activeTab]}
           onClick={() => onSetScoreOnly(activeTab, false)}
         >
-          📊 Full Box Score
+          Full Box Score
         </button>
         <button
           type="button"
@@ -2005,7 +2005,7 @@ function StatsStep(props: {
           aria-selected={scoreOnly[activeTab]}
           onClick={() => onSetScoreOnly(activeTab, true)}
         >
-          📝 Score Only
+          Score Only
         </button>
         {activeTab !== mySide && (
           <span className="bs-cap-mode-hint">
@@ -2071,7 +2071,7 @@ function StatsStep(props: {
           onClick={onSubmit}
           disabled={saving || validation.length > 0}
         >
-          {saving ? "Submitting…" : "✅ Submit Box Score"}
+          {saving ? "Submitting…" : "Submit Box Score"}
         </button>
         {savedAt && !serverError && (
           <span style={{ fontSize: 12, color: "#16a34a", fontWeight: 600 }}>

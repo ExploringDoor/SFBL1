@@ -173,7 +173,7 @@ export function ScoresheetUploader({
       // summary so the captain fixes those rows before submitting.
       const warnNote =
         data.warnings && data.warnings.length > 0
-          ? ` ⚠️ Check these lines (likely a misread): ${data.warnings.join("; ")}`
+          ? ` Check these lines (likely a misread): ${data.warnings.join("; ")}`
           : "";
       setStage({
         kind: "ok",
@@ -196,7 +196,7 @@ export function ScoresheetUploader({
     <div className="ssu-card">
       <div className="ssu-head">
         <div>
-          <p className="ssu-title">📄 Upload scoresheet (instead of typing)</p>
+          <p className="ssu-title">Upload scoresheet (instead of typing)</p>
           <p className="ssu-sub">
             PDF (e.g. GameChanger export) or photo of your paper sheet —
             AI reads it and pre-fills the editor below. You review +
@@ -207,7 +207,7 @@ export function ScoresheetUploader({
 
       <div className="ssu-actions">
         <label className="ssu-btn ssu-btn-primary">
-          📁 Choose file
+          Choose file
           <input
             type="file"
             accept=".pdf,application/pdf,image/*"

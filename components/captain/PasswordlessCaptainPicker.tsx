@@ -277,9 +277,21 @@ export function PasswordlessCaptainPicker({
   // ── Step 1: team grid ──────────────────────────────────────────
   return (
     <div style={{ maxWidth: 720, margin: "0 auto", textAlign: "center" }}>
-      <div aria-hidden style={{ fontSize: 48, marginBottom: 10 }}>
-        ⚾
-      </div>
+      <svg
+        aria-hidden
+        viewBox="0 0 24 24"
+        width={46}
+        height={46}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.6}
+        strokeLinecap="round"
+        style={{ display: "block", margin: "0 auto 10px", color: "var(--brand-primary)" }}
+      >
+        <circle cx="12" cy="12" r="9" />
+        <path d="M7 4.6c1.9 2.1 2.9 4.6 2.9 7.4S8.9 17.3 7 19.4" />
+        <path d="M17 4.6c-1.9 2.1-2.9 4.6-2.9 7.4s1 5.3 2.9 7.4" />
+      </svg>
       <h2
         style={{
           fontFamily: "var(--font-barlow), sans-serif",

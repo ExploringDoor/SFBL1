@@ -698,7 +698,7 @@ function TeamView({
               >
                 {saving === `remind_${g.id}`
                   ? "Sending…"
-                  : `📢 Remind ${waiting.length} waiting`}
+                  : `Remind ${waiting.length} waiting`}
               </button>
             )}
           </li>

@@ -22,6 +22,7 @@ import { useEffect, useState } from "react";
 
 const SW_PATH = "/firebase-messaging-sw.js";
 const IOS_TIP_DISMISSED_KEY = "leagueplatform:iosInstallTipDismissed";
+const INSTALL_CTA_DISMISSED_KEY = "leagueplatform:installCtaDismissed";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -32,6 +33,7 @@ export function PwaShell() {
   const [installEvent, setInstallEvent] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
+  const [installDismissed, setInstallDismissed] = useState(false);
   const [iosTipVisible, setIosTipVisible] = useState(false);
   // Track viewport so we can hide the install CTA on desktop.
   // Chrome/Edge fire `beforeinstallprompt` on desktop too — but for a
@@ -59,6 +61,16 @@ export function PwaShell() {
     const updateViewport = () => setIsMobileViewport(mq.matches);
     updateViewport();
     mq.addEventListener("change", updateViewport);
+
+    // 0c. Honor a prior dismissal of the install CTA so it can't come
+    // back to sit over a form field the coach is trying to tap.
+    try {
+      if (window.localStorage.getItem(INSTALL_CTA_DISMISSED_KEY)) {
+        setInstallDismissed(true);
+      }
+    } catch {
+      /* ignore */
+    }
 
     // 1. Register SW (idempotent — Chrome dedupes).
     //
@@ -164,7 +176,16 @@ export function PwaShell() {
     }
   }
 
-  if (installed) return null;
+  function dismissInstallCta() {
+    setInstallDismissed(true);
+    try {
+      window.localStorage.setItem(INSTALL_CTA_DISMISSED_KEY, "1");
+    } catch {
+      /* ignore */
+    }
+  }
+
+  if (installed || installDismissed) return null;
 
   // Suppress on desktop — the install CTA is only useful for phones.
   // (iOS Safari tip is already gated by the user-agent check below.)
@@ -172,14 +193,38 @@ export function PwaShell() {
 
   if (installEvent) {
     return (
-      <button
-        type="button"
-        onClick={handleInstall}
-        className="pwa-install-cta"
-        title="Install this app to your home screen"
-      >
-        ⬇ Install app
-      </button>
+      <div className="pwa-install-wrap">
+        <button
+          type="button"
+          onClick={handleInstall}
+          className="pwa-install-cta"
+          title="Install this app to your home screen"
+        >
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            width={14}
+            height={14}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" />
+          </svg>
+          Install app
+        </button>
+        <button
+          type="button"
+          className="pwa-install-dismiss"
+          onClick={dismissInstallCta}
+          aria-label="Dismiss install prompt"
+          title="Dismiss"
+        >
+          ×
+        </button>
+      </div>
     );
   }
 
@@ -189,9 +234,23 @@ export function PwaShell() {
         <div className="pwa-ios-tip-body">
           <strong>Install this app</strong>
           <p>
-            Tap <span aria-label="share">⬆️</span> Share, then{" "}
-            <strong>Add to Home Screen</strong>. Push notifications only
-            work once installed.
+            Tap{" "}
+            <svg
+              aria-hidden
+              viewBox="0 0 24 24"
+              width={13}
+              height={13}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.9}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ verticalAlign: "-2px" }}
+            >
+              <path d="M12 15V4m0 0L8.5 7.5M12 4l3.5 3.5M6 11v8a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-8" />
+            </svg>{" "}
+            Share, then <strong>Add to Home Screen</strong>. Push
+            notifications only work once installed.
           </p>
         </div>
         <button

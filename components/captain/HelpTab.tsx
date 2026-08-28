@@ -156,7 +156,7 @@ function CoyblHelp({
         <div className="help-body">
           <p>
             Open <strong>Submit Score</strong>, find the game, and tap{" "}
-            <strong>⚡ Quick Score</strong>. A small form opens right there in
+            <strong>Quick Score</strong>. A small form opens right there in
             the list. Put your runs in the <strong>US</strong> box and theirs in
             the <strong>THEM</strong> box, then tap <strong>SUBMIT</strong>.
           </p>
@@ -458,14 +458,14 @@ export function HelpTab({ contactEmail }: Props) {
               </p>
               <ul>
                 <li>
-                  <strong>📊 Box Score</strong> — full manual entry. AB / R / H
+                  <strong>Box Score</strong> — full manual entry. AB / R / H
                   / 2B / 3B / HR / RBI / BB / K per player, plus pitcher lines.
                   Takes ~5 minutes if you've got a paper scoresheet in front of
                   you. The system reconciles your entry with the opposing
                   captain's.
                 </li>
                 <li>
-                  <strong>📝 Score Only</strong> — fastest option. Just enter
+                  <strong>Score Only</strong> — fastest option. Just enter
                   the final away/home runs, hit submit, done. No individual
                   stats. Use this when nobody tracked the game and you only
                   know the final.
@@ -551,7 +551,7 @@ export function HelpTab({ contactEmail }: Props) {
             </li>
             <li>
               <strong>Team</strong> — see who's in / out / waiting for each
-              upcoming game. Has a "📢 Remind N waiting" button that sends a
+              upcoming game. Has a "Remind N waiting" button that sends a
               push to everyone who hasn't responded yet (skips people who
               already have).
             </li>
@@ -610,7 +610,7 @@ export function HelpTab({ contactEmail }: Props) {
           <ul>
             <li>
               <strong>Enable</strong> — go to the{" "}
-              <strong>🔔 Notifications</strong> tab in your captain portal.
+              <strong>Notifications</strong> tab in your captain portal.
               Tap "Enable Notifications" and accept the browser prompt.
             </li>
             <li>

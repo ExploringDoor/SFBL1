@@ -52,7 +52,7 @@ export function FirstTimeWelcome({
       >
         ×
       </button>
-      <h3>Welcome, captain. 👋</h3>
+      <h3>Welcome, captain.</h3>
       <p>
         You're now managing <strong>{teamName}</strong>. Here's what
         captains do most often:
@@ -63,15 +63,15 @@ export function FirstTimeWelcome({
           confirm contact info.
         </li>
         <li>
-          <strong>⚡ Quick Score</strong> — fastest way to log a final
+          <strong>Quick Score</strong> — fastest way to log a final
           score after the game (no lineup needed).
         </li>
         <li>
-          <strong>📡 Score Live</strong> — for the in-dugout
+          <strong>Score Live</strong> — for the in-dugout
           scorekeeper. Taps update the public scoreboard in real time.
         </li>
         <li>
-          <strong>📄 Upload scoresheet</strong> (in Submit Score) —
+          <strong>Upload scoresheet</strong> (in Submit Score) —
           drop a PDF / photo of your scorebook and the AI extracts
           batting stats automatically.
         </li>

@@ -30,6 +30,7 @@ import {
   formatGameDate,
   formatTime12,
 } from "@/lib/format-time";
+import { shortFieldName } from "@/lib/field-label";
 import { RosterTab } from "@/components/captain/RosterTab";
 import { FreeAgentsTab } from "@/components/captain/FreeAgentsTab";
 import { ScheduleTab } from "@/components/captain/ScheduleTab";
@@ -346,9 +347,21 @@ export default function CaptainHomePage() {
     return (
       <CaptainShell>
         <div style={{ maxWidth: 460, textAlign: "center", margin: "0 auto" }}>
-          <div aria-hidden style={{ fontSize: 48, marginBottom: 10 }}>
-            ⚾
-          </div>
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            width={46}
+            height={46}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.6}
+            strokeLinecap="round"
+            style={{ display: "block", margin: "0 auto 10px", color: "var(--brand-primary)" }}
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path d="M7 4.6c1.9 2.1 2.9 4.6 2.9 7.4S8.9 17.3 7 19.4" />
+            <path d="M17 4.6c-1.9 2.1-2.9 4.6-2.9 7.4s1 5.3 2.9 7.4" />
+          </svg>
           <h2
             style={{
               fontFamily: "var(--font-barlow), sans-serif",
@@ -398,9 +411,22 @@ export default function CaptainHomePage() {
     return (
       <CaptainShell>
         <div style={{ maxWidth: 480, textAlign: "center", margin: "0 auto" }}>
-          <div aria-hidden style={{ fontSize: 48, marginBottom: 10 }}>
-            🔒
-          </div>
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            width={42}
+            height={42}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.6}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ display: "block", margin: "0 auto 10px", color: "var(--muted)" }}
+          >
+            <rect x="4.5" y="10.5" width="15" height="10" rx="2" />
+            <path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" />
+            <circle cx="12" cy="15.5" r="1.2" />
+          </svg>
           <h2
             style={{
               fontFamily: "var(--font-barlow), sans-serif",
@@ -566,7 +592,7 @@ const TABS: Tab[] = [
   { key: "freeagents", label: "Free Agents" },
   { key: "scores", label: "Submit Score" },
   { key: "pitchcounts", label: "Pitch Counts" },
-  { key: "notifications", label: "🔔 Notifications" },
+  { key: "notifications", label: "Notifications" },
   { key: "schedule", label: "Schedule" },
   // Chat hidden for now (Adam, 2026-05-18). Removed from the tab list
   // entirely (not in the strip AND not reachable via #teamchat /
@@ -1108,7 +1134,21 @@ function AwaitingScoreCard({
           color: "var(--brand-primary)",
         }}
       >
-        <span aria-hidden="true">⚾</span>
+        <svg
+          aria-hidden
+          viewBox="0 0 24 24"
+          width={15}
+          height={15}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.8}
+          strokeLinecap="round"
+          style={{ flex: "0 0 auto" }}
+        >
+          <circle cx="12" cy="12" r="9" />
+          <path d="M7 4.6c1.9 2.1 2.9 4.6 2.9 7.4S8.9 17.3 7 19.4" />
+          <path d="M17 4.6c-1.9 2.1-2.9 4.6-2.9 7.4s1 5.3 2.9 7.4" />
+        </svg>
         Submit your score
         {entries.length > 1 ? (
           <span
@@ -1268,7 +1308,9 @@ function NextGameSpotlight({
         <p className="cap-next-game-sub">
           {when}
           {timeLabel ? ` · ${timeLabel}` : ""}
-          {game.field ? ` · ${game.field}` : ""}
+          {game.field
+            ? ` · ${tenantId === "windmill" ? shortFieldName(game.field) : game.field}`
+            : ""}
         </p>
       </div>
 
@@ -1285,7 +1327,7 @@ function NextGameSpotlight({
         {!hideRsvp && (
           /* native <a> hash → fires hashchange so the tab switches */
           <a href="#attendance" className="le-cap-btn-secondary">
-            📋 Attendance
+            Attendance
           </a>
         )}
         {!boxScoreEnabled(config) ? (
@@ -1297,14 +1339,14 @@ function NextGameSpotlight({
           // only league too, and nobody came back to add the second slug. Read
           // the flag, and the next one is right by default.
           <a href="#scores" className="le-cap-btn-primary">
-            ⚾ Submit Score
+            Submit Score
           </a>
         ) : (
           <Link
             href={`/captain/box-score?game=${game.id}`}
             className="le-cap-btn-primary"
           >
-            ⚾ Submit Score
+            Submit Score
           </Link>
         )}
       </div>
@@ -1445,7 +1487,7 @@ function SubmitScoreTab({
                           href: `/captain/box-score?game=${g.id}`,
                         },
                         secondary: {
-                          label: open ? "✕ Close" : "⚡ Quick Score",
+                          label: open ? "Close" : "Quick Score",
                           onClick: () => setOpenId(open ? null : g.id),
                         },
                       }
@@ -1456,7 +1498,7 @@ function SubmitScoreTab({
                         // it: the one button a coach needs, on a phone, at a
                         // field, was rendered in the secondary style.
                         secondary: {
-                          label: open ? "✕ Close" : "⚡ Quick Score",
+                          label: open ? "Close" : "Quick Score",
                           onClick: () => setOpenId(open ? null : g.id),
                           prominent: true,
                         },
@@ -1697,7 +1739,7 @@ function GameDayHero({
             href={`/captain/box-score?game=${game.id}`}
             className="cap-gameday-btn cap-gameday-btn-primary"
           >
-            ✏ Box Score
+            Box Score
           </Link>
         ) : (
           // Game day, phone in hand, at the field, and this is the biggest
@@ -1715,7 +1757,7 @@ function GameDayHero({
           href={`/captain/lineup?game=${game.id}`}
           className="cap-gameday-btn cap-gameday-btn-secondary"
         >
-          📋 Submit Lineup
+          Submit Lineup
         </Link>
       </div>
       <style jsx>{`

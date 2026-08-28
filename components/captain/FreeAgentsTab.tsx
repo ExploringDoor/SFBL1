@@ -144,7 +144,20 @@ export function FreeAgentsTab({ leagueId }: { leagueId: string }) {
                 <div style={{ marginTop: 8, fontSize: 14, lineHeight: 1.6 }}>
                   {p.phone && (
                     <div>
-                      📞{" "}
+                      <svg
+                        aria-hidden
+                        viewBox="0 0 24 24"
+                        width={13}
+                        height={13}
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={1.8}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        style={{ verticalAlign: "-1px", marginRight: 4 }}
+                      >
+                        <path d="M6.5 3.5h3l1.5 4-2 1.5a11 11 0 0 0 5 5l1.5-2 4 1.5v3a2 2 0 0 1-2.2 2A16 16 0 0 1 4.5 5.7 2 2 0 0 1 6.5 3.5z" />
+                      </svg>
                       <a href={`tel:${p.phone.replace(/[^\d+]/g, "")}`}>
                         {p.phone}
                       </a>
@@ -152,7 +165,22 @@ export function FreeAgentsTab({ leagueId }: { leagueId: string }) {
                   )}
                   {p.email && (
                     <div style={{ wordBreak: "break-all" }}>
-                      ✉️ <a href={`mailto:${p.email}`}>{p.email}</a>
+                      <svg
+                        aria-hidden
+                        viewBox="0 0 24 24"
+                        width={13}
+                        height={13}
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={1.8}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        style={{ verticalAlign: "-1px", marginRight: 4 }}
+                      >
+                        <rect x="3" y="5" width="18" height="14" rx="2" />
+                        <path d="M3.5 6.5 12 12l8.5-5.5" />
+                      </svg>
+                      <a href={`mailto:${p.email}`}>{p.email}</a>
                     </div>
                   )}
                   {!p.phone && !p.email && (
