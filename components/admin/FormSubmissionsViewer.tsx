@@ -28,7 +28,9 @@ type Kind =
   | "player_waiver"
   | "clinic_registration"
   | "alerts_signup"
-  | "umpire_registration";
+  | "umpire_registration"
+  | "tournament_registration"
+  | "baseball_order";
 
 const KIND_TABS: { key: Kind; label: string }[] = [
   { key: "player_registration", label: "Player registration" },
@@ -45,6 +47,8 @@ const KIND_TABS: { key: Kind; label: string }[] = [
   // tab here they could be seen there and deleted from nowhere.
   { key: "alerts_signup", label: "Alerts sign-ups" },
   { key: "umpire_registration", label: "Umpire registration" },
+  { key: "tournament_registration", label: "Tournament entries" },
+  { key: "baseball_order", label: "Baseball orders" },
 ];
 
 // The College Clinic is one league's event, not a capability every league has.
@@ -56,6 +60,8 @@ const KIND_TABS: { key: Kind; label: string }[] = [
 const TENANT_ONLY_KINDS: Partial<Record<Kind, string>> = {
   clinic_registration: "island",
   umpire_registration: "coybl",
+  tournament_registration: "coybl",
+  baseball_order: "coybl",
 };
 
 function kindTabsFor(leagueId: string) {
@@ -1257,6 +1263,20 @@ function summaryLine(kind: Kind, s: Submission): string {
   if (kind === "team_waiver") {
     return String(s.team_name ?? "(unnamed team)") +
       (s.signature ? ` — signed by ${s.signature}` : "");
+  }
+  if (kind === "tournament_registration") {
+    const team = s.team_name ?? "(unnamed team)";
+    const age = s.team_age ? ` ${s.team_age}` : "";
+    const who = `${s.first_name ?? ""} ${s.last_name ?? ""}`.trim();
+    return `${s.tournament ?? "Tournament"} — ${team}${age}${who ? ` · ${who}` : ""}`;
+  }
+  if (kind === "baseball_order") {
+    // Quantity leads. Doug orders from Rawlings off the total, so the number
+    // of dozens is the thing he adds up.
+    const who = `${s.first_name ?? ""} ${s.last_name ?? ""}`.trim() || "(unnamed)";
+    const dz = s.dozens != null ? `${s.dozens} dozen · ` : "";
+    const ship = s.ship_to_home === "Yes" ? " · ship" : " · pickup";
+    return `${dz}${who}${s.team_name ? ` (${s.team_name})` : ""}${ship}`;
   }
   if (kind === "umpire_registration") {
     // Number first. Doug's umpires ARE their registration number, so that is

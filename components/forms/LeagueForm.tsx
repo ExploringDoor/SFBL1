@@ -64,7 +64,9 @@ export interface LeagueFormProps {
     | "site_feedback"
     | "player_waiver"
     | "clinic_registration"
-    | "umpire_registration";
+    | "umpire_registration"
+    | "tournament_registration"
+    | "baseball_order";
   title: string;
   description?: string;
   /** Optional intro paragraph(s) — shown above the form. Each entry
@@ -104,6 +106,16 @@ export interface LeagueFormProps {
   /** Tenant whose payment details to show. Required when afterSuccess is set;
    *  without it the block cannot know whose Venmo handle to print. */
   leagueId?: string;
+  /** Values submitted with the form but never shown or asked.
+   *
+   *  COYBL's tournament pages use one route for every event, so which event an
+   *  entry is FOR comes from the URL. Sending it as a hidden value rather than
+   *  asking means a coach on the Super Heros page cannot enter Licking County
+   *  by picking the wrong item in a dropdown.
+   *
+   *  Merged UNDER the user's answers, so a hidden value can never overwrite
+   *  something the coach actually typed. */
+  hiddenValues?: Record<string, string>;
   /** Flashy Apple-style treatment (LCYBL): fields fly in on load, inputs glow
    *  on focus, the submit button lifts. Off by default so other tenants are
    *  unchanged. */
@@ -123,6 +135,7 @@ export function LeagueForm({
   footer,
   afterSuccess,
   leagueId,
+  hiddenValues,
   flashy = false,
 }: LeagueFormProps) {
   // Set once on mount; sent with the payload so the server can see how long
@@ -207,7 +220,7 @@ export function LeagueForm({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           kind,
-          data,
+          data: hiddenValues ? { ...hiddenValues, ...data } : data,
           // Elapsed ms, for the server's too-fast-to-be-human check.
           form_ms: Date.now() - Number(openedAt),
         }),

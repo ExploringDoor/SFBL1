@@ -40,6 +40,8 @@ const ALLOWED_KINDS = new Set([
   // is the umpire's registration number, so these rows are referenced by
   // people, not just counted.
   "umpire_registration",
+  "tournament_registration",
+  "baseball_order",
 ]);
 
 interface Body {

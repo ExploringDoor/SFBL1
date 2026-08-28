@@ -179,6 +179,8 @@ export async function GET(req: Request) {
     "site_feedback",
     "player_waiver",
     "umpire_registration",
+    "tournament_registration",
+    "baseball_order",
   ] as const;
   const formSnaps = await Promise.all(
     FORM_KINDS.map((k) =>

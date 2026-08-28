@@ -45,6 +45,11 @@ export async function GET() {
     "Disallow: /print/",
     "Disallow: /_platform",
     "Disallow: /login",
+    // Under review by the league office and not linked from anywhere. The
+    // pages also carry robots:noindex; this keeps them out of a crawl that
+    // never reads the page. Remove both when Doug signs them off.
+    "Disallow: /tournament-registration",
+    "Disallow: /baseball-order",
     "",
     `Sitemap: ${sitemapUrl}`,
     "",

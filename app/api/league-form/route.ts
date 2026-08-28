@@ -53,7 +53,9 @@ type Kind =
   | "site_feedback"
   | "player_waiver"
   | "clinic_registration"
-  | "umpire_registration";
+  | "umpire_registration"
+  | "tournament_registration"
+  | "baseball_order";
 
 interface SubmissionBody {
   kind: Kind;
@@ -105,6 +107,41 @@ const ALLOWED_FIELDS: Record<Kind, string[]> = {
   // Field names mirror the league's umpire roster (name / level / email /
   // phone in components/admin/UmpiresManager.tsx) so a registration can be
   // promoted onto the roster without a translation layer.
+  // COYBL's own tournaments. ONE kind for all of them, with `tournament`
+  // naming which — Doug runs "a couple of small" ones and adds to the list, and
+  // a kind per event would mean seven allow-lists and an admin tab every time.
+  tournament_registration: [
+    "tournament",
+    "team_name",
+    "team_age",
+    "first_name",
+    "last_name",
+    "email",
+    "phone",
+    "payment_preference",
+    "not_travel_team",
+    "notes",
+    "agreed_to_terms",
+  ],
+  // Rawlings baseballs, sold by the dozen. Address fields are here because he
+  // ships: they are the delivery address, not profile data.
+  baseball_order: [
+    "first_name",
+    "last_name",
+    "email",
+    "phone",
+    "team_name",
+    "team_age",
+    "address",
+    "city",
+    "state",
+    "zip",
+    "dozens",
+    "ship_to_home",
+    "payment_preference",
+    "notes",
+    "agreed_to_terms",
+  ],
   umpire_registration: [
     "first_name",
     "last_name",
@@ -276,6 +313,25 @@ const ALLOWED_FIELDS: Record<Kind, string[]> = {
 };
 
 const REQUIRED: Record<Kind, string[]> = {
+  // Enough to invoice a team and chase them. Everything else is optional.
+  tournament_registration: [
+    "tournament",
+    "team_name",
+    "team_age",
+    "first_name",
+    "last_name",
+    "email",
+    "phone",
+  ],
+  // `dozens` is required and minimum 2, matching his form. An order with no
+  // quantity is not an order, and the page enforces the minimum too.
+  baseball_order: [
+    "first_name",
+    "last_name",
+    "email",
+    "phone",
+    "dozens",
+  ],
   // Deliberately short. Doug's stated purpose is "to send updates and info to
   // you and to contact you in case of an issue at a COYBL event", so the only
   // hard requirements are who you are and how to reach you. Everything else
@@ -877,6 +933,19 @@ export async function POST(req: Request) {
   }
 
   let ref;
+  // His form sets a minimum of 2 dozen and the page says so, but the page can
+  // be bypassed. Enforced here too, because an order for 1 dozen is one Doug
+  // has to decline by hand after the coach already thinks it is placed.
+  if (body.kind === "baseball_order") {
+    const dozens = Number((cleaned as Record<string, unknown>).dozens);
+    if (!Number.isFinite(dozens) || dozens < 2) {
+      return NextResponse.json(
+        { error: "Minimum order is 2 dozen." },
+        { status: 400 },
+      );
+    }
+  }
+
   // COYBL umpires get a NUMBER, not just a record. Doug's own form says so:
   // "Your Registration Entry number will be your 2026 COYBL Umpire
   // registration number as it is a special number assigned to you." On
@@ -1563,6 +1632,113 @@ async function sendRegistrationEmails(
   // REGISTRATION, YOU DID NOT COMPLETE IT PROPERLY AND WILL NEED TO REDO IT."
   // So the email has to arrive, has to be recognisable as the confirmation,
   // and has to carry the number.
+  // Tournament entries and baseball orders. Both owe Doug money and neither is
+  // charged on the site, so the confirmation has to carry the payment
+  // instructions: a coach who registers and is told nothing about paying is a
+  // coach Doug chases in June.
+  //
+  // Own branch for the same reason as umpire registration — the generic
+  // builder reads manager_first_name and would address every one of these as
+  // "Hi there".
+  if (kind === "tournament_registration" || kind === "baseball_order") {
+    const f = (k: string) =>
+      typeof data[k] === "string" ? (data[k] as string).trim() : "";
+    const name = `${f("first_name")} ${f("last_name")}`.trim();
+    const email = f("email");
+    const team = f("team_name");
+    const isOrder = kind === "baseball_order";
+    const what = isOrder
+      ? "baseball order"
+      : `entry for ${f("tournament") || "the tournament"}`;
+    const dozens = Number(data.dozens ?? 0);
+    const flags: MailFlags = {};
+
+    // How to pay, from the ONE place these details live. lib/coybl-payment.ts
+    // exists because the address was already duplicated once, and a league
+    // that tells half its coaches to post cheques to a dead address is the
+    // thing that note is there to prevent.
+    const pay = paymentDetailsFor(tenantId);
+    const payHtml =
+      `<p><strong>How to pay</strong></p><ul>` +
+      (pay?.venmoHandle
+        ? `<li>Venmo <strong>${esc(pay.venmoHandle)}</strong>. Please put the team name and ${isOrder ? "“baseballs”" : "the tournament name"} in the note.</li>`
+        : "") +
+      (pay?.checkPayableTo && pay?.checkAddress
+        ? `<li>Cheque payable to <strong>${esc(pay.checkPayableTo)}</strong>, posted to ${esc(pay.checkAddress)}.</li>`
+        : "") +
+      `<li>To pay by card, reply to this email and the league office will arrange it. A processing fee applies.</li>` +
+      `</ul>`;
+
+    if (email) {
+      const res = await sendEmail({
+        to: email,
+        subject: isOrder
+          ? `We got your ${leagueAbbrev} baseball order`
+          : `We got your ${leagueAbbrev} tournament entry`,
+        html:
+          `<p>Hi ${esc(name) || "there"},</p>` +
+          `<p>Thanks. We have your ${esc(what)}${team ? ` for ${esc(team)}` : ""}.</p>` +
+          (isOrder && dozens > 0
+            ? `<p><strong>Order:</strong> ${dozens} dozen${dozens === 1 ? "" : ""} at $52 per dozen` +
+              (f("ship_to_home") === "Yes"
+                ? `, plus $5 per dozen shipping.`
+                : `, for collection at no extra cost.`) +
+              `</p>`
+            : "") +
+          payHtml +
+          `<p>Nothing is confirmed until payment reaches the league. ` +
+          `Questions go to ${esc(notifyAddress() ?? "the league office")}.</p>`,
+        replyTo: notifyAddress() ?? undefined,
+      });
+      flags.confirmation_email_sent = res.ok;
+      if (!res.ok) {
+        flags.confirmation_email_error = res.skipped
+          ? "email not configured"
+          : (res.error ?? "unknown error");
+        console.error(
+          `[league-form] ${kind} confirmation FAILED to=${email}:`,
+          flags.confirmation_email_error,
+        );
+      }
+    }
+
+    const sentTo = await notifyOffice({
+      subject: isOrder
+        ? `Baseball order: ${team || name || "(no name)"}${dozens ? ` — ${dozens} dozen` : ""}`
+        : `${f("tournament") || "Tournament"} entry: ${team || "(no team)"}`,
+      html:
+        `<p><strong>${isOrder ? "A baseball order came in." : "A team entered a tournament."}</strong></p>` +
+        (f("tournament") ? `<p><strong>Tournament:</strong> ${esc(f("tournament"))}</p>` : "") +
+        `<p><strong>Team:</strong> ${esc(team)}${f("team_age") ? ` (${esc(f("team_age"))})` : ""}<br/>` +
+        `<strong>Contact:</strong> ${esc(name)}<br/>` +
+        `<strong>Email:</strong> ${esc(email)}<br/>` +
+        `<strong>Phone:</strong> ${esc(f("phone"))}` +
+        (dozens ? `<br/><strong>Dozens:</strong> ${dozens}` : "") +
+        (isOrder
+          ? `<br/><strong>Ship to home:</strong> ${esc(f("ship_to_home") || "not stated")}`
+          : "") +
+        (f("payment_preference")
+          ? `<br/><strong>Intends to pay by:</strong> ${esc(f("payment_preference"))}`
+          : "") +
+        (f("not_travel_team")
+          ? `<br/><strong>Certified not a travel team:</strong> yes`
+          : "") +
+        `</p>` +
+        (isOrder && f("address")
+          ? `<p><strong>Delivery address:</strong><br/>${esc(f("address"))}<br/>` +
+            `${esc(f("city"))} ${esc(f("state"))} ${esc(f("zip"))}</p>`
+          : "") +
+        (f("notes") ? `<p><strong>Notes:</strong> ${esc(f("notes"))}</p>` : "") +
+        `<p>Payment is NOT taken on the site, so mark it off by hand when it arrives.</p>`,
+      replyTo: email || undefined,
+    });
+    flags.office_email_sent = sentTo > 0;
+    if (sentTo === 0) {
+      flags.office_email_error = "no office recipient accepted the message";
+    }
+    return flags;
+  }
+
   if (kind === "umpire_registration") {
     const f = (k: string) =>
       typeof data[k] === "string" ? (data[k] as string).trim() : "";
