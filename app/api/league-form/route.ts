@@ -25,6 +25,7 @@ import { headers } from "next/headers";
 import { parseHost, resolveTenant } from "@/lib/tenants";
 import { sendEmail, notifyAddress, esc } from "@/lib/email/send";
 import { ageFromDob } from "@/lib/age";
+import { looksLikeSpam } from "@/lib/spam";
 
 export const runtime = "nodejs";
 
@@ -254,11 +255,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
+  // Heuristic spam flag (bots that skip the honeypot and POST gibberish).
+  // The entry is still STORED — never silently lost, in case a real one is
+  // mis-flagged — but it's marked so the admin can keep it separate, and we
+  // do NOT email the league office about it.
+  const isSpam = looksLikeSpam(cleaned);
+
   const db = getAdminDb();
   const ref = await db
     .collection(`leagues/${tenantId}/form_submissions/${body.kind}/items`)
     .add({
       ...cleaned,
+      spam: isSpam,
       submitted_at: new Date().toISOString(),
       ip,
       user_agent: h.get("user-agent") ?? null,
@@ -267,8 +275,12 @@ export async function POST(req: Request) {
   // Best-effort email (no-op unless RESEND_API_KEY/EMAIL_FROM are set):
   //   1. a confirmation to the registrant (if they gave an email)
   //   2. a heads-up to the league office (EMAIL_NOTIFY)
-  // Fire-and-forget — never blocks or fails the submission.
-  void sendRegistrationEmails(body.kind, cleaned).catch(() => {});
+  // Fire-and-forget — never blocks or fails the submission. Skipped
+  // entirely for suspected spam (no inbox noise, and we don't email a
+  // bot's random address).
+  if (!isSpam) {
+    void sendRegistrationEmails(body.kind, cleaned).catch(() => {});
+  }
 
   return NextResponse.json({ ok: true, id: ref.id });
 }

@@ -76,13 +76,14 @@ const NEXT_LABEL: Record<Status, string> = {
 // All all hide deleted), and the Deleted pill is the only place to
 // see them. Restoring from Deleted brings the row back wherever it
 // would have lived.
-type FilterMode = "actionable" | "all" | "deleted" | Status;
+type FilterMode = "actionable" | "all" | "deleted" | "spam" | Status;
 
 interface Submission {
   id: string;
   submitted_at: string;
   status?: Status;
   deleted?: boolean;
+  spam?: boolean;
   [k: string]: unknown;
 }
 
@@ -463,9 +464,9 @@ function StatusFilterBar({
   active: FilterMode;
   onChange: (f: FilterMode) => void;
 }) {
-  // Live items only — deleted submissions have their own bucket
-  // and shouldn't pollute the status counts.
-  const live = items.filter((s) => s.deleted !== true);
+  // Live items only — deleted AND suspected-spam submissions have their
+  // own buckets and shouldn't pollute the status counts.
+  const live = items.filter((s) => s.deleted !== true && s.spam !== true);
   const counts = {
     new: live.filter((s) => (s.status ?? "new") === "new").length,
     in_progress: live.filter((s) => s.status === "in_progress").length,
@@ -474,6 +475,9 @@ function StatusFilterBar({
   const actionable = counts.new + counts.in_progress;
   const all = live.length;
   const deleted = items.filter((s) => s.deleted === true).length;
+  const spam = items.filter(
+    (s) => s.spam === true && s.deleted !== true,
+  ).length;
 
   // Filter labels use the same icons as the row pills so the bar
   // and the row state map 1:1 visually.
@@ -487,6 +491,7 @@ function StatusFilterBar({
     },
     { key: "done", label: `${STATUS_ICON.done} Done`, count: counts.done },
     { key: "all", label: "All", count: all },
+    { key: "spam", label: "🚫 Spam", count: spam },
     { key: "deleted", label: "🗑️ Deleted", count: deleted },
   ];
 
@@ -527,8 +532,12 @@ function filterItems(
   statusOf: (s: Submission) => Status,
 ): Submission[] {
   if (filter === "deleted") return items.filter((s) => s.deleted === true);
-  // Every non-deleted filter excludes trashed items.
-  const live = items.filter((s) => s.deleted !== true);
+  // Suspected spam has its own bucket — kept out of every other view.
+  if (filter === "spam") {
+    return items.filter((s) => s.spam === true && s.deleted !== true);
+  }
+  // Every non-deleted filter excludes trashed items AND suspected spam.
+  const live = items.filter((s) => s.deleted !== true && s.spam !== true);
   if (filter === "all") return live;
   if (filter === "actionable") {
     return live.filter((s) => statusOf(s) !== "done");
@@ -540,6 +549,7 @@ function filterLabel(f: FilterMode): string {
   if (f === "actionable") return "Actionable";
   if (f === "all") return "All";
   if (f === "deleted") return "Deleted";
+  if (f === "spam") return "Spam";
   return STATUS_LABEL[f];
 }
 
