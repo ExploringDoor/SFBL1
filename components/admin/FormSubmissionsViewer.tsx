@@ -437,7 +437,19 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
         </div>
       </div>
 
-      <div className="flex gap-1 overflow-x-auto pb-1">
+      {/* WRAPS rather than scrolling sideways. Adam, 2026-08-27: "should be
+        * able to view all form submission tabs at once instead of having to
+        * scroll to see baseball orders."
+        *
+        * The strip was built when there were three kinds. COYBL now has nine,
+        * and the last two are the newest, so the two tabs Doug has never seen
+        * were the two parked off the right-hand edge with nothing on screen to
+        * suggest they existed. A horizontal scroller hides its own overflow,
+        * which is fine for a long list nobody needs all of and wrong for a
+        * complete set of nine.
+        *
+        * Also fixes it on a phone, where the sideways scroll was worse. */}
+      <div className="flex flex-wrap gap-1 pb-1">
         {kindTabs.map((t) => (
           <button
             key={t.key}
@@ -1127,7 +1139,10 @@ function StatusFilterBar({
   ];
 
   return (
-    <div className="flex gap-1 overflow-x-auto pb-1">
+    // Wraps, same reasoning as the kind strip above: six filters including
+    // Spam and Deleted, and the ones that scrolled out of sight were the ones
+    // holding the things nobody had looked at.
+    <div className="flex flex-wrap gap-1 pb-1">
       {pills.map((p) => (
         <button
           key={p.key}
