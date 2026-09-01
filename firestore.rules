@@ -27,6 +27,33 @@ service cloud.firestore {
       return leagueRole(leagueId) == 'admin';
     }
 
+    // Scoped admin. A league can hand out extra passwords that open PART of
+    // the admin; /api/public-admin-claim mints "admin:<roleId>" for those.
+    // See lib/admin-roles.ts for what each role opens.
+    //
+    // READ ONLY, and only where a scoped tab genuinely needs it. Every admin
+    // WRITE still goes through an /api/admin-* route, and those routes test
+    // the claim themselves, so nothing here needs to grant a scoped caller
+    // write access and nothing here does. isAdmin() is unchanged, so all 26
+    // existing uses of it stay owner-only exactly as before.
+    function hasAdminScope(leagueId, scope) {
+      return isAdmin(leagueId)
+        || (
+          // Scoped admin FOR THIS LEAGUE. Both halves are required: the league
+          // claim proves which league they hold a scoped role in, and
+          // admin_scopes says what that role opens. Checking the scope list
+          // alone would let a role minted for one league read another's.
+          //
+          // The list is expanded by /api/public-admin-claim rather than
+          // derived here, because rules cannot read lib/admin-roles.ts and a
+          // rule that hardcoded "scheduler implies scores" would drift from it.
+          leagueRole(leagueId) is string
+          && leagueRole(leagueId).matches('^admin:[a-z-]+$')
+          && request.auth.token.get('admin_scopes', []) is list
+          && request.auth.token.get('admin_scopes', []).hasAny([scope])
+        );
+    }
+
     // Anchored, single-segment team id: "captain:team_a" — yes;
     // "captain:foo:bar" or "captain:" — no.
     function captainTeamId(leagueId) {
@@ -267,7 +294,12 @@ service cloud.firestore {
       // Assignments themselves live on the game doc as an array of umpire ids,
       // which are opaque without this collection to resolve them.
       match /umpires/{umpireId} {
-        allow read, write: if isAdmin(leagueId);
+        // Read widened 2026-09-01 for the "umpires" role, which is Mike's
+        // umpire in chief asking to see umpire stuff. Write stays owner-only:
+        // he asked for visibility, not control, and /api/admin-umpires is the
+        // only thing that changes this collection.
+        allow read: if hasAdminScope(leagueId, 'umpires');
+        allow write: if isAdmin(leagueId);
       }
 
       // Box scores: admin OR captain of one of the teams in the game.
@@ -309,7 +341,10 @@ service cloud.firestore {
       // Same isCaptainOfDocGame check as /lineups above — captain must
       // both own the team suffix AND be in the game.
       match /box_score_submissions/{subId} {
-        allow read: if isAdmin(leagueId)
+        // "scores" scope reads these because ScoresManager lists what coaches
+        // have submitted so the office can confirm a result. Writing one is
+        // still the captain's own action or a full admin's.
+        allow read: if hasAdminScope(leagueId, 'scores')
                     || isCaptainOfDocGame(leagueId, subId);
         allow write: if isAdmin(leagueId)
                     || isCaptainOfDocGame(leagueId, subId);

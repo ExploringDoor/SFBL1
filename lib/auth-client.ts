@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { accessFromClaim, type AdminAccess } from "@/lib/admin-roles";
 import {
   isSignInWithEmailLink,
   onAuthStateChanged,
@@ -129,6 +130,49 @@ export type LeagueRole = "admin" | "captain" | "player" | "none" | "loading";
 // token claims. Returns "loading" until claims resolve. Calls
 // `getIdTokenResult(user, true)` once after sign-in to force a refresh,
 // because newly-set custom claims aren't in the cached token.
+/** Admin access for one league, including SCOPED roles.
+ *
+ *  Separate from useLeagueRole rather than folded into it, deliberately.
+ *  useLeagueRole answers "admin | captain | player | none" and the captain
+ *  portal and several pages branch on it; teaching it to call a scoped
+ *  assistant "admin" would quietly hand her whatever those pages gate on.
+ *  This hook answers a different question and only the admin page asks it.
+ *
+ *  Returns "loading" until the token resolves, then an AdminAccess whose
+ *  `full` is false and whose `scopes` is empty for anyone with no admin claim
+ *  at all, so callers can treat "no access" and "some access" uniformly. */
+export function useAdminAccess(
+  leagueId: string | null,
+): AdminAccess | "loading" {
+  const user = useUser();
+  const [access, setAccess] = useState<AdminAccess | "loading">("loading");
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!leagueId || user === null) {
+      setAccess(accessFromClaim(null));
+      return;
+    }
+    if (user === undefined) {
+      setAccess("loading");
+      return;
+    }
+    (async () => {
+      // Force-refresh for the same reason useLeagueRole does: a password typed
+      // seconds ago has to work without a sign-out cycle.
+      const result = await user.getIdTokenResult(true);
+      if (cancelled) return;
+      const leagues = (result.claims.leagues ?? {}) as Record<string, unknown>;
+      setAccess(accessFromClaim(leagues[leagueId]));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, leagueId]);
+
+  return access;
+}
+
 export function useLeagueRole(leagueId: string | null): LeagueRole {
   const user = useUser();
   const [role, setRole] = useState<LeagueRole>("loading");

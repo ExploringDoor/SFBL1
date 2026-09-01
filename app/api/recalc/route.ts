@@ -6,6 +6,7 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { hasScope } from "@/lib/admin-roles";
 import { recalcLeague } from "@/lib/stats";
 
 // API routes are server-only. Force Node runtime — firebase-admin won't
@@ -41,7 +42,12 @@ export async function POST(req: Request) {
   }
 
   const leagues = decoded.leagues as Record<string, string> | undefined;
-  if (leagues?.[leagueId] !== "admin") {
+  // SCOPED. hasScope() lets the full admin through as before, and also the one
+  // scoped role that declares "scores" in lib/admin-roles.ts. Every other
+  // admin route still tests `!== "admin"` directly and so refuses a scoped
+  // caller outright, which is the intended default: access widens only where
+  // someone wrote it down.
+  if (!hasScope(decoded, leagueId, "scores")) {
     return NextResponse.json(
       { error: `Not admin of league "${leagueId}"` },
       { status: 403 },

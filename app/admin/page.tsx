@@ -10,8 +10,9 @@
 // Developer-only sections (smoke test, recalc) live under "Tools"
 // so they're available but out of the way.
 
-import { useMemo, useState } from "react";
-import { signOut, useLeagueRole, useUser } from "@/lib/auth-client";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { signOut, useAdminAccess, useLeagueRole, useUser } from "@/lib/auth-client";
+import { ADMIN_ROLES, scopedTabKeys } from "@/lib/admin-roles";
 import { getDb } from "@/lib/firebase";
 import { useTenant } from "@/lib/tenant-context";
 import { doc, setDoc } from "firebase/firestore";
@@ -191,10 +192,36 @@ export default function AdminPage() {
   const { tenantId, config } = useTenant();
   const user = useUser();
   const role = useLeagueRole(tenantId);
+  // Scoped roles. useLeagueRole answers "admin" only for the unrestricted
+  // password, so a scoped assistant reads as "none" there; this is the hook
+  // that knows about partial access. See lib/admin-roles.ts.
+  const access = useAdminAccess(tenantId);
+  const scoped = access !== "loading" ? scopedTabKeys(access) : null;
   const [activeTab, setActiveTab] = useState<TabKey>("health");
   const [moreOpen, setMoreOpen] = useState(false);
-  const topTabs = useMemo(() => visibleTabs(TOP_TABS, tenantId), [tenantId]);
-  const moreTabs = useMemo(() => visibleTabs(MORE_TABS, tenantId), [tenantId]);
+  // Two filters, composed. visibleTabs() hides tabs this TENANT does not use;
+  // scoped hides tabs this PERSON may not open. A tab has to survive both.
+  const topTabs = useMemo(
+    () =>
+      visibleTabs(TOP_TABS, tenantId).filter((t) => !scoped || scoped.has(t.key)),
+    [tenantId, scoped],
+  );
+  const moreTabs = useMemo(
+    () =>
+      visibleTabs(MORE_TABS, tenantId).filter((t) => !scoped || scoped.has(t.key)),
+    [tenantId, scoped],
+  );
+  // A scoped session must not open on Health, which it cannot see. Land on the
+  // first tab it does have, once.
+  const landed = useRef(false);
+  useEffect(() => {
+    if (landed.current || !scoped) return;
+    const first = [...topTabs, ...moreTabs][0];
+    if (first) {
+      setActiveTab(first.key);
+      landed.current = true;
+    }
+  }, [scoped, topTabs, moreTabs]);
   // Only count the dropdown as active for a tab this tenant can actually see,
   // so a hidden tab can never leave "More" highlighted with nothing under it.
   const moreActive = moreTabs.some((t) => t.key === activeTab);
@@ -236,7 +263,17 @@ export default function AdminPage() {
     );
   }
 
-  if (role !== "admin") {
+  if (access === "loading") {
+    return (
+      <Shell heading={config?.name ?? "Admin"}>
+        <p className="text-slate-500">Loading…</p>
+      </Shell>
+    );
+  }
+
+  // A scoped role is not "admin" to useLeagueRole, so the gate has to ask
+  // access, not role. Anyone with no admin claim at all still lands here.
+  if (!access.full && access.scopes.size === 0) {
     return (
       <Shell heading={config?.name ?? "Admin"}>
         <SignedInHeader email={user.email} role={role} />

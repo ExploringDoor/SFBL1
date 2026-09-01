@@ -17,6 +17,7 @@
 // limit + every successful sign-in writes an audit log entry.
 
 import { NextResponse } from "next/server";
+import { ADMIN_ROLES } from "@/lib/admin-roles";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 
 export const runtime = "nodejs";
@@ -132,7 +133,42 @@ export async function POST(req: Request) {
     );
   }
 
-  if (!(await safeEqual(password, storedPassword))) {
+  // SCOPED ROLES. A league can hand out extra passwords that open only part of
+  // the admin, configured at leagues/{id}.admin.roles:
+  //
+  //   admin: { roles: { umpires: { password: "..." }, scheduler: { ... } } }
+  //
+  // Island 2026-09-01: Mike wanted his umpire in chief to "see umpire stuff"
+  // and his assistant to run schedules, scores and coach messages, without
+  // either of them getting the Payments tab, every coach's sign-in code, or
+  // the clinic families' details.
+  //
+  // THE FULL PASSWORD IS TRIED FIRST and wins on a tie, so no role password
+  // can ever shadow the owner's. Every candidate is compared with the same
+  // constant-time check, and a wrong password still costs the same work
+  // whichever slot it was closest to.
+  //
+  // What each role opens lives in lib/admin-roles.ts, not here. This route
+  // only decides WHICH role the caller proved they hold.
+  const roleCfg = (adminCfg.roles ?? {}) as Record<
+    string,
+    { password?: unknown } | undefined
+  >;
+  let matchedRole: string | null = null;
+  let matched = await safeEqual(password, storedPassword);
+  if (!matched) {
+    for (const [roleId, cfg] of Object.entries(roleCfg)) {
+      const pw = cfg?.password;
+      if (typeof pw !== "string" || !pw) continue;
+      if (!ADMIN_ROLES[roleId]) continue; // configured but unknown to the code
+      if (await safeEqual(password, pw)) {
+        matched = true;
+        matchedRole = roleId;
+        break;
+      }
+    }
+  }
+  if (!matched) {
     return NextResponse.json(
       { error: "Wrong password." },
       { status: 401 },
@@ -142,11 +178,35 @@ export async function POST(req: Request) {
   // Mint the admin token. Synthetic uid shared across all visitors
   // who type the right password — Firebase doesn't mind re-issued
   // tokens for the same uid.
-  const uid = `public-admin:${leagueId}`;
+  //
+  // The uid carries the role so the audit log and Firestore can tell a scoped
+  // session apart from the owner's, and so one role signing out cannot drop
+  // another's token.
+  const uid = matchedRole
+    ? `public-admin:${leagueId}:${matchedRole}`
+    : `public-admin:${leagueId}`;
   const claims = {
-    leagues: { [leagueId]: "admin" },
+    leagues: { [leagueId]: matchedRole ? `admin:${matchedRole}` : "admin" },
     public_admin: true,
     league: leagueId,
+    // BOTH the role id and its expanded scopes go in the token, and they are
+    // read by different layers.
+    //
+    // API routes read the role id and expand it through ADMIN_ROLES, so the
+    // scope table lives in one place in TypeScript. Firestore rules cannot do
+    // that lookup: rules have no access to the table, so a rule asking "may
+    // this caller read box scores" would otherwise have to know that the
+    // "scheduler" role happens to include "scores". That coupling is exactly
+    // how a role gains a permission nobody intended.
+    //
+    // So the scopes are expanded HERE, once, at the only place that decides
+    // which role a caller holds, and rules match on the list.
+    ...(matchedRole
+      ? {
+          admin_role: matchedRole,
+          admin_scopes: [...(ADMIN_ROLES[matchedRole]?.scopes ?? [])],
+        }
+      : {}),
   };
   const customToken = await getAdminAuth().createCustomToken(uid, claims);
 
@@ -156,6 +216,9 @@ export async function POST(req: Request) {
   try {
     await db.collection(`leagues/${leagueId}/audit`).add({
       kind: "public_admin_claim",
+      // Which door they came through. Without this the audit log cannot tell
+      // the owner apart from a scoped assistant.
+      role: matchedRole ?? "admin",
       ip,
       at: new Date().toISOString(),
     });

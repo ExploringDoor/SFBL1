@@ -12,6 +12,7 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { hasScope } from "@/lib/admin-roles";
 import { sendGridBroadcast, sendGridConfigured } from "@/lib/email/sendgrid";
 import {
   sendSmsBroadcast,
@@ -186,7 +187,12 @@ async function requireAdmin(
     return NextResponse.json({ error: "leagueId required" }, { status: 400 });
   }
   const leagues = (decoded.leagues ?? {}) as Record<string, string>;
-  if (leagues[leagueId] !== "admin") {
+  // SCOPED. hasScope() lets the full admin through as before, and also the one
+  // scoped role that declares "broadcast" in lib/admin-roles.ts. Every other
+  // admin route still tests `!== "admin"` directly and so refuses a scoped
+  // caller outright, which is the intended default: access widens only where
+  // someone wrote it down.
+  if (!hasScope(decoded, leagueId, "broadcast")) {
     return NextResponse.json(
       { error: `Not an admin of "${leagueId}"` },
       { status: 403 },
