@@ -1205,10 +1205,22 @@ export async function POST(req: Request) {
       // bot" reads as "safe to delete". The wording also has to be honest that
       // nothing was provisioned, because a flagged signup now waits for a human.
       const sentTo = certainBot ? 0 : await notifyOffice({
-        subject: spamFlags.length
+        // THE HEADER MUST MATCH WHAT ACTUALLY HAPPENED, and there are now two
+        // different outcomes, not one.
+        //
+        // `flagged` is the timing check, and only it withholds a team. The
+        // honeypot flags without withholding, because it caught zero bots and
+        // three real teams before it was renamed. Keying this copy on
+        // spamFlags.length told the office "no team was created" for BOTH,
+        // which was false for a honeypot hit: on 2026-09-01 Craig Fisher's LI
+        // Rebels 14U-Fisher was created and had its code emailed, while the
+        // notification said neither had happened. Mike would then have clicked
+        // "Create team from this registration" on a team that already existed
+        // and re-sent Craig a second code.
+        subject: flagged
           ? `NEEDS REVIEW — ${built.subject}`
           : built.subject,
-        html: spamFlags.length
+        html: flagged
           ? `<p style="background:#fff4e5;border:1px solid #f0b37e;padding:10px 12px;border-radius:8px">` +
             `<strong>This registration tripped an automatic bot check (${esc(spamFlags.join(", "))}).</strong><br/>` +
             `It has been saved in full, but <strong>no team was created</strong> and the coach has not been ` +
@@ -1220,7 +1232,14 @@ export async function POST(req: Request) {
             `<strong>Create team from this registration</strong>, which sets it up and emails the coach ` +
             `their sign-in code. If it is junk, delete it.` +
             `</p>` + built.html
-          : built.html,
+          : spamFlags.length
+            ? `<p style="background:#eef6ff;border:1px solid #b6d4f7;padding:10px 12px;border-radius:8px">` +
+              `<strong>Set up as normal. No action needed.</strong><br/>` +
+              `A minor bot check fired (${esc(spamFlags.join(", "))}), which usually just means the coach ` +
+              `used a password manager. The team was created and the coach has been emailed their ` +
+              `sign-in code. Mentioned only so nothing looks unexplained.` +
+              `</p>` + built.html
+            : built.html,
         // Hitting reply reaches the coach who registered rather than the
         // noreply sender. Every other office notification in this file
         // already does this; the registration one was the exception, so the
