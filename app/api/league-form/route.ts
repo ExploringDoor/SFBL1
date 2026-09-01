@@ -738,9 +738,8 @@ export async function POST(req: Request) {
   //
   // Neither signal is trustworthy enough to destroy a registration on:
   //
-  //   honeypot  an off-screen text input named "le_hp". Named "website" until
-  //             2026-08-22, which password managers autofill, so it caught
-  //             three real teams and zero bots. It flags but no longer holds.
+  //   (a honeypot field lived here until 2026-09-01. Removed: 0 bots, 9 real
+  //    people. See components/forms/LeagueForm.tsx for the measurement.)
   //             autoComplete="off" is advisory and Chrome and every password
   //             manager ignore it. A coach with 1Password fills it without
   //             ever seeing it.
@@ -758,14 +757,9 @@ export async function POST(req: Request) {
   // open in somebody's browser mid-registration; reading only the new name
   // would quietly stop checking those. Drop `website` once no stale client
   // can plausibly be live.
-  const data0 = body.data as Record<string, unknown>;
-  const honeypot = data0.le_hp ?? data0.website;
-  if (typeof honeypot === "string" && honeypot.length > 0) {
-    console.warn(
-      `[league-form] honeypot filled tenant=${tenantId} kind=${body.kind} ip=${ip} — FLAGGING, not dropping`,
-    );
-    spamFlags.push("honeypot");
-  }
+  // Honeypot check removed 2026-09-01. It caught 0 bots and 9 real people
+  // across six weeks; the timing check below caught all 165 bots by itself.
+  // See the note in components/forms/LeagueForm.tsx for the full measurement.
 
   // The submission write is the whole point of the request, so it gets real
   // error handling. Unwrapped, a transient Firestore failure threw out of the
@@ -1100,18 +1094,11 @@ export async function POST(req: Request) {
     // nobody knew to send. Caught live at 22:56 the same evening.
     // WHICH FLAGS ACTUALLY HOLD A TEAM BACK.
     //
-    // Not all of them, and the difference is measured rather than guessed. On
-    // Island: the submit-timing check has caught 16 bots and 0 real people.
-    // The honeypot has caught 0 bots and 3 real teams, because it was named
-    // `website` and password managers fill that. Holding on honeypot alone
-    // cost Emilio Estevez and Mariah Salvatto most of a day each, with their
-    // teams uncreated and no sign-in code, while both records carried a logo,
-    // a phone number and a hand-typed note.
-    //
-    // So the honeypot still FLAGS, and the office still gets NEEDS REVIEW, but
-    // on its own it no longer withholds the team. A real bot trips the timing
-    // check too, and that still holds. Revisit if a renamed honeypot ever
-    // starts catching bots on its own.
+    // Only the timing check holds a team back, and since the honeypot was
+    // removed on 2026-09-01 it is the only check there is. Measured over
+    // Island's first six weeks: 165 bots, all 165 caught here, 0 false
+    // positives. Kept as a `some()` over the flags rather than a plain
+    // boolean so a future second check has to opt in to holding a team.
     const flagged = spamFlags.some((f) => f.startsWith("too_fast"));
     let teamCode: string | null = null;
     if (!flagged) {
@@ -1209,14 +1196,14 @@ export async function POST(req: Request) {
         // different outcomes, not one.
         //
         // `flagged` is the timing check, and only it withholds a team. The
-        // honeypot flags without withholding, because it caught zero bots and
-        // three real teams before it was renamed. Keying this copy on
-        // spamFlags.length told the office "no team was created" for BOTH,
-        // which was false for a honeypot hit: on 2026-09-01 Craig Fisher's LI
-        // Rebels 14U-Fisher was created and had its code emailed, while the
-        // notification said neither had happened. Mike would then have clicked
-        // "Create team from this registration" on a team that already existed
-        // and re-sent Craig a second code.
+        // second branch is now unreachable in practice, because the honeypot
+        // was the only check that flagged without holding and it was removed
+        // on 2026-09-01. It stays because the next check added here will very
+        // likely be another advisory one, and the lesson that produced it is
+        // worth keeping: keyed on spamFlags.length this told the office "no
+        // team was created" for a honeypot hit where the team HAD been created
+        // and the coach HAD been emailed, which would have had Mike create a
+        // duplicate and send Craig Fisher a second sign-in code.
         subject: flagged
           ? `NEEDS REVIEW — ${built.subject}`
           : built.subject,

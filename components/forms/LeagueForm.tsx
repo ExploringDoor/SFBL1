@@ -359,37 +359,34 @@ export function LeagueForm({
             every field instantly. Checked server-side. */}
         <input type="hidden" name="form_opened_at" value={openedAt} readOnly />
 
-        {/* Honeypot — hidden from real users, bots that fill every field get
-            caught.
+        {/* THE HONEYPOT IS GONE. Removed 2026-09-01 on the evidence.
 
-            THE NAME IS THE WHOLE DESIGN. This was `name="website"` until
-            2026-08-22, and `website` is precisely what 1Password, LastPass and
-            Chrome autofill drop the site URL into, because that is the field
-            they store beside a login. autoComplete="off" does not stop them;
-            password managers override it on purpose. So the trap caught
-            coaches who use a password manager and nothing else.
+            A hidden text input that bots fill and humans do not. Over Island's
+            first six weeks live it caught 165 bots... no. It caught ZERO. The
+            submit-timing check caught all 165 on its own. What the honeypot
+            caught was NINE real people: LI Rebels 12u Blue, Lindenhurst
+            Bulldogs, Long Island Rebels 14U White, LI Heat 12U, Force 12u
+            Gigs, Patriots, Westhampton Beach Hurricanes, LI Rebels 14U-Fisher,
+            and a clinic parent, Juliana Estevez.
 
-            Measured over Island's first three weeks: this check caught ZERO
-            bots and THREE real teams (LI Rebels 12u Blue, Lindenhurst
-            Bulldogs, Long Island Rebels 14U White). Every actual bot was
-            caught by the submit-timing check instead, 16 for 16. Emilio
-            Estevez registered with a logo, a GameChanger link and a note about
-            which turf field they might get, and sat for 18 hours with no
-            sign-in code.
+            It was first named "website", which password managers fill because
+            that is the field they store beside a login. Renaming it to "le_hp"
+            on 2026-08-22 was supposed to fix that. It made it WORSE: 14% of
+            real registrations before the rename, 31% after. Autofill does not
+            only match on the name, it will fill an unlabelled text input near
+            the top of a form whatever it is called, and aria-hidden,
+            tabIndex=-1 and autoComplete="off" do not stop it because password
+            managers override all three deliberately.
 
-            `le_hp` matches no autofill heuristic: not url, website, address,
-            email, name, phone, username or password. Keep it meaningless. If
-            you ever rename it, rename the server check in
-            /api/league-form with it. */}
-        <input
-          type="text"
-          name="le_hp"
-          autoComplete="off"
-          tabIndex={-1}
-          aria-hidden="true"
-          style={{ position: "absolute", left: "-9999px", height: 0 }}
-          onChange={(e) => update("le_hp", e.target.value)}
-        />
+            Every one of those nine sent the league office a "NEEDS REVIEW"
+            email about a real team. Mike, 2026-09-01: "he gets that email
+            every registration".
+
+            A honeypot that has never once caught what it is for, and misfires
+            on a third of real signups, is not a weakened control. It is noise
+            that trains the office to ignore warnings. The timing check stays
+            and is doing the entire job. */}
+
 
         <div className="le-form-grid">
           {fields.map((f) => (
