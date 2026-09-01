@@ -5,7 +5,8 @@
 // those, and the rules widen exactly two READS for them and nothing else.
 //
 // What these tests pin, in order of how badly it would hurt to get wrong:
-//   1. a scoped role can never WRITE anything, however narrow its scope
+//   1. the only thing any scoped role can write is the umpires collection,
+//      and only the umpires role can write it
 //   2. a scoped role cannot read the OTHER role's collection
 //   3. the full admin is completely unaffected
 //   4. anonymous is still refused, which the earlier honeypot work established
@@ -64,11 +65,17 @@ describe("umpires role", () => {
     await assertSucceeds(getDoc(doc(c.firestore(), "leagues/island/umpires/u1")));
   });
 
-  it("CANNOT write an umpire", async () => {
+  it("CAN write an umpire, since 2026-09-01", async () => {
     const c = env.authenticatedContext(uid("ump"), UMPIRE);
-    await assertFails(
+    await assertSucceeds(
       setDoc(doc(c.firestore(), "leagues/island/umpires/u1"), { name: "changed" }),
     );
+  });
+
+  it("still CANNOT write anything outside its own collection", async () => {
+    const db = env.authenticatedContext(uid("ump"), UMPIRE).firestore();
+    await assertFails(setDoc(doc(db, "leagues/island/teams/t1"), { name: "x" }));
+    await assertFails(setDoc(doc(db, "leagues/island/games/g1"), { home_score: 9 }));
   });
 
   it("CANNOT read the other role's collection", async () => {
@@ -90,6 +97,13 @@ describe("scheduler role", () => {
   it("CANNOT read the umpire roster, which carries officials' phone numbers", async () => {
     const c = env.authenticatedContext(uid("sched"), SCHEDULER);
     await assertFails(getDoc(doc(c.firestore(), "leagues/island/umpires/u1")));
+  });
+
+  it("CANNOT write the umpire roster either", async () => {
+    const c = env.authenticatedContext(uid("sched"), SCHEDULER);
+    await assertFails(
+      setDoc(doc(c.firestore(), "leagues/island/umpires/u1"), { name: "x" }),
+    );
   });
 
   it("CANNOT write a box score submission", async () => {

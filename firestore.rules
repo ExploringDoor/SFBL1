@@ -294,12 +294,16 @@ service cloud.firestore {
       // Assignments themselves live on the game doc as an array of umpire ids,
       // which are opaque without this collection to resolve them.
       match /umpires/{umpireId} {
-        // Read widened 2026-09-01 for the "umpires" role, which is Mike's
-        // umpire in chief asking to see umpire stuff. Write stays owner-only:
-        // he asked for visibility, not control, and /api/admin-umpires is the
-        // only thing that changes this collection.
-        allow read: if hasAdminScope(leagueId, 'umpires');
-        allow write: if isAdmin(leagueId);
+        // The "umpires" role owns this collection outright, read and write.
+        // Opened to read on 2026-09-01 for Mike's umpire in chief, and to
+        // write later the same day when Mike said to let him edit his own
+        // page. He is the person who actually knows who is available, so
+        // routing every change back through the office was friction with no
+        // safety value: the only thing he can reach is the umpire roster.
+        //
+        // This is the ONLY collection any scoped role can write. Everything
+        // else stays isAdmin.
+        allow read, write: if hasAdminScope(leagueId, 'umpires');
       }
 
       // Box scores: admin OR captain of one of the teams in the game.

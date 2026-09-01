@@ -51,9 +51,10 @@ export const ADMIN_ROLES: Record<
   string,
   { label: string; scopes: readonly AdminScope[] }
 > = {
-  // "Just to see umpire stuff." Read of the umpire roster and assignments and
-  // nothing else. Writes are not granted: changing an assignment is still the
-  // office's job, and Mike asked for visibility, not control.
+  // The umpire in chief. The umpire roster and assignments, read AND write,
+  // and nothing else. Started read-only on Mike's "just to see umpire stuff",
+  // widened the same day on "let the umpire edit his page": he is the one who
+  // knows who is available, and the only thing the role can reach is umpires.
   umpires: { label: "Umpires", scopes: ["umpires"] },
   // The assistant. Schedules, makeups, scores, standings and coach messages.
   // Standings are derived from scores rather than edited, so "update
