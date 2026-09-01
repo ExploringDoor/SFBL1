@@ -514,6 +514,22 @@ const MAIL_RECORDED_KINDS = new Set<Kind>([
   "umpire_evaluation",
   "player_ad",
   "alerts_signup",
+  // The three COYBL forms added 2026-08-27. Left off this list when they were
+  // built, so they took the fire-and-forget path the comment above warns
+  // about, and none of them stamped a flag saying whether the mail went.
+  //
+  // Found on 2026-08-31 by a real order: Rhonda Hare submitted FIFTY DOZEN
+  // baseballs, $2,600, on 28 August, and the document carries no mail flags at
+  // all — so there is no way to tell whether Doug was ever told about it.
+  //
+  // Safe to await, for exactly the reason the comment gives: nobody submits an
+  // umpire registration, a tournament entry or a baseball order in bulk. These
+  // are the forms where a lost notification costs the most, because unlike a
+  // team registration there is no ledger row or roster that would surface the
+  // submission anywhere else.
+  "umpire_registration",
+  "tournament_registration",
+  "baseball_order",
 ]);
 
 // What actually went out, merged onto the submission so a failed send is
