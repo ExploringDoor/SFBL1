@@ -28,6 +28,10 @@ const PATHS: Record<string, string> = {
   "/player-registration": "M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5",
   "/team-registration": "M4 10c0-3.3 3.6-6 8-6s8 2.7 8 6M3 10h18v3a9 9 0 01-18 0v-3zM12 19v3M8 22h8",
   "/team-waiver-form": "M6 3h8l4 4v14H6V3zM14 3v5h4M8 17l3-1 7-7-2-2-7 7-1 3z",
+  // A clipboard: the coach form is a report filed about a person, where
+  // the umpire icon is a pair of bases.
+  "/coach-evaluation-form":
+    "M9 4h6v2H9zM7 6h10v14H7zM10 11h4M10 15h4",
   "/umpire-evaluation-form": "M12 4v16M6 8l-3 6h6l-3-6zM18 8l-3 6h6l-3-6zM5 20h14M9 4h6",
   "/pay-online": "M3 8a1 1 0 011-1h16a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1V8zM3 11h18M7 15h3",
   "/content/pay-online": "M3 8a1 1 0 011-1h16a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1V8zM3 11h18M7 15h3",

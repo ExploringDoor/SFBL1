@@ -35,6 +35,7 @@ const ALLOWED_KINDS = new Set([
   // two were missed, which is the shape this bug always takes.
   "clinic_registration",
   "umpire_evaluation",
+  "coach_evaluation",
   "site_feedback",
   "player_waiver",
   // Alerts sign-ups. They feed the Send Message list and had no admin surface

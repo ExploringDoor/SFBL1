@@ -61,6 +61,7 @@ export const DEFAULT_LINKS: NavLink[] = [
       { label: "Availability", href: "/availability" },
       { label: "History", href: "/history" },
       { label: "Umpire Evaluation", href: "/umpire-evaluation-form" },
+      { label: "Coach Evaluation", href: "/coach-evaluation-form" },
       { label: "Pay Online", href: "/pay-online" },
       { label: "Sponsors", href: "/content/sponsors" },
       { label: "Store", href: "/content/store" },

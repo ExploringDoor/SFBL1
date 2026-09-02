@@ -3,6 +3,7 @@
 //   - player_registration→ leagues/{tid}/form_submissions/player_registration/{auto}
 //   - team_waiver        → leagues/{tid}/form_submissions/team_waiver/{auto}
 //   - umpire_evaluation  → leagues/{tid}/form_submissions/umpire_evaluation/{auto}
+//   - coach_evaluation   → leagues/{tid}/form_submissions/coach_evaluation/{auto}
 //
 // Why one endpoint instead of four: the four forms differ only in
 // which fields are required + the storage subcollection. The shape
@@ -48,6 +49,7 @@ type Kind =
   | "player_registration"
   | "team_waiver"
   | "umpire_evaluation"
+  | "coach_evaluation"
   | "alerts_signup"
   | "player_ad"
   | "site_feedback"
@@ -208,6 +210,9 @@ const ALLOWED_FIELDS: Record<Kind, string[]> = {
     "home_field_maps",
     "team_name",
     "division",
+    // UCSL (adult coed softball) — captain lists the player roster as free
+    // text (one player per line). Additive: no other tenant sends this field.
+    "roster",
     // COYBL (youth) fields — age group instead of division, the
     // registration option ($495/$425) + USSSA add-on, club/org, and the
     // GameChanger schedule link.
@@ -282,6 +287,26 @@ const ALLOWED_FIELDS: Record<Kind, string[]> = {
     "field_umpire_name",
     "field_umpire_rating",
     "field_umpire_comments",
+    "general_comments",
+  ],
+  coach_evaluation: [
+    "evaluator_name",
+    "evaluator_role",
+    "phone",
+    "game_date",
+    "game_time",
+    "field",
+    "visiting_team",
+    "home_team",
+    "coach_name",
+    "coach_team",
+    "sportsmanship_rating",
+    "rules_rating",
+    "players_rating",
+    "officials_rating",
+    "coach_comments",
+    "incident",
+    "incident_details",
     "general_comments",
   ],
   alerts_signup: [
@@ -405,6 +430,14 @@ const REQUIRED: Record<Kind, string[]> = {
     "visiting_team",
     "home_team",
   ],
+  coach_evaluation: [
+    "evaluator_name",
+    "game_date",
+    "visiting_team",
+    "home_team",
+    "coach_name",
+    "coach_team",
+  ],
   alerts_signup: ["email", "agreed_to_alerts"],
   player_ad: [
     "posted_by",
@@ -512,6 +545,7 @@ const MAIL_RECORDED_KINDS = new Set<Kind>([
   "clinic_registration",
   "team_waiver",
   "umpire_evaluation",
+  "coach_evaluation",
   "player_ad",
   "alerts_signup",
   // The three COYBL forms added 2026-08-27. Left off this list when they were
@@ -1843,6 +1877,7 @@ async function sendRegistrationEmails(
   if (
     kind === "player_ad" ||
     kind === "umpire_evaluation" ||
+    kind === "coach_evaluation" ||
     kind === "alerts_signup"
   ) {
     const f = (k: string) =>
@@ -1880,6 +1915,58 @@ async function sendRegistrationEmails(
         `<p style="color:#555;font-size:13px">The contact details above are ` +
         `private and stay in the admin. The public ad carries the age group, ` +
         `position, town, team and message only.</p>`;
+    } else if (kind === "coach_evaluation") {
+      // The incident flag leads the SUBJECT, not just the body. An ejection
+      // report and a routine "he was fine" evaluation arrive in the same inbox
+      // and look identical in a list; the office has to be able to tell them
+      // apart without opening either.
+      const incident = f("incident").toLowerCase() === "yes";
+      subject =
+        (incident ? "INCIDENT — " : "") +
+        `Coach evaluation: ${f("coach_name") || "?"} (${f("coach_team") || "?"})` +
+        (f("game_date") ? ` ${f("game_date")}` : "");
+      const rating = (label: string, key: string) =>
+        f(key) ? `<li>${label}: <strong>${esc(f(key))}</strong> of 5</li>` : "";
+      html =
+        (incident
+          ? `<p style="background:#fdecea;border:1px solid #f5b5ae;padding:10px 12px;border-radius:8px">` +
+            `<strong>An ejection or incident was reported.</strong> Details below.</p>`
+          : "") +
+        `<p><strong>Coach:</strong> ${esc(f("coach_name"))}` +
+        (f("coach_team") ? `, ${esc(f("coach_team"))}` : "") +
+        `</p>` +
+        `<p><strong>Game:</strong> ${esc(f("visiting_team"))} at ${esc(f("home_team"))}` +
+        (f("game_date") ? `, ${esc(f("game_date"))}` : "") +
+        (f("game_time") ? ` ${esc(f("game_time"))}` : "") +
+        (f("field") ? `<br/><strong>Field:</strong> ${esc(f("field"))}` : "") +
+        `</p>` +
+        `<p><strong>From:</strong> ${esc(f("evaluator_name"))}` +
+        (f("evaluator_role") ? `, ${esc(f("evaluator_role"))}` : "") +
+        (f("phone") ? `<br/><strong>Phone:</strong> ${esc(f("phone"))}` : "") +
+        `</p>` +
+        (f("sportsmanship_rating") ||
+        f("rules_rating") ||
+        f("players_rating") ||
+        f("officials_rating")
+          ? `<ul>` +
+            rating("Sportsmanship and conduct", "sportsmanship_rating") +
+            rating("Knowledge of the rules", "rules_rating") +
+            rating("Treatment of players", "players_rating") +
+            rating("Treatment of officials", "officials_rating") +
+            `</ul>`
+          : "") +
+        (f("coach_comments")
+          ? `<p><strong>Comments:</strong><br/>` +
+            `<span style="white-space:pre-wrap">${esc(f("coach_comments"))}</span></p>`
+          : "") +
+        (f("incident_details")
+          ? `<p><strong>Incident:</strong><br/>` +
+            `<span style="white-space:pre-wrap">${esc(f("incident_details"))}</span></p>`
+          : "") +
+        (f("general_comments")
+          ? `<p><strong>For the league:</strong><br/>` +
+            `<span style="white-space:pre-wrap">${esc(f("general_comments"))}</span></p>`
+          : "");
     } else if (kind === "umpire_evaluation") {
       subject =
         `Umpire evaluation: ${f("visiting_team") || "?"} at ${f("home_team") || "?"}` +

@@ -174,6 +174,8 @@ export async function GET(req: Request) {
     "team_registration",
     "team_waiver",
     "umpire_evaluation",
+    "coach_evaluation",
+  "coach_evaluation",
     // Doug gets no email for feedback on purpose, so the Health tab is where
     // he finds out any is waiting.
     "site_feedback",

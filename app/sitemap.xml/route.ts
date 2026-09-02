@@ -68,6 +68,7 @@ export async function GET() {
     ["/team-registration", "team registration"],
     ["/team-waiver-form", "team waiver"],
     ["/umpire-evaluation-form", "umpire evaluation"],
+    ["/coach-evaluation-form", "coach evaluation"],
   ];
   for (const [href, label] of optional) {
     if (!navHide.has(label)) staticPages.push(href);

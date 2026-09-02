@@ -24,6 +24,7 @@ type Kind =
   | "team_registration"
   | "team_waiver"
   | "umpire_evaluation"
+  | "coach_evaluation"
   | "site_feedback"
   | "player_waiver"
   | "clinic_registration"
@@ -41,6 +42,7 @@ const KIND_TABS: { key: Kind; label: string }[] = [
   // down?" on the morning of the event.
   { key: "clinic_registration", label: "College Clinic" },
   { key: "umpire_evaluation", label: "Umpire evaluation" },
+  { key: "coach_evaluation", label: "Coach evaluation" },
   { key: "player_waiver", label: "Signed waivers" },
   { key: "site_feedback", label: "Site feedback" },
   // Alerts sign-ups feed the Send Message recipient list directly. Without a
@@ -1322,6 +1324,17 @@ function summaryLine(kind: Kind, s: Submission): string {
     ]
       .filter(Boolean)
       .join(" ");
+  }
+  if (kind === "coach_evaluation") {
+    // Coach first, because that is what the office scans this list for. The
+    // incident marker is prefixed rather than appended so it survives the
+    // truncation a long team name causes.
+    const coach = String(s.coach_name ?? "(unnamed coach)");
+    const team = s.coach_team ? ` (${s.coach_team})` : "";
+    const date = s.game_date ? ` — ${s.game_date}` : "";
+    const flag =
+      String(s.incident ?? "").toLowerCase() === "yes" ? "INCIDENT · " : "";
+    return `${flag}${coach}${team}${date}`;
   }
   if (kind === "umpire_evaluation") {
     const ev = s.evaluator_name ?? "";

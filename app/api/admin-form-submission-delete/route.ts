@@ -28,6 +28,7 @@ const ALLOWED_KINDS = new Set([
   // this is a SOFT delete, so nothing is destroyed either way.
   "clinic_registration",
   "umpire_evaluation",
+  "coach_evaluation",
   "site_feedback",
   "player_waiver",
   // Alerts sign-ups. These feed the Send Message recipient list directly, so

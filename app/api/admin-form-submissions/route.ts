@@ -20,6 +20,7 @@ const ALLOWED_KINDS = new Set([
   // "unknown kind" and Mike sees an error where the list should be.
   "clinic_registration",
   "umpire_evaluation",
+  "coach_evaluation",
   "site_feedback",
   "player_waiver",
   // Alerts sign-ups. They feed the Send Message list and had no admin surface

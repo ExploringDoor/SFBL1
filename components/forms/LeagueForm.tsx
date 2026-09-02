@@ -59,6 +59,7 @@ export interface LeagueFormProps {
     | "player_registration"
     | "team_waiver"
     | "umpire_evaluation"
+    | "coach_evaluation"
     | "alerts_signup"
     | "player_ad"
     | "site_feedback"

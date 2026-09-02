@@ -366,6 +366,7 @@ export default async function RootLayout({
         { label: "Past Seasons", href: "/history" },
         { label: "Sponsors", href: "/sponsors" },
         { label: "Umpire Evaluation", href: "/umpire-evaluation-form" },
+        { label: "Coach Evaluation", href: "/coach-evaluation-form" },
         { label: "Coach Login", href: "/captain" },
         // Admin STAYS. Removed on 2026-08-14 and put straight back at Adam's
         // call the same day, so: do not take it out again.
@@ -490,6 +491,16 @@ export default async function RootLayout({
             <link rel="apple-touch-icon" href="/lcybl/apple-touch-icon.png" />
             <link rel="icon" type="image/png" sizes="192x192" href="/lcybl/icon-192.png" />
             <link rel="icon" type="image/png" sizes="512x512" href="/lcybl/icon-512.png" />
+          </>
+        ) : leagueAbbrev === "UCSL" ? (
+          /* United Coed Softball League — its own round badge, generated
+             from the logo by scripts/build-ucsl-brand.js. (Adam, 2026-09-02.) */
+          <>
+            <link rel="icon" type="image/png" sizes="32x32" href="/ucsl/favicon-32.png" />
+            <link rel="icon" type="image/png" sizes="16x16" href="/ucsl/favicon-16.png" />
+            <link rel="apple-touch-icon" href="/ucsl/apple-touch-icon.png" />
+            <link rel="icon" type="image/png" sizes="192x192" href="/ucsl/icon-192.png" />
+            <link rel="icon" type="image/png" sizes="512x512" href="/ucsl/icon-512.png" />
           </>
         ) : leagueAbbrev === "WFS" ? (
           /* Windmill was falling through to /icons/* (the SFBL brand mark),
