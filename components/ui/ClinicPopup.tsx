@@ -49,6 +49,13 @@ export function ClinicPopup() {
     // one screen where the visitor most needs to read what it says.
     // Verified on production 2026-08-20.
     if (pathname?.startsWith("/pay/")) return;
+    // Nor over an evaluation form. These are filled in by umpires and league
+    // officials doing league business, the same class of surface as /admin and
+    // /captain, not by a parent browsing who might want to hear about a
+    // clinic. Verified 2026-09-01: the popup opened on top of the new coach
+    // evaluation form and covered the rating rows.
+    if (pathname?.startsWith("/coach-evaluation-form")) return;
+    if (pathname?.startsWith("/umpire-evaluation-form")) return;
     try {
       if (sessionStorage.getItem(SEEN_KEY)) return;
     } catch {
