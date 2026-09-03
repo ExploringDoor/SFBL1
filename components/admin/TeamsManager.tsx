@@ -675,17 +675,21 @@ function generatePreviewHint(teamName: string, leagueId: string): string {
 function TeamEditForm({
   team,
   leagueId,
+  existingDivisions,
   busy,
   onCancel,
   onSave,
 }: {
   team: TeamRow;
   leagueId: string;
+  /** Every division already in use, so the picker offers real values. */
+  existingDivisions: string[];
   busy: boolean;
   onCancel: () => void;
   onSave: (patch: TeamPatch) => void;
 }) {
   const isCode = leagueId === "coybl";
+  const [divisionIsNew, setDivisionIsNew] = useState(false);
   const [name, setName] = useState(team.name);
   const [abbrev, setAbbrev] = useState(team.abbrev);
   const [color, setColor] = useState(team.color || "#002d72");
@@ -730,17 +734,53 @@ function TeamEditForm({
           <span className="block text-xs font-semibold text-slate-700 mb-1">
             Division
           </span>
-          <input
-            type="text"
-            value={division}
-            onChange={(e) => setDivision(e.target.value)}
+          {/* A PICKER, not free text. Moving a team between divisions is the
+              routine job here (Mike, 2026-09-03: "I had a team sign up for
+              weekends and wants to go weeknight"), and typing the target by
+              hand is how you get "Weeknight" sitting next to "weeknight" as
+              two separate divisions. The schedule generator groups by this
+              exact string, so a capital letter would quietly split a division
+              in half while every screen still looked right.
+
+              The existing values are offered; anything genuinely new still can
+              be typed, but it takes a deliberate choice to do it. */}
+          <select
+            value={
+              division === "" || existingDivisions.includes(division)
+                ? division
+                : "__new__"
+            }
+            onChange={(e) => {
+              const v = e.target.value;
+              setDivision(v === "__new__" ? "" : v);
+              setDivisionIsNew(v === "__new__");
+            }}
             disabled={busy}
-            placeholder="Division 1"
             className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-          />
+          >
+            <option value="">Division TBD</option>
+            {existingDivisions.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+            <option value="__new__">+ New division…</option>
+          </select>
+          {divisionIsNew && (
+            <input
+              type="text"
+              value={division}
+              onChange={(e) => setDivision(e.target.value)}
+              disabled={busy}
+              placeholder="New division name"
+              className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              autoFocus
+            />
+          )}
           <span className="block text-[11px] text-slate-500 mt-1">
-            Leave blank until you assign one. Unassigned teams show as
-            &quot;Division TBD&quot; and sort last.
+            Leave as Division TBD until you assign one. Unassigned teams sort
+            last. Moving a team here moves it everywhere: standings, the teams
+            page and the schedule generator.
           </span>
         </label>
         <label className="block sm:col-span-2">
@@ -980,6 +1020,17 @@ function DivisionGroups({
     name: string,
   ) => Promise<void>;
 }) {
+  // Every division already in use, for the move-a-team picker. Derived from
+  // the teams on screen rather than configured anywhere, so it cannot drift
+  // from reality, and sorted so the list reads the same every time.
+  const existingDivisions = Array.from(
+    new Set(
+      teams
+        .map((t) => (t.division ?? "").trim())
+        .filter((d): d is string => d.length > 0),
+    ),
+  ).sort((a, b) => a.localeCompare(b));
+
   // Group teams by division, and for youth leagues by AGE GROUP first.
   // COYBL runs 7U through 14U with numbered divisions inside each, so
   // bucketing on division alone piles 7U "Division 1" and 14U "Division 1"
@@ -1037,6 +1088,7 @@ function DivisionGroups({
                 <TeamRowItem
                   key={t.id}
                   leagueId={leagueId}
+                  existingDivisions={existingDivisions}
                   team={t}
                   lastLogin={lastLogin[t.id]}
                   roster={players.filter((p) => p.team_id === t.id)}
@@ -1072,6 +1124,7 @@ function DivisionGroups({
 }
 
 function TeamRowItem({
+  existingDivisions,
   leagueId,
   team: t,
   lastLogin,
@@ -1092,6 +1145,7 @@ function TeamRowItem({
   onUpdatePlayer,
   onRemovePlayer,
 }: {
+  existingDivisions: string[];
   leagueId: string;
   team: TeamRow;
   lastLogin?: string;
@@ -1260,6 +1314,7 @@ function TeamRowItem({
         <TeamEditForm
           team={t}
           leagueId={leagueId}
+          existingDivisions={existingDivisions}
           busy={busy}
           onCancel={onCancelEdit}
           onSave={onSaveEdit}

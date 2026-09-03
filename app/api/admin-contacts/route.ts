@@ -15,6 +15,7 @@
 import { NextResponse } from "next/server";
 import { assessPlayer, needsConsent, type MinorsPolicy } from "@/lib/minors";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { accessFor, hasScope } from "@/lib/admin-roles";
 
 export const runtime = "nodejs";
 
@@ -50,13 +51,15 @@ export async function GET(req: Request) {
   const callerLeagues = decoded.leagues as
     | Record<string, string>
     | undefined;
-  if (callerLeagues?.[leagueId] !== "admin") {
+  // SCOPED, but not with the same payload. See the redaction below.
+  if (!hasScope(decoded, leagueId, "teams")) {
     return NextResponse.json(
       { error: `Not admin of league "${leagueId}"` },
       { status: 403 },
     );
   }
 
+  const fullAdmin = accessFor(decoded, leagueId).full;
   const db = getAdminDb();
   const [teamSnap, playerSnap] = await Promise.all([
     db.collection(`leagues/${leagueId}/teams`).get(),
@@ -113,8 +116,14 @@ export async function GET(req: Request) {
       name: String(data.name ?? ""),
       jersey: String(data.jersey ?? ""),
       position: String(data.position ?? ""),
-      email: String(contact.email ?? ""),
-      phone: String(contact.phone ?? ""),
+      // REDACTED FOR SCOPED CALLERS. This endpoint returns every active
+      // player's email and phone, and the players are children. The Teams tab
+      // needs the roster to render (name, jersey, position) and never displays
+      // either of these, so a scoped role gets the roster and not the contact
+      // dump. The full admin, who runs the contacts print and PDF, is
+      // unchanged.
+      email: fullAdmin ? String(contact.email ?? "") : "",
+      phone: fullAdmin ? String(contact.phone ?? "") : "",
       minor_status: age.status,
       age_at_cutoff: age.age,
       cutoff_date: age.cutoffDate,

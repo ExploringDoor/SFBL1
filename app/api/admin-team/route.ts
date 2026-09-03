@@ -17,6 +17,7 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { accessFor, hasScope } from "@/lib/admin-roles";
 import { cleanName } from "@/lib/text";
 import {
   generateTeamPassword,
@@ -108,7 +109,10 @@ export async function POST(req: Request) {
   const callerLeagues = decoded.leagues as
     | Record<string, string>
     | undefined;
-  if (callerLeagues?.[leagueId] !== "admin") {
+  // SCOPED. The "teams" scope covers viewing and editing a team, which is
+  // what Kaitlin needs to see divisions and rosters and to move a team between
+  // divisions. Deactivating one is gated separately below.
+  if (!hasScope(decoded, leagueId, "teams")) {
     return NextResponse.json(
       { error: `Not admin of league "${leagueId}"` },
       { status: 403 },
@@ -130,6 +134,19 @@ export async function POST(req: Request) {
   const ref = db.doc(`leagues/${leagueId}/teams/${teamId}`);
 
   if (action === "delete") {
+    // FULL ADMIN ONLY, even though the rest of this route is scoped.
+    // Deactivating a team pulls it out of the standings and off the schedule,
+    // and with 41 teams registered and fixtures being built it is the one
+    // action here that is expensive to undo by hand.
+    if (!accessFor(decoded, leagueId).full) {
+      return NextResponse.json(
+        {
+          error:
+            "Only the league administrator can deactivate a team. Ask them to do it.",
+        },
+        { status: 403 },
+      );
+    }
     // Soft delete — preserves historical box scores + standings.
     // True hard delete would orphan past games' team_id references.
     await ref.set(

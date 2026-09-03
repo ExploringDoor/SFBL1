@@ -31,7 +31,8 @@ export type AdminScope =
   | "schedule"
   | "schedule-gen"
   | "score-disputes"
-  | "broadcast";
+  | "broadcast"
+  | "teams";
 
 export const ALL_SCOPES: readonly AdminScope[] = [
   "umpires",
@@ -40,6 +41,7 @@ export const ALL_SCOPES: readonly AdminScope[] = [
   "schedule-gen",
   "score-disputes",
   "broadcast",
+  "teams",
 ] as const;
 
 /** The roles a league can hand out, and what each opens.
@@ -61,7 +63,22 @@ export const ADMIN_ROLES: Record<
   // standings" is covered by the scores scope plus the recalc endpoint.
   scheduler: {
     label: "Scheduling and scores",
-    scopes: ["scores", "schedule", "schedule-gen", "score-disputes", "broadcast"],
+    // "teams" added 2026-09-03: Mike asked for Kaitlin to have "roster access
+    // and she need to see the teams in each division". The Teams tab is both,
+    // it lists every team with its division and expands to the roster.
+    //
+    // It is NOT full team control. /api/admin-team refuses `delete` to a
+    // scoped caller, and /api/admin-contacts redacts email and phone, because
+    // that endpoint returns every player's contact details and the players are
+    // children. She asked to see rosters, not for a contact dump.
+    scopes: [
+      "scores",
+      "schedule",
+      "schedule-gen",
+      "score-disputes",
+      "broadcast",
+      "teams",
+    ],
   },
 };
 

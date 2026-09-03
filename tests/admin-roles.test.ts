@@ -28,12 +28,25 @@ describe("accessFromClaim", () => {
     expect([...a.scopes]).toEqual(["umpires"]);
   });
 
-  it("the scheduler gets the five it needs and nothing more", () => {
+  it("the scheduler gets the six it needs and nothing more", () => {
     const a = accessFromClaim("admin:scheduler");
     expect([...a.scopes].sort()).toEqual(
-      ["broadcast", "schedule", "schedule-gen", "score-disputes", "scores"].sort(),
+      [
+        "broadcast",
+        "schedule",
+        "schedule-gen",
+        "score-disputes",
+        "scores",
+        "teams",
+      ].sort(),
     );
+    // The umpire roster carries officials' phone numbers and the dates they
+    // cannot work. Adding "teams" for rosters must not have leaked this in.
     expect(a.scopes.has("umpires")).toBe(false);
+  });
+
+  it("the umpire role did NOT gain teams when the scheduler did", () => {
+    expect(accessFromClaim("admin:umpires").scopes.has("teams")).toBe(false);
   });
 
   it.each([
@@ -100,6 +113,7 @@ describe("the role table", () => {
       "schedule-gen",
       "score-disputes",
       "broadcast",
+      "teams",
     ]);
     for (const [id, role] of Object.entries(ADMIN_ROLES)) {
       for (const s of role.scopes) {
