@@ -85,6 +85,11 @@ export default async function TeamsPage() {
     // Skip placeholder teams like "TBD" (used to schedule bracket games
     // before seeds are known) — they aren't real teams (Nelson, 2026-07).
     .filter((d) => d.data().placeholder !== true)
+    // Skip deactivated teams (active:false) — a team that's folded / not
+    // returning for the new season shouldn't appear in the current league
+    // directory. Their /teams/[id] page and past-season standings still
+    // work; this only controls the current roster grid.
+    .filter((d) => d.data().active !== false)
     .map((d) => {
     const data = d.data();
     const row = recordByTeam.get(d.id);

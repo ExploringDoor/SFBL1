@@ -47,6 +47,7 @@ interface TeamOpt {
   id: string;
   name: string;
   division: string;
+  active: boolean;
 }
 
 interface Props {
@@ -184,6 +185,7 @@ export function ScheduleEditor({ leagueId, user }: Props) {
             id: d.id,
             name: String(d.data().name ?? d.id),
             division: String(d.data().division ?? ""),
+            active: d.data().active !== false,
           }))
           .sort((a, b) => a.name.localeCompare(b.name)),
       );
@@ -243,6 +245,16 @@ export function ScheduleEditor({ leagueId, user }: Props) {
     for (const t of teams) m.set(t.id, t.name);
     return (id: string) => m.get(id) ?? id;
   }, [teams]);
+
+  // Options for the "add game" pickers: only active teams — you shouldn't
+  // be able to schedule a deactivated team into the new season. `teamName`
+  // above still maps ALL teams, so existing games with a since-deactivated
+  // team still render their real name, and the edit form (which receives
+  // the full list) can still show/keep that team.
+  const teamOptions = useMemo(
+    () => teams.filter((t) => t.active !== false),
+    [teams],
+  );
 
   const filteredGames = useMemo(() => {
     const search = searchTeam.toLowerCase().trim();
@@ -391,7 +403,7 @@ export function ScheduleEditor({ leagueId, user }: Props) {
       {showAdd && (
         <GameForm
           mode="create"
-          teams={teams}
+          teams={teamOptions}
           fields={fields}
           divisions={allDivisions}
           seasons={seasons}

@@ -332,8 +332,23 @@ async function loadStandings(
     scheme: usePoints ? scheme : null,
     leagueName: config?.name ?? null,
     throughDate,
-    teamCount: teamsSnap.docs.filter((d) => d.data().placeholder !== true)
-      .length,
+    // Count teams relevant to the season being viewed: currently-active
+    // teams plus any (now-deactivated) team that actually played this
+    // season. Keeps the current-season count honest after teams fold,
+    // without understating a past season those teams played in.
+    teamCount: (() => {
+      const played = new Set<string>();
+      for (const d of seasonDocs) {
+        const g = d.data();
+        played.add(String(g.home_team_id ?? ""));
+        played.add(String(g.away_team_id ?? ""));
+      }
+      return teamsSnap.docs.filter((d) => {
+        const data = d.data();
+        if (data.placeholder === true) return false;
+        return data.active !== false || played.has(d.id);
+      }).length;
+    })(),
     hasFinalGames: finalDates.length > 0,
   };
 }
