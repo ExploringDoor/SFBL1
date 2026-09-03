@@ -21,6 +21,7 @@
 import Link from "next/link";
 import islandData from "@/app/tournaments/island-fall-2026.json";
 import { tournamentSlug } from "@/lib/tournament-slug";
+import { asTournamentDate, isTournamentPast } from "@/lib/tournament-dates";
 
 interface SlateEvent {
   name: string;
@@ -37,9 +38,8 @@ interface SlateEvent {
   logo?: string;
 }
 
-function asDate(iso: string): Date {
-  return new Date(`${iso}T12:00:00Z`);
-}
+// Re-exported name kept so the formatting helper below reads the same.
+const asDate = asTournamentDate;
 
 function fmt(iso: string, opts: Intl.DateTimeFormatOptions): string {
   return asDate(iso).toLocaleDateString("en-US", { ...opts, timeZone: "UTC" });
@@ -75,15 +75,10 @@ export function UpcomingTournaments({
   // Midnight UTC today, compared against each event's last day. Comparing ISO
   // strings directly would work too, but only by accident of format; this
   // stays correct if a date ever arrives with a time on it.
-  const today = new Date();
-  const cutoff = Date.UTC(
-    today.getUTCFullYear(),
-    today.getUTCMonth(),
-    today.getUTCDate(),
-  );
-
+  // Shared with /tournaments, which now splits upcoming from past on exactly
+  // this rule. Two copies of "has it finished" is two answers.
   const upcoming = all
-    .filter((e) => asDate(e.end || e.start).getTime() >= cutoff)
+    .filter((e) => !isTournamentPast(e))
     .sort((a, b) => a.start.localeCompare(b.start))
     .slice(0, limit);
 

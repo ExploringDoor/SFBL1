@@ -12,6 +12,8 @@
 //   /leagues/<id>/site_config/tournament_meta = { data: [{name, location}] }
 
 import Link from "next/link";
+import islandSlate from "@/app/tournaments/island-fall-2026.json";
+import { isTournamentPast } from "@/lib/tournament-dates";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import type { PublicLeagueConfig } from "@/lib/tenants";
@@ -369,6 +371,38 @@ export default async function TournamentsPage() {
     }))
     .filter((t) => meta.some((m) => m.name === t.name) || t.games.length > 0);
 
+  // UPCOMING vs FINISHED.
+  //
+  // The page listed all thirteen forever, in file order, with nothing marking
+  // one as over, so the day after an event it sat above the ones you can still
+  // pay to enter. Tournaments are the paid side of this business.
+  //
+  // WHERE THE DATE COMES FROM, in order of trust:
+  //   1. the tournament's own last GAME, which is the real thing that happened
+  //   2. the checked-in slate's `end`/`start`, for an event with no games yet
+  //   3. nothing, in which case it is NOT past. Something we cannot date is
+  //      something we must not bury: hiding an enterable tournament is a far
+  //      worse failure than leaving a finished one on top.
+  const slateDates = new Map<string, { start?: string; end?: string }>(
+    (islandSlate.events ?? []).map((e) => [
+      e.name,
+      { start: e.start ?? undefined, end: e.end ?? undefined },
+    ]),
+  );
+  const endDateOf = (t: { name: string; games: { date: string }[] }) => {
+    const lastGame = t.games.length ? t.games[t.games.length - 1]!.date : "";
+    if (lastGame) return { start: lastGame, end: lastGame };
+    return slateDates.get(t.name) ?? {};
+  };
+  const upcomingTournaments = orderedTournaments.filter(
+    (t) => !isTournamentPast(endDateOf(t)),
+  );
+  // Newest finished first: the one that just happened is the one people look
+  // up for results.
+  const pastTournaments = orderedTournaments
+    .filter((t) => isTournamentPast(endDateOf(t)))
+    .reverse();
+
   if (orderedTournaments.length === 0) {
     return (
       <main className="container py-10">
@@ -436,6 +470,143 @@ export default async function TournamentsPage() {
     );
   }
 
+  // One card, rendered for both lists. Extracted rather than duplicated:
+  // the finished tournaments show exactly the same schedule and bracket
+  // information, they just live under a collapsed heading.
+  const renderTournament = (t: (typeof orderedTournaments)[number]) => (
+        <section
+          key={t.name}
+          style={{
+            background: "white",
+            border: "1px solid rgba(0,0,0,0.08)",
+            borderRadius: 14,
+            padding: "20px 22px",
+          }}
+        >
+          <header style={{ marginBottom: 14 }}>
+            <h2
+              className="font-display"
+              style={{
+                margin: 0,
+                fontSize: 22,
+                color: "var(--text-strong)",
+                letterSpacing: "-0.01em",
+                lineHeight: 1.2,
+              }}
+            >
+              {t.name}
+            </h2>
+            {t.location && (
+              <p
+                style={{
+                  margin: "4px 0 0",
+                  fontSize: 13,
+                  color: "var(--muted)",
+                }}
+              >
+                📍 {t.location}
+              </p>
+            )}
+          </header>
+
+          {t.games.length === 0 ? (
+            <p
+              style={{
+                margin: 0,
+                fontSize: 14,
+                color: "var(--muted)",
+                fontStyle: "italic",
+              }}
+            >
+              Schedule coming soon.
+            </p>
+          ) : (
+            <ul
+              style={{
+                listStyle: "none",
+                padding: 0,
+                margin: 0,
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+              }}
+            >
+              {t.games.map((g) => (
+                <li
+                  key={g.id}
+                  style={{
+                    background: "rgba(0,0,0,0.025)",
+                    border: "1px solid rgba(0,0,0,0.05)",
+                    borderRadius: 10,
+                    padding: "10px 14px",
+                    display: "grid",
+                    gridTemplateColumns: "120px 1fr",
+                    gap: 10,
+                    alignItems: "center",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: "var(--brand-primary)",
+                    }}
+                  >
+                    {formatDate(g.date) || "TBD"}
+                    {g.time && (
+                      <span
+                        style={{
+                          display: "block",
+                          fontWeight: 500,
+                          color: "var(--muted)",
+                          fontSize: 12,
+                        }}
+                      >
+                        {g.time}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        fontWeight: 600,
+                        fontSize: 14,
+                        color: "var(--text-strong)",
+                      }}
+                    >
+                      {g.away_team_id || "TBD"} @ {g.home_team_id || "TBD"}
+                    </div>
+                    {g.field && (
+                      <div
+                        style={{
+                          fontSize: 12,
+                          color: "var(--muted)",
+                          marginTop: 2,
+                        }}
+                      >
+                        {g.field}
+                      </div>
+                    )}
+                    {g.notes && g.notes !== "__placeholder__" && (
+                      <div
+                        style={{
+                          fontSize: 12,
+                          color: "var(--muted)",
+                          marginTop: 2,
+                          fontStyle: "italic",
+                        }}
+                      >
+                        {g.notes}
+                      </div>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+  );
+
   return (
     <main className="container py-10">
       <header className="mb-8">
@@ -459,140 +630,44 @@ export default async function TournamentsPage() {
       </header>
 
       <div className="space-y-10">
-        {orderedTournaments.map((t) => (
-          <section
-            key={t.name}
+        {upcomingTournaments.map(renderTournament)}
+      </div>
+
+      {/* FINISHED EVENTS, kept and collapsed.
+          Not deleted: they carry the game results people look up afterwards,
+          and thirteen run tournaments is the strongest thing this page says
+          about the league. They just must not sit above the ones you can still
+          pay to enter. Closed by default, and a native <details> so it works
+          with no JavaScript. */}
+      {pastTournaments.length > 0 && (
+        <details style={{ marginTop: 40 }}>
+          <summary
             style={{
-              background: "white",
-              border: "1px solid rgba(0,0,0,0.08)",
-              borderRadius: 14,
-              padding: "20px 22px",
+              cursor: "pointer",
+              fontWeight: 800,
+              fontSize: 18,
+              color: "var(--muted)",
+              padding: "10px 0",
             }}
           >
-            <header style={{ marginBottom: 14 }}>
-              <h2
-                className="font-display"
-                style={{
-                  margin: 0,
-                  fontSize: 22,
-                  color: "var(--text-strong)",
-                  letterSpacing: "-0.01em",
-                  lineHeight: 1.2,
-                }}
-              >
-                {t.name}
-              </h2>
-              {t.location && (
-                <p
-                  style={{
-                    margin: "4px 0 0",
-                    fontSize: 13,
-                    color: "var(--muted)",
-                  }}
-                >
-                  📍 {t.location}
-                </p>
-              )}
-            </header>
+            Finished this season ({pastTournaments.length})
+          </summary>
+          <p style={{ color: "var(--muted)", margin: "4px 0 18px", fontSize: 14 }}>
+            These have already been played. Schedules and results are kept here
+            for reference.
+          </p>
+          <div className="space-y-10">
+            {pastTournaments.map(renderTournament)}
+          </div>
+        </details>
+      )}
 
-            {t.games.length === 0 ? (
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: 14,
-                  color: "var(--muted)",
-                  fontStyle: "italic",
-                }}
-              >
-                Schedule coming soon.
-              </p>
-            ) : (
-              <ul
-                style={{
-                  listStyle: "none",
-                  padding: 0,
-                  margin: 0,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 8,
-                }}
-              >
-                {t.games.map((g) => (
-                  <li
-                    key={g.id}
-                    style={{
-                      background: "rgba(0,0,0,0.025)",
-                      border: "1px solid rgba(0,0,0,0.05)",
-                      borderRadius: 10,
-                      padding: "10px 14px",
-                      display: "grid",
-                      gridTemplateColumns: "120px 1fr",
-                      gap: 10,
-                      alignItems: "center",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 700,
-                        color: "var(--brand-primary)",
-                      }}
-                    >
-                      {formatDate(g.date) || "TBD"}
-                      {g.time && (
-                        <span
-                          style={{
-                            display: "block",
-                            fontWeight: 500,
-                            color: "var(--muted)",
-                            fontSize: 12,
-                          }}
-                        >
-                          {g.time}
-                        </span>
-                      )}
-                    </div>
-                    <div>
-                      <div
-                        style={{
-                          fontWeight: 600,
-                          fontSize: 14,
-                          color: "var(--text-strong)",
-                        }}
-                      >
-                        {g.away_team_id || "TBD"} @ {g.home_team_id || "TBD"}
-                      </div>
-                      {g.field && (
-                        <div
-                          style={{
-                            fontSize: 12,
-                            color: "var(--muted)",
-                            marginTop: 2,
-                          }}
-                        >
-                          {g.field}
-                        </div>
-                      )}
-                      {g.notes && g.notes !== "__placeholder__" && (
-                        <div
-                          style={{
-                            fontSize: 12,
-                            color: "var(--muted)",
-                            marginTop: 2,
-                            fontStyle: "italic",
-                          }}
-                        >
-                          {g.notes}
-                        </div>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        ))}
-      </div>
+      {upcomingTournaments.length === 0 && pastTournaments.length > 0 && (
+        <p style={{ marginTop: 24, color: "var(--muted)" }}>
+          Every tournament on this season&rsquo;s slate has been played. Next
+          season&rsquo;s dates go up here when they are set.
+        </p>
+      )}
     </main>
   );
 }
