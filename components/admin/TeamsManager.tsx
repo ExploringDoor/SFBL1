@@ -22,6 +22,8 @@ interface TeamRow {
   abbrev: string;
   color: string;
   division: string;
+  /** Part of the seeded sample season. */
+  demo?: boolean;
   /** COYBL: 7U..14U. Registration sets it; the office can correct it here. */
   ageGroup: string;
   logo_url: string;
@@ -117,6 +119,10 @@ export function TeamsManager({ leagueId, user }: Props) {
               gamechanger_url: String(data.gamechanger_url ?? ""),
               has_captain_password: data.has_captain_password === true,
               active: data.active !== false,
+              // Carried so the division picker can exclude the seeded season's
+              // capitalised "Weekend"/"Weeknight". Without this the filter
+              // below compiles and silently does nothing.
+              demo: data.demo === true,
             };
           })
           .sort((a, b) => a.name.localeCompare(b.name)),
@@ -1020,12 +1026,19 @@ function DivisionGroups({
     name: string,
   ) => Promise<void>;
 }) {
-  // Every division already in use, for the move-a-team picker. Derived from
-  // the teams on screen rather than configured anywhere, so it cannot drift
-  // from reality, and sorted so the list reads the same every time.
+  // Every division a REAL team is in, for the move-a-team picker. Derived from
+  // the teams on screen rather than configured anywhere, so it cannot drift.
+  //
+  // Sample teams excluded. The seeded season uses "Weekend" and "Weeknight"
+  // with capitals while every real Island team uses lowercase, so including
+  // them offered Mike six options where there are three, with two pairs that
+  // look identical at a glance and are different strings to the schedule
+  // generator. Picking the wrong one puts a team in a division containing
+  // nothing but sample data.
   const existingDivisions = Array.from(
     new Set(
       teams
+        .filter((t) => !t.demo)
         .map((t) => (t.division ?? "").trim())
         .filter((d): d is string => d.length > 0),
     ),

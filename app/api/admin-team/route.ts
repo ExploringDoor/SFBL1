@@ -18,6 +18,7 @@
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { accessFor, hasScope } from "@/lib/admin-roles";
+import { isAllowedLogoDataUrl } from "@/lib/team-logo";
 import { cleanName } from "@/lib/text";
 import {
   generateTeamPassword,
@@ -215,14 +216,30 @@ export async function POST(req: Request) {
       v === "" ||
       v.startsWith("/") ||
       v.startsWith("https://") ||
-      v.startsWith("http://")
+      v.startsWith("http://") ||
+      // data: IMAGES ARE VALID HERE, and refusing them broke the whole tab.
+      //
+      // /api/captain-team-logo stores a coach's upload as a data: URL on the
+      // team doc. The edit form loads every field and posts them all back, so
+      // once a coach had uploaded a logo this check rejected the unchanged
+      // logo and 400'd the entire save. Not just the logo: the name, the
+      // abbrev, the age group and the DIVISION all silently failed with it.
+      //
+      // Mike, 2026-09-03: "it's not saving to week night". Lindenhurst
+      // Bulldogs, and 33 of Island's other 41 teams, could not be edited at
+      // all. The count is only going up, because every coach who uploads a
+      // crest joins them.
+      //
+      // Same allowlist the serving route uses, so svg+xml is still refused
+      // here as it is there. See lib/team-logo.ts.
+      isAllowedLogoDataUrl(v)
     ) {
       update.logo_url = v || null;
     } else {
       return NextResponse.json(
         {
           error:
-            "logo_url must start with /, https://, or http:// (or empty)",
+            "logo_url must start with /, https://, http://, or be an uploaded PNG, JPEG, WEBP or GIF (or empty)",
         },
         { status: 400 },
       );
