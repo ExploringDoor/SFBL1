@@ -137,9 +137,21 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
 
   // --- where -------------------------------------------------------------
   // Times are held as a real list, not a comma string the admin has to type.
-  const [fields, setFields] = useState<{ name: string; times: string[] }[]>([
-    { name: "", times: ["17:30"] },
-  ]);
+  // `diamonds` is how many games can run at this venue AT ONCE.
+  //
+  // Mike, 2026-09-01: "in schedule maker Bellport for example it's Bellport 1
+  // Bellport 2 and Bellport 3 and Bellport 4, it's only showing Bellport". The
+  // generator books one game per field per start time, so a four diamond
+  // complex was scheduling a quarter of what it can hold, and the Fields tab
+  // lists the venue once because that is what the public fields page should
+  // show.
+  //
+  // Expanded at submit time into "Bellport Martha Avenue Complex 1..4", so the
+  // generator model stays name+times and the games come out carrying the
+  // diamond they are actually on, which is what a coach needs to read.
+  const [fields, setFields] = useState<
+    { name: string; times: string[]; diamonds: number }[]
+  >([{ name: "", times: ["17:30"], diamonds: 1 }]);
   const [lastBatch, setLastBatch] = useState<string | null>(null);
 
   // --- blocked pairs -----------------------------------------------------
@@ -332,9 +344,23 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
   function build() {
     setError(null);
     setDone(null);
+    // One row per diamond. A venue with diamonds: 4 becomes four independent
+    // fields sharing the same start times, which is exactly four parallel
+    // games. diamonds: 1 emits the bare venue name, so nothing that worked
+    // before gains a stray " 1".
     const genFields: GeneratorField[] = fields
-      .map((f) => ({ name: f.name.trim(), times: [...f.times].sort() }))
-      .filter((f) => f.name && f.times.length > 0);
+      .filter((f) => f.name.trim() && f.times.length > 0)
+      .flatMap((f) => {
+        const times = [...f.times].sort();
+        const n = Math.max(1, Math.floor(f.diamonds || 1));
+        const name = f.name.trim();
+        return n === 1
+          ? [{ name, times }]
+          : Array.from({ length: n }, (_, k) => ({
+              name: `${name} ${k + 1}`,
+              times,
+            }));
+      });
 
     if (!startDate) return setError("Pick the first game date.");
     if (useEndDate && !endDate) return setError("Pick the last game date.");
@@ -638,6 +664,10 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
         <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 10px" }}>
           Each field has its own start times, so a field that only runs one game a night
           is not given slots it does not have. Separate times with commas.
+          <br />
+          <strong>Diamonds</strong> is how many games that venue can run at the
+          same time. A four diamond complex set to 4 is scheduled as Bellport 1
+          through Bellport 4, and the games say which one.
         </p>
         {fields.map((f, i) => (
           <div key={i} style={{ display: "flex", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
@@ -668,6 +698,35 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
                 }}
               />
             )}
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                fontSize: 12,
+                color: "var(--muted)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Diamonds
+              <input
+                type="number"
+                min={1}
+                max={12}
+                style={{ ...INPUT, width: 64 }}
+                value={f.diamonds}
+                onChange={(e) => {
+                  // Clamped, not validated on submit. A 0 here would silently
+                  // drop the venue from the schedule, and a blank box while
+                  // someone is retyping must not wipe the row.
+                  const n = Math.min(12, Math.max(1, Number(e.target.value) || 1));
+                  setFields((cur) =>
+                    cur.map((x, ix) => (ix === i ? { ...x, diamonds: n } : x)),
+                  );
+                  reset();
+                }}
+              />
+            </label>
             <button
               type="button"
               style={BTN}
@@ -737,7 +796,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
         <button
           type="button"
           style={BTN}
-          onClick={() => setFields((cur) => [...cur, { name: "", times: ["17:30"] }])}
+          onClick={() => setFields((cur) => [...cur, { name: "", times: ["17:30"], diamonds: 1 }])}
         >
           + Add field
         </button>

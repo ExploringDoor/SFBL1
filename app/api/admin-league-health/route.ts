@@ -232,6 +232,17 @@ export async function GET(req: Request) {
   return NextResponse.json({
     ok: true,
     leagueId,
+    // Sample season, if this tenant still has one. Counted here rather than in
+    // the dashboard so the "Remove sample data" panel can say exactly what it
+    // is about to delete, and can hide itself entirely once there is nothing.
+    demo: {
+      teams: teamsSnap.docs.filter(
+        (d) => (d.data() as { demo?: unknown }).demo === true,
+      ).length,
+      games: gamesSnap.docs.filter(
+        (d) => (d.data() as { demo?: unknown }).demo === true,
+      ).length,
+    },
     teams: {
       active: teamsActive,
       total: teamsSnap.size,

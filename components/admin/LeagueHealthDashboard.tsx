@@ -13,6 +13,8 @@ import { useCallback, useEffect, useState } from "react";
 import type { User } from "firebase/auth";
 
 interface Health {
+  /** Sample season still present, if any. Absent on older responses. */
+  demo?: { teams: number; games: number };
   teams: { active: number; total: number };
   players: {
     active: number;
@@ -72,6 +74,8 @@ export function LeagueHealthDashboard({ leagueId, user, onReviewForms }: Props) 
   const [health, setHealth] = useState<Health | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [removing, setRemoving] = useState(false);
+  const [removed, setRemoved] = useState<string | null>(null);
 
   const fetchHealth = useCallback(async () => {
     setLoading(true);
@@ -131,6 +135,81 @@ export function LeagueHealthDashboard({ leagueId, user, onReviewForms }: Props) 
         <p className="text-sm text-slate-500">Loading…</p>
       ) : (
         <>
+          {/* Sample season. Shown only while there IS one, so it disappears
+              the moment it is used and never becomes furniture.
+
+              This exists because removing the seeded season previously needed
+              a script and a terminal, which meant it needed Adam, which meant
+              it did not happen. Mike, 2026-09-01: "Schedule in admin, not
+              deleting sample games." Deleting them one at a time worked but
+              left the eight sample TEAMS on the standings, so the job never
+              looked done. */}
+          {(health.demo?.teams ?? 0) + (health.demo?.games ?? 0) > 0 && (
+            <div className="rounded-md border border-amber-300 bg-amber-50 p-3">
+              <p className="text-sm font-bold text-amber-900">
+                Sample data is still on the site
+              </p>
+              <p className="mt-0.5 text-xs text-amber-800">
+                {health.demo?.teams ?? 0} sample team
+                {(health.demo?.teams ?? 0) === 1 ? "" : "s"} and{" "}
+                {health.demo?.games ?? 0} sample game
+                {(health.demo?.games ?? 0) === 1 ? "" : "s"}, including results
+                with scores. Real visitors see these on the schedule, the
+                standings and the home page.
+              </p>
+              {removed ? (
+                <p className="mt-2 text-xs font-bold text-emerald-800">{removed}</p>
+              ) : (
+                <button
+                  type="button"
+                  disabled={removing}
+                  onClick={async () => {
+                    const t = health.demo?.teams ?? 0;
+                    const g = health.demo?.games ?? 0;
+                    if (
+                      !window.confirm(
+                        `Delete ${t} sample team${t === 1 ? "" : "s"} and ${g} sample game${g === 1 ? "" : "s"}?\n\nThis cannot be undone. Only sample data is removed; real teams and real games are not touched.`,
+                      )
+                    )
+                      return;
+                    setRemoving(true);
+                    setError(null);
+                    try {
+                      const idToken = await user.getIdToken();
+                      const res = await fetch("/api/admin-remove-demo", {
+                        method: "POST",
+                        headers: {
+                          "content-type": "application/json",
+                          authorization: `Bearer ${idToken}`,
+                        },
+                        body: JSON.stringify({ leagueId }),
+                      });
+                      const data = (await res.json().catch(() => ({}))) as {
+                        error?: string;
+                        teams?: number;
+                        games?: number;
+                      };
+                      if (!res.ok) {
+                        setError(data.error ?? `Failed (${res.status})`);
+                      } else {
+                        setRemoved(
+                          `Removed ${data.teams ?? 0} sample teams and ${data.games ?? 0} sample games.`,
+                        );
+                        fetchHealth();
+                      }
+                    } catch (e) {
+                      setError(e instanceof Error ? e.message : "Failed");
+                    } finally {
+                      setRemoving(false);
+                    }
+                  }}
+                  className="mt-2 rounded-md bg-amber-900 px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+                >
+                  {removing ? "Removing…" : "Remove all sample data"}
+                </button>
+              )}
+            </div>
+          )}
           {health.pending_forms && health.pending_forms.total > 0 && (
             <button
               type="button"
