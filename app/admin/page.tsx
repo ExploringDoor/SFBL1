@@ -18,6 +18,7 @@ import { useTenant } from "@/lib/tenant-context";
 import { doc, setDoc } from "firebase/firestore";
 import { SendPushSection } from "@/components/admin/SendPushSection";
 import { PagesManager } from "@/components/admin/PagesManager";
+import { RulesManager } from "@/components/admin/RulesManager";
 import { CaptainClaimsManager } from "@/components/admin/CaptainClaimsManager";
 import { CaptainsRoster } from "@/components/admin/CaptainsRoster";
 import { BulkInviteSection } from "@/components/admin/BulkInviteSection";
@@ -69,6 +70,7 @@ type TabKey =
   | "broadcast"
   | "news"
   | "potw"
+  | "rules"
   | "pages"
   | "photos"
   | "sponsors"
@@ -103,7 +105,8 @@ const TABS: { key: TabKey; label: string; description: string }[] = [
   { key: "broadcast", label: "Send Message", description: "Email + text your alert sign-up list — rainouts, reminders, deadlines." },
   { key: "news", label: "News", description: "From-the-commissioner news & events shown on the homepage." },
   { key: "potw", label: "Player of Week", description: "Curate the Player of the Week spotlight + archive shown at /player-of-the-week." },
-  { key: "pages", label: "Pages", description: "Edit Rules, News, Register, Sponsors, and other content pages." },
+  { key: "rules", label: "Rules", description: "Edit the public rules page. Wording, sections, and the at-a-glance boxes." },
+  { key: "pages", label: "Pages", description: "Edit News, Register, Sponsors, and other content pages." },
   { key: "photos", label: "Photos", description: "Upload photos to the public gallery at /photos." },
   { key: "sponsors", label: "Sponsors", description: "Manage the sponsor logo strip in the site footer." },
   { key: "tournament_logos", label: "Tournament logos", description: "Change the artwork on any tournament. Goes live straight away, no waiting on a developer." },
@@ -601,6 +604,9 @@ export default function AdminPage() {
         )}
         {activeTab === "potw" && (
           <PlayerOfWeekManager leagueId={tenantId} user={user} />
+        )}
+        {activeTab === "rules" && (
+          <RulesManager leagueId={tenantId} user={user} />
         )}
         {activeTab === "pages" && (
           <PagesManager leagueId={tenantId} user={user} />
