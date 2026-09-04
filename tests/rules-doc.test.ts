@@ -6,7 +6,12 @@
 // the shape the renderer needs back.
 
 import { describe, expect, it } from "vitest";
-import { cleanDivisions, cleanSection, cleanSections } from "@/lib/rules-doc";
+import {
+  canEditStructured,
+  cleanDivisions,
+  cleanSection,
+  cleanSections,
+} from "@/lib/rules-doc";
 
 describe("cleanSection", () => {
   it("keeps a normal rules section and trims its lines", () => {
@@ -178,5 +183,35 @@ describe("open the editor and save without typing", () => {
       "Second rule.",
       "Third rule.",
     ]);
+  });
+});
+
+// ── the guard that protects the other leagues ────────────────────────────
+// COYBL, SFBL and Windmill publish a markdown rules page. Writing a structured
+// document for one of them would replace the whole page with a single typed
+// section, while the real rules sat unpublished in page_content looking fine.
+
+describe("canEditStructured", () => {
+  it("allows editing a league that already has a structured rulebook", () => {
+    expect(canEditStructured({ data: [{ section: "Forfeits", items: ["x"] }] })).toBe(
+      true,
+    );
+  });
+
+  it("refuses a league with no rules document at all", () => {
+    expect(canEditStructured(null)).toBe(false);
+    expect(canEditStructured(undefined)).toBe(false);
+    expect(canEditStructured({})).toBe(false);
+  });
+
+  it("refuses a markdown league, whose doc exists but carries no sections", () => {
+    expect(canEditStructured({ data: [] })).toBe(false);
+    expect(canEditStructured({ markdown: "# Rules", html: "<h1>Rules</h1>" })).toBe(
+      false,
+    );
+  });
+
+  it("refuses a doc whose data is not an array", () => {
+    expect(canEditStructured({ data: "sections" })).toBe(false);
   });
 });

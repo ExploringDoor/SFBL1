@@ -29,7 +29,11 @@
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { accessFor } from "@/lib/admin-roles";
-import { cleanDivisions, cleanSections } from "@/lib/rules-doc";
+import {
+  canEditStructured,
+  cleanDivisions,
+  cleanSections,
+} from "@/lib/rules-doc";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -103,6 +107,22 @@ export async function POST(req: Request) {
   const ref = db.doc(`leagues/${leagueId}/site_config/rules`);
   const prevSnap = await ref.get();
   const prev = prevSnap.exists ? prevSnap.data() : null;
+
+  // The guard that protects the OTHER leagues. The admin UI already declines to
+  // show a form here for a markdown-rules league, but that check runs in the
+  // browser and this one does not: writing a structured document for a league
+  // that publishes markdown would replace its entire rules page with whatever
+  // was typed first. See canEditStructured.
+  if (!canEditStructured(prev)) {
+    return NextResponse.json(
+      {
+        error:
+          "This league's rules page is a single document, edited on the Pages " +
+          "tab. Nothing was changed.",
+      },
+      { status: 409 },
+    );
+  }
 
   // ── snapshot the OUTGOING version, before overwriting it ──────────────
   // Best effort on purpose. A history write that fails must not block the

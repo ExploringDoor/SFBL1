@@ -156,3 +156,20 @@ export function fromDraft(d: DraftSection): Record<string, unknown> {
     items: d.text.split("\n").map((l) => l.trim()).filter(Boolean),
   };
 }
+
+/**
+ * May this league's rules be edited through the admin Rules tab?
+ *
+ * Only when a structured rulebook ALREADY EXISTS. /rules publishes one of two
+ * things, and prefers the structured document whenever it has sections, so
+ * creating one for a league that publishes markdown (COYBL, SFBL, Windmill)
+ * would replace its whole rules page with whatever single section was typed
+ * first, leaving the real one intact but unpublished in page_content.
+ *
+ * So: this endpoint EDITS a structured rulebook, it does not CREATE one.
+ * Starting one is a seeding job, done deliberately, with the content to hand.
+ */
+export function canEditStructured(existing: unknown): boolean {
+  const d = (existing ?? {}) as { data?: unknown };
+  return Array.isArray(d.data) && d.data.length > 0;
+}

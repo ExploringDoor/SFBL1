@@ -94,6 +94,9 @@ export function RulesManager({ leagueId, user }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
+  // Which rules page this league actually publishes. See the note by the
+  // markdown panel below: this tab must not be an editor for the second kind.
+  const [mode, setMode] = useState<"structured" | "markdown" | "none">("none");
 
   const patch = (uid: string, next: Partial<DraftSection>) => {
     setSections((prev) =>
@@ -110,15 +113,22 @@ export function RulesManager({ leagueId, user }: Props) {
       setError(null);
       try {
         const db = getDb();
-        const [rulesSnap, histSnap] = await Promise.all([
+        const [rulesSnap, histSnap, mdSnap] = await Promise.all([
           getDoc(doc(db, `leagues/${leagueId}/site_config/rules`)),
           getDoc(doc(db, `leagues/${leagueId}/site_config/rules_history`)),
+          getDoc(doc(db, `leagues/${leagueId}/page_content/rules`)),
         ]);
         if (!alive) return;
         const d = rulesSnap.exists() ? rulesSnap.data() : null;
-        setSections(
-          Array.isArray(d?.data) ? (d!.data as unknown[]).map(toRow) : [],
+        const structured = Array.isArray(d?.data) ? (d!.data as unknown[]) : [];
+        setMode(
+          structured.length
+            ? "structured"
+            : mdSnap.exists()
+              ? "markdown"
+              : "none",
         );
+        setSections(structured.map(toRow));
         setDivisions(
           Array.isArray(d?.divisions) ? (d!.divisions as DivisionDef[]) : [],
         );
@@ -295,6 +305,42 @@ export function RulesManager({ leagueId, user }: Props) {
 
       {loading ? (
         <p className="text-sm text-slate-500">Loading the rules…</p>
+      ) : mode !== "structured" ? (
+        // NOT AN EDITOR FOR THIS LEAGUE, and the reason is worth stating plainly
+        // because the failure it prevents is silent and expensive.
+        //
+        // /rules renders one of two things. Some leagues (Island, LBDC) publish
+        // the STRUCTURED document this tab edits. Others (COYBL, SFBL, Windmill)
+        // publish a markdown page from page_content, edited on the Pages tab.
+        // app/rules/page.tsx PREFERS the structured document whenever it has
+        // sections, so if someone here typed one section and pressed Save, that
+        // single section would replace their entire rules page and the original
+        // would still be sitting in page_content looking untouched.
+        //
+        // COYBL's rules page alone is the league rules plus a rulebook per age
+        // group plus bats, baseballs and field dimensions. So this tab shows a
+        // signpost, not a form, unless a structured rulebook already exists.
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <p className="text-sm text-slate-700">
+            {mode === "markdown" ? (
+              <>
+                This league&rsquo;s rules page is written as one document, so it
+                is edited on the{" "}
+                <strong>Pages</strong> tab (under <strong>More</strong>) rather
+                than here. Open Pages, find <strong>rules</strong> in the list,
+                and press Edit.
+              </>
+            ) : (
+              <>
+                This league has no rules page set up yet. Ask Adam to build one
+                and it will become editable here.
+              </>
+            )}
+          </p>
+          <p className="mt-2 text-xs text-slate-500">
+            Nothing on this tab can change your rules page.
+          </p>
+        </div>
       ) : (
         <>
           <div className="space-y-4">
