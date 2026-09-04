@@ -107,6 +107,93 @@ export function computePoints(row: StandingsRow, scheme: PointsScheme): number {
 
 export type Tiebreaker = "pct" | "rd";
 
+/**
+ * Forgive the loss in a team's extra game.
+ *
+ * WHY. When a division has an odd number of team-games the scheduler cannot
+ * split them evenly, so exactly one team is handed one more game than the rest
+ * (see buildTargetedRounds in lib/schedule-generator.ts). Mike, 2026-09-04:
+ * "1 team will play 1 more than others and then we drop loss for them." Adam
+ * picked the literal reading on 2026-09-04: drop one loss, keep the wins, so a
+ * team that goes 3-1 over four games is shown 3-0.
+ *
+ * A team that wins the extra game keeps it. That is deliberate, not an
+ * oversight: nobody should be punished for a fixture they did not ask for, and
+ * an extra win is the upside of an extra game.
+ *
+ * PASS ONE DIVISION AT A TIME. The baseline is the FEWEST games in the group,
+ * so handing this the whole league would measure a 12U team against a 10U team
+ * three fixtures behind and forgive losses wholesale. Callers apply it after
+ * grouping, never before.
+ *
+ * MEASURE THE SCHEDULE, NOT THE GAMES PLAYED SO FAR. This is the subtle one.
+ * Judging by games PLAYED looks right in a finished season and is wrong every
+ * other week of it: in April a team is routinely one game ahead of another
+ * purely because the other was rained out, and this rule would cheerfully
+ * strike a real loss off the leader every week until the makeup was played.
+ * The extra game is a property of the SCHEDULE, known the day it is built and
+ * stable all season, so pass `scheduledGames` and the baseline comes from
+ * there. The played-games fallback exists only for callers that genuinely
+ * have no schedule to hand, and it carries that flaw.
+ *
+ * RUNS ARE LEFT ALONE. Removing the runs would mean picking WHICH loss to
+ * strike, and the row does not carry its games. Leaving them counts the extra
+ * game against a team's run differential while not counting it against their
+ * record, which errs against the team being forgiven. That is the safe
+ * direction for a tiebreaker.
+ *
+ * Returns a new array. Does not mutate.
+ */
+export function dropExtraGameLosses(
+  rows: StandingsRow[],
+  /** Fixtures each team has ON THE SCHEDULE, played or not. Strongly preferred
+   *  over the games-played fallback; see the note above. */
+  scheduledGames?: Map<string, number> | Record<string, number>,
+): StandingsRow[] {
+  const scheduledOf = (id: string): number | undefined => {
+    if (!scheduledGames) return undefined;
+    const n =
+      scheduledGames instanceof Map ? scheduledGames.get(id) : scheduledGames[id];
+    return typeof n === "number" && n > 0 ? n : undefined;
+  };
+  // Only usable if EVERY team in the group has a schedule. A partial map would
+  // silently mix the two baselines and forgive the wrong teams.
+  const useSchedule =
+    !!scheduledGames && rows.every((r) => scheduledOf(r.team_id) !== undefined);
+  const countFor = (r: StandingsRow) =>
+    useSchedule ? scheduledOf(r.team_id)! : r.gp;
+
+  const played = rows.filter((r) => r.gp > 0);
+  // Nothing to compare against, so nothing to forgive.
+  if (played.length < 2) return rows.map((r) => ({ ...r }));
+
+  // A team that has not played yet cannot set the baseline in played mode; in
+  // schedule mode every team counts, which is the point of using the schedule.
+  const basis = useSchedule ? rows : played;
+  const minGp = Math.min(...basis.map(countFor));
+  const out = rows.map((r) => {
+    const extra = countFor(r) - minGp;
+    // Only a team ABOVE the baseline, and only as far as it actually lost.
+    const drop = Math.max(0, Math.min(extra, r.l));
+    if (drop === 0) return { ...r };
+    const gp = r.gp - drop;
+    const l = r.l - drop;
+    return {
+      ...r,
+      gp,
+      l,
+      pct: gp > 0 ? (r.w + 0.5 * r.t) / gp : 0,
+    };
+  });
+
+  // Games behind is measured off W-L, so it has to be redone against the
+  // adjusted records rather than the ones the games produced.
+  const winDiffs = out.map((r) => r.w - r.l);
+  const best = winDiffs.length ? Math.max(...winDiffs) : 0;
+  for (const r of out) r.gb = (best - (r.w - r.l)) / 2;
+  return out;
+}
+
 // Sort an existing standings list by points desc with the given
 // tiebreaker. Use this when the league config has `scoring: 'points'`.
 // Returns a new array — does not mutate. Doesn't recompute GB (which is

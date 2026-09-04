@@ -71,6 +71,18 @@ export interface LeagueStandingsConfig {
   /** Divisions never shown a standings table — e.g. a no-score/blind-draw
    *  division like Windmill's 8U Machine. Matched against the team `division`. */
   exclude_divisions?: string[];
+  /**
+   * Forgive the loss in a team's extra game.
+   *
+   * When a division's team-games do not divide evenly, the scheduler hands
+   * exactly one team an extra fixture. With this on, a team that played more
+   * games than the fewest in its division has that many losses struck from its
+   * record, so 3-1 over four games shows as 3-0. Wins are kept.
+   *
+   * Off by default. Island turned it on 2026-09-04; every other league's
+   * standings are unchanged. See dropExtraGameLosses in lib/stats/shared.ts.
+   */
+  drop_extra_game_loss?: boolean;
 }
 
 export interface NavAddLink {

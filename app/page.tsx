@@ -25,6 +25,7 @@ import {
   sortByPoints,
   type GameResult,
   type StandingsRow,
+  dropExtraGameLosses,
 } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { teamsHidden } from "@/lib/team-options";
@@ -622,7 +623,29 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
   if (usePoints && scheme) {
     standings = sortByPoints(standings, scheme, tiebreaker);
   }
-  const divisionGroups = groupByDivision(standings, teams);
+  // Fixtures per team across the whole schedule, played or not. This is what
+  // makes "played an extra game" a fact about the schedule rather than a
+  // side effect of last week's rainout. Built once and reused per division.
+  const scheduledGamesPerTeam = new Map<string, number>();
+  if (config?.standings?.drop_extra_game_loss) {
+    for (const g of allGameResults) {
+      for (const id of [g.home_team_id, g.away_team_id]) {
+        if (id) scheduledGamesPerTeam.set(id, (scheduledGamesPerTeam.get(id) ?? 0) + 1);
+      }
+    }
+  }
+
+  const rawDivisionGroups = groupByDivision(standings, teams);
+  // Forgive the loss in a team's extra game, if this league asked for it.
+  // Applied AFTER grouping and per group: the baseline is the fewest games in
+  // that division, and measuring it league-wide would forgive losses wholesale
+  // in every division that happens to be further behind than another.
+  const divisionGroups = config?.standings?.drop_extra_game_loss
+    ? rawDivisionGroups.map((g) => ({
+        ...g,
+        rows: dropExtraGameLosses(g.rows, scheduledGamesPerTeam),
+      }))
+    : rawDivisionGroups;
 
   // Age-grouped standings for the homepage switcher. Stats-off leagues
   // (COYBL) use the exact stored league records (see standings page);
