@@ -20,7 +20,6 @@ Doubleheaders play on Mondays (10U), Tuesdays (12U), and Thursdays (14U).
 - The first game starts at 5:45 PM. The second game starts at 7:15 PM.
 - No new inning begins after 65 minutes. Finish the inning already in progress.
 - A 15-minute intermission between games gives families time to visit the concession stand.
-- The second game ends because of darkness. Darkness in Wisconsin is generally around 8:45 PM in mid-summer, so the clock is worked backward to end play about 15 minutes before sunset. The hard clock time makes sure teams are off the field before dark.
 
 ## Game balls
 

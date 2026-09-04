@@ -10,6 +10,7 @@ import {
   getCachedTeamsSnap,
 } from "@/lib/league-cache";
 import { TeamBadge } from "@/components/TeamBadge";
+import { TeamsBrowser, type BrowserTeam } from "@/components/ui/TeamsBrowser";
 import { teamLogoSrc } from "@/lib/team-logo";
 import {
   computeStandings,
@@ -26,6 +27,19 @@ export const dynamic = "force-dynamic";
 // the bare league name on every page).
 export const metadata = { title: "Teams" };
 
+
+// Windmill files teams under a division that IS the age group (no separate
+// ageGroup field), and the raw values sort alphabetically wrong (U10 before U8,
+// uHigh last). Map each to a clean label + true age order for the browser.
+const WF_DIVISIONS = new Map<string, { label: string; order: number }>([
+  ["U8 Mach", { label: "8U Machine", order: 1 }],
+  ["U8 Live", { label: "8U Live", order: 2 }],
+  ["U10", { label: "10U", order: 3 }],
+  ["U10 USA", { label: "10U USA", order: 4 }],
+  ["U12", { label: "12U", order: 5 }],
+  ["U14", { label: "14U", order: 6 }],
+  ["uHigh", { label: "High School", order: 7 }],
+]);
 
 interface TeamCard {
   id: string;
@@ -164,6 +178,32 @@ export default async function TeamsPage() {
     return ai - bi;
   };
 
+  // Windmill: flat, division-keyed list for the interactive filter/list browser.
+  // Sort by standings/name first, then stable-sort by age order so teams stay
+  // ordered within each division. Other tenants keep the server grid below.
+  const browserTeams: BrowserTeam[] =
+    tenantId === "windmill"
+      ? [...teams]
+          .sort(teamOrder)
+          .map((t) => {
+            const key = t.division?.trim() ? t.division : "Division TBD";
+            const meta = WF_DIVISIONS.get(key) ?? { label: key, order: 900 };
+            return {
+              id: t.id,
+              name: t.name,
+              abbrev: t.abbrev,
+              division: key,
+              divLabel: meta.label,
+              divOrder: meta.order,
+              color: t.color,
+              logoUrl: t.logoUrl,
+              record: t.record,
+              points: t.points,
+            };
+          })
+          .sort((a, b) => a.divOrder - b.divOrder)
+      : [];
+
   type DivGroup = { division: string; teams: TeamCard[] };
   const divisionsOf = (list: TeamCard[]): DivGroup[] => {
     const byDiv = new Map<string, TeamCard[]>();
@@ -290,6 +330,9 @@ export default async function TeamsPage() {
         </div>
       )}
 
+      {tenantId === "windmill" && teams.length > 0 ? (
+        <TeamsBrowser teams={browserTeams} usePoints={usePoints} />
+      ) : (
       <div className="space-y-10">
         {sections.map((section) => (
           <section
@@ -391,6 +434,7 @@ export default async function TeamsPage() {
           </section>
         ))}
       </div>
+      )}
     </main>
   );
 }

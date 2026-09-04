@@ -6675,6 +6675,154 @@ select:focus-visible {
   .le-agejump-label { flex-basis: 100%; margin-bottom: 2px; }
 }
 
+/* ── Teams browser (Windmill): age-group filter + tile/list toggle ────── */
+.wf-teamctl {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--rule, rgba(0, 0, 0, 0.1));
+}
+.wf-teamctl-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.wf-teamctl-pill {
+  appearance: none;
+  cursor: pointer;
+  border: 1px solid var(--rule, rgba(0, 0, 0, 0.14));
+  background: transparent;
+  color: var(--text-strong);
+  font-family: var(--font-barlow), sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 7px 15px;
+  line-height: 1;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+.wf-teamctl-pill:hover {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+.wf-teamctl-pill.active {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: #fff;
+}
+.wf-teamctl-view {
+  display: inline-flex;
+  border: 1px solid var(--rule, rgba(0, 0, 0, 0.14));
+  border-radius: 999px;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+.wf-teamctl-vbtn {
+  appearance: none;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-barlow), sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  line-height: 1;
+  transition: background 120ms ease, color 120ms ease;
+}
+.wf-teamctl-vbtn + .wf-teamctl-vbtn {
+  border-left: 1px solid var(--rule, rgba(0, 0, 0, 0.14));
+}
+.wf-teamctl-vbtn.active {
+  background: var(--brand-primary);
+  color: #fff;
+}
+.wf-team-divhead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+.wf-team-divcount {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 12%, transparent);
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+.wf-teamlist {
+  border: 1px solid var(--rule, rgba(0, 0, 0, 0.1));
+  border-radius: 12px;
+  overflow: hidden;
+}
+.wf-teamlist-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 14px;
+  text-decoration: none;
+  color: inherit;
+  border-top: 1px solid var(--rule, rgba(0, 0, 0, 0.08));
+  transition: background 100ms ease;
+}
+.wf-teamlist-row:first-child {
+  border-top: none;
+}
+.wf-teamlist-row:hover {
+  background: color-mix(in srgb, var(--brand-primary) 6%, transparent);
+}
+.wf-teamlist-logo {
+  flex: 0 0 auto;
+  display: inline-flex;
+}
+.wf-teamlist-name {
+  flex: 1 1 auto;
+  font-family: var(--font-oswald), sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  text-transform: uppercase;
+  line-height: 1.15;
+  color: var(--text-strong);
+}
+.wf-teamlist-rec {
+  flex: 0 0 auto;
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 13px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.wf-teamlist-rec b {
+  color: var(--brand-primary);
+  font-weight: 800;
+}
+@media (max-width: 520px) {
+  .wf-teamctl {
+    justify-content: flex-start;
+  }
+  .wf-teamctl-view {
+    margin-left: auto;
+  }
+}
+
 /* ── Content tables on phones ──────────────────────────────────────────
  *
  * Markdown tables in Rules / Player Safety / Coaches Checklist are authored
