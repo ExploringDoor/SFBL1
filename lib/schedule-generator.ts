@@ -114,6 +114,14 @@ export interface GeneratorOptions {
    */
   existingGames?: ConflictGame[];
   /**
+   * Games each team should play. When set, THIS drives the season instead of a
+   * full round robin: pairs are chosen to hit the target while avoiding repeat
+   * opponents and same-club matchups, and the calendar only has to be big
+   * enough to hold them. Leave unset for the old everyone-plays-everyone
+   * behaviour, which is what every league using this before 2026-09-04 gets.
+   */
+  gamesPerTeam?: number;
+  /**
    * How long a game occupies its field, in minutes. 0 (default) means a slot
    * is only "taken" by an exact same-start game. Set it and near-misses like
    * 17:30 against 18:00 on one field stop being scheduled.
@@ -150,8 +158,21 @@ export interface GeneratorResult {
    *  the admin can see the generator worked around the rest of the league
    *  rather than wondering why it produced fewer games than expected. */
   slotsBlockedByExisting: number;
-  /** True once every allowed pair has been scheduled at least once. */
+  /** True once every allowed pair has been scheduled at least once. Only
+   *  meaningful in round-robin mode; a games-per-team season is not trying to
+   *  cover every pair and reports `gamesPerTeamActual` instead. */
   everyPairPlayed: boolean;
+  /** Games each team ended up with. The headline number in targeted mode, and
+   *  the thing an admin checks first. */
+  gamesPerTeamActual: { team: string; games: number }[];
+  /** Teams handed the extra game because the total could not divide evenly. */
+  extraGameTeams: string[];
+  /** Pairs that had to meet twice to fill the card. Empty is the good case. */
+  repeatMatchups: { a: string; b: string }[];
+  /** Same-club pairs used anyway, because avoiding them would have left a team
+   *  short. The old code deleted these games; leaving a team with fewer games
+   *  was the worse outcome. */
+  sameOrgUsed: { a: string; b: string }[];
   warnings: string[];
 }
 
@@ -179,6 +200,203 @@ export function roundRobinRounds(teamIds: string[]): [string, string][][] {
     rotating = [rotating[rotating.length - 1]!, ...rotating.slice(0, -1)];
   }
   return rounds;
+}
+
+// ── pairing to a games-per-team target ───────────────────────────────────
+//
+// The circle method above answers "how do we get everyone to play everyone".
+// That is the wrong question for a fall season built out of clubs. Mike,
+// 2026-09-04: "Get rid of the code that says every team must play each other
+// once. The goal is to just not have teams play repeat teams or teams in their
+// same organizations if we can help it."
+//
+// The bug underneath the request: same-club matchups used to be DELETED from
+// the round-robin, so those teams simply played fewer games than everyone else.
+// Deleting a fixture is not the same as avoiding it. Here a conflict causes a
+// RE-PAIR, so the count per team holds.
+//
+// THREE RULES, in strict order of authority:
+//   1. a hand-blocked pair NEVER happens. The admin said never, so never.
+//   2. two teams from one club is the next thing avoided, and yields only to
+//      keep a team from falling short. It used to be banned outright, so it
+//      stays the least acceptable of the soft conflicts. "If we can help it"
+//      are the operative words: a strong preference, not the old ban.
+//   3. a repeat opponent is avoided too, but gives way BEFORE a club derby
+//      does. A rematch is ordinary pool play; a derby is the thing directors
+//      complain about.
+//
+// UNEVEN COUNTS. Games take two teams, so an odd number of team-slots cannot
+// come out even, and exactly one team ends up playing one extra. That is
+// deliberate and reported, not an accident to be hidden.
+
+export interface TargetedRoundsOptions {
+  teamIds: string[];
+  /** Games each team should end up with. */
+  gamesPerTeam: number;
+  /** Pairs that must never be drawn, as `pairKeyOf` strings. */
+  blocked?: Set<string>;
+  /** Club for a team, "" for none. Teams sharing one are avoided, not banned. */
+  orgOf?: (id: string) => string;
+}
+
+export interface TargetedRoundsResult {
+  /** Rounds, each pairing a team at most once, in playing order. */
+  rounds: [string, string][][];
+  /** How many games each team actually got. */
+  gamesFor: Map<string, number>;
+  /** Pairs that had to meet more than once to fill the card. */
+  repeats: [string, string][];
+  /** Same-club pairs that had to be used anyway. */
+  sameOrg: [string, string][];
+  /** Teams that could not reach the target at all, usually over-blocked. */
+  short: string[];
+}
+
+export function pairKeyOf(a: string, b: string): string {
+  return [a, b].sort().join("|");
+}
+
+export function buildTargetedRounds(
+  opts: TargetedRoundsOptions,
+): TargetedRoundsResult {
+  const ids = [...new Set(opts.teamIds.filter(Boolean))];
+  const target = Math.max(0, Math.floor(opts.gamesPerTeam));
+  const blocked = opts.blocked ?? new Set<string>();
+  const orgOf = opts.orgOf ?? (() => "");
+
+  const gamesFor = new Map<string, number>(ids.map((id) => [id, 0]));
+  const metCount = new Map<string, number>();
+  const rounds: [string, string][][] = [];
+  const repeats: [string, string][] = [];
+  const sameOrg: [string, string][] = [];
+  const short: string[] = [];
+
+  if (ids.length < 2 || target < 1) {
+    return { rounds, gamesFor, repeats, sameOrg, short };
+  }
+
+  const met = (a: string, b: string) => metCount.get(pairKeyOf(a, b)) ?? 0;
+  const shareClub = (a: string, b: string) => {
+    const oa = orgOf(a).trim().toLowerCase();
+    const ob = orgOf(b).trim().toLowerCase();
+    return !!oa && oa === ob;
+  };
+
+  // Lower is better, and the weights are far enough apart that the ordering is
+  // strict rather than a blend: no number of rematches ever outweighs one
+  // club derby, and neither is affected by the games-played tiebreak.
+  //
+  // CLUB BEATS REPEAT, and that is the deliberate call. Until today a same-club
+  // pair was BANNED outright, so a club derby is the thing this league has
+  // always treated as unacceptable; a rematch is ordinary pool play. Loosening
+  // the ban to "if we can help it" should not quietly promote the derby to
+  // being the preferred way out of a tight card.
+  const cost = (a: string, b: string) =>
+    (shareClub(a, b) ? 1_000_000 : 0) +
+    met(a, b) * 1_000 +
+    (gamesFor.get(b) ?? 0);
+
+  // Safety valve. Every round must place at least one game or the loop stops,
+  // but cap the count too so a pathological block list cannot spin.
+  const maxRounds = target * ids.length + ids.length + 8;
+
+  for (let guard = 0; guard < maxRounds; guard++) {
+    const needy = ids
+      .filter((id) => (gamesFor.get(id) ?? 0) < target)
+      // Furthest behind first, then by id so a rebuild of the same season
+      // produces the same schedule.
+      .sort(
+        (x, y) =>
+          (gamesFor.get(x) ?? 0) - (gamesFor.get(y) ?? 0) || (x < y ? -1 : 1),
+      );
+    if (needy.length === 0) break;
+
+    const round: [string, string][] = [];
+    const used = new Set<string>();
+
+    for (const a of needy) {
+      if (used.has(a)) continue;
+
+      const pick = (pool: string[]) => {
+        let best: string | null = null;
+        let bestCost = Infinity;
+        for (const b of pool) {
+          if (b === a || used.has(b)) continue;
+          if (blocked.has(pairKeyOf(a, b))) continue;
+          const c = cost(a, b);
+          if (c < bestCost) {
+            bestCost = c;
+            best = b;
+          }
+        }
+        return best;
+      };
+
+      // Prefer a partner who also still needs games; only then borrow someone
+      // already finished, which is what hands that team the extra game.
+      const b = pick(needy) ?? pick(ids);
+      if (!b) continue; // nobody legal this round; a later round may differ
+
+      used.add(a);
+      used.add(b);
+      round.push([a, b]);
+    }
+
+    // No pairing was possible at all: everyone left is blocked against everyone
+    // else. Another identical round would not help, so stop and report.
+    if (round.length === 0) break;
+
+    // ── repair pass ──────────────────────────────────────────────────────
+    // Taking the cheapest partner for each team in turn is greedy, and greedy
+    // leaves money on the table: with four clubs of two, it would pair three
+    // rounds perfectly and then have no choice but to draw a club against
+    // itself, even though a different arrangement of the SAME teams had no
+    // derby in it at all.
+    //
+    // So swap the ends of two games whenever that costs less. Cheap (the round
+    // is at most half the division) and it clears exactly the case above,
+    // because a same-club pair almost always has a swap that dissolves it.
+    let improved = true;
+    while (improved) {
+      improved = false;
+      for (let i = 0; i < round.length; i++) {
+        for (let j = i + 1; j < round.length; j++) {
+          const [a, b] = round[i]!;
+          const [c, d] = round[j]!;
+          const now = cost(a, b) + cost(c, d);
+          const legal = (x: string, y: string) => !blocked.has(pairKeyOf(x, y));
+          // Both ways of re-cutting the two games.
+          const swapA = legal(a, c) && legal(b, d) ? cost(a, c) + cost(b, d) : Infinity;
+          const swapB = legal(a, d) && legal(b, c) ? cost(a, d) + cost(b, c) : Infinity;
+          if (swapA < now && swapA <= swapB) {
+            round[i] = [a, c];
+            round[j] = [b, d];
+            improved = true;
+          } else if (swapB < now) {
+            round[i] = [a, d];
+            round[j] = [b, c];
+            improved = true;
+          }
+        }
+      }
+    }
+
+    // Bookkeeping happens AFTER the repair, so the counters describe the round
+    // that is actually played rather than the one greedy first proposed.
+    for (const [a, b] of round) {
+      if (met(a, b) > 0) repeats.push([a, b]);
+      if (shareClub(a, b)) sameOrg.push([a, b]);
+      metCount.set(pairKeyOf(a, b), met(a, b) + 1);
+      gamesFor.set(a, (gamesFor.get(a) ?? 0) + 1);
+      gamesFor.set(b, (gamesFor.get(b) ?? 0) + 1);
+    }
+    rounds.push(round);
+  }
+
+  for (const id of ids) {
+    if ((gamesFor.get(id) ?? 0) < target) short.push(id);
+  }
+  return { rounds, gamesFor, repeats, sameOrg, short };
 }
 
 /** Add days to a YYYY-MM-DD date without touching the local timezone.
@@ -267,6 +485,10 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
     noLegalField: [],
     slotsBlockedByExisting: 0,
     everyPairPlayed: false,
+    gamesPerTeamActual: [],
+    extraGameTeams: [],
+    repeatMatchups: [],
+    sameOrgUsed: [],
     warnings: [msg],
   });
 
@@ -291,10 +513,11 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
     );
   }
 
-  // ---- 2. every pair, in round-robin order -------------------------------
-  const rounds = roundRobinRounds(teams.map((t) => t.id));
-
-  // ---- 3. drop blocked and same-organisation pairings --------------------
+  // ---- 2 + 3. build the matchups -----------------------------------------
+  // TWO MODES. `gamesPerTeam` builds to a target, avoiding repeats and clubs
+  // but re-pairing rather than deleting when they collide. Without it the old
+  // round robin runs unchanged, which is what every league configured before
+  // 2026-09-04 still gets.
   const skippedSameOrg: GeneratorResult["skippedSameOrg"] = [];
   const skippedBlocked: GeneratorResult["skippedBlocked"] = [];
   const blocked = new Set(
@@ -302,31 +525,56 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
       .filter((p) => Array.isArray(p) && p[0] && p[1])
       .map(([a, b]) => [a, b].sort().join("|")),
   );
-  const playable = rounds.map((round) =>
-    round.filter(([a, b]) => {
-      if (blocked.has([a, b].sort().join("|"))) {
-        skippedBlocked.push({ a: nameOf(a), b: nameOf(b) });
-        return false;
-      }
-      const oa = orgOf(byId.get(a)!);
-      const ob = orgOf(byId.get(b)!);
-      if (oa && ob && oa === ob) {
-        skippedSameOrg.push({
-          a: nameOf(a),
-          b: nameOf(b),
-          organization: byId.get(a)?.organization ?? "",
-        });
-        return false;
-      }
-      return true;
-    }),
-  );
+
+  const gamesPerTeam = Math.max(0, Math.floor(opts.gamesPerTeam ?? 0));
+  const targeted = gamesPerTeam > 0;
+
+  let playable: [string, string][][];
+  let targetedResult: TargetedRoundsResult | null = null;
+
+  if (targeted) {
+    targetedResult = buildTargetedRounds({
+      teamIds: teams.map((t) => t.id),
+      gamesPerTeam,
+      blocked,
+      orgOf: (id) => orgOf(byId.get(id)!),
+    });
+    playable = targetedResult.rounds;
+    // A blocked pair never reaches the calendar in this mode, so there is
+    // nothing to "skip" and nothing to report under that heading.
+  } else {
+    const rounds = roundRobinRounds(teams.map((t) => t.id));
+    playable = rounds.map((round) =>
+      round.filter(([a, b]) => {
+        if (blocked.has([a, b].sort().join("|"))) {
+          skippedBlocked.push({ a: nameOf(a), b: nameOf(b) });
+          return false;
+        }
+        const oa = orgOf(byId.get(a)!);
+        const ob = orgOf(byId.get(b)!);
+        if (oa && ob && oa === ob) {
+          skippedSameOrg.push({
+            a: nameOf(a),
+            b: nameOf(b),
+            organization: byId.get(a)?.organization ?? "",
+          });
+          return false;
+        }
+        return true;
+      }),
+    );
+  }
 
   // ---- 4. drop the pairings into the calendar ----------------------------
   const gamesPerWeek = Math.max(1, Math.floor(opts.gamesPerWeek ?? 1));
   const sameOpponent = (opts.weeklyPairing ?? "same-opponent") === "same-opponent";
   const roundsPerWeek = sameOpponent ? 1 : gamesPerWeek;
-  const gamesPerMatchup = sameOpponent ? gamesPerWeek : 1;
+  // In targeted mode a matchup is always ONE game. "Two games a week" there
+  // means a team plays twice against two different opponents, which is the
+  // whole point of avoiding repeats; a same-opponent doubleheader would be a
+  // repeat by construction. gamesPerWeek still caps a team's weekly load, it
+  // is just enforced on the queue below rather than by the round shape.
+  const gamesPerMatchup = targeted ? 1 : sameOpponent ? gamesPerWeek : 1;
 
   const games: GeneratedGame[] = [];
   const unscheduled: GeneratorResult["unscheduled"] = [];
@@ -441,6 +689,18 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
   let roundCursor = 0;
   let weekNo = 0;
 
+  // TARGETED MODE CARRIES ITS WORK FORWARD.
+  //
+  // Round-robin mode treats a week as a round and drops whatever will not fit,
+  // which is right there: the rotation is the point, and a missed pair is
+  // reported. Here the COUNT is the point. A division whose round is twenty
+  // games but whose Saturday holds twelve slots would otherwise hand eight
+  // teams a game short, week after week, while the calendar sat half empty.
+  //
+  // So the matchups are a queue. Whatever will not fit this week is first in
+  // line next week, and the season stretches instead of the promise breaking.
+  let pending: [string, string][] = targeted ? playable.flat() : [];
+
   for (const weekDates of calendar) {
     if (weekDates.length === 0) continue; // an off week
     weekNo += 1;
@@ -531,12 +791,40 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
     const weekMatchups: { a: string; b: string; cycle: number }[] = [];
     for (let r = 0; r < roundsPerWeek; r++) {
       const idx = roundCursor + r;
+      // Round-robin mode WRAPS: the rotation repeats until the calendar runs
+      // out, which is how a long season keeps producing games. Targeted mode
+      // must NOT wrap. Its rounds are exactly the games each team was asked
+      // for, so wrapping would quietly hand everyone a second helping.
+      if (targeted) break; // the queue below decides this week's card
       const cycle = Math.floor(idx / playable.length);
       (playable[idx % playable.length] ?? []).forEach(([a, b]) =>
         weekMatchups.push({ a, b, cycle }),
       );
     }
     roundCursor += roundsPerWeek;
+
+    if (targeted) {
+      // Take from the front of the queue, skipping any matchup that would give
+      // a team more games this week than it is allowed. Order is preserved, so
+      // the round structure still spreads opponents out; it just no longer
+      // forces a whole round into one week.
+      const thisWeek = new Map<string, number>();
+      const rest: [string, string][] = [];
+      for (const [a, b] of pending) {
+        const ca = thisWeek.get(a) ?? 0;
+        const cb = thisWeek.get(b) ?? 0;
+        if (ca < gamesPerWeek && cb < gamesPerWeek) {
+          thisWeek.set(a, ca + 1);
+          thisWeek.set(b, cb + 1);
+          weekMatchups.push({ a, b, cycle: 0 });
+        } else {
+          rest.push([a, b]);
+        }
+      }
+      pending = rest;
+      // Nothing waiting and nothing placed: the season is done.
+      if (weekMatchups.length === 0) break;
+    }
 
     for (const { a, b } of weekMatchups) {
       // A pairing whose allowed-field sets do not intersect can never be placed,
@@ -554,7 +842,11 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
       }
       const picked = takeSlots(gamesPerMatchup, a, b);
       if (!picked) {
-        unscheduled.push({ a: nameOf(a), b: nameOf(b) });
+        // Round-robin mode has no later chance at this pair, so it is lost and
+        // reported. Targeted mode puts it back at the head of the queue and
+        // tries again next week.
+        if (targeted) pending.unshift([a, b]);
+        else unscheduled.push({ a: nameOf(a), b: nameOf(b) });
         continue;
       }
       for (let g = 0; g < gamesPerMatchup; g++) {
@@ -597,6 +889,11 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
     }
   }
 
+  // Whatever is still queued when the calendar runs out never got a slot.
+  for (const [a, b] of pending) {
+    unscheduled.push({ a: nameOf(a), b: nameOf(b) });
+  }
+
   // ---- 5. report what the inputs could not fit ---------------------------
   const allowedPairs = new Set<string>();
   playable.forEach((round) =>
@@ -604,13 +901,67 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
   );
   const everyPairPlayed = [...allowedPairs].every((k) => playedPairs.has(k));
 
-  const weeksForFullRotation = Math.ceil(playable.length / roundsPerWeek);
-  if (usableWeeks < weeksForFullRotation) {
-    warnings.push(
-      `${usableWeeks} playable week${usableWeeks === 1 ? "" : "s"} is not enough ` +
-        `for everyone to play everyone once. That needs ${weeksForFullRotation} ` +
-        `at this format. Extend the end date, or add game days.`,
-    );
+  // How many games each team actually GOT, counted off the placed games rather
+  // than the intended pairings. A matchup that found no slot is a team short a
+  // game, and the admin has to see that here rather than infer it.
+  const placedFor = new Map<string, number>(teams.map((t) => [t.id, 0]));
+  for (const g of games) {
+    placedFor.set(g.home_team_id, (placedFor.get(g.home_team_id) ?? 0) + 1);
+    placedFor.set(g.away_team_id, (placedFor.get(g.away_team_id) ?? 0) + 1);
+  }
+  const gamesPerTeamActual = teams
+    .map((t) => ({ team: t.name, games: placedFor.get(t.id) ?? 0 }))
+    .sort((a, b) => a.games - b.games || (a.team < b.team ? -1 : 1));
+
+  const most = Math.max(0, ...placedFor.values());
+  const extraGameTeams = targeted
+    ? teams.filter((t) => (placedFor.get(t.id) ?? 0) === most && most > gamesPerTeam)
+        .map((t) => t.name)
+    : [];
+  const repeatMatchups = (targetedResult?.repeats ?? []).map(([a, b]) => ({
+    a: nameOf(a),
+    b: nameOf(b),
+  }));
+  const sameOrgUsed = (targetedResult?.sameOrg ?? []).map(([a, b]) => ({
+    a: nameOf(a),
+    b: nameOf(b),
+  }));
+
+  if (targeted) {
+    const shortNames = teams
+      .filter((t) => (placedFor.get(t.id) ?? 0) < gamesPerTeam)
+      .map((t) => `${t.name} (${placedFor.get(t.id) ?? 0})`);
+    if (shortNames.length > 0) {
+      warnings.push(
+        `${shortNames.length} team${shortNames.length === 1 ? "" : "s"} did not ` +
+          `reach ${gamesPerTeam} games: ${shortNames.slice(0, 6).join(", ")}` +
+          `${shortNames.length > 6 ? ", …" : ""}. Add game days or another ` +
+          `field and start time, or lift a blocked matchup.`,
+      );
+    }
+    if (repeatMatchups.length > 0) {
+      warnings.push(
+        `${repeatMatchups.length} matchup${repeatMatchups.length === 1 ? "" : "s"} ` +
+          `had to be played twice to fill everyone's games. Fewer games per ` +
+          `team, or more teams, would avoid it.`,
+      );
+    }
+    if (sameOrgUsed.length > 0) {
+      warnings.push(
+        `${sameOrgUsed.length} game${sameOrgUsed.length === 1 ? "" : "s"} had to ` +
+          `pair two teams from the same club. There was no other opponent left ` +
+          `that would keep them at ${gamesPerTeam} games.`,
+      );
+    }
+  } else {
+    const weeksForFullRotation = Math.ceil(playable.length / roundsPerWeek);
+    if (usableWeeks < weeksForFullRotation) {
+      warnings.push(
+        `${usableWeeks} playable week${usableWeeks === 1 ? "" : "s"} is not enough ` +
+          `for everyone to play everyone once. That needs ${weeksForFullRotation} ` +
+          `at this format. Extend the end date, or add game days.`,
+      );
+    }
   }
   if (unscheduled.length > 0) {
     warnings.push(
@@ -654,6 +1005,10 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
     unscheduled,
     noLegalField,
     slotsBlockedByExisting,
+    gamesPerTeamActual,
+    extraGameTeams,
+    repeatMatchups,
+    sameOrgUsed,
     everyPairPlayed,
     warnings,
   };

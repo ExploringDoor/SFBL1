@@ -130,6 +130,10 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
   const [days, setDays] = useState<number[]>([]);
   const [offDates, setOffDates] = useState<string[]>([]);
   const [newOffDate, setNewOffDate] = useState("");
+  // 0 = the old round robin, everyone plays everyone. Any other number is the
+  // games-per-team target Mike asked for on 2026-09-04. Default stays 0 so an
+  // existing league's saved setup behaves exactly as it did.
+  const [gamesPerTeam, setGamesPerTeam] = useState(0);
   const [gamesPerWeek, setGamesPerWeek] = useState(1);
   const [pairing, setPairing] = useState<"same-opponent" | "different-opponents">(
     "same-opponent",
@@ -384,6 +388,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
         blackoutDates: offDates,
         fields: genFields,
         gamesPerWeek,
+        ...(gamesPerTeam > 0 ? { gamesPerTeam } : {}),
         weeklyPairing: pairing,
         blockedPairs: blocked,
         division: ageGroup || division || undefined,
@@ -447,7 +452,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
   return (
     <section>
       <p style={{ fontSize: 13, color: "var(--muted)", marginTop: 0, lineHeight: 1.6 }}>
-        Builds a full season: everyone plays everyone at least once, across the days,
+        Builds a full season across the days,
         fields and times you set. Nothing is written until you press Create.
       </p>
 
@@ -577,6 +582,25 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
             </div>
           </div>
 
+          <div style={{ minWidth: 230 }}>
+            <label style={LABEL}>Games for each team</label>
+            <select
+              style={INPUT}
+              value={String(gamesPerTeam)}
+              onChange={(e) => {
+                setGamesPerTeam(Number(e.target.value) || 0);
+                reset();
+              }}
+            >
+              <option value="0">Everyone plays everyone</option>
+              {Array.from({ length: 20 }, (_, i) => i + 1).map((n) => (
+                <option key={n} value={n}>
+                  {n} game{n === 1 ? "" : "s"} each
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div style={{ width: 140 }}>
             <label style={LABEL}>Games per week</label>
             <input
@@ -591,7 +615,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
               }}
             />
           </div>
-          {gamesPerWeek > 1 && (
+          {gamesPerWeek > 1 && gamesPerTeam === 0 && (
             <div style={{ minWidth: 220 }}>
               <label style={LABEL}>Those games are against</label>
               <select
@@ -881,12 +905,81 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
       <div style={CARD}>
         <p style={{ fontWeight: 800, margin: "0 0 4px" }}>5. Per-team settings</p>
         <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 12px" }}>
-          Optional. A club name stops that club&rsquo;s own teams being drawn against
-          each other, without listing every pair by hand. A home field pulls a
+          Optional. Give two teams the same club name and the generator keeps
+          them apart, without listing every pair by hand. It will only draw them
+          against each other if the alternative is leaving a team short of its
+          games, and it says so when that happens. A home field pulls a
           team&rsquo;s games there and makes them the home side. Dates a team cannot play
           are skipped for them only, and the rest of the division still plays.
           Saved with the rules above.
         </p>
+
+        {/* CLUBS AT A GLANCE. The club field has existed all along, one text
+            box per team inside the collapsed list below, which is exactly
+            where nobody found it. Adam, 2026-09-04: "the organizations don't
+            have their own field for us to put it down". Showing the clubs
+            here, before anything is expanded, is what makes the setting
+            discoverable, and the count of teams in each is what makes a typo
+            ("Fire" against "Fire Softball") visible as two clubs of one. */}
+        {(() => {
+          const clubs = new Map<string, string[]>();
+          for (const t of teams) {
+            const c = (teamCfg[t.id]?.organization ?? "").trim();
+            if (!c) continue;
+            const k = c.toLowerCase();
+            clubs.set(k, [...(clubs.get(k) ?? []), t.name]);
+          }
+          const named = [...clubs.entries()].map(([k, v]) => ({
+            label:
+              (teams
+                .map((t) => (teamCfg[t.id]?.organization ?? "").trim())
+                .find((o) => o.toLowerCase() === k) ?? k),
+            teams: v,
+          }));
+          if (named.length === 0) {
+            return (
+              <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 10px" }}>
+                No clubs set yet. Open the list below and type a club name on any
+                team that shares an organisation with another.
+              </p>
+            );
+          }
+          return (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+              {named
+                .sort((a, b) => b.teams.length - a.teams.length)
+                .map((c) => (
+                  <span
+                    key={c.label}
+                    title={c.teams.join(", ")}
+                    style={{
+                      fontSize: 12,
+                      padding: "3px 9px",
+                      borderRadius: 999,
+                      border: "1px solid rgba(0,0,0,0.14)",
+                      // A club of one keeps nobody apart, and is nearly always
+                      // a spelling mismatch rather than a real single-team club.
+                      opacity: c.teams.length === 1 ? 0.55 : 1,
+                    }}
+                  >
+                    {c.label} · {c.teams.length}
+                  </span>
+                ))}
+            </div>
+          );
+        })()}
+
+        <datalist id="sg-club-names">
+          {[
+            ...new Set(
+              teams
+                .map((t) => (teamCfg[t.id]?.organization ?? "").trim())
+                .filter(Boolean),
+            ),
+          ].map((c) => (
+            <option key={c} value={c} />
+          ))}
+        </datalist>
 
         <details>
           <summary style={{ cursor: "pointer", fontWeight: 700, fontSize: 13, marginBottom: 8 }}>
@@ -917,6 +1010,10 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
                       <input
                         placeholder="e.g. Phoenix Fire"
                         style={INPUT}
+                        // Pick from clubs already typed. Matching is by name,
+                        // so a second spelling is a second club that keeps
+                        // nobody apart.
+                        list="sg-club-names"
                         value={cfg.organization ?? ""}
                         onChange={(e) => patch({ organization: e.target.value })}
                       />
@@ -1123,7 +1220,14 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
           <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 8 }}>
             <p style={{ fontWeight: 800, margin: 0 }}>
               Preview · {result.games.length} games
-              {result.everyPairPlayed && " · everyone plays everyone"}
+              {gamesPerTeam === 0 && result.everyPairPlayed && " · everyone plays everyone"}
+              {gamesPerTeam > 0 &&
+                (() => {
+                  const n = result.gamesPerTeamActual.map((r) => r.games);
+                  const lo = Math.min(...n);
+                  const hi = Math.max(...n);
+                  return ` · ${lo === hi ? `${lo}` : `${lo}-${hi}`} games each`;
+                })()}
             </p>
             <button
               type="button"
@@ -1202,6 +1306,78 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
               {w}
             </p>
           ))}
+
+          {/* GAMES PER TEAM, the thing to check before pressing Create.
+              A count that is not what was asked for is the failure this whole
+              mode exists to make visible, so it is shown as a table rather
+              than buried in a warning string. */}
+          {gamesPerTeam > 0 && (
+            <details style={{ margin: "0 0 10px" }}>
+              <summary style={{ cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
+                Games per team
+                {result.extraGameTeams.length > 0 &&
+                  ` · ${result.extraGameTeams.join(", ")} play${
+                    result.extraGameTeams.length === 1 ? "s" : ""
+                  } one extra`}
+              </summary>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 6,
+                  marginTop: 8,
+                  fontSize: 12,
+                }}
+              >
+                {result.gamesPerTeamActual.map((r) => {
+                  const shortOf = r.games < gamesPerTeam;
+                  return (
+                    <span
+                      key={r.team}
+                      style={{
+                        padding: "3px 8px",
+                        borderRadius: 999,
+                        border: "1px solid",
+                        borderColor: shortOf
+                          ? "rgba(220,38,38,0.45)"
+                          : "rgba(0,0,0,0.14)",
+                        background: shortOf ? "rgba(220,38,38,0.08)" : "transparent",
+                        color: shortOf ? "#7f1d1d" : "inherit",
+                      }}
+                    >
+                      {r.team} · {r.games}
+                    </span>
+                  );
+                })}
+              </div>
+              {result.extraGameTeams.length > 0 && (
+                <p style={{ fontSize: 12, color: "var(--muted)", margin: "8px 0 0" }}>
+                  An odd number of team-games cannot split evenly, so one team
+                  always plays one more than the rest.
+                </p>
+              )}
+            </details>
+          )}
+
+          {/* Conflicts the generator had to accept. Empty is the normal case
+              and shows nothing; when it is not empty, it is the reason to add
+              a week or drop a game rather than something to shrug at. */}
+          {(result.sameOrgUsed.length > 0 || result.repeatMatchups.length > 0) && (
+            <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 10px" }}>
+              {result.sameOrgUsed.length > 0 && (
+                <>
+                  Same club, unavoidable:{" "}
+                  {result.sameOrgUsed.map((m) => `${m.a} v ${m.b}`).join(", ")}.{" "}
+                </>
+              )}
+              {result.repeatMatchups.length > 0 && (
+                <>
+                  Played twice:{" "}
+                  {result.repeatMatchups.map((m) => `${m.a} v ${m.b}`).join(", ")}.
+                </>
+              )}
+            </p>
+          )}
 
           {(result.skippedBlocked.length > 0 || result.skippedSameOrg.length > 0) && (
             <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 10px" }}>
