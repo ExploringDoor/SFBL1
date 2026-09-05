@@ -383,7 +383,24 @@ export default async function RootLayout({
     { label: "Contact", href: "/content/contact" },
   ];
 
-  const tickerGames = tenantId ? await loadTickerGames(tenantId) : [];
+  // The ticker prints a record beside each team in the header of every page,
+  // so it has to agree with /standings. Read straight off the tenant config
+  // header rather than threading a value down: this is the only thing in the
+  // layout that needs it.
+  const dropExtraGameLoss = (() => {
+    if (!configJson) return false;
+    try {
+      const cfg = JSON.parse(configJson) as {
+        standings?: { drop_extra_game_loss?: boolean };
+      };
+      return !!cfg.standings?.drop_extra_game_loss;
+    } catch {
+      return false;
+    }
+  })();
+  const tickerGames = tenantId
+    ? await loadTickerGames(tenantId, dropExtraGameLoss)
+    : [];
 
   // Tenant overrides become inline custom-properties on <html>. CSS
   // throughout the app uses `var(--brand-primary, fallback)` so any

@@ -18,6 +18,7 @@ import {
   sortByPoints,
   type GameResult,
   type StandingsRow,
+  computeStandingsWithExtraGameRule,
 } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 
@@ -121,7 +122,17 @@ export default async function TeamsPage() {
       date: data.date ? String(data.date) : undefined,
     };
   });
-  let standings: StandingsRow[] = computeStandings(games);
+  // Divisions for the extra-game rule. It forgives a loss only for a team the
+  // SCHEDULE gave more fixtures than the rest of its division, so the baseline
+  // has to be the division, and every page that shows a record has to agree or
+  // the standings page and the team page will print different numbers.
+  const divisionById = new Map(
+    teamsSnap.docs.map((d) => [d.id, String(d.data().division ?? "")]),
+  );
+  let standings: StandingsRow[] = computeStandingsWithExtraGameRule(games, {
+    enabled: config?.standings?.drop_extra_game_loss,
+    divisionOf: (id) => divisionById.get(id) ?? "",
+  });
   const scheme = config?.standings?.points_per ?? null;
   const usePoints = config?.standings?.scoring === "points" && !!scheme;
   if (usePoints && scheme) {

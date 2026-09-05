@@ -5,7 +5,10 @@
 import { getAdminDb } from "./firebase-admin";
 import { teamLogoSrc } from "./team-logo";
 import type { TickerGame } from "@/components/ui/Ticker";
-import { computeStandings, type GameResult } from "./stats/shared";
+import {
+  computeStandingsWithExtraGameRule,
+  type GameResult,
+} from "./stats/shared";
 import { combineDateTime } from "./format-time";
 
 interface TeamMeta {
@@ -40,7 +43,14 @@ interface TickerCacheEntry {
 const TICKER_TTL_MS = 30_000;
 const tickerCache = new Map<string, TickerCacheEntry>();
 
-export async function loadTickerGames(tenantId: string): Promise<TickerGame[]> {
+export async function loadTickerGames(
+  tenantId: string,
+  /** League setting standings.drop_extra_game_loss. The ticker prints a record
+   *  next to each team in the header of every page, so it has to match
+   *  /standings or the site contradicts itself. Off by default, which is every
+   *  league that has not asked for the rule. */
+  dropExtraGameLoss = false,
+): Promise<TickerGame[]> {
   // Cache hit short-circuits the entire fetch + compute.
   const cached = tickerCache.get(tenantId);
   if (cached && Date.now() < cached.expires_at) {
@@ -101,7 +111,10 @@ export async function loadTickerGames(tenantId: string): Promise<TickerGame[]> {
       status: (data.status ?? "draft") as GameResult["status"],
     });
   }
-  const standings = computeStandings(standingsGames);
+  const standings = computeStandingsWithExtraGameRule(standingsGames, {
+    enabled: dropExtraGameLoss,
+    divisionOf: (id) => teamMeta[id]?.division ?? "",
+  });
   const recordByTeam = new Map(
     standings.map((r) => [r.team_id, formatRecord(r.w, r.l, r.t)]),
   );

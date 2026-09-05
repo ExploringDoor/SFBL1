@@ -16,7 +16,7 @@ import {
   sortByPoints,
   type GameResult,
   type StandingsRow,
-  dropExtraGameLosses,
+  computeStandingsWithExtraGameRule,
 } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import {
@@ -60,6 +60,7 @@ export default async function StandingsPage() {
 
   const {
     divisionGroups,
+    forgaveALoss,
     ageSections,
     hasAge,
     teams,
@@ -238,6 +239,22 @@ export default async function StandingsPage() {
         />
       )}
 
+      {forgaveALoss && (
+        <p
+          style={{
+            margin: "14px 0 0",
+            fontSize: 13,
+            lineHeight: 1.6,
+            color: "var(--muted)",
+          }}
+        >
+          Where a division could not be split evenly, one team was scheduled an
+          extra game. That team has one loss dropped from its record, so every
+          team is judged over the same number of games. A win in the extra game
+          still counts.
+        </p>
+      )}
+
       {/* Footer CTA: surface the league archive at the bottom of the
           standings page since users who care about today's standings
           are exactly the ones likely to want past-season comparisons.
@@ -346,7 +363,10 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
   const storedRecordsMode = useStoredRecords(config, records);
   let standings: StandingsRow[] = storedRecordsMode
     ? recordsToStandings(records)
-    : computeStandings(games);
+    : computeStandingsWithExtraGameRule(games, {
+        enabled: config?.standings?.drop_extra_game_loss,
+        divisionOf: (id) => teams[id]?.division ?? "",
+      });
   const scheme = config?.standings?.points_per ?? null;
   const usePoints = config?.standings?.scoring === "points" && !!scheme;
   if (usePoints && scheme) {
@@ -369,29 +389,19 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
     );
   }
 
-  // Fixtures per team across the whole schedule, played or not. This is what
-  // makes "played an extra game" a fact about the schedule rather than a
-  // side effect of last week's rainout. Built once and reused per division.
-  const scheduledGamesPerTeam = new Map<string, number>();
-  if (config?.standings?.drop_extra_game_loss) {
-    for (const g of games) {
-      for (const id of [g.home_team_id, g.away_team_id]) {
-        if (id) scheduledGamesPerTeam.set(id, (scheduledGamesPerTeam.get(id) ?? 0) + 1);
-      }
-    }
-  }
+  // Did the rule actually forgive anything? Only say so when it did. A note
+  // explaining an adjustment that has not happened is noise on every other
+  // page view, and the note is the difference between a coach understanding
+  // their 3-0 and ringing the league about it.
+  const forgaveALoss =
+    !!config?.standings?.drop_extra_game_loss &&
+    (() => {
+      const plain = computeStandings(games);
+      const byId = new Map(plain.map((r) => [r.team_id, r]));
+      return standings.some((r) => (byId.get(r.team_id)?.l ?? r.l) > r.l);
+    })();
 
-  const rawDivisionGroups = groupByDivision(standings, teams);
-  // Forgive the loss in a team's extra game, if this league asked for it.
-  // Applied AFTER grouping and per group: the baseline is the fewest games in
-  // that division, and measuring it league-wide would forgive losses wholesale
-  // in every division that happens to be further behind than another.
-  const divisionGroups = config?.standings?.drop_extra_game_loss
-    ? rawDivisionGroups.map((g) => ({
-        ...g,
-        rows: dropExtraGameLosses(g.rows, scheduledGamesPerTeam),
-      }))
-    : rawDivisionGroups;
+  const divisionGroups = groupByDivision(standings, teams);
   // Age-grouped tenants (COYBL): build Age Group -> Division sections. Flat
   // tenants (SFBL/LBDC) have no team.ageGroup, so hasAge is false.
   const hasAge = Object.values(teamExtra).some((t) => t.ageGroup);
@@ -416,6 +426,7 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
 
   return {
     divisionGroups,
+    forgaveALoss,
     ageSections,
     hasAge,
     teams,

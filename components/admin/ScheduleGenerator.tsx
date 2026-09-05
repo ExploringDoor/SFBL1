@@ -241,6 +241,10 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
         }
         const ts = rulesSnap.exists() ? rulesSnap.data()?.team_settings : null;
         if (ts && typeof ts === "object") setTeamCfg(ts as typeof teamCfg);
+        const gpt = rulesSnap.exists() ? rulesSnap.data()?.games_per_team : null;
+        if (typeof gpt === "number" && Number.isFinite(gpt)) {
+          setGamesPerTeam(Math.max(0, Math.floor(gpt)));
+        }
         const bp = rulesSnap.exists() ? rulesSnap.data()?.blocked_pairs : null;
         if (Array.isArray(bp)) {
           setBlocked(
@@ -337,7 +341,12 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
     setBusy(true);
     setError(null);
     try {
-      await post({ action: "save_rules", blockedPairs: blocked, teamSettings: teamCfg });
+      await post({
+        action: "save_rules",
+        blockedPairs: blocked,
+        teamSettings: teamCfg,
+        gamesPerTeam,
+      });
       setRulesSaved(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to save");
@@ -590,6 +599,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
               value={String(gamesPerTeam)}
               onChange={(e) => {
                 setGamesPerTeam(Number(e.target.value) || 0);
+                setRulesSaved(false);
                 reset();
               }}
             >

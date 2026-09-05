@@ -25,6 +25,7 @@ import {
   computeStandings,
   sortByPoints,
   type GameResult,
+  computeStandingsWithExtraGameRule,
 } from "@/lib/stats/shared";
 import { formatIP } from "@/lib/stats/ip";
 import { formatGameDate } from "@/lib/format-time";
@@ -225,7 +226,16 @@ export default async function TeamDetailPage({
       date: data.date ? String(data.date) : undefined,
     };
   });
-  let standings = computeStandings(games);
+  // The team page is where a coach checks their own record, so it is the page
+  // a mismatch with /standings would be noticed on first. Same rule, same
+  // division baseline.
+  const divisionById = new Map(
+    teamsSnap.docs.map((d) => [d.id, String(d.data().division ?? "")]),
+  );
+  let standings = computeStandingsWithExtraGameRule(games, {
+    enabled: config?.standings?.drop_extra_game_loss,
+    divisionOf: (id) => divisionById.get(id) ?? "",
+  });
   const scheme = config?.standings?.points_per ?? null;
   const usePoints = config?.standings?.scoring === "points" && !!scheme;
   if (usePoints && scheme) {
@@ -701,7 +711,7 @@ export default async function TeamDetailPage({
                   today — but the only games in it right now are last Summer's,
                   so a coach who subscribed would pull a calendar of finished
                   games. Delete this condition once Fall games are published. */}
-              {tenantId !== "island" && tenantId !== "coybl" && tenantId !== "windmill" && (
+              {tenantId !== "island" && tenantId !== "coybl" && tenantId !== "windmill" && tenantId !== "ucsl" && (
                 <div style={{ marginTop: 14 }}>
                   <SubscribeCalendar teamId={params.teamId} />
                 </div>
@@ -804,7 +814,7 @@ export default async function TeamDetailPage({
                 </p>
               )}
               <Link
-                href={`/standings#age-${ageGroup}`}
+                href={ageGroup ? `/standings#age-${ageGroup}` : "/standings"}
                 style={{
                   display: "inline-block",
                   marginTop: 12,

@@ -1,11 +1,13 @@
 // /print/standings — division-grouped standings, print-friendly.
 
 import { headers } from "next/headers";
+import type { PublicLeagueConfig } from "@/lib/tenants";
 import { getAdminDb } from "@/lib/firebase-admin";
 import {
   computeStandings,
   type GameResult,
   type StandingsRow,
+  computeStandingsWithExtraGameRule,
 } from "@/lib/stats/shared";
 import "../print.css";
 import { PrintToolbar } from "../PrintToolbar";
@@ -14,6 +16,17 @@ export const dynamic = "force-dynamic";
 
 export default async function PrintStandingsPage() {
   const tenantId = headers().get("x-tenant-id");
+  // The printed sheet is what gets pinned to a fence, so it has to carry the
+  // same records as the site. Same config, same rule.
+  const config = (() => {
+    const raw = headers().get("x-tenant-config-json");
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as PublicLeagueConfig;
+    } catch {
+      return null;
+    }
+  })();
   if (!tenantId) {
     return (
       <div className="print-page">
@@ -107,7 +120,11 @@ export default async function PrintStandingsPage() {
         const divGames = divisions.get(div) ?? [];
         const divTeamIds = teamsByDivision.get(div) ?? [];
         // Compute, then merge in zero-row for teams with no games yet.
-        const computed = computeStandings(divGames);
+        // divGames is already one division, so the whole set is the group and
+        // no divisionOf is needed. See computeStandingsWithExtraGameRule.
+        const computed = computeStandingsWithExtraGameRule(divGames, {
+          enabled: config?.standings?.drop_extra_game_loss,
+        });
         const seen = new Set(computed.map((r) => r.team_id));
         const zeroes: StandingsRow[] = divTeamIds
           .filter((id) => !seen.has(id))

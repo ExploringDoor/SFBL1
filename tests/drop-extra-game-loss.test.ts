@@ -157,3 +157,120 @@ describe("baseline comes from the schedule, not the games played so far", () => 
     expect(find(out, "a")).toMatchObject({ w: 3, l: 0, gp: 3 });
   });
 });
+
+// ── one rule, seven pages ────────────────────────────────────────────────
+// Standings, home, teams, one team, scores, schedule and the printed sheet all
+// compute records separately. They must agree: a coach who sees 3-0 on the
+// standings page and 3-1 on their own team page will ring the league, and be
+// right to. computeStandingsWithExtraGameRule is the single implementation
+// they all call, and it groups internally so no caller can get the baseline
+// wrong.
+
+import {
+  computeStandings,
+  computeStandingsWithExtraGameRule,
+} from "@/lib/stats/shared";
+import type { GameResult } from "@/lib/stats/shared";
+
+const g = (
+  home: string,
+  away: string,
+  hs: number,
+  as_: number,
+  status: GameResult["status"] = "final",
+): GameResult => ({
+  home_team_id: home,
+  away_team_id: away,
+  home_score: hs,
+  away_score: as_,
+  status,
+  date: "2026-09-12",
+});
+
+describe("computeStandingsWithExtraGameRule", () => {
+  // Two divisions. In 12U, "a" was scheduled an extra game and lost it.
+  // FIVE teams in 12U, not four. Every fixture adds two to the total, so the
+  // sum is always even: a division of four with one team on an extra would be
+  // 4+3+3+3 = 13, which no fixture list can produce. Five teams at three games
+  // each is 15, odd, so exactly one team plays a fourth. That is the real
+  // shape, and the first fixture I wrote here was impossible.
+  const GAMES: GameResult[] = [
+    g("a", "b", 5, 1),
+    g("a", "c", 4, 2),
+    g("a", "d", 3, 2),
+    g("a", "e", 0, 7), // a's fourth, and a loss
+    g("b", "c", 3, 2),
+    g("b", "d", 1, 4),
+    g("c", "e", 6, 5),
+    g("d", "e", 2, 1),
+    // 10U, level at two games each
+    g("x", "y", 2, 1),
+    g("x", "z", 0, 5),
+    g("y", "z", 3, 1),
+  ];
+  const DIV: Record<string, string> = {
+    a: "12U", b: "12U", c: "12U", d: "12U", e: "12U",
+    x: "10U", y: "10U", z: "10U",
+  };
+  const run = (enabled: boolean) =>
+    computeStandingsWithExtraGameRule(GAMES, {
+      enabled,
+      divisionOf: (id) => DIV[id] ?? "",
+    });
+  const of = (rows: ReturnType<typeof run>, id: string) =>
+    rows.find((r) => r.team_id === id)!;
+
+  it("is exactly plain standings when the league has not asked for it", () => {
+    expect(run(false)).toEqual(computeStandings(GAMES));
+  });
+
+  it("forgives the loss for the team the schedule gave an extra game", () => {
+    // a went 3-1 over four games; three teams played three. Shown 3-0.
+    expect(of(run(false), "a")).toMatchObject({ w: 3, l: 1, gp: 4 });
+    expect(of(run(true), "a")).toMatchObject({ w: 3, l: 0, gp: 3 });
+  });
+
+  it("leaves the other division alone, since it is level", () => {
+    const before = of(run(false), "z");
+    expect(of(run(true), "z")).toMatchObject({ w: before.w, l: before.l });
+  });
+
+  it("does not measure one division against another", () => {
+    // 10U teams have 2 fixtures, 12U have 3 or 4. League-wide, every 12U team
+    // would look "extra" and have a loss forgiven. Per division, only a does.
+    const rows = run(true);
+    expect(of(rows, "b").l).toBe(of(run(false), "b").l);
+    expect(of(rows, "c").l).toBe(of(run(false), "c").l);
+  });
+
+  it("keeps the row order, so a table does not reshuffle for no reason", () => {
+    expect(run(true).map((r) => r.team_id)).toEqual(
+      computeStandings(GAMES).map((r) => r.team_id),
+    );
+  });
+
+  it("counts unplayed fixtures towards the schedule, not just finished ones", () => {
+    // Level the division at four fixtures each, with the new ones unplayed.
+    // Counting only FINISHED games, a would still look a game ahead and keep
+    // being forgiven; counting the schedule, nobody is above the baseline.
+    const withUpcoming = [
+      ...GAMES,
+      g("b", "e", 0, 0, "scheduled"),
+      g("c", "d", 0, 0, "scheduled"),
+    ];
+    const rows = computeStandingsWithExtraGameRule(withUpcoming, {
+      enabled: true,
+      divisionOf: (id) => DIV[id] ?? "",
+    });
+    expect(rows.find((r) => r.team_id === "a")).toMatchObject({ w: 3, l: 1 });
+  });
+
+  it("treats a league with no divisions as one group", () => {
+    const rows = computeStandingsWithExtraGameRule(
+      [g("p", "q", 1, 0), g("p", "r", 0, 1), g("q", "r", 2, 1)],
+      { enabled: true },
+    );
+    // Level at two each, so nothing is forgiven.
+    for (const r of rows) expect(r.gp).toBe(2);
+  });
+});

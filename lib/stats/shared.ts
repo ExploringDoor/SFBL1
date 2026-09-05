@@ -108,6 +108,60 @@ export function computePoints(row: StandingsRow, scheme: PointsScheme): number {
 export type Tiebreaker = "pct" | "rd";
 
 /**
+ * Standings with the extra-game rule already applied.
+ *
+ * USE THIS, not computeStandings + a hand-rolled adjustment, anywhere a record
+ * is shown. Seven pages compute records (standings, home, teams, one team,
+ * scores, schedule, box scores) and they must agree: a coach who sees 3-0 on
+ * the standings page and 3-1 on their team page will ring the league, and be
+ * right to.
+ *
+ * Grouping happens INSIDE, so callers cannot get the baseline wrong. They only
+ * have to say which division a team is in.
+ *
+ * `games` should be every fixture, not only the finished ones: computeStandings
+ * filters to finished itself, and the schedule is what tells us who was handed
+ * the extra game (see dropExtraGameLosses).
+ */
+export function computeStandingsWithExtraGameRule(
+  games: GameResult[],
+  opts: {
+    /** League setting standings.drop_extra_game_loss. Off = plain standings. */
+    enabled?: boolean;
+    /** Division for a team. Return "" when a league has none: everyone then
+     *  sits in one group, which is the right baseline for a flat league. */
+    divisionOf?: (teamId: string) => string;
+  } = {},
+): StandingsRow[] {
+  const rows = computeStandings(games);
+  if (!opts.enabled) return rows;
+
+  const scheduled = new Map<string, number>();
+  for (const g of games) {
+    for (const id of [g.home_team_id, g.away_team_id]) {
+      if (id) scheduled.set(id, (scheduled.get(id) ?? 0) + 1);
+    }
+  }
+
+  const divisionOf = opts.divisionOf ?? (() => "");
+  const byDivision = new Map<string, StandingsRow[]>();
+  for (const r of rows) {
+    const d = divisionOf(r.team_id) || "";
+    byDivision.set(d, [...(byDivision.get(d) ?? []), r]);
+  }
+
+  // Rebuild in the original order. Callers sort afterwards, but a silently
+  // reordered list is the kind of thing that shifts a table for no reason.
+  const adjusted = new Map<string, StandingsRow>();
+  for (const group of byDivision.values()) {
+    for (const r of dropExtraGameLosses(group, scheduled)) {
+      adjusted.set(r.team_id, r);
+    }
+  }
+  return rows.map((r) => adjusted.get(r.team_id) ?? r);
+}
+
+/**
  * Forgive the loss in a team's extra game.
  *
  * WHY. When a division has an odd number of team-games the scheduler cannot

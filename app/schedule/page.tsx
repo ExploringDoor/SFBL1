@@ -11,7 +11,9 @@ import { teamLogoSrc } from "@/lib/team-logo";
 import { PreviewCard, type PreviewCardTeam } from "@/components/ui/PreviewCard";
 import { GameCard, type GameCardTeam } from "@/components/ui/GameCard";
 import { computeWeeks, pickActiveWeek } from "@/lib/season-weeks";
-import { computeStandings, type GameResult } from "@/lib/stats/shared";
+import { computeStandings, type GameResult,
+  computeStandingsWithExtraGameRule,
+} from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { ScoresScheduleTabs, WeekRow } from "../scores/tabs-and-weeks";
 import { SubscribeCalendar } from "@/components/SubscribeCalendar";
@@ -71,7 +73,7 @@ export default async function SchedulePage({
   // LMLL-flagship scoreboard chrome — see /scores. Opt-in per tenant.
   const lmllStyle = config?.flags?.lmll_scoreboard === true;
 
-  const { games, teams } = await loadSchedule(tenantId);
+  const { games, teams } = await loadSchedule(tenantId, config);
   // Show every game in the season — scheduled, final, postponed,
   // cancelled — so the schedule page is a real season-long calendar
   // instead of just "the 1 game still on the books." Cards render
@@ -187,7 +189,9 @@ export default async function SchedulePage({
           <div className="flex flex-col items-end gap-2">
             {/* Windmill: Adam asked to drop the calendar-subscribe controls
                 sitewide (2026-08-20). The CSV export stays. */}
-            {tenantId !== "windmill" && <SubscribeCalendar />}
+            {/* UCSL: Adam asked to hide the calendar-subscribe controls
+                sitewide (2026-09-02). */}
+            {tenantId !== "windmill" && tenantId !== "ucsl" && <SubscribeCalendar />}
             {/* Flat CSV of the whole schedule — opens straight in Excel /
                 Sheets. For the umpire assigner etc. (Adam, 2026-06). */}
             <a
@@ -334,7 +338,10 @@ interface TeamMeta {
   ageGroup?: string;
 }
 
-async function loadSchedule(tenantId: string): Promise<{
+async function loadSchedule(
+  tenantId: string,
+  config: PublicLeagueConfig | null,
+): Promise<{
   games: ScheduleGame[];
   teams: Record<string, TeamMeta>;
 }> {
@@ -371,7 +378,17 @@ async function loadSchedule(tenantId: string): Promise<{
       date: data.date ? String(data.date) : undefined,
     };
   });
-  const standings = computeStandings(standingsGames);
+  // Divisions for the extra-game rule. It forgives a loss only for a team the
+  // SCHEDULE gave more fixtures than the rest of its division, so the baseline
+  // has to be the division, and every page that shows a record has to agree or
+  // the standings page and the team page will print different numbers.
+  const divisionById = new Map(
+    teamsSnap.docs.map((d) => [d.id, String(d.data().division ?? "")]),
+  );
+  const standings = computeStandingsWithExtraGameRule(standingsGames, {
+    enabled: config?.standings?.drop_extra_game_loss,
+    divisionOf: (id) => divisionById.get(id) ?? "",
+  });
   const recordByTeam = new Map(
     standings.map((r) => [r.team_id, formatRecord(r.w, r.l, r.t)]),
   );

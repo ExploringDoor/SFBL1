@@ -2,7 +2,7 @@
 //
 // Two admin-only actions behind the schedule generator:
 //
-//   { leagueId, action: "save_rules", blockedPairs }
+//   { leagueId, action: "save_rules", blockedPairs, teamSettings, gamesPerTeam }
 //       Persist the "these two teams never play each other" list to
 //       /leagues/<id>/site_config/schedule_rules so Mike sets it once rather
 //       than re-picking every time he builds a schedule.
@@ -152,10 +152,21 @@ export async function POST(req: Request) {
       }
     }
 
+    // Games each team plays. 0 means the old everyone-plays-everyone round
+    // robin. Stored with the rest of the setup because it is a decision about
+    // the SEASON, not about one press of Generate: Mike picked 8 games, saved,
+    // came back the following week and the box had reset to the round robin.
+    const rawGpt = (body as { gamesPerTeam?: unknown }).gamesPerTeam;
+    const gamesPerTeam =
+      typeof rawGpt === "number" && Number.isFinite(rawGpt)
+        ? Math.max(0, Math.min(40, Math.floor(rawGpt)))
+        : 0;
+
     await db.doc(`leagues/${leagueId}/site_config/schedule_rules`).set(
       {
         blocked_pairs: pairs,
         team_settings: teamSettings,
+        games_per_team: gamesPerTeam,
         updated_at: now,
         updated_by: decoded.uid,
       },

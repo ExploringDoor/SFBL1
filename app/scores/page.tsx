@@ -10,7 +10,9 @@ import {
 import { teamLogoSrc } from "@/lib/team-logo";
 import { GameCard, type GameCardTeam } from "@/components/ui/GameCard";
 import { computeWeeks, pickActiveWeek } from "@/lib/season-weeks";
-import { computeStandings, type GameResult } from "@/lib/stats/shared";
+import { computeStandings, type GameResult,
+  computeStandingsWithExtraGameRule,
+} from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { ScoresScheduleTabs, WeekRow } from "./tabs-and-weeks";
 import { DivisionFilter } from "@/components/ui/DivisionFilter";
@@ -66,7 +68,7 @@ export default async function ScoresPage({
   // look every other league ships stays put.
   const lmllStyle = config?.flags?.lmll_scoreboard === true;
 
-  const { games, teams } = await loadScores(tenantId);
+  const { games, teams } = await loadScores(tenantId, config);
   const allFinal = games.filter(
     (g) => g.status === "final" || g.status === "approved",
   );
@@ -348,7 +350,10 @@ interface TeamMeta {
   ageGroup?: string;
 }
 
-async function loadScores(tenantId: string): Promise<{
+async function loadScores(
+  tenantId: string,
+  config: PublicLeagueConfig | null,
+): Promise<{
   games: ScoreGame[];
   teams: Record<string, TeamMeta>;
 }> {
@@ -388,7 +393,17 @@ async function loadScores(tenantId: string): Promise<{
     status: g.status as GameResult["status"],
     date: g.date,
   }));
-  const standings = computeStandings(standingsGames);
+  // Divisions for the extra-game rule. It forgives a loss only for a team the
+  // SCHEDULE gave more fixtures than the rest of its division, so the baseline
+  // has to be the division, and every page that shows a record has to agree or
+  // the standings page and the team page will print different numbers.
+  const divisionById = new Map(
+    teamsSnap.docs.map((d) => [d.id, String(d.data().division ?? "")]),
+  );
+  const standings = computeStandingsWithExtraGameRule(standingsGames, {
+    enabled: config?.standings?.drop_extra_game_loss,
+    divisionOf: (id) => divisionById.get(id) ?? "",
+  });
   const recordByTeam = new Map(
     standings.map((r) => [r.team_id, formatRecord(r.w, r.l, r.t)]),
   );
