@@ -39,6 +39,7 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
   const [playerPay, setPlayerPay] = useState<Record<string, Entry>>({});
   const [expanded, setExpanded] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
+  const [resettingTeam, setResettingTeam] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   async function load() {
@@ -149,6 +150,55 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
     }
   }
 
+  // Commissioner-side reset of a single team's MANAGER payment sheet (the
+  // captain `payments` collection — the one the manager sees in their
+  // portal, not the league ledger above). Same effect + endpoint as the
+  // manager's own "Reset for new season" button, done on their behalf
+  // when they ask. Only ever one team at a time, always confirmed —
+  // never a league-wide wipe.
+  async function resetTeamSheet(teamId: string, teamName: string) {
+    const ok = window.confirm(
+      `Reset ${teamName}'s manager payment sheet for a new season?\n\n` +
+        "This is the sheet the team's manager sees in their portal:\n" +
+        "• Every player's PAID amount → $0\n" +
+        "• Payment notes cleared\n" +
+        '• Each player\'s "Owes" amount stays\n\n' +
+        "The league ledger above is NOT affected. Can't be undone.",
+    );
+    if (!ok) return;
+    setMsg(null);
+    setResettingTeam(teamId);
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch("/api/captain-payment-reset", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ leagueId, teamId }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        reset?: number;
+      };
+      if (res.ok) {
+        setMsg({
+          ok: true,
+          text: `Reset ${teamName}'s manager sheet (${data.reset ?? 0} player${
+            data.reset === 1 ? "" : "s"
+          } cleared).`,
+        });
+      } else {
+        setMsg({ ok: false, text: data.error ?? `HTTP ${res.status}` });
+      }
+    } catch (e) {
+      setMsg({ ok: false, text: e instanceof Error ? e.message : "Reset failed" });
+    } finally {
+      setResettingTeam(null);
+    }
+  }
+
   if (loading) return <p className="text-sm text-slate-500">Loading…</p>;
 
   const teamTotal = Object.values(teamPay).reduce(
@@ -245,6 +295,28 @@ export function PaymentsAdmin({ leagueId, user }: Props) {
                   {saving === `team:${t.id}` ? "…" : "Save"}
                 </button>
               </div>
+
+              {/* Commissioner tools for this team — the manager's own
+                  payment sheet lives in a different collection, so this
+                  reset is called out separately from the ledger inputs. */}
+              {open && (
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 bg-amber-50/40 px-4 py-2">
+                  <span className="text-xs text-slate-500">
+                    Manager&rsquo;s collection sheet (what {t.name}&rsquo;s
+                    manager sees) — reset only if they ask.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => resetTeamSheet(t.id, t.name)}
+                    disabled={resettingTeam === t.id}
+                    className="rounded-md border border-amber-600 bg-white px-2.5 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-600 hover:text-white disabled:opacity-50"
+                  >
+                    {resettingTeam === t.id
+                      ? "Resetting…"
+                      : "Reset for new season"}
+                  </button>
+                </div>
+              )}
 
               {/* Player-level rows */}
               {open && (

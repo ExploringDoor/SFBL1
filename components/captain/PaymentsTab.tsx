@@ -71,6 +71,7 @@ export function PaymentsTab({ leagueId, teamId }: PaymentsTabProps) {
   const [rows, setRows] = useState<PlayerPay[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [resetting, setResetting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function load() {
@@ -196,6 +197,47 @@ export function PaymentsTab({ leagueId, teamId }: PaymentsTabProps) {
     }
   }
 
+  // Reset the whole team for a new season: zero every player's collected
+  // amount + clear notes, keeping their "Owes" fee. One batched write on
+  // the server (/api/captain-payment-reset). Guarded by a confirm since
+  // it wipes collection progress + notes and can't be undone.
+  async function resetSeason() {
+    if (!user || rows.length === 0) return;
+    const ok = window.confirm(
+      "Reset payments for a new season?\n\n" +
+        "• Every player's PAID amount goes back to $0\n" +
+        "• All payment notes are cleared\n" +
+        '• Each player\'s "Owes" amount stays the same\n\n' +
+        "This can't be undone.",
+    );
+    if (!ok) return;
+    setError(null);
+    setResetting(true);
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch("/api/captain-payment-reset", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ leagueId, teamId }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        setError(data.error ?? "Reset failed");
+      } else {
+        await load();
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Reset failed");
+    } finally {
+      setResetting(false);
+    }
+  }
+
   // Quick-mark convenience: clicking the status badge toggles paid-in-full
   // by snapping amount_paid to amount_due (or back to 0).
   function toggleFullPaid(r: PlayerPay) {
@@ -259,6 +301,20 @@ export function PaymentsTab({ leagueId, teamId }: PaymentsTabProps) {
                 <span className="cap-pay-stat-lbl">Partial</span>
               </div>
             )}
+            <button
+              type="button"
+              className="cap-btn-warn"
+              onClick={resetSeason}
+              disabled={resetting || busyId !== null}
+              title="Zero every player's Paid amount and clear notes for a new season (keeps Owes)"
+              style={{
+                marginLeft: "auto",
+                alignSelf: "center",
+                opacity: resetting || busyId !== null ? 0.5 : 1,
+              }}
+            >
+              {resetting ? "Resetting…" : "Reset for new season"}
+            </button>
           </div>
 
           <div className="cap-roster-tbl-wrap">
