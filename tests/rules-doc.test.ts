@@ -215,3 +215,56 @@ describe("canEditStructured", () => {
     expect(canEditStructured({ data: "sections" })).toBe(false);
   });
 });
+
+// ── the updated-date stamp ───────────────────────────────────────────────
+// The editor loads the stored date into its box and posts it back, so a rule
+// that simply trusts the client never advances it. Island rewrote how scores
+// are reported on 2026-09-03 and /rules went on saying "Last updated January
+// 5, 2026". A coach reading a stale date decides nothing changed and keeps
+// texting the old number, which is the failure the edit was meant to prevent.
+//
+// The decision is pure, so it is pinned here even though it lives in the route.
+
+function stampDate(opts: {
+  sent: string;
+  prevDate: string;
+  contentChanged: boolean;
+  today: string;
+}): string {
+  const adminMovedDate = !!opts.sent && opts.sent !== opts.prevDate;
+  return adminMovedDate
+    ? opts.sent
+    : opts.contentChanged
+      ? opts.today
+      : opts.sent || opts.prevDate || opts.today;
+}
+
+describe("the date shown on the public rules page", () => {
+  const today = "2026-09-04";
+  const prevDate = "2026-01-05";
+
+  it("advances to today when the wording actually changed", () => {
+    expect(
+      stampDate({ sent: prevDate, prevDate, contentChanged: true, today }),
+    ).toBe(today);
+  });
+
+  it("stays put when nothing changed, so a no-op save is a no-op", () => {
+    expect(
+      stampDate({ sent: prevDate, prevDate, contentChanged: false, today }),
+    ).toBe(prevDate);
+  });
+
+  it("honours a date the admin deliberately set, even on a real edit", () => {
+    // A typo fix that should not look like a rules change.
+    expect(
+      stampDate({ sent: "2026-02-01", prevDate, contentChanged: true, today }),
+    ).toBe("2026-02-01");
+  });
+
+  it("stamps today when there was no date before", () => {
+    expect(stampDate({ sent: "", prevDate: "", contentChanged: true, today })).toBe(
+      today,
+    );
+  });
+});

@@ -157,11 +157,32 @@ export async function POST(req: Request) {
   }
 
   const now = new Date().toISOString();
-  // content_updated is the date the LEAGUE revised its rules and is what the
-  // public page stamps at the top. Default it to today on every save: an edit
-  // still showing "Updated January 5" tells coaches the page is stale when it
-  // is not.
-  const contentUpdated = str(body.contentUpdated) || now.slice(0, 10);
+  const today = now.slice(0, 10);
+
+  // content_updated is the date the LEAGUE revised its rules, and it is what
+  // the public page stamps at the top.
+  //
+  // THIS HAS TO ADVANCE BY ITSELF. The editor loads the stored date into its
+  // date box and posts it back, so the first version of this kept whatever was
+  // already there: Island rewrote how scores are reported on 2026-09-03 and
+  // /rules went on saying "Last updated January 5, 2026". A coach reading a
+  // stale date decides the page has not changed and keeps texting the old
+  // number, which is the exact failure the rules edit was meant to prevent.
+  //
+  // So: if the CONTENT changed and the admin did not deliberately move the
+  // date themselves, stamp today. A date they actually edited is always
+  // honoured, which is what makes a typo fix that should not move the date
+  // still possible.
+  const sentDate = str(body.contentUpdated);
+  const prevDate = typeof prev?.content_updated === "string" ? prev.content_updated : "";
+  const contentChanged =
+    JSON.stringify(prev?.data ?? null) !== JSON.stringify(sections);
+  const adminMovedDate = !!sentDate && sentDate !== prevDate;
+  const contentUpdated = adminMovedDate
+    ? sentDate
+    : contentChanged
+      ? today
+      : sentDate || prevDate || today;
 
   await ref.set({
     data: sections,

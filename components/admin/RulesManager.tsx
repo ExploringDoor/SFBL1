@@ -525,7 +525,10 @@ export function RulesManager({ leagueId, user }: Props) {
             >
               {saving ? "Saving…" : "Save and publish"}
             </button>
-            <label className="flex items-center gap-2 text-xs text-slate-600">
+            <label
+              className="flex items-center gap-2 text-xs text-slate-600"
+              title="Moves to today automatically whenever you change the wording. Set it by hand only if a correction should not move the date."
+            >
               Updated date shown on the page
               <input
                 type="date"
