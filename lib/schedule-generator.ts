@@ -1093,6 +1093,12 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
  * they are greedy committing early and finding no way back, so the cheapest
  * real fix is to deal the teams in a different order and keep the better
  * result. Four fixed orders, no randomness, so a rebuilt season is identical.
+ *
+ * Eight orders were tried and measured: no better. Where greedy still leaves a
+ * rematch on the table (Island's 12U takes four where one is possible) the
+ * cause is structural, not the deal, and it would need a real matching
+ * algorithm. Not worth it: the count per team is still exact, no club is drawn
+ * against itself, and the preview names every rematch.
  */
 export function buildTargetedRounds(
   opts: TargetedRoundsOptions,
@@ -1172,5 +1178,94 @@ export function summariseClubs(
   }
   return [...groups.values()].sort(
     (a, b) => b.teams.length - a.teams.length || (a.label < b.label ? -1 : 1),
+  );
+}
+
+// ── guessing clubs from team names ───────────────────────────────────────
+//
+// The club field keeps a club's own teams apart, and it was empty for all 41
+// of Island's teams on 2026-09-04, a week before the season. Typing it 41
+// times is why. And the cost of not doing it is concrete: Phoenix Fire has
+// three 14U teams, LI Rebels three, LI Heat two, Waves two, so ten of the
+// sixteen teams in that age group belong to four clubs and would happily be
+// drawn against their own.
+//
+// The names say it plainly ("Phoenix Fire 12u Black", "Phoenix Fire 12u
+// Silver"), so this reads them and proposes the clubs. It is a SUGGESTION,
+// reviewed before it is applied and never overwriting a name already typed:
+// a wrong guess that silently separated two teams would be worse than the
+// blank field, because nobody would know to look.
+
+/** Words that identify a TEAM within a club rather than the club itself. */
+const TEAM_QUALIFIERS = new Set([
+  "black", "white", "blue", "red", "silver", "gold", "green", "gray", "grey",
+  "navy", "orange", "purple", "teal", "maroon", "pink", "yellow",
+  "elite", "premier", "select", "futures", "local", "national", "american",
+  "fastpitch", "softball", "baseball", "youth", "leagues", "league", "girls",
+  "travel", "academy", "club", "team",
+]);
+
+/** Reduce a team name to the club it probably belongs to. Exported for tests
+ *  and for the admin's preview; `suggestClubs` is what callers want. */
+export function clubNameFrom(raw: string): string {
+  let s = ` ${String(raw).toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim()} `;
+  // "LI Rebels" and "Long Island Rebels" are one club, and Island has both.
+  s = s.replace(/ long island /g, " li ");
+  // Age tags in either order: "14u", "u14".
+  s = s.replace(/ \d{1,2} ?u /g, " ").replace(/ u ?\d{1,2} /g, " ");
+  const words = s.trim().split(/\s+/).filter(Boolean);
+  const kept = words.filter((w) => !TEAM_QUALIFIERS.has(w) && !/^\d+$/.test(w));
+  // Everything was a qualifier ("Elite Premier"). Falling through to an empty
+  // string would file every such team under one blank club, which is exactly
+  // the wrong answer, so keep the original words instead.
+  const base = kept.length ? kept : words;
+  return base.slice(0, 2).join(" ").trim();
+}
+
+export interface ClubSuggestion {
+  /** Club name to apply, capitalised from the commonest spelling seen. */
+  club: string;
+  /** Teams that would get it. Only ever teams with no club set. */
+  teams: { id: string; name: string }[];
+}
+
+/**
+ * Propose clubs for teams that have none.
+ *
+ * Only groups of TWO OR MORE are proposed: a club of one keeps nobody apart,
+ * so suggesting it is noise. Teams that already have a club are left alone but
+ * still counted towards the group, so a second team joins the spelling that is
+ * already there rather than starting a rival one.
+ */
+export function suggestClubs(
+  teams: { id: string; name: string; organization?: string | null }[],
+): ClubSuggestion[] {
+  const groups = new Map<
+    string,
+    { labels: string[]; blank: { id: string; name: string }[]; taken: string[] }
+  >();
+  for (const t of teams) {
+    const key = clubNameFrom(t.name);
+    if (!key) continue;
+    const g = groups.get(key) ?? { labels: [], blank: [], taken: [] };
+    const existing = String(t.organization ?? "").trim();
+    if (existing) g.taken.push(existing);
+    else g.blank.push({ id: t.id, name: t.name });
+    g.labels.push(key);
+    groups.set(key, g);
+  }
+
+  const out: ClubSuggestion[] = [];
+  for (const [key, g] of groups) {
+    const size = g.blank.length + g.taken.length;
+    if (size < 2 || g.blank.length === 0) continue;
+    // Join the spelling already in use, if there is one.
+    const label =
+      g.taken[0] ??
+      key.replace(/\b[a-z]/g, (c) => c.toUpperCase()).replace(/\bLi\b/, "LI");
+    out.push({ club: label, teams: g.blank });
+  }
+  return out.sort(
+    (a, b) => b.teams.length - a.teams.length || (a.club < b.club ? -1 : 1),
   );
 }

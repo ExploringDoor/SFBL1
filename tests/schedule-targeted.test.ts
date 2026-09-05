@@ -13,7 +13,9 @@ import { describe, expect, it } from "vitest";
 import {
   buildTargetedRounds,
   generateSchedule,
+  clubNameFrom,
   pairKeyOf,
+  suggestClubs,
   summariseClubs,
   type GeneratorTeam,
 } from "@/lib/schedule-generator";
@@ -430,5 +432,125 @@ describe("summariseClubs", () => {
       orgOf: (id) => org[id] ?? "",
     });
     expect(r.sameOrg).toEqual([]);
+  });
+});
+
+// ── guessing clubs from team names ───────────────────────────────────────
+// The club field was empty for all 41 of Island's teams a week before the
+// season, because typing it 41 times is nobody's idea of a Tuesday. The names
+// already say it. Every fixture below is a REAL Island team name, including
+// the ones that make it hard: the same club written "LI Rebels" and "Long
+// Island Rebels", and the same club in two different cases.
+
+describe("clubNameFrom", () => {
+  it("strips the age tag and the team colour", () => {
+    expect(clubNameFrom("Phoenix Fire 12u Black")).toBe(
+      clubNameFrom("Phoenix Fire 12u Silver"),
+    );
+    expect(clubNameFrom("Phoenix Fire 16U")).toBe(clubNameFrom("Phoenix Fire 18U"));
+  });
+
+  it("treats Long Island and LI as the same club", () => {
+    expect(clubNameFrom("Long Island Rebels 14U White")).toBe(
+      clubNameFrom("LI Rebels 12u Blue"),
+    );
+    expect(clubNameFrom("Long Island Rage 10U")).toBe(
+      clubNameFrom("Long Island Rage 14U Carragher"),
+    );
+  });
+
+  it("ignores case, which Island's own data needs", () => {
+    expect(clubNameFrom("LI HEAT 14U RED")).toBe(clubNameFrom("LI Heat Black 14u"));
+  });
+
+  it("ignores a coach surname used as the team name", () => {
+    expect(clubNameFrom("LI Rebels 14U-Fisher")).toBe(
+      clubNameFrom("LI Rebels Iarocci"),
+    );
+  });
+
+  it("never returns empty, even when every word is a qualifier", () => {
+    // "Elite Premier" is all qualifier words. Returning "" would file every
+    // such team under one blank club, which is the wrong answer loudly.
+    expect(clubNameFrom("Elite Premier")).not.toBe("");
+    expect(clubNameFrom("Elite Futures")).not.toBe("");
+    expect(clubNameFrom("Elite Premier")).not.toBe(clubNameFrom("Elite Futures"));
+  });
+
+  it("keeps genuinely different clubs apart", () => {
+    const names = ["Attack", "Copiague Youth Leagues", "Sandlot Girls", "Waves 14U White"];
+    expect(new Set(names.map(clubNameFrom)).size).toBe(4);
+  });
+});
+
+describe("suggestClubs", () => {
+  const ISLAND = [
+    "Phoenix Fire 12u Black", "Phoenix Fire 12u Silver", "Phoenix Fire 14u Black",
+    "Phoenix Fire 14u Gray", "Phoenix Fire 14u Silver", "Phoenix Fire 16U",
+    "Phoenix Fire 18U", "LI Heat Black 14u", "LI HEAT 14U RED", "LI Heat Local 18U",
+    "LI Heat 12U", "Long Island Rebels 14U White", "LI Rebels 12u Blue",
+    "LI Rebels 14U-Fisher", "LI Rebels Iarocci", "Waves 14U White", "Waves 14U Blue",
+    "Attack", "Copiague Youth Leagues",
+  ].map((name, i) => ({ id: `t${i}`, name }));
+
+  it("finds the clubs that actually exist in Island's league", () => {
+    const s = suggestClubs(ISLAND);
+    const found = Object.fromEntries(s.map((c) => [c.club, c.teams.length]));
+    expect(found["Phoenix Fire"]).toBe(7);
+    expect(found["LI Heat"]).toBe(4);
+    expect(found["LI Rebels"]).toBe(4);
+    expect(found["Waves"]).toBe(2);
+  });
+
+  it("proposes nothing for a team that is the only one of its club", () => {
+    const s = suggestClubs(ISLAND);
+    const named = s.flatMap((c) => c.teams.map((t) => t.name));
+    expect(named).not.toContain("Attack");
+    expect(named).not.toContain("Copiague Youth Leagues");
+  });
+
+  it("never overwrites a club someone already typed", () => {
+    const s = suggestClubs([
+      { id: "a", name: "Phoenix Fire 12u Black", organization: "Phoenix" },
+      { id: "b", name: "Phoenix Fire 12u Silver" },
+    ]);
+    expect(s).toHaveLength(1);
+    expect(s[0]!.teams.map((t) => t.id)).toEqual(["b"]);
+  });
+
+  it("joins the spelling already in use rather than starting a rival one", () => {
+    // Matching is by name, so a second spelling separates nobody.
+    const s = suggestClubs([
+      { id: "a", name: "LI Rebels 12u Blue", organization: "Rebels of Long Island" },
+      { id: "b", name: "Long Island Rebels 14U White" },
+    ]);
+    expect(s[0]!.club).toBe("Rebels of Long Island");
+  });
+
+  it("suggests nothing when every team already has a club", () => {
+    expect(
+      suggestClubs([
+        { id: "a", name: "Phoenix Fire 12u Black", organization: "Phoenix Fire" },
+        { id: "b", name: "Phoenix Fire 12u Silver", organization: "Phoenix Fire" },
+      ]),
+    ).toEqual([]);
+  });
+
+  it("hands the scheduler something that actually keeps a club apart", () => {
+    // End to end: suggest, apply, then confirm no derby is drawn.
+    const teams = ISLAND.filter((t) => t.name.startsWith("Phoenix Fire 14u"))
+      .concat(ISLAND.filter((t) => t.name === "Attack" || t.name === "Waves 14U White"))
+      .concat([{ id: "z", name: "Copiague Youth Leagues" }]);
+    const org: Record<string, string> = {};
+    for (const c of suggestClubs(teams)) {
+      for (const t of c.teams) org[t.id] = c.club;
+    }
+    const r = buildTargetedRounds({
+      teamIds: teams.map((t) => t.id),
+      gamesPerTeam: 3,
+      orgOf: (id) => org[id] ?? "",
+    });
+    expect(r.sameOrg).toEqual([]);
+    expect([...r.gamesFor.values()].every((n) => n >= 3)).toBe(true);
   });
 });

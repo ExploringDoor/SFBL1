@@ -16,6 +16,7 @@ import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import {
   generateSchedule,
+  suggestClubs,
   summariseClubs,
   DAY_NAMES,
   weekdayOf,
@@ -976,6 +977,69 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
             </div>
           );
                 })()}
+
+        {/* SUGGEST, DO NOT DECIDE. The club field was blank on all 41 of
+            Island's teams a week before the season, because typing it 41 times
+            is why features like this go unused. The names already say it, so
+            this reads them. It only ever fills EMPTY fields, and it shows what
+            it will do first: a wrong guess that silently separated two teams
+            would be worse than the blank field, because nobody would know to
+            look. */}
+        {(() => {
+          const suggestions = suggestClubs(
+            teams.map((t) => ({
+              id: t.id,
+              name: t.name,
+              organization: teamCfg[t.id]?.organization ?? "",
+            })),
+          );
+          if (suggestions.length === 0) return null;
+          const n = suggestions.reduce((k, c) => k + c.teams.length, 0);
+          return (
+            <div
+              style={{
+                marginBottom: 12,
+                padding: "10px 12px",
+                borderRadius: 8,
+                border: "1px solid rgba(0,0,0,0.12)",
+                background: "rgba(0,0,0,0.02)",
+              }}
+            >
+              <p style={{ margin: "0 0 6px", fontSize: 12 }}>
+                <strong>{suggestions.length} clubs</strong> look like they have
+                more than one team here, covering {n} team{n === 1 ? "" : "s"}{" "}
+                with no club set:{" "}
+                {suggestions
+                  .map((c) => `${c.club} (${c.teams.length})`)
+                  .join(", ")}
+                .
+              </p>
+              <button
+                type="button"
+                style={BTN}
+                onClick={() => {
+                  setTeamCfg((cur) => {
+                    const next = { ...cur };
+                    for (const c of suggestions) {
+                      for (const t of c.teams) {
+                        next[t.id] = { ...(next[t.id] ?? {}), organization: c.club };
+                      }
+                    }
+                    return next;
+                  });
+                  setRulesSaved(false);
+                  reset();
+                }}
+              >
+                Fill these in
+              </button>
+              <span style={{ marginLeft: 8, fontSize: 12, color: "var(--muted)" }}>
+                Nothing you have already typed is changed. Check them below, then
+                save.
+              </span>
+            </div>
+          );
+        })()}
 
         <datalist id="sg-club-names">
           {[
