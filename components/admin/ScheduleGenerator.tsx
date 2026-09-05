@@ -16,6 +16,7 @@ import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import {
   generateSchedule,
+  summariseClubs,
   DAY_NAMES,
   weekdayOf,
   type GeneratedGame,
@@ -615,6 +616,15 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
               }}
             />
           </div>
+          {gamesPerWeek > 1 && gamesPerTeam > 0 && (
+            <div style={{ minWidth: 240, alignSelf: "flex-end" }}>
+              <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 8px" }}>
+                Those {gamesPerWeek} games are against{" "}
+                <strong>different opponents</strong>. Two games against the same
+                team would be a repeat, which this mode is built to avoid.
+              </p>
+            </div>
+          )}
           {gamesPerWeek > 1 && gamesPerTeam === 0 && (
             <div style={{ minWidth: 220 }}>
               <label style={LABEL}>Those games are against</label>
@@ -922,20 +932,10 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
             discoverable, and the count of teams in each is what makes a typo
             ("Fire" against "Fire Softball") visible as two clubs of one. */}
         {(() => {
-          const clubs = new Map<string, string[]>();
-          for (const t of teams) {
-            const c = (teamCfg[t.id]?.organization ?? "").trim();
-            if (!c) continue;
-            const k = c.toLowerCase();
-            clubs.set(k, [...(clubs.get(k) ?? []), t.name]);
-          }
-          const named = [...clubs.entries()].map(([k, v]) => ({
-            label:
-              (teams
-                .map((t) => (teamCfg[t.id]?.organization ?? "").trim())
-                .find((o) => o.toLowerCase() === k) ?? k),
-            teams: v,
-          }));
+          const named = summariseClubs(
+            teams.map((t) => ({ id: t.id, name: t.name })),
+            (id) => teamCfg[id]?.organization ?? "",
+          );
           if (named.length === 0) {
             return (
               <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 10px" }}>
@@ -946,28 +946,26 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
           }
           return (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
-              {named
-                .sort((a, b) => b.teams.length - a.teams.length)
-                .map((c) => (
-                  <span
-                    key={c.label}
-                    title={c.teams.join(", ")}
-                    style={{
-                      fontSize: 12,
-                      padding: "3px 9px",
-                      borderRadius: 999,
-                      border: "1px solid rgba(0,0,0,0.14)",
-                      // A club of one keeps nobody apart, and is nearly always
-                      // a spelling mismatch rather than a real single-team club.
-                      opacity: c.teams.length === 1 ? 0.55 : 1,
-                    }}
-                  >
-                    {c.label} · {c.teams.length}
-                  </span>
-                ))}
+              {named.map((c) => (
+                <span
+                  key={c.label}
+                  title={c.teams.join(", ")}
+                  style={{
+                    fontSize: 12,
+                    padding: "3px 9px",
+                    borderRadius: 999,
+                    border: "1px solid rgba(0,0,0,0.14)",
+                    // A club of one keeps nobody apart, and is nearly always a
+                    // second spelling rather than a real single-team club.
+                    opacity: c.teams.length === 1 ? 0.55 : 1,
+                  }}
+                >
+                  {c.label} · {c.teams.length}
+                </span>
+              ))}
             </div>
           );
-        })()}
+                })()}
 
         <datalist id="sg-club-names">
           {[

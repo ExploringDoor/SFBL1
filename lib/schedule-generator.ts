@@ -256,10 +256,13 @@ export function pairKeyOf(a: string, b: string): string {
   return [a, b].sort().join("|");
 }
 
-export function buildTargetedRounds(
+function buildTargetedRoundsOnce(
   opts: TargetedRoundsOptions,
+  /** Team order to start from. Changing it changes nothing about the rules,
+   *  only which of several equally legal schedules greedy finds. */
+  seedOrder: (ids: string[]) => string[],
 ): TargetedRoundsResult {
-  const ids = [...new Set(opts.teamIds.filter(Boolean))];
+  const ids = seedOrder([...new Set(opts.teamIds.filter(Boolean))]);
   const target = Math.max(0, Math.floor(opts.gamesPerTeam));
   const blocked = opts.blocked ?? new Set<string>();
   const orgOf = opts.orgOf ?? (() => "");
@@ -332,19 +335,76 @@ export function buildTargetedRounds(
         return best;
       };
 
-      // Prefer a partner who also still needs games; only then borrow someone
-      // already finished, which is what hands that team the extra game.
-      const b = pick(needy) ?? pick(ids);
-      if (!b) continue; // nobody legal this round; a later round may differ
+      // ONLY pair two teams that both still need games. Borrowing a finished
+      // team happens once, below, and deliberately NOT here: an odd number of
+      // needy teams is normal in most rounds, and borrowing every time one was
+      // left over handed the extra game to a different team each round. Teams
+      // finished two and three games above the target.
+      //
+      // Leaving the odd team out costs nothing. Outstanding need falls by
+      // exactly two per game, so it stays even when it started even and can
+      // never strand a lone team; when it started odd it ends at exactly one,
+      // which is the single extra game and the only time a borrow is right.
+      const b = pick(needy);
+      if (!b) continue; // no legal partner this round; a later round may differ
 
       used.add(a);
       used.add(b);
       round.push([a, b]);
     }
 
-    // No pairing was possible at all: everyone left is blocked against everyone
-    // else. Another identical round would not help, so stop and report.
-    if (round.length === 0) break;
+    // ── rescue ───────────────────────────────────────────────────────────
+    // Teams that found no legal partner this round. Usually there is at most
+    // one, and it simply waits. But two teams BLOCKED AGAINST EACH OTHER
+    // strand one another every round from here on, and both then have to
+    // borrow, so two teams finish with the extra game instead of one.
+    //
+    // They can nearly always be rescued by re-cutting a game already in this
+    // round: break (x, y) into (a, x) and (b, y). Same teams, one more game,
+    // two fewer stranded.
+    const leftover = needy.filter((id) => !used.has(id));
+    if (leftover.length >= 2 && round.length > 0) {
+      const legal = (x: string, y: string) => !blocked.has(pairKeyOf(x, y));
+      for (let i = 0; i < round.length && leftover.length >= 2; i++) {
+        const [x, y] = round[i]!;
+        const a = leftover[0]!;
+        const b = leftover[1]!;
+        if (legal(a, x) && legal(b, y)) {
+          round[i] = [a, x];
+          round.push([b, y]);
+        } else if (legal(a, y) && legal(b, x)) {
+          round[i] = [a, y];
+          round.push([b, x]);
+        } else {
+          continue;
+        }
+        leftover.splice(0, 2);
+      }
+    }
+
+    // Nothing could be paired needy-to-needy. Either one team is left needing a
+    // game (the odd total, and the expected case) or the survivors are blocked
+    // against each other. This is the ONE place a finished team is borrowed,
+    // and it is what hands out the single extra game.
+    if (round.length === 0) {
+      const a = needy[0]!;
+      let best: string | null = null;
+      let bestCost = Infinity;
+      for (const b of ids) {
+        if (b === a) continue;
+        // Never take someone already carrying the extra: that is how a team
+        // reached target + 2.
+        if ((gamesFor.get(b) ?? 0) > target) continue;
+        if (blocked.has(pairKeyOf(a, b))) continue;
+        const c = cost(a, b);
+        if (c < bestCost) {
+          bestCost = c;
+          best = b;
+        }
+      }
+      if (!best) break; // genuinely unpairable; reported as short below
+      round.push([a, best]);
+    }
 
     // ── repair pass ──────────────────────────────────────────────────────
     // Taking the cheapest partner for each team in turn is greedy, and greedy
@@ -932,11 +992,21 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
       .filter((t) => (placedFor.get(t.id) ?? 0) < gamesPerTeam)
       .map((t) => `${t.name} (${placedFor.get(t.id) ?? 0})`);
     if (shortNames.length > 0) {
+      // Two very different causes, and the wrong advice sends an admin off to
+      // add Sundays when the real problem is a block list that leaves a team
+      // with nobody legal to play. `short` comes from the pairing stage, before
+      // the calendar is involved, so it tells them apart exactly.
+      const pairingShort = (targetedResult?.short ?? []).length > 0;
       warnings.push(
         `${shortNames.length} team${shortNames.length === 1 ? "" : "s"} did not ` +
           `reach ${gamesPerTeam} games: ${shortNames.slice(0, 6).join(", ")}` +
-          `${shortNames.length > 6 ? ", …" : ""}. Add game days or another ` +
-          `field and start time, or lift a blocked matchup.`,
+          `${shortNames.length > 6 ? ", …" : ""}. ` +
+          (pairingShort
+            ? `There were not enough legal opponents to fill their games. ` +
+              `Lift a blocked matchup, or lower the games per team.`
+            : `The matchups exist but the calendar could not hold them. Add ` +
+              `game days, another field, or another start time, or extend the ` +
+              `end date.`),
       );
     }
     if (repeatMatchups.length > 0) {
@@ -1012,4 +1082,95 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
     everyPairPlayed,
     warnings,
   };
+}
+
+/**
+ * Build the rounds, best of a few deterministic starting orders.
+ *
+ * Greedy plus the repair passes lands on a perfect card for all but a handful
+ * of shapes (1,968 combinations of size, games, club layout and blocked pairs
+ * were checked; one was imperfect). The stragglers are not a rules problem,
+ * they are greedy committing early and finding no way back, so the cheapest
+ * real fix is to deal the teams in a different order and keep the better
+ * result. Four fixed orders, no randomness, so a rebuilt season is identical.
+ */
+export function buildTargetedRounds(
+  opts: TargetedRoundsOptions,
+): TargetedRoundsResult {
+  const target = Math.max(0, Math.floor(opts.gamesPerTeam));
+  const seeds: ((ids: string[]) => string[])[] = [
+    (ids) => ids,
+    (ids) => [...ids].reverse(),
+    // Deal the two halves alternately, which breaks up clubs that were entered
+    // next to each other, and rotate by one so a different team leads.
+    (ids) => {
+      const half = Math.ceil(ids.length / 2);
+      const out: string[] = [];
+      for (let i = 0; i < half; i++) {
+        out.push(ids[i]!);
+        if (ids[half + i]) out.push(ids[half + i]!);
+      }
+      return out;
+    },
+    (ids) => (ids.length > 1 ? [...ids.slice(1), ids[0]!] : ids),
+  ];
+
+  // Lower is better, in the same order of authority the pairing itself uses:
+  // a team left short is the worst outcome, then a club derby, then a rematch,
+  // and finally handing more than one team the extra game.
+  const score = (r: TargetedRoundsResult) => {
+    const counts = [...r.gamesFor.values()];
+    const extras = counts.filter((n) => n > target).length;
+    return (
+      r.short.length * 1_000_000 +
+      r.sameOrg.length * 10_000 +
+      r.repeats.length * 100 +
+      Math.max(0, extras - 1) * 10 +
+      Math.max(0, ...counts.map((n) => n - target - 1))
+    );
+  };
+
+  let best: TargetedRoundsResult | null = null;
+  let bestScore = Infinity;
+  for (const seed of seeds) {
+    const r = buildTargetedRoundsOnce(opts, seed);
+    const sc = score(r);
+    if (sc < bestScore) {
+      bestScore = sc;
+      best = r;
+      if (sc === 0) break; // cannot do better than a perfect card
+    }
+  }
+  return best!;
+}
+
+/**
+ * Group teams by club, exactly the way the pairing does.
+ *
+ * The admin shows these as chips so the setting is visible without expanding
+ * anything, and so a club showing ONE team reads as what it almost always is:
+ * the same club spelled two ways on two teams, keeping nobody apart.
+ *
+ * It shares `shareClub`'s matching rule (trimmed, case-insensitive) on purpose.
+ * A summary that grouped more loosely than the scheduler would quietly promise
+ * separation the schedule was never going to deliver.
+ */
+export function summariseClubs(
+  teams: { id: string; name: string }[],
+  organizationOf: (teamId: string) => string | null | undefined,
+): { label: string; teams: string[] }[] {
+  const groups = new Map<string, { label: string; teams: string[] }>();
+  for (const t of teams) {
+    const raw = String(organizationOf(t.id) ?? "").trim();
+    if (!raw) continue;
+    const key = raw.toLowerCase();
+    const g = groups.get(key);
+    if (g) g.teams.push(t.name);
+    // First spelling seen wins the label, so the chip shows something a human
+    // typed rather than a lowercased key.
+    else groups.set(key, { label: raw, teams: [t.name] });
+  }
+  return [...groups.values()].sort(
+    (a, b) => b.teams.length - a.teams.length || (a.label < b.label ? -1 : 1),
+  );
 }

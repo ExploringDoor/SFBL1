@@ -14,6 +14,7 @@ import {
   buildTargetedRounds,
   generateSchedule,
   pairKeyOf,
+  summariseClubs,
   type GeneratorTeam,
 } from "@/lib/schedule-generator";
 
@@ -268,5 +269,166 @@ describe("generateSchedule with gamesPerTeam", () => {
     expect(withOut.everyPairPlayed).toBe(true);
     expect(withOut.gamesPerTeamActual.length).toBe(4);
     expect(withOut.extraGameTeams).toEqual([]);
+  });
+});
+
+// ── invariants, swept across the shapes a league might have ──────────────
+// These found three real bugs that the hand-written cases above missed:
+// a finished team could be borrowed again and again, so several teams ended
+// two and three games ABOVE the target; two teams blocked against each other
+// stranded one another every round; and the extra game was handed out even
+// when the total divided evenly. Cheap to run, so it stays.
+
+describe("invariants across 1,000+ division shapes", () => {
+  const CLUB_SHAPES = [
+    { name: "no clubs", of: () => "" },
+    { name: "two clubs of two", of: (i: number) => (i < 4 ? `C${Math.floor(i / 2)}` : "") },
+    { name: "everyone in a club of three", of: (i: number) => `C${Math.floor(i / 3)}` },
+    { name: "half the field in one club", of: (i: number) => (i % 2 ? "Big" : "") },
+  ];
+
+  it("holds for every team count, game target, club layout and block list", () => {
+    const failures: string[] = [];
+    let checked = 0;
+
+    // Every small size exhaustively, plus a few big ones. Divisions are
+    // usually 8 to 16 teams; the large entries are there so a whole-league
+    // run cannot regress unnoticed.
+    const SIZES = [...Array.from({ length: 23 }, (_, i) => i + 2), 28, 34, 41];
+    for (const t of SIZES) {
+      for (let g = 1; g <= 10; g++) {
+        for (const shape of CLUB_SHAPES) {
+          const teamIds = Array.from({ length: t }, (_, i) => `t${i}`);
+          const orgOf = (id: string) => shape.of(Number(id.slice(1)));
+          const blocked =
+            t >= 4
+              ? new Set([pairKeyOf("t0", "t1"), pairKeyOf("t2", "t3")])
+              : new Set<string>();
+          const r = buildTargetedRounds({ teamIds, gamesPerTeam: g, orgOf, blocked });
+          checked++;
+          const where = `${t} teams x ${g} games, ${shape.name}`;
+          const counts = teamIds.map((id) => r.gamesFor.get(id) ?? 0);
+          const fail = (m: string) => failures.push(`${where}: ${m}`);
+
+          // A blocked pair is absolute, always, everywhere.
+          for (const round of r.rounds) {
+            for (const [a, b] of round) {
+              if (blocked.has(pairKeyOf(a, b))) fail("played a blocked pair");
+            }
+          }
+
+          // Nobody plays twice in one round, and nobody plays themselves.
+          for (const round of r.rounds) {
+            const seen = new Set<string>();
+            for (const [a, b] of round) {
+              if (a === b) fail("team paired with itself");
+              if (seen.has(a) || seen.has(b)) fail("team twice in one round");
+              seen.add(a);
+              seen.add(b);
+            }
+          }
+
+          // The reported counts match the rounds actually produced.
+          const tally = new Map<string, number>();
+          for (const round of r.rounds) {
+            for (const [a, b] of round) {
+              tally.set(a, (tally.get(a) ?? 0) + 1);
+              tally.set(b, (tally.get(b) ?? 0) + 1);
+            }
+          }
+          for (const id of teamIds) {
+            if ((tally.get(id) ?? 0) !== (r.gamesFor.get(id) ?? 0)) {
+              fail(`bookkeeping drift on ${id}`);
+            }
+          }
+
+          // Nobody is ever handed more than one extra game.
+          if (Math.max(...counts) > g + 1) fail(`a team reached ${Math.max(...counts)}`);
+
+          // With no blocks in the way the count is exact: everyone reaches the
+          // target, and the extra game appears only when the total is odd.
+          if (blocked.size === 0) {
+            if (Math.min(...counts) < g) fail(`a team finished on ${Math.min(...counts)}`);
+            const extras = counts.filter((n) => n === g + 1).length;
+            const expected = (t * g) % 2 === 1 ? 1 : 0;
+            if (extras !== expected) fail(`${extras} extras, expected ${expected}`);
+          }
+        }
+      }
+    }
+
+    expect(checked).toBeGreaterThan(1000);
+    expect(failures.slice(0, 10)).toEqual([]);
+  });
+});
+
+// ── the club chips ───────────────────────────────────────────────────────
+// The point of showing these is that a typo is INVISIBLE otherwise: matching
+// is by name, so "Fire" against "Fire Softball" silently stops keeping two
+// teams apart, and the only clue is a club showing one team. So the summary
+// has to group exactly the way the pairing does, or the chips lie.
+
+describe("summariseClubs", () => {
+  const teams = [
+    { id: "1", name: "Thunder 12U" },
+    { id: "2", name: "Thunder 14U" },
+    { id: "3", name: "Rays" },
+    { id: "4", name: "Bolts" },
+  ];
+
+  it("groups teams that share a club", () => {
+    const out = summariseClubs(teams, (id) =>
+      id === "1" || id === "2" ? "Thunder" : "",
+    );
+    expect(out).toEqual([{ label: "Thunder", teams: ["Thunder 12U", "Thunder 14U"] }]);
+  });
+
+  it("ignores case and padding, exactly as the pairing does", () => {
+    const out = summariseClubs(teams, (id) =>
+      id === "1" ? "  Thunder " : id === "2" ? "THUNDER" : "",
+    );
+    expect(out).toHaveLength(1);
+    expect(out[0]!.teams).toHaveLength(2);
+  });
+
+  it("shows a misspelling as two clubs of one, which is the whole point", () => {
+    const out = summariseClubs(teams, (id) =>
+      id === "1" ? "Thunder" : id === "2" ? "Thunder Softball" : "",
+    );
+    expect(out.map((c) => c.teams.length)).toEqual([1, 1]);
+  });
+
+  it("keeps the spelling a human typed rather than a lowercased key", () => {
+    const out = summariseClubs(teams, (id) => (id === "1" ? "Long Island Thunder" : ""));
+    expect(out[0]!.label).toBe("Long Island Thunder");
+  });
+
+  it("skips teams with no club, and returns nothing when none are set", () => {
+    expect(summariseClubs(teams, () => "")).toEqual([]);
+    expect(summariseClubs(teams, () => null)).toEqual([]);
+    expect(summariseClubs(teams, () => undefined)).toEqual([]);
+  });
+
+  it("puts the biggest club first, then alphabetical, so the order is stable", () => {
+    const out = summariseClubs(teams, (id) =>
+      id === "1" || id === "2" ? "Zebras" : id === "3" ? "Apples" : "Bears",
+    );
+    expect(out.map((c) => c.label)).toEqual(["Zebras", "Apples", "Bears"]);
+  });
+
+  it("agrees with the pairing: a club it shows as 2 really is kept apart", () => {
+    const org: Record<string, string> = { a: "Fire", b: "  fire  ", c: "", d: "" };
+    const summary = summariseClubs(
+      ["a", "b", "c", "d"].map((id) => ({ id, name: id })),
+      (id) => org[id] ?? "",
+    );
+    expect(summary[0]!.teams).toHaveLength(2);
+    // and the scheduler treats them as one club too
+    const r = buildTargetedRounds({
+      teamIds: ["a", "b", "c", "d"],
+      gamesPerTeam: 2,
+      orgOf: (id) => org[id] ?? "",
+    });
+    expect(r.sameOrg).toEqual([]);
   });
 });
