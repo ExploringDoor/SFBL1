@@ -622,7 +622,72 @@ const WINDMILL_FIELDS: FormField[] = [
   },
 ];
 
+// United Coed Softball League (UCSL) — adult 21+ coed slowpitch. Whole teams
+// register with a captain + (optional) roster. Reuses the shared required
+// field names (manager_first_name/last, email, phone, team_name,
+// agreed_to_terms) so no server-side REQUIRED change is needed — they're just
+// relabelled "Captain". `roster` is the one new field (whitelisted in
+// app/api/league-form/route.ts). Isolated to this tenant; no other league is
+// affected.
+const UCSL_FIELDS: FormField[] = [
+  {
+    name: "team_name",
+    label: "Team Name",
+    type: "text",
+    required: true,
+    placeholder: "Or write \"Undetermined\"",
+    width: "half",
+  },
+  {
+    name: "division",
+    label: "Preferred Division (if known)",
+    type: "select",
+    width: "half",
+    help: "Skill-based. The commissioner confirms final placement.",
+    options: [
+      { value: "gold", label: "Gold" },
+      { value: "silver", label: "Silver" },
+      { value: "bronze", label: "Bronze" },
+      { value: "unsure", label: "Unsure — place us" },
+    ],
+  },
+  { name: "manager_first_name", label: "Captain First Name", type: "text", required: true, width: "half" },
+  { name: "manager_last_name", label: "Captain Last Name", type: "text", required: true, width: "half" },
+  { name: "phone", label: "Captain Cell Phone", type: "tel", required: true, width: "half" },
+  { name: "email", label: "Captain Email", type: "email", required: true, width: "half" },
+  {
+    name: "roster",
+    label: "Team Roster",
+    type: "textarea",
+    width: "full",
+    help:
+      "Optional — one player per line: Name, Phone, Email, M/F, Age (e.g. \"Jane Doe, 203-555-1234, jane@email.com, F, 27\"). You can add or update players later; a full roster isn't required to register.",
+  },
+  { name: "notes", label: "Anything else we should know?", type: "textarea", width: "full" },
+  {
+    name: "agreed_to_terms",
+    label:
+      "I confirm every player on our team is 21 or older and will sign the league's Waiver & Release of Liability before playing, and I accept UCSL's rules.",
+    type: "checkbox",
+    required: true,
+    width: "full",
+  },
+];
+
 function content(tenantId: string) {
+  if (tenantId === "ucsl") {
+    return {
+      fields: UCSL_FIELDS,
+      description: "Register your team for the United Coed Softball League.",
+      intro: [
+        "Complete one form per team. It captures your team name, captain contact, and (optionally) your player roster so the commissioner can place your team and follow up about the schedule.",
+        "United Coed Softball League is an adult 21+ coed recreational league. Every player must be 21 or older and must sign the league's Waiver & Release of Liability before playing — the full waiver is on the Team Waiver page.",
+      ],
+      successMessage:
+        "Thanks! Your team is registered. The commissioner will follow up about division placement, the schedule, and any fees. Please also have every player sign the Team Waiver before the first game.",
+      footer: null,
+    };
+  }
   if (tenantId === "windmill") {
     return {
       fields: WINDMILL_FIELDS,
@@ -721,11 +786,16 @@ function content(tenantId: string) {
         // at the field. Kept in the intro so nobody registers without seeing
         // the number, since payment is handled off-site.
         "League fees are $795 per team ($500 for 8U Weekend), plus umpire fees paid at the field. Teams using their own home field for at least half their games may qualify for a $200 discount. Fees must be paid in full before the season begins.",
-        // What actually happens next, in order. The site now creates the team
-        // and emails a sign-in code the moment this is submitted, and a coach
-        // who is not told that either misses the email or does not know what
-        // the five digits are for (Adam, 2026-08-12).
-        "As soon as you submit, your team appears on the site and we email you a five digit coach sign-in code. That code is how you get into your team page to submit scores, manage your roster and attendance, and upload your team logo. There is no account to create and no password to remember. Keep the code to your coaching staff \u2014 anyone who has it can enter scores for your team.",
+        // The sign-in code paragraph used to sit here. Mike asked for it off on
+        // 2026-09-06 so he can tell coaches himself: reading it on his own
+        // registration page, he took "we email you a code" as something HE had
+        // to do for all 41 teams, and went looking for the button.
+        //
+        // The code still goes out automatically on submit; nothing about the
+        // behaviour changed, only what the page says about it. Removing it does
+        // re-open the reason it was added (Adam, 2026-08-12): a coach who is
+        // not told either misses the email or does not know what five digits
+        // are for. The email itself explains it, and Mike is telling them.
         "You can pay by card or Venmo on the next screen, or choose to pay later. Rosters must be on USSSA.",
       ],
       successMessage:
