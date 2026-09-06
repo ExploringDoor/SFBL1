@@ -168,3 +168,22 @@
   color: var(--muted);
   text-decoration: none;
 }
+
+/* How to actually get one. Sits under the grid, and matters most while there
+   is no Buy button: a product with a price and no next step is a dead end. */
+.str-howto {
+  margin: 22px 0 0;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-body);
+  max-width: 680px;
+}
+
+.str-howto-link {
+  font-weight: 800;
+  color: var(--brand-accent, #35afea);
+  white-space: nowrap;
+}

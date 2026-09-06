@@ -152,6 +152,19 @@ export default async function StorePage() {
               );
             })}
           </div>
+          {/* HOW TO ACTUALLY GET ONE. `note` used to render only in the
+              coming-soon state, so the moment real items existed the page
+              showed a product, a price and no way to buy it, which is a worse
+              dead end than the empty state it replaced. It belongs under the
+              grid, and it belongs there whether or not there is a Buy button. */}
+          {data?.note && (
+            <p className="str-howto">
+              {data.note}{" "}
+              <Link href="/contact" className="str-howto-link">
+                Contact the league »
+              </Link>
+            </p>
+          )}
         </>
       ) : (
         <section className="str-soon">
