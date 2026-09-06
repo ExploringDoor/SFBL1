@@ -144,6 +144,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
   const [scheduleHidden, setScheduleHidden] = useState<boolean | null>(null);
   const [hiddenNote, setHiddenNote] = useState("");
   const [releaseNote, setReleaseNote] = useState("");
+  const [splitDivision, setSplitDivision] = useState("");
   const [dropTeam, setDropTeam] = useState("");
   const [dropPlan, setDropPlan] = useState<{
     wouldRemove: number;
@@ -487,6 +488,63 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
   // DRY RUN FIRST, ALWAYS. Deleting part of a live schedule on a mis-click is
   // not a recoverable mistake, so the admin sees the damage before agreeing to
   // it. The endpoint also defaults to a dry run, so a missing flag is safe.
+  // Move the teams already ticked above into a division, in one write.
+  //
+  // Kaitlin, 2026-09-06: "For 14u weeknight I have 16 teams and I need to break
+  // them up into 2 divisions." The Teams tab could already do it, sixteen times,
+  // one team and one save each. Reusing the selection she has just made turns
+  // that into: tick eight, name it, apply, tick the rest, name it, apply.
+  //
+  // One write also means all sixteen agree on the SPELLING, which matters more
+  // than it sounds: division is a plain string and the generator, the standings
+  // grouping and the public filters all match it exactly, so "14U American" and
+  // "14U american" would be two divisions of eight.
+  async function applyDivision() {
+    const name = splitDivision.trim();
+    if (!name) return setError("Type a division name first.");
+    if (picked.size === 0) return setError("Tick the teams that go in it first.");
+    if (
+      !window.confirm(
+        `Put ${picked.size} team${picked.size === 1 ? "" : "s"} into "${name}"?\n\n` +
+          `This changes the division on the team itself, so it also changes the ` +
+          `standings and the public filters.`,
+      )
+    ) {
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch("/api/admin-team", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          leagueId,
+          action: "set_division",
+          teamIds: [...picked],
+          division: name,
+        }),
+      });
+      const d = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        moved?: number;
+      };
+      if (!res.ok) throw new Error(d.error ?? `HTTP ${res.status}`);
+      setDone(
+        `Moved ${d.moved} teams into "${name}". Reload to see it in the filters.`,
+      );
+      setSplitDivision("");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not move those teams");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function planDrop(teamId: string) {
     if (!teamId) return;
     setBusy(true);
@@ -707,6 +765,42 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
               {t.name}
             </button>
           ))}
+        </div>
+
+        {/* SPLIT AN AGE GROUP INTO DIVISIONS, using the ticks above.
+            Sixteen 14U teams is too many for one table and too many for a
+            sensible card, and doing it a team at a time in the Teams tab is
+            why it does not get done. */}
+        <div
+          style={{
+            marginTop: 14,
+            paddingTop: 12,
+            borderTop: "1px solid rgba(0,0,0,0.08)",
+          }}
+        >
+          <label style={LABEL}>Split these into divisions</label>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            <input
+              style={{ ...INPUT, minWidth: 220, flex: 1 }}
+              placeholder="Division name, e.g. 14U American"
+              value={splitDivision}
+              maxLength={80}
+              onChange={(e) => setSplitDivision(e.target.value)}
+            />
+            <button
+              type="button"
+              style={BTN}
+              disabled={busy || picked.size === 0 || !splitDivision.trim()}
+              onClick={applyDivision}
+            >
+              Put the {picked.size} ticked team{picked.size === 1 ? "" : "s"} in it
+            </button>
+          </div>
+          <p style={{ fontSize: 11, color: "var(--muted)", margin: "4px 0 0" }}>
+            Tick half the teams, name the division, apply. Then tick the rest and
+            do the other one. Standings and the public filters follow the same
+            names.
+          </p>
         </div>
       </div>
 

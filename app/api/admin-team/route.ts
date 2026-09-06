@@ -100,9 +100,14 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
-  if (action !== "create" && action !== "update" && action !== "delete") {
+  if (
+    action !== "create" &&
+    action !== "update" &&
+    action !== "delete" &&
+    action !== "set_division"
+  ) {
     return NextResponse.json(
-      { error: "action must be one of create | update | delete" },
+      { error: "action must be one of create | update | delete | set_division" },
       { status: 400 },
     );
   }
@@ -133,6 +138,83 @@ export async function POST(req: Request) {
 
   const db = getAdminDb();
   const ref = db.doc(`leagues/${leagueId}/teams/${teamId}`);
+
+  // ---- put a group of teams into a division ------------------------------
+  // Kaitlin, 2026-09-06: "For 14u weeknight I have 16 teams and I need to break
+  // them up into 2 divisions."
+  //
+  // She could already do this: the Teams tab has a division picker with a
+  // "+ New division" option. Sixteen times, one team at a time, each a separate
+  // save. That is not a missing feature so much as a missing verb, and the
+  // reason nobody splits a division until it is painful.
+  //
+  // Division is a plain string and the schedule generator, the standings
+  // grouping and the public filters all match on it exactly, so setting it in
+  // ONE write for a whole group is also the only way to be sure all sixteen
+  // agree on the spelling.
+  if (action === "set_division") {
+    const ids = Array.isArray((body as { teamIds?: unknown }).teamIds)
+      ? ((body as { teamIds: unknown[] }).teamIds
+          .map((v) => String(v ?? ""))
+          .filter((v) => /^[A-Za-z0-9_-]{1,128}$/.test(v)))
+      : [];
+    const division = String((body as { division?: unknown }).division ?? "")
+      .trim()
+      .slice(0, 80);
+    if (ids.length === 0) {
+      return NextResponse.json({ error: "pick at least one team" }, { status: 400 });
+    }
+    if (ids.length > 200) {
+      return NextResponse.json({ error: "too many teams at once" }, { status: 400 });
+    }
+    if (!division) {
+      return NextResponse.json(
+        { error: "a division name is required" },
+        { status: 400 },
+      );
+    }
+
+    const refs = ids.map((id) => db.doc(`leagues/${leagueId}/teams/${id}`));
+    const snaps = await db.getAll(...refs);
+    const found = snaps.filter((sn) => sn.exists);
+    if (found.length === 0) {
+      return NextResponse.json({ error: "none of those teams exist" }, { status: 404 });
+    }
+    const previous = [
+      ...new Set(found.map((sn) => String(sn.data()?.division ?? "")).filter(Boolean)),
+    ];
+
+    const batch = db.batch();
+    for (const sn of found) {
+      batch.update(sn.ref, {
+        division,
+        updated_at: new Date().toISOString(),
+        updated_by_uid: decoded.uid,
+      });
+    }
+    await batch.commit();
+
+    try {
+      await db.collection(`leagues/${leagueId}/audit`).add({
+        kind: "set_team_division",
+        by_uid: decoded.uid,
+        division,
+        teams: found.length,
+        previous,
+        at: new Date().toISOString(),
+      });
+    } catch {
+      /* never fail the move over the audit row */
+    }
+
+    return NextResponse.json({
+      ok: true,
+      moved: found.length,
+      division,
+      previous,
+      missing: ids.length - found.length,
+    });
+  }
 
   if (action === "delete") {
     // FULL ADMIN ONLY, even though the rest of this route is scoped.

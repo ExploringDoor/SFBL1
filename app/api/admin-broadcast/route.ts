@@ -24,8 +24,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-/** Where a contact came from. "coaches" = the head coach on a team
- *  registration (the list that grows on its own as teams sign up);
+/** Where a contact came from. "coaches" = the coaches on a team registration,
+ *  head AND assistant (the list that grows on its own as teams sign up);
  *  "subscribers" = the public Alerts sign-up form. */
 type Source = "coaches" | "subscribers" | "all";
 
@@ -39,6 +39,8 @@ interface Contact {
   ageGroup: string | null;
   notifyBy: string;
   source: "coaches" | "subscribers";
+  /** Only on coach rows, so the compose screen can label who is who. */
+  role?: "head" | "assistant";
 }
 
 function esc(s: unknown): string {
@@ -85,19 +87,63 @@ async function loadContacts(
   for (const d of coaches?.docs ?? []) {
     const x = d.data();
     if (!isSendable(x)) continue;
-    out.push({
-      id: `coach:${d.id}`,
-      name: [x.manager_first_name, x.manager_last_name]
+    const teamName = typeof x.team_name === "string" ? x.team_name.trim() : "";
+    const ageGroup = typeof x.age_group === "string" ? x.age_group : null;
+    const nameOf = (first: unknown, last: unknown) =>
+      [first, last]
         .map((v) => (typeof v === "string" ? v.trim() : ""))
         .filter(Boolean)
-        .join(" "),
-      teamName: typeof x.team_name === "string" ? x.team_name.trim() : "",
+        .join(" ");
+
+    out.push({
+      id: `coach:${d.id}`,
+      name: nameOf(x.manager_first_name, x.manager_last_name),
+      teamName,
       email: typeof x.email === "string" ? x.email.trim() : null,
       phone: typeof x.phone === "string" ? x.phone.trim() : null,
-      ageGroup: typeof x.age_group === "string" ? x.age_group : null,
+      ageGroup,
       notifyBy: "both",
       source: "coaches",
+      role: "head",
     });
+
+    // THE ASSISTANT COACH. Mike, 2026-09-06: "how do I send message to the
+    // coach and asst coach? Head coach getting the message but not asst
+    // coach." The registration has asked for their email and phone all along,
+    // required on Island, and this list simply never read them: 64 of 79
+    // assistants were on file and none had ever been sent anything.
+    //
+    // They are a SEPARATE contact rather than extra addresses on the head
+    // coach, so the compose screen can show them, count them, and let the
+    // office untick one.
+    const asstEmail = typeof x.asst_email === "string" ? x.asst_email.trim() : "";
+    const asstPhone = typeof x.asst_phone === "string" ? x.asst_phone.trim() : "";
+    const headEmail = typeof x.email === "string" ? x.email.trim() : "";
+    const headPhone = typeof x.phone === "string" ? x.phone.trim() : "";
+    // MOST ASSISTANTS ARE NOT A SECOND PERSON. On Island 39 of 64 registrations
+    // put the head coach's own address in the assistant box. Listing that as a
+    // second recipient makes the compose screen claim an audience twice the
+    // size of the one that exists, and the office would untick rows all day.
+    // Only skip when BOTH channels repeat: a shared mailbox with a different
+    // mobile is still a person worth texting.
+    const sameEmail =
+      !!asstEmail && asstEmail.toLowerCase() === headEmail.toLowerCase();
+    const samePhone =
+      !asstPhone || (toE164US(asstPhone) ?? asstPhone) === (toE164US(headPhone) ?? headPhone);
+    const duplicateOfHead = sameEmail && samePhone;
+    if ((asstEmail || asstPhone) && !duplicateOfHead) {
+      out.push({
+        id: `asst:${d.id}`,
+        name: nameOf(x.asst_first_name, x.asst_last_name),
+        teamName,
+        email: asstEmail || null,
+        phone: asstPhone || null,
+        ageGroup,
+        notifyBy: "both",
+        source: "coaches",
+        role: "assistant",
+      });
+    }
   }
 
   // Public Alerts sign-ups (parents, fans). The form asks how they want to be
@@ -157,13 +203,21 @@ function audience(
   const emails = inScope
     .filter((c) => c.email && c.notifyBy !== "text")
     .map((c) => c.email!);
-  const phones = inScope
-    .filter((c) => c.phone && (c.notifyBy === "text" || c.notifyBy === "both"))
-    .map((c) => c.phone!)
-    .filter((p) => toE164US(p));
+  // Dedupe on the DIALLED number, not the typed one. The set below used the
+  // raw string, so "631-555-1234" and "(631) 555-1234" were two recipients and
+  // one person got two texts. It mattered little while every number came from
+  // a different coach; it matters now that assistants are on the list and
+  // often share a phone with their head coach, typed differently.
+  const dialled = new Map<string, string>();
+  for (const c of inScope) {
+    if (!c.phone || !(c.notifyBy === "text" || c.notifyBy === "both")) continue;
+    const e164 = toE164US(c.phone);
+    if (!e164) continue;
+    if (!dialled.has(e164)) dialled.set(e164, c.phone);
+  }
   return {
     emails: [...new Set(emails.map((e) => e.toLowerCase()))],
-    phones: [...new Set(phones)],
+    phones: [...dialled.values()],
   };
 }
 
