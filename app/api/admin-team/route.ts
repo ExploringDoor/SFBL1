@@ -126,7 +126,10 @@ export async function POST(req: Request) {
   }
 
   const teamId = body.teamId;
-  if (typeof teamId !== "string" || !TEAM_ID_RE.test(teamId)) {
+  // set_division works on a LIST (`teamIds`), so it must not be held to the
+  // single-id check below. Its own branch validates every id in the list. This
+  // gate sat above every action and quietly refused the whole feature.
+  if (action !== "set_division" && (typeof teamId !== "string" || !TEAM_ID_RE.test(teamId))) {
     return NextResponse.json(
       {
         error:
@@ -137,7 +140,6 @@ export async function POST(req: Request) {
   }
 
   const db = getAdminDb();
-  const ref = db.doc(`leagues/${leagueId}/teams/${teamId}`);
 
   // ---- put a group of teams into a division ------------------------------
   // Kaitlin, 2026-09-06: "For 14u weeknight I have 16 teams and I need to break
@@ -215,6 +217,9 @@ export async function POST(req: Request) {
       missing: ids.length - found.length,
     });
   }
+
+
+  const ref = db.doc(`leagues/${leagueId}/teams/${teamId}`);
 
   if (action === "delete") {
     // FULL ADMIN ONLY, even though the rest of this route is scoped.
