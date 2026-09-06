@@ -21,6 +21,7 @@ import type { PublicLeagueConfig } from "@/lib/tenants";
 import { IslandSlate } from "./IslandSlate";
 import { loadTournamentLogos } from "@/lib/tournament-logos";
 import "./island-tournaments.css";
+import { ScheduleReleaseNote } from "@/components/ui/ScheduleReleaseNote";
 
 export const dynamic = "force-dynamic";
 
@@ -117,6 +118,7 @@ function EventsView({
           }}
         />
       )}
+      <ScheduleReleaseNote note={releaseNote} />
       <header className="mb-8">
         {!hideTitle && (
           <>
@@ -142,27 +144,6 @@ function EventsView({
           {intro ??
             "Tap an event to register or get details."}
         </p>
-        {/* WHEN THE SCHEDULE COMES OUT. The most common question a tournament
-            gets, and it is answered here rather than in the homepage banner:
-            a banner is for a one-off, it stops being read within a fortnight,
-            and the one slot is needed for rainouts. Editable in the admin, so
-            "Tuesday" can become "Wednesday" without me. */}
-        {releaseNote && (
-          <p
-            style={{
-              marginTop: 14,
-              padding: "10px 14px",
-              borderRadius: 10,
-              borderLeft: "4px solid var(--brand-primary)",
-              background: "var(--surface-2, rgba(0,0,0,0.03))",
-              maxWidth: 680,
-              fontWeight: 600,
-              lineHeight: 1.5,
-            }}
-          >
-            {releaseNote}
-          </p>
-        )}
       </header>
 
       <div
