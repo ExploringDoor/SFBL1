@@ -1,4 +1,5 @@
 import { COYBL_TOURNAMENTS, tournamentFeeFor } from "@/lib/coybl-tournaments";
+import ISLAND_MERCH from "@/app/store/island-merch.json";
 // Fee and surcharge rules. No network, no crypto, no server-only imports —
 // this is imported by CLIENT components (the admin's manual payment recorder)
 // as well as by the API routes, and lib/square.ts pulls in node:crypto, which
@@ -125,6 +126,24 @@ export function feeFor(
       dozens * BASEBALL_PRICE_PER_DOZEN +
       (ship ? dozens * BASEBALL_SHIPPING_PER_DOZEN : 0)
     );
+  }
+
+  // League store. The price comes from the SAME catalogue the store page reads
+  // and the order route validated against, so the number on the shirt, the
+  // number in the order row and the number on the card cannot drift apart.
+  //
+  // Reads the saved order rather than the catalogue's own quantity, because the
+  // order is what was actually reserved and stock has already moved for it.
+  if (kind === "merch_order") {
+    const item = (ISLAND_MERCH.items ?? []).find(
+      (i) => i.id === String(data.item_id ?? ""),
+    );
+    const qty = Math.floor(Number(data.quantity ?? 0));
+    // Zero for anything unrecognised rather than a guess. square-pay refuses a
+    // zero fee, which is the right outcome: charging a price nobody published
+    // is worse than declining to charge.
+    if (!item || !Number.isFinite(qty) || qty < 1) return 0;
+    return item.price * qty;
   }
 
   if (leagueId === "island") {

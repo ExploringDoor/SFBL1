@@ -42,6 +42,7 @@ export async function POST(req: Request) {
     // COYBL takes card for its own tournaments and its baseball orders.
     "tournament_registration",
     "baseball_order",
+    "merch_order",
   ]);
   const kind =
     typeof (body as { kind?: unknown }).kind === "string" &&

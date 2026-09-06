@@ -91,6 +91,9 @@ export async function POST(req: Request) {
     // COYBL takes card for its own tournaments and its baseball orders.
     "tournament_registration",
     "baseball_order",
+    // Island's store. Priced in feeFor from the checked-in catalogue, so the
+    // browser cannot influence the amount.
+    "merch_order",
   ]);
   const kind =
     typeof body.kind === "string" && PAYABLE_KINDS.has(body.kind)

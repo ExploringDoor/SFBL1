@@ -31,7 +31,8 @@ type Kind =
   | "alerts_signup"
   | "umpire_registration"
   | "tournament_registration"
-  | "baseball_order";
+  | "baseball_order"
+  | "merch_order";
 
 const KIND_TABS: { key: Kind; label: string }[] = [
   { key: "player_registration", label: "Player registration" },
@@ -51,6 +52,9 @@ const KIND_TABS: { key: Kind; label: string }[] = [
   { key: "umpire_registration", label: "Umpire registration" },
   { key: "tournament_registration", label: "Tournament entries" },
   { key: "baseball_order", label: "Baseball orders" },
+  // Island's store. Orders land here with the size, the quantity and how the
+  // buyer said they would pay, which is the list Mike works from at the field.
+  { key: "merch_order", label: "Store orders" },
 ];
 
 // The College Clinic is one league's event, not a capability every league has.
@@ -64,6 +68,7 @@ const TENANT_ONLY_KINDS: Partial<Record<Kind, string>> = {
   umpire_registration: "coybl",
   tournament_registration: "coybl",
   baseball_order: "coybl",
+  merch_order: "island",
 };
 
 function kindTabsFor(leagueId: string) {

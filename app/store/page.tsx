@@ -18,36 +18,20 @@ import { headers } from "next/headers";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import merch from "./island-merch.json";
 import "./store.css";
+import { getAdminDb } from "@/lib/firebase-admin";
+import { OrderForm } from "./OrderForm";
+import { stockFor, type MerchItem } from "@/lib/merch";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = { title: "Store" };
-
-interface StoreItem {
-  name: string;
-  price?: string;
-  /** Free-text size line, for an item with no counts to track. */
-  sizes?: string;
-  image?: string;
-  url?: string;
-  detail?: string;
-  /**
-   * What is left, per size.
-   *
-   * Shown rather than hidden because of the actual numbers: sixty smalls and
-   * FIVE larges. A plain "S M L XL" line sells the same five larges to
-   * everyone who reads it, and the person who drives to a field for one is the
-   * one who remembers the league badly.
-   */
-  stock?: { size: string; count: number }[];
-}
 
 interface StoreData {
   headline: string;
   blurb: string;
   note?: string;
   buy_url?: string | null;
-  items: StoreItem[];
+  items: MerchItem[];
 }
 
 export default async function StorePage() {
@@ -66,8 +50,20 @@ export default async function StorePage() {
   // Only Island has a store today. Another tenant reaching this route gets the
   // neutral empty state rather than Island's copy.
   const data: StoreData | null =
-    tenantId === "island" ? (merch as StoreData) : null;
+    tenantId === "island" ? (merch as unknown as StoreData) : null;
   const items = data?.items ?? [];
+
+  // LIVE stock, and the handles people send Venmo and Zelle to. Both live in
+  // Firestore rather than in the checked-in file: one changes every time a
+  // shirt sells, the other is Mike's to set without waiting on a deploy.
+  const [stockDoc, payDoc] = items.length
+    ? await Promise.all([
+        getAdminDb().doc(`leagues/${tenantId}/site_config/merch_stock`).get(),
+        getAdminDb().doc(`leagues/${tenantId}/site_config/merch_pay`).get(),
+      ]).catch(() => [null, null] as const)
+    : ([null, null] as const);
+  const live = (stockDoc?.data() ?? null) as Record<string, unknown> | null;
+  const pay = (payDoc?.data() ?? {}) as { venmo?: string; zelle?: string };
   const leagueName = config?.name ?? "the league";
 
   return (
@@ -92,62 +88,28 @@ export default async function StorePage() {
         <>
           {data?.blurb && <p className="str-intro">{data.blurb}</p>}
           <div className="str-grid">
-            {items.map((item, i) => {
-              const href = item.url ?? data?.buy_url ?? null;
+            {items.map((item) => {
+              const sizes = stockFor(item, live);
               return (
-                <article key={`${item.name}-${i}`} className="str-card">
+                <article key={item.id} className="str-card">
                   {item.image && (
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img src={item.image} alt={item.name} className="str-img" />
                   )}
                   <h2 className="str-name">{item.name}</h2>
                   <div className="str-meta">
-                    {item.price && <span className="str-price">{item.price}</span>}
-                    {item.sizes && <span className="str-sizes">{item.sizes}</span>}
+                    <span className="str-price">${item.price}</span>
                   </div>
                   {item.detail && <p className="str-detail">{item.detail}</p>}
-                  {item.stock && item.stock.length > 0 && (
-                    <div className="str-stock" aria-label="Sizes available">
-                      {item.stock.map((s) => {
-                        const out = s.count <= 0;
-                        // "Only 3 left" is worth saying and "only 47 left" is
-                        // not, so the count shows when it is genuinely short.
-                        const low = !out && s.count <= 6;
-                        return (
-                          <span
-                            key={s.size}
-                            className={
-                              "str-size" +
-                              (out ? " is-out" : "") +
-                              (low ? " is-low" : "")
-                            }
-                            title={
-                              out
-                                ? `${s.size} is sold out`
-                                : `${s.count} left in ${s.size}`
-                            }
-                          >
-                            {s.size}
-                            {out ? (
-                              <em>sold out</em>
-                            ) : low ? (
-                              <em>{s.count} left</em>
-                            ) : null}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  )}
-                  {href && (
-                    <a
-                      className="str-buy"
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Buy
-                    </a>
-                  )}
+                  <OrderForm
+                    leagueId={tenantId ?? ""}
+                    itemId={item.id}
+                    itemName={item.name}
+                    price={item.price}
+                    stock={sizes}
+                    {...(pay.venmo ? { venmo: pay.venmo } : {})}
+                    {...(pay.zelle ? { zelle: pay.zelle } : {})}
+                  />
                 </article>
               );
             })}

@@ -187,3 +187,60 @@
   color: var(--brand-accent, #35afea);
   white-space: nowrap;
 }
+
+/* ---- ordering ----------------------------------------------------------- */
+.str-form { margin-top: 14px; display: grid; gap: 12px; }
+.str-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.str-field { display: grid; gap: 4px; flex: 1; min-width: 130px; }
+.str-label {
+  font-size: 11px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--muted);
+}
+.str-input {
+  width: 100%; padding: 9px 10px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--card, transparent);
+  color: var(--text-strong); font-size: 14px;
+}
+.str-sizepick { display: flex; flex-wrap: wrap; gap: 6px; }
+.str-sizebtn {
+  display: inline-flex; align-items: baseline; gap: 5px;
+  padding: 8px 13px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--text-strong); font-size: 14px; font-weight: 800;
+}
+.str-sizebtn.is-on {
+  border-color: var(--brand-accent, #35afea);
+  background: var(--brand-accent, #35afea);
+  color: color-mix(in srgb, var(--brand-accent, #35afea) 22%, #000);
+}
+/* Sold out is SHOWN, struck through, not removed. A size that vanishes reads
+   as a broken site; a size struck through reads as "you are too late". */
+.str-sizebtn.is-out {
+  opacity: 0.4; cursor: not-allowed; text-decoration: line-through;
+}
+.str-sizebtn em {
+  font-style: normal; font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.05em; text-decoration: none;
+}
+.str-order {
+  padding: 12px 18px; border: none; border-radius: 10px; cursor: pointer;
+  background: var(--brand-accent, #35afea);
+  color: color-mix(in srgb, var(--brand-accent, #35afea) 22%, #000);
+  font-size: 15px; font-weight: 900;
+}
+.str-order:disabled { opacity: 0.55; cursor: not-allowed; }
+.str-fineprint { margin: 0; font-size: 12px; color: var(--muted); }
+.str-error {
+  margin: 0; padding: 9px 12px; border-radius: 8px; font-size: 14px;
+  border: 1px solid rgba(220,38,38,0.45); background: rgba(220,38,38,0.10);
+  color: #ffb4b4;
+}
+.str-soldout { margin-top: 14px; font-weight: 800; color: var(--muted); }
+.str-placed {
+  margin-top: 14px; padding: 14px 16px; border-radius: 12px;
+  border: 1px solid color-mix(in srgb, #22c55e 55%, transparent);
+  background: color-mix(in srgb, #22c55e 12%, transparent);
+  display: grid; gap: 6px; font-size: 15px; line-height: 1.5;
+}
+.str-placed-head { margin: 0; font-weight: 900; font-size: 17px; }
+.str-placed-sub { margin: 0; font-size: 13px; color: var(--muted); }
