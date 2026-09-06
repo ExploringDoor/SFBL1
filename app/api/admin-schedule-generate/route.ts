@@ -393,8 +393,119 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, deleted: snap.size });
   }
 
+  // ---- a team dropped out ------------------------------------------------
+  // Mike, 2026-09-06: "We had a team drop but instead of redoing the whole
+  // schedule can I just delete the team and adjust weeks."
+  //
+  // Rebuilding the season is the wrong answer to one team leaving: it moves
+  // every other fixture, and coaches have already put those dates in diaries.
+  // This removes only the departing team's games and then reports exactly who
+  // is now short and by how many, which is the information needed to top them
+  // up rather than start again.
+  //
+  // GAMES WITH RESULTS ARE NEVER TOUCHED. A team that quits in week six played
+  // weeks one to five, and those results are the other teams' records. They are
+  // reported and left exactly where they are.
+  if (body.action === "remove_team") {
+    const teamId = String((body as { teamId?: unknown }).teamId ?? "");
+    if (!TEAM_ID_RE.test(teamId)) {
+      return NextResponse.json({ error: "teamId required" }, { status: 400 });
+    }
+    // Default to today so history is safe even if the caller forgets. An
+    // explicit date lets an admin clear a team from a future week only.
+    const rawFrom = String((body as { from?: unknown }).from ?? "");
+    const from = DATE_RE.test(rawFrom) ? rawFrom : now.slice(0, 10);
+    const dryRun = (body as { dryRun?: unknown }).dryRun !== false;
+
+    const [homeSnap, awaySnap] = await Promise.all([
+      db.collection(`leagues/${leagueId}/games`).where("home_team_id", "==", teamId).get(),
+      db.collection(`leagues/${leagueId}/games`).where("away_team_id", "==", teamId).get(),
+    ]);
+    const seen = new Set<string>();
+    const all = [...homeSnap.docs, ...awaySnap.docs].filter((d) => {
+      if (seen.has(d.id)) return false;
+      seen.add(d.id);
+      return true;
+    });
+
+    const hasResult = (d: FirebaseFirestore.QueryDocumentSnapshot) => {
+      const v = d.data();
+      const st = String(v.status ?? "");
+      return st === "final" || st === "approved" || v.home_score != null;
+    };
+
+    const played = all.filter(hasResult);
+    const removable = all.filter(
+      (d) => !hasResult(d) && String(d.data().date ?? "") >= from,
+    );
+    const beforeFrom = all.filter(
+      (d) => !hasResult(d) && String(d.data().date ?? "") < from,
+    );
+
+    // Who loses a fixture, and on which dates the slots free up. This is the
+    // "adjust weeks" half of the question: nothing needs moving, but somebody
+    // has to know which teams are now a game light.
+    const opponentCount = new Map<string, number>();
+    const freedSlots: { date: string; time: string; field: string }[] = [];
+    for (const d of removable) {
+      const v = d.data();
+      const other =
+        String(v.home_team_id ?? "") === teamId
+          ? String(v.away_team_id ?? "")
+          : String(v.home_team_id ?? "");
+      if (other) opponentCount.set(other, (opponentCount.get(other) ?? 0) + 1);
+      freedSlots.push({
+        date: String(v.date ?? ""),
+        time: String(v.time ?? ""),
+        field: String(v.field ?? ""),
+      });
+    }
+    freedSlots.sort((x, y) => x.date.localeCompare(y.date) || x.time.localeCompare(y.time));
+
+    const summary = {
+      ok: true,
+      dryRun,
+      teamId,
+      wouldRemove: removable.length,
+      keptWithResults: played.length,
+      keptBeforeFrom: beforeFrom.length,
+      from,
+      opponents: [...opponentCount.entries()]
+        .map(([id, games]) => ({ id, games }))
+        .sort((a, b) => b.games - a.games),
+      freedSlots: freedSlots.slice(0, 200),
+    };
+
+    // Dry run BY DEFAULT. Deleting a chunk of a live schedule on a typo is not
+    // a recoverable mistake, so the caller has to ask twice.
+    if (dryRun) return NextResponse.json(summary);
+
+    for (let i = 0; i < removable.length; i += 400) {
+      const batch = db.batch();
+      removable.slice(i, i + 400).forEach((d) => batch.delete(d.ref));
+      await batch.commit();
+    }
+    try {
+      await db.collection(`leagues/${leagueId}/audit`).add({
+        kind: "remove_team_from_schedule",
+        by_uid: decoded.uid,
+        team_id: teamId,
+        removed: removable.length,
+        kept_with_results: played.length,
+        from,
+        at: now,
+      });
+    } catch {
+      /* never fail the removal over the audit row */
+    }
+    return NextResponse.json({ ...summary, dryRun: false, removed: removable.length });
+  }
+
   return NextResponse.json(
-    { error: "action must be save_rules | create_games | undo_batch" },
+    {
+      error:
+        "action must be save_rules | create_games | undo_batch | remove_team",
+    },
     { status: 400 },
   );
 }

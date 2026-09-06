@@ -2,6 +2,10 @@
 // shows upcoming games only. No Recap/Box Score buttons, just Preview.
 
 import { headers } from "next/headers";
+import {
+  DEFAULT_HIDDEN_NOTE,
+  loadScheduleVisibility,
+} from "@/lib/schedule-visibility";
 import { DemoDataBanner } from "@/components/ui/DemoDataBanner";
 import {
   getCachedGamesSnap,
@@ -74,6 +78,46 @@ export default async function SchedulePage({
   const lmllStyle = config?.flags?.lmll_scoreboard === true;
 
   const { games, teams } = await loadSchedule(tenantId, config);
+
+  // THE SCHEDULE CAN BE TAKEN DOWN WHILE IT IS BEING REBUILT. Mike asked for a
+  // switch he can flip while moving games around, so coaches are not reading a
+  // half-moved fixture list and turning up at the wrong field. Results are NOT
+  // hidden: a game that has been played is not part of the reshuffle, and
+  // /scores and /standings go on working.
+  const visibility = await loadScheduleVisibility(tenantId);
+  if (visibility.hidden) {
+    return (
+      <main className="container py-10">
+        <header className="mb-6">
+          <h1 className="font-display" style={{ fontSize: "clamp(40px, 6vw, 64px)" }}>
+            <span style={{ color: "var(--text-strong)" }}>Season</span>{" "}
+            <span style={{ color: "var(--brand-primary)" }}>Schedule</span>
+          </h1>
+          {config?.name && <p className="sec-eyebrow mt-1">{config.name}</p>}
+        </header>
+        <div
+          className="rounded-lg border p-6"
+          style={{ borderColor: "var(--line)", background: "var(--surface-2)" }}
+        >
+          <p style={{ fontSize: 17, fontWeight: 600, margin: 0 }}>
+            {visibility.note || DEFAULT_HIDDEN_NOTE}
+          </p>
+          <p style={{ fontSize: 14, color: "var(--muted)", margin: "10px 0 0" }}>
+            Scores and standings are still up to date.
+          </p>
+          <p style={{ marginTop: 16 }}>
+            <a
+              href="/standings"
+              className="font-barlow text-xs font-bold uppercase tracking-wider hover:underline"
+              style={{ color: "var(--brand-primary)" }}
+            >
+              Standings »
+            </a>
+          </p>
+        </div>
+      </main>
+    );
+  }
   // Show every game in the season — scheduled, final, postponed,
   // cancelled — so the schedule page is a real season-long calendar
   // instead of just "the 1 game still on the books." Cards render

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { headers } from "next/headers";
+import { loadScheduleVisibility } from "@/lib/schedule-visibility";
 import { SocialFeeds } from "@/components/ui/SocialFeeds";
 import { UpcomingTournaments } from "@/components/ui/UpcomingTournaments";
 import { loadTournamentLogos } from "@/lib/tournament-logos";
@@ -94,6 +95,11 @@ export default async function HomePage() {
     scheme,
     leagueName,
   } = await loadHomeData(tenantId, config);
+
+  // The schedule can be taken down while it is being rebuilt. Upcoming fixtures
+  // come off the home page with it; recent RESULTS stay, because a game that
+  // has been played is not part of the reshuffle.
+  const { hidden: scheduleHidden } = await loadScheduleVisibility(tenantId);
 
   // Branded season year (config.season_year), falling back to the calendar
   // year. COYBL opens 2027 registration during 2026, so the clock is wrong.
@@ -283,7 +289,7 @@ export default async function HomePage() {
                 we explain why below. Captains hit Friday morning with
                 the league freshly provisioned and games scheduled but
                 not yet final — this is expected, not broken. */}
-            {recent.length === 0 && upcoming.length === 0 && (
+            {recent.length === 0 && (upcoming.length === 0 || scheduleHidden) && (
               <div className="le-home-launch">
                 <p className="le-home-launch-eyebrow">
                   {season} season
@@ -342,7 +348,7 @@ export default async function HomePage() {
               </div>
             )}
 
-            {upcoming.length > 0 && (
+            {upcoming.length > 0 && !scheduleHidden && (
               <div style={{ marginTop: 36 }}>
                 <SectionHead
                   eyebrow={`${season} Season`}

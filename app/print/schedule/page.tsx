@@ -6,6 +6,10 @@
 
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
+import {
+  DEFAULT_HIDDEN_NOTE,
+  loadScheduleVisibility,
+} from "@/lib/schedule-visibility";
 import "../print.css";
 import { PrintToolbar } from "../PrintToolbar";
 import { formatTime12 } from "@/lib/format-time";
@@ -35,6 +39,22 @@ export default async function PrintSchedulePage({
     return (
       <div className="print-page">
         <p>No tenant. Visit on a tenant subdomain.</p>
+      </div>
+    );
+  }
+
+  // A printed schedule outlives the screen: it goes on a fence and stays
+  // there. Printing one mid-rebuild is exactly the copy that would still be
+  // pinned up in three weeks, so the sheet comes down with the page.
+  const visibility = await loadScheduleVisibility(tenantId);
+  if (visibility.hidden) {
+    return (
+      <div className="print-page">
+        <p style={{ fontWeight: 700 }}>
+          {visibility.note || DEFAULT_HIDDEN_NOTE}
+        </p>
+        <p>Printing is off until it is back up, so nobody pins up a copy that
+          is about to change.</p>
       </div>
     );
   }

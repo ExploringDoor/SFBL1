@@ -45,6 +45,11 @@ const tickerCache = new Map<string, TickerCacheEntry>();
 
 export async function loadTickerGames(
   tenantId: string,
+  /** Schedule hidden while it is rebuilt. Upcoming fixtures come out of the
+   *  ticker with it; finals stay, because a played game is not in flux. The
+   *  ticker sits in the header of EVERY page, so leaving it alone would have
+   *  advertised the fixtures the schedule page had just taken down. */
+  scheduleHidden = false,
   /** League setting standings.drop_extra_game_loss. The ticker prints a record
    *  next to each team in the header of every page, so it has to match
    *  /standings or the site contradicts itself. Off by default, which is every
@@ -203,7 +208,7 @@ export async function loadTickerGames(
     hasAge ? capPerAge(upcomingSorted, 3) : upcomingSorted.slice(0, 8)
   ).slice(0, 40);
 
-  const result: TickerGame[] = [...finals, ...upcoming].map((g) => ({
+  const result: TickerGame[] = [...finals, ...(scheduleHidden ? [] : upcoming)].map((g) => ({
     id: g.id,
     date: g.date,
     status: g.status,

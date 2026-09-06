@@ -24,6 +24,7 @@ import { Ticker } from "@/components/ui/Ticker";
 import { SiteFX } from "@/components/ui/SiteFX";
 import { PageSlug } from "@/components/ui/PageSlug";
 import { loadTickerGames } from "@/lib/site-data";
+import { loadScheduleVisibility } from "@/lib/schedule-visibility";
 import "./globals.css";
 import "./fx.css";
 import "./island-theme.css";
@@ -398,8 +399,11 @@ export default async function RootLayout({
       return false;
     }
   })();
+  const scheduleHidden = tenantId
+    ? (await loadScheduleVisibility(tenantId)).hidden
+    : false;
   const tickerGames = tenantId
-    ? await loadTickerGames(tenantId, dropExtraGameLoss)
+    ? await loadTickerGames(tenantId, dropExtraGameLoss, scheduleHidden)
     : [];
 
   // Tenant overrides become inline custom-properties on <html>. CSS

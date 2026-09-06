@@ -140,6 +140,23 @@ export interface GeneratedGame {
   status: "scheduled";
 }
 
+/** A game whose two teams both have a home field. */
+export interface HomeFieldChoice {
+  /** Index into `games`, so the admin UI can rewrite exactly this fixture. */
+  game: number;
+  date: string;
+  time: string;
+  /** Team ids and names, in no particular order. */
+  a: string;
+  b: string;
+  aName: string;
+  bName: string;
+  aField: string;
+  bField: string;
+  /** The field the generator went with, always one of the two. */
+  chosen: string;
+}
+
 export interface GeneratorResult {
   games: GeneratedGame[];
   /** Dates the schedule actually uses, in order. */
@@ -173,6 +190,17 @@ export interface GeneratorResult {
    *  short. The old code deleted these games; leaving a team with fewer games
    *  was the worse outcome. */
   sameOrgUsed: { a: string; b: string }[];
+  /**
+   * Games where BOTH teams have a home field, so somebody has to travel.
+   *
+   * Mike, 2026-09-06: "if a team has a home field it will automatically put
+   * them there. But if it's playing a team that also has a field then it will
+   * notify me to choose." One home field is an answer; two is a question, and
+   * the generator is not the one who should be answering it. It still picks a
+   * field so the preview is a complete schedule, and lists the game here so
+   * the choice can be taken back.
+   */
+  homeFieldChoices: HomeFieldChoice[];
   warnings: string[];
 }
 
@@ -549,6 +577,7 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
     extraGameTeams: [],
     repeatMatchups: [],
     sameOrgUsed: [],
+    homeFieldChoices: [],
     warnings: [msg],
   });
 
@@ -637,6 +666,8 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
   const gamesPerMatchup = targeted ? 1 : sameOpponent ? gamesPerWeek : 1;
 
   const games: GeneratedGame[] = [];
+  // Games where both sides have a home field. Filled during placement below.
+  const homeFieldChoices: HomeFieldChoice[] = [];
   const unscheduled: GeneratorResult["unscheduled"] = [];
   const noLegalField: GeneratorResult["noLegalField"] = [];
   const noLegalFieldSeen = new Set<string>();
@@ -931,6 +962,25 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
           const hb = homeCount.get(b) ?? 0;
           [home, away] = ha <= hb ? [a, b] : [b, a];
         }
+        // BOTH sides have a home field: the generator has just decided which
+        // one travels, and that is a decision the league should make. Recorded
+        // with the index of the fixture so the admin can flip it.
+        const fa = homeFieldOf(a);
+        const fb = homeFieldOf(b);
+        if (fa && fb && fa !== fb) {
+          homeFieldChoices.push({
+            game: games.length,
+            date: s.date,
+            time: s.time,
+            a,
+            b,
+            aName: nameOf(a),
+            bName: nameOf(b),
+            aField: fa,
+            bField: fb,
+            chosen: s.field,
+          });
+        }
         bump(homeCount, home);
         bump(timesFor(a), s.time);
         bump(timesFor(b), s.time);
@@ -1079,6 +1129,7 @@ export function generateSchedule(opts: GeneratorOptions): GeneratorResult {
     extraGameTeams,
     repeatMatchups,
     sameOrgUsed,
+    homeFieldChoices,
     everyPairPlayed,
     warnings,
   };

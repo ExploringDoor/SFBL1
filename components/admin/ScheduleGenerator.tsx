@@ -136,6 +136,19 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
   // games-per-team target Mike asked for on 2026-09-04. Default stays 0 so an
   // existing league's saved setup behaves exactly as it did.
   const [gamesPerTeam, setGamesPerTeam] = useState(0);
+  // Drafts and the live-schedule switch. See /api/admin-schedule-drafts for why
+  // a draft is a separate document rather than a flag on each game.
+  const [drafts, setDrafts] = useState<
+    { id: string; name: string; games: number; created_at: string }[]
+  >([]);
+  const [scheduleHidden, setScheduleHidden] = useState<boolean | null>(null);
+  const [hiddenNote, setHiddenNote] = useState("");
+  const [dropTeam, setDropTeam] = useState("");
+  const [dropPlan, setDropPlan] = useState<{
+    wouldRemove: number;
+    keptWithResults: number;
+    opponents: { id: string; games: number }[];
+  } | null>(null);
   const [gamesPerWeek, setGamesPerWeek] = useState(1);
   const [pairing, setPairing] = useState<"same-opponent" | "different-opponents">(
     "same-opponent",
@@ -191,10 +204,11 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
     (async () => {
       try {
         const db = getDb();
-        const [teamSnap, rulesSnap, fieldsSnap, gameSnap] = await Promise.all([
+        const [teamSnap, rulesSnap, fieldsSnap, visSnap, gameSnap] = await Promise.all([
           getDocs(collection(db, `leagues/${leagueId}/teams`)),
           getDoc(doc(db, `leagues/${leagueId}/site_config/schedule_rules`)),
           getDoc(doc(db, `leagues/${leagueId}/site_config/fields`)),
+          getDoc(doc(db, `leagues/${leagueId}/site_config/schedule`)),
           getDocs(collection(db, `leagues/${leagueId}/games`)),
         ]);
 
@@ -242,6 +256,9 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
         }
         const ts = rulesSnap.exists() ? rulesSnap.data()?.team_settings : null;
         if (ts && typeof ts === "object") setTeamCfg(ts as typeof teamCfg);
+        const vis = visSnap.exists() ? visSnap.data() : null;
+        setScheduleHidden(vis?.hidden === true);
+        setHiddenNote(typeof vis?.note === "string" ? vis.note : "");
         const gpt = rulesSnap.exists() ? rulesSnap.data()?.games_per_team : null;
         if (typeof gpt === "number" && Number.isFinite(gpt)) {
           setGamesPerTeam(Math.max(0, Math.floor(gpt)));
@@ -260,6 +277,14 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
         setLoading(false);
       }
     })();
+  }, [leagueId]);
+
+  // The saved-drafts list comes through the API, not client Firestore: drafts
+  // are denied to every client by the security rules, which is what keeps an
+  // unposted schedule genuinely unposted.
+  useEffect(() => {
+    void refreshDrafts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leagueId]);
 
   const ageGroups = useMemo(
@@ -336,6 +361,152 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
       throw err;
     }
     return data;
+  }
+
+  async function draftApi(payload: Record<string, unknown>) {
+    const idToken = await user.getIdToken();
+    const res = await fetch("/api/admin-schedule-drafts", {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${idToken}` },
+      body: JSON.stringify({ leagueId, ...payload }),
+    });
+    const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    if (!res.ok) throw new Error(String(data.error ?? `HTTP ${res.status}`));
+    return data;
+  }
+
+  async function refreshDrafts() {
+    try {
+      const d = await draftApi({ action: "list" });
+      setDrafts((d.drafts as typeof drafts) ?? []);
+    } catch {
+      /* the panel simply shows nothing rather than blocking the builder */
+    }
+  }
+
+  async function saveDraft() {
+    if (!result || result.games.length === 0) return;
+    const name = window.prompt(
+      "Name this draft, so you know which one it is later.",
+      `${ageGroup || division || "Season"} ${new Date().toLocaleDateString()}`,
+    );
+    if (name === null) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const d = await draftApi({
+        action: "save",
+        name,
+        division: ageGroup || division || "",
+        games: result.games,
+      });
+      setDone(`Saved "${d.name}" as a draft. Nothing is live yet.`);
+      await refreshDrafts();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not save the draft");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function loadDraft(id: string, name: string) {
+    setBusy(true);
+    setError(null);
+    try {
+      const d = await draftApi({ action: "load", id });
+      const draft = d.draft as { games: GeneratedGame[] };
+      // Straight into the preview, so the same Create button posts it and the
+      // same conflict gate applies. A draft is not a second way to write games.
+      setResult({
+        games: draft.games,
+        dates: [...new Set(draft.games.map((g) => g.date))].sort(),
+        skippedSameOrg: [],
+        skippedBlocked: [],
+        unscheduled: [],
+        noLegalField: [],
+        slotsBlockedByExisting: 0,
+        everyPairPlayed: false,
+        gamesPerTeamActual: [],
+        extraGameTeams: [],
+        repeatMatchups: [],
+        sameOrgUsed: [],
+        homeFieldChoices: [],
+        warnings: [
+          `Loaded the draft "${name}". Conflicts are re-checked against the live ` +
+            `schedule when you press Create.`,
+        ],
+      });
+      setSaveConflicts(null);
+      setDone(`Loaded "${name}". Review it, then Create when you are ready.`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not load that draft");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function setVisibility(hidden: boolean) {
+    setBusy(true);
+    setError(null);
+    try {
+      await draftApi({ action: "set_visibility", hidden, note: hiddenNote });
+      setScheduleHidden(hidden);
+      setDone(
+        hidden
+          ? "Schedule hidden. Coaches see a short note instead of the fixtures. Scores and standings still work."
+          : "Schedule is live again.",
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not change that");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // DRY RUN FIRST, ALWAYS. Deleting part of a live schedule on a mis-click is
+  // not a recoverable mistake, so the admin sees the damage before agreeing to
+  // it. The endpoint also defaults to a dry run, so a missing flag is safe.
+  async function planDrop(teamId: string) {
+    if (!teamId) return;
+    setBusy(true);
+    setError(null);
+    setDropPlan(null);
+    try {
+      const d = await post({ action: "remove_team", teamId, dryRun: true });
+      setDropPlan({
+        wouldRemove: Number(d.wouldRemove ?? 0),
+        keptWithResults: Number(d.keptWithResults ?? 0),
+        opponents: (d.opponents as { id: string; games: number }[]) ?? [],
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not check that team");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function confirmDrop(teamId: string) {
+    if (!dropPlan) return;
+    if (
+      !window.confirm(
+        `Remove ${dropPlan.wouldRemove} games for ${nameOf(teamId)}?\n\n` +
+          `Games that already have a result are kept. This cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const d = await post({ action: "remove_team", teamId, dryRun: false });
+      setDone(`Removed ${d.removed} games. The rest of the schedule is untouched.`);
+      setDropPlan(null);
+      setDropTeam("");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not remove those games");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function saveRules() {
@@ -1222,6 +1393,199 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
         </details>
       </div>
 
+      {/* ---- 6. THE LIVE SCHEDULE ---------------------------------------
+          Three things Mike asked for on 2026-09-06, and they belong together
+          because they are all "the schedule exists, now manage it": keep a
+          version without posting it, take the posted one down while you move
+          it, and drop a team that quit without rebuilding the season. */}
+      <div style={CARD}>
+        <p style={{ fontWeight: 800, margin: "0 0 4px" }}>6. The live schedule</p>
+        <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 12px" }}>
+          Saved drafts are not on the site. The switch below takes the posted
+          schedule down while you move games about. Dropping a team removes only
+          that team&rsquo;s games.
+        </p>
+
+        {/* -- hide / show ------------------------------------------------- */}
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 10,
+            padding: "10px 12px",
+            borderRadius: 8,
+            marginBottom: 12,
+            border: "1px solid",
+            borderColor: scheduleHidden ? "rgba(220,38,38,0.35)" : "rgba(0,0,0,0.12)",
+            background: scheduleHidden ? "rgba(220,38,38,0.06)" : "transparent",
+          }}
+        >
+          <strong style={{ fontSize: 13 }}>
+            {scheduleHidden === null
+              ? "Checking…"
+              : scheduleHidden
+                ? "Schedule is HIDDEN from coaches"
+                : "Schedule is LIVE"}
+          </strong>
+          <input
+            style={{ ...INPUT, flex: 1, minWidth: 200 }}
+            placeholder="Optional note, e.g. Back up Friday after makeups"
+            value={hiddenNote}
+            onChange={(e) => setHiddenNote(e.target.value)}
+          />
+          <button
+            type="button"
+            style={BTN}
+            disabled={busy || scheduleHidden === null}
+            onClick={() => setVisibility(!scheduleHidden)}
+          >
+            {scheduleHidden ? "Put it back up" : "Hide it while I work"}
+          </button>
+          <span style={{ fontSize: 11, color: "var(--muted)", width: "100%" }}>
+            Hiding covers the schedule page, the upcoming games on the home page,
+            the ticker and the printable sheet. Scores, standings and the calendar
+            feed keep working, because a feed that empties itself deletes the
+            games out of everyone&rsquo;s phone.
+          </span>
+        </div>
+
+        {/* -- saved drafts ------------------------------------------------- */}
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+            <strong style={{ fontSize: 13 }}>Saved drafts</strong>
+            <button type="button" style={BTN} disabled={busy} onClick={refreshDrafts}>
+              Refresh
+            </button>
+          </div>
+          {drafts.length === 0 ? (
+            <p style={{ fontSize: 12, color: "var(--muted)", margin: 0 }}>
+              None yet. Build a schedule and press <strong>Save as draft</strong>{" "}
+              to keep it without posting it.
+            </p>
+          ) : (
+            <div style={{ display: "grid", gap: 6 }}>
+              {drafts.map((d) => (
+                <div
+                  key={d.id}
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                    gap: 8,
+                    fontSize: 12,
+                    padding: "6px 8px",
+                    borderRadius: 6,
+                    border: "1px solid rgba(0,0,0,0.10)",
+                  }}
+                >
+                  <strong style={{ flex: 1, minWidth: 180 }}>{d.name}</strong>
+                  <span style={{ color: "var(--muted)" }}>{d.games} games</span>
+                  <button
+                    type="button"
+                    style={BTN}
+                    disabled={busy}
+                    onClick={() => loadDraft(d.id, d.name)}
+                  >
+                    Open
+                  </button>
+                  <button
+                    type="button"
+                    style={BTN}
+                    disabled={busy}
+                    onClick={async () => {
+                      if (!window.confirm(`Delete the draft "${d.name}"?`)) return;
+                      try {
+                        await draftApi({ action: "delete", id: d.id });
+                        await refreshDrafts();
+                      } catch (e) {
+                        setError(e instanceof Error ? e.message : "Could not delete");
+                      }
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* -- a team dropped out ------------------------------------------- */}
+        <div>
+          <strong style={{ fontSize: 13 }}>A team dropped out</strong>
+          <p style={{ fontSize: 12, color: "var(--muted)", margin: "4px 0 8px" }}>
+            Removes only that team&rsquo;s games from today onwards, and tells you
+            which teams are now a game short. Games that already have a result are
+            never touched, so nobody&rsquo;s record changes.
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            <select
+              style={{ ...INPUT, minWidth: 240 }}
+              value={dropTeam}
+              onChange={(e) => {
+                setDropTeam(e.target.value);
+                setDropPlan(null);
+              }}
+            >
+              <option value="">— Pick the team that left —</option>
+              {teams.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              style={BTN}
+              disabled={busy || !dropTeam}
+              onClick={() => planDrop(dropTeam)}
+            >
+              See what this removes
+            </button>
+          </div>
+          {dropPlan && (
+            <div
+              style={{
+                marginTop: 10,
+                padding: "10px 12px",
+                borderRadius: 8,
+                border: "1px solid rgba(0,0,0,0.12)",
+                fontSize: 12,
+              }}
+            >
+              <p style={{ margin: "0 0 6px" }}>
+                <strong>{dropPlan.wouldRemove} games</strong> would be removed.{" "}
+                {dropPlan.keptWithResults > 0 && (
+                  <>
+                    <strong>{dropPlan.keptWithResults}</strong> already have results
+                    and are kept, so no record changes.{" "}
+                  </>
+                )}
+              </p>
+              {dropPlan.opponents.length > 0 && (
+                <p style={{ margin: "0 0 6px" }}>
+                  These teams end up a game short:{" "}
+                  {dropPlan.opponents
+                    .map((o) => `${nameOf(o.id)} (${o.games})`)
+                    .join(", ")}
+                  . Build a short top-up run for just those teams if you want them
+                  back to a full card.
+                </p>
+              )}
+              <button
+                type="button"
+                style={{ ...BTN, fontWeight: 800 }}
+                disabled={busy || dropPlan.wouldRemove === 0}
+                onClick={() => confirmDrop(dropTeam)}
+              >
+                Remove those {dropPlan.wouldRemove} games
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* ---- build ------------------------------------------------------- */}
       <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 14, flexWrap: "wrap" }}>
         <button
@@ -1233,6 +1597,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
           Build schedule
         </button>
         {result && result.games.length > 0 && (
+          <>
           <button
             type="button"
             // Wrapped, not passed directly: React hands the click event to the
@@ -1244,6 +1609,16 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
           >
             {busy ? "Creating…" : `Create ${result.games.length} games`}
           </button>
+          <button
+            type="button"
+            style={BTN}
+            disabled={busy}
+            onClick={saveDraft}
+            title="Keeps this schedule without putting it on the site. Load it back any time."
+          >
+            {busy ? "Saving…" : "Save as draft"}
+          </button>
+          </>
         )}
       </div>
 
@@ -1428,6 +1803,89 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
                   always plays one more than the rest.
                 </p>
               )}
+            </details>
+          )}
+
+          {/* BOTH TEAMS HAVE A HOME FIELD, so somebody travels and the league
+              should be the one saying who. Mike, 2026-09-06: "if it's playing a
+              team that also has a field then it will notify me to choose."
+              The generator still picks, so the preview is a complete schedule;
+              this is where the pick gets taken back.
+
+              Switching moves the game to the other club's field AND flips who
+              is the home side, because those are the same decision. The slot
+              might already be busy on that field, and rather than guess here,
+              the commit re-checks every conflict server-side and refuses with
+              the specifics. */}
+          {result.homeFieldChoices.length > 0 && (
+            <details style={{ margin: "0 0 10px" }} open>
+              <summary style={{ cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
+                {result.homeFieldChoices.length} game
+                {result.homeFieldChoices.length === 1 ? "" : "s"} where both teams
+                have a home field. Pick who hosts.
+              </summary>
+              <div style={{ marginTop: 8, display: "grid", gap: 6 }}>
+                {result.homeFieldChoices.map((c) => {
+                  const g = result.games[c.game];
+                  const at = g?.field ?? c.chosen;
+                  const pick = (field: string, homeId: string) => {
+                    setResult((cur) => {
+                      if (!cur) return cur;
+                      const games = [...cur.games];
+                      const row = games[c.game];
+                      if (!row) return cur;
+                      games[c.game] = {
+                        ...row,
+                        field,
+                        home_team_id: homeId,
+                        away_team_id: homeId === c.a ? c.b : c.a,
+                      };
+                      return { ...cur, games };
+                    });
+                    setSaveConflicts(null);
+                  };
+                  return (
+                    <div
+                      key={c.game}
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        alignItems: "center",
+                        gap: 8,
+                        fontSize: 12,
+                        padding: "6px 8px",
+                        borderRadius: 6,
+                        border: "1px solid rgba(0,0,0,0.10)",
+                      }}
+                    >
+                      <span style={{ minWidth: 150 }}>
+                        {c.date} {pretty(c.time)}
+                      </span>
+                      <span style={{ flex: 1, minWidth: 220 }}>
+                        {c.aName} v {c.bName}
+                      </span>
+                      {[
+                        { field: c.aField, home: c.a, who: c.aName },
+                        { field: c.bField, home: c.b, who: c.bName },
+                      ].map((opt) => (
+                        <button
+                          key={opt.home}
+                          type="button"
+                          onClick={() => pick(opt.field, opt.home)}
+                          style={{
+                            ...BTN,
+                            fontWeight: at === opt.field ? 800 : 500,
+                            outline:
+                              at === opt.field ? "2px solid var(--brand-primary)" : "none",
+                          }}
+                        >
+                          {opt.who} home · {opt.field}
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
             </details>
           )}
 
