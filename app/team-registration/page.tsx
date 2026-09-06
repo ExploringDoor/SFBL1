@@ -721,11 +721,19 @@ function content(tenantId: string) {
         // at the field. Kept in the intro so nobody registers without seeing
         // the number, since payment is handled off-site.
         "League fees are $795 per team ($500 for 8U Weekend), plus umpire fees paid at the field. Teams using their own home field for at least half their games may qualify for a $200 discount. Fees must be paid in full before the season begins.",
-        // What actually happens next, in order. The site now creates the team
-        // and emails a sign-in code the moment this is submitted, and a coach
-        // who is not told that either misses the email or does not know what
-        // the five digits are for (Adam, 2026-08-12).
-        "As soon as you submit, your team appears on the site and we email you a five digit coach sign-in code. That code is how you get into your team page to submit scores, manage your roster and attendance, and upload your team logo. There is no account to create and no password to remember. Keep the code to your coaching staff \u2014 anyone who has it can enter scores for your team.",
+        // What actually happens next. The site creates the team and emails the
+        // sign-in code the moment this is submitted, and a coach who is not
+        // told that either misses the email or does not know what the five
+        // digits are for (Adam, 2026-08-12).
+        //
+        // IT NAMES ITS READER IN THE FIRST WORD, and that is the whole edit.
+        // It used to open "As soon as you submit ... we email you a code",
+        // which is true and reads fine to a coach, but Mike read it on his own
+        // registration page as a job for the LEAGUE and went looking for the
+        // button to send 41 codes (2026-09-06). Same facts, addressed out
+        // loud, and it now says the code sends itself, so nobody on either
+        // side of the form goes hunting for something to press.
+        "Coaches: the moment you submit this form, your team goes up on the site and your five digit sign-in code is emailed to you automatically. There is nothing to request and nobody to chase. That code is how you sign in to your team page to post scores, manage your roster and attendance, and upload your logo. No account, no password. Share it only with your coaching staff, because anyone who has it can enter scores for your team.",
         "You can pay by card or Venmo on the next screen, or choose to pay later. Rosters must be on USSSA.",
       ],
       successMessage:
