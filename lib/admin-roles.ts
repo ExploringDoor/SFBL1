@@ -33,7 +33,8 @@ export type AdminScope =
   | "score-disputes"
   | "broadcast"
   | "teams"
-  | "fields";
+  | "fields"
+  | "rules";
 
 export const ALL_SCOPES: readonly AdminScope[] = [
   "umpires",
@@ -44,6 +45,7 @@ export const ALL_SCOPES: readonly AdminScope[] = [
   "broadcast",
   "teams",
   "fields",
+  "rules",
 ] as const;
 
 /** The roles a league can hand out, and what each opens.
@@ -87,6 +89,20 @@ export const ADMIN_ROLES: Record<
       // own job. Writes go through /api/admin-fields, which keeps the previous
       // list so a deletion is recoverable.
       "fields",
+      // "rules" added 2026-09-06, Mike: "Rules button can you give her access
+      // too so she can edit."
+      //
+      // This file said the opposite yesterday: the rulebook is policy, and the
+      // assistant schedules games. Mike owns the league and asked directly, so
+      // it changes. Worth writing down that it is safe rather than merely
+      // asked for: every save snapshots the previous version, the Undo control
+      // reads those back, and the audit log records who saved what. A bad edit
+      // is a thirty second fix by either of them.
+      //
+      // It stays EDIT ONLY. canEditStructured still refuses to create a
+      // rulebook where there is none, which is what protects the leagues whose
+      // rules live in a different document.
+      "rules",
     ],
   },
 };

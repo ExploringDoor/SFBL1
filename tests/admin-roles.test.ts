@@ -8,6 +8,7 @@
 import { describe, expect, it } from "vitest";
 import {
   ADMIN_ROLES,
+  ALL_SCOPES,
   accessFromClaim,
   hasScope,
   scopedTabKeys,
@@ -23,6 +24,10 @@ describe("the assistant (scheduler)", () => {
 
   it("can manage fields, which Mike asked for on 2026-09-06", () => {
     expect(hasScope(tok, "island", "fields")).toBe(true);
+  });
+
+  it("can edit the rulebook, which Mike asked for the same day", () => {
+    expect(hasScope(tok, "island", "rules")).toBe(true);
   });
 
   it("keeps the scheduling scopes it already had", () => {
@@ -50,6 +55,12 @@ describe("the umpire in chief", () => {
     expect(hasScope(tok, "island", "fields")).toBe(false);
   });
 
+  it("did NOT get the rulebook either", () => {
+    // Widening one role must never widen another. The umpire declares no
+    // "rules" scope, so granting the assistant it changes nothing here.
+    expect(hasScope(tok, "island", "rules")).toBe(false);
+  });
+
   it("still opens only the umpire roster", () => {
     expect(scopedTabKeys(accessFromClaim("admin:umpires"))).toEqual(new Set(["umpires"]));
   });
@@ -58,7 +69,7 @@ describe("the umpire in chief", () => {
 describe("the full admin is unaffected", () => {
   it("holds every scope, including new ones, without being listed", () => {
     const tok = claim({ island: "admin" });
-    for (const s of ["fields", "umpires", "teams", "scores"] as const) {
+    for (const s of ["fields", "umpires", "teams", "scores", "rules"] as const) {
       expect(hasScope(tok, "island", s)).toBe(true);
     }
     // null means "no filtering", so a tab added later shows up for the owner
@@ -85,7 +96,10 @@ describe("nothing else gets in", () => {
   it("every role's scopes are real scopes, not typos", () => {
     // A typo here fails open in the worst way: the tab shows and the API says
     // no, or worse the reverse.
-    const known = new Set(["umpires","scores","schedule","schedule-gen","score-disputes","broadcast","teams","fields"]);
+    // Derived from the source, not retyped. A hand-kept copy here just
+    // failed for the third scope added this week, which is a test that
+    // reports its own staleness rather than a real problem.
+    const known = new Set<string>(ALL_SCOPES);
     for (const [id, role] of Object.entries(ADMIN_ROLES)) {
       for (const s of role.scopes) {
         expect(known.has(s), `${id} declares unknown scope "${s}"`).toBe(true);

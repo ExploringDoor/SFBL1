@@ -22,13 +22,19 @@
 //      silently. A save that would empty the page has to be refused here rather
 //      than discovered by a coach.
 //
-// FULL ADMIN ONLY. Deliberately no scope: league rules are policy. The
-// assistant schedules games and the umpire in chief runs officials; neither
-// rewrites the rulebook.
+// WHO CAN EDIT. Full admin, plus any role holding the "rules" scope. This was
+// full-admin-only on the reasoning that the rulebook is policy rather than
+// scheduling; Mike asked on 2026-09-06 for his assistant to have it, and it is
+// his league. The safety net is real rather than notional: every save
+// snapshots the previous version, Undo reads those back, and the audit log
+// records who saved what.
+//
+// The umpire in chief still cannot: that role declares no "rules" scope, so
+// widening one role did not widen the other.
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
-import { accessFor } from "@/lib/admin-roles";
+import { hasScope } from "@/lib/admin-roles";
 import {
   canEditStructured,
   cleanDivisions,
@@ -76,7 +82,7 @@ export async function POST(req: Request) {
   if (!leagueId) {
     return NextResponse.json({ error: "leagueId required" }, { status: 400 });
   }
-  if (!accessFor(decoded, leagueId).full) {
+  if (!hasScope(decoded, leagueId, "rules")) {
     return NextResponse.json({ error: "not admin" }, { status: 403 });
   }
 
