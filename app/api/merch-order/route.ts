@@ -177,11 +177,34 @@ export async function POST(req: Request) {
     /* never fail an order over the audit row */
   }
 
+  // WHERE TO SEND THE MONEY, returned only to someone who has actually
+  // ordered. These were going to be props on the store page, which would have
+  // put Mike's Venmo handle and his MOBILE NUMBER into the page source of a
+  // public site for anything that scrapes it. He gave them so buyers can pay,
+  // not so they can be harvested, and handing them back with the order costs
+  // one read and discloses them to exactly the people who need them.
+  let payTo: string | null = null;
+  if (method === "venmo" || method === "zelle") {
+    try {
+      const pay = (
+        await db.doc(`leagues/${leagueId}/site_config/merch_pay`).get()
+      ).data() as { venmo?: string; zelle?: string } | undefined;
+      const v = method === "venmo" ? pay?.venmo : pay?.zelle;
+      payTo = typeof v === "string" && v.trim() ? v.trim() : null;
+    } catch {
+      // The order stands either way. A missing handle means the confirmation
+      // tells them the office will be in touch, which is recoverable; losing
+      // the order would not be.
+      payTo = null;
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     orderId: orderRef.id,
     total,
     payMethod: method,
+    payTo,
     // Where a card payer goes next. That page recomputes the amount from the
     // saved order, so this is a destination, not an instruction.
     payUrl: method === "card" ? `/pay/${orderRef.id}?kind=merch_order` : null,

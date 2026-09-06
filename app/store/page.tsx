@@ -53,17 +53,16 @@ export default async function StorePage() {
     tenantId === "island" ? (merch as unknown as StoreData) : null;
   const items = data?.items ?? [];
 
-  // LIVE stock, and the handles people send Venmo and Zelle to. Both live in
-  // Firestore rather than in the checked-in file: one changes every time a
-  // shirt sells, the other is Mike's to set without waiting on a deploy.
-  const [stockDoc, payDoc] = items.length
-    ? await Promise.all([
-        getAdminDb().doc(`leagues/${tenantId}/site_config/merch_stock`).get(),
-        getAdminDb().doc(`leagues/${tenantId}/site_config/merch_pay`).get(),
-      ]).catch(() => [null, null] as const)
-    : ([null, null] as const);
+  // Live stock only. The Venmo handle and the Zelle number deliberately do NOT
+  // come down with the page: they are returned with the order instead, so a
+  // public page never carries Mike's mobile number in its source.
+  const stockDoc = items.length
+    ? await getAdminDb()
+        .doc(`leagues/${tenantId}/site_config/merch_stock`)
+        .get()
+        .catch(() => null)
+    : null;
   const live = (stockDoc?.data() ?? null) as Record<string, unknown> | null;
-  const pay = (payDoc?.data() ?? {}) as { venmo?: string; zelle?: string };
   const leagueName = config?.name ?? "the league";
 
   return (
@@ -107,8 +106,6 @@ export default async function StorePage() {
                     itemName={item.name}
                     price={item.price}
                     stock={sizes}
-                    {...(pay.venmo ? { venmo: pay.venmo } : {})}
-                    {...(pay.zelle ? { zelle: pay.zelle } : {})}
                   />
                 </article>
               );

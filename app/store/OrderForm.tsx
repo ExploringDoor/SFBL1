@@ -23,20 +23,9 @@ interface Props {
   itemName: string;
   price: number;
   stock: MerchSize[];
-  /** Where to send Venmo and Zelle payers. Empty until the league sets them. */
-  venmo?: string;
-  zelle?: string;
 }
 
-export function OrderForm({
-  leagueId,
-  itemId,
-  itemName,
-  price,
-  stock,
-  venmo,
-  zelle,
-}: Props) {
+export function OrderForm({ leagueId, itemId, itemName, price, stock }: Props) {
   const firstAvailable = stock.find((s) => s.count > 0)?.size ?? "";
   const [size, setSize] = useState(firstAvailable);
   const [quantity, setQuantity] = useState(1);
@@ -46,7 +35,14 @@ export function OrderForm({
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [placed, setPlaced] = useState<{ id: string; total: number; method: PayMethod } | null>(null);
+  const [placed, setPlaced] = useState<{
+    id: string;
+    total: number;
+    method: PayMethod;
+    /** Handle to pay, sent back with the order rather than rendered on the
+     *  public page, so it is not sitting in the source for scrapers. */
+    payTo: string | null;
+  } | null>(null);
 
   const allGone = stock.every((s) => s.count <= 0);
   const left = stock.find((s) => s.size === size)?.count ?? 0;
@@ -75,6 +71,7 @@ export function OrderForm({
         error?: string;
         orderId?: string;
         total?: number;
+        payTo?: string | null;
         payUrl?: string | null;
       };
       if (!res.ok) {
@@ -87,7 +84,12 @@ export function OrderForm({
         window.location.href = d.payUrl;
         return;
       }
-      setPlaced({ id: d.orderId ?? "", total: d.total ?? 0, method: payMethod });
+      setPlaced({
+        id: d.orderId ?? "",
+        total: d.total ?? 0,
+        method: payMethod,
+        payTo: d.payTo ?? null,
+      });
     } catch {
       setError("Could not reach the league. Please try again.");
     } finally {
@@ -96,14 +98,10 @@ export function OrderForm({
   }
 
   if (placed) {
-    const how =
-      placed.method === "venmo"
-        ? venmo
-          ? `Send $${placed.total} on Venmo to ${venmo}.`
-          : `Send $${placed.total} on Venmo. The league office will confirm the handle.`
-        : zelle
-          ? `Send $${placed.total} on Zelle to ${zelle}.`
-          : `Send $${placed.total} on Zelle. The league office will confirm the details.`;
+    const where = placed.method === "venmo" ? "Venmo" : "Zelle";
+    const how = placed.payTo
+      ? `Send $${placed.total} on ${where} to ${placed.payTo}.`
+      : `Send $${placed.total} on ${where}. The league office will confirm the details.`;
     return (
       <div className="str-placed" role="status">
         <p className="str-placed-head">Your {size} is reserved.</p>
