@@ -459,9 +459,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
         releaseNote,
       });
       setDone(
-        releaseNote
-          ? "Saved. It shows on the Tournaments page and the Schedule page."
-          : "Cleared.",
+        releaseNote ? "Saved. It shows on the Tournaments page." : "Cleared.",
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not save that");
@@ -1438,7 +1436,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
             fortnight, and the single slot is needed for rainouts. This is a
             standing line on the pages people are on when they go looking. */}
         <div style={{ marginBottom: 12 }}>
-          <label style={LABEL}>When the schedule comes out</label>
+          <label style={LABEL}>Tournaments page notice</label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             <input
               style={{ ...INPUT, flex: 1, minWidth: 260 }}
@@ -1452,8 +1450,8 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
             </button>
           </div>
           <p style={{ fontSize: 11, color: "var(--muted)", margin: "4px 0 0" }}>
-            Shows on the Tournaments page and the Schedule page. Leave it empty
-            to take it down.
+            Shows at the top of the Tournaments page. Leave it empty to take it
+            down.
           </p>
         </div>
 

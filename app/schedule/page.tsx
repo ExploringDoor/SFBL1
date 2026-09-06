@@ -24,7 +24,6 @@ import { SubscribeCalendar } from "@/components/SubscribeCalendar";
 import { DivisionFilter } from "@/components/ui/DivisionFilter";
 import { AgeFilter } from "@/components/ui/AgeFilter";
 import { combineDateTime } from "@/lib/format-time";
-import { ScheduleReleaseNote } from "@/components/ui/ScheduleReleaseNote";
 
 export const dynamic = "force-dynamic";
 
@@ -106,9 +105,6 @@ export default async function SchedulePage({
           <p style={{ fontSize: 14, color: "var(--muted)", margin: "10px 0 0" }}>
             Scores and standings are still up to date.
           </p>
-          <div style={{ marginTop: 16 }}>
-            <ScheduleReleaseNote note={visibility.releaseNote} />
-          </div>
           <p style={{ marginTop: 16 }}>
             <a
               href="/standings"
@@ -214,7 +210,6 @@ export default async function SchedulePage({
   return (
     <main className={"container py-10" + (lmllStyle ? " le-lmll-sb" : "")}>
     <DemoDataBanner show={config?.flags?.demo_data === true} />
-      <ScheduleReleaseNote note={visibility.releaseNote} />
       <header className="mb-6 flex items-end justify-between gap-4 flex-wrap">
         {!config?.flags?.hide_page_titles && !lmllStyle ? (
           <div>
