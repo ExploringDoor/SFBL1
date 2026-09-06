@@ -210,3 +210,35 @@
 .le-preview-card.muted .le-preview-link {
   display: none;
 }
+
+/* ---- makeup games -------------------------------------------------------
+   Kaylee, 2026-09-06: make a makeup stand out, "maybe baby blue".
+
+   Baby blue is right on Island, whose pages are pure black. It is close to
+   illegible on a WHITE page, and this component is shared, so the colour is a
+   token: a readable mid blue by default, and Island's theme swaps in the baby
+   blue she asked for. A tenant that never marks a makeup never sees either. */
+:root {
+  --makeup: #0f62b0;
+  --makeup-bg: rgba(15, 98, 176, 0.12);
+}
+
+.le-preview-status[data-kind="makeup"] {
+  color: var(--makeup);
+  background: var(--makeup-bg);
+  border: 1px solid color-mix(in srgb, var(--makeup) 45%, transparent);
+}
+
+/* The date and time line, which is the whole reason a makeup needs marking:
+   it is the row where the date is NOT the one a coach already wrote down. */
+.le-preview-card.is-makeup .le-preview-time {
+  color: var(--makeup);
+  font-weight: 800;
+}
+
+/* An edge, so it is findable while scrolling past a column of cards. The team
+   names stay their normal colour: colouring those too turns a schedule into a
+   wall of blue and the makeup stops standing out at all. */
+.le-preview-card.is-makeup {
+  border-left: 3px solid var(--makeup);
+}

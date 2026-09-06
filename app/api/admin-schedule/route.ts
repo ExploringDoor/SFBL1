@@ -66,6 +66,8 @@ interface GameInput {
   division?: string;
   week?: string | number | null;
   status?: string;
+  /** Marks a rearranged game, shown in the league's makeup colour. */
+  makeup?: unknown;
   away_score?: number | null;
   home_score?: number | null;
 }
@@ -423,6 +425,10 @@ function sanitizeGame(
   if (g.division != null) out.division = String(g.division).trim();
   if (g.week != null) out.week = g.week === "" ? null : g.week;
   if (g.status != null) out.status = String(g.status);
+  // A rearranged game. Coerced to a real boolean rather than stored as sent:
+  // the public card tests `=== true`, so a stray "false" string would light up
+  // every game on the schedule in the makeup colour.
+  if (g.makeup != null) out.makeup = g.makeup === true || g.makeup === "true";
   if (g.away_score != null && g.away_score !== ("" as never)) {
     out.away_score = Number(g.away_score);
   }

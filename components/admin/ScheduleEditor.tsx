@@ -33,6 +33,9 @@ interface GameRow {
   status: string;
   away_score: number | null;
   home_score: number | null;
+  /** A rearranged game. Shown on the public schedule in the league's makeup
+   *  colour, so a coach spots the row whose date changed. */
+  makeup?: boolean;
 }
 
 interface TeamOpt {
@@ -134,6 +137,8 @@ export function ScheduleEditor({ leagueId, user }: Props) {
                 data.away_score == null ? null : Number(data.away_score),
               home_score:
                 data.home_score == null ? null : Number(data.home_score),
+              // Only an explicit true; an absent field is an ordinary game.
+              makeup: data.makeup === true,
             };
           })
           .sort((a, b) => {
@@ -640,6 +645,7 @@ function GameForm({
   const [homeId, setHomeId] = useState(initial?.home_team_id ?? "");
   const [division, setDivision] = useState(initial?.division ?? "");
   const [status, setStatus] = useState(initial?.status ?? "scheduled");
+  const [makeup, setMakeup] = useState(initial?.makeup === true);
   const [awayScore, setAwayScore] = useState<string>(
     initial?.away_score == null ? "" : String(initial.away_score),
   );
@@ -666,6 +672,7 @@ function GameForm({
       home_team_id: homeId,
       division,
       status,
+      makeup,
       away_score: showScores && awayScore !== "" ? Number(awayScore) : null,
       home_score: showScores && homeScore !== "" ? Number(homeScore) : null,
     };
@@ -841,6 +848,25 @@ function GameForm({
               </option>
             ))}
           </select>
+        </label>
+        {/* NOT a status. A makeup is scheduled, then final, exactly like every
+            other game: it is a fact about the fixture rather than a state it
+            passes through, so putting it in the dropdown above would have made
+            a played makeup unable to be "final". */}
+        <label className="flex items-end gap-2 pb-1">
+          <input
+            type="checkbox"
+            checked={makeup}
+            onChange={(e) => setMakeup(e.target.checked)}
+            disabled={busy}
+            className="h-4 w-4"
+          />
+          <span className="text-xs font-semibold text-slate-700">
+            Makeup game
+            <span className="block font-normal text-slate-500">
+              Shows in the makeup colour on the schedule.
+            </span>
+          </span>
         </label>
         {showScores && (
           <>

@@ -46,7 +46,9 @@ interface ScheduleGame {
   home_team_id: string;
   division: string | null;
   away_score: number;
-  home_score: number;
+  home_score: number;  /** A rearranged game. Marked in the admin, shown in the league's makeup
+   *  colour so a coach spots the row whose date changed. */
+  makeup?: boolean;
 }
 
 export default async function SchedulePage({
@@ -407,6 +409,9 @@ async function loadSchedule(
       division: data.division ? String(data.division) : null,
       away_score: Number(data.away_score ?? 0),
       home_score: Number(data.home_score ?? 0),
+      // Only an explicit true. An absent field is an ordinary game, which is
+      // almost all of them.
+      makeup: data.makeup === true,
     };
   });
 
@@ -591,6 +596,7 @@ function DaySection({
               home={teamCardData(g.home_team_id, teams)}
               isNext={isFirstUpcomingDay && idx === 0 && g.status === "scheduled"}
               status={g.status}
+              makeup={g.makeup === true}
               ageGroup={
                 teams[g.home_team_id]?.ageGroup ??
                 teams[g.away_team_id]?.ageGroup

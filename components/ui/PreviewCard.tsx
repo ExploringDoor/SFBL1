@@ -39,6 +39,19 @@ export interface PreviewCardProps {
   /** Age group ("9U") for age-grouped tenants — small pill so a mixed
    *  feed is readable. Omitted for flat leagues. */
   ageGroup?: string;
+  /**
+   * A rearranged game, rained out or moved and now replayed on a new date.
+   *
+   * Kaylee, 2026-09-06, asked for makeups to stand out on the schedule, and
+   * she is right that they need to: a coach scanning for their next game reads
+   * the date and stops, and a makeup is precisely the row where the date is
+   * not the one they already wrote down.
+   *
+   * NOT a status. A makeup is scheduled, then it is final, exactly like every
+   * other game; it is a fact ABOUT the fixture, not a state it passes through.
+   * Making it a status would have meant a played makeup could not be "final".
+   */
+  makeup?: boolean;
 }
 
 export function PreviewCard({
@@ -50,6 +63,7 @@ export function PreviewCard({
   home,
   isNext = false,
   status,
+  makeup,
   ageGroup,
 }: PreviewCardProps) {
   // When the field is a link, keep it OUT of the joined time string so it can
@@ -64,7 +78,8 @@ export function PreviewCard({
       className={
         "le-preview-card" +
         (isNext ? " next" : "") +
-        (muted ? " muted" : "")
+        (muted ? " muted" : "") +
+        (makeup ? " is-makeup" : "")
       }
       role="link"
       tabIndex={0}
@@ -107,6 +122,15 @@ export function PreviewCard({
             }}
           >
             {ageGroup}
+          </span>
+        )}
+        {/* MAKEUP, alongside any status rather than instead of it: a makeup
+            can also be postponed, and hiding one behind the other loses the
+            more urgent of the two. Colour AND a word, because colour alone is
+            not a signal for a colourblind coach. */}
+        {makeup && (
+          <span className="le-preview-status" data-kind="makeup" aria-label="Makeup game">
+            MAKEUP
           </span>
         )}
         {badge && (

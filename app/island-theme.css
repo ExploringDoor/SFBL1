@@ -28,6 +28,11 @@
  * ============================================================================= */
 
 html.tenant-island {
+  /* Baby blue, as Kaylee asked. It only works because Island's pages are
+     black; the default in PreviewCard.css is the darker blue a white page
+     needs. */
+  --makeup: #7fd4ff;
+  --makeup-bg: rgba(127, 212, 255, 0.16);
   --bg: #000000;
   --text-strong: #ffffff;
   --text-body: rgba(255, 255, 255, 0.90);
