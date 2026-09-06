@@ -214,13 +214,21 @@
 /* ---- makeup games -------------------------------------------------------
    Kaylee, 2026-09-06: make a makeup stand out, "maybe baby blue".
 
-   Baby blue is right on Island, whose pages are pure black. It is close to
-   illegible on a WHITE page, and this component is shared, so the colour is a
-   token: a readable mid blue by default, and Island's theme swaps in the baby
-   blue she asked for. A tenant that never marks a makeup never sees either. */
+   Baby blue was the obvious answer and it is wrong HERE, which I only found by
+   measuring the rendered page rather than trusting the design. Island's pages
+   are black, so baby blue reads beautifully on them, but these game CARDS are
+   white on every tenant. #7fd4ff on white is a contrast ratio of 1.65:1, where
+   4.5 is the readable minimum. It would have been close to invisible on the
+   one element she asked to make obvious.
+
+   So the TEXT is #0077c8: 4.70 on white and 4.47 on black, the only blue tried
+   that is legible on both, and still plainly a light blue rather than a navy.
+   The EDGE keeps her baby blue, because a border carries no text and is where
+   the pop actually comes from at a glance down a column of cards. */
 :root {
-  --makeup: #0f62b0;
-  --makeup-bg: rgba(15, 98, 176, 0.12);
+  --makeup: #0077c8;
+  --makeup-edge: #7fd4ff;
+  --makeup-bg: rgba(0, 119, 200, 0.10);
 }
 
 .le-preview-status[data-kind="makeup"] {
@@ -236,9 +244,9 @@
   font-weight: 800;
 }
 
-/* An edge, so it is findable while scrolling past a column of cards. The team
-   names stay their normal colour: colouring those too turns a schedule into a
-   wall of blue and the makeup stops standing out at all. */
+/* The edge, in her baby blue. Findable while scrolling past a column of cards.
+   The team names stay their normal colour: colouring those too turns a
+   schedule into a wall of blue and the makeup stops standing out at all. */
 .le-preview-card.is-makeup {
-  border-left: 3px solid var(--makeup);
+  border-left: 4px solid var(--makeup-edge);
 }
