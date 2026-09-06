@@ -1442,7 +1442,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             <input
               style={{ ...INPUT, flex: 1, minWidth: 260 }}
-              placeholder="e.g. Tournament schedules go up every Tuesday night."
+              placeholder="e.g. Schedules are posted every Tuesday night."
               value={releaseNote}
               maxLength={300}
               onChange={(e) => setReleaseNote(e.target.value)}
