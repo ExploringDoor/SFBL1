@@ -32,7 +32,8 @@ export type AdminScope =
   | "schedule-gen"
   | "score-disputes"
   | "broadcast"
-  | "teams";
+  | "teams"
+  | "fields";
 
 export const ALL_SCOPES: readonly AdminScope[] = [
   "umpires",
@@ -42,6 +43,7 @@ export const ALL_SCOPES: readonly AdminScope[] = [
   "score-disputes",
   "broadcast",
   "teams",
+  "fields",
 ] as const;
 
 /** The roles a league can hand out, and what each opens.
@@ -78,6 +80,13 @@ export const ADMIN_ROLES: Record<
       "score-disputes",
       "broadcast",
       "teams",
+      // "fields" added 2026-09-06, Mike: "give Kaitlin access to fields so she
+      // can add and delete fields." Fields ARE scheduling: she books them and
+      // she is the one who hears a park is closed. Needing Mike to add a
+      // location before she can schedule on it made him the bottleneck on her
+      // own job. Writes go through /api/admin-fields, which keeps the previous
+      // list so a deletion is recoverable.
+      "fields",
     ],
   },
 };

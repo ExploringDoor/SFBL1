@@ -133,35 +133,53 @@ export async function POST(req: Request) {
 
   // ---- hide or show the LIVE schedule ------------------------------------
   if (action === "set_visibility") {
-    const hidden = body.hidden === true;
-    // The standing "when the schedule comes out" line. Sent separately from the
-    // hide switch and only written when supplied, so toggling visibility never
-    // wipes a note the league set weeks ago.
-    const releaseNote = body.releaseNote;
-    await db.doc(`leagues/${leagueId}/site_config/schedule`).set(
-      {
-        hidden,
-        ...(typeof releaseNote === "string"
-          ? { release_note: releaseNote.trim().slice(0, 300) }
-          : {}),
-        // A bare "coming soon" makes a league look abandoned. A reason makes it
-        // look like somebody is working, which is the truth.
-        note: typeof body.note === "string" ? body.note.trim().slice(0, 200) : "",
-        updated_at: now,
-        updated_by: who,
-      },
-      { merge: true },
-    );
-    try {
-      await db.collection(`leagues/${leagueId}/audit`).add({
-        kind: hidden ? "schedule_hidden" : "schedule_shown",
-        by_uid: decoded.uid,
-        at: now,
-      });
-    } catch {
-      /* never fail the toggle over the audit row */
+    // PARTIAL UPDATE, and this is not a nicety. The first version took
+    // `hidden` and the notice off whatever the admin page happened to hold in
+    // state, so pressing Hide sent an empty notice and WIPED the line the
+    // league had set. Kaitlin did exactly that within the hour: her page had
+    // been open since before the notice existed, so her state said "".
+    //
+    // The reverse was just as live: saving the notice sent a stale `hidden`,
+    // so writing a line could put a schedule back up mid-rebuild.
+    //
+    // So each field moves only when it is actually in the request. The hide
+    // button sends `hidden`. The notice button sends `releaseNote`. Neither
+    // can reach across and undo the other.
+    const patch: Record<string, unknown> = { updated_at: now, updated_by: who };
+    let touched = false;
+    if (typeof body.hidden === "boolean") {
+      patch.hidden = body.hidden;
+      // A bare "coming soon" makes a league look abandoned. A reason makes it
+      // look like somebody is working, which is the truth.
+      patch.note = typeof body.note === "string" ? body.note.trim().slice(0, 200) : "";
+      touched = true;
     }
-    return NextResponse.json({ ok: true, hidden });
+    if (typeof body.releaseNote === "string") {
+      patch.release_note = body.releaseNote.trim().slice(0, 300);
+      touched = true;
+    }
+    if (!touched) {
+      return NextResponse.json(
+        { error: "nothing to change: send hidden, releaseNote, or both" },
+        { status: 400 },
+      );
+    }
+    const hidden = typeof body.hidden === "boolean" ? body.hidden : undefined;
+    await db
+      .doc(`leagues/${leagueId}/site_config/schedule`)
+      .set(patch, { merge: true });
+    if (hidden !== undefined) {
+      try {
+        await db.collection(`leagues/${leagueId}/audit`).add({
+          kind: hidden ? "schedule_hidden" : "schedule_shown",
+          by_uid: decoded.uid,
+          at: now,
+        });
+      } catch {
+        /* never fail the toggle over the audit row */
+      }
+    }
+    return NextResponse.json({ ok: true, ...(hidden !== undefined ? { hidden } : {}) });
   }
 
   // ---- list the drafts ----------------------------------------------------

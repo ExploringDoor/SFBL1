@@ -32,7 +32,7 @@ interface FieldEntry {
   appleMapsUrl?: string;
 }
 
-export function FieldsManager({ leagueId }: Props) {
+export function FieldsManager({ leagueId, user }: Props) {
   // Team names for the home-field picker. Doug could add a field but had no
   // way to say whose home field it was: the team showed as a read-only chip,
   // set once from the registration and uneditable afterwards.
@@ -132,12 +132,22 @@ export function FieldsManager({ leagueId }: Props) {
           return entry;
         })
         .filter((f) => f.name);
-      const db = getDb();
-      await setDoc(
-        doc(db, `leagues/${leagueId}/site_config/fields`),
-        { data: clean },
-        { merge: true },
-      );
+      // THROUGH THE API, not straight to Firestore. The rule on site_config
+      // demands the exact "admin" claim, so a client write is refused for the
+      // scheduler role no matter what this page shows. The route checks the
+      // "fields" scope instead, and keeps the previous list so a deletion is
+      // recoverable. See /api/admin-fields.
+      const idToken = await user.getIdToken();
+      const res = await fetch("/api/admin-fields", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ leagueId, fields: clean }),
+      });
+      const out = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) throw new Error(out.error ?? `HTTP ${res.status}`);
       clean.sort((a, b) => a.name.localeCompare(b.name));
       setFields(clean);
       setSaved(true);

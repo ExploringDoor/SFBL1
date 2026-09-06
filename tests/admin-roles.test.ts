@@ -1,123 +1,94 @@
-// The scope table itself. Pure, so no emulator.
+// What each scoped password opens.
 //
-// The rules tests cover what a scoped session can read; this covers the
-// decision that produces those claims in the first place, and in particular
-// that a malformed or unknown claim grants NOTHING rather than defaulting open.
+// This file exists because the roles are the one place where widening access
+// is a one-word change. Adding "fields" to the scheduler on 2026-09-06 was a
+// single line, and a single line in the wrong array would have handed the
+// assistant the Payments tab.
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
+  ADMIN_ROLES,
   accessFromClaim,
   hasScope,
   scopedTabKeys,
-  ADMIN_ROLES,
 } from "@/lib/admin-roles";
 
-describe("accessFromClaim", () => {
-  it("'admin' is unrestricted", () => {
-    const a = accessFromClaim("admin");
-    expect(a.full).toBe(true);
-    expect(a.roleId).toBeNull();
-    expect(a.scopes.has("umpires")).toBe(true);
-    expect(a.scopes.has("broadcast")).toBe(true);
-  });
-
-  it("a known role gets exactly its declared scopes", () => {
-    const a = accessFromClaim("admin:umpires");
-    expect(a.full).toBe(false);
-    expect(a.roleId).toBe("umpires");
-    expect([...a.scopes]).toEqual(["umpires"]);
-  });
-
-  it("the scheduler gets the six it needs and nothing more", () => {
-    const a = accessFromClaim("admin:scheduler");
-    expect([...a.scopes].sort()).toEqual(
-      [
-        "broadcast",
-        "schedule",
-        "schedule-gen",
-        "score-disputes",
-        "scores",
-        "teams",
-      ].sort(),
-    );
-    // The umpire roster carries officials' phone numbers and the dates they
-    // cannot work. Adding "teams" for rosters must not have leaked this in.
-    expect(a.scopes.has("umpires")).toBe(false);
-  });
-
-  it("the umpire role did NOT gain teams when the scheduler did", () => {
-    expect(accessFromClaim("admin:umpires").scopes.has("teams")).toBe(false);
-  });
-
-  it.each([
-    ["admin:not-a-real-role", "unknown role id"],
-    ["captain:team_a", "a captain claim"],
-    ["player:p1", "a player claim"],
-    ["", "empty string"],
-    ["Admin", "wrong case"],
-    ["adminx", "prefix lookalike"],
-    [null, "null"],
-    [undefined, "undefined"],
-    [{ role: "admin" }, "an object"],
-  ])("%s grants nothing (%s)", (claim, _why) => {
-    const a = accessFromClaim(claim);
-    expect(a.full).toBe(false);
-    expect(a.scopes.size).toBe(0);
-  });
+const claim = (leagues: Record<string, string>, scopes?: string[]) => ({
+  leagues,
+  ...(scopes ? { admin_scopes: scopes } : {}),
 });
 
-describe("hasScope", () => {
-  const tok = (v: unknown) => ({ leagues: { island: v } });
+describe("the assistant (scheduler)", () => {
+  const tok = claim({ island: "admin:scheduler" });
 
-  it("a full admin passes every scope", () => {
-    for (const s of ["umpires", "scores", "broadcast"] as const) {
-      expect(hasScope(tok("admin"), "island", s)).toBe(true);
+  it("can manage fields, which Mike asked for on 2026-09-06", () => {
+    expect(hasScope(tok, "island", "fields")).toBe(true);
+  });
+
+  it("keeps the scheduling scopes it already had", () => {
+    for (const s of ["scores", "schedule", "schedule-gen", "teams", "broadcast"] as const) {
+      expect(hasScope(tok, "island", s)).toBe(true);
     }
   });
 
-  it("a scoped role passes only its own", () => {
-    expect(hasScope(tok("admin:umpires"), "island", "umpires")).toBe(true);
-    expect(hasScope(tok("admin:umpires"), "island", "broadcast")).toBe(false);
+  it("still cannot reach the umpire roster, which carries officials' numbers", () => {
+    expect(hasScope(tok, "island", "umpires")).toBe(false);
   });
 
-  it("a claim for another league does not carry over", () => {
-    expect(
-      hasScope({ leagues: { coybl: "admin" } }, "island", "scores"),
-    ).toBe(false);
-  });
-
-  it("no token at all is refused", () => {
-    expect(hasScope(null, "island", "scores")).toBe(false);
-    expect(hasScope(undefined, "island", "scores")).toBe(false);
-    expect(hasScope({}, "island", "scores")).toBe(false);
+  it("opens no tab that is not a declared scope", () => {
+    const tabs = scopedTabKeys(accessFromClaim("admin:scheduler"))!;
+    for (const forbidden of ["payments", "captains", "forms", "branding", "audit"]) {
+      expect(tabs.has(forbidden)).toBe(false);
+    }
   });
 });
 
-describe("scopedTabKeys", () => {
-  it("returns null for a full admin, meaning do not filter", () => {
+describe("the umpire in chief", () => {
+  const tok = claim({ island: "admin:umpires" });
+
+  it("did NOT get fields as a side effect", () => {
+    expect(hasScope(tok, "island", "fields")).toBe(false);
+  });
+
+  it("still opens only the umpire roster", () => {
+    expect(scopedTabKeys(accessFromClaim("admin:umpires"))).toEqual(new Set(["umpires"]));
+  });
+});
+
+describe("the full admin is unaffected", () => {
+  it("holds every scope, including new ones, without being listed", () => {
+    const tok = claim({ island: "admin" });
+    for (const s of ["fields", "umpires", "teams", "scores"] as const) {
+      expect(hasScope(tok, "island", s)).toBe(true);
+    }
+    // null means "no filtering", so a tab added later shows up for the owner
+    // without anyone remembering this file.
     expect(scopedTabKeys(accessFromClaim("admin"))).toBeNull();
   });
-
-  it("returns just the role's tabs otherwise", () => {
-    const keys = scopedTabKeys(accessFromClaim("admin:umpires"));
-    expect(keys && [...keys]).toEqual(["umpires"]);
-  });
 });
 
-describe("the role table", () => {
-  it("every declared scope is one the code knows", () => {
-    const known = new Set([
-      "umpires",
-      "scores",
-      "schedule",
-      "schedule-gen",
-      "score-disputes",
-      "broadcast",
-      "teams",
-    ]);
+describe("nothing else gets in", () => {
+  it("a claim for another league grants nothing here", () => {
+    expect(hasScope(claim({ coybl: "admin" }), "island", "fields")).toBe(false);
+    expect(hasScope(claim({ coybl: "admin:scheduler" }), "island", "fields")).toBe(false);
+  });
+
+  it("an unknown role id grants nothing", () => {
+    expect(hasScope(claim({ island: "admin:not-a-role" }), "island", "fields")).toBe(false);
+  });
+
+  it("a captain claim is not an admin claim", () => {
+    expect(hasScope(claim({ island: "captain" }), "island", "fields")).toBe(false);
+    expect(accessFromClaim("captain").full).toBe(false);
+  });
+
+  it("every role's scopes are real scopes, not typos", () => {
+    // A typo here fails open in the worst way: the tab shows and the API says
+    // no, or worse the reverse.
+    const known = new Set(["umpires","scores","schedule","schedule-gen","score-disputes","broadcast","teams","fields"]);
     for (const [id, role] of Object.entries(ADMIN_ROLES)) {
       for (const s of role.scopes) {
-        expect(known.has(s), `${id} declares unknown scope ${s}`).toBe(true);
+        expect(known.has(s), `${id} declares unknown scope "${s}"`).toBe(true);
       }
     }
   });

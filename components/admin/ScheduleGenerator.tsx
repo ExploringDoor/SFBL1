@@ -452,12 +452,9 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
     setError(null);
     try {
       // Visibility is sent unchanged: this button is only about the note.
-      await draftApi({
-        action: "set_visibility",
-        hidden: scheduleHidden === true,
-        note: hiddenNote,
-        releaseNote,
-      });
+      // Only the notice. Sending `hidden` from this button's state is how a
+      // stale page could put a hidden schedule back up.
+      await draftApi({ action: "set_visibility", releaseNote });
       setDone(
         releaseNote ? "Saved. It shows on the Tournaments page." : "Cleared.",
       );
@@ -472,7 +469,8 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
     setBusy(true);
     setError(null);
     try {
-      await draftApi({ action: "set_visibility", hidden, note: hiddenNote, releaseNote });
+      // Only the switch. Sending the notice from here is what wiped it.
+      await draftApi({ action: "set_visibility", hidden, note: hiddenNote });
       setScheduleHidden(hidden);
       setDone(
         hidden
