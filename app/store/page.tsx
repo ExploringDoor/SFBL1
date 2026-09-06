@@ -26,9 +26,20 @@ export const metadata = { title: "Store" };
 interface StoreItem {
   name: string;
   price?: string;
+  /** Free-text size line, for an item with no counts to track. */
   sizes?: string;
   image?: string;
   url?: string;
+  detail?: string;
+  /**
+   * What is left, per size.
+   *
+   * Shown rather than hidden because of the actual numbers: sixty smalls and
+   * FIVE larges. A plain "S M L XL" line sells the same five larges to
+   * everyone who reads it, and the person who drives to a field for one is the
+   * one who remembers the league badly.
+   */
+  stock?: { size: string; count: number }[];
 }
 
 interface StoreData {
@@ -94,6 +105,39 @@ export default async function StorePage() {
                     {item.price && <span className="str-price">{item.price}</span>}
                     {item.sizes && <span className="str-sizes">{item.sizes}</span>}
                   </div>
+                  {item.detail && <p className="str-detail">{item.detail}</p>}
+                  {item.stock && item.stock.length > 0 && (
+                    <div className="str-stock" aria-label="Sizes available">
+                      {item.stock.map((s) => {
+                        const out = s.count <= 0;
+                        // "Only 3 left" is worth saying and "only 47 left" is
+                        // not, so the count shows when it is genuinely short.
+                        const low = !out && s.count <= 6;
+                        return (
+                          <span
+                            key={s.size}
+                            className={
+                              "str-size" +
+                              (out ? " is-out" : "") +
+                              (low ? " is-low" : "")
+                            }
+                            title={
+                              out
+                                ? `${s.size} is sold out`
+                                : `${s.count} left in ${s.size}`
+                            }
+                          >
+                            {s.size}
+                            {out ? (
+                              <em>sold out</em>
+                            ) : low ? (
+                              <em>{s.count} left</em>
+                            ) : null}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
                   {href && (
                     <a
                       className="str-buy"
