@@ -101,11 +101,9 @@ export function OrderForm({
         ? venmo
           ? `Send $${placed.total} on Venmo to ${venmo}.`
           : `Send $${placed.total} on Venmo. The league office will confirm the handle.`
-        : placed.method === "zelle"
-          ? zelle
-            ? `Send $${placed.total} on Zelle to ${zelle}.`
-            : `Send $${placed.total} on Zelle. The league office will confirm the details.`
-          : `Bring $${placed.total} when you collect it.`;
+        : zelle
+          ? `Send $${placed.total} on Zelle to ${zelle}.`
+          : `Send $${placed.total} on Zelle. The league office will confirm the details.`;
     return (
       <div className="str-placed" role="status">
         <p className="str-placed-head">Your {size} is reserved.</p>

@@ -98,10 +98,17 @@ describe("what an order costs", () => {
 });
 
 describe("how they said they would pay", () => {
-  it("accepts the four Mike named", () => {
-    for (const m of ["card", "venmo", "zelle", "cash"]) {
+  it("accepts the three Mike settled on", () => {
+    for (const m of ["card", "venmo", "zelle"]) {
       expect(isPayMethod(m)).toBe(true);
     }
+  });
+
+  it("rejects cash, which he took out on 2026-09-06", () => {
+    // Removed from the model, not just hidden in the form, so an order from a
+    // browser tab left open before the change is refused rather than arriving
+    // as a method the office no longer accepts.
+    expect(isPayMethod("cash")).toBe(false);
   });
 
   it("rejects anything else, since this string is stored on the order", () => {

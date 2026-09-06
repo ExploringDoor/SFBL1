@@ -39,14 +39,18 @@ export interface MerchItem {
   initial_stock: Record<string, number>;
 }
 
-/** How someone said they would pay. Only "card" moves money on the site. */
-export type PayMethod = "card" | "venmo" | "zelle" | "cash";
+/** How someone said they would pay. Only "card" moves money on the site.
+ *
+ *  Cash was offered and Mike took it out the same day (2026-09-06). Removed
+ *  from this list rather than merely hidden in the form: isPayMethod reads it,
+ *  so an order that still says "cash" is refused by the API instead of arriving
+ *  from a stale browser tab as a method the office no longer accepts. */
+export type PayMethod = "card" | "venmo" | "zelle";
 
 export const PAY_METHODS: { value: PayMethod; label: string }[] = [
   { value: "card", label: "Card, now on this page" },
   { value: "venmo", label: "Venmo" },
   { value: "zelle", label: "Zelle" },
-  { value: "cash", label: "Cash at the field" },
 ];
 
 /** Nobody needs sixteen shirts, and a typo in a quantity box is how five
