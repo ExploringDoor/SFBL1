@@ -143,6 +143,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
   >([]);
   const [scheduleHidden, setScheduleHidden] = useState<boolean | null>(null);
   const [hiddenNote, setHiddenNote] = useState("");
+  const [releaseNote, setReleaseNote] = useState("");
   const [dropTeam, setDropTeam] = useState("");
   const [dropPlan, setDropPlan] = useState<{
     wouldRemove: number;
@@ -259,6 +260,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
         const vis = visSnap.exists() ? visSnap.data() : null;
         setScheduleHidden(vis?.hidden === true);
         setHiddenNote(typeof vis?.note === "string" ? vis.note : "");
+        setReleaseNote(typeof vis?.release_note === "string" ? vis.release_note : "");
         const gpt = rulesSnap.exists() ? rulesSnap.data()?.games_per_team : null;
         if (typeof gpt === "number" && Number.isFinite(gpt)) {
           setGamesPerTeam(Math.max(0, Math.floor(gpt)));
@@ -445,11 +447,34 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
     }
   }
 
+  async function saveReleaseNote() {
+    setBusy(true);
+    setError(null);
+    try {
+      // Visibility is sent unchanged: this button is only about the note.
+      await draftApi({
+        action: "set_visibility",
+        hidden: scheduleHidden === true,
+        note: hiddenNote,
+        releaseNote,
+      });
+      setDone(
+        releaseNote
+          ? "Saved. It shows on the Tournaments page and the Schedule page."
+          : "Cleared.",
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not save that");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function setVisibility(hidden: boolean) {
     setBusy(true);
     setError(null);
     try {
-      await draftApi({ action: "set_visibility", hidden, note: hiddenNote });
+      await draftApi({ action: "set_visibility", hidden, note: hiddenNote, releaseNote });
       setScheduleHidden(hidden);
       setDone(
         hidden
@@ -1405,6 +1430,32 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
           schedule down while you move games about. Dropping a team removes only
           that team&rsquo;s games.
         </p>
+
+        {/* -- when the schedule comes out ---------------------------------
+            Mike, 2026-09-06: "We release tournament schedule every Tuesday
+            night, can you post this so everyone sees it." Not the homepage
+            banner: that is for one-off news, it becomes wallpaper in a
+            fortnight, and the single slot is needed for rainouts. This is a
+            standing line on the pages people are on when they go looking. */}
+        <div style={{ marginBottom: 12 }}>
+          <label style={LABEL}>When the schedule comes out</label>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            <input
+              style={{ ...INPUT, flex: 1, minWidth: 260 }}
+              placeholder="e.g. Tournament schedules go up every Tuesday night."
+              value={releaseNote}
+              maxLength={300}
+              onChange={(e) => setReleaseNote(e.target.value)}
+            />
+            <button type="button" style={BTN} disabled={busy} onClick={saveReleaseNote}>
+              Save note
+            </button>
+          </div>
+          <p style={{ fontSize: 11, color: "var(--muted)", margin: "4px 0 0" }}>
+            Shows on the Tournaments page and the Schedule page. Leave it empty
+            to take it down.
+          </p>
+        </div>
 
         {/* -- hide / show ------------------------------------------------- */}
         <div

@@ -105,6 +105,7 @@ export async function POST(req: Request) {
     division?: unknown;
     hidden?: unknown;
     note?: unknown;
+    releaseNote?: unknown;
   };
   try {
     body = (await req.json()) as typeof body;
@@ -133,9 +134,16 @@ export async function POST(req: Request) {
   // ---- hide or show the LIVE schedule ------------------------------------
   if (action === "set_visibility") {
     const hidden = body.hidden === true;
+    // The standing "when the schedule comes out" line. Sent separately from the
+    // hide switch and only written when supplied, so toggling visibility never
+    // wipes a note the league set weeks ago.
+    const releaseNote = body.releaseNote;
     await db.doc(`leagues/${leagueId}/site_config/schedule`).set(
       {
         hidden,
+        ...(typeof releaseNote === "string"
+          ? { release_note: releaseNote.trim().slice(0, 300) }
+          : {}),
         // A bare "coming soon" makes a league look abandoned. A reason makes it
         // look like somebody is working, which is the truth.
         note: typeof body.note === "string" ? body.note.trim().slice(0, 200) : "",

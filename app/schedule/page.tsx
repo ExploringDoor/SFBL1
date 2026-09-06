@@ -105,6 +105,11 @@ export default async function SchedulePage({
           <p style={{ fontSize: 14, color: "var(--muted)", margin: "10px 0 0" }}>
             Scores and standings are still up to date.
           </p>
+          {visibility.releaseNote && (
+            <p style={{ fontSize: 14, margin: "10px 0 0", fontWeight: 600 }}>
+              {visibility.releaseNote}
+            </p>
+          )}
           <p style={{ marginTop: 16 }}>
             <a
               href="/standings"
@@ -210,6 +215,24 @@ export default async function SchedulePage({
   return (
     <main className={"container py-10" + (lmllStyle ? " le-lmll-sb" : "")}>
     <DemoDataBanner show={config?.flags?.demo_data === true} />
+      {/* When the schedule comes out. Sits above the fixtures because the
+          person asking has usually just looked at the fixtures and not found
+          the one they wanted. */}
+      {visibility.releaseNote && (
+        <p
+          style={{
+            margin: "0 0 18px",
+            padding: "10px 14px",
+            borderRadius: 10,
+            borderLeft: "4px solid var(--brand-primary)",
+            background: "var(--surface-2, rgba(0,0,0,0.03))",
+            fontWeight: 600,
+            lineHeight: 1.5,
+          }}
+        >
+          {visibility.releaseNote}
+        </p>
+      )}
       <header className="mb-6 flex items-end justify-between gap-4 flex-wrap">
         {!config?.flags?.hide_page_titles && !lmllStyle ? (
           <div>

@@ -15,6 +15,7 @@ import Link from "next/link";
 import islandSlate from "@/app/tournaments/island-fall-2026.json";
 import { isTournamentPast } from "@/lib/tournament-dates";
 import { headers } from "next/headers";
+import { loadScheduleVisibility } from "@/lib/schedule-visibility";
 import { getAdminDb } from "@/lib/firebase-admin";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { IslandSlate } from "./IslandSlate";
@@ -89,10 +90,12 @@ function EventsView({
   eyebrow,
   hideTitle,
   bannerUrl,
+  releaseNote,
 }: {
   events: TournamentEvent[];
   fallbackUrl?: string;
   intro?: string;
+  releaseNote?: string;
   eyebrow?: string;
   hideTitle?: boolean;
   bannerUrl?: string;
@@ -139,6 +142,27 @@ function EventsView({
           {intro ??
             "Tap an event to register or get details."}
         </p>
+        {/* WHEN THE SCHEDULE COMES OUT. The most common question a tournament
+            gets, and it is answered here rather than in the homepage banner:
+            a banner is for a one-off, it stops being read within a fortnight,
+            and the one slot is needed for rainouts. Editable in the admin, so
+            "Tuesday" can become "Wednesday" without me. */}
+        {releaseNote && (
+          <p
+            style={{
+              marginTop: 14,
+              padding: "10px 14px",
+              borderRadius: 10,
+              borderLeft: "4px solid var(--brand-primary)",
+              background: "var(--surface-2, rgba(0,0,0,0.03))",
+              maxWidth: 680,
+              fontWeight: 600,
+              lineHeight: 1.5,
+            }}
+          >
+            {releaseNote}
+          </p>
+        )}
       </header>
 
       <div
@@ -301,6 +325,9 @@ export default async function TournamentsPage() {
       return null;
     }
   })();
+  // When the schedule comes out. Same document as the hide switch, one read.
+  const { releaseNote } = await loadScheduleVisibility(tenantId);
+
   if (!tenantId) {
     return (
       <main className="container py-12">
@@ -330,6 +357,7 @@ export default async function TournamentsPage() {
         eyebrow={config?.name}
         hideTitle={config?.flags?.hide_page_titles}
         bannerUrl={config?.tournaments?.banner_url}
+        releaseNote={releaseNote}
       />
     );
   }

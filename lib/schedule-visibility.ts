@@ -23,11 +23,23 @@ import { getAdminDb } from "@/lib/firebase-admin";
 
 export interface ScheduleVisibility {
   hidden: boolean;
-  /** Optional line shown in place of the fixtures. */
+  /** Optional line shown in place of the fixtures while hidden. */
   note: string;
+  /**
+   * A STANDING line about when the schedule comes out, shown whether or not
+   * the schedule is hidden.
+   *
+   * Mike, 2026-09-06: "We release tournament schedule every Tuesday night, can
+   * you post this so everyone sees it." Deliberately NOT the homepage banner:
+   * a banner is for something that happens once, it becomes wallpaper within a
+   * fortnight, and Island has exactly one banner slot which is needed for
+   * rainouts. This sits on the pages people are already on when they wonder
+   * where the schedule is.
+   */
+  releaseNote: string;
 }
 
-const VISIBLE: ScheduleVisibility = { hidden: false, note: "" };
+const VISIBLE: ScheduleVisibility = { hidden: false, note: "", releaseNote: "" };
 
 /**
  * Read the stored document into a decision.
@@ -42,10 +54,11 @@ const VISIBLE: ScheduleVisibility = { hidden: false, note: "" };
  */
 export function readVisibility(data: unknown): ScheduleVisibility {
   if (!data || typeof data !== "object") return VISIBLE;
-  const d = data as { hidden?: unknown; note?: unknown };
+  const dd = data as { hidden?: unknown; note?: unknown; release_note?: unknown };
   return {
-    hidden: d.hidden === true,
-    note: typeof d.note === "string" ? d.note : "",
+    hidden: dd.hidden === true,
+    note: typeof dd.note === "string" ? dd.note : "",
+    releaseNote: typeof dd.release_note === "string" ? dd.release_note.trim() : "",
   };
 }
 

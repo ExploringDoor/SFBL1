@@ -10,7 +10,11 @@ import { DEFAULT_HIDDEN_NOTE, readVisibility } from "@/lib/schedule-visibility";
 
 describe("only a deliberate press hides the schedule", () => {
   it("hides on an explicit boolean true", () => {
-    expect(readVisibility({ hidden: true })).toEqual({ hidden: true, note: "" });
+    expect(readVisibility({ hidden: true })).toEqual({
+      hidden: true,
+      note: "",
+      releaseNote: "",
+    });
   });
 
   it("stays visible for a league that has never touched it", () => {
@@ -35,7 +39,28 @@ describe("only a deliberate press hides the schedule", () => {
   });
 });
 
-describe("the note", () => {
+describe("the standing release note", () => {
+  it("is carried through, and is independent of hiding", () => {
+    const v = readVisibility({ release_note: "Schedules go up Tuesday night." });
+    expect(v.releaseNote).toBe("Schedules go up Tuesday night.");
+    // It shows whether or not the schedule is hidden, so it must not imply one.
+    expect(v.hidden).toBe(false);
+  });
+
+  it("is trimmed, since it renders as a standing line", () => {
+    expect(readVisibility({ release_note: "  Tuesday night.  " }).releaseNote).toBe(
+      "Tuesday night.",
+    );
+  });
+
+  it("is empty when unset or the wrong type, so nothing odd renders", () => {
+    expect(readVisibility({}).releaseNote).toBe("");
+    expect(readVisibility({ release_note: 7 }).releaseNote).toBe("");
+    expect(readVisibility(null).releaseNote).toBe("");
+  });
+});
+
+describe("the hidden note", () => {
   it("is carried through when set", () => {
     expect(readVisibility({ hidden: true, note: "Back Friday" }).note).toBe(
       "Back Friday",
