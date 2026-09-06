@@ -96,9 +96,12 @@ const HL_ICONS = [ICON_WHISTLE, ICON_TROPHY, ICON_BALL, ICON_STAR];
 
 export function IslandSlate({
   logos,
+  releaseNote,
 }: {
   /** Admin-uploaded logos by slug, which beat the checked-in art. */
   logos?: Record<string, string>;
+  /** Standing line about when schedules go up. See lib/schedule-visibility. */
+  releaseNote?: string;
 } = {}) {
   const data = islandData as {
     season: string;
@@ -138,6 +141,25 @@ export function IslandSlate({
           {data.season} Tournaments
         </h1>
         <p className="ift-intro">{data.intro}</p>
+        {/* WHEN THE SCHEDULE COMES OUT. Island renders this page through its
+            own component, so the note added to the shared EventsView never
+            reached the one league that asked for it. */}
+        {releaseNote && (
+          <p
+            style={{
+              marginTop: 14,
+              padding: "10px 14px",
+              borderRadius: 10,
+              borderLeft: "4px solid var(--brand-primary, #002d6e)",
+              background: "rgba(0,0,0,0.03)",
+              maxWidth: 680,
+              fontWeight: 600,
+              lineHeight: 1.5,
+            }}
+          >
+            {releaseNote}
+          </p>
+        )}
       </header>
 
       {data.highlights && data.highlights.length > 0 && (

@@ -342,7 +342,12 @@ export default async function TournamentsPage() {
   // (COYBL) buries the dates, which is the one thing a coach is scanning for.
   // See IslandSlate for why the data is a checked-in file.
   if (tenantId === "island") {
-    return <IslandSlate logos={await loadTournamentLogos(tenantId)} />;
+    return (
+      <IslandSlate
+        logos={await loadTournamentLogos(tenantId)}
+        releaseNote={releaseNote}
+      />
+    );
   }
 
   // Config-driven event list (e.g. COYBL's Five Tool charity slate).
