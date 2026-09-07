@@ -16,6 +16,7 @@ import { useEffect, useState } from "react";
 import type { User } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
+import { defaultFieldsFor } from "@/lib/tenant-default-fields";
 
 interface Props {
   leagueId: string;
@@ -73,8 +74,25 @@ export function FieldsManager({ leagueId, user }: Props) {
               )
               .filter((f) => f.name || f.address)
           : [];
-        list.sort((a, b) => a.name.localeCompare(b.name));
-        if (alive) setFields(list);
+        // NOTHING SAVED YET? OPEN ON THE LEAGUE'S REAL LIST.
+        //
+        // The public /fields page falls back to a built-in venue list while
+        // this document does not exist, so a league can be showing twenty six
+        // ballparks that are not stored anywhere. Adding one venue here used
+        // to CREATE the document with a single entry, which switched that
+        // fallback off and took the other twenty six off the public site. Adam
+        // did exactly that to SFBL on 2026-09-07: one addition, twenty six
+        // silent deletions.
+        //
+        // Loading the same defaults means the editor opens on what the site is
+        // actually showing, so adding a venue appends to the list instead of
+        // replacing it.
+        const seeded =
+          list.length === 0
+            ? defaultFieldsFor(leagueId).map((f) => ({ ...f }))
+            : list;
+        seeded.sort((a, b) => a.name.localeCompare(b.name));
+        if (alive) setFields(seeded);
       } catch (e) {
         if (alive) setError(e instanceof Error ? e.message : "Load failed");
       } finally {

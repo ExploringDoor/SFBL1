@@ -92,18 +92,37 @@ export function ScheduleEditor({ leagueId, user }: Props) {
             (x): x is string => typeof x === "string" && x.length > 0,
           )
         : [];
-      if (cfgFields.length === 0 && fieldsDoc.exists()) {
+      // BOTH LISTS, NOT THE FIRST NON-EMPTY ONE.
+      //
+      // The league doc carries a legacy array of names and site_config/fields
+      // carries the rich records the Fields tab edits. This used to take the
+      // league doc and stop, so a venue added in the Fields tab never reached
+      // the schedule dropdown: Adam added Oriole Park to SFBL on 2026-09-07 and
+      // could not then schedule a game on it. Reading both, deduped, means a
+      // venue added anywhere is selectable and nothing a league already had
+      // disappears.
+      if (fieldsDoc.exists()) {
         const arr = fieldsDoc.data()?.data;
         if (Array.isArray(arr)) {
-          cfgFields = arr
-            .map((f) => {
-              if (typeof f === "string") return f;
-              if (f && typeof f === "object" && typeof f.name === "string") {
-                return f.name;
-              }
-              return null;
-            })
-            .filter((s): s is string => !!s);
+          const nameOf = (f: unknown): string | null => {
+            if (typeof f === "string") return f;
+            if (f && typeof f === "object") {
+              const n = (f as { name?: unknown }).name;
+              if (typeof n === "string" && n) return n;
+            }
+            return null;
+          };
+          // Start from whatever the league doc had, then ADD anything the
+          // Fields tab knows about that is not already there. Names are
+          // compared case-insensitively; the first spelling seen wins, so a
+          // league's existing games keep matching their own field names.
+          const seen = new Set(cfgFields.map((f) => f.toLowerCase()));
+          for (const f of arr) {
+            const name = nameOf(f);
+            if (!name || seen.has(name.toLowerCase())) continue;
+            seen.add(name.toLowerCase());
+            cfgFields.push(name);
+          }
         }
       }
       // Stable, alphabetical so the dropdown reads consistently.
