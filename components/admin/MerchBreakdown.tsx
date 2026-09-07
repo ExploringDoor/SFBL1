@@ -107,6 +107,7 @@ export function MerchBreakdown({ rows }: { rows: MerchOrderRow[] }) {
       <div className="flex flex-wrap gap-6">
         <Group title="By size" rows={s.bySize} note="How many of each to bring." />
         <Group title="By team" rows={s.byTeam} />
+        <Group title="By age" rows={s.byAge} />
         <Group title="By division" rows={s.byDivision} />
       </div>
     </div>

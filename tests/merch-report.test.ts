@@ -7,6 +7,7 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  ageOf,
   packingList,
   summarise,
   tallyBy,
@@ -91,6 +92,26 @@ describe("who still owes money", () => {
   });
 });
 
+describe("paid, however it was paid", () => {
+  it("counts a card payment, which lands in a nested payment object", () => {
+    // /api/square-pay writes payment: { status: "paid" }, NOT payment_status.
+    // Reading only the flat field called every paid card order unpaid, which
+    // at a field means turning away somebody who has already been charged.
+    const rows = [o({ size: "M", payment: { status: "paid" }, team_name: "T" })];
+    expect(summarise(rows).paidShirts).toBe(1);
+    expect(summarise(rows).owed).toBe(0);
+  });
+
+  it("counts the office marking a Venmo order paid", () => {
+    expect(summarise([o({ size: "M", payment_status: "paid" })]).paidShirts).toBe(1);
+  });
+
+  it("still treats a pending card order as unpaid", () => {
+    const rows = [o({ size: "M", payment: { status: "pending" } })];
+    expect(summarise(rows).unpaidShirts).toBe(1);
+  });
+});
+
 describe("the packing list", () => {
   it("reads in the order shirts are handed out: division, team, size, player", () => {
     const out = packingList(ROWS).map((r) => `${r.division}/${r.team_name}/${r.size}`);
@@ -118,5 +139,33 @@ describe("nothing sold yet", () => {
   it("ignores a quantity that is not a real number", () => {
     const s = summarise([o({ size: "M", quantity: NaN }), o({ size: "M", quantity: -3 })]);
     expect(s.shirts).toBe(0);
+  });
+});
+
+describe("by age, which is not the same as by division", () => {
+  it("folds 12U Open and 12U C into one 12U", () => {
+    const rows = [
+      o({ size: "M", division: "12U Open" }),
+      o({ size: "S", division: "12U C", quantity: 2 }),
+      o({ size: "L", division: "14U Open" }),
+    ];
+    const byAge = summarise(rows).byAge;
+    expect(byAge.find((t) => t.key === "12U")!.shirts).toBe(3);
+    expect(byAge.find((t) => t.key === "14U")!.shirts).toBe(1);
+  });
+
+  it("orders ages numerically, so 10U comes before 12U and 16U", () => {
+    const rows = ["16U Open", "10U Open", "12U C"].map((d) => o({ size: "M", division: d }));
+    expect(summarise(rows).byAge.map((t) => t.key)).toEqual(["10U", "12U", "16U"]);
+  });
+
+  it("leaves an unrecognised division alone rather than guessing", () => {
+    expect(ageOf("Rec League")).toBe("Rec League");
+    expect(ageOf("")).toBe("");
+  });
+
+  it("normalises spacing and case", () => {
+    expect(ageOf("12 u Open")).toBe("12U");
+    expect(ageOf("12u C")).toBe("12U");
   });
 });

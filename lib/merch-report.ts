@@ -13,6 +13,12 @@
 
 export interface MerchOrderRow {
   id: string;
+  /** Written by /api/square-pay when a card clears. It is a NESTED object,
+   *  not the flat payment_status this file also reads: the merch order writes
+   *  the flat one, the payment route writes this one, and a report that knew
+   *  about only one of them would call a paid card order unpaid and send
+   *  somebody away from a field without their shirt. */
+  payment?: { status?: string; method?: string; amount_cents?: number };
   item_name?: string;
   size?: string;
   quantity?: number;
@@ -41,7 +47,10 @@ const qty = (r: MerchOrderRow) => {
   const n = Math.floor(Number(r.quantity ?? 0));
   return Number.isFinite(n) && n > 0 ? n : 0;
 };
-const isPaid = (r: MerchOrderRow) => r.payment_status === "paid";
+/** Paid by EITHER route: the card path writes payment.status, the office
+ *  marking a Venmo or Zelle order writes payment_status. */
+const isPaid = (r: MerchOrderRow) =>
+  r.payment_status === "paid" || r.payment?.status === "paid";
 
 /** Group and count, biggest first. `blank` names rows with nothing in the
  *  field, which happens for orders taken before that field was asked for. */
@@ -83,6 +92,19 @@ export function tallyBySize(rows: MerchOrderRow[]): Tally[] {
   });
 }
 
+/** "12U Open" -> "12U". Anything unrecognised is returned unchanged rather
+ *  than guessed at, so an odd division shows as itself instead of vanishing. */
+export function ageOf(division: string): string {
+  const m = /^\s*(\d{1,2}\s*U)\b/i.exec(division);
+  return m ? m[1]!.replace(/\s+/g, "").toUpperCase() : division.trim();
+}
+
+/** Sort 10U before 12U before 16U, numerically, not as text. */
+function ageNum(label: string): number {
+  const m = /^(\d{1,2})U$/i.exec(label);
+  return m ? Number(m[1]) : Number.MAX_SAFE_INTEGER;
+}
+
 export interface MerchSummary {
   orders: number;
   shirts: number;
@@ -93,6 +115,12 @@ export interface MerchSummary {
   bySize: Tally[];
   byTeam: Tally[];
   byDivision: Tally[];
+  /** By AGE, with the level dropped: 12U Open and 12U C are both 12U.
+   *  Melinda asked for "by Age" as well as by team and size, and a division
+   *  grouping does not answer it: an age group is one set of parents on one
+   *  set of fields, and the shirts for it travel together regardless of
+   *  whether a team plays Open or C. */
+  byAge: Tally[];
 }
 
 export function summarise(rows: MerchOrderRow[]): MerchSummary {
@@ -112,6 +140,9 @@ export function summarise(rows: MerchOrderRow[]): MerchSummary {
     bySize: tallyBySize(rows),
     byTeam: tallyBy(rows, (r) => String(r.team_name ?? ""), "No team given"),
     byDivision: tallyBy(rows, (r) => String(r.division ?? ""), "No division given"),
+    byAge: tallyBy(rows, (r) => ageOf(String(r.division ?? "")), "No age given").sort(
+      (a, b) => (ageNum(a.key) - ageNum(b.key)) || a.key.localeCompare(b.key),
+    ),
   };
 }
 

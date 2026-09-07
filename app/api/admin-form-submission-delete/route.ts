@@ -15,35 +15,11 @@
 import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { FORM_KIND_SET } from "@/lib/form-kinds";
 
 export const runtime = "nodejs";
 
-const ALLOWED_KINDS = new Set([
-  "team_registration",
-  "player_registration",
-  "team_waiver",
-  // Same omission as the status route: the College Clinic tab shipped with a
-  // Delete button that returned "unknown kind". The two duplicate rows sitting
-  // in Island's clinic collection right now cannot be tidied without this, and
-  // this is a SOFT delete, so nothing is destroyed either way.
-  "clinic_registration",
-  "umpire_evaluation",
-  "coach_evaluation",
-  "site_feedback",
-  "player_waiver",
-  // Alerts sign-ups. These feed the Send Message recipient list directly, so
-  // until now a bot signup could be seen there and not removed from anywhere:
-  // the kind has no tab of its own in the submissions viewer, and this
-  // allow-list rejected it. Adam, 2026-08-20, on three of them sitting in
-  // COYBL's list: "yes delete them".
-  "alerts_signup",
-  // COYBL umpire registration. Doug runs this every year and the entry number
-  // is the umpire's registration number, so these rows are referenced by
-  // people, not just counted.
-  "umpire_registration",
-  "tournament_registration",
-  "baseball_order",
-]);
+const ALLOWED_KINDS = FORM_KIND_SET;
 
 interface Body {
   leagueId?: unknown;

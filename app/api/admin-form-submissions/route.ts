@@ -9,31 +9,11 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { FORM_KIND_SET } from "@/lib/form-kinds";
 
 export const runtime = "nodejs";
 
-const ALLOWED_KINDS = new Set([
-  "team_registration",
-  "player_registration",
-  "team_waiver",
-  // Without this the College Clinic tab in the admin returns
-  // "unknown kind" and Mike sees an error where the list should be.
-  "clinic_registration",
-  "umpire_evaluation",
-  "coach_evaluation",
-  "site_feedback",
-  "player_waiver",
-  // Alerts sign-ups. They feed the Send Message list and had no admin surface
-  // at all, so a bot signup could be seen in Send Message and removed from
-  // nowhere. Doug, forwarded 2026-08-23: "How can I delete this one ?"
-  "alerts_signup",
-  // COYBL umpire registration. Doug runs this every year and the entry number
-  // is the umpire's registration number, so these rows are referenced by
-  // people, not just counted.
-  "umpire_registration",
-  "tournament_registration",
-  "baseball_order",
-]);
+const ALLOWED_KINDS = FORM_KIND_SET;
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
