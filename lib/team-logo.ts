@@ -63,7 +63,12 @@ function fingerprint(s: string): string {
  * would put COYBL's crest on every Windmill team the day someone set one.
  */
 const LEAGUE_LOGO_FALLBACK: Record<string, string> = {
-  island: "/island/logo.png",
+  // The pitcher alone, square, NOT the full logo. A team crest renders in a
+  // 44px slot, and Island's logo is 600px wide with "ISLAND Fastpitch" across
+  // the bottom: at that size the wordmark is three pixels tall and the whole
+  // thing reads as a navy smudge. Cropped to the mark it fills the circle and
+  // is recognisable. Generated from public/island/logo.png.
+  island: "/island/logo-mark.png",
 };
 
 export function leagueLogoFallback(leagueId: string): string | null {
