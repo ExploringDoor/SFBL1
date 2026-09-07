@@ -48,7 +48,8 @@ export function PaymentOptions({
     | "team_registration"
     | "clinic_registration"
     | "tournament_registration"
-    | "baseball_order";
+    | "baseball_order"
+    | "merch_order";
   /** What to call the money on screen. "team fee" is wrong for a clinic
    *  place bought by one family. */
   noun?: string;

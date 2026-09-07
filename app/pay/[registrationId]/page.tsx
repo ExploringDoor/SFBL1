@@ -60,7 +60,20 @@ const ID_RE = /^[A-Za-z0-9_-]{16,128}$/;
 // walking this public path can tell a malformed id from a well formed one by
 // the status code alone. Everything unknown must fail the same way.
 const RESERVED_ID_RE = /^__.*__$/;
-const KINDS = ["team_registration", "clinic_registration"] as const;
+// The kinds this page can take money for. merch_order was added 2026-09-07,
+// late and at a cost: the store shipped with a card option that sent every
+// buyer here, and this list did not know about them, so the page answered
+// "we do not recognise this link" to fourteen real customers. Twenty card
+// attempts, zero payments, and six people gave up and switched to Venmo.
+//
+// If you add a payable form, add it HERE as well as to square-pay and
+// square-quote. Those two took merch_order on the same day this did not, and
+// the gap was invisible until somebody tried to pay.
+const KINDS = [
+  "team_registration",
+  "clinic_registration",
+  "merch_order",
+] as const;
 
 /** The ONE answer for every link we cannot honour: unknown id, malformed id,
  *  reserved id, another league's id, or a read that failed. Identical wording
@@ -130,6 +143,7 @@ export default async function PayPage({
   if (!kind || !data) return <UnknownLink office={office} />;
 
   const isClinic = kind === "clinic_registration";
+  const isMerch = kind === "merch_order";
 
   // Whitespace collapsed, not merely trimmed: live data holds a first name
   // stored as "Alyssa " with a trailing space, and two Island team names have
@@ -141,14 +155,25 @@ export default async function PayPage({
   const last = clean(data.player_last_name);
   const who = isClinic
     ? `${clean(data.player_first_name)}${last ? ` ${last[0]}.` : ""}`.trim()
-    : clean(data.team_name);
+    : isMerch
+      ? // What they are paying for, so the page they land on names the thing
+        // rather than a team fee they do not owe.
+        [
+          clean(data.item_name) || "Shirt",
+          clean(data.size) ? `size ${clean(data.size)}` : "",
+          Number(data.quantity ?? 1) > 1 ? `x${Number(data.quantity)}` : "",
+          clean(data.player_name) ? `for ${clean(data.player_name)}` : "",
+        ]
+          .filter(Boolean)
+          .join(", ")
+      : clean(data.team_name);
 
   const payment = (data.payment ?? null) as { status?: string } | null;
 
   // WHAT THE LEDGER SAYS, which the payment block above cannot see.
   // See lib/fee-ledger.ts for why both of its cases matter here and not before.
   let blocked: string | null = null;
-  if (!isClinic) {
+  if (!isClinic && !isMerch) {
     const ledgerId =
       typeof data.assigned_team_id === "string" && data.assigned_team_id
         ? data.assigned_team_id
@@ -211,7 +236,11 @@ export default async function PayPage({
   return (
     <main className="container py-10">
       <h1 className="text-2xl font-bold">
-        {isClinic ? "Pay for your clinic place" : "Pay your team fee"}
+        {isMerch
+          ? "Pay for your shirt"
+          : isClinic
+            ? "Pay for your clinic place"
+            : "Pay your team fee"}
       </h1>
       {who && <p className="mt-1 text-slate-700">{who}</p>}
       {/* The price breakdown, the card form and the Venmo option all come from
@@ -224,7 +253,7 @@ export default async function PayPage({
         submissionId={id}
         leagueId={tenantId}
         kind={kind}
-        noun={isClinic ? "clinic fee" : "team fee"}
+        noun={isMerch ? "shirt order" : isClinic ? "clinic fee" : "team fee"}
         // There is no "later" here. This page IS later: it is what somebody who
         // deferred at sign up was sent, and an exit reading "reply to your
         // confirmation email" would send them round the loop they came here to

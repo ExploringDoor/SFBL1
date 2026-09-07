@@ -67,7 +67,8 @@ export interface LeagueFormProps {
     | "clinic_registration"
     | "umpire_registration"
     | "tournament_registration"
-    | "baseball_order";
+    | "baseball_order"
+    | "merch_order";
   title: string;
   description?: string;
   /** Optional intro paragraph(s) — shown above the form. Each entry

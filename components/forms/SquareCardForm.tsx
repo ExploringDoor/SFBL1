@@ -95,7 +95,8 @@ export function SquareCardForm({
     | "team_registration"
     | "clinic_registration"
     | "tournament_registration"
-    | "baseball_order";
+    | "baseball_order"
+    | "merch_order";
   /** What the line item is called in the amount breakdown. A parent buying
    *  one clinic place for one girl was shown "Team fee $175.00", which is not
    *  what they are buying and not a phrase they can reconcile against their
