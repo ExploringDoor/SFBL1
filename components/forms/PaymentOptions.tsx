@@ -75,6 +75,7 @@ export function PaymentOptions({
   // A clinic place is capped and held in payment order, so several strings
   // below have to say something different from the team-fee wording.
   const isClinic = kind === "clinic_registration";
+  const isMerch = kind === "merch_order";
   const details = paymentDetailsFor(leagueId);
   const hasVenmo = Boolean(details?.venmoUrl && details?.venmoHandle);
   const hasCheck = Boolean(details?.checkPayableTo && details?.checkAddress);
@@ -239,7 +240,11 @@ export function PaymentOptions({
   return (
     <section className="cop-wrap">
       <h3 className="cop-head">
-        {isClinic ? "Now pay the clinic fee" : "Now pay your team fee"}
+        {isMerch
+          ? "Now pay for your shirt"
+          : isClinic
+            ? "Now pay the clinic fee"
+            : "Now pay your team fee"}
       </h3>
 
       {/* The two prices, side by side, before the coach chooses. This is the
@@ -263,9 +268,13 @@ export function PaymentOptions({
         {/* For a team, registering IS the spot. For a clinic it is not: the
             cap is 40 and places go in payment order, so promising a saved
             spot here would be the same lie as the deferred screen told. */}
-        {isClinic
-          ? "We have the registration. Paying now locks the place in. "
-          : "Your spot is saved. "}
+        {/* A shirt has no "spot": the size is held by the order, and saying
+            otherwise is the same overclaim the clinic wording avoids. */}
+        {isMerch
+          ? "Your size is held. Collect it at the field. "
+          : isClinic
+            ? "We have the registration. Paying now locks the place in. "
+            : "Your spot is saved. "}
         {quote
           ? // "which is what the processor charges us" is only TRUE where the
             // surcharge is derived from real cost. Island's is; COYBL's flat
