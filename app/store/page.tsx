@@ -21,6 +21,7 @@ import "./store.css";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { OrderForm } from "./OrderForm";
 import { stockFor, type MerchItem } from "@/lib/merch";
+import { isStoreOpen, readStoreHours } from "@/lib/store-hours";
 
 export const dynamic = "force-dynamic";
 
@@ -53,16 +54,23 @@ export default async function StorePage() {
     tenantId === "island" ? (merch as unknown as StoreData) : null;
   const items = data?.items ?? [];
 
-  // Live stock only. The Venmo handle and the Zelle number deliberately do NOT
-  // come down with the page: they are returned with the order instead, so a
-  // public page never carries Mike's mobile number in its source.
-  const stockDoc = items.length
-    ? await getAdminDb()
-        .doc(`leagues/${tenantId}/site_config/merch_stock`)
-        .get()
-        .catch(() => null)
-    : null;
+  // Live stock, plus where to send Venmo and Zelle. Mike asked for the handles
+  // on the FORM (2026-09-07), not only on the confirmation, so they come down
+  // with the page again. His call: it is his number and his business.
+  const [stockDoc, payDoc, hoursDoc] = items.length
+    ? await Promise.all([
+        getAdminDb().doc(`leagues/${tenantId}/site_config/merch_stock`).get(),
+        getAdminDb().doc(`leagues/${tenantId}/site_config/merch_pay`).get(),
+        getAdminDb().doc(`leagues/${tenantId}/site_config/merch_hours`).get(),
+      ]).catch(() => [null, null, null] as const)
+    : ([null, null, null] as const);
   const live = (stockDoc?.data() ?? null) as Record<string, unknown> | null;
+  const pay = (payDoc?.data() ?? {}) as { venmo?: string; zelle?: string };
+  // Ordering pauses between Wednesday night and Saturday morning while the
+  // week's shirts are sorted. The stock and the prices still show: a shopper
+  // should see what they will be able to buy, and when.
+  const hours = readStoreHours(hoursDoc?.data());
+  const open = isStoreOpen(new Date(), hours);
   const leagueName = config?.name ?? "the league";
 
   return (
@@ -100,13 +108,19 @@ export default async function StorePage() {
                     <span className="str-price">${item.price}</span>
                   </div>
                   {item.detail && <p className="str-detail">{item.detail}</p>}
+                  {!open ? (
+                    <p className="str-closed">{hours.closedNote}</p>
+                  ) : (
                   <OrderForm
                     leagueId={tenantId ?? ""}
                     itemId={item.id}
                     itemName={item.name}
                     price={item.price}
                     stock={sizes}
+                    {...(pay.venmo ? { venmo: pay.venmo } : {})}
+                    {...(pay.zelle ? { zelle: pay.zelle } : {})}
                   />
+                  )}
                 </article>
               );
             })}

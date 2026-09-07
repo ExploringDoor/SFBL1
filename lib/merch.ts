@@ -57,6 +57,30 @@ export const PAY_METHODS: { value: PayMethod; label: string }[] = [
  *  larges become none. */
 export const MAX_PER_ORDER = 6;
 
+/**
+ * The divisions Island plays, as Mike wrote them: "10 oh 12 oh 12 C 14 oh
+ * 14 C 16 oh 18 oh". O is Open, C is C level, which is the split the
+ * tournaments page already describes.
+ *
+ * ASKED ON A SHIRT ORDER because the shirts are handed over at a field, not
+ * posted. Knowing the division, the team and the player is the difference
+ * between "sixty shirts in a box" and a pile Melinda can sort into stacks per
+ * team before Saturday morning.
+ */
+export const MERCH_DIVISIONS = [
+  "10U Open",
+  "12U Open",
+  "12U C",
+  "14U Open",
+  "14U C",
+  "16U Open",
+  "18U Open",
+] as const;
+
+export function isMerchDivision(v: unknown): boolean {
+  return typeof v === "string" && (MERCH_DIVISIONS as readonly string[]).includes(v);
+}
+
 export function isPayMethod(v: unknown): v is PayMethod {
   return typeof v === "string" && PAY_METHODS.some((m) => m.value === v);
 }

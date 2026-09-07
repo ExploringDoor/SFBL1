@@ -244,3 +244,28 @@
 }
 .str-placed-head { margin: 0; font-weight: 900; font-size: 17px; }
 .str-placed-sub { margin: 0; font-size: 13px; color: var(--muted); }
+
+/* Where to send the money, shown once a method is picked. */
+.str-payto {
+  margin: 0;
+  padding: 11px 14px;
+  border-radius: 10px;
+  font-size: 15px;
+  line-height: 1.5;
+  border: 1px solid color-mix(in srgb, var(--brand-accent, #35afea) 45%, transparent);
+  background: color-mix(in srgb, var(--brand-accent, #35afea) 12%, transparent);
+}
+
+/* Ordering paused between Wednesday night and Saturday morning. Deliberately
+   sits where the form was, with the sizes and price still above it, so a
+   shopper sees what they will be able to buy and when. */
+.str-closed {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.55;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--text-strong) 6%, transparent);
+}

@@ -1,0 +1,122 @@
+// Sorting the pile before Saturday morning.
+//
+// Melinda, via Mike, 2026-09-07: a breakdown of shirts sorted by team, by size
+// and by age. This is a handover problem, not a sales report: on Saturday
+// somebody stands at a field with a box and needs to know how many of each
+// size to bring, whose stack is whose, and who still owes money.
+
+import { describe, expect, it } from "vitest";
+import {
+  packingList,
+  summarise,
+  tallyBy,
+  tallyBySize,
+  type MerchOrderRow,
+} from "@/lib/merch-report";
+
+const o = (p: Partial<MerchOrderRow>): MerchOrderRow => ({
+  id: Math.random().toString(36).slice(2),
+  item_name: "Never Forget Tournament Tee",
+  quantity: 1,
+  amount_due: 30,
+  payment_status: "unpaid",
+  ...p,
+});
+
+const ROWS: MerchOrderRow[] = [
+  o({ size: "M", team_name: "Phoenix Fire", division: "12U Open", player_name: "Ana", payment_status: "paid" }),
+  o({ size: "S", team_name: "Phoenix Fire", division: "12U Open", player_name: "Bea", quantity: 2 }),
+  o({ size: "L", team_name: "LI Heat", division: "14U C", player_name: "Cara", payment_status: "paid" }),
+  o({ size: "S", team_name: "LI Heat", division: "14U C", player_name: "Dee" }),
+  o({ size: "XL", team_name: "Waves", division: "14U Open", player_name: "Eve", quantity: 3, amount_due: 90 }),
+];
+
+describe("how many of each size to bring", () => {
+  it("counts shirts, not orders", () => {
+    const s = tallyBySize(ROWS).find((t) => t.key === "S")!;
+    expect(s.orders).toBe(2);
+    expect(s.shirts).toBe(3); // one order of two, one of one
+  });
+
+  it("lists sizes in wearing order, not alphabetical", () => {
+    expect(tallyBySize(ROWS).map((t) => t.key)).toEqual(["S", "M", "L", "XL"]);
+  });
+
+  it("puts an unrecognised size at the end rather than in the middle", () => {
+    const out = tallyBySize([...ROWS, o({ size: "Toddler 2T", team_name: "X" })]);
+    expect(out[out.length - 1]!.key).toBe("Toddler 2T");
+  });
+});
+
+describe("whose stack is whose", () => {
+  it("groups by team, biggest first", () => {
+    const t = tallyBy(ROWS, (r) => String(r.team_name ?? ""));
+    expect(t[0]!.key).toBe("Phoenix Fire"); // 3 shirts
+    expect(t[0]!.shirts).toBe(3);
+  });
+
+  it("groups by division too, which is how the field is laid out", () => {
+    const d = tallyBy(ROWS, (r) => String(r.division ?? ""));
+    expect(d.find((x) => x.key === "14U C")!.shirts).toBe(2);
+  });
+
+  it("names rows taken before a field was asked for, rather than dropping them", () => {
+    // Orders placed before division was collected must still be countable, or
+    // the totals stop adding up and nobody trusts the sheet.
+    const t = tallyBy([...ROWS, o({ size: "M" })], (r) => String(r.team_name ?? ""), "No team given");
+    expect(t.find((x) => x.key === "No team given")!.shirts).toBe(1);
+  });
+});
+
+describe("who still owes money", () => {
+  it("separates paid from unpaid shirts", () => {
+    const s = summarise(ROWS);
+    expect(s.shirts).toBe(8);
+    expect(s.paidShirts).toBe(2);
+    expect(s.unpaidShirts).toBe(6);
+  });
+
+  it("adds up what is collected and what is outstanding", () => {
+    const s = summarise(ROWS);
+    expect(s.collected).toBe(60); // two paid orders at $30
+    expect(s.owed).toBe(150); // 30 + 30 + 90
+  });
+
+  it("carries the unpaid count into each grouping", () => {
+    const phoenix = tallyBy(ROWS, (r) => String(r.team_name ?? "")).find(
+      (t) => t.key === "Phoenix Fire",
+    )!;
+    expect(phoenix.shirts).toBe(3);
+    expect(phoenix.unpaid).toBe(2); // the paid one is Ana's single
+  });
+});
+
+describe("the packing list", () => {
+  it("reads in the order shirts are handed out: division, team, size, player", () => {
+    const out = packingList(ROWS).map((r) => `${r.division}/${r.team_name}/${r.size}`);
+    expect(out[0]).toBe("12U Open/Phoenix Fire/S");
+    expect(out[1]).toBe("12U Open/Phoenix Fire/M");
+    expect(out[2]).toBe("14U C/LI Heat/S");
+    expect(out[3]).toBe("14U C/LI Heat/L");
+    expect(out[4]).toBe("14U Open/Waves/XL");
+  });
+
+  it("does not mutate the list it was given", () => {
+    const before = ROWS.map((r) => r.id);
+    packingList(ROWS);
+    expect(ROWS.map((r) => r.id)).toEqual(before);
+  });
+});
+
+describe("nothing sold yet", () => {
+  it("returns zeroes rather than throwing", () => {
+    const s = summarise([]);
+    expect(s).toMatchObject({ orders: 0, shirts: 0, collected: 0, owed: 0 });
+    expect(s.bySize).toEqual([]);
+  });
+
+  it("ignores a quantity that is not a real number", () => {
+    const s = summarise([o({ size: "M", quantity: NaN }), o({ size: "M", quantity: -3 })]);
+    expect(s.shirts).toBe(0);
+  });
+});

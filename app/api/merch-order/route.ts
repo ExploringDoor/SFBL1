@@ -25,9 +25,12 @@
 
 import { NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { isStoreOpen, readStoreHours } from "@/lib/store-hours";
+import { esc, notifyAddresses, sendEmail } from "@/lib/email/send";
 import merch from "@/app/store/island-merch.json";
 import {
   MAX_PER_ORDER,
+  isMerchDivision,
   isPayMethod,
   merchTotal,
   type MerchItem,
@@ -80,6 +83,26 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Choose how you will pay" }, { status: 400 });
   }
 
+  // WHO IT IS FOR, so the pile can be sorted before Saturday. Mike, 2026-09-07:
+  // "He also needs to add what division they're playing", with the team and the
+  // player's name. These are handed over at a field, not posted, so the sort is
+  // the whole logistics problem.
+  //
+  // Division is allow-listed because it becomes a grouping key in the office
+  // breakdown; a typed division would quietly split a team's stack in two.
+  const division = str(body.division, 40);
+  if (!isMerchDivision(division)) {
+    return NextResponse.json({ error: "Pick a division" }, { status: 400 });
+  }
+  const teamName = str(body.teamName, 120);
+  const playerName = str(body.playerName, 120);
+  if (!teamName) {
+    return NextResponse.json({ error: "Team name is required" }, { status: 400 });
+  }
+  if (!playerName) {
+    return NextResponse.json({ error: "Player name is required" }, { status: 400 });
+  }
+
   const name = str(body.name, 120);
   const email = str(body.email, 200);
   const phone = str(body.phone, 40);
@@ -97,6 +120,17 @@ export async function POST(req: Request) {
   }
 
   const db = getAdminDb();
+
+  // SHUT MEANS SHUT, and it is enforced here rather than only on the page. The
+  // store page hides the form while the shop is closed, but a form already open
+  // in somebody's browser at 11.59 on Wednesday will still post at 12.05.
+  const hours = readStoreHours(
+    (await db.doc(`leagues/${leagueId}/site_config/merch_hours`).get()).data(),
+  );
+  if (!isStoreOpen(new Date(), hours)) {
+    return NextResponse.json({ error: hours.closedNote }, { status: 409 });
+  }
+
   const stockRef = db.doc(`leagues/${leagueId}/site_config/merch_stock`);
   const orderRef = db
     .collection(`leagues/${leagueId}/form_submissions/merch_order/items`)
@@ -143,6 +177,9 @@ export async function POST(req: Request) {
         // The rest are the office's to tick off as the money arrives.
         payment_status: "unpaid",
         fulfilment: "pickup_at_field",
+        division,
+        team_name: teamName,
+        player_name: playerName,
         name,
         email,
         phone,
@@ -161,6 +198,53 @@ export async function POST(req: Request) {
       { error: "Could not place that order. Please try again." },
       { status: 500 },
     );
+  }
+
+  // ---- tell the office a shirt sold -------------------------------------
+  // Mike, 2026-09-07: "When a sale happens can you put
+  // melinda.islandusssa@gmail.com gets it like me."
+  //
+  // She goes on a STORE list, not the main office one. That list already
+  // receives every registration, waiver and evaluation, and putting her there
+  // to get sale emails would sign her up for all of it. The list lives in
+  // Firestore beside the payment handles so it can change without a deploy.
+  //
+  // Best effort, after the order is safely written. An email that fails must
+  // never cost somebody their shirt.
+  try {
+    const extra = (
+      await db.doc(`leagues/${leagueId}/site_config/merch_notify`).get()
+    ).data() as { to?: unknown } | undefined;
+    const storeList = Array.isArray(extra?.to)
+      ? extra!.to.map((x) => String(x).trim()).filter((x) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x))
+      : [];
+    const recipients = [...new Set([...notifyAddresses(), ...storeList])];
+    const paidLine =
+      method === "card"
+        ? "Paying by card on the site."
+        : `Paying by ${method}. Watch for ${esc(name)}.`;
+    const html =
+      `<p><strong>${esc(quantity)} x ${esc(item.name)}, size ${esc(size)}</strong></p>` +
+      `<p>$${total}. ${paidLine}</p>` +
+      `<table cellpadding="4">` +
+      `<tr><td>Player</td><td><strong>${esc(playerName)}</strong></td></tr>` +
+      `<tr><td>Team</td><td>${esc(teamName)}</td></tr>` +
+      `<tr><td>Division</td><td>${esc(division)}</td></tr>` +
+      `<tr><td>Ordered by</td><td>${esc(name)}</td></tr>` +
+      `<tr><td>Email</td><td>${esc(email)}</td></tr>` +
+      `<tr><td>Phone</td><td>${esc(phone) || "not given"}</td></tr>` +
+      `</table>` +
+      `<p>Collected at the field.</p>`;
+    for (const to of recipients) {
+      await sendEmail({
+        to,
+        subject: `Shirt order: ${playerName}, ${teamName} (${size})`,
+        html,
+        ...(email ? { replyTo: email } : {}),
+      }).catch(() => null);
+    }
+  } catch {
+    /* a sale is recorded whether or not the office hears about it today */
   }
 
   try {

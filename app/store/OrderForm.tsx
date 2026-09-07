@@ -15,7 +15,13 @@
 // last large while this page is open, the message comes back from there.
 
 import { useState } from "react";
-import { MAX_PER_ORDER, PAY_METHODS, type MerchSize, type PayMethod } from "@/lib/merch";
+import {
+  MAX_PER_ORDER,
+  MERCH_DIVISIONS,
+  PAY_METHODS,
+  type MerchSize,
+  type PayMethod,
+} from "@/lib/merch";
 
 interface Props {
   leagueId: string;
@@ -23,13 +29,28 @@ interface Props {
   itemName: string;
   price: number;
   stock: MerchSize[];
+  /** Where to send Venmo and Zelle. Mike asked for these ON the form, not
+   *  only on the confirmation. See the note by the payment picker. */
+  venmo?: string;
+  zelle?: string;
 }
 
-export function OrderForm({ leagueId, itemId, itemName, price, stock }: Props) {
+export function OrderForm({
+  leagueId,
+  itemId,
+  itemName,
+  price,
+  stock,
+  venmo,
+  zelle,
+}: Props) {
   const firstAvailable = stock.find((s) => s.count > 0)?.size ?? "";
   const [size, setSize] = useState(firstAvailable);
   const [quantity, setQuantity] = useState(1);
   const [payMethod, setPayMethod] = useState<PayMethod>("card");
+  const [division, setDivision] = useState("");
+  const [teamName, setTeamName] = useState("");
+  const [playerName, setPlayerName] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -62,6 +83,9 @@ export function OrderForm({ leagueId, itemId, itemName, price, stock }: Props) {
           size,
           quantity,
           payMethod,
+          division,
+          teamName,
+          playerName,
           name,
           email,
           phone,
@@ -181,6 +205,48 @@ export function OrderForm({ leagueId, itemId, itemName, price, stock }: Props) {
         </label>
       </div>
 
+      {/* WHO THE SHIRT IS FOR. Collected because these are handed over at a
+          field: the office sorts the pile by division, then team, then size,
+          and none of that is possible from a buyer's name and email alone. */}
+      <div className="str-row">
+        <label className="str-field">
+          <span className="str-label">Division</span>
+          <select
+            className="str-input"
+            value={division}
+            onChange={(e) => setDivision(e.target.value)}
+            required
+          >
+            <option value="">Choose</option>
+            {MERCH_DIVISIONS.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="str-field">
+          <span className="str-label">Team name</span>
+          <input
+            className="str-input"
+            value={teamName}
+            onChange={(e) => setTeamName(e.target.value)}
+            required
+            maxLength={120}
+          />
+        </label>
+        <label className="str-field">
+          <span className="str-label">Player name</span>
+          <input
+            className="str-input"
+            value={playerName}
+            onChange={(e) => setPlayerName(e.target.value)}
+            required
+            maxLength={120}
+          />
+        </label>
+      </div>
+
       <div className="str-row">
         <label className="str-field">
           <span className="str-label">Your name</span>
@@ -214,6 +280,24 @@ export function OrderForm({ leagueId, itemId, itemName, price, stock }: Props) {
           />
         </label>
       </div>
+
+      {/* THE HANDLE, ON THE FORM. It used to appear only on the confirmation,
+          to keep Mike's mobile out of a public page's source. He asked for it
+          on the form (2026-09-07) and it is his number and his business, so it
+          is here. It still only renders for the method actually chosen, so the
+          page carries one of them rather than both. */}
+      {payMethod === "venmo" && venmo && (
+        <p className="str-payto">
+          Send <strong>${price * quantity}</strong> on Venmo to{" "}
+          <strong>{venmo}</strong>, then place the order below.
+        </p>
+      )}
+      {payMethod === "zelle" && zelle && (
+        <p className="str-payto">
+          Send <strong>${price * quantity}</strong> on Zelle to{" "}
+          <strong>{zelle}</strong>, then place the order below.
+        </p>
+      )}
 
       {error && <p className="str-error">{error}</p>}
 
