@@ -113,6 +113,20 @@ export async function POST(req: Request) {
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
     return NextResponse.json({ error: "A valid email is required" }, { status: 400 });
   }
+  // PHONE IS REQUIRED TOO. Mike, 2026-09-07: "force them to give phone number
+  // and email so we can keep that and build on it." A shirt is collected at a
+  // field, so a phone is how the office reaches somebody standing in the wrong
+  // place, and tonight it was how four unpaid card buyers got chased at all.
+  //
+  // Ten digits, checked, because a phone that is not dialable is the same as no
+  // phone and worse, since it looks like one on the sheet.
+  const phoneDigits = phone.replace(/\D/g, "").replace(/^1(?=\d{10}$)/, "");
+  if (phoneDigits.length !== 10) {
+    return NextResponse.json(
+      { error: "A 10 digit phone number is required" },
+      { status: 400 },
+    );
+  }
 
   const total = merchTotal(item, quantity);
   if (total <= 0) {

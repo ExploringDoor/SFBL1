@@ -51,12 +51,32 @@ function fingerprint(s: string): string {
  * Only data: URLs are rewritten. That early return is the entire tenant safety
  * story, do not "simplify" it away.
  */
+/**
+ * The crest a league lends to a team that has not uploaded one.
+ *
+ * Mike, 2026-09-07: "when a team doesn't post there logo my logo is
+ * automatically there, please add that." Before this, a team with no logo got
+ * an empty circle, which on a schedule full of crests reads as a broken image
+ * rather than a team that has not got round to it.
+ *
+ * Per tenant, and only where a league has asked. Falling back platform-wide
+ * would put COYBL's crest on every Windmill team the day someone set one.
+ */
+const LEAGUE_LOGO_FALLBACK: Record<string, string> = {
+  island: "/island/logo.png",
+};
+
+export function leagueLogoFallback(leagueId: string): string | null {
+  return LEAGUE_LOGO_FALLBACK[leagueId] ?? null;
+}
+
 export function teamLogoSrc(
   leagueId: string,
   teamId: string,
   raw: unknown,
 ): string | null {
-  if (!raw) return null;
+  // No logo of their own: lend them the league's, where the league has one.
+  if (!raw) return leagueLogoFallback(leagueId);
   const s = String(raw);
   if (!s.startsWith("data:")) return s;
   return `/api/team-logo/${encodeURIComponent(leagueId)}/${encodeURIComponent(teamId)}/${fingerprint(s)}`;

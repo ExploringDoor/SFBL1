@@ -276,6 +276,7 @@ export function OrderForm({
             type="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
+            required
             maxLength={40}
           />
         </label>
