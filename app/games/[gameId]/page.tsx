@@ -144,7 +144,13 @@ export default async function GameDetailPage({
   }
 
   return (
-    <main className="container py-12">
+    /* bs-standalone marks "this box score is NOT in the modal". The modal
+       renders the same BoxScoreContent inside a white panel, so the tenant
+       themes restate a few of its classes as dark-on-light. Here the same
+       markup sits straight on the page background, and on a dark tenant
+       those restatements turned the recap and the logo initials invisible.
+       The class lets a theme tell the two contexts apart. */
+    <main className="container py-12 bs-standalone">
       <div className="mb-4 flex items-center justify-between no-print">
         <Link
           href="/scores"

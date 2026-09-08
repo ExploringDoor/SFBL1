@@ -685,6 +685,27 @@ html.tenant-island .bs-team-winner .bs-team-abbr {
   color: #1a1a1a;
 }
 
+/* …but NOT on the standalone /games/[id] page. Those restatements above
+ * assume the white modal panel. This page has no panel, so the same rules
+ * put #1a1a1a on the black page: the recap measured 1.21:1 and the
+ * logo-fallback initials rgba(0,0,0,.56) measured 1:1, i.e. the dark blobs
+ * Adam screenshotted on 2026-09-08. Everything else in this view is already
+ * correct for dark (AWAY / VS / the date / the headline all read white), so
+ * the fix is to undo the light-card colours here, not to add a light card. */
+html.tenant-island .bs-standalone .bs-recap-p {
+  color: rgba(255, 255, 255, 0.78); /* 12.0:1 on #000 */
+}
+html.tenant-island .bs-standalone .bs-team-abbr,
+html.tenant-island .bs-standalone .bs-team-winner .bs-team-abbr {
+  color: rgba(255, 255, 255, 0.56); /* 6.3:1 */
+}
+html.tenant-island .bs-standalone .rc-score {
+  color: #fff;
+}
+html.tenant-island .bs-standalone .rc-rec {
+  color: rgba(255, 255, 255, 0.64); /* 8.1:1 */
+}
+
 /* ---- 2. brand navy sitting directly on the black page -------------------
  * The mirror image of group 1: text that hardcodes brand navy (#0b2e4f) or
  * reads --brand-primary from a CLASS, on no background at all. Navy on black
