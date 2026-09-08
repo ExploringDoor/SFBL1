@@ -69,7 +69,7 @@ export default function TeamRegistrationPage() {
       title="Team Registration"
       description="Register a new team for the South Florida Baseball League."
       intro={[
-        "The Team Registration Fee is $2,440, plus umpire fees of $1,200 — $3,640 total for a 13-player roster.",
+        "The Team Registration Fee is $2,505, plus umpire fees of $1,200 — $3,705 total for a 13-player roster.",
         <>
           After submitting this form, contact the league office (
           <a href="tel:+17863720034">786-372-0034</a> /{" "}
