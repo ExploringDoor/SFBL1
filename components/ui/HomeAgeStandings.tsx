@@ -25,7 +25,24 @@ export function HomeAgeStandings({
   ages: AgeStandingsSection[];
   teamMeta: Record<string, TeamMeta>;
 }) {
-  const [active, setActive] = useState(ages[0]?.ageGroup ?? "");
+  // Open on the BIGGEST age group, not the youngest.
+  //
+  // Ages are sorted youngest first, which is right for the tab strip and
+  // wrong as a landing view: Island has one 8U team and seventeen 14U, so
+  // the standings opened on a table with a single row while the real
+  // division sat a tab away. Ties keep the youngest, so a league with even
+  // groups behaves exactly as before.
+  const [active, setActive] = useState(() => {
+    let best = ages[0];
+    for (const a of ages) {
+      const n = a.divisionGroups.reduce((t, g) => t + g.rows.length, 0);
+      const bestN = best
+        ? best.divisionGroups.reduce((t, g) => t + g.rows.length, 0)
+        : -1;
+      if (n > bestN) best = a;
+    }
+    return best?.ageGroup ?? "";
+  });
   const sel = ages.find((a) => a.ageGroup === active) ?? ages[0];
   if (!sel) return null;
 
