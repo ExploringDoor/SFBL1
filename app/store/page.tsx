@@ -66,7 +66,7 @@ export default async function StorePage() {
     : ([null, null, null] as const);
   const live = (stockDoc?.data() ?? null) as Record<string, unknown> | null;
   const pay = (payDoc?.data() ?? {}) as { venmo?: string; zelle?: string };
-  // Ordering pauses between Wednesday night and Saturday morning while the
+  // Ordering pauses between Thursday 4pm and Saturday morning while the
   // week's shirts are sorted. The stock and the prices still show: a shopper
   // should see what they will be able to buy, and when.
   const hours = readStoreHours(hoursDoc?.data());

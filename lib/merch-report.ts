@@ -4,6 +4,9 @@
 // them by team sort them by size sort them by Age once we close the store on
 // Wednesday night."
 //
+// The close moved to Thursday 4pm on 2026-09-08. The quote is left as he said
+// it; lib/store-hours.ts is the one place that decides when the shop shuts.
+//
 // This is a HANDOVER problem, not a sales report. On Saturday morning somebody
 // stands at a field with a box and a list, and what they need is: how many of
 // each size to bring, whose stack is whose, and who has not paid yet. Revenue

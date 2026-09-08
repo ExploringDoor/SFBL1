@@ -137,7 +137,7 @@ export async function POST(req: Request) {
 
   // SHUT MEANS SHUT, and it is enforced here rather than only on the page. The
   // store page hides the form while the shop is closed, but a form already open
-  // in somebody's browser at 11.59 on Wednesday will still post at 12.05.
+  // in somebody's browser at 3.59 on Thursday will still post at 4.05.
   const hours = readStoreHours(
     (await db.doc(`leagues/${leagueId}/site_config/merch_hours`).get()).data(),
   );
