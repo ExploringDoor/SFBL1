@@ -97,7 +97,7 @@ const TABS: { key: TabKey; label: string; description: string }[] = [
   // Playoffs tab hidden per Adam — no bracket workflow until later.
   // { key: "playoffs", label: "Playoffs", description: "Build the playoff bracket — divisions, rounds, matchups, results." },
   { key: "teams", label: "Teams", description: "Roster import, edit team metadata, manage divisions." },
-  { key: "signups", label: "Signups", description: "Approve or reject players added by captains (walk-ons)." },
+  { key: "signups", label: "Roster Approval", description: "Approve or reject players added by captains (walk-ons)." },
   { key: "captains", label: "Captains", description: "Every team's captain: contact, password status, and last login." },
   { key: "payments", label: "Payments", description: "League-wide fee collection — who's paid, per team, with totals." },
   { key: "fields", label: "Fields", description: "Add / edit the league's fields (name + address), and see how many games each has hosted." },

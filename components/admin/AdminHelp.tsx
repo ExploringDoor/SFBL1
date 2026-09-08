@@ -24,7 +24,7 @@
 
 /** The tab strip, drawn. Shows where things are and which row they sit on. */
 function TabStripDiagram() {
-  const row1 = ["Health", "Activity", "Scores", "Schedule", "Teams", "Signups"];
+  const row1 = ["Health", "Activity", "Scores", "Schedule", "Teams", "Roster Approval"];
   const row2 = ["Captains", "Payments", "Alerts", "Send Message", "Form submissions"];
   return (
     <svg viewBox="0 0 620 132" className="ah-fig" role="img"

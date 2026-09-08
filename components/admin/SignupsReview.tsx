@@ -206,7 +206,7 @@ export function SignupsReview({ leagueId, user }: Props) {
     <section className="space-y-3 rounded-md border border-slate-200 bg-white p-4">
       <div className="flex items-baseline justify-between">
         <div>
-          <p className="font-semibold text-slate-900">Signups review</p>
+          <p className="font-semibold text-slate-900">Roster approval</p>
           <p className="text-xs text-slate-600 mt-1">
             Players added by captains awaiting your verification. Approve to
             include them on the roster, reject to soft-delete.
@@ -251,8 +251,8 @@ export function SignupsReview({ leagueId, user }: Props) {
         <p className="text-sm text-slate-500">Loading…</p>
       ) : pending.length === 0 ? (
         <p className="text-sm text-slate-500 italic">
-          No pending signups. Captains haven't added any walk-ons yet, or
-          you've already reviewed them all.
+          No players waiting for approval. Captains haven't added any
+          walk-ons yet, or you've already reviewed them all.
         </p>
       ) : (
         <ul className="divide-y divide-slate-200 border border-slate-200 rounded-md overflow-hidden">
