@@ -155,9 +155,14 @@ export default async function StandingsPage() {
         )}
       </header>
 
-      {!hasFinalGames ? (
-        // Pre-launch / launch-day state: every row is 0-0 and looks
-        // like the site is broken. Show a friendly placeholder instead.
+      {divisionGroups.every((g) => g.rows.length === 0) ? (
+        // Only when there is genuinely nothing to show, i.e. no teams at all.
+        //
+        // This used to trigger on "no finals yet", on the reasoning that a
+        // table of 0-0 rows looks broken. Adam overruled it on 2026-09-08:
+        // the homepage shows the teams at 0-0, so /standings hiding them made
+        // the two pages contradict each other, which looks far more broken
+        // than a column of zeros. They are seeded from the same helper now.
         <div
           style={{
             padding: "32px 24px",
