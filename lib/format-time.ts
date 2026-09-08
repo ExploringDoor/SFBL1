@@ -167,3 +167,60 @@ export function leagueToday(timeZone: string = DEFAULT_LEAGUE_TZ): string {
     return new Date().toLocaleDateString("en-CA");
   }
 }
+
+/** Resolve a FLOATING local timestamp ("2026-09-14T18:00:00", no zone) into
+ *  the real UTC instant it denotes in `timeZone`.
+ *
+ *  Game dates are stored floating on purpose — combineDateTime keeps the
+ *  calendar day from shifting, and parseGameDate renders them as-is so a
+ *  6:00 PM game reads "6:00 PM" to everyone. That is right for DISPLAY and
+ *  wrong for a COUNTDOWN: `new Date("2026-09-14T18:00:00")` means 6 PM in
+ *  the VIEWER's zone, so a parent watching from California would be counting
+ *  down to the wrong moment by three hours.
+ *
+ *  Works by asking Intl what the naive-UTC reading of the wall clock looks
+ *  like in the target zone, then subtracting the difference. Handles DST
+ *  because the offset is sampled at that date, not today.
+ *
+ *  Returns null on an unparseable input. */
+export function floatingToUtc(
+  floating: string | null | undefined,
+  timeZone: string,
+): Date | null {
+  if (!floating) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{1,2}):(\d{2}))?/.exec(floating);
+  if (!m) return null;
+  const naiveUtc = Date.UTC(
+    Number(m[1]),
+    Number(m[2]) - 1,
+    Number(m[3]),
+    Number(m[4] ?? 0),
+    Number(m[5] ?? 0),
+  );
+  if (Number.isNaN(naiveUtc)) return null;
+  const dtf = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour12: false,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+  const p: Record<string, string> = {};
+  for (const part of dtf.formatToParts(new Date(naiveUtc))) {
+    p[part.type] = part.value;
+  }
+  // hour can come back as "24" at midnight in some engines.
+  const seen = Date.UTC(
+    Number(p.year),
+    Number(p.month) - 1,
+    Number(p.day),
+    Number(p.hour) % 24,
+    Number(p.minute),
+    Number(p.second),
+  );
+  if (Number.isNaN(seen)) return null;
+  return new Date(naiveUtc - (seen - naiveUtc));
+}

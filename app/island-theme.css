@@ -898,3 +898,33 @@ html.tenant-island .cop-or {
   font-weight: 900;
   letter-spacing: -0.01em;
 }
+
+/* ── Opening Day countdown ────────────────────────────────────────────
+ * Island's page is black and its brand-primary is a deep navy (#0b2e4f),
+ * which is ~1.4:1 against it — the band would read as a barely-visible
+ * smudge. Give it the accent-edged dark panel the rest of the dark theme
+ * uses, and put the accent on the eyebrow where it carries the emphasis. */
+html.tenant-island .le-countdown {
+  background: linear-gradient(
+    180deg,
+    rgba(53, 175, 234, 0.14),
+    rgba(53, 175, 234, 0.04)
+  );
+  border-top: 1px solid rgba(53, 175, 234, 0.45);
+  border-bottom: 1px solid rgba(53, 175, 234, 0.45);
+}
+html.tenant-island .le-countdown-eyebrow {
+  color: var(--brand-accent, #35afea);
+  opacity: 1;
+}
+html.tenant-island .le-countdown-head {
+  color: #fff;
+}
+html.tenant-island .le-countdown-cell {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+html.tenant-island .le-countdown-btn {
+  background: var(--brand-accent, #35afea);
+  color: #06263c; /* 8.4:1 on the accent */
+}

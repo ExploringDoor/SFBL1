@@ -30,7 +30,9 @@ import {
 } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { teamsHidden } from "@/lib/team-options";
-import { combineDateTime } from "@/lib/format-time";
+import { OpeningDayCountdown } from "@/components/ui/OpeningDayCountdown";
+import { LEAGUE_TIME_ZONE } from "@/lib/league-time";
+import { combineDateTime, floatingToUtc } from "@/lib/format-time";
 import { GameCard, type GameCardTeam } from "@/components/ui/GameCard";
 import { PreviewCard, type PreviewCardTeam } from "@/components/ui/PreviewCard";
 import { Hero as DvslHero } from "@/components/ui/Hero";
@@ -106,6 +108,28 @@ export default async function HomePage() {
   const season = String(config?.season_year ?? new Date().getFullYear());
   const big = config?.abbrev ?? deriveAbbrev(leagueName);
 
+  // Opening Day = first pitch of the first scheduled game (upcoming is already
+  // sorted ascending). Resolved to a real UTC instant HERE, on the server, so
+  // every viewer counts down to the same moment — the stored dates are
+  // floating Eastern, and handing one to the browser would have a viewer in
+  // California counting to 6 PM Pacific. Null once the schedule is hidden or
+  // the season is under way, and the band simply does not render.
+  const openingDay = (() => {
+    if (scheduleHidden) return null;
+    const first = upcoming[0];
+    const at = floatingToUtc(first?.date, LEAGUE_TIME_ZONE);
+    if (!at) return null;
+    return {
+      iso: at.toISOString(),
+      label: new Intl.DateTimeFormat("en-US", {
+        timeZone: LEAGUE_TIME_ZONE,
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      }).format(at),
+    };
+  })();
+
   return (
     <main>
       {/* No `pill` — the "⚾ {YEAR} Regular Season" tag sat awkwardly
@@ -168,7 +192,19 @@ export default async function HomePage() {
           restore the whole text hero and say the league name twice, surface
           just the CTA. Tenants that render the hero never see this, so SFBL,
           LBDC and Island are unaffected. */}
-      {config?.flags?.registration_open &&
+      {/* Island runs the Opening Day countdown in this slot instead of the
+          registration banner (Adam, 2026-09-08). The registration_open flag
+          is deliberately left alone: it still drives the Register Your Team
+          button on /teams and elsewhere, so flipping it off to clear this
+          band would have quietly removed those too. */}
+      {tenantId === "island" && openingDay && (
+        <OpeningDayCountdown
+          targetIso={openingDay.iso}
+          dateLabel={openingDay.label}
+        />
+      )}
+      {!(tenantId === "island" && openingDay) &&
+        config?.flags?.registration_open &&
         (config?.flags?.hide_page_titles || config?.flags?.hide_home_hero) && (
           <section className="le-home-reg-cta">
             <div className="container le-home-reg-cta-inner">
