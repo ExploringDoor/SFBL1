@@ -17,6 +17,7 @@ import {
   type GameResult,
   type StandingsRow,
   computeStandingsWithExtraGameRule,
+  seedStandingsWithAllTeams,
 } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import {
@@ -66,7 +67,6 @@ export default async function StandingsPage() {
     teams,
     scheme,
     throughDate,
-    teamCount,
     hasFinalGames,
     storedRecordsMode,
   } = await loadStandings(tenantId, config);
@@ -115,9 +115,14 @@ export default async function StandingsPage() {
             fontFamily: "var(--font-inter), sans-serif",
           }}
         >
+          {/* No team count. Mike asked for it out (2026-09-08): the number is
+              already obvious from the table underneath, and a raw count reads
+              like a target the league is short of rather than a fact. The
+              pre-season line matches the homepage word for word so the two
+              pages plainly agree. */}
           {hasFinalGames
-            ? `Through ${throughDate} · ${teamCount} teams`
-            : `${teamCount} team${teamCount === 1 ? "" : "s"} · season starts soon`}
+            ? `Through ${throughDate}`
+            : "Everyone starts at 0-0. Records update after the first game is final."}
         </p>
 
         {/* Island's Summer League runs through USSSA, so its standings live on
@@ -367,6 +372,10 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
         enabled: config?.standings?.drop_extra_game_loss,
         divisionOf: (id) => teams[id]?.division ?? "",
       });
+  // Every team gets a row before a ball is thrown, exactly as the homepage
+  // does. These two must agree: a parent who sees 0-0 on the home page and an
+  // empty /standings assumes the site is broken, and they would be half right.
+  standings = seedStandingsWithAllTeams(standings, Object.keys(teams));
   const scheme = config?.standings?.points_per ?? null;
   const usePoints = config?.standings?.scoring === "points" && !!scheme;
   if (usePoints && scheme) {

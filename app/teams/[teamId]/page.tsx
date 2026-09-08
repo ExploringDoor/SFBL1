@@ -26,6 +26,7 @@ import {
   sortByPoints,
   type GameResult,
   computeStandingsWithExtraGameRule,
+  seedStandingsWithAllTeams,
 } from "@/lib/stats/shared";
 import { formatIP } from "@/lib/stats/ip";
 import { formatGameDate } from "@/lib/format-time";
@@ -236,6 +237,13 @@ export default async function TeamDetailPage({
     enabled: config?.standings?.drop_extra_game_loss,
     divisionOf: (id) => divisionById.get(id) ?? "",
   });
+  // Same seeding as /standings and the homepage. Without it a team with no
+  // results has no row at all, so its own page showed no record while the
+  // other two showed 0-0.
+  standings = seedStandingsWithAllTeams(
+    standings,
+    teamsSnap.docs.map((d) => d.id),
+  );
   const scheme = config?.standings?.points_per ?? null;
   const usePoints = config?.standings?.scoring === "points" && !!scheme;
   if (usePoints && scheme) {
