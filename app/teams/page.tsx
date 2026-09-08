@@ -15,6 +15,7 @@ import {
   type StandingsRow,
 } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
+import { loadSeasonConfig, resolveActiveSeason, inSeason } from "@/lib/season";
 
 export const dynamic = "force-dynamic";
 
@@ -61,7 +62,16 @@ export default async function TeamsPage() {
   // per request on a page that's in the sitemap (audit M12).
   const { gamesSnap, teamsSnap } = await loadGamesAndTeamsSnaps(db, tenantId);
 
-  const games: GameResult[] = gamesSnap.docs.map((d) => {
+  // Records shown here are for the league's CURRENT season only — a new
+  // season starts every team at 0-0 rather than carrying last season's
+  // W-L forward. (Untagged games / no season set → shows all, per the
+  // inSeason fail-safe.) Past-season records live on each team's page.
+  const seasonCfg = await loadSeasonConfig(db, tenantId);
+  const activeSeason = resolveActiveSeason(undefined, seasonCfg);
+
+  const games: GameResult[] = gamesSnap.docs
+    .filter((d) => inSeason(d.data().season, activeSeason))
+    .map((d) => {
     const data = d.data();
     return {
       home_team_id: String(data.home_team_id ?? ""),

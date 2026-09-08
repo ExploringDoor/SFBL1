@@ -6,6 +6,7 @@ import { getAdminDb } from "./firebase-admin";
 import type { TickerGame } from "@/components/ui/Ticker";
 import { computeStandings, type GameResult } from "./stats/shared";
 import { combineDateTime } from "./format-time";
+import { loadSeasonConfig, resolveActiveSeason, inSeason } from "./season";
 
 interface TeamMeta {
   name: string;
@@ -89,7 +90,18 @@ export async function loadTickerGames(tenantId: string): Promise<TickerGame[]> {
     };
   }
 
-  for (const d of gamesSnap.docs) {
+  // Season scope: the ticker + the records it shows reflect the league's
+  // CURRENT season only, so a new season starts clean — no last-season
+  // finals or win/loss records leaking into the ticker. Untagged games /
+  // leagues that never opted into seasons still show everything (the
+  // inSeason fail-safe), so this is a no-op until a season is set.
+  const seasonCfg = await loadSeasonConfig(db, tenantId);
+  const activeSeason = resolveActiveSeason(undefined, seasonCfg);
+  const seasonDocs = gamesSnap.docs.filter((d) =>
+    inSeason(d.data().season, activeSeason),
+  );
+
+  for (const d of seasonDocs) {
     const data = d.data();
     standingsGames.push({
       home_team_id: String(data.home_team_id ?? ""),
@@ -120,7 +132,7 @@ export async function loadTickerGames(tenantId: string): Promise<TickerGame[]> {
     const div = teamMeta[teamId]?.division ?? "";
     return /boomers/i.test(div);
   }
-  const all = gamesSnap.docs
+  const all = seasonDocs
     .map((d) => {
       const data = d.data();
       // Combine the (sometimes separate) date + time fields so the
