@@ -86,6 +86,8 @@ export function UmpiresManager({ leagueId, user }: Props) {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mailMsg, setMailMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [mailWho, setMailWho] = useState("");
   const [done, setDone] = useState<string | null>(null);
   const [draft, setDraft] = useState<Partial<Umpire>>({ name: "" });
   const [newDate, setNewDate] = useState<Record<string, string>>({});
@@ -168,6 +170,61 @@ export function UmpiresManager({ leagueId, user }: Props) {
     const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
     if (!res.ok) throw new Error(String(data.error ?? `HTTP ${res.status}`));
     return data;
+  }
+
+  /**
+   * Send umpires the games they are on.
+   *
+   * Mike asked for a button he can press once a night is settled: one umpire,
+   * or everybody. Repeatable on purpose so a reshuffle can be re-sent.
+   *
+   * The message is truthful about what happened rather than encouraging. An
+   * umpire with no address on file is counted and named in the result instead
+   * of being quietly treated as sent, because "I emailed everyone" is the
+   * thing an assignor will believe and act on.
+   */
+  async function emailAssignments(umpireId?: string) {
+    setBusy(true);
+    setError(null);
+    setDone(null);
+    setMailMsg(null);
+    try {
+      const r = (await post({
+        action: "email_assignments",
+        ...(umpireId ? { umpireIds: [umpireId] } : {}),
+      })) as { sent?: number; noEmail?: number; none?: boolean };
+      const sent = Number(r.sent ?? 0);
+      const noEmail = Number(r.noEmail ?? 0);
+      if (r.none) {
+        setMailMsg({
+          ok: false,
+          text: umpireId
+            ? "That umpire is not on any upcoming games."
+            : "Nobody is assigned to an upcoming game yet.",
+        });
+      } else if (sent === 0) {
+        setMailMsg({
+          ok: false,
+          text:
+            noEmail > 0
+              ? `Nothing sent. ${noEmail} umpire${noEmail === 1 ? " has" : "s have"} no email address on file.`
+              : "Nothing sent.",
+        });
+      } else {
+        setMailMsg({
+          ok: true,
+          text:
+            `Emailed ${sent} umpire${sent === 1 ? "" : "s"} their assignments.` +
+            (noEmail > 0
+              ? ` ${noEmail} skipped with no email address on file.`
+              : ""),
+        });
+      }
+    } catch (e) {
+      setMailMsg({ ok: false, text: e instanceof Error ? e.message : "Could not send." });
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function act(body: Record<string, unknown>, msg: string) {
@@ -336,6 +393,58 @@ export function UmpiresManager({ leagueId, user }: Props) {
           Contact details stay in the admin. They are never shown on the public
           site.
         </p>
+
+        <div
+          style={{
+            border: "1px solid var(--border, rgba(0,0,0,0.12))",
+            borderRadius: 8,
+            padding: 12,
+            margin: "0 0 16px",
+          }}
+        >
+          <strong style={{ fontSize: 14 }}>Email assignments</strong>
+          <p style={{ fontSize: 12, color: "var(--muted)", margin: "6px 0 10px" }}>
+            Sends each umpire the upcoming games they are on. Everyone only ever sees their own
+            games. Safe to send again after you move things around.
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+            <button
+              type="button"
+              style={BTN}
+              disabled={busy}
+              onClick={() => void emailAssignments()}
+            >
+              Email everyone their assignments
+            </button>
+            <select
+              value={mailWho}
+              onChange={(e) => setMailWho(e.target.value)}
+              style={INPUT}
+              aria-label="Umpire to email"
+            >
+              <option value="">One umpire…</option>
+              {umpires.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name}
+                  {u.email ? "" : " (no email)"}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              style={BTN}
+              disabled={busy || !mailWho}
+              onClick={() => void emailAssignments(mailWho)}
+            >
+              Email just them
+            </button>
+          </div>
+          {mailMsg && (
+            <p style={{ fontSize: 12, marginTop: 8, color: mailMsg.ok ? "#047857" : "#b91c1c" }}>
+              {mailMsg.text}
+            </p>
+          )}
+        </div>
 
         <ImportUmpires
           existing={umpires}

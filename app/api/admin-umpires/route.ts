@@ -137,6 +137,110 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, imported: written });
   }
 
+  /**
+   * Email umpires the games they are on, on demand.
+   *
+   * Separate from the automatic mail when a crew is assigned. Mike wanted a
+   * button he can press after he has finished moving a night around: send one
+   * umpire their card, or send everybody theirs. Repeatable on purpose, so a
+   * reshuffle can be re-sent.
+   *
+   * The list is built HERE, from the games collection, not sent by the
+   * browser. The client knowing who to mail is fine; the client deciding what
+   * somebody's schedule says is not.
+   */
+  if (action === "email_assignments") {
+    const only =
+      Array.isArray(body.umpireIds) && body.umpireIds.length > 0
+        ? new Set(body.umpireIds.map(String).filter((x) => ID_RE.test(x)))
+        : null;
+
+    const [umpSnap2, gamesSnap, teamsSnap] = await Promise.all([
+      col.get(),
+      db.collection(`leagues/${leagueId}/games`).get(),
+      db.collection(`leagues/${leagueId}/teams`).get(),
+    ]);
+
+    const teamName = new Map(
+      teamsSnap.docs.map((d) => [d.id, String(d.data().name ?? d.id)]),
+    );
+    // Today in league time. A game earlier today is still worth sending; one
+    // from last month is noise, and a season of them would bury the real ones.
+    const today = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/New_York",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+
+    const linesFor = new Map<string, string[]>();
+    const dated: Record<string, unknown>[] = gamesSnap.docs
+      .map(
+        (d) =>
+          ({ id: d.id, ...(d.data() as Record<string, unknown>) }) as Record<
+            string,
+            unknown
+          >,
+      )
+      .filter((g) => String(g.date ?? "").slice(0, 10) >= today)
+      .sort((a, b) =>
+        `${a.date ?? ""}${a.time ?? ""}`.localeCompare(`${b.date ?? ""}${b.time ?? ""}`),
+      );
+    for (const g of dated) {
+      const crew = Array.isArray(g.umpires) ? (g.umpires as string[]).map(String) : [];
+      if (crew.length === 0) continue;
+      const away = teamName.get(String(g.away_team_id ?? "")) ?? "";
+      const home = teamName.get(String(g.home_team_id ?? "")) ?? "";
+      const matchup = away && home ? `${away} at ${home}` : "Game";
+      const when = [String(g.date ?? ""), String(g.time ?? "")].filter(Boolean).join(" ");
+      const where = String(g.field ?? "");
+      const line = `${when}${where ? `, ${where}` : ""} — ${matchup}`;
+      for (const id of crew) {
+        if (only && !only.has(id)) continue;
+        linesFor.set(id, [...(linesFor.get(id) ?? []), line].slice(0, 60));
+      }
+    }
+
+    const host =
+      req.headers.get("origin") ??
+      (req.headers.get("host") ? `https://${req.headers.get("host")}` : "");
+    const byId = new Map(umpSnap2.docs.map((d) => [d.id, d.data()]));
+
+    let sent = 0;
+    let noEmail = 0;
+    for (const [id, lines] of linesFor) {
+      const rec = byId.get(id);
+      if (!rec) continue;
+      const to = String(rec.email ?? "").trim();
+      if (!to) {
+        noEmail++;
+        continue;
+      }
+      const name = String(rec.name ?? "").trim();
+      const html =
+        `<p>Hi ${escapeHtml(name || "there")},</p>` +
+        `<p>Here ${lines.length === 1 ? "is the game" : `are the ${lines.length} games`} you are scheduled for.</p>` +
+        `<ul>${lines.map((l) => `<li>${escapeHtml(l)}</li>`).join("")}</ul>` +
+        (host ? `<p><a href="${escapeHtml(host)}/schedule">See the full schedule</a></p>` : "") +
+        `<p>If you cannot work one of these, reply to this email and let the office know.</p>`;
+      const r = await sendEmail({
+        to,
+        subject: `Your umpire assignments (${lines.length} game${lines.length === 1 ? "" : "s"})`,
+        html,
+        ...(notifyAddress() ? { replyTo: notifyAddress()! } : {}),
+      }).catch(() => ({ ok: false }) as { ok: boolean });
+      if (r.ok) sent++;
+    }
+
+    return NextResponse.json({
+      ok: true,
+      sent,
+      noEmail,
+      // Nobody matched at all: worth saying, rather than a silent success.
+      none: linesFor.size === 0,
+    });
+  }
+
   if (action === "delete_umpire") {
     const umpireId = String(body.umpireId ?? "");
     if (!ID_RE.test(umpireId)) {
@@ -294,7 +398,7 @@ export async function POST(req: Request) {
   }
 
   return NextResponse.json(
-    { error: "action must be save_umpire | delete_umpire | assign | settings" },
+    { error: "action must be save_umpire | import_umpires | email_assignments | delete_umpire | assign | settings" },
     { status: 400 },
   );
 }
