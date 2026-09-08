@@ -18,6 +18,18 @@ import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { leagueToday } from "@/lib/format-time";
 import {
+  buildUmpirePreview,
+  guessUmpireMapping,
+  isImportableUmpire,
+  looksBinarySpreadsheet,
+  parseUmpireTable,
+  UMPIRE_FIELD_LABEL,
+  UMPIRE_FIELDS,
+  type ParsedUmpireTable,
+  type UmpireColumnMap,
+  type UmpireField,
+} from "@/lib/umpire-import";
+import {
   eligibleUmpires,
   findUmpireIssues,
   assignmentCounts,
@@ -325,6 +337,18 @@ export function UmpiresManager({ leagueId, user }: Props) {
           site.
         </p>
 
+        <ImportUmpires
+          existing={umpires}
+          busy={busy}
+          onImport={async (rows) => {
+            const r = (await post({ action: "import_umpires", umpires: rows })) as {
+              imported?: number;
+            };
+            await load();
+            return Number(r.imported ?? 0);
+          }}
+        />
+
         {counts.map(({ umpire: u, count }) => (
           <div
             key={u.id}
@@ -605,5 +629,228 @@ function Msg({ tone, children }: { tone: "error" | "ok"; children: React.ReactNo
     >
       {children}
     </p>
+  );
+}
+
+
+/**
+ * Bulk-add a roster.
+ *
+ * Columns are matched by HEADING, never by position. A positional importer
+ * reads a real Arbiter or Assignr export silently wrong, and "silently" is
+ * the problem: the assignor gets a roster full of people whose phone is in
+ * the level field and no error to tell them. The guess is shown and can be
+ * corrected before anything is written.
+ */
+function ImportUmpires({
+  existing,
+  busy,
+  onImport,
+}: {
+  existing: { name?: string | null; email?: string | null }[];
+  busy: boolean;
+  onImport: (rows: { name: string; email: string; phone: string; level: string }[]) => Promise<number>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState("");
+  const [table, setTable] = useState<ParsedUmpireTable | null>(null);
+  const [map, setMap] = useState<UmpireColumnMap | null>(null);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [working, setWorking] = useState(false);
+
+  const preview = table && map ? buildUmpirePreview(table.rows, map, existing) : [];
+  const ready = preview.filter(isImportableUmpire);
+  const skipped = preview.filter((p) => p.skip).length;
+  const unnamed = preview.filter((p) => p.problems.length > 0).length;
+
+  function ingest(raw: string) {
+    setText(raw);
+    setMsg(null);
+    if (!raw.trim()) {
+      setTable(null);
+      setMap(null);
+      return;
+    }
+    if (looksBinarySpreadsheet(raw)) {
+      setTable(null);
+      setMap(null);
+      setMsg({
+        ok: false,
+        text: "That is an Excel file, which cannot be read directly. In Excel: File, then Save As, then CSV. Or select the cells in Excel and paste them into the box below, which works as-is.",
+      });
+      return;
+    }
+    const parsed = parseUmpireTable(raw);
+    setTable(parsed);
+    setMap(guessUmpireMapping(parsed.headers, parsed.hadHeader));
+  }
+
+  function readFile(file: File) {
+    const reader = new FileReader();
+    reader.onload = () => ingest(String(reader.result));
+    reader.readAsText(file);
+  }
+
+  return (
+    <div
+      style={{
+        border: "1px solid var(--border, rgba(0,0,0,0.12))",
+        borderRadius: 8,
+        padding: 12,
+        margin: "0 0 16px",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <strong style={{ fontSize: 14 }}>Import a roster</strong>
+        <button type="button" style={BTN} onClick={() => setOpen((o) => !o)}>
+          {open ? "Hide" : "Show"}
+        </button>
+      </div>
+
+      {open && (
+        <>
+          <p style={{ fontSize: 12, color: "var(--muted)", margin: "8px 0" }}>
+            Drop a CSV from Arbiter, Assignr or a spreadsheet, or paste the cells straight out of
+            Excel. Column order does not matter. Anyone already on your list is skipped.
+          </p>
+
+          <input
+            type="file"
+            accept=".csv,.tsv,.txt,text/csv,text/plain"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              e.target.value = "";
+              if (f) readFile(f);
+            }}
+            style={{ fontSize: 12, marginBottom: 8 }}
+          />
+
+          <textarea
+            rows={5}
+            placeholder={"Name, Email, Phone, Level\nJane Doe, jane@example.com, 516-555-0132, Senior"}
+            value={text}
+            onChange={(e) => ingest(e.target.value)}
+            style={{ ...INPUT, width: "100%", fontFamily: "ui-monospace, monospace", fontSize: 12 }}
+          />
+
+          {table && table.rows.length > 0 && map && (
+            <>
+              {!table.hadHeader && (
+                <p style={{ fontSize: 12, color: "var(--muted)", margin: "6px 0" }}>
+                  No column headings found, so these are being read in order. Check the matches
+                  below.
+                </p>
+              )}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+                  gap: 8,
+                  margin: "8px 0",
+                }}
+              >
+                {UMPIRE_FIELDS.map((f: UmpireField) => (
+                  <label key={f} style={{ fontSize: 12 }}>
+                    {UMPIRE_FIELD_LABEL[f]}
+                    <select
+                      value={map[f]}
+                      onChange={(e) => setMap({ ...map, [f]: e.target.value })}
+                      style={{ ...INPUT, width: "100%" }}
+                    >
+                      <option value="">— none —</option>
+                      {table.headers.map((h) => (
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ))}
+              </div>
+
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ textAlign: "left" }}>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Phone</th>
+                      <th>Level</th>
+                      <th />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {preview.slice(0, 12).map((r, i) => (
+                      <tr key={i} style={{ opacity: isImportableUmpire(r) ? 1 : 0.55 }}>
+                        <td>{r.name || "—"}</td>
+                        <td>{r.email || "—"}</td>
+                        <td>{r.phone || "—"}</td>
+                        <td>{r.level || "—"}</td>
+                        <td style={{ color: r.problems.length > 0 ? "#b91c1c" : "var(--muted)" }}>
+                          {r.problems.length > 0 ? r.problems.join(", ") : r.notes.join(", ")}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {preview.length > 12 && (
+                <p style={{ fontSize: 12, color: "var(--muted)" }}>
+                  …and {preview.length - 12} more.
+                </p>
+              )}
+
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
+                <span style={{ fontSize: 12, color: "var(--muted)" }}>
+                  {ready.length} to add
+                  {skipped > 0 ? ` · ${skipped} already on your list` : ""}
+                  {unnamed > 0 ? ` · ${unnamed} with no name` : ""}
+                </span>
+                <button
+                  type="button"
+                  style={BTN}
+                  disabled={busy || working || ready.length === 0}
+                  onClick={async () => {
+                    setWorking(true);
+                    setMsg(null);
+                    try {
+                      const n = await onImport(
+                        ready.map((r) => ({
+                          name: r.name,
+                          email: r.email,
+                          phone: r.phone,
+                          level: r.level,
+                        })),
+                      );
+                      setText("");
+                      setTable(null);
+                      setMap(null);
+                      setMsg({
+                        ok: true,
+                        text: `Added ${n} umpire${n === 1 ? "" : "s"}.${
+                          skipped > 0 ? ` ${skipped} already on your list, skipped.` : ""
+                        }`,
+                      });
+                    } catch (e) {
+                      setMsg({ ok: false, text: e instanceof Error ? e.message : "Failed" });
+                    } finally {
+                      setWorking(false);
+                    }
+                  }}
+                >
+                  Import {ready.length} umpire{ready.length === 1 ? "" : "s"}
+                </button>
+              </div>
+            </>
+          )}
+
+          {msg && (
+            <p style={{ fontSize: 12, marginTop: 8, color: msg.ok ? "#047857" : "#b91c1c" }}>
+              {msg.text}
+            </p>
+          )}
+        </>
+      )}
+    </div>
   );
 }

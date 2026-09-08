@@ -19,6 +19,7 @@
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { hasScope } from "@/lib/admin-roles";
+import { esc as escapeHtml, notifyAddress, sendEmail } from "@/lib/email/send";
 import {
   findUmpireIssues,
   type AssignableGame,
@@ -94,6 +95,46 @@ export async function POST(req: Request) {
       { merge: true },
     );
     return NextResponse.json({ ok: true, id });
+  }
+
+  // Bulk create from a pasted or uploaded roster. The client has already
+  // parsed, mapped and de-duplicated (lib/umpire-import.ts); this validates
+  // and writes. One batch so a partial roster cannot land.
+  if (action === "import_umpires") {
+    const list = Array.isArray(body.umpires) ? body.umpires : [];
+    if (list.length === 0 || list.length > 400) {
+      return NextResponse.json(
+        { error: "Send between 1 and 400 umpires." },
+        { status: 400 },
+      );
+    }
+    const batch = db.batch();
+    let written = 0;
+    for (const raw of list) {
+      const u = (raw ?? {}) as Record<string, unknown>;
+      const name = String(u.name ?? "").trim().slice(0, 80);
+      if (!name) continue; // the client flags these; never write a nameless row
+      batch.set(
+        col.doc(),
+        {
+          name,
+          level: String(u.level ?? "").trim().slice(0, 40),
+          email: String(u.email ?? "").trim().slice(0, 160),
+          phone: String(u.phone ?? "").trim().slice(0, 40),
+          unavailable: [],
+          fields: [],
+          active: true,
+          updated_at: now,
+        },
+        { merge: true },
+      );
+      written++;
+    }
+    if (written === 0) {
+      return NextResponse.json({ error: "Nothing to import." }, { status: 400 });
+    }
+    await batch.commit();
+    return NextResponse.json({ ok: true, imported: written });
   }
 
   if (action === "delete_umpire") {
@@ -204,7 +245,51 @@ export async function POST(req: Request) {
       );
     }
 
+    const previous = Array.isArray(gd.umpires) ? gd.umpires.map(String) : [];
     await gameRef.set({ umpires: umpireIds, umpires_updated_at: now }, { merge: true });
+
+    // Tell the umpires they have a game.
+    //
+    // ONLY THE NEWLY ADDED ONES. Re-saving a crew to swap one person must not
+    // re-email the two who were already on it, or an assignor tidying up the
+    // week mails the whole roster twice and they stop reading them.
+    //
+    // Best effort, after the write. An assignment that is made must never be
+    // rolled back because mail is down.
+    const added = umpireIds.filter((id) => !previous.includes(id));
+    if (added.length > 0) {
+      try {
+        const byId = new Map(umpSnap.docs.map((d) => [d.id, d.data()]));
+        const when = [String(gd.date ?? ""), String(gd.time ?? "")]
+          .filter(Boolean)
+          .join(" at ");
+        const where = String(gd.field ?? "");
+        const host = req.headers.get("origin") ?? (req.headers.get("host") ? `https://${req.headers.get("host")}` : "");
+        const link = `${host}/games/${gameId}`;
+        for (const id of added) {
+          const to = String(byId.get(id)?.email ?? "").trim();
+          if (!to) continue;
+          const name = String(byId.get(id)?.name ?? "").trim();
+          const html =
+            `<p>Hi ${escapeHtml(name || "there")},</p>` +
+            `<p>You have been assigned to a game.</p>` +
+            `<table cellpadding="4">` +
+            `<tr><td>When</td><td><strong>${escapeHtml(when || "see the schedule")}</strong></td></tr>` +
+            (where ? `<tr><td>Where</td><td>${escapeHtml(where)}</td></tr>` : "") +
+            `</table>` +
+            `<p><a href="${escapeHtml(link)}">See the game</a></p>` +
+            `<p>If you cannot work it, reply to this email and let the office know.</p>`;
+          await sendEmail({
+            to,
+            subject: `Game assignment${when ? `: ${when}` : ""}`,
+            html,
+            ...(notifyAddress() ? { replyTo: notifyAddress()! } : {}),
+          }).catch(() => null);
+        }
+      } catch {
+        /* the crew is assigned whether or not the mail goes out today */
+      }
+    }
     return NextResponse.json({ ok: true, assigned: umpireIds.length });
   }
 
