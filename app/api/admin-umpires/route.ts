@@ -21,6 +21,13 @@ import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { hasScope } from "@/lib/admin-roles";
 import { esc as escapeHtml, notifyAddress, sendEmail } from "@/lib/email/send";
 import {
+  renderLine,
+  smsFor,
+  smsSegments,
+  upcomingByUmpire,
+  type AssignmentGame,
+} from "@/lib/umpire-assignments";
+import {
   findUmpireIssues,
   type AssignableGame,
   type Umpire,
@@ -173,33 +180,14 @@ export async function POST(req: Request) {
       day: "2-digit",
     }).format(new Date());
 
-    const linesFor = new Map<string, string[]>();
-    const dated: Record<string, unknown>[] = gamesSnap.docs
-      .map(
-        (d) =>
-          ({ id: d.id, ...(d.data() as Record<string, unknown>) }) as Record<
-            string,
-            unknown
-          >,
-      )
-      .filter((g) => String(g.date ?? "").slice(0, 10) >= today)
-      .sort((a, b) =>
-        `${a.date ?? ""}${a.time ?? ""}`.localeCompare(`${b.date ?? ""}${b.time ?? ""}`),
-      );
-    for (const g of dated) {
-      const crew = Array.isArray(g.umpires) ? (g.umpires as string[]).map(String) : [];
-      if (crew.length === 0) continue;
-      const away = teamName.get(String(g.away_team_id ?? "")) ?? "";
-      const home = teamName.get(String(g.home_team_id ?? "")) ?? "";
-      const matchup = away && home ? `${away} at ${home}` : "Game";
-      const when = [String(g.date ?? ""), String(g.time ?? "")].filter(Boolean).join(" ");
-      const where = String(g.field ?? "");
-      const line = `${when}${where ? `, ${where}` : ""} — ${matchup}`;
-      for (const id of crew) {
-        if (only && !only.has(id)) continue;
-        linesFor.set(id, [...(linesFor.get(id) ?? []), line].slice(0, 60));
-      }
-    }
+    // Shared with the copy-for-texting action below, deliberately: two
+    // implementations of "their upcoming games" would eventually disagree.
+    const linesFor = upcomingByUmpire(
+      gamesSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as AssignmentGame),
+      teamName,
+      today,
+      only ?? undefined,
+    );
 
     const host =
       req.headers.get("origin") ??
@@ -220,7 +208,7 @@ export async function POST(req: Request) {
       const html =
         `<p>Hi ${escapeHtml(name || "there")},</p>` +
         `<p>Here ${lines.length === 1 ? "is the game" : `are the ${lines.length} games`} you are scheduled for.</p>` +
-        `<ul>${lines.map((l) => `<li>${escapeHtml(l)}</li>`).join("")}</ul>` +
+        `<ul>${lines.map((l) => `<li>${escapeHtml(renderLine(l))}</li>`).join("")}</ul>` +
         (host ? `<p><a href="${escapeHtml(host)}/schedule">See the full schedule</a></p>` : "") +
         `<p>If you cannot work one of these, reply to this email and let the office know.</p>`;
       const r = await sendEmail({
@@ -239,6 +227,68 @@ export async function POST(req: Request) {
       // Nobody matched at all: worth saying, rather than a silent success.
       none: linesFor.size === 0,
     });
+  }
+
+  /**
+   * Build the text messages, do not send them.
+   *
+   * Mike sends texts from his own phone, from his own number, because that is
+   * the number the umpires already know and reply to. Sending SMS from the
+   * platform would mean a Twilio number and 10DLC registration, and the reply
+   * would land nowhere. So this composes the message and hands it over to
+   * copy, which is the whole ask.
+   *
+   * Same upcomingByUmpire as the email action, so the two can never disagree
+   * about who is on what.
+   */
+  if (action === "assignment_texts") {
+    const [umpSnap3, gamesSnap2, teamsSnap2, cfgSnap2] = await Promise.all([
+      col.get(),
+      db.collection(`leagues/${leagueId}/games`).get(),
+      db.collection(`leagues/${leagueId}/teams`).get(),
+      // The league's own document, which is where the display name lives.
+      // There is no site_config/branding on these tenants.
+      db.doc(`leagues/${leagueId}`).get(),
+    ]);
+    const teamName2 = new Map(
+      teamsSnap2.docs.map((d) => [d.id, String(d.data().name ?? d.id)]),
+    );
+    const today2 = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/New_York",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+    const leagueName =
+      String(cfgSnap2.data()?.name ?? "").trim() || "the league";
+
+    const lines2 = upcomingByUmpire(
+      gamesSnap2.docs.map((d) => ({ id: d.id, ...d.data() }) as AssignmentGame),
+      teamName2,
+      today2,
+    );
+    const byId2 = new Map(umpSnap3.docs.map((d) => [d.id, d.data()]));
+
+    const messages = [...lines2]
+      .map(([id, lines]) => {
+        const rec = byId2.get(id);
+        if (!rec) return null;
+        const name = String(rec.name ?? "").trim();
+        const text = smsFor(name, lines, leagueName);
+        return {
+          umpireId: id,
+          name,
+          phone: String(rec.phone ?? "").trim(),
+          games: lines.length,
+          text,
+          chars: text.length,
+          segments: smsSegments(text),
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => (a!.name || "").localeCompare(b!.name || ""));
+
+    return NextResponse.json({ ok: true, messages });
   }
 
   if (action === "delete_umpire") {
@@ -398,7 +448,7 @@ export async function POST(req: Request) {
   }
 
   return NextResponse.json(
-    { error: "action must be save_umpire | import_umpires | email_assignments | delete_umpire | assign | settings" },
+    { error: "action must be save_umpire | import_umpires | email_assignments | assignment_texts | delete_umpire | assign | settings" },
     { status: 400 },
   );
 }

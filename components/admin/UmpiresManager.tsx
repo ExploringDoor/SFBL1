@@ -77,6 +77,16 @@ const LABEL: React.CSSProperties = {
   marginBottom: 3,
 };
 
+interface TextMsg {
+  umpireId: string;
+  name: string;
+  phone: string;
+  games: number;
+  text: string;
+  chars: number;
+  segments: number;
+}
+
 export function UmpiresManager({ leagueId, user }: Props) {
   const [umpires, setUmpires] = useState<Umpire[]>([]);
   const [games, setGames] = useState<AssignableGame[]>([]);
@@ -88,6 +98,8 @@ export function UmpiresManager({ leagueId, user }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [mailMsg, setMailMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [mailWho, setMailWho] = useState("");
+  const [texts, setTexts] = useState<TextMsg[] | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
   const [draft, setDraft] = useState<Partial<Umpire>>({ name: "" });
   const [newDate, setNewDate] = useState<Record<string, string>>({});
@@ -224,6 +236,39 @@ export function UmpiresManager({ leagueId, user }: Props) {
       setMailMsg({ ok: false, text: e instanceof Error ? e.message : "Could not send." });
     } finally {
       setBusy(false);
+    }
+  }
+
+  /**
+   * Build the texts, do not send them.
+   *
+   * Mike texts from his own phone, from the number the umpires already know
+   * and reply to. Sending SMS from the platform would need a Twilio number
+   * and 10DLC registration, and replies would land nowhere. So this composes
+   * the message and hands it over to copy, which is what he asked for.
+   */
+  async function loadTexts() {
+    setBusy(true);
+    setError(null);
+    setDone(null);
+    setMailMsg(null);
+    try {
+      const r = (await post({ action: "assignment_texts" })) as { messages?: TextMsg[] };
+      setTexts(Array.isArray(r.messages) ? r.messages : []);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not build the texts.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function copyText(m: TextMsg) {
+    try {
+      await navigator.clipboard.writeText(m.text);
+      setCopied(m.umpireId);
+      window.setTimeout(() => setCopied(null), 1600);
+    } catch {
+      setError("Could not reach the clipboard. Select the message and copy it by hand.");
     }
   }
 
@@ -444,6 +489,75 @@ export function UmpiresManager({ leagueId, user }: Props) {
               {mailMsg.text}
             </p>
           )}
+
+          <div style={{ borderTop: "1px solid rgba(0,0,0,0.08)", marginTop: 12, paddingTop: 10 }}>
+            <button type="button" style={BTN} disabled={busy} onClick={() => void loadTexts()}>
+              {texts ? "Rebuild texts" : "Text messages to copy"}
+            </button>
+            <span style={{ fontSize: 12, color: "var(--muted)", marginLeft: 8 }}>
+              writes each umpire&rsquo;s text for you to send from your own phone
+            </span>
+
+            {texts && texts.length === 0 && (
+              <p style={{ fontSize: 12, color: "#b91c1c", marginTop: 8 }}>
+                Nobody is assigned to an upcoming game yet.
+              </p>
+            )}
+
+            {texts && texts.length > 0 && (
+              <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
+                {texts.map((m) => (
+                  <div
+                    key={m.umpireId}
+                    style={{
+                      border: "1px solid rgba(0,0,0,0.10)",
+                      borderRadius: 6,
+                      padding: 8,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 8,
+                        alignItems: "center",
+                        marginBottom: 6,
+                      }}
+                    >
+                      <strong style={{ fontSize: 13 }}>{m.name}</strong>
+                      {m.phone ? (
+                        <a href={`sms:${m.phone.replace(/[^\d+]/g, "")}`} style={{ fontSize: 12 }}>
+                          {m.phone}
+                        </a>
+                      ) : (
+                        <span style={{ fontSize: 12, color: "#b91c1c" }}>no phone on file</span>
+                      )}
+                      <span style={{ fontSize: 11, color: "var(--muted)" }}>
+                        {m.games} game{m.games === 1 ? "" : "s"} · {m.chars} chars ·{" "}
+                        {m.segments} text{m.segments === 1 ? "" : "s"}
+                      </span>
+                      <button type="button" style={BTN} onClick={() => void copyText(m)}>
+                        {copied === m.umpireId ? "Copied" : "Copy"}
+                      </button>
+                    </div>
+                    <pre
+                      style={{
+                        whiteSpace: "pre-wrap",
+                        fontFamily: "ui-monospace, monospace",
+                        fontSize: 12,
+                        margin: 0,
+                        background: "rgba(0,0,0,0.03)",
+                        borderRadius: 4,
+                        padding: 8,
+                      }}
+                    >
+                      {m.text}
+                    </pre>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <ImportUmpires
