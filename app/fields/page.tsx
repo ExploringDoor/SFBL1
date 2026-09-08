@@ -56,7 +56,15 @@ async function loadFields(tenantId: string): Promise<Field[]> {
         ? (data as unknown as Field[])
         : null;
     if (!arr || arr.length === 0) return fallback;
-    return arr;
+    // Also sorted on read. The write path sorts from now on, but every list
+    // saved BEFORE that is still stored in the order it was typed, and this
+    // page is where that shows.
+    return [...arr].sort((a, b) =>
+      String(a?.name ?? "").localeCompare(String(b?.name ?? ""), undefined, {
+        numeric: true,
+        sensitivity: "base",
+      }),
+    );
   } catch {
     return fallback;
   }

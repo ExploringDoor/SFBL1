@@ -94,6 +94,19 @@ export async function POST(req: Request) {
     })
     .filter((f): f is Record<string, string> => f !== null);
 
+  // Alphabetical, once, HERE. The stored order is what every consumer shows:
+  // the public /fields page, the captain schedule tab and the field dropdown
+  // all render the array as written. Sorting only in the admin meant a field
+  // added today sat at the bottom of the public list for good (Mike added
+  // Fireman's Field, Lindenhurst on 2026-09-08 and it landed last).
+  // numeric:true so "Field 2" comes before "Field 10".
+  clean.sort((a, b) =>
+    String(a.name ?? "").localeCompare(String(b.name ?? ""), undefined, {
+      numeric: true,
+      sensitivity: "base",
+    }),
+  );
+
   const db = getAdminDb();
   const ref = db.doc(`leagues/${leagueId}/site_config/fields`);
 
