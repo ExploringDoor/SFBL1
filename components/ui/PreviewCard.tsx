@@ -92,21 +92,26 @@ export function PreviewCard({
       }}
     >
       <div className="le-preview-time">
-        {timeLabel}
-        {fieldHref && field && (
-          <>
-            {" · "}
-            {/* stopPropagation so the field click opens the field directory
-                instead of the card's game link. */}
-            <Link
-              href={fieldHref}
-              className="le-preview-fieldlink"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {shortFieldName(field)}
-            </Link>
-          </>
-        )}
+        {/* Only the date/field TEXT ellipsizes. The badges after it are
+            flex siblings that never shrink, so a long field name can no
+            longer push the age group or a MAKEUP flag out of the card. */}
+        <span className="le-preview-time-text">
+          {timeLabel}
+          {fieldHref && field && (
+            <>
+              {" · "}
+              {/* stopPropagation so the field click opens the field directory
+                  instead of the card's game link. */}
+              <Link
+                href={fieldHref}
+                className="le-preview-fieldlink"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {shortFieldName(field)}
+              </Link>
+            </>
+          )}
+        </span>
         {ageGroup && (
           <span
             style={{

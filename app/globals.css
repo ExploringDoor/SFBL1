@@ -236,7 +236,11 @@ body {
 
 @media (min-width: 720px) {
   .le-home-scores-grid {
-    grid-template-columns: 1fr 1fr;
+    /* minmax(0, …) for the same reason as .le-preview-grid: a bare 1fr
+     * floors the track at min-content, and GameCard's eyebrow is nowrap,
+     * so a long field name would push these cards out of the main column
+     * and over the standings sidebar. */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
 

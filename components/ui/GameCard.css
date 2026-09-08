@@ -30,6 +30,7 @@
 }
 
 .le-gc-card {
+  min-width: 0; /* grid item: default auto floor would overflow the track */
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 12px;

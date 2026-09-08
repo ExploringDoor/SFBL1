@@ -16,7 +16,14 @@
   /* 2 cards per row on phones (Adam asked for this — single-col was
    * making cards too tall and the page felt sparse). 2 cards on
    * tablet+ as well. Consistent with .le-gc-cards-grid. */
-  grid-template-columns: 1fr 1fr;
+  /* minmax(0, …), NOT plain 1fr. A bare `1fr` is `minmax(auto, 1fr)`, so
+   * each track's FLOOR is its content's min-content width. The eyebrow is
+   * `white-space: nowrap`, so a long field name ("BELLPORT MARTHA AVENUE
+   * COMPLEX 1") made the floor wider than the column: the tracks computed
+   * to 633px each inside an 800px grid and the cards spilled sideways
+   * across the standings sidebar on the homepage. The 0 floor lets the
+   * track shrink so the ellipsis below can actually do its job. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 10px;
   padding: 20px 0;
 }
@@ -28,6 +35,9 @@
 }
 
 .le-preview-card {
+  /* Grid items default to min-width: auto (= min-content), which would
+   * overflow the track even after the minmax(0, …) above. */
+  min-width: 0;
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 8px;
@@ -59,10 +69,28 @@
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   /* Always keep "DAY M/D · TIME · FIELD" on a single line. If the
    * content is too long for the card, ellipsize the right side
-   * rather than wrapping onto a second line. */
+   * rather than wrapping onto a second line.
+   *
+   * Flex row so the ellipsis applies to the TEXT ONLY. When the whole
+   * eyebrow was one overflow:hidden block, a long field name pushed the
+   * age-group pill and the MAKEUP flag past the clip edge and they simply
+   * vanished. They are flex-shrink: 0 siblings now. */
+  display: flex;
+  align-items: center;
   white-space: nowrap;
   overflow: hidden;
+}
+
+.le-preview-time-text {
+  min-width: 0; /* lets the text shrink so the ellipsis can appear */
+  overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Every badge after the text keeps its full width. */
+.le-preview-time > :not(.le-preview-time-text) {
+  flex: 0 0 auto;
 }
 
 /* Windmill: the field portion of the eyebrow links to the field directory.
@@ -157,7 +185,7 @@
    * felt cramped). Records stay visible since we no longer need
    * to scavenge every pixel of horizontal space. */
   .le-preview-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 10px;
     padding: 14px 0;
   }

@@ -442,9 +442,31 @@ body.ticker-force-hide #score-ticker {
   will-change: transform;
 }
 
-/* Stop for anyone reaching for a tile, including keyboard users. */
-.st-scroll--marquee:hover .st-track--marquee,
-.st-scroll--marquee:focus-within .st-track--marquee {
+/* Stop for anyone reaching for a tile, including keyboard users.
+ *
+ * Deliberately NOT :hover on its own and NOT :focus-within:
+ *
+ *  - Every tile is a <Link>, and the ticker lives in the ROOT LAYOUT, so it
+ *    never remounts when you open a game. Clicking a tile focuses that link,
+ *    and coming back restores focus to it, so :focus-within stayed matched
+ *    and the marquee never started again. Reported 2026-09-08: "when i click
+ *    on a ticker then close out, the ticker doesn't keep scrolling."
+ *    :focus-visible only matches keyboard focus, which is who the pause is
+ *    actually for. A mouse click does not trigger it.
+ *
+ *  - iOS makes :hover STICK to the last-tapped element until you tap
+ *    somewhere else, which froze the strip the same way after a tap. Gating
+ *    hover on a real pointer keeps the desktop behaviour and drops it on
+ *    touch, where there is nothing to "reach for" anyway.
+ *
+ * Browsers without :has() simply never pause on focus, which fails in the
+ * safe direction: still scrolling. */
+@media (hover: hover) and (pointer: fine) {
+  .st-scroll--marquee:hover .st-track--marquee {
+    animation-play-state: paused;
+  }
+}
+.st-scroll--marquee:has(:focus-visible) .st-track--marquee {
   animation-play-state: paused;
 }
 
