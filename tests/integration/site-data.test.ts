@@ -42,10 +42,13 @@ vi.mock("@/lib/firebase-admin", () => ({
   }),
 }));
 
-const { loadTickerGames } = await import("@/lib/site-data");
+const { loadTickerGames, __resetTickerCache } = await import("@/lib/site-data");
 
 beforeEach(() => {
   mockState.collections = new Map();
+  // The ticker cache is a process-wide 30s map. Without this every test after
+  // the first re-reads the first one's result and asserts nothing.
+  __resetTickerCache();
 });
 
 afterEach(() => vi.clearAllMocks());
@@ -446,5 +449,98 @@ describe("loadTickerGames — defensive parsing", () => {
     // Both team_ids are "" — fallback name is "" too. The ticker
     // entry exists; UI is responsible for rendering "—" or similar.
     expect(ticker[0]!.home_team_id).toBe("");
+  });
+});
+
+// ── options are named, not positional ─────────────────────────────
+//
+// Regression for the 2026-09-08 outage. b4f00ab added `scheduleHidden`
+// as parameter 2 of loadTickerGames while app/layout.tsx passed it as
+// argument 3, so Island Fastpitch's `drop_extra_game_loss: true` arrived
+// in the `scheduleHidden` slot. Every upcoming game was dropped from the
+// ticker in the header of every page, and because Island had no finals
+// yet the strip read "No games yet" for two days with 92 games scheduled.
+//
+// Nothing failed loudly: both flags are booleans, both default false, and
+// the ticker's own tests were all reading a cached [] (see beforeEach).
+// These pin the two behaviours apart so a future flag cannot repeat it.
+
+describe("loadTickerGames — scheduleHidden vs dropExtraGameLoss", () => {
+  function twoScheduledOneFinal() {
+    mockState.collections.set("leagues/sfbl/teams", [
+      { id: "a", data: { name: "Aces" } },
+      { id: "b", data: { name: "Bats" } },
+    ]);
+    mockState.collections.set("leagues/sfbl/games", [
+      {
+        id: "g_final",
+        data: {
+          status: "final",
+          date: "2026-05-01",
+          home_team_id: "a",
+          away_team_id: "b",
+          home_score: 4,
+          away_score: 1,
+        },
+      },
+      {
+        id: "g_up1",
+        data: {
+          status: "scheduled",
+          date: "2026-06-01",
+          home_team_id: "a",
+          away_team_id: "b",
+        },
+      },
+      {
+        id: "g_up2",
+        data: {
+          status: "scheduled",
+          date: "2026-06-08",
+          home_team_id: "b",
+          away_team_id: "a",
+        },
+      },
+    ]);
+  }
+
+  it("dropExtraGameLoss does NOT remove upcoming games (the Island bug)", async () => {
+    twoScheduledOneFinal();
+    const ticker = await loadTickerGames("sfbl", { dropExtraGameLoss: true });
+    expect(ticker.map((t) => t.id)).toEqual(["g_final", "g_up1", "g_up2"]);
+  });
+
+  it("scheduleHidden removes upcoming games but keeps finals", async () => {
+    twoScheduledOneFinal();
+    const ticker = await loadTickerGames("sfbl", { scheduleHidden: true });
+    expect(ticker.map((t) => t.id)).toEqual(["g_final"]);
+  });
+
+  it("a hidden schedule with no finals is the only empty case", async () => {
+    mockState.collections.set("leagues/sfbl/games", [
+      {
+        id: "g_up1",
+        data: {
+          status: "scheduled",
+          date: "2026-06-01",
+          home_team_id: "a",
+          away_team_id: "b",
+        },
+      },
+    ]);
+    expect(await loadTickerGames("sfbl", { scheduleHidden: true })).toEqual([]);
+    // Same data, the OTHER flag: games must still be there.
+    expect(
+      await loadTickerGames("sfbl", { dropExtraGameLoss: true }),
+    ).toHaveLength(1);
+  });
+
+  it("caches per flag combination, not per tenant", async () => {
+    twoScheduledOneFinal();
+    // Prime the cache with the hidden variant, then read the normal one.
+    // Keyed on tenant alone, this returned the 1-game hidden result.
+    await loadTickerGames("sfbl", { scheduleHidden: true });
+    const visible = await loadTickerGames("sfbl");
+    expect(visible).toHaveLength(3);
   });
 });

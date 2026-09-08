@@ -403,7 +403,7 @@ export default async function RootLayout({
     ? (await loadScheduleVisibility(tenantId)).hidden
     : false;
   const tickerGames = tenantId
-    ? await loadTickerGames(tenantId, dropExtraGameLoss, scheduleHidden)
+    ? await loadTickerGames(tenantId, { dropExtraGameLoss, scheduleHidden })
     : [];
 
   // Tenant overrides become inline custom-properties on <html>. CSS

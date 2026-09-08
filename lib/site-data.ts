@@ -43,21 +43,46 @@ interface TickerCacheEntry {
 const TICKER_TTL_MS = 30_000;
 const tickerCache = new Map<string, TickerCacheEntry>();
 
-export async function loadTickerGames(
-  tenantId: string,
+/** Test-only. The 30s cache is process-wide, so a suite that reuses one tenant
+ *  id gets the FIRST case's result for every later case. That is not
+ *  hypothetical: it silently neutered 12 of the 17 ticker tests from 53a8e26
+ *  (May 11) until 2026-09-08, which is how the b4f00ab argument swap reached
+ *  production. Call this in beforeEach. */
+export function __resetTickerCache(): void {
+  tickerCache.clear();
+}
+
+export interface TickerOptions {
   /** Schedule hidden while it is rebuilt. Upcoming fixtures come out of the
    *  ticker with it; finals stay, because a played game is not in flux. The
    *  ticker sits in the header of EVERY page, so leaving it alone would have
    *  advertised the fixtures the schedule page had just taken down. */
-  scheduleHidden = false,
+  scheduleHidden?: boolean;
   /** League setting standings.drop_extra_game_loss. The ticker prints a record
    *  next to each team in the header of every page, so it has to match
    *  /standings or the site contradicts itself. Off by default, which is every
    *  league that has not asked for the rule. */
-  dropExtraGameLoss = false,
+  dropExtraGameLoss?: boolean;
+}
+
+/** Options are NAMED, not positional, and deliberately so. They used to be two
+ *  adjacent booleans; b4f00ab added `scheduleHidden` as parameter 2 while the
+ *  layout passed it as argument 3, so `drop_extra_game_loss: true` arrived as
+ *  `scheduleHidden` and silently emptied the ticker on every page of every
+ *  tenant that had the rule on. Nothing failed loudly: both are booleans, both
+ *  default false, and the tenant that had it on had no finals to fall back on.
+ *  Keep them named so the next flag cannot repeat it. */
+export async function loadTickerGames(
+  tenantId: string,
+  opts: TickerOptions = {},
 ): Promise<TickerGame[]> {
-  // Cache hit short-circuits the entire fetch + compute.
-  const cached = tickerCache.get(tenantId);
+  const { scheduleHidden = false, dropExtraGameLoss = false } = opts;
+
+  // Cache hit short-circuits the entire fetch + compute. The key carries the
+  // flags: both change the RESULT, so keying on tenant alone let one request
+  // during a hidden window serve an empty ticker to everyone for 30s.
+  const cacheKey = `${tenantId}|${scheduleHidden ? 1 : 0}${dropExtraGameLoss ? 1 : 0}`;
+  const cached = tickerCache.get(cacheKey);
   if (cached && Date.now() < cached.expires_at) {
     return cached.games;
   }
@@ -222,7 +247,7 @@ export async function loadTickerGames(
     home_record: recordByTeam.get(g.home_team_id),
     ageGroup: ageOf(g) ?? undefined,
   }));
-  tickerCache.set(tenantId, {
+  tickerCache.set(cacheKey, {
     games: result,
     expires_at: Date.now() + TICKER_TTL_MS,
   });
