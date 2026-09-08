@@ -316,3 +316,29 @@
     padding: 20px 14px 60px;
   }
 }
+
+/* Season switcher — lets visitors view past seasons' brackets as
+   history (e.g. "2026 Summer") alongside the current season. */
+.po-season-nav {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: -6px 0 22px;
+}
+.po-season-tab {
+  font-family: var(--font-barlow, "Barlow Condensed"), sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  padding: 6px 13px;
+  border-radius: 999px;
+  text-decoration: none;
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.14));
+  color: var(--text-strong, #0a0e1c);
+  background: transparent;
+}
+.po-season-tab-on {
+  background: var(--brand-primary, #002d72);
+  border-color: var(--brand-primary, #002d72);
+  color: #fff;
+}

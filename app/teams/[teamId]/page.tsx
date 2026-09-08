@@ -19,6 +19,12 @@ import {
 import { formatIP } from "@/lib/stats/ip";
 import { formatGameDate } from "@/lib/format-time";
 import type { PublicLeagueConfig } from "@/lib/tenants";
+import {
+  loadSeasonConfig,
+  resolveActiveSeason,
+  publicSeasons,
+  inSeason,
+} from "@/lib/season";
 
 export const dynamic = "force-dynamic";
 
@@ -66,8 +72,10 @@ export async function generateMetadata({
 
 export default async function TeamDetailPage({
   params,
+  searchParams,
 }: {
   params: { teamId: string };
+  searchParams?: { season?: string };
 }) {
   const h = headers();
   const tenantId = h.get("x-tenant-id");
@@ -146,7 +154,20 @@ export default async function TeamDetailPage({
     };
   }
 
-  const games: GameResult[] = gamesSnap.docs.map((d) => {
+  // Season scope for this page: the record + schedule below reflect ONE
+  // season. Default is the league's current season (so a new season shows
+  // 0-0 + this season's schedule); the season switcher in the hero lets a
+  // visitor flip to a past season to see that season's record + full
+  // schedule. Untagged games / no season set → shows all (inSeason
+  // fail-safe), so single-season leagues are unaffected.
+  const seasonCfg = await loadSeasonConfig(db, tenantId);
+  const activeSeason = resolveActiveSeason(searchParams?.season, seasonCfg);
+  const seasonTabs = publicSeasons(seasonCfg);
+  const seasonDocs = gamesSnap.docs.filter((d) =>
+    inSeason(d.data().season, activeSeason),
+  );
+
+  const games: GameResult[] = seasonDocs.map((d) => {
     const data = d.data();
     return {
       home_team_id: String(data.home_team_id ?? ""),
@@ -375,8 +396,9 @@ export default async function TeamDetailPage({
       ? (aggPitching.er * 27) / aggPitching.ip_outs
       : 0;
 
-  // Recent + upcoming games for this team.
-  const myGames = gamesSnap.docs
+  // Recent + upcoming games for this team — scoped to the selected season
+  // (seasonDocs), so the schedule matches the record shown above.
+  const myGames = seasonDocs
     .map((d) => ({ id: d.id, ...d.data() }) as Record<string, unknown> & { id: string })
     .filter((g) => g.home_team_id === params.teamId || g.away_team_id === params.teamId);
   // Full season — every game played + the entire rest of the schedule
@@ -535,6 +557,41 @@ export default async function TeamDetailPage({
                     />
                   )}
                 </div>
+              )}
+              {seasonTabs.length >= 2 && (
+                <nav
+                  aria-label="Season"
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    flexWrap: "wrap",
+                    marginTop: 16,
+                  }}
+                >
+                  {seasonTabs.map((s) => {
+                    const on = s.id === activeSeason;
+                    return (
+                      <Link
+                        key={s.id}
+                        href={`/teams/${params.teamId}?season=${encodeURIComponent(s.id)}`}
+                        className="font-barlow"
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 700,
+                          letterSpacing: "0.02em",
+                          padding: "5px 12px",
+                          borderRadius: 999,
+                          textDecoration: "none",
+                          border: "1px solid rgba(255,255,255,0.35)",
+                          background: on ? "#fff" : "transparent",
+                          color: on ? "#0a0e1c" : "rgba(255,255,255,0.9)",
+                        }}
+                      >
+                        {s.label}
+                      </Link>
+                    );
+                  })}
+                </nav>
               )}
             </div>
           </div>

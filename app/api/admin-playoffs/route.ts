@@ -38,6 +38,7 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { loadSeasonConfig, resolveActiveSeason } from "@/lib/season";
 
 export const runtime = "nodejs";
 
@@ -172,11 +173,26 @@ export async function POST(req: Request) {
   }
 
   const db = getAdminDb();
-  await db.doc(`leagues/${leagueId}/site_config/playoffs`).set({
+  // Stamp the bracket with the league's current season and mirror it to a
+  // per-season archive doc (playoffs_<season>). The live `playoffs` doc
+  // stays the most-recent bracket (box-score playoff detection + the nav
+  // link + loadPlayoffsActive all read it); the archive is what lets the
+  // public /playoffs page show PAST seasons' brackets as history once a
+  // new season's bracket is built over the live doc.
+  const seasonCfg = await loadSeasonConfig(db, leagueId);
+  const currentSeason = resolveActiveSeason(undefined, seasonCfg);
+  const payload = {
     ...cleaned,
+    ...(currentSeason ? { season: currentSeason } : {}),
     updated_at: new Date().toISOString(),
     updated_by_uid: decoded.uid,
-  });
+  };
+  await db.doc(`leagues/${leagueId}/site_config/playoffs`).set(payload);
+  if (currentSeason) {
+    await db
+      .doc(`leagues/${leagueId}/site_config/playoffs_${currentSeason}`)
+      .set(payload);
+  }
   await db.collection(`leagues/${leagueId}/audit`).add({
     kind: "playoffs_update",
     by_uid: decoded.uid,

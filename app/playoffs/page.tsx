@@ -15,6 +15,11 @@ import {
   type BracketDivision,
   type BracketGameInfo,
 } from "@/components/ui/PlayoffsBracket";
+import {
+  loadSeasonConfig,
+  resolveActiveSeason,
+  publicSeasons,
+} from "@/lib/season";
 import "./playoffs.css";
 
 export const dynamic = "force-dynamic";
@@ -64,7 +69,11 @@ function teamId(v: unknown): string | null {
   return s === "" || s.toLowerCase() === "tbd" ? null : s;
 }
 
-export default async function PlayoffsPage() {
+export default async function PlayoffsPage({
+  searchParams,
+}: {
+  searchParams?: { season?: string };
+}) {
   const tenantId = headers().get("x-tenant-id");
   if (!tenantId) {
     return (
@@ -75,18 +84,60 @@ export default async function PlayoffsPage() {
   }
 
   const db = getAdminDb();
-  const [bracketSnap, { gamesSnap, teamsSnap }] = await Promise.all([
+  const seasonCfg = await loadSeasonConfig(db, tenantId);
+  const activeSeason = resolveActiveSeason(searchParams?.season, seasonCfg);
+  const seasonTabs = publicSeasons(seasonCfg);
+
+  // Bracket source, season-aware:
+  //   - past seasons live in per-season archive docs (playoffs_<season>),
+  //   - the live `playoffs` doc is the most-recently-built bracket.
+  // An archive doc for the selected season wins; otherwise the live doc,
+  // but only if it belongs to this season (or is untagged = a league that
+  // never opted into seasons, so the single bracket always shows).
+  const [liveSnap, archiveSnap, { gamesSnap, teamsSnap }] = await Promise.all([
     db.doc(`leagues/${tenantId}/site_config/playoffs`).get(),
+    activeSeason
+      ? db.doc(`leagues/${tenantId}/site_config/playoffs_${activeSeason}`).get()
+      : Promise.resolve(null),
     loadGamesAndTeamsSnaps(db, tenantId),
   ]);
 
-  const bracket: Bracket | null = bracketSnap.exists
+  let bracketData: FirebaseFirestore.DocumentData | null = null;
+  if (archiveSnap && archiveSnap.exists) {
+    bracketData = archiveSnap.data() ?? null;
+  } else if (liveSnap.exists) {
+    const ls = liveSnap.data() ?? {};
+    const lsSeason = typeof ls.season === "string" ? ls.season : null;
+    if (!activeSeason || !lsSeason || lsSeason === activeSeason) {
+      bracketData = ls;
+    }
+  }
+
+  const bracket: Bracket | null = bracketData
     ? {
-        active: bracketSnap.data()?.active === true,
-        title: String(bracketSnap.data()?.title ?? "Playoffs"),
-        divisions: (bracketSnap.data()?.divisions ?? []) as BracketDivision[],
+        active: bracketData.active === true,
+        title: String(bracketData.title ?? "Playoffs"),
+        divisions: (bracketData.divisions ?? []) as BracketDivision[],
       }
     : null;
+
+  // Season switcher — only once a league has 2+ published seasons.
+  const seasonSwitcher =
+    seasonTabs.length >= 2 ? (
+      <nav className="po-season-nav" aria-label="Season">
+        {seasonTabs.map((s) => (
+          <a
+            key={s.id}
+            href={`/playoffs?season=${encodeURIComponent(s.id)}`}
+            className={
+              "po-season-tab" + (s.id === activeSeason ? " po-season-tab-on" : "")
+            }
+          >
+            {s.label}
+          </a>
+        ))}
+      </nav>
+    ) : null;
 
   if (!bracket || !bracket.active) {
     return (
@@ -94,9 +145,10 @@ export default async function PlayoffsPage() {
         <header className="po-header">
           <h1 className="po-title">Playoffs</h1>
         </header>
+        {seasonSwitcher}
         <p className="po-empty">
-          Playoff bracket isn&apos;t published yet. Check back later in the
-          season.
+          Playoff bracket isn&apos;t published yet for this season. Check back
+          later — or pick a past season above to see its bracket.
         </p>
       </main>
     );
@@ -253,6 +305,7 @@ export default async function PlayoffsPage() {
       <header className="po-header">
         <h1 className="po-title">{bracket.title}</h1>
       </header>
+      {seasonSwitcher}
 
       {linkedDivisions.length === 0 ? (
         <p className="po-empty">No divisions configured yet.</p>
