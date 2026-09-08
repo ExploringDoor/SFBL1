@@ -68,6 +68,11 @@ export async function POST(req: Request) {
     name?: unknown;
     num?: unknown;
     pos?: unknown;
+    // Aliases sent by the admin Teams manager (it posts `jersey`/`position`,
+    // matching /api/captain-add-player). The manager portal posts `num`/`pos`.
+    // Accept both so an admin edit to jersey/position actually persists.
+    jersey?: unknown;
+    position?: unknown;
     email?: unknown;
     phone?: unknown;
     dob?: unknown;
@@ -233,12 +238,22 @@ export async function POST(req: Request) {
     // email or phone.
     const publicUpdate: Record<string, unknown> = {};
     if (typeof body.name === "string") publicUpdate.name = cleanName(body.name);
-    if (body.num !== undefined) {
-      const n = Number(body.num);
-      publicUpdate.jersey = Number.isFinite(n) ? n : null;
+    // Jersey — accept `num` (manager portal) or `jersey` (admin Teams
+    // manager). A blank value CLEARS the number rather than storing 0
+    // (Number("") is 0, which used to leak through as jersey 0).
+    const rawNum = body.num !== undefined ? body.num : body.jersey;
+    if (rawNum !== undefined) {
+      if (rawNum === "" || rawNum === null) {
+        publicUpdate.jersey = null;
+      } else {
+        const n = Number(rawNum);
+        publicUpdate.jersey = Number.isFinite(n) ? n : null;
+      }
     }
-    if (typeof body.pos === "string") {
-      publicUpdate.position = body.pos.trim() || null;
+    // Position — accept `pos` (manager portal) or `position` (admin).
+    const rawPos = body.pos !== undefined ? body.pos : body.position;
+    if (typeof rawPos === "string") {
+      publicUpdate.position = rawPos.trim() || null;
     }
     publicUpdate.updated_at = new Date().toISOString();
     publicUpdate.updated_by_uid = decoded.uid;
