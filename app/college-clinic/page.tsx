@@ -125,6 +125,10 @@ export default async function CollegeClinicPage() {
   // happened, which this page would otherwise have gone on offering forever.
   const over = clinicIsOver();
   const taken = over ? 0 : await placesTaken(tenantId);
+  // Still counted, no longer advertised. Mike asked to drop the "N places left
+  // of 40" line (2026-09-08): a public countdown reads as pressure when the
+  // clinic is filling and as a bad sign when it is not. The cap itself is
+  // unchanged, and a full clinic still switches to the waiting-list notice.
   const left = Math.max(0, CLINIC.capacity - taken);
   const full = left === 0;
 
@@ -186,9 +190,6 @@ export default async function CollegeClinicPage() {
         <LeagueForm
           kind="clinic_registration"
           title="Register a player"
-          // "40 of 40 places left" parses as a fraction and reads wrong when
-          // the clinic is empty, which is exactly when it is first seen.
-          eyebrow={`${left} places left of ${CLINIC.capacity}`}
           intro={[
             <>
               One form per player. The fee is <strong>${CLINIC.fee}</strong> and

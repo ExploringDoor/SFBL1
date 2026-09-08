@@ -27,6 +27,7 @@ import {
   type GameResult,
   type StandingsRow,
   computeStandingsWithExtraGameRule,
+  seedStandingsWithAllTeams,
 } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { teamsHidden } from "@/lib/team-options";
@@ -449,12 +450,13 @@ export default async function HomePage() {
                 color: "var(--muted)",
               }}
             >
-              Through{" "}
-              {new Date().toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
+              {divisionGroups.every((g) => g.rows.every((r) => r.gp === 0))
+                ? "Everyone starts at 0-0. Records update after the first game is final."
+                : `Through ${new Date().toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}`}
             </p>
             {ageStandings.length > 0 ? (
               // Age-grouped tenants (COYBL): show the youngest age's
@@ -464,7 +466,7 @@ export default async function HomePage() {
                 ages={ageStandings}
                 teamMeta={standingsTeamMeta(ageStandings, teams)}
               />
-            ) : standingsHasGames(divisionGroups) ? (
+            ) : divisionGroups.some((g) => g.rows.length > 0) ? (
               <StandingsTable
                 groups={divisionGroups}
                 teamMeta={teams}
@@ -662,6 +664,10 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
     enabled: config?.standings?.drop_extra_game_loss,
     divisionOf: (id) => teams[id]?.division ?? "",
   });
+  // Every team gets a row from day one. Without this the table has no rows at
+  // all until the first final, so a league whose schedule is up but whose
+  // season has not started shows an apology where the standings belong.
+  standings = seedStandingsWithAllTeams(standings, Object.keys(teams));
   const scheme = config?.standings?.points_per ?? null;
   const usePoints = config?.standings?.scoring === "points" && !!scheme;
   const tiebreaker = config?.standings?.tiebreaker ?? "rd";
@@ -811,15 +817,6 @@ function formatRecord(w: number, l: number, t: number): string {
 // which looks like a broken site rather than a fresh one. We hide
 // the table and show "Standings will appear after the first game
 // is final" instead until the first W/L/T lands.
-function standingsHasGames(groups: DivisionGroup[]): boolean {
-  for (const g of groups) {
-    for (const r of g.rows) {
-      if (r.w > 0 || r.l > 0 || r.t > 0) return true;
-    }
-  }
-  return false;
-}
-
 function BareApex() {
   return (
     <main className="container py-16">

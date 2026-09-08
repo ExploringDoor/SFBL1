@@ -368,3 +368,39 @@ export function computeStandings(games: GameResult[]): StandingsRow[] {
     return b.rd - a.rd;
   });
 }
+
+/**
+ * Give every team a row, whether or not it has played.
+ *
+ * computeStandings() only counts FINISHED games, so before opening day it
+ * returns nothing at all and a league's standings block has no rows to draw.
+ * Island opened its schedule with 92 games scheduled and none played, so the
+ * homepage showed "Standings will appear here after the first game is final"
+ * beside a full slate of fixtures, and Mike asked to see the table at zeros
+ * instead (2026-09-08).
+ *
+ * Teams that already have a row keep it untouched, so this changes nothing
+ * once results start arriving. Rows added here are genuinely empty: no
+ * streak, no recent form, rather than a fabricated one.
+ */
+export function seedStandingsWithAllTeams(
+  rows: StandingsRow[],
+  teamIds: string[],
+): StandingsRow[] {
+  const have = new Set(rows.map((r) => r.team_id));
+  const missing = teamIds
+    .filter((id) => id && !have.has(id))
+    .map((team_id) => ({
+      team_id,
+      gp: 0,
+      w: 0,
+      l: 0,
+      t: 0,
+      rs: 0,
+      ra: 0,
+      rd: 0,
+      pct: 0,
+      gb: 0,
+    }));
+  return [...rows, ...missing];
+}
