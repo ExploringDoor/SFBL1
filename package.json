@@ -21,6 +21,8 @@
     "provision:emulator": "FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 FIRESTORE_EMULATOR_HOST=localhost:8080 tsx scripts/provision.ts",
     "set-admin-role": "tsx scripts/set-admin-role.ts",
     "set-admin-role:emulator": "FIRESTORE_EMULATOR_HOST=localhost:8080 tsx scripts/set-admin-role.ts",
+    "seed:fields": "tsx scripts/seed-fields-json.ts",
+    "seed:fields:emulator": "FIRESTORE_EMULATOR_HOST=localhost:8080 tsx scripts/seed-fields-json.ts",
     "audit:tenant": "tsx scripts/audit-tenant.ts",
     "audit:tenant:emulator": "FIRESTORE_EMULATOR_HOST=localhost:8080 tsx scripts/audit-tenant.ts",
     "seed:page": "tsx scripts/seed-page-content.ts",

@@ -1,0 +1,92 @@
+{
+  "league": {
+    "slug": "etbl",
+    "name": "East Texas Basketball League",
+    "abbrev": "ETBL",
+    "sport": "basketball",
+    "innings": 4,
+    "ruleset": "basketball",
+    "linescore_innings": 4,
+    "stat_columns": [],
+    "pitching": { "tracked": false },
+    "rules_flags": {
+      "dropped_third_strike": false,
+      "balks": false,
+      "infield_fly": false
+    },
+    "flags": {
+      "stats_enabled": false,
+      "demo_data": true,
+      "registration_open": false,
+      "ticker_scroll": true
+    },
+    "demo_note": "These teams, gyms and results are placeholders so the league can see how the site works before the 2026-27 divisions are final. Real teams and scores replace them before tip-off.",
+    "theme": {
+      "primary": "#0b2545",
+      "accent": "#c2410c",
+      "secondary": "#f59e0b",
+      "logo_url": "/etbl/logo.png",
+      "banner_url": "/etbl/banner.svg",
+      "og_image_url": "/etbl/og.png"
+    },
+    "billing": {
+      "status": "trial",
+      "paid_through": null,
+      "last_payment": null,
+      "notes": "New build Sept 2026 for BJ Threlkeld (Mineola, TX). Youth developmental basketball, ~3rd-6th grade, 96 teams / 6 divisions / 7 towns, one commissioner per town. Every team, division, town, gym and result is a PLACEHOLDER (demo:true) until the league sends real data. Branding is a placeholder navy / burnt-orange theme with a generated logo — see data/etbl/README.md for the swap."
+    },
+    "standings": { "scoring": "pct", "tiebreaker": "rd" },
+    "captain": { "passwordless": false },
+    "admin": { "passwordless": true },
+    "season_year": 2026,
+    "season_label": "2026-27",
+    "about": "Developmental youth basketball for 3rd through 6th graders across seven East Texas towns, based in Mineola. Six divisions, one commissioner per town, and Saturday games in local gyms — a league built to get kids ready for middle-school ball, not to chase rings.",
+    "fields": [
+      "Mineola Community Gym",
+      "Mineola Elementary Gym",
+      "Town B Gym",
+      "Town C Gym",
+      "Town D Gym",
+      "Town E Gym",
+      "Town F Gym",
+      "Town G Gym"
+    ],
+    "nav": {
+      "hide": [
+        "SFBL",
+        "Stats",
+        "Register",
+        "News",
+        "Photos",
+        "Team Stats",
+        "Player of the Week",
+        "Playoffs",
+        "Tournaments",
+        "Availability",
+        "History",
+        "Umpire Evaluation",
+        "Coach Evaluation",
+        "Pay Online",
+        "Store"
+      ],
+      "add": [
+        { "label": "Gyms", "href": "/fields" },
+        { "label": "Volunteers", "href": "/volunteers" },
+        { "label": "About", "href": "/content/about" },
+        {
+          "label": "More",
+          "href": "#",
+          "children": [{ "label": "Rules", "href": "/rules" }]
+        }
+      ]
+    }
+  },
+  "_notes": {
+    "read_me": "data/etbl/README.md — what is real, what is placeholder, and the local bring-up.",
+    "admin_password": "The shared admin password is NOT stored here. Set env ETBL_ADMIN_PASSWORD (local shell / Vercel); /api/public-admin-claim reads it as the fallback for admin.password.",
+    "commissioner_roles": "Per-town passwords live at leagues/etbl.admin.roles.<town> and are written with `npm run set-admin-role -- --league etbl --role <town> --town \"<Town>\" --scopes scores,volunteers --password ...`, never in this file."
+  },
+  "teams_csv": "./teams.csv",
+  "schedule_csv": "./schedule.csv",
+  "admins": ["adam.miller.22@gmail.com"]
+}

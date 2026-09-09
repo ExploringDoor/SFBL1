@@ -68,6 +68,17 @@ export async function POST(req: Request) {
   const teams = teamSnap.docs.filter(isDemo);
   const games = gameSnap.docs.filter(isDemo);
 
+  // The provision script and quick-score write a score-only box_scores doc
+  // for every final game, keyed by the game id. A sample game's must go with
+  // it, or the public game page keeps showing a result for a game that no
+  // longer exists. Matched on the id of a VERIFIED demo game only.
+  const demoGameIds = new Set(games.map((d) => d.id));
+  const boxSnap = await db
+    .collection(`leagues/${leagueId}/box_scores`)
+    .get()
+    .catch(() => null);
+  const boxScores = (boxSnap?.docs ?? []).filter((d) => demoGameIds.has(d.id));
+
   // Standings are derived, and a sample division left behind is as visible as
   // a sample team. Only rows whose every entry belongs to a demo team go.
   const demoTeamIds = new Set(teams.map((d) => d.id));
@@ -94,6 +105,7 @@ export async function POST(req: Request) {
   };
 
   await batchDelete(games);
+  await batchDelete(boxScores);
   await batchDelete(standings);
   // Teams last. If anything above fails the sample teams are still there, and
   // a half-removed season that still has its teams reads as "not finished"
@@ -113,6 +125,7 @@ export async function POST(req: Request) {
       by_uid: decoded.uid,
       teams: teams.length,
       games: games.length,
+      box_scores: boxScores.length,
       standings: standings.length,
       at: new Date().toISOString(),
     });
@@ -124,6 +137,7 @@ export async function POST(req: Request) {
     ok: true,
     teams: teams.length,
     games: games.length,
+    box_scores: boxScores.length,
     standings: standings.length,
   });
 }

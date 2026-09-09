@@ -56,7 +56,9 @@ const ipBuckets = new Map<string, { count: number; resets_at: number }>();
 // falling back to the lenient "trust the URL" model. COYBL mints a code for
 // every team at registration, so a team without one is a bug, not an invitation
 // to let anyone in as its coach.
-const REQUIRE_PASSWORD_TENANTS = new Set(["island", "coybl"]);
+// ETBL has no coach portal in its nav at all, so this is belt-and-braces: if
+// the portal is ever switched on there, a team with no code stays closed.
+const REQUIRE_PASSWORD_TENANTS = new Set(["island", "coybl", "etbl"]);
 
 // Per-TEAM lockout, on top of the per-IP limit above.
 //

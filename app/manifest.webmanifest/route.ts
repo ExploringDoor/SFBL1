@@ -59,6 +59,7 @@ export function GET() {
     island: { base: "/island", maskable: "/island/icon-512-maskable.png" },
     lcybl: { base: "/lcybl", maskable: "/lcybl/icon-512-maskable.png" },
     ucsl: { base: "/ucsl", maskable: "/ucsl/icon-512-maskable.png" },
+    etbl: { base: "/etbl", maskable: "/etbl/icon-512-maskable.png" },
   };
   const iconSet = ICON_SETS[tenantId ?? ""] ?? {
     base: "/icons",

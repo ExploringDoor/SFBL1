@@ -524,6 +524,17 @@ export default async function RootLayout({
             <link rel="icon" type="image/png" sizes="192x192" href="/ucsl/icon-192.png" />
             <link rel="icon" type="image/png" sizes="512x512" href="/ucsl/icon-512.png" />
           </>
+        ) : leagueAbbrev === "ETBL" ? (
+          /* East Texas Basketball League — generated placeholder mark until
+             the league sends artwork; scripts/build-etbl-brand.js rebuilds
+             the set from public/etbl/logo.png. (2026-09-09.) */
+          <>
+            <link rel="icon" type="image/png" sizes="32x32" href="/etbl/favicon-32.png" />
+            <link rel="icon" type="image/png" sizes="16x16" href="/etbl/favicon-16.png" />
+            <link rel="apple-touch-icon" href="/etbl/apple-touch-icon.png" />
+            <link rel="icon" type="image/png" sizes="192x192" href="/etbl/icon-192.png" />
+            <link rel="icon" type="image/png" sizes="512x512" href="/etbl/icon-512.png" />
+          </>
         ) : leagueAbbrev === "WFS" ? (
           /* Windmill was falling through to /icons/* (the SFBL brand mark),
              so the SFBL badge sat in Windmill's browser tab + home-screen
