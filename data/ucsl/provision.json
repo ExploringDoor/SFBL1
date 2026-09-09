@@ -1,0 +1,89 @@
+{
+  "league": {
+    "slug": "ucsl",
+    "name": "United Coed Softball League",
+    "abbrev": "UCSL",
+    "sport": "softball",
+    "innings": 7,
+    "ruleset": "slowpitch",
+    "linescore_innings": 7,
+    "stat_columns": [],
+    "pitching": {
+      "tracked": false
+    },
+    "rules_flags": {
+      "courtesy_runner": true,
+      "dropped_third_strike": false,
+      "balks": false,
+      "infield_fly": false
+    },
+    "flags": {
+      "stats_enabled": false,
+      "ticker_scroll": true,
+      "registration_open": true
+    },
+    "theme": {
+      "primary": "#2e8b3d",
+      "accent": "#f3c218",
+      "secondary": "#14532d",
+      "logo_url": "/ucsl/logo.png",
+      "og_image_url": "/ucsl/og.png",
+      "banner_url": "/ucsl/banner.svg"
+    },
+    "billing": {
+      "status": "trial",
+      "paid_through": null,
+      "last_payment": null,
+      "notes": "New build Sept 2026, migrating off LeagueLineup (shut down Aug 2026). Content (rules, waiver, divisions, venues, philosophy) recovered from the old GoDaddy site + PDFs; see recovered-content.json. Teams/schedule are PLACEHOLDER historical names pending the current roster. Season label 'Fall 2026' is an assumption (source shows Fall 2025) — confirm with commissioner."
+    },
+    "standings": {
+      "scoring": "pct",
+      "tiebreaker": "rd"
+    },
+    "captain": {
+      "passwordless": true,
+      "require_password": true
+    },
+    "admin": {
+      "passwordless": true
+    },
+    "season_year": 2026,
+    "season_label": "Fall 2026",
+    "about": "Adult 21+ coed recreational slowpitch softball in Hamden, CT — a fun, family atmosphere for players of all skill levels to compete. Established 2016.",
+    "social": {
+      "youtube": "https://www.youtube.com/channel/UCjY58mfii3TonS0FpBi8bHw"
+    },
+    "fields": [
+      "Hamden Middle",
+      "Hamden High",
+      "Eli Whitney",
+      "Dunbar Hill"
+    ],
+    "nav": {
+      "hide": [
+        "SFBL",
+        "Stats",
+        "Team Stats",
+        "Player of the Week",
+        "Player Registration",
+        "Store",
+        "Pay Online",
+        "Availability",
+        "Photos",
+        "Playoffs",
+        "Tournaments",
+        "History",
+        "Umpire Evaluation",
+        "Coach Evaluation"
+      ],
+      "add": [
+        { "label": "About", "href": "/content/about" }
+      ]
+    }
+  },
+  "teams_csv": "./teams.csv",
+  "schedule_csv": "./schedule.csv",
+  "admins": [
+    "adam.miller.22@gmail.com"
+  ]
+}

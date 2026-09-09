@@ -59,7 +59,12 @@ interface ScheduleTabProps {
  *  saw "Subscribe to Calendar" on a league that does not run a calendar feed
  *  (Adam, 2026-08-12). */
 function showCalendarSubscribe(leagueId: string) {
-  return leagueId !== "coybl" && leagueId !== "island" && leagueId !== "windmill";
+  return (
+    leagueId !== "coybl" &&
+    leagueId !== "island" &&
+    leagueId !== "windmill" &&
+    leagueId !== "ucsl"
+  );
 }
 
 export function ScheduleTab({ leagueId, teamId }: ScheduleTabProps) {

@@ -1,0 +1,19 @@
+id,date,time,field,away_team_id,home_team_id,week,division,status,away_score,home_score
+g-w6-gold,2026-08-04,18:30,Hamden High,tri-state-glass,chickson-dix,6,Gold,final,8,12
+g-w6-silver,2026-08-04,19:30,Hamden High,inspired-kitchen,oriente-construction,6,Silver,final,6,10
+g-w6-br1,2026-08-04,18:30,Eli Whitney,bos-bat-breakers,parental-disasters,6,Bronze,final,11,9
+g-w6-br2,2026-08-04,19:30,Eli Whitney,ding-bats,mount-carmel-vet,6,Bronze,final,7,10
+g-w7-gold,2026-08-11,18:30,Dunbar Hill,chickson-dix,tri-state-glass,7,Gold,final,13,9
+g-w7-silver,2026-08-11,19:30,Dunbar Hill,oriente-construction,inspired-kitchen,7,Silver,final,12,5
+g-w7-br1,2026-08-11,18:30,Hamden Middle,ding-bats,parental-disasters,7,Bronze,final,6,8
+g-w7-br2,2026-08-11,19:30,Hamden Middle,mount-carmel-vet,bos-bat-breakers,7,Bronze,final,4,9
+g-w8-gold,2026-08-18,18:30,Hamden High,tri-state-glass,chickson-dix,8,Gold,final,9,14
+g-w8-silver,2026-08-18,19:30,Hamden High,inspired-kitchen,oriente-construction,8,Silver,final,7,11
+g-w8-br1,2026-08-18,18:30,Eli Whitney,mount-carmel-vet,parental-disasters,8,Bronze,final,5,10
+g-w8-br2,2026-08-18,19:30,Eli Whitney,ding-bats,bos-bat-breakers,8,Bronze,final,6,12
+g-w9-gold,2026-08-25,18:30,Dunbar Hill,chickson-dix,tri-state-glass,9,Gold,final,8,11
+g-w9-silver,2026-08-25,19:30,Dunbar Hill,oriente-construction,inspired-kitchen,9,Silver,final,6,9
+g-w10-gold,2026-09-08,18:30,Hamden High,tri-state-glass,chickson-dix,10,Gold,scheduled,,
+g-w10-silver,2026-09-08,19:30,Hamden High,inspired-kitchen,oriente-construction,10,Silver,scheduled,,
+g-w10-br1,2026-09-08,18:30,Eli Whitney,bos-bat-breakers,parental-disasters,10,Bronze,scheduled,,
+g-w10-br2,2026-09-09,18:30,Eli Whitney,mount-carmel-vet,ding-bats,10,Bronze,scheduled,,

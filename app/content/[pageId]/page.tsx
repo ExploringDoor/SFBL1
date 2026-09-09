@@ -101,7 +101,7 @@ export default async function ContentPage({
   // News feed lives at /content/news (the default nav's "News" link) and reads
   // the leagues/{tenant}/news collection directly — there is no page_content
   // doc for it, so it must short-circuit BEFORE the doc-exists check below.
-  if (pageId === "news" && tenantId === "lcybl") {
+  if (pageId === "news" && (tenantId === "lcybl" || tenantId === "ucsl")) {
     return (
       <Shell eyebrow={eyebrow} heading="News & Events">
         <NewsFeed tenantId={tenantId} />

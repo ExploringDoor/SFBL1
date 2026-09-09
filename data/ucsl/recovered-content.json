@@ -1,0 +1,60 @@
+{
+  "_note": "Authentic UCSL content recovered 2026-09-01 from the old GoDaddy site + 4 PDFs (LeagueLineup data itself was gone). Durable copy of the recovery-workflow output. Rules -> content/rules.md, waiver -> content/waiver.md. Sponsors below are NOT yet in provision.json because the footer strip needs logo images we don't have.",
+  "league": {
+    "name": "United Coed Sports and Recreational Leagues (softball tenant: United Coed Softball League / UCSL)",
+    "tagline": "Ages 21+... Coed and Recreational Sports Leagues.",
+    "established": "2016 (from the logo 'EST. 2016')",
+    "location": "Hamden, CT",
+    "sports_offered": ["Softball (this tenant)", "Volleyball", "Kickball", "Soccer"],
+    "philosophy": "United Coed Sports and Recreational League provides Coed Softball, Volleyball, Kickball, and Soccer Leagues for adult players of all skill levels to enjoy. The league provides a fun and family atmosphere for adults to compete. We strive to establish a safe and caring environment that allows for individual and social growth by providing and facilitating positive fun with responsible leadership through recreational sports.",
+    "sportsmanship_vow": "I believe in sportsmanship first. The sport is the game, and we are all in it together. While I am very competitive, I also want to support all the competitors as we strive to make our league great.",
+    "divisions": ["Gold", "Silver", "Bronze", "National League (historical, 2019 Fall Ball)"],
+    "contact_email": "untiedcoedsports@gmail.com (NOTE: 'untied' misspelling is verbatim from the source; domain is unitedcoedsports.net)",
+    "venues": ["Hamden Middle", "Hamden High", "Eli Whitney", "Dunbar Hill"]
+  },
+  "social": {
+    "youtube": "https://www.youtube.com/channel/UCjY58mfii3TonS0FpBi8bHw",
+    "facebook": "PLACEHOLDER/invalid on old site ('https://www.facebook.com/United Coed Softball League (UCSL)' has literal spaces) — need the real vanity URL",
+    "instagram": "none found"
+  },
+  "sponsors": [
+    { "name": "Hard Hat Cafe", "url": "http://www.hardhatcafect.com" },
+    { "name": "Spirit Cafe", "phone": "(475) 235-2166", "address": "103 Bank St, Waterbury, CT", "email": "SpiritCafeWtby@gmail.com" },
+    { "name": "Tiffany M. French, CBR REALTOR (Berkshire Hathaway)", "email": "TiffanyMFrench@bhhsne.com" },
+    { "name": "Calandrelli's Cleaning, LLC", "phone": "(203) 435-2186", "email": "calandrelliarlene@gmail.com" },
+    { "name": "Oriente Construction, LLC", "phone": "(203) 887-0825", "email": "Tiemarcie@gmail.com" },
+    { "name": "Vio's Sports Plus", "url": "http://www.viossportsplus.net", "phone": "(203) 934-3368", "address": "487 Campbell Ave, West Haven, CT 06516" },
+    { "name": "SL Home Improvement LLC", "contact": "Sheldon Lennon, General Contractor", "phone": "203-676-0468", "email": "slennon38@outlook.com" },
+    { "name": "Mount Carmel Veterinary Hospital", "phone": "203-239-0663", "address": "3320 Whitney Ave, Hamden, CT 06518" },
+    { "name": "D'Amore Designs Custom Apparel", "url": "https://ddcustomapparel.com/", "alt": "damore-designs.square.site", "phone": "732-546-6952" },
+    { "name": "Tri-State Glass", "url": "http://www.tri-stateglassco.com", "phone": "(860) 388-4091" }
+  ],
+  "historical_teams": [
+    { "name": "Chickson Dix", "division": "Gold", "note": "2023 Fall Gold Division championship matchup vs Tri-State Glass Co." },
+    { "name": "Tri-State Glass Co.", "division": "Gold", "note": "2023 Fall Gold Division championship matchup" },
+    { "name": "Oriente Construction", "division": "Silver", "note": "2023 Fall Silver Division championship matchup vs Inspired Kitchen; also a sponsor" },
+    { "name": "Inspired Kitchen", "division": "Silver", "note": "2023 Fall Silver Division championship matchup" },
+    { "name": "Parental Disasters", "division": "Bronze", "note": "2023 Fall Bronze Division championship matchup vs Bo's Bat Breakers" },
+    { "name": "Bo's Bat Breakers", "division": "Bronze", "note": "2023 Fall Bronze Division championship matchup" },
+    { "name": "Ding-Bats", "division": "Bronze", "note": "2023 Fall Bronze Division section" },
+    { "name": "Mount Carmel Vet.", "division": "Bronze", "note": "2023 Fall Bronze Division section" },
+    { "name": "Hidden Kitchen Route 80", "division": "National League", "note": "2019 Fall Ball champs (Wall of Champions)" }
+  ],
+  "roster_form_fields": ["Team Name", "Team Captain/Representative", "Cell Phone (captain)", "Email (captain)", "Player: Name", "Player: Phone", "Player: Email", "Player: M/F", "Player: Age"],
+  "registration": {
+    "last_documented_season": "Fall 2025 (site form: 'Register Your Team ... 2025 Fall Coed Softball Season')",
+    "fees": "none documented (only the $70/game umpire fee, split $35/team, appears in the rules)",
+    "notes": "Old online form was on LeagueLineup (team code 'unitedcoedsportssoftball'), now gone. The GoDaddy on-site form only ever collected Name + Email."
+  },
+  "still_needed_from_league": [
+    "Current-season team roster / active team list (names on file are HISTORICAL)",
+    "Current-season schedule (dates, times, field assignments)",
+    "This season's division assignments (Gold/Silver/Bronze)",
+    "Confirm the current season label (source shows Fall 2025; we assumed Fall 2026)",
+    "Registration fees + open/close dates",
+    "Real Facebook page URL; any Instagram/X",
+    "Sponsor LOGO images (footer strip is logo-based)",
+    "Current Approved Bat List (referenced in rules/nav, not in recovered files)",
+    "Confirm whether the 2021 COVID rules still apply (tied to lapsed CT guidance) before publishing them"
+  ]
+}
