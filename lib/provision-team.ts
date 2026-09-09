@@ -25,6 +25,7 @@
 import type { auth as AdminAuth } from "firebase-admin";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { feeFor } from "@/lib/square";
+import { normalizeGameChangerUrl } from "@/lib/gamechanger";
 import { initialsFromName } from "@/lib/team-initials";
 import { generateTeamCode } from "@/lib/team-code";
 
@@ -111,12 +112,12 @@ export async function provisionTeamFromRegistration(
       // team page has always had a "Live stats on GameChanger" button that
       // reads gamechanger_url, so it never appeared for anybody.
       //
-      // Only a real gc.com URL is stored. Two coaches typed something else
-      // into the box, and a team page linking to that is worse than no
-      // button at all.
-      gamechanger_url: /^https?:\/\/(web\.)?gc\.com\//i.test(str("gamechanger_link"))
-        ? str("gamechanger_link")
-        : null,
+      // normalizeGameChangerUrl also copes with a bare team id and with a
+      // link a mail scanner rewrote, which is how BOTH of Island's two
+      // rejected entries happened. Returns null for anything that is not
+      // recognisably GameChanger: a team page linking elsewhere is worse
+      // than no button at all.
+      gamechanger_url: normalizeGameChangerUrl(str("gamechanger_link")),
       registration_id: submissionId,
       registered_email: email || null,
       created_at: new Date().toISOString(),

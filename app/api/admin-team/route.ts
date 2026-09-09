@@ -15,6 +15,7 @@
 // (name, color, abbrev) is admin-only — captains shouldn't rename
 // each other or recolor logos.
 
+import { normalizeGameChangerUrl } from "@/lib/gamechanger";
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { accessFor, hasScope } from "@/lib/admin-roles";
@@ -333,20 +334,28 @@ export async function POST(req: Request) {
     }
   }
 
-  // Optional per-team GameChanger link. Only http(s) is accepted — this value
-  // is rendered straight into an href on the public team page, so a
-  // javascript: URL here would be stored XSS. Empty clears it.
+  // Optional per-team GameChanger link, put through the same normaliser the
+  // registration form uses. It is rendered straight into an href on the
+  // public team page, so anything that is not a GameChanger team URL is
+  // refused rather than stored. Empty clears it.
   if (typeof body.gamechanger_url === "string") {
     const v = body.gamechanger_url.trim();
     if (v === "") {
       update.gamechanger_url = null;
-    } else if (/^https?:\/\//i.test(v) && v.length <= 500) {
-      update.gamechanger_url = v;
     } else {
-      return NextResponse.json(
-        { error: "GameChanger link must start with http:// or https://" },
-        { status: 400 },
-      );
+      // Same normaliser the registration form uses, so the office pasting a
+      // bare team id or a mail-scanner-rewritten link gets the same result a
+      // coach does. Returns null for anything that is not GameChanger, which
+      // also closes the stored-XSS hole the old http(s)-only check left open:
+      // "https://evil.test/x" passed that test and rendered into an href.
+      const normalized = normalizeGameChangerUrl(v);
+      if (!normalized) {
+        return NextResponse.json(
+          { error: "That does not look like a GameChanger team link." },
+          { status: 400 },
+        );
+      }
+      update.gamechanger_url = normalized;
     }
   }
 
