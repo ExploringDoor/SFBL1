@@ -226,12 +226,14 @@ export default async function SchedulePage({
         )}
         {/* Calendar subscribe + CSV export, hidden while a tenant has no
             upcoming games. The .ics feed and the CSV route both WORK — the
-            problem is what they contain right now. Island is waiting on its
-            Fall schedule; COYBL's 2026 season has been cleared and 2027 games
-            do not exist until coaches post them. Either way a coach who
-            subscribes gets an empty or finished-games calendar, which reads as
-            broken. Both come back on their own once real games exist. */}
-        {tenantId !== "island" && games.length > 0 && (
+            problem was what they contained: a coach subscribing to an empty
+            calendar reads it as broken.
+            The comment here always said "both come back on their own once real
+            games exist", but the guard also hard-excluded Island, so they never
+            did. Its 90 Fall games are up and Mike asked for the Excel export on
+            2026-09-09, not knowing it had been there all along. The games check
+            is the condition that was meant to do this work. */}
+        {games.length > 0 && (
           <div className="flex flex-col items-end gap-2">
             {/* Windmill: Adam asked to drop the calendar-subscribe controls
                 sitewide (2026-08-20). The CSV export stays. */}

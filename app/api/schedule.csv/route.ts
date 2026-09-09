@@ -1,8 +1,13 @@
 // Per-tenant schedule as a CSV — flat one-row-per-game export the
 // umpire assigner (and anyone) can open straight in Excel / Google
 // Sheets (Adam, 2026-06: the old WP site let him copy the weekly
-// schedule into Excel). Columns: Date, Time, Field, Division, Away,
-// Home, Away Score, Home Score, Status. Optional ?div=<division>.
+// schedule into Excel). Columns: Date, Time, Field, Age, Division, Away,
+// Home, Away Score, Home Score, Status, Umpires. Optional ?div=<division>.
+//
+// Age and Division are separate on purpose. The game's own `division` field
+// holds the AGE label ("14U") on these tenants, while the competitive division
+// lives on the team, and Island split 14U into West and East on 2026-09-08.
+// Umpires was added 2026-09-09: the assigner is who asked for this export.
 //
 // Middleware doesn't run on /api/*, so we resolve the tenant from the
 // Host header ourselves — same as schedule.ics.
@@ -61,8 +66,25 @@ export async function GET(req: Request) {
   ]);
 
   const teamNames: Record<string, string> = {};
+  // The game's own `division` is the AGE label on these tenants ("14U"). The
+  // competitive division lives on the TEAM, and since Island split 14U into
+  // West and East an assigner exporting the week needs to see which is which.
+  const teamDivision: Record<string, string> = {};
+  const teamAge: Record<string, string> = {};
   for (const d of teamsSnap.docs) {
-    teamNames[d.id] = String(d.data().name ?? d.id);
+    const t = d.data();
+    teamNames[d.id] = String(t.name ?? d.id);
+    teamDivision[d.id] = String(t.division ?? "");
+    teamAge[d.id] = String(t.ageGroup ?? "");
+  }
+  // Umpire names, so the crew comes out in the same sheet. This is the column
+  // an assigner actually wants, and it was not there.
+  const umpireNames: Record<string, string> = {};
+  try {
+    const uSnap = await db.collection(`leagues/${tenantId}/umpires`).get();
+    for (const d of uSnap.docs) umpireNames[d.id] = String(d.data().name ?? d.id);
+  } catch {
+    /* a league with no umpires collection simply gets a blank column */
   }
 
   const rows = gamesSnap.docs
@@ -79,6 +101,15 @@ export async function GET(req: Request) {
         time,
         field: String(g.field ?? ""),
         division: String(g.division ?? ""),
+        age: teamAge[String(g.home_team_id ?? "")] || String(g.division ?? ""),
+        realDivision:
+          teamDivision[String(g.home_team_id ?? "")] ||
+          teamDivision[String(g.away_team_id ?? "")] ||
+          "",
+        umpires: (Array.isArray(g.umpires) ? (g.umpires as string[]) : [])
+          .map((id) => umpireNames[String(id)] ?? "")
+          .filter(Boolean)
+          .join("; "),
         away: teamNames[String(g.away_team_id ?? "")] ?? String(g.away_team_id ?? ""),
         home: teamNames[String(g.home_team_id ?? "")] ?? String(g.home_team_id ?? ""),
         awayScore: isFinal && g.away_score != null ? String(g.away_score) : "",
@@ -106,12 +137,14 @@ export async function GET(req: Request) {
     "Date",
     "Time",
     "Field",
+    "Age",
     "Division",
     "Away",
     "Home",
     "Away Score",
     "Home Score",
     "Status",
+    "Umpires",
   ].join(",");
 
   const body = rows
@@ -120,12 +153,14 @@ export async function GET(req: Request) {
         r.date,
         formatTime12(r.time) || "",
         r.field,
-        r.division,
+        r.age,
+        r.realDivision,
         r.away,
         r.home,
         r.awayScore,
         r.homeScore,
         r.status,
+        r.umpires,
       ]
         .map((v) => cell(String(v)))
         .join(","),
