@@ -493,6 +493,9 @@ export default async function TeamDetailPage({
   let divisionGroup: DivisionGroup | null = null;
   if (statsOff && division) {
     const divRecords: Record<string, { w: number; l: number; t: number }> = {};
+    // Inactive teams are kept out of the fallback rows; the stored-record
+    // path is left exactly as it was so COYBL is untouched.
+    const divActiveIds = new Set<string>();
     for (const d of teamsSnap.docs) {
       const data = d.data();
       if (String(data.division ?? "") !== division) continue;
@@ -504,6 +507,7 @@ export default async function TeamDetailPage({
         logoUrl: teamLogoSrc(tenantId, d.id, data.logo_url),
         division,
       };
+      if (data.active !== false) divActiveIds.add(d.id);
       if (typeof data.w === "number" && typeof data.l === "number") {
         divRecords[d.id] = {
           w: data.w,
@@ -512,10 +516,20 @@ export default async function TeamDetailPage({
         };
       }
     }
-    if (Object.keys(divRecords).length > 0) {
+    // Stored records win when they exist. Before any are written there are
+    // none, and the block used to fall through to "No division standings." —
+    // which is what every Island team page showed, since Island runs
+    // stats_enabled: false and had not banked a single record yet. Fall back
+    // to the seeded standings so the page reads 0-0 like the homepage and
+    // /standings, rather than contradicting them.
+    const divRows =
+      Object.keys(divRecords).length > 0
+        ? recordsToStandings(divRecords)
+        : standings.filter((r) => divActiveIds.has(r.team_id));
+    if (divRows.length > 0) {
       divisionGroup = {
         division: ageGroup ? `${ageGroup} — ${division}` : division,
-        rows: recordsToStandings(divRecords),
+        rows: divRows,
       };
     }
   } else if (division) {
