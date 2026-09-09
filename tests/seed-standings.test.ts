@@ -50,3 +50,31 @@ describe("seedStandingsWithAllTeams", () => {
     expect(seedStandingsWithAllTeams(rows, [])).toEqual(rows);
   });
 });
+
+// Deactivated teams must never be seeded.
+//
+// Mike deactivated Waves 14U White and it appeared on the front page anyway,
+// in a division of its own, because the homepage seeded every team document
+// rather than the active ones. /standings had always filtered them out, so the
+// two pages disagreed about a team he had deliberately removed.
+
+describe("deactivated teams", () => {
+  it("is not seeded when it is left out of the id list", () => {
+    const out = seedStandingsWithAllTeams([], ["active-a", "active-b"]);
+    expect(out.map((r) => r.team_id)).not.toContain("deactivated");
+  });
+
+  it("seeds only what it is given, so the caller controls the filter", () => {
+    const out = seedStandingsWithAllTeams([], ["a"]);
+    expect(out).toHaveLength(1);
+  });
+
+  it("a caller filtering afterwards removes a computed row too", () => {
+    // A team that PLAYED and was later deactivated has a real row, so
+    // seeding alone cannot remove it; the page filters as well.
+    const rows = [row("gone", 2, 1), row("here", 1, 1)];
+    const active = new Set(["here"]);
+    const seeded = seedStandingsWithAllTeams(rows, ["here"]);
+    expect(seeded.filter((r) => active.has(r.team_id)).map((r) => r.team_id)).toEqual(["here"]);
+  });
+});

@@ -587,8 +587,15 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
   const teamAge: Record<string, string> = {};
   const teamExtra: Record<string, TeamExtra> = {};
   const records: Record<string, { w: number; l: number; t: number }> = {};
+  // Deactivated teams stay in `teams` so a game card or the ticker can still
+  // render a name and a logo for a fixture they appear in. They must NOT be
+  // seeded into the standings: Mike deactivated Waves 14U White and the
+  // seeding invented a 0-0 row for it, which put a team he had removed on the
+  // front page in a division of its own. /standings has always excluded them.
+  const activeTeamIds: string[] = [];
   for (const d of teamsSnap.docs) {
     const data = d.data();
+    if (data.active !== false) activeTeamIds.push(d.id);
     teams[d.id] = {
       name: String(data.name ?? d.id),
       abbrev: data.abbrev ? String(data.abbrev) : undefined,
@@ -667,7 +674,11 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
   // Every team gets a row from day one. Without this the table has no rows at
   // all until the first final, so a league whose schedule is up but whose
   // season has not started shows an apology where the standings belong.
-  standings = seedStandingsWithAllTeams(standings, Object.keys(teams));
+  standings = seedStandingsWithAllTeams(standings, activeTeamIds);
+  // And drop any computed row for a team that has since been deactivated, so
+  // the homepage agrees with /standings, which filters them out entirely.
+  const activeSet = new Set(activeTeamIds);
+  standings = standings.filter((r) => activeSet.has(r.team_id));
   const scheme = config?.standings?.points_per ?? null;
   const usePoints = config?.standings?.scoring === "points" && !!scheme;
   const tiebreaker = config?.standings?.tiebreaker ?? "rd";
