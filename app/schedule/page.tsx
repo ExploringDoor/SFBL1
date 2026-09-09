@@ -235,11 +235,15 @@ export default async function SchedulePage({
             is the condition that was meant to do this work. */}
         {games.length > 0 && (
           <div className="flex flex-col items-end gap-2">
-            {/* Windmill: Adam asked to drop the calendar-subscribe controls
-                sitewide (2026-08-20). The CSV export stays. */}
-            {/* UCSL: Adam asked to hide the calendar-subscribe controls
-                sitewide (2026-09-02). */}
-            {tenantId !== "windmill" && tenantId !== "ucsl" && <SubscribeCalendar />}
+            {/* Calendar subscribe is off for these tenants; the CSV export
+                below stays for all of them.
+                  Windmill  2026-08-20, Adam
+                  UCSL      2026-09-02, Adam
+                  Island    2026-09-09, Adam. Unhiding the CSV link for Island
+                            brought these back with it, which was not the ask. */}
+            {tenantId !== "windmill" &&
+              tenantId !== "ucsl" &&
+              tenantId !== "island" && <SubscribeCalendar />}
             {/* Flat CSV of the whole schedule — opens straight in Excel /
                 Sheets. For the umpire assigner etc. (Adam, 2026-06). */}
             <a

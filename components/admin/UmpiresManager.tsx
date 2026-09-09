@@ -17,6 +17,7 @@ import type { User } from "firebase/auth";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { leagueToday } from "@/lib/format-time";
+import { shortDate, shortTime } from "@/lib/umpire-assignments";
 import {
   buildUmpirePreview,
   guessUmpireMapping,
@@ -769,7 +770,13 @@ export function UmpiresManager({ leagueId, user }: Props) {
               }}
             >
               <span style={{ fontSize: 13, minWidth: 168, fontVariantNumeric: "tabular-nums" }}>
-                <strong>{g.date}</strong> {g.time} · {g.field || "no field"}
+                {/* Through the same formatter the assignment emails and the
+                    copy-for-texting panel use, so the screen Mike assigns from
+                    reads exactly like the message the umpire gets. It showed
+                    "2026-09-14 18:00", which is Eastern already but nobody
+                    talks that way. */}
+                <strong>{shortDate(g.date)}</strong> {shortTime(g.time ?? "") || g.time} ·{" "}
+                {g.field || "no field"}
               </span>
               <span style={{ display: "flex", gap: 5, flexWrap: "wrap", flex: "1 1 auto" }}>
                 {crew.map((u) => (
