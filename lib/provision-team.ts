@@ -103,6 +103,20 @@ export async function provisionTeamFromRegistration(
           ? str("team_logo")
           : null,
       organization: str("organization") || null,
+      // The GameChanger link the coach pasted on the form.
+      //
+      // Same bug the logo above had: Island's form asks for it, calls it
+      // "strongly recommended", and eleven coaches supplied a real gc.com
+      // link — and every one went into the submission and nowhere else. The
+      // team page has always had a "Live stats on GameChanger" button that
+      // reads gamechanger_url, so it never appeared for anybody.
+      //
+      // Only a real gc.com URL is stored. Two coaches typed something else
+      // into the box, and a team page linking to that is worse than no
+      // button at all.
+      gamechanger_url: /^https?:\/\/(web\.)?gc\.com\//i.test(str("gamechanger_link"))
+        ? str("gamechanger_link")
+        : null,
       registration_id: submissionId,
       registered_email: email || null,
       created_at: new Date().toISOString(),
