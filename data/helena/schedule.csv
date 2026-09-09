@@ -45,7 +45,7 @@ g-0043,2026-05-11,18:00,Batch 4,uppies,regulatr,,Men's Division E,final,15,26
 g-0044,2026-05-11,19:15,Batch 4,uppies,bashbros,,Men's Division E,final,13,21
 g-0045,2026-05-11,19:15,Batch 2,batinten,mamamos,,Women's Division,final,6,21
 g-0046,2026-05-11,19:15,Batch 3,topgun,pappasmn,,Men's Division I,final,16,17
-g-0047,2026-05-12,18:00,Batch 3,cloud9,abbooks,,Men's Division E,scheduled,,
+g-0047,2026-05-12,18:00,Batch 3,cloud9,abbooks,,Men's Division E,final,21,15
 g-0048,2026-05-12,18:00,Batch 2,trolls,hlclub,,Men's Recreational,final,24,3
 g-0049,2026-05-12,18:00,Batch 4,yankdeez,kaos,,Men's Division E,final,14,15
 g-0050,2026-05-12,19:15,Batch 2,echochm,coke,,Men's Recreational,final,17,12
@@ -75,15 +75,15 @@ g-0073,2026-05-18,19:15,Batch 2,mamamos,1hitw,,Women's Division,final,22,10
 g-0074,2026-05-18,19:15,CENT 1,bashbros,cloud9,,Men's Division E,final,23,25
 g-0075,2026-05-18,19:15,Batch 3,echochm,hlclub,,Men's Recreational,final,18,3
 g-0076,2026-05-18,19:15,Batch 4,hitmen,pappasmn,,Men's Division I,final,16,17
-g-0077,2026-05-19,18:00,CENT 3,yankdeez,abbooks,,Men's Division E,scheduled,,
+g-0077,2026-05-19,18:00,CENT 3,yankdeez,abbooks,,Men's Division E,final,22,5
 g-0078,2026-05-19,18:00,CENT 2,regulatr,clbrew,,Men's Division E,final,19,21
 g-0079,2026-05-19,18:00,Batch 4,thedroll,hbbm,,Coed Red,final,13,11
 g-0080,2026-05-19,18:00,Batch 2,hccgt,mmaierle,,Coed White,final,21,7
 g-0081,2026-05-19,19:15,Batch 2,elite,echochrch,,Coed White,final,12,21
 g-0082,2026-05-19,19:15,Batch 3,gotwings,hbbm,,Coed White,final,9,22
-g-0083,2026-05-19,19:15,CENT 3,clbrew,kaos,,Men's Division E,scheduled,,
+g-0083,2026-05-19,19:15,CENT 3,clbrew,kaos,,Men's Division E,final,21,19
 g-0084,2026-05-19,19:15,Batch 4,jackwag,mimpact,,Coed Red,final,9,10
-g-0085,2026-05-19,19:15,CENT 2,abbooks,regulatr,,Men's Division E,scheduled,,
+g-0085,2026-05-19,19:15,CENT 2,abbooks,regulatr,,Men's Division E,final,3,16
 g-0086,2026-05-20,18:00,Batch 4,hitbrains,baseinvd,,Coed White,scheduled,,
 g-0087,2026-05-20,18:00,Batch 2,unstpball,onehitw,,Coed Blue,final,8,14
 g-0088,2026-05-20,18:00,Batch 3,scaredhit,tingtings,,Coed White,final,18,12
@@ -237,14 +237,14 @@ g-0235,2026-06-19,19:30,Batch 4,unstpball,pitslap,,Coed Blue,final,1,17
 g-0236,2026-06-19,19:30,CENT 2,hbbm,sgl-asw,,Coed White,final,11,13
 g-0237,2026-06-19,19:30,Batch 2,sparkys,tballers,,Coed Blue,final,16,0
 g-0238,2026-06-22,18:15,Batch 3,coke,buntforce,,Men's Recreational,final,2,14
-g-0239,2026-06-22,18:15,CENT 1,cloud9,kaos,,Men's Division E,scheduled,,
+g-0239,2026-06-22,18:15,CENT 1,cloud9,kaos,,Men's Division E,final,2,14
 g-0240,2026-06-22,18:15,Batch 4,hitmen,pappasmn,,Men's Division I,final,30,13
 g-0241,2026-06-22,18:15,CENT 3,bashbros,regulatr,,Men's Division E,final,11,27
 g-0242,2026-06-22,18:15,CENT 2,uppies,yankdeez,,Men's Division E,final,13,10
 g-0243,2026-06-22,19:30,CENT 3,uppies,bashbros,,Men's Division E,final,8,9
-g-0244,2026-06-22,19:30,Batch 4,abbooks,clbrew,,Men's Division E,scheduled,,
+g-0244,2026-06-22,19:30,Batch 4,abbooks,clbrew,,Men's Division E,final,16,18
 g-0245,2026-06-22,19:30,Batch 3,echochm,hlclub,,Men's Recreational,final,16,1
-g-0246,2026-06-22,19:30,CENT 1,kaos,regulatr,,Men's Division E,scheduled,,
+g-0246,2026-06-22,19:30,CENT 1,kaos,regulatr,,Men's Division E,final,23,11
 g-0247,2026-06-22,19:30,CENT 2,cloud9,yankdeez,,Men's Division E,final,12,9
 g-0248,2026-06-23,18:15,Batch 3,trolls,brdgbomb,,Men's Recreational,final,10,12
 g-0249,2026-06-23,18:15,Batch 4,1hitw,dwballs,,Women's Division,final,21,9
@@ -275,16 +275,16 @@ g-0273,2026-06-26,18:15,Batch 2,1889amer,scaredhit,,Coed White,final,23,21
 g-0274,2026-06-26,19:30,Batch 4,sgl-asw,elite,,Coed White,final,8,9
 g-0275,2026-06-26,19:30,Batch 2,echochrch,hbbm,,Coed White,final,7,10
 g-0276,2026-06-26,19:30,Batch 3,mmaierle,hitbrains,,Coed White,final,7,0
-g-0277,2026-06-29,18:15,CENT 2,pappasmn,abbooks,,Men's Division I,scheduled,,
-g-0278,2026-06-29,18:15,Batch 3,topgun,bashbros,,Men's Division I,scheduled,,
+g-0277,2026-06-29,18:15,CENT 2,pappasmn,abbooks,,Men's Division I,final,0,7
+g-0278,2026-06-29,18:15,Batch 3,topgun,bashbros,,Men's Division I,final,26,5
 g-0279,2026-06-29,18:15,Batch 4,hlclub,brdgbomb,,Men's Recreational,final,7,19
 g-0280,2026-06-29,18:15,CENT 1,smokbnt,clbrew,,Men's Division I,scheduled,,
 g-0281,2026-06-29,18:15,CENT 3,hitmen,cloud9,,Men's Division I,scheduled,,
-g-0282,2026-06-29,19:30,Batch 3,topgun,kaos,,Men's Division I,scheduled,,
+g-0282,2026-06-29,19:30,Batch 3,topgun,kaos,,Men's Division I,final,23,22
 g-0283,2026-06-29,19:30,CENT 3,hitmen,regulatr,,Men's Division I,scheduled,,
 g-0284,2026-06-29,19:30,Batch 4,coke,trolls,,Men's Recreational,final,7,6
 g-0285,2026-06-29,19:30,CENT 1,smokbnt,uppies,,Men's Division I,scheduled,,
-g-0286,2026-06-29,19:30,CENT 2,pappasmn,yankdeez,,Men's Division I,scheduled,,
+g-0286,2026-06-29,19:30,CENT 2,pappasmn,yankdeez,,Men's Division I,final,0,7
 g-0287,2026-06-30,18:15,Batch 3,mhcc-1,brewjays,,Coed Blue,final,15,10
 g-0288,2026-06-30,18:15,Batch 4,echochm,buntforce,,Men's Recreational,final,10,24
 g-0289,2026-06-30,18:15,Batch 2,batinten,dwballs,,Women's Division,final,17,5
@@ -400,22 +400,22 @@ g-0398,2026-07-22,19:30,Batch 2,batinten,dwballs,,Women's Division,scheduled,,
 g-0399,2026-07-23,18:15,Batch 3,mimpact,tingtings,,Coed Red,final,20,5
 g-0400,2026-07-24,18:15,Batch 4,thedroll,sgl-asw,,Coed Red,scheduled,,
 g-0401,2026-07-24,19:30,Batch 4,scaredhit,jackwag,,Coed Red,scheduled,,
-g-0402,2026-07-27,18:15,CENT 2,smokbnt,abbooks,,Men's Division I,scheduled,,
+g-0402,2026-07-27,18:15,CENT 2,smokbnt,abbooks,,Men's Division I,final,21,9
 g-0403,2026-07-27,18:15,CENT 1,hitmen,bashbros,,Men's Division I,scheduled,,
-g-0404,2026-07-27,18:15,CENT 3,topgun,clbrew,,Men's Division I,scheduled,,
-g-0405,2026-07-27,18:15,Batch 4,pappasmn,cloud9,,Men's Division I,scheduled,,
+g-0404,2026-07-27,18:15,CENT 3,topgun,clbrew,,Men's Division I,final,24,20
+g-0405,2026-07-27,18:15,Batch 4,pappasmn,cloud9,,Men's Division I,final,28,14
 g-0406,2026-07-27,18:15,Batch 2,dwballs,mamamos,,Women's Division,scheduled,,
 g-0407,2026-07-27,19:30,Batch 2,batinten,1hitw,,Women's Division,scheduled,,
 g-0408,2026-07-27,19:30,CENT 1,hitmen,kaos,,Men's Division I,scheduled,,
-g-0409,2026-07-27,19:30,Batch 4,pappasmn,regulatr,,Men's Division I,scheduled,,
-g-0410,2026-07-27,19:30,CENT 3,topgun,uppies,,Men's Division I,scheduled,,
-g-0411,2026-07-27,19:30,CENT 2,smokbnt,yankdeez,,Men's Division I,scheduled,,
+g-0409,2026-07-27,19:30,Batch 4,pappasmn,regulatr,,Men's Division I,final,7,0
+g-0410,2026-07-27,19:30,CENT 3,topgun,uppies,,Men's Division I,final,24,27
+g-0411,2026-07-27,19:30,CENT 2,smokbnt,yankdeez,,Men's Division I,final,22,2
 g-0412,2026-08-03,07:15,Batch 1,1hitw,dwballs,,Women's Division,scheduled,,
-g-0413,2026-08-03,18:00,CENT 1,clbrew,cloud9,,Men's Division E,scheduled,,
+g-0413,2026-08-03,18:00,CENT 1,clbrew,cloud9,,Men's Division E,final,35,23
 g-0414,2026-08-03,18:00,Batch 3,batinten,dwballs,,Women's Division,scheduled,,
-g-0415,2026-08-03,18:00,CENT 2,hitmen,pappasmn,,Men's Division I,scheduled,,
-g-0416,2026-08-03,18:00,Batch 4,regulatr,yankdeez,,Men's Division E,scheduled,,
-g-0417,2026-08-03,19:15,CENT 1,uppies,abbooks,,Men's Division E,scheduled,,
-g-0418,2026-08-03,19:15,Batch 4,kaos,bashbros,,Men's Division E,scheduled,,
+g-0415,2026-08-03,18:00,CENT 2,hitmen,pappasmn,,Men's Division I,final,13,1
+g-0416,2026-08-03,18:00,Batch 4,regulatr,yankdeez,,Men's Division E,final,12,28
+g-0417,2026-08-03,19:15,CENT 1,uppies,abbooks,,Men's Division E,final,27,22
+g-0418,2026-08-03,19:15,Batch 4,kaos,bashbros,,Men's Division E,final,22,21
 g-0419,2026-08-03,19:15,Batch 2,batinten,mamamos,,Women's Division,scheduled,,
-g-0420,2026-08-03,19:15,CENT 2,smokbnt,topgun,,Men's Division I,scheduled,,
+g-0420,2026-08-03,19:15,CENT 2,smokbnt,topgun,,Men's Division I,final,28,22
