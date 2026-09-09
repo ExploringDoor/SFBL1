@@ -3,6 +3,7 @@
 // this in the @modal slot instead of the full page. Direct URL access
 // still hits the full page at app/games/[gameId]/page.tsx.
 
+import { fieldAddressFor } from "@/lib/field-address";
 import { headers } from "next/headers";
 import { Modal } from "@/components/Modal";
 import { BoxScoreContent } from "@/components/BoxScoreContent";
@@ -41,6 +42,8 @@ export default async function GameModalRoute({
   );
   if (!data) return null;
 
+  // Street address for the field, so an umpire can tap it for directions.
+  const fieldAddress = await fieldAddressFor(tenantId, data.field);
   const view = searchParams?.tab === "recap" ? "recap" : "box";
   const isFinal = data.status === "final" || data.status === "approved";
   // Stats-off leagues (COYBL): recap-only — no box score. Resolve the
@@ -89,10 +92,13 @@ export default async function GameModalRoute({
         view={view}
         recapOnly={recapOnly}
         recapOverrideHtml={recapHtml}
+        shortenField={tenantId === "windmill"}
         fieldHref={
           tenantId === "windmill" && data.field
             ? `/fields?f=${encodeURIComponent(data.field)}`
-            : null
+            : fieldAddress
+              ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fieldAddress)}`
+              : null
         }
       />
       <GameShareSection data={data} config={config} />

@@ -23,6 +23,8 @@ export interface AssignmentGame {
 }
 
 export interface AssignmentLine {
+  /** Game id, so an email can link each line to the game itself. */
+  id: string;
   date: string;
   time: string;
   field: string;
@@ -53,6 +55,7 @@ export function upcomingByUmpire(
     const away = teamName.get(String(g.away_team_id ?? "")) ?? "";
     const home = teamName.get(String(g.home_team_id ?? "")) ?? "";
     const line: AssignmentLine = {
+      id: String(g.id ?? ""),
       date: String(g.date ?? "").slice(0, 10),
       time: String(g.time ?? ""),
       field: String(g.field ?? ""),

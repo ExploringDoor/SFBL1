@@ -93,6 +93,9 @@ export function UmpiresManager({ leagueId, user }: Props) {
   const [fields, setFields] = useState<string[]>([]);
   const [requiredPerGame, setRequiredPerGame] = useState(0);
   const [gameMinutes, setGameMinutes] = useState(0);
+  // Reply-to on every assignment email. The assignor, not the league office:
+  // an umpire who cannot make a game needs the person holding the schedule.
+  const [assignorEmail, setAssignorEmail] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -160,6 +163,7 @@ export function UmpiresManager({ leagueId, user }: Props) {
       if (cSnap.exists()) {
         setRequiredPerGame(Number(cSnap.data()?.required_per_game ?? 0) || 0);
         setGameMinutes(Number(cSnap.data()?.game_minutes ?? 0) || 0);
+        setAssignorEmail(String(cSnap.data()?.assignor_email ?? ""));
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
@@ -342,11 +346,21 @@ export function UmpiresManager({ leagueId, user }: Props) {
               style={{ ...INPUT, width: 110 }}
             />
           </div>
+          <div>
+            <label style={LABEL}>Assignor email (replies go here)</label>
+            <input
+              type="email"
+              value={assignorEmail}
+              placeholder="assignor@example.com"
+              onChange={(e) => setAssignorEmail(e.target.value)}
+              style={{ ...INPUT, width: 240 }}
+            />
+          </div>
           <button
             type="button"
             style={BTN}
             disabled={busy}
-            onClick={() => act({ action: "settings", requiredPerGame, gameMinutes }, "Settings saved.")}
+            onClick={() => act({ action: "settings", requiredPerGame, gameMinutes, assignorEmail }, "Settings saved.")}
           >
             Save settings
           </button>

@@ -106,6 +106,10 @@ describe("dates and times read the way a person says them", () => {
     expect(shortTime("")).toBe("");
   });
 
+  it("carries the game id so an email can link to it", () => {
+    expect(upcomingByUmpire(GAMES, TEAMS, TODAY).get("jim")![0]!.id).toBe("g1");
+  });
+
   it("renders a full line", () => {
     const l = upcomingByUmpire(GAMES, TEAMS, TODAY).get("jim")![0]!;
     expect(renderLine(l)).toBe("Mon 9/14 6:00 PM, Bellport 1 - Thunder 12U at Waves 12U");

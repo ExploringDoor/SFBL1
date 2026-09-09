@@ -103,13 +103,19 @@ export interface BoxScoreContentProps {
    *  field directory instead of the full street address. Only set for windmill,
    *  so every other tenant is byte-for-byte unchanged. */
   fieldHref?: string | null;
+  /** Shorten "Ihde Field 810 Morgan St" to "Ihde Field". Windmill stores the
+   *  whole address in `field`; Island stores the venue name and keeps the
+   *  address separately, and shortening THAT turns "Bellport Martha Avenue
+   *  Complex 1" into "...Complex", losing which of the three it is. So this
+   *  is opt-in rather than implied by the presence of a link. */
+  shortenField?: boolean;
 }
 
 export function BoxScoreContent(props: BoxScoreContentProps) {
   const { gameId, date, time, field, status, innings, away, home, playerNames } =
     props;
   // Short, linked venue name for windmill; the raw field string everywhere else.
-  const fieldLabel = props.fieldHref ? shortFieldName(field) : field;
+  const fieldLabel = props.shortenField ? shortFieldName(field) : field;
   const view = props.view ?? "box";
   const isFinal = status === "final" || status === "approved";
 

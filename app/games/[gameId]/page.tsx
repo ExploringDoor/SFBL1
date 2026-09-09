@@ -1,6 +1,7 @@
 // Full /games/[id] page — used on direct navigation. The intercepted
 // route at @modal/(.)games/[id] wraps the same content in a modal.
 
+import { fieldAddressFor } from "@/lib/field-address";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
@@ -109,6 +110,8 @@ export default async function GameDetailPage({
   );
   if (!data) notFound();
 
+  // Street address for the field, so an umpire can tap it for directions.
+  const fieldAddress = await fieldAddressFor(tenantId, data.field);
   const view = searchParams?.tab === "recap" ? "recap" : "box";
   const isFinal = data.status === "final" || data.status === "approved";
   // Stats-off leagues (COYBL) have no box score — final games show a
@@ -184,10 +187,13 @@ export default async function GameDetailPage({
         view={view}
         recapOnly={recapOnly}
         recapOverrideHtml={recapHtml}
+        shortenField={tenantId === "windmill"}
         fieldHref={
           tenantId === "windmill" && data.field
             ? `/fields?f=${encodeURIComponent(data.field)}`
-            : null
+            : fieldAddress
+              ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fieldAddress)}`
+              : null
         }
         recapEditor={
           <RecapEditor

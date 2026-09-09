@@ -75,6 +75,64 @@ export async function POST(req: Request) {
   const action = String(body.action ?? "");
   const col = db.collection(`leagues/${leagueId}/umpires`);
 
+  /** Who an umpire should reply to.
+   *
+   *  NOT the league office. Assignments are the assignor's business, and on
+   *  Island that is Jim, not Mike: an umpire who cannot make Monday needs to
+   *  reach the person holding the schedule. Set on site_config/umpires so it
+   *  changes without a deploy. Falls back to the office list. */
+  async function assignorReplyTo(): Promise<string | null> {
+    try {
+      const cfg = (
+        await db.doc(`leagues/${leagueId}/site_config/umpires`).get()
+      ).data() as { assignor_email?: unknown } | undefined;
+      const v = String(cfg?.assignor_email ?? "").trim();
+      if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return v;
+    } catch {
+      /* fall through to the office */
+    }
+    return notifyAddress();
+  }
+
+  /** name -> street address, for linking a field to where it actually is. */
+  async function fieldAddresses(): Promise<Map<string, string>> {
+    const m = new Map<string, string>();
+    try {
+      const d = (
+        await db.doc(`leagues/${leagueId}/site_config/fields`).get()
+      ).data() as { data?: unknown } | undefined;
+      const arr = Array.isArray(d?.data) ? (d!.data as Record<string, unknown>[]) : [];
+      for (const f of arr) {
+        const n = String(f?.name ?? "").trim().toLowerCase();
+        const a = String(f?.address ?? "").trim();
+        if (n && a) m.set(n, a);
+      }
+    } catch {
+      /* no fields doc: the email simply carries no map link */
+    }
+    return m;
+  }
+
+  /** A line of an assignment email: the game links to its page, and the field
+   *  links to a map of its address, which is what an umpire actually needs at
+   *  6pm on a Monday. */
+  function lineHtml(
+    l: { id: string; date: string; time: string; field: string; matchup: string },
+    host: string,
+    addr: Map<string, string>,
+  ): string {
+    const when = renderLine({ ...l, field: "", matchup: "" });
+    const a = addr.get(l.field.trim().toLowerCase());
+    const where = a
+      ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(a)}">${escapeHtml(l.field)}</a>`
+      : escapeHtml(l.field);
+    const what = l.matchup ? ` &mdash; ${escapeHtml(l.matchup)}` : "";
+    const head = host
+      ? `<a href="${escapeHtml(host)}/games/${escapeHtml(l.id)}">${escapeHtml(when)}</a>`
+      : escapeHtml(when);
+    return `${head}, ${where}${what}`;
+  }
+
   // ── roster ────────────────────────────────────────────────────────
   if (action === "save_umpire") {
     const u = (body.umpire ?? {}) as Record<string, unknown>;
@@ -194,6 +252,9 @@ export async function POST(req: Request) {
       (req.headers.get("host") ? `https://${req.headers.get("host")}` : "");
     const byId = new Map(umpSnap2.docs.map((d) => [d.id, d.data()]));
 
+    const addr = await fieldAddresses();
+    const replyTo = await assignorReplyTo();
+
     let sent = 0;
     let noEmail = 0;
     for (const [id, lines] of linesFor) {
@@ -208,14 +269,15 @@ export async function POST(req: Request) {
       const html =
         `<p>Hi ${escapeHtml(name || "there")},</p>` +
         `<p>Here ${lines.length === 1 ? "is the game" : `are the ${lines.length} games`} you are scheduled for.</p>` +
-        `<ul>${lines.map((l) => `<li>${escapeHtml(renderLine(l))}</li>`).join("")}</ul>` +
+        `<ul>${lines.map((l) => `<li>${lineHtml(l, host, addr)}</li>`).join("")}</ul>` +
+        `<p>Tap a date for the game, or the field for directions.</p>` +
         (host ? `<p><a href="${escapeHtml(host)}/schedule">See the full schedule</a></p>` : "") +
-        `<p>If you cannot work one of these, reply to this email and let the office know.</p>`;
+        `<p>If you cannot work one of these, reply to this email and let the assignor know.</p>`;
       const r = await sendEmail({
         to,
         subject: `Your umpire assignments (${lines.length} game${lines.length === 1 ? "" : "s"})`,
         html,
-        ...(notifyAddress() ? { replyTo: notifyAddress()! } : {}),
+        ...(replyTo ? { replyTo } : {}),
       }).catch(() => ({ ok: false }) as { ok: boolean });
       if (r.ok) sent++;
     }
@@ -318,6 +380,15 @@ export async function POST(req: Request) {
       {
         required_per_game: Math.max(0, Math.min(6, Number(body.requiredPerGame) || 0)),
         game_minutes: Math.max(0, Math.min(360, Number(body.gameMinutes) || 0)),
+        // Where an umpire's reply goes. The assignor holds the schedule, so a
+        // "I can't make Monday" has to reach them, not the league office.
+        ...(typeof body.assignorEmail === "string"
+          ? {
+              assignor_email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.assignorEmail.trim())
+                ? body.assignorEmail.trim()
+                : "",
+            }
+          : {}),
         updated_at: now,
       },
       { merge: true },
@@ -414,12 +485,23 @@ export async function POST(req: Request) {
     if (added.length > 0) {
       try {
         const byId = new Map(umpSnap.docs.map((d) => [d.id, d.data()]));
-        const when = [String(gd.date ?? ""), String(gd.time ?? "")]
-          .filter(Boolean)
-          .join(" at ");
-        const where = String(gd.field ?? "");
-        const host = req.headers.get("origin") ?? (req.headers.get("host") ? `https://${req.headers.get("host")}` : "");
-        const link = `${host}/games/${gameId}`;
+        const host =
+          req.headers.get("origin") ??
+          (req.headers.get("host") ? `https://${req.headers.get("host")}` : "");
+        const addr = await fieldAddresses();
+        const replyTo = await assignorReplyTo();
+        // Through the SAME renderer the manual email and the texts use. This
+        // read gd.date and gd.time raw and produced "2026-09-14 at 18:00",
+        // while every other message said "Mon 9/14 6:00 PM". One umpire could
+        // get both wordings for the same game.
+        const line = {
+          id: gameId,
+          date: String(gd.date ?? "").slice(0, 10),
+          time: String(gd.time ?? ""),
+          field: String(gd.field ?? ""),
+          matchup: "",
+        };
+        const when = renderLine({ ...line, field: "", matchup: "" });
         for (const id of added) {
           const to = String(byId.get(id)?.email ?? "").trim();
           if (!to) continue;
@@ -427,17 +509,13 @@ export async function POST(req: Request) {
           const html =
             `<p>Hi ${escapeHtml(name || "there")},</p>` +
             `<p>You have been assigned to a game.</p>` +
-            `<table cellpadding="4">` +
-            `<tr><td>When</td><td><strong>${escapeHtml(when || "see the schedule")}</strong></td></tr>` +
-            (where ? `<tr><td>Where</td><td>${escapeHtml(where)}</td></tr>` : "") +
-            `</table>` +
-            `<p><a href="${escapeHtml(link)}">See the game</a></p>` +
-            `<p>If you cannot work it, reply to this email and let the office know.</p>`;
+            `<p>${lineHtml(line, host, addr)}</p>` +
+            `<p>If you cannot work it, reply to this email and let the assignor know.</p>`;
           await sendEmail({
             to,
             subject: `Game assignment${when ? `: ${when}` : ""}`,
             html,
-            ...(notifyAddress() ? { replyTo: notifyAddress()! } : {}),
+            ...(replyTo ? { replyTo } : {}),
           }).catch(() => null);
         }
       } catch {
