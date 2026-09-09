@@ -290,9 +290,18 @@ export default function AdminPage() {
     );
   }
 
+  // The badge names what the caller actually holds. useLeagueRole calls every
+  // scoped session "none", which reads as a bug when a town commissioner has
+  // just typed a working password.
+  const roleLabel = access.full
+    ? role
+    : access.town
+      ? `${access.town} commissioner`
+      : (ADMIN_ROLES[access.roleId ?? ""]?.label ?? access.roleId ?? role);
+
   return (
     <Shell heading={config?.name ?? "Admin"}>
-      <SignedInHeader email={user.email} role={role} />
+      <SignedInHeader email={user.email} role={roleLabel} />
 
       {/* Tab nav — wraps to multiple rows on desktop, horizontally
           scrolls on phone with the active tab auto-scrolling into
@@ -544,7 +553,7 @@ export default function AdminPage() {
           </div>
         )}
         {activeTab === "scores" && (
-          <ScoresManager leagueId={tenantId} user={user} />
+          <ScoresManager leagueId={tenantId} user={user} town={access.town} />
         )}
         {activeTab === "schedule" && (
           <ScheduleEditor leagueId={tenantId} user={user} />

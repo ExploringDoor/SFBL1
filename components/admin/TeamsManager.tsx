@@ -30,6 +30,11 @@ interface TeamRow {
   /** Optional per-team GameChanger link, for leagues whose clubs keep their
    *  book there. Rendered on the public team page when set. */
   gamechanger_url: string;
+  /** Town / club the team belongs to. The Scores tab groups on it and each
+   *  town's commissioner password can only score games with a team whose
+   *  organization matches — so it must be spelled the same on every team
+   *  from one town. */
+  organization: string;
   active: boolean;
   /** Non-secret marker: does this team have a manager password set?
    *  The password itself lives privately and is never loaded here. */
@@ -117,6 +122,7 @@ export function TeamsManager({ leagueId, user }: Props) {
               ageGroup: String(data.ageGroup ?? ""),
               logo_url: String(data.logo_url ?? ""),
               gamechanger_url: String(data.gamechanger_url ?? ""),
+              organization: String(data.organization ?? ""),
               has_captain_password: data.has_captain_password === true,
               active: data.active !== false,
               // Carried so the division picker can exclude the seeded season's
@@ -682,6 +688,7 @@ function TeamEditForm({
   team,
   leagueId,
   existingDivisions,
+  existingOrganizations,
   busy,
   onCancel,
   onSave,
@@ -690,6 +697,9 @@ function TeamEditForm({
   leagueId: string;
   /** Every division already in use, so the picker offers real values. */
   existingDivisions: string[];
+  /** Every town / organization already in use, offered as suggestions so the
+   *  seventh team from Mineola is typed the way the first six were. */
+  existingOrganizations: string[];
   busy: boolean;
   onCancel: () => void;
   onSave: (patch: TeamPatch) => void;
@@ -701,6 +711,7 @@ function TeamEditForm({
   const [color, setColor] = useState(team.color || "#002d72");
   const [division, setDivision] = useState(team.division);
   const [ageGroup, setAgeGroup] = useState(team.ageGroup);
+  const [organization, setOrganization] = useState(team.organization);
   const [logoUrl, setLogoUrl] = useState(team.logo_url);
   const [gamechangerUrl, setGamechangerUrl] = useState(team.gamechanger_url);
   const [captainPassword, setCaptainPassword] = useState("");
@@ -735,6 +746,34 @@ function TeamEditForm({
             maxLength={8}
             className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm font-mono"
           />
+        </label>
+        <label className="block">
+          <span className="block text-xs font-semibold text-slate-700 mb-1">
+            Town / organization
+          </span>
+          {/* Suggestions, not a strict picker: a brand-new town has to be
+              typeable on the first team from it. The datalist still makes
+              the existing spelling the path of least resistance, which is
+              what keeps "Mineola" from splitting into two towns. */}
+          <input
+            type="text"
+            value={organization}
+            onChange={(e) => setOrganization(e.target.value)}
+            disabled={busy}
+            list="team-organization-names"
+            placeholder="e.g. Mineola"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+          <datalist id="team-organization-names">
+            {existingOrganizations.map((o) => (
+              <option key={o} value={o} />
+            ))}
+          </datalist>
+          <span className="mt-1 block text-[11px] leading-snug text-slate-500">
+            Spell it the same on every team from one town. The Scores tab and
+            each town&apos;s commissioner password use this to decide which
+            games belong to the town.
+          </span>
         </label>
         <label className="block">
           <span className="block text-xs font-semibold text-slate-700 mb-1">
@@ -931,6 +970,7 @@ function TeamEditForm({
               color,
               division,
               ageGroup,
+              organization: organization.trim(),
               logo_url: logoUrl,
               gamechanger_url: gamechangerUrl.trim(),
               // Only send a password when one was typed/generated —
@@ -1043,6 +1083,17 @@ function DivisionGroups({
         .filter((d): d is string => d.length > 0),
     ),
   ).sort((a, b) => a.localeCompare(b));
+  // Towns / organizations already in use, offered as suggestions in the edit
+  // form. Sample teams are included here on purpose: ETBL's placeholder season
+  // is where the town names first exist, and the real teams should be typed
+  // to match them.
+  const existingOrganizations = Array.from(
+    new Set(
+      teams
+        .map((t) => (t.organization ?? "").trim())
+        .filter((o): o is string => o.length > 0),
+    ),
+  ).sort((a, b) => a.localeCompare(b));
 
   // Group teams by division, and for youth leagues by AGE GROUP first.
   // COYBL runs 7U through 14U with numbered divisions inside each, so
@@ -1102,6 +1153,7 @@ function DivisionGroups({
                   key={t.id}
                   leagueId={leagueId}
                   existingDivisions={existingDivisions}
+                  existingOrganizations={existingOrganizations}
                   team={t}
                   lastLogin={lastLogin[t.id]}
                   roster={players.filter((p) => p.team_id === t.id)}
@@ -1138,6 +1190,7 @@ function DivisionGroups({
 
 function TeamRowItem({
   existingDivisions,
+  existingOrganizations,
   leagueId,
   team: t,
   lastLogin,
@@ -1159,6 +1212,7 @@ function TeamRowItem({
   onRemovePlayer,
 }: {
   existingDivisions: string[];
+  existingOrganizations: string[];
   leagueId: string;
   team: TeamRow;
   lastLogin?: string;
@@ -1328,6 +1382,7 @@ function TeamRowItem({
           team={t}
           leagueId={leagueId}
           existingDivisions={existingDivisions}
+          existingOrganizations={existingOrganizations}
           busy={busy}
           onCancel={onCancelEdit}
           onSave={onSaveEdit}

@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { accessFromClaim, type AdminAccess } from "@/lib/admin-roles";
+import {
+  accessFor,
+  accessFromClaim,
+  type AdminAccess,
+} from "@/lib/admin-roles";
 import {
   isSignInWithEmailLink,
   onAuthStateChanged,
@@ -162,8 +166,11 @@ export function useAdminAccess(
       // seconds ago has to work without a sign-out cycle.
       const result = await user.getIdTokenResult(true);
       if (cancelled) return;
-      const leagues = (result.claims.leagues ?? {}) as Record<string, unknown>;
-      setAccess(accessFromClaim(leagues[leagueId]));
+      // The whole token, not just the league claim: a config-defined role
+      // (ETBL's town commissioners) carries its scopes and town in
+      // admin_scopes / admin_town, and the client must see exactly what the
+      // API routes will enforce.
+      setAccess(accessFor(result.claims as Record<string, unknown>, leagueId));
     })();
     return () => {
       cancelled = true;

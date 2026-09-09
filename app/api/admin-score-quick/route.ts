@@ -23,7 +23,8 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
-import { hasScope } from "@/lib/admin-roles";
+import { accessFor, hasScope } from "@/lib/admin-roles";
+import { checkGamesInTown, townForbidden } from "@/lib/admin-town";
 import { recalcLeague } from "@/lib/stats";
 import { invalidateGeneratedRecap } from "@/lib/stats-off-recap";
 
@@ -114,6 +115,13 @@ export async function POST(req: Request) {
       { status: 403 },
     );
   }
+  // TOWN. A commissioner's password carries admin_town, and the only games it
+  // may score are the ones with a team from that town (lib/admin-town.ts).
+  // The full admin and the league-wide scheduler have no town and skip every
+  // town check below at zero cost.
+  const access = accessFor(decoded, leagueId);
+  const town = access.town;
+  const byRole = access.roleId ?? "admin";
 
   const db = getAdminDb();
 
@@ -140,6 +148,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Game not found" }, { status: 404 });
     }
     const game = gameSnap.data()!;
+    if (town) {
+      const r = await checkGamesInTown(db, leagueId, [gameId], town);
+      if (r.forbidden.length) return townForbidden(town, r.forbidden);
+    }
     const teamId = String(
       side === "away" ? game.away_team_id : game.home_team_id,
     );
@@ -228,7 +240,8 @@ export async function POST(req: Request) {
     await db.collection(`leagues/${leagueId}/audit`).add({
       kind: "score_resolve_conflict",
       by_uid: decoded.uid,
-      by_role: "admin",
+      by_role: byRole,
+      ...(town ? { town } : {}),
       game_id: gameId,
       changes: {
         side_chosen: side,
@@ -262,6 +275,17 @@ export async function POST(req: Request) {
   const updates = body.updates as Update[];
   const errors: { gameId: string; error: string }[] = [];
   const written: string[] = [];
+
+  if (town) {
+    // The whole batch is refused when any game is outside the town, before a
+    // single write: a foreign game must not ride along with legitimate ones.
+    // Ids with no game doc are left to the per-item "game not found" below.
+    const ids = updates
+      .map((u) => u.gameId)
+      .filter((id): id is string => typeof id === "string" && id !== "");
+    const r = await checkGamesInTown(db, leagueId, ids, town);
+    if (r.forbidden.length) return townForbidden(town, r.forbidden);
+  }
 
   for (const u of updates) {
     if (typeof u.gameId !== "string" || !u.gameId) {
@@ -331,7 +355,8 @@ export async function POST(req: Request) {
     await db.collection(`leagues/${leagueId}/audit`).add({
       kind: "score_quick_batch",
       by_uid: decoded.uid,
-      by_role: "admin",
+      by_role: byRole,
+      ...(town ? { town } : {}),
       changes: {
         count: written.length,
         game_ids: written,

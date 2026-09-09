@@ -26,6 +26,7 @@ import type { User } from "firebase/auth";
 import { formatTime12 } from "@/lib/format-time";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
+import { townKey } from "@/lib/admin-roles";
 
 interface GameRow {
   id: string;
@@ -47,16 +48,23 @@ interface GameRow {
 interface TeamOpt {
   id: string;
   name: string;
+  /** Town / club, as typed on the team. Compared through townKey. */
+  organization: string;
 }
 
 interface Props {
   leagueId: string;
   user: User;
+  /** Set for a town commissioner's session (lib/admin-roles AdminAccess.town).
+   *  The list is narrowed to games with a team from that town, and the API
+   *  refuses anything else regardless of what this component shows. Null for
+   *  the full admin, who instead gets an optional town dropdown. */
+  town?: string | null;
 }
 
 type Filter = "needs_score" | "all" | "conflicts";
 
-export function ScoresManager({ leagueId, user }: Props) {
+export function ScoresManager({ leagueId, user, town = null }: Props) {
   const [games, setGames] = useState<GameRow[]>([]);
   const [teams, setTeams] = useState<TeamOpt[]>([]);
   const [drafts, setDrafts] = useState<
@@ -80,7 +88,11 @@ export function ScoresManager({ leagueId, user }: Props) {
       ]);
       setTeams(
         teamSnap.docs
-          .map((d) => ({ id: d.id, name: String(d.data().name ?? d.id) }))
+          .map((d) => ({
+            id: d.id,
+            name: String(d.data().name ?? d.id),
+            organization: String(d.data().organization ?? ""),
+          }))
           .sort((a, b) => a.name.localeCompare(b.name)),
       );
       // Index submissions by game id for conflict detection.
@@ -167,8 +179,38 @@ export function ScoresManager({ leagueId, user }: Props) {
     return (id: string) => m.get(id) ?? id;
   }, [teams]);
 
+  // Town of each team, normalised the way the server compares it.
+  const teamTownKey = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const t of teams) m.set(t.id, townKey(t.organization));
+    return (id: string) => m.get(id) ?? "";
+  }, [teams]);
+  // Distinct towns, for the full admin's dropdown. First spelling wins for
+  // display; the key is what is compared.
+  const townOptions = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const t of teams) {
+      const k = townKey(t.organization);
+      if (k && !seen.has(k)) seen.set(k, t.organization.trim());
+    }
+    return [...seen.values()].sort((a, b) => a.localeCompare(b));
+  }, [teams]);
+  const [townPick, setTownPick] = useState("");
+  const effectiveTown = town ?? townPick;
+  // A commissioner sees only games with a team from their town. The API
+  // enforces the same rule, so this is convenience and a true count, not the
+  // security boundary.
+  const visible = useMemo(() => {
+    const k = townKey(effectiveTown);
+    if (!k) return games;
+    return games.filter(
+      (g) =>
+        teamTownKey(g.away_team_id) === k || teamTownKey(g.home_team_id) === k,
+    );
+  }, [games, effectiveTown, teamTownKey]);
+
   const filtered = useMemo(() => {
-    return games.filter((g) => {
+    return visible.filter((g) => {
       if (filter === "conflicts") return g.has_conflict;
       if (filter === "needs_score") {
         // Anything that isn't a clean final.
@@ -181,7 +223,7 @@ export function ScoresManager({ leagueId, user }: Props) {
       }
       return true;
     });
-  }, [games, filter]);
+  }, [visible, filter]);
 
   function setDraft(gameId: string, side: "away" | "home", value: string) {
     setDrafts((cur) => ({
@@ -253,10 +295,18 @@ export function ScoresManager({ leagueId, user }: Props) {
       });
       const data = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
+        error?: string;
         errors?: { gameId: string; error: string }[];
       };
       if (!res.ok) {
-        setError(data.errors?.[0]?.error ?? "Save failed");
+        // A refusal (403: not your town, not an admin) comes back as a single
+        // `error`; per-game problems come back in `errors`. Show whichever
+        // arrived rather than a blank "Save failed".
+        setError(
+          data.error ??
+            data.errors?.[0]?.error ??
+            `Save failed (HTTP ${res.status})`,
+        );
         return;
       }
       setSuccess(
@@ -307,11 +357,20 @@ export function ScoresManager({ leagueId, user }: Props) {
       });
       const data = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
+        error?: string;
         written?: string[];
         errors?: { gameId: string; error: string }[];
       };
-      if (!res.ok && data.errors?.length) {
-        setError(`${data.errors.length} errors. First: ${data.errors[0]!.error}`);
+      if (!res.ok) {
+        // Any non-2xx is a failure. This used to fall through to "Saved 0
+        // games." whenever the body carried `error` instead of `errors` —
+        // exactly what a 403 for another town's game returns.
+        setError(
+          data.error ??
+            (data.errors?.length
+              ? `${data.errors.length} errors. First: ${data.errors[0]!.error}`
+              : `Save failed (HTTP ${res.status})`),
+        );
         return;
       }
       setSuccess(
@@ -375,8 +434,10 @@ export function ScoresManager({ leagueId, user }: Props) {
     }
   }
 
-  const conflictCount = games.filter((g) => g.has_conflict).length;
-  const needsScoreCount = games.filter(
+  // Counted over what this session can see, so a commissioner's "3 games
+  // still need a score" is about their town, not the league.
+  const conflictCount = visible.filter((g) => g.has_conflict).length;
+  const needsScoreCount = visible.filter(
     (g) =>
       g.status !== "final" &&
       g.status !== "approved" &&
@@ -394,8 +455,35 @@ export function ScoresManager({ leagueId, user }: Props) {
             still need a score
             {conflictCount > 0 && `, ${conflictCount} captain conflict${conflictCount === 1 ? "" : "s"} to resolve`}.
           </p>
+          {town && (
+            <p className="text-xs text-slate-700 mt-1">
+              Showing <span className="font-semibold">{town}</span> games only
+              ({visible.length} of {games.length}).
+            </p>
+          )}
+          {town && !loading && games.length > 0 && visible.length === 0 && (
+            <p className="mt-1 text-xs text-amber-800 rounded bg-amber-50 px-2 py-1 border border-amber-200">
+              No team is assigned to {town} yet. The league admin sets each
+              team&apos;s Town in the Teams tab.
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-2">
+          {!town && townOptions.length > 0 && (
+            <select
+              value={townPick}
+              onChange={(e) => setTownPick(e.target.value)}
+              className="rounded-md border border-slate-300 px-2 py-1.5 text-xs"
+              aria-label="Filter by town"
+            >
+              <option value="">All towns</option>
+              {townOptions.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          )}
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value as Filter)}

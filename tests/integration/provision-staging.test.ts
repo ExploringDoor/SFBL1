@@ -72,6 +72,15 @@ function stageTeams(
         ...(r.division ? { division: r.division } : {}),
         ...(r.color ? { color: r.color } : {}),
         ...(r.logo_url ? { logo_url: r.logo_url } : {}),
+        // Town / club: column absent → untouched; present but blank → cleared.
+        // (scripts/provision.ts also runs cleanName on it.)
+        ...(r.organization !== undefined
+          ? { organization: r.organization ? r.organization.trim() : null }
+          : {}),
+        // Placeholder-season marker, only ever set.
+        ...(String(r.demo ?? "").trim().toLowerCase() === "true"
+          ? { demo: true }
+          : {}),
         active: true,
         updated_at: new Date().toISOString(),
       },
@@ -243,6 +252,9 @@ function stageSchedule(
         status,
         away_score: awayScoreNum ?? 0,
         home_score: homeScoreNum ?? 0,
+        ...(String(r.demo ?? "").trim().toLowerCase() === "true"
+          ? { demo: true }
+          : {}),
         updated_at: new Date().toISOString(),
       },
     });
@@ -359,6 +371,37 @@ describe("stageTeams", () => {
     expect(r.writes[0]!.data).not.toHaveProperty("abbrev");
     expect(r.writes[0]!.data).not.toHaveProperty("color");
     expect(r.writes[0]!.data).not.toHaveProperty("division");
+  });
+
+  // ETBL: the town a team belongs to rides in as `organization`, and the
+  // commissioner passwords are gated on it — so the three cases that matter
+  // are "carried", "cleared" and "left alone".
+  it("carries the organization (town) column, trimmed", () => {
+    const r = stageTeams(
+      [{ id: "t-mineola-3b-red", name: "Mineola 3B Red", organization: " Mineola " }],
+      "etbl",
+    );
+    expect(r.errors).toEqual([]);
+    expect(r.writes[0]!.data.organization).toBe("Mineola");
+  });
+
+  it("a present-but-blank organization clears the field (null), an absent column leaves it alone", () => {
+    const cleared = stageTeams(
+      [{ id: "t1", name: "T1", organization: "" }],
+      "etbl",
+    );
+    expect(cleared.writes[0]!.data.organization).toBeNull();
+    const absent = stageTeams([{ id: "t1", name: "T1" }], "etbl");
+    expect(absent.writes[0]!.data).not.toHaveProperty("organization");
+  });
+
+  it("demo=true marks a placeholder team; anything else does not", () => {
+    const yes = stageTeams([{ id: "t1", name: "T1", demo: "TRUE" }], "etbl");
+    expect(yes.writes[0]!.data.demo).toBe(true);
+    const no = stageTeams([{ id: "t1", name: "T1", demo: "false" }], "etbl");
+    expect(no.writes[0]!.data).not.toHaveProperty("demo");
+    const absent = stageTeams([{ id: "t1", name: "T1" }], "etbl");
+    expect(absent.writes[0]!.data).not.toHaveProperty("demo");
   });
 });
 
@@ -667,6 +710,40 @@ describe("stageSchedule", () => {
     expect(boxWrite!.data.home_score_only).toBe(true);
     expect(boxWrite!.data.away_lineup).toEqual([]);
     expect(boxWrite!.data.home_lineup).toEqual([]);
+  });
+
+  it("demo=true marks a placeholder game, and only the game doc", () => {
+    const r = stageSchedule(
+      [
+        {
+          id: "g1",
+          date: "2026-08-29",
+          time: "09:00",
+          away_team_id: "team_a",
+          home_team_id: "team_b",
+          status: "final",
+          away_score: "24",
+          home_score: "18",
+          demo: "true",
+        },
+      ],
+      "etbl",
+    );
+    expect(r.errors).toEqual([]);
+    const gameWrite = r.writes.find((w) => w.path.startsWith("leagues/etbl/games/"));
+    expect(gameWrite!.data.demo).toBe(true);
+    const plain = stageSchedule(
+      [
+        {
+          id: "g2",
+          date: "2026-08-29",
+          away_team_id: "team_a",
+          home_team_id: "team_b",
+        },
+      ],
+      "etbl",
+    );
+    expect(plain.writes[0]!.data).not.toHaveProperty("demo");
   });
 
   it("'approved' status also gets a /box_scores doc (admin-confirmed final)", () => {

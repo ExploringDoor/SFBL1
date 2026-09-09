@@ -19,6 +19,8 @@
     "magic-link": "tsx scripts/magic-link.ts",
     "provision": "tsx scripts/provision.ts",
     "provision:emulator": "FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 FIRESTORE_EMULATOR_HOST=localhost:8080 tsx scripts/provision.ts",
+    "set-admin-role": "tsx scripts/set-admin-role.ts",
+    "set-admin-role:emulator": "FIRESTORE_EMULATOR_HOST=localhost:8080 tsx scripts/set-admin-role.ts",
     "audit:tenant": "tsx scripts/audit-tenant.ts",
     "audit:tenant:emulator": "FIRESTORE_EMULATOR_HOST=localhost:8080 tsx scripts/audit-tenant.ts",
     "seed:page": "tsx scripts/seed-page-content.ts",

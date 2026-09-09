@@ -194,6 +194,44 @@ describe("/api/admin-team — update", () => {
     );
   });
 
+  it("stores the town / organization trimmed, and blank clears it to null", async () => {
+    // ETBL: the Scores tab and the commissioner passwords compare this
+    // string, so it must land exactly as the admin meant it.
+    let res = await POST(
+      makeReq({
+        leagueId: "sfbl",
+        action: "update",
+        teamId: "miami_yankees",
+        organization: "  Mineola ",
+      }),
+    );
+    expect(res.status).toBe(200);
+    expect(mockState.setCalls[0]!.data.organization).toBe("Mineola");
+
+    res = await POST(
+      makeReq({
+        leagueId: "sfbl",
+        action: "update",
+        teamId: "miami_yankees",
+        organization: "",
+      }),
+    );
+    expect(res.status).toBe(200);
+    expect(mockState.setCalls[1]!.data.organization).toBeNull();
+
+    // Not sent at all → not touched.
+    res = await POST(
+      makeReq({
+        leagueId: "sfbl",
+        action: "update",
+        teamId: "miami_yankees",
+        name: "Still Yankees",
+      }),
+    );
+    expect(res.status).toBe(200);
+    expect(mockState.setCalls[2]!.data).not.toHaveProperty("organization");
+  });
+
   it("404s when team doesn't exist", async () => {
     const res = await POST(
       makeReq({

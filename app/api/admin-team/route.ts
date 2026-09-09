@@ -48,6 +48,11 @@ interface Body {
   ageGroup?: unknown;
   logo_url?: unknown;
   gamechanger_url?: unknown;
+  /** Town / club the team belongs to. Free text, but the Scores tab groups on
+   *  it and each town's commissioner password may only score games with a
+   *  team whose organization matches (lib/admin-town.ts), so it must be
+   *  spelled the same on every team from one town. Blank clears it. */
+  organization?: unknown;
   // Per-team captain/manager password. Stored on the PRIVATE
   // teams/{id}/_private/auth subdoc (the public team doc is
   // world-readable, so a password there would leak). Empty/omitted
@@ -297,6 +302,12 @@ export async function POST(req: Request) {
     update.ageGroup = ag || null;
     const m = /^(\d+)/.exec(ag);
     update.ageOrder = m ? Number(m[1]) : 999;
+  }
+  // Town / organization. cleanName so a Word-pasted "Mineola" with an NBSP
+  // does not become a second town that no commissioner password can reach.
+  if (typeof body.organization === "string") {
+    const org = cleanName(body.organization).trim().slice(0, 80);
+    update.organization = org || null;
   }
   if (typeof body.logo_url === "string") {
     const v = body.logo_url.trim();

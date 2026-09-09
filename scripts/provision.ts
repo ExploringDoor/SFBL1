@@ -17,8 +17,15 @@
 //
 // CSV formats:
 //   teams.csv:
-//     id,name,abbrev,division,color,logo_url[,w,l,t][,gamechanger_url]
-//     (w/l/t are OPTIONAL and only for stats-off tenants whose source
+//     id,name,abbrev,division,color,logo_url[,age_group][,w,l,t]
+//       [,gamechanger_url][,organization][,demo]
+//     (organization is the town / club a team belongs to — the Scores tab
+//      groups on it and the per-town commissioner passwords are gated on it,
+//      so spell it identically on every team from one town. Column absent →
+//      the field is left alone; present but blank → cleared.
+//      demo=true marks a placeholder row so "Remove sample season" in the
+//      admin can find it later; anything else leaves the field alone.
+//      w/l/t are OPTIONAL and only for stats-off tenants whose source
 //      site publishes official records that can't be recomputed from
 //      the games — e.g. leagues with crossover games that count in no
 //      division's standings. /standings reads these when the tenant sets
@@ -30,6 +37,7 @@
 //
 //   schedule.csv:
 //     id,date,time,field,away_team_id,home_team_id,week,division
+//       [,status,away_score,home_score][,demo]
 //     (date is ISO yyyy-mm-dd, time is 24h "HH:MM"; we combine into
 //      ISO datetime with the local TZ unless the date is already
 //      datetime form)
@@ -391,6 +399,25 @@ function stageTeams(): StageResult {
           if (!raw) return null;
           return /^https?:\/\//i.test(raw) ? raw : null;
         })(),
+        // Town / club. Column absent → leave the field alone (merge keeps
+        // whatever registration or the admin wrote); present but blank →
+        // clear it. The Scores tab and the commissioner passwords compare
+        // this string, so it gets the same cleanName the admin API applies.
+        ...((r as Record<string, string | undefined>).organization !==
+        undefined
+          ? {
+              organization: (r as Record<string, string>).organization
+                ? cleanName((r as Record<string, string>).organization)
+                : null,
+            }
+          : {}),
+        // Placeholder-season marker. Only ever set, never cleared here: the
+        // admin's "Remove sample season" deletes these docs outright.
+        ...(String((r as Record<string, unknown>).demo ?? "")
+          .trim()
+          .toLowerCase() === "true"
+          ? { demo: true }
+          : {}),
         active: true,
         updated_at: new Date().toISOString(),
       },
@@ -626,6 +653,12 @@ function stageSchedule(): StageResult {
         status,
         away_score: awayScoreNum ?? 0,
         home_score: homeScoreNum ?? 0,
+        // Same placeholder marker as teams.csv (see stageTeams).
+        ...(String((r as Record<string, unknown>).demo ?? "")
+          .trim()
+          .toLowerCase() === "true"
+          ? { demo: true }
+          : {}),
         updated_at: new Date().toISOString(),
       },
       // Plain upcoming row — no status or score in the CSV. run() will hold this

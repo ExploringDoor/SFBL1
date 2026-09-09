@@ -22,6 +22,28 @@
 // the browser but every mutation posts to an /api/admin-* route, so the
 // firestore.rules change that accompanies this only relaxes READS, and only on
 // the two collections these roles actually need. Writes stay full-admin.
+//
+// CONFIG-DEFINED ROLES AND TOWNS (2026-09-09, ETBL). East Texas Basketball is
+// run by one commissioner per town, and each needs a password that enters
+// scores for THEIR town's games and nothing else. Two additions:
+//
+//   1. A role the table below does not know can still be configured on the
+//      league doc with its own `scopes` list (see resolveConfiguredRole).
+//      /api/public-admin-claim expands those scopes into the token once, at
+//      mint time — the same trust the Firestore rules already place in
+//      `admin_scopes` — and accessFromClaim reads them back ONLY when the
+//      token's `admin_role` names that very claim. A static role in the table
+//      always wins over the token: Island's assistant keeps exactly what the
+//      table says however her token was minted.
+//   2. A role may carry a `town`. It travels as `admin_town` and is
+//      intersected with TOWN_SCOPES: a town can narrow a role, never widen it,
+//      because only the routes listed under TOWN_SCOPES know to check it. The
+//      check itself lives in lib/admin-town.ts (server) and the routes that
+//      write scores. Rules never read admin_town.
+//
+// One consequence worth naming: /api/recalc accepts the "scores" scope, so a
+// commissioner can trigger a league-wide stat recalc. It is idempotent and the
+// batch score endpoint already runs it after every save, so that is fine.
 
 /** A unit of admin access. Deliberately matches the admin page's tab keys, so
  *  the tab strip and the API gates cannot describe different things. */
@@ -34,7 +56,11 @@ export type AdminScope =
   | "broadcast"
   | "teams"
   | "fields"
-  | "rules";
+  | "rules"
+  // The game-day job board (clock, scorebook, snack bar). Opened for full
+  // admins and for the town commissioner role; the routes that write shifts
+  // check this scope.
+  | "volunteers";
 
 export const ALL_SCOPES: readonly AdminScope[] = [
   "umpires",
@@ -46,7 +72,22 @@ export const ALL_SCOPES: readonly AdminScope[] = [
   "teams",
   "fields",
   "rules",
+  "volunteers",
 ] as const;
+
+/** The scopes whose routes enforce `admin_town`. A town-bound role is
+ *  intersected with this list at mint time and again on every read, so adding
+ *  a scope here is a deliberate one-word widening — and the route for that
+ *  scope MUST call checkGamesInTown (or its equivalent) first, or the town
+ *  binding means nothing there. */
+export const TOWN_SCOPES: readonly AdminScope[] = ["scores", "volunteers"];
+
+/** Role ids are interpolated into a Firestore rules regex
+ *  (`^admin:[a-z-]+$` in firestore.rules), so they are pinned to the same
+ *  alphabet here. `Mineola`, `mineola2` and `big_sandy` are all refused. */
+export const ROLE_ID_RE = /^[a-z][a-z-]{0,31}$/;
+
+const TOWN_MAX = 60;
 
 /** The roles a league can hand out, and what each opens.
  *
@@ -115,9 +156,102 @@ export interface AdminAccess {
   scopes: Set<AdminScope>;
   /** Role id, for the audit log and the admin header. Null for a full admin. */
   roleId: string | null;
+  /** The town this role is bound to, or null. Only the routes behind
+   *  TOWN_SCOPES act on it; everything else ignores it. */
+  town: string | null;
 }
 
-const NONE: AdminAccess = { full: false, scopes: new Set(), roleId: null };
+const NONE: AdminAccess = {
+  full: false,
+  scopes: new Set(),
+  roleId: null,
+  town: null,
+};
+
+/** Normalise a town / organization string for comparison. Both sides of
+ *  every town check go through this, so "Mineola", " mineola " and "MINEOLA"
+ *  are one town — the same rule the schedule generator uses for clubs. */
+export function townKey(v: unknown): string {
+  return String(v ?? "")
+    .trim()
+    .toLowerCase();
+}
+
+/** Is a team whose `organization` is `teamOrganization` in `town`? A blank on
+ *  either side is a no: a team nobody assigned belongs to nobody. */
+export function teamInTown(teamOrganization: unknown, town: unknown): boolean {
+  const k = townKey(town);
+  return k !== "" && townKey(teamOrganization) === k;
+}
+
+function validTown(v: unknown): string | null {
+  if (typeof v !== "string") return null;
+  const t = v.trim();
+  return t.length >= 1 && t.length <= TOWN_MAX ? t : null;
+}
+
+function filterScopes(v: unknown): AdminScope[] {
+  if (!Array.isArray(v)) return [];
+  const known = new Set<string>(ALL_SCOPES);
+  const out: AdminScope[] = [];
+  for (const s of v) {
+    if (typeof s === "string" && known.has(s) && !out.includes(s as AdminScope)) {
+      out.push(s as AdminScope);
+    }
+  }
+  return out;
+}
+
+function narrowToTown(scopes: AdminScope[], town: string | null): AdminScope[] {
+  return town ? scopes.filter((s) => TOWN_SCOPES.includes(s)) : scopes;
+}
+
+/** What a configured role resolves to, before any token exists. */
+export interface ResolvedRole {
+  scopes: AdminScope[];
+  town: string | null;
+}
+
+/**
+ * Resolve one entry of `leagues/{id}.admin.roles` into the scopes and town it
+ * grants, or null if it grants nothing and must not be minted.
+ *
+ *   roles: {
+ *     umpires:  { password: "…" },                                   // table role
+ *     mineola:  { password: "…", scopes: ["scores"], town: "Mineola" } // config role
+ *   }
+ *
+ * Precedence: an id the table knows takes the table's scopes and ignores
+ * `cfg.scopes`; an unknown id needs a non-empty `cfg.scopes` of real scope
+ * names. A `town`, on either kind, narrows the scopes to TOWN_SCOPES. A town
+ * that is present but unusable (not a string, blank, too long) makes the whole
+ * role unmintable rather than quietly minting it town-less.
+ */
+export function resolveConfiguredRole(
+  roleId: string,
+  cfg: unknown,
+): ResolvedRole | null {
+  if (!ROLE_ID_RE.test(roleId)) return null;
+  const c = (cfg && typeof cfg === "object" ? cfg : {}) as {
+    scopes?: unknown;
+    town?: unknown;
+  };
+  const townGiven = c.town !== undefined && c.town !== null && c.town !== "";
+  const town = validTown(c.town);
+  if (townGiven && town === null) return null;
+
+  const table = ADMIN_ROLES[roleId];
+  let scopes: AdminScope[];
+  if (table) {
+    scopes = [...table.scopes];
+  } else {
+    scopes = filterScopes(c.scopes);
+    if (scopes.length === 0) return null;
+  }
+  scopes = narrowToTown(scopes, town);
+  if (scopes.length === 0) return null;
+  return { scopes, town };
+}
 
 /**
  * Read a league claim value into an access decision.
@@ -126,16 +260,35 @@ const NONE: AdminAccess = { full: false, scopes: new Set(), roleId: null };
  *   "admin"            → everything, as before
  *   "admin:<roleId>"   → the scopes that role declares
  * Anything else, including a captain claim, gets no admin access at all.
+ *
+ * `token` is the rest of the decoded token. It is consulted for two things
+ * only: `admin_town` (any scoped role), and `admin_scopes` for a role the
+ * table does not know — and then only when `admin_role` names this claim's
+ * role, so scopes minted for one role can never be read as another's.
  */
-export function accessFromClaim(claim: unknown): AdminAccess {
+export function accessFromClaim(
+  claim: unknown,
+  token?: Record<string, unknown> | null,
+): AdminAccess {
   if (claim === "admin") {
-    return { full: true, scopes: new Set(ALL_SCOPES), roleId: null };
+    return { full: true, scopes: new Set(ALL_SCOPES), roleId: null, town: null };
   }
   if (typeof claim !== "string" || !claim.startsWith("admin:")) return NONE;
   const roleId = claim.slice("admin:".length);
-  const role = ADMIN_ROLES[roleId];
-  if (!role) return NONE;
-  return { full: false, scopes: new Set(role.scopes), roleId };
+  const town = validTown(token?.admin_town);
+
+  const table = ADMIN_ROLES[roleId];
+  let scopes: AdminScope[];
+  if (table) {
+    scopes = [...table.scopes];
+  } else {
+    if (!token || token.admin_role !== roleId) return NONE;
+    scopes = filterScopes(token.admin_scopes);
+    if (scopes.length === 0) return NONE;
+  }
+  scopes = narrowToTown(scopes, town);
+  if (scopes.length === 0) return NONE;
+  return { full: false, scopes: new Set(scopes), roleId, town };
 }
 
 /** Pull the claim for one league out of a decoded Firebase token. */
@@ -147,7 +300,7 @@ export function accessFor(
   leagueId: string,
 ): AdminAccess {
   const leagues = (decodedToken?.leagues ?? {}) as Record<string, unknown>;
-  return accessFromClaim(leagues[leagueId]);
+  return accessFromClaim(leagues[leagueId], decodedToken);
 }
 
 /**

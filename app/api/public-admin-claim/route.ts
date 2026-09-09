@@ -17,7 +17,11 @@
 // limit + every successful sign-in writes an audit log entry.
 
 import { NextResponse } from "next/server";
-import { ADMIN_ROLES } from "@/lib/admin-roles";
+import {
+  ROLE_ID_RE,
+  resolveConfiguredRole,
+  type ResolvedRole,
+} from "@/lib/admin-roles";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 
 export const runtime = "nodejs";
@@ -136,12 +140,21 @@ export async function POST(req: Request) {
   // SCOPED ROLES. A league can hand out extra passwords that open only part of
   // the admin, configured at leagues/{id}.admin.roles:
   //
-  //   admin: { roles: { umpires: { password: "..." }, scheduler: { ... } } }
+  //   admin: { roles: {
+  //     umpires:   { password: "..." },                                    // table role
+  //     scheduler: { password: "..." },
+  //     mineola:   { password: "...", scopes: ["scores"], town: "Mineola" } // config role
+  //   } }
   //
   // Island 2026-09-01: Mike wanted his umpire in chief to "see umpire stuff"
   // and his assistant to run schedules, scores and coach messages, without
   // either of them getting the Payments tab, every coach's sign-in code, or
   // the clinic families' details.
+  //
+  // ETBL 2026-09-09: seven town commissioners, each entering scores for their
+  // own town's games. Those roles are not in the code's table; the league doc
+  // declares their scopes and town, and resolveConfiguredRole decides what
+  // (if anything) such an entry may open. A town always narrows.
   //
   // THE FULL PASSWORD IS TRIED FIRST and wins on a tie, so no role password
   // can ever shadow the owner's. Every candidate is compared with the same
@@ -150,20 +163,28 @@ export async function POST(req: Request) {
   //
   // What each role opens lives in lib/admin-roles.ts, not here. This route
   // only decides WHICH role the caller proved they hold.
-  const roleCfg = (adminCfg.roles ?? {}) as Record<
-    string,
-    { password?: unknown } | undefined
-  >;
+  const roleCfg = (adminCfg.roles ?? {}) as Record<string, unknown>;
   let matchedRole: string | null = null;
+  let matchedResolved: ResolvedRole | null = null;
   let matched = await safeEqual(password, storedPassword);
   if (!matched) {
     for (const [roleId, cfg] of Object.entries(roleCfg)) {
-      const pw = cfg?.password;
+      const pw = (cfg as { password?: unknown } | undefined)?.password;
       if (typeof pw !== "string" || !pw) continue;
-      if (!ADMIN_ROLES[roleId]) continue; // configured but unknown to the code
+      if (!ROLE_ID_RE.test(roleId)) {
+        // The id ends up inside a Firestore rules regex. Refuse to mint it
+        // rather than mint something the rules will not recognise.
+        console.warn(
+          `[public-admin-claim] ${leagueId}: skipping role "${roleId}" — ids must match ${ROLE_ID_RE}`,
+        );
+        continue;
+      }
+      const resolved = resolveConfiguredRole(roleId, cfg);
+      if (!resolved) continue; // configured but grants nothing the code knows
       if (await safeEqual(password, pw)) {
         matched = true;
         matchedRole = roleId;
+        matchedResolved = resolved;
         break;
       }
     }
@@ -201,10 +222,14 @@ export async function POST(req: Request) {
     //
     // So the scopes are expanded HERE, once, at the only place that decides
     // which role a caller holds, and rules match on the list.
-    ...(matchedRole
+    //
+    // admin_town rides along for a town-bound role. Rules never read it; the
+    // score routes do (lib/admin-town.ts).
+    ...(matchedRole && matchedResolved
       ? {
           admin_role: matchedRole,
-          admin_scopes: [...(ADMIN_ROLES[matchedRole]?.scopes ?? [])],
+          admin_scopes: [...matchedResolved.scopes],
+          ...(matchedResolved.town ? { admin_town: matchedResolved.town } : {}),
         }
       : {}),
   };
@@ -219,6 +244,7 @@ export async function POST(req: Request) {
       // Which door they came through. Without this the audit log cannot tell
       // the owner apart from a scoped assistant.
       role: matchedRole ?? "admin",
+      ...(matchedResolved?.town ? { town: matchedResolved.town } : {}),
       ip,
       at: new Date().toISOString(),
     });

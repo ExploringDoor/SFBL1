@@ -9,9 +9,14 @@ import { describe, expect, it } from "vitest";
 import {
   ADMIN_ROLES,
   ALL_SCOPES,
+  TOWN_SCOPES,
+  accessFor,
   accessFromClaim,
   hasScope,
+  resolveConfiguredRole,
   scopedTabKeys,
+  teamInTown,
+  townKey,
 } from "@/lib/admin-roles";
 
 const claim = (leagues: Record<string, string>, scopes?: string[]) => ({
@@ -105,5 +110,164 @@ describe("nothing else gets in", () => {
         expect(known.has(s), `${id} declares unknown scope "${s}"`).toBe(true);
       }
     }
+    for (const s of TOWN_SCOPES) {
+      expect(known.has(s), `TOWN_SCOPES declares unknown scope "${s}"`).toBe(true);
+    }
+  });
+});
+
+// ── ETBL: town commissioners (config-defined roles) ─────────────────────
+//
+// Seven towns, seven passwords, each entering scores for its own games. None
+// of these roles is in ADMIN_ROLES; the league doc declares them and the mint
+// route expands them into the token. These pin that a town can only narrow.
+
+const mineola = {
+  leagues: { etbl: "admin:mineola" },
+  admin_role: "mineola",
+  admin_scopes: ["scores", "volunteers"],
+  admin_town: "Mineola",
+};
+
+describe("a town commissioner (config-defined role)", () => {
+  it("enters scores and posts volunteer shifts, and nothing else", () => {
+    expect(hasScope(mineola, "etbl", "scores")).toBe(true);
+    expect(hasScope(mineola, "etbl", "volunteers")).toBe(true);
+    for (const s of ["schedule", "teams", "umpires", "rules", "fields", "broadcast"] as const) {
+      expect(hasScope(mineola, "etbl", s)).toBe(false);
+    }
+  });
+
+  it("carries its town, and opens exactly its scoped tabs", () => {
+    const a = accessFor(mineola, "etbl");
+    expect(a.full).toBe(false);
+    expect(a.roleId).toBe("mineola");
+    expect(a.town).toBe("Mineola");
+    expect(scopedTabKeys(a)).toEqual(new Set(["scores", "volunteers"]));
+  });
+
+  it("cannot widen itself past the town allowlist, whatever the token says", () => {
+    const greedy = { ...mineola, admin_scopes: ["scores", "schedule", "teams", "rules"] };
+    const a = accessFor(greedy, "etbl");
+    expect([...a.scopes]).toEqual(["scores"]);
+    expect(hasScope(greedy, "etbl", "teams")).toBe(false);
+  });
+
+  it("is only honoured when admin_role names the claimed role", () => {
+    // Scopes minted for Quitman's password must not be readable as Mineola's.
+    const swapped = { ...mineola, admin_role: "quitman" };
+    expect(accessFor(swapped, "etbl").scopes.size).toBe(0);
+    expect(hasScope(swapped, "etbl", "scores")).toBe(false);
+  });
+
+  it("drops unknown scope strings, and grants nothing for an all-unknown list", () => {
+    const typo = { ...mineola, admin_scopes: ["scores", "payments", "everything"] };
+    expect([...accessFor(typo, "etbl").scopes]).toEqual(["scores"]);
+    const junk = { ...mineola, admin_scopes: ["payments"] };
+    expect(accessFor(junk, "etbl").scopes.size).toBe(0);
+  });
+
+  it("without a town is still a config role, with exactly its declared scopes", () => {
+    const { admin_town: _t, ...noTown } = mineola;
+    const a = accessFor(noTown, "etbl");
+    expect(a.town).toBeNull();
+    expect([...a.scopes]).toEqual(["scores", "volunteers"]);
+  });
+
+  it("does not exist for a league claim that names no admin_role at all", () => {
+    expect(accessFromClaim("admin:mineola").scopes.size).toBe(0);
+    expect(accessFromClaim("admin:mineola", { admin_scopes: ["scores"] }).scopes.size).toBe(0);
+  });
+});
+
+describe("the table roles are unchanged by the token", () => {
+  it("a static role ignores admin_scopes in the token", () => {
+    const tok = { leagues: { island: "admin:umpires" }, admin_role: "umpires", admin_scopes: ["scores"] };
+    expect([...accessFor(tok, "island").scopes]).toEqual(["umpires"]);
+    expect(hasScope(tok, "island", "scores")).toBe(false);
+  });
+
+  it("a static role can be town-narrowed but never widened", () => {
+    const tok = { leagues: { island: "admin:scheduler" }, admin_town: "Bay Shore" };
+    const a = accessFor(tok, "island");
+    expect(a.town).toBe("Bay Shore");
+    expect([...a.scopes]).toEqual(["scores"]);
+  });
+
+  it("the full admin ignores admin_town", () => {
+    const tok = { leagues: { etbl: "admin" }, admin_town: "Mineola" };
+    const a = accessFor(tok, "etbl");
+    expect(a.full).toBe(true);
+    expect(a.town).toBeNull();
+    expect(a.scopes.size).toBe(ALL_SCOPES.length);
+  });
+});
+
+describe("resolveConfiguredRole", () => {
+  it("resolves a valid town role", () => {
+    expect(
+      resolveConfiguredRole("mineola", { password: "x", scopes: ["scores"], town: "Mineola" }),
+    ).toEqual({ scopes: ["scores"], town: "Mineola" });
+  });
+
+  it("refuses ids the rules regex would not recognise", () => {
+    for (const bad of ["Mineola", "mineola2", "big_sandy", "", "-x", "a".repeat(33)]) {
+      expect(resolveConfiguredRole(bad, { scopes: ["scores"] }), bad).toBeNull();
+    }
+  });
+
+  it("every accepted id also matches the rules regex once prefixed", () => {
+    for (const ok of ["mineola", "big-sandy", "x", "quitman"]) {
+      expect(resolveConfiguredRole(ok, { scopes: ["scores"] })).not.toBeNull();
+      expect(`admin:${ok}`).toMatch(/^admin:[a-z-]+$/);
+    }
+  });
+
+  it("an unknown id with no usable scopes is unmintable", () => {
+    expect(resolveConfiguredRole("mineola", { password: "x" })).toBeNull();
+    expect(resolveConfiguredRole("mineola", { scopes: [] })).toBeNull();
+    expect(resolveConfiguredRole("mineola", { scopes: ["payments"] })).toBeNull();
+    expect(resolveConfiguredRole("mineola", { scopes: "scores" })).toBeNull();
+  });
+
+  it("a table id takes the table's scopes and ignores cfg.scopes", () => {
+    const r = resolveConfiguredRole("umpires", { password: "x", scopes: ["scores"] });
+    expect(r).toEqual({ scopes: ["umpires"], town: null });
+  });
+
+  it("a town narrows a table role too, and never past TOWN_SCOPES", () => {
+    const r = resolveConfiguredRole("scheduler", { town: "Bay Shore" });
+    expect(r?.town).toBe("Bay Shore");
+    expect(r?.scopes).toEqual(["scores"]);
+    // A town on a role with nothing town-scoped leaves nothing to mint.
+    expect(resolveConfiguredRole("umpires", { town: "Bay Shore" })).toBeNull();
+  });
+
+  it("trims the town and refuses one that is present but unusable", () => {
+    expect(resolveConfiguredRole("mineola", { scopes: ["scores"], town: "  Mineola " })?.town).toBe(
+      "Mineola",
+    );
+    expect(resolveConfiguredRole("mineola", { scopes: ["scores"], town: "x".repeat(61) })).toBeNull();
+    expect(resolveConfiguredRole("mineola", { scopes: ["scores"], town: 42 })).toBeNull();
+    // Absent / null / "" mean "no town", which is a legal config role.
+    expect(resolveConfiguredRole("mineola", { scopes: ["scores"], town: "" })?.town).toBeNull();
+  });
+});
+
+describe("townKey / teamInTown", () => {
+  it("compares towns case- and whitespace-insensitively", () => {
+    expect(townKey(" Mineola ")).toBe("mineola");
+    expect(townKey("MINEOLA")).toBe("mineola");
+    expect(townKey(null)).toBe("");
+    expect(townKey(undefined)).toBe("");
+    expect(teamInTown("  mineola ", "Mineola")).toBe(true);
+    expect(teamInTown("Quitman", "Mineola")).toBe(false);
+  });
+
+  it("a team nobody assigned belongs to nobody", () => {
+    expect(teamInTown(null, "Mineola")).toBe(false);
+    expect(teamInTown("", "Mineola")).toBe(false);
+    expect(teamInTown("", "")).toBe(false);
+    expect(teamInTown("Mineola", "")).toBe(false);
   });
 });

@@ -9,7 +9,8 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
-import { hasScope } from "@/lib/admin-roles";
+import { accessFor, hasScope } from "@/lib/admin-roles";
+import { checkGamesInTown, townForbidden } from "@/lib/admin-town";
 import { invalidateGeneratedRecap } from "@/lib/stats-off-recap";
 
 export const runtime = "nodejs";
@@ -61,6 +62,19 @@ export async function POST(req: Request) {
   const gameId = String(dispute.game_id ?? "");
   const now = new Date().toISOString();
 
+  // TOWN. No town-bound role holds "score-disputes" today (lib/admin-roles
+  // TOWN_SCOPES), so this is unreachable for them — it exists so that widening
+  // TOWN_SCOPES later cannot quietly let a commissioner settle another town's
+  // dispute. Full admins have no town and skip it.
+  const access = accessFor(decoded, leagueId);
+  if (access.town) {
+    if (!gameId) {
+      return NextResponse.json({ error: "dispute has no game" }, { status: 400 });
+    }
+    const r = await checkGamesInTown(db, leagueId, [gameId], access.town);
+    if (r.forbidden.length) return townForbidden(access.town, r.forbidden);
+  }
+
   if (body.action === "dismiss") {
     await dRef.set(
       { status: "dismissed", resolved_at: now, resolved_by: decoded.uid },
@@ -111,6 +125,8 @@ export async function POST(req: Request) {
     kind: "score_dispute_resolved",
     at: now,
     by_uid: decoded.uid,
+    by_role: access.roleId ?? "admin",
+    ...(access.town ? { town: access.town } : {}),
     game_id: gameId,
     home_score: home,
     away_score: away,

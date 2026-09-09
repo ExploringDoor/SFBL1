@@ -12,6 +12,10 @@
 //   4. anonymous is still refused, which the earlier honeypot work established
 //      matters here: the umpire roster carries officials' phones and the dates
 //      they cannot work.
+//   5. a CONFIG-DEFINED role (ETBL's town commissioners, admin:<town> with the
+//      scopes expanded into admin_scopes at mint time) gets exactly the reads
+//      its scopes name and no writes at all — the town binding is enforced by
+//      the score API, so at this layer it must look like nobody for writes.
 
 import { afterAll, beforeAll, beforeEach, describe, it } from "vitest";
 import {
@@ -35,6 +39,15 @@ const SCHEDULER = {
   admin_scopes: ["scores", "schedule", "schedule-gen", "score-disputes", "broadcast"],
 };
 const OWNER = { leagues: { island: "admin" } };
+// A town commissioner. Not in the code's role table; the league doc declared
+// it and /api/public-admin-claim expanded its scopes. admin_town is for the
+// score API only — the rules never read it.
+const TOWN = {
+  leagues: { etbl: "admin:mineola" },
+  admin_role: "mineola",
+  admin_scopes: ["scores", "volunteers"],
+  admin_town: "Mineola",
+};
 
 beforeAll(async () => {
   env = await makeTestEnv("rules-scoped-admin");
@@ -56,6 +69,45 @@ beforeEach(async () => {
       away_score: 4,
       home_score: 3,
     });
+    await setDoc(doc(db, "leagues/etbl/games/g1"), {
+      away_team_id: "t1",
+      home_team_id: "t2",
+      status: "scheduled",
+    });
+    await setDoc(doc(db, "leagues/etbl/box_score_submissions/g1_t1"), {
+      away_score: 30,
+      home_score: 22,
+    });
+    await setDoc(doc(db, "leagues/etbl/umpires/u1"), { name: "Ref Example" });
+    await setDoc(doc(db, "leagues/etbl/audit/a1"), { kind: "score_quick_batch" });
+  });
+});
+
+describe("town commissioner role (config-defined, ETBL)", () => {
+  it("CAN read submitted box scores, which the Scores tab loads", async () => {
+    const c = env.authenticatedContext(uid("mineola"), TOWN);
+    await assertSucceeds(
+      getDoc(doc(c.firestore(), "leagues/etbl/box_score_submissions/g1_t1")),
+    );
+  });
+
+  it("CANNOT write a game score directly — only the API, which checks the town, may", async () => {
+    const db = env.authenticatedContext(uid("mineola"), TOWN).firestore();
+    await assertFails(setDoc(doc(db, "leagues/etbl/games/g1"), { home_score: 40 }));
+    await assertFails(setDoc(doc(db, "leagues/etbl/teams/t1"), { organization: "Quitman" }));
+  });
+
+  it("CANNOT read the umpire roster or the audit log", async () => {
+    const db = env.authenticatedContext(uid("mineola"), TOWN).firestore();
+    await assertFails(getDoc(doc(db, "leagues/etbl/umpires/u1")));
+    await assertFails(getDoc(doc(db, "leagues/etbl/audit/a1")));
+  });
+
+  it("CANNOT read another tenant's submissions", async () => {
+    const c = env.authenticatedContext(uid("mineola-x"), TOWN);
+    await assertFails(
+      getDoc(doc(c.firestore(), "leagues/island/box_score_submissions/g1_team_a")),
+    );
   });
 });
 
