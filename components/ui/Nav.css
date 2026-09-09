@@ -59,6 +59,19 @@ html.nav-sticky body.ticker-hidden .le-nav {
   pointer-events: auto;
   opacity: 1;
 }
+/* INSTALLED WEB APP: let the top bar slide away again, even under
+ * sticky_nav. In standalone the bottom tab bar already carries every
+ * destination, so pinning the top bar buys nothing and costs ~62px of a
+ * screen that has no browser chrome to spare. Adam, 2026-08-08.
+ *
+ * Scoped to body.has-tabbar, so the browser site keeps the pinned nav the
+ * flag asks for. Beats the nav-sticky rule above on specificity. */
+html.nav-sticky body.has-tabbar.ticker-hidden .le-nav {
+  transform: translateY(-100%);
+  pointer-events: none;
+  opacity: 0;
+}
+
 body.ticker-hidden .le-mob-menu {
   /* Mobile menu was anchored below the nav; with the nav gone, it
    * floats up to fill the space. Hidden when nav is hidden anyway. */
