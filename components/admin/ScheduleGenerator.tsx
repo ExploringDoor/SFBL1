@@ -123,6 +123,8 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
   const [ageGroup, setAgeGroup] = useState("");
   const [division, setDivision] = useState("");
   const [picked, setPicked] = useState<Set<string>>(new Set());
+  // Feedback for the top-up button below the drop-out plan.
+  const [topUpNote, setTopUpNote] = useState<string | null>(null);
 
   // --- when --------------------------------------------------------------
   const [startDate, setStartDate] = useState("");
@@ -312,6 +314,10 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
   useEffect(() => {
     setPicked(new Set(shown.map((t) => t.id)));
     setResult(null);
+    // The top-up note names specific teams and a specific selection. Once the
+    // filter re-picks everything it is describing something that is no longer
+    // on screen, which is worse than saying nothing.
+    setTopUpNote(null);
   }, [shown]);
 
   // Default the game day to whatever weekday the start date is.
@@ -550,6 +556,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
     setBusy(true);
     setError(null);
     setDropPlan(null);
+    setTopUpNote(null);
     try {
       const d = await post({ action: "remove_team", teamId, dryRun: true });
       setDropPlan({
@@ -580,6 +587,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
       const d = await post({ action: "remove_team", teamId, dryRun: false });
       setDone(`Removed ${d.removed} games. The rest of the schedule is untouched.`);
       setDropPlan(null);
+    setTopUpNote(null);
       setDropTeam("");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not remove those games");
@@ -1667,6 +1675,8 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
               onChange={(e) => {
                 setDropTeam(e.target.value);
                 setDropPlan(null);
+                setTopUpNote(null);
+    setTopUpNote(null);
               }}
             >
               <option value="">— Pick the team that left —</option>
@@ -1705,14 +1715,46 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
                 )}
               </p>
               {dropPlan.opponents.length > 0 && (
-                <p style={{ margin: "0 0 6px" }}>
-                  These teams end up a game short:{" "}
-                  {dropPlan.opponents
-                    .map((o) => `${nameOf(o.id)} (${o.games})`)
-                    .join(", ")}
-                  . Build a short top-up run for just those teams if you want them
-                  back to a full card.
-                </p>
+                <>
+                  <p style={{ margin: "0 0 6px" }}>
+                    These teams end up a game short:{" "}
+                    {dropPlan.opponents
+                      .map((o) => `${nameOf(o.id)} (${o.games})`)
+                      .join(", ")}
+                    .
+                  </p>
+                  {/* This used to end "Build a short top-up run for just those
+                      teams if you want them back to a full card", which is
+                      advice with no button behind it: the admin had to work out
+                      that it meant unticking every other team and setting
+                      games-per-team to 1. Adam flagged it 2026-09-09. Now it
+                      does that itself and leaves the build one click away. */}
+                  <button
+                    type="button"
+                    style={{ ...BTN, marginBottom: 8 }}
+                    disabled={busy}
+                    onClick={() => {
+                      const want = dropPlan.opponents.map((o) => o.id);
+                      const here = new Set(shown.map((t) => t.id));
+                      const missing = want.filter((id) => !here.has(id));
+                      setPicked(new Set(want.filter((id) => here.has(id))));
+                      setGamesPerTeam(1);
+                      setResult(null);
+                      setTopUpNote(
+                        missing.length > 0
+                          ? `Selected ${want.length - missing.length} of them. ${missing
+                              .map(nameOf)
+                              .join(", ")} ${missing.length === 1 ? "is" : "are"} outside the current age/division filter, so clear the filter and press this again to include ${missing.length === 1 ? "it" : "them"}.`
+                          : `${want.length} teams selected, one game each. Press Build schedule when you are ready.`,
+                      );
+                    }}
+                  >
+                    Set up a top-up run for those {dropPlan.opponents.length} teams
+                  </button>
+                  {topUpNote && (
+                    <p style={{ margin: "0 0 6px", color: "var(--muted)" }}>{topUpNote}</p>
+                  )}
+                </>
               )}
               <button
                 type="button"
