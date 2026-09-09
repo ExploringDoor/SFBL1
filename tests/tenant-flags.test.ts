@@ -12,6 +12,7 @@ const FLAGS: Record<string, { stats_enabled?: boolean } | undefined> = {
   lcybl: { stats_enabled: false },
   windmill: { stats_enabled: false },
   helena: { stats_enabled: false },
+  etbl: { stats_enabled: false },
   // Stats on. No stats_enabled key at all, which must read as "on".
   sfbl: undefined,
   lbdc: undefined,

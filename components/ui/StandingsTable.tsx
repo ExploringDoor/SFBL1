@@ -47,6 +47,10 @@ export interface StandingsTableProps {
   /** Highlight this team's row (full variant) — used on the team page's
    *  division-standings tab to mark the team you're viewing. */
   highlightTeamId?: string;
+  /** Header labels for the for / against / differential columns. Default
+   *  RS / RA / DIFF; a basketball tenant passes PF / PA / DIFF (see
+   *  lib/sport-labels). The row fields stay rs / ra / rd whatever the sport. */
+  scoreLabels?: { for: string; against: string; diff: string };
 }
 
 export function StandingsTable({
@@ -57,6 +61,7 @@ export function StandingsTable({
   showExtras = true,
   showRecentForm = true,
   highlightTeamId,
+  scoreLabels = { for: "RS", against: "RA", diff: "DIFF" },
 }: StandingsTableProps) {
   const multi = groups.length > 1;
   // Hide T / RS / RA / DIFF columns unless someone actually has data
@@ -163,9 +168,9 @@ export function StandingsTable({
                 <th>GP</th>
                 {showRunsCols && (
                   <>
-                    <th>RS</th>
-                    <th>RA</th>
-                    <th>DIFF</th>
+                    <th>{scoreLabels.for}</th>
+                    <th>{scoreLabels.against}</th>
+                    <th>{scoreLabels.diff}</th>
                   </>
                 )}
                 {showStreak && <th>STRK</th>}

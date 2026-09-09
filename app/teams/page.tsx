@@ -260,7 +260,10 @@ export default async function TeamsPage() {
 
   return (
     <main className="container py-10">
-    <DemoDataBanner show={config?.flags?.demo_data === true} />
+    <DemoDataBanner
+      show={config?.flags?.demo_data === true}
+      note={config?.demo_note}
+    />
       {!config?.flags?.hide_page_titles && (
         <header className="mb-8">
           <h1 className="font-display" style={{ fontSize: "clamp(40px, 6vw, 64px)" }}>

@@ -20,6 +20,7 @@ import {
   seedStandingsWithAllTeams,
 } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
+import { scoreLabels } from "@/lib/sport-labels";
 import {
   StandingsTable,
   type DivisionGroup,
@@ -78,7 +79,10 @@ export default async function StandingsPage() {
 
   return (
     <main className="container py-10">
-    <DemoDataBanner show={config?.flags?.demo_data === true} />
+    <DemoDataBanner
+      show={config?.flags?.demo_data === true}
+      note={config?.demo_note}
+    />
       <header className="mb-8">
         <p
           className="font-barlow"
@@ -234,6 +238,7 @@ export default async function StandingsPage() {
                 variant="full"
                 showExtras={!storedRecordsMode}
                 showRecentForm={false}
+                scoreLabels={scoreLabels(config?.sport)}
               />
             </section>
           ))}
@@ -246,6 +251,7 @@ export default async function StandingsPage() {
           variant="full"
           showExtras={!storedRecordsMode}
           showRecentForm={config?.abbrev !== "SFBL" && tenantId !== "sfbl"}
+          scoreLabels={scoreLabels(config?.sport)}
         />
       )}
 

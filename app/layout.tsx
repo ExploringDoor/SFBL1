@@ -30,6 +30,7 @@ import "./fx.css";
 import "./island-theme.css";
 import { ClinicPopup } from "@/components/ui/ClinicPopup";
 import { clinicIsOver } from "@/lib/clinic";
+import { sportNoun } from "@/lib/sport-labels";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -108,7 +109,7 @@ export async function generateMetadata(): Promise<Metadata> {
     };
     const name = cfg.name ?? "League";
     const abbrev = cfg.abbrev;
-    const sport = cfg.sport === "softball" ? "softball" : "baseball";
+    const sport = sportNoun(cfg.sport);
     // Stats-off leagues (Island) publish no player stats — saying "stats" in
     // the meta description advertises something the site doesn't have.
     const statsOff = cfg.flags?.stats_enabled === false;

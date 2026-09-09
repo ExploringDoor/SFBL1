@@ -35,7 +35,7 @@ beforeEach(async () => {
   );
 });
 
-async function seedLeague(sport: "softball" | "baseball") {
+async function seedLeague(sport: "softball" | "baseball" | "basketball") {
   await db.doc("leagues/sfbl").set({ slug: "sfbl", sport, name: "Test League" });
 }
 
@@ -260,6 +260,31 @@ describe("recalcLeague — baseball", () => {
     });
     const result = await recalcLeague(db, "sfbl");
     expect(result.pitchers_written).toBe(0);
+  });
+});
+
+describe("recalcLeague — basketball (score-only)", () => {
+  beforeEach(() => seedLeague("basketball"));
+
+  // A basketball league has no batting or pitching to aggregate. It must
+  // neither throw (captain-submit and admin-score-quick call recalc after
+  // every score) nor invent player stats from a stray box-score doc.
+  it("does not throw and writes nothing, even with box scores present", async () => {
+    await seedBoxScore("g1", {
+      away_lineup: [{ player_id: "p1", ab: 4, h: 2 }],
+      home_lineup: [],
+    });
+    const result = await recalcLeague(db, "sfbl");
+    expect(result).toMatchObject({
+      sport: "basketball",
+      box_scores_read: 0,
+      players_aggregated: 0,
+      players_written: 0,
+      pitchers_written: 0,
+      flagged_lines: [],
+    });
+    const p1 = await db.doc("leagues/sfbl/players/p1").get();
+    expect(p1.exists).toBe(false);
   });
 });
 

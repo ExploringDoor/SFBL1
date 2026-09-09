@@ -438,8 +438,27 @@ export async function POST(req: Request) {
     // writes at LBDC's 1100 players / 200+ box scores). Fine at 1-2
     // tenants; gets expensive at 5+. Move to the standings Cloud
     // Function / incremental aggregate per PLAN.md §10 before scaling.
-    const result = await recalcLeague(db, leagueId);
-    return NextResponse.json({ ok: true, recalc: result });
+    //
+    // Non-fatal: the score is already persisted by this point, so a recalc
+    // failure (bad stat data, or a sport with no box-score math) must not
+    // turn into "Submit failed" for a coach whose score just saved. Mirrors
+    // safeRecalc in admin-score-quick.
+    let result: Awaited<ReturnType<typeof recalcLeague>> | null = null;
+    let statsWarning: string | undefined;
+    try {
+      result = await recalcLeague(db, leagueId);
+    } catch (e) {
+      console.error(
+        "[api/captain-submit] recalc failed (score already saved):",
+        e,
+      );
+      statsWarning = e instanceof Error ? e.message : "stat recalc failed";
+    }
+    return NextResponse.json({
+      ok: true,
+      recalc: result,
+      ...(statsWarning ? { statsWarning } : {}),
+    });
   } catch (err) {
     console.error("[api/captain-submit] failed:", err);
     return NextResponse.json(

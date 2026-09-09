@@ -1,8 +1,13 @@
 // Tenant config schema. Mirrors the shape in PLAN.md §2 + §3 + §5 + §7.
 // One doc per league at /leagues/{slug}. Read on every request via middleware.
 
-export type Sport = "softball" | "baseball";
-export type Ruleset = "hardball" | "slowpitch" | "fastpitch";
+// Basketball is score-only: standings come from games/{away,home}_score and
+// no box-score math exists for it (lib/stats returns early). A basketball
+// tenant runs with flags.stats_enabled:false, the same profile as the youth
+// baseball leagues, and supplies inert values for the innings/pitching fields
+// the type still requires.
+export type Sport = "softball" | "baseball" | "basketball";
+export type Ruleset = "hardball" | "slowpitch" | "fastpitch" | "basketball";
 export type BillingStatus = "active" | "lapsed" | "trial" | "comp";
 
 export interface LeagueTheme {
@@ -196,6 +201,10 @@ export interface LeagueConfig {
   /** Overrides the month-derived season heading ("Fall 2026"). Needed by any
    *  league whose registration month and playing season disagree. */
   season_label?: string;
+  /** Sentence shown after "Sample data." in the demo banner while
+   *  flags.demo_data is on. The banner's default copy names Island's season
+   *  dates; any other tenant running on placeholder data sets its own. */
+  demo_note?: string;
   /** Elfsight widget ids for the social feed boxes. See SocialFeeds.tsx. */
   social_widgets?: { instagram?: string; facebook?: string; tiktok?: string };
 

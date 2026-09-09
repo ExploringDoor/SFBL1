@@ -211,7 +211,10 @@ export default async function SchedulePage({
 
   return (
     <main className={"container py-10" + (lmllStyle ? " le-lmll-sb" : "")}>
-    <DemoDataBanner show={config?.flags?.demo_data === true} />
+    <DemoDataBanner
+      show={config?.flags?.demo_data === true}
+      note={config?.demo_note}
+    />
       <header className="mb-6 flex items-end justify-between gap-4 flex-wrap">
         {!config?.flags?.hide_page_titles && !lmllStyle ? (
           <div>

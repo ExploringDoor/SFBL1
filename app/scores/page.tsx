@@ -14,6 +14,7 @@ import { computeStandings, type GameResult,
   computeStandingsWithExtraGameRule,
 } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
+import { scoreUnit } from "@/lib/sport-labels";
 import { ScoresScheduleTabs, WeekRow } from "./tabs-and-weeks";
 import { DivisionFilter } from "@/components/ui/DivisionFilter";
 import { AgeFilter } from "@/components/ui/AgeFilter";
@@ -188,7 +189,10 @@ export default async function ScoresPage({
 
   return (
     <main className={"container py-10" + (lmllStyle ? " le-lmll-sb" : "")}>
-    <DemoDataBanner show={config?.flags?.demo_data === true} />
+    <DemoDataBanner
+      show={config?.flags?.demo_data === true}
+      note={config?.demo_note}
+    />
       {!config?.flags?.hide_page_titles && !lmllStyle && (
         <header className="mb-6">
           <h1 className="font-display" style={{ fontSize: "clamp(40px, 6vw, 64px)" }}>
@@ -263,7 +267,7 @@ export default async function ScoresPage({
                   {weekSummary.totalRuns}
                 </span>
                 <span className="scores-week-summary-lbl">
-                  Total runs scored
+                  Total {scoreUnit(config?.sport)} scored
                 </span>
               </div>
               {weekSummary.gamesPlayed >= 2 && (

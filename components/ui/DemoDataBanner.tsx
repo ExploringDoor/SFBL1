@@ -14,14 +14,24 @@
 // Driven by the tenant flag `demo_data`, which scripts/seed-demo-season.ts sets
 // when it seeds and clears when it removes. One switch, so the banner cannot
 // outlive the data or vice versa.
+//
+// The sentence after "Sample data." is Island's by default (its season dates
+// are in the copy). A tenant running on placeholder data for a different
+// reason sets `demo_note` on its config and the banner says that instead.
 
-export function DemoDataBanner({ show }: { show: boolean }) {
+export function DemoDataBanner({
+  show,
+  note,
+}: {
+  show: boolean;
+  note?: string;
+}) {
   if (!show) return null;
   return (
     <div className="le-demo-banner" role="status">
-      <strong>Sample data.</strong> These teams and results are examples so you
-      can see how the site works. The Fall 2026 season starts September 12 and
-      real scores replace this then.
+      <strong>Sample data.</strong>{" "}
+      {note?.trim() ||
+        "These teams and results are examples so you can see how the site works. The Fall 2026 season starts September 12 and real scores replace this then."}
     </div>
   );
 }

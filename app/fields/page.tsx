@@ -22,6 +22,8 @@ import { FieldsByClub } from "@/components/FieldsByClub";
 import { FieldsMap } from "@/components/FieldsMap";
 import FieldsWindmill, { type WindmillField } from "@/components/FieldsWindmill";
 import { defaultFieldsFor } from "@/lib/tenant-default-fields";
+import { venueLabels } from "@/lib/sport-labels";
+import type { PublicLeagueConfig } from "@/lib/tenants";
 
 export const dynamic = "force-dynamic";
 
@@ -71,7 +73,20 @@ async function loadFields(tenantId: string): Promise<Field[]> {
 }
 
 export default async function FieldsPage() {
-  const tenantId = headers().get("x-tenant-id");
+  const h = headers();
+  const tenantId = h.get("x-tenant-id");
+  // Only the sport is read here: "Fields" and "diamond" are the wrong words
+  // for a basketball league, whose venues are gyms.
+  const config = (() => {
+    const raw = h.get("x-tenant-config-json");
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as PublicLeagueConfig;
+    } catch {
+      return null;
+    }
+  })();
+  const venue = venueLabels(config?.sport);
   if (!tenantId) {
     return (
       <main className="container py-12">
@@ -124,12 +139,12 @@ export default async function FieldsPage() {
             margin: 0,
           }}
         >
-          Fields
+          {venue.plural}
         </h1>
         <p style={{ marginTop: 8, color: "var(--muted)", maxWidth: 680 }}>
           {fields.length > 0
-            ? "Every diamond the league plays at on one interactive map. Search the list or tap a pin for one-tap driving directions."
-            : "Field locations are posted here once the league adds them."}
+            ? venue.blurb
+            : `${venue.singular} locations are posted here once the league adds them.`}
         </p>
       </header>
 
@@ -146,7 +161,8 @@ export default async function FieldsPage() {
         )
       ) : (
         <p style={{ color: "var(--muted)" }}>
-          No fields have been added yet. Game locations are listed on the{" "}
+          No {venue.plural.toLowerCase()} have been added yet. Game locations
+          are listed on the{" "}
           <Link href="/schedule" style={{ color: "var(--brand-primary)" }}>
             schedule
           </Link>

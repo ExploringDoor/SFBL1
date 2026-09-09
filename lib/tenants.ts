@@ -46,6 +46,9 @@ export interface PublicLeagueConfig {
   // league that registers in August for a September season needs to say
   // "Fall 2026" in August, and no calendar heuristic can know that.
   season_label?: string;
+  // Demo-banner sentence for a tenant on placeholder data. See
+  // LeagueConfig["demo_note"] and components/ui/DemoDataBanner.
+  demo_note?: string;
   /** Elfsight widget ids for the social feed boxes, per network. Config-driven
    *  so a feed can be swapped, added or moved to another provider without a
    *  deploy. Absent = the section does not render at all. */
@@ -116,6 +119,7 @@ export function toPublicConfig(c: LeagueConfig): PublicLeagueConfig {
     tournaments: c.tournaments,
     season_year: c.season_year,
     season_label: c.season_label,
+    demo_note: c.demo_note,
     social_widgets: c.social_widgets,
     power_rankings: c.power_rankings,
     captain: c.captain,

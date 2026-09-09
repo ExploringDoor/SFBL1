@@ -4,7 +4,9 @@
 //   1. Reads /leagues/{id} → discovers sport
 //   2. Reads all box scores under that league
 //   3. Aggregates batting (and pitching for baseball) using the
-//      sport-specific aggregators
+//      sport-specific aggregators. Basketball is score-only — no
+//      box-score math exists for it — so recalc returns a zeroed
+//      result right after step 1 and every caller succeeds unchanged.
 //   4. Writes per-player stats to /leagues/{id}/players/{pid}.stats
 //      with the dirty-check optimization (skip no-op writes)
 //
@@ -15,6 +17,7 @@
 // Function or an admin-page button.
 
 import type { Firestore } from "firebase-admin/firestore";
+import type { Sport } from "@/lib/types";
 
 import {
   aggregateBatting as aggregateBaseballBatting,
@@ -36,7 +39,11 @@ import {
 
 import { battingLineError } from "./validate";
 
-export type Sport = "softball" | "baseball";
+export type { Sport };
+/** Sports with box-score math. Basketball is score-only: recalcLeague
+ *  returns early for it and never reaches the aggregators below, so the
+ *  exhaustiveness checks in this file stay pinned to these two. */
+export type StatSport = Extract<Sport, "softball" | "baseball">;
 
 export interface RecalcResult {
   league_id: string;
@@ -68,12 +75,29 @@ export async function recalcLeague(
     throw new Error(`recalcLeague: league "${leagueId}" not found.`);
   }
   const sport = leagueSnap.get("sport") as Sport | undefined;
+  if (sport === "basketball") {
+    // Score-only sport: standings come straight from games/{away,home}_score
+    // and there is no batting or pitching to aggregate. Return a zeroed
+    // result so every caller (captain-submit, admin-score-quick, /api/recalc)
+    // succeeds exactly as it does for a stats-off baseball tenant.
+    return {
+      league_id: leagueId,
+      sport,
+      box_scores_read: 0,
+      players_aggregated: 0,
+      players_written: 0,
+      pitchers_written: 0,
+      duration_ms: Date.now() - startedAt,
+      flagged_lines: [],
+    };
+  }
   if (sport !== "softball" && sport !== "baseball") {
     throw new Error(
       `recalcLeague: league "${leagueId}" has unknown sport "${sport}". ` +
-        `Expected "softball" or "baseball".`,
+        `Expected "softball", "baseball" or "basketball".`,
     );
   }
+  const statSport: StatSport = sport;
 
   // 2. Read all box scores. Filter to finalized ones — drafts shouldn't
   //    contribute to season stats.
@@ -130,7 +154,7 @@ export async function recalcLeague(
     const away = (data.away_lineup ?? []) as Array<Record<string, unknown>>;
     const home = (data.home_lineup ?? []) as Array<Record<string, unknown>>;
     for (const line of [...away, ...home]) {
-      const bl = toBattingLine(line, sport);
+      const bl = toBattingLine(line, statSport);
       // Guard the H >= 2B+3B+HR invariant. Skipping every line that
       // violates it keeps the per-player AGGREGATE safe too: if every
       // retained line has H_i >= (2B+3B+HR)_i, then summed H covers
@@ -149,7 +173,7 @@ export async function recalcLeague(
       careerBatting.push(bl);
       if (isCurrent) currentBatting.push(bl);
     }
-    if (sport === "baseball") {
+    if (statSport === "baseball") {
       const aw = (data.away_pitchers ?? []) as Array<Record<string, unknown>>;
       const hp = (data.home_pitchers ?? []) as Array<Record<string, unknown>>;
       for (const line of [...aw, ...hp]) {
@@ -164,22 +188,22 @@ export async function recalcLeague(
   function aggBatting(
     lines: Array<SoftballBattingLine | BaseballBattingLine>,
   ): SoftballPlayerStats[] | BaseballBatterStats[] {
-    if (sport === "softball") {
+    if (statSport === "softball") {
       return aggregateSoftballBatting(lines as SoftballBattingLine[]);
     }
-    if (sport === "baseball") {
+    if (statSport === "baseball") {
       return aggregateBaseballBatting(lines as BaseballBattingLine[]);
     }
     // Sport union is exhausted above; this throw exists only so TS
     // can prove the function returns a value on every branch.
-    throw new Error(`unreachable sport variant: ${String(sport)}`);
+    throw new Error(`unreachable sport variant: ${String(statSport)}`);
   }
   const currentBatterStats = aggBatting(currentBatting);
   const careerBatterStats = aggBatting(careerBatting);
   const currentPitcherStats =
-    sport === "baseball" ? aggregatePitching(currentPitching) : [];
+    statSport === "baseball" ? aggregatePitching(currentPitching) : [];
   const careerPitcherStats =
-    sport === "baseball" ? aggregatePitching(careerPitching) : [];
+    statSport === "baseball" ? aggregatePitching(careerPitching) : [];
 
   // 5. Write stats. player.stats / player.pitching = current-season;
   //    player.career_stats / player.career_pitching = all-time. We
@@ -187,7 +211,7 @@ export async function recalcLeague(
   const writes = await writeStats(
     db,
     leagueId,
-    sport,
+    statSport,
     currentBatterStats,
     careerBatterStats,
     currentPitcherStats,
@@ -221,7 +245,7 @@ export async function recalcLeague(
 
 function toBattingLine(
   raw: Record<string, unknown>,
-  sport: Sport,
+  sport: StatSport,
 ): SoftballBattingLine | BaseballBattingLine {
   const base = {
     player_id: String(raw.player_id ?? ""),
@@ -271,7 +295,7 @@ function num(x: unknown): number {
 async function writeStats(
   db: Firestore,
   leagueId: string,
-  sport: Sport,
+  sport: StatSport,
   currentBatters: SoftballPlayerStats[] | BaseballBatterStats[],
   careerBatters: SoftballPlayerStats[] | BaseballBatterStats[],
   currentPitchers: BaseballPitcherStats[],
@@ -438,7 +462,7 @@ async function writeStats(
 function areBatterStatsEqual(
   a: unknown,
   b: SoftballPlayerStats | BaseballBatterStats,
-  sport: Sport,
+  sport: StatSport,
 ): boolean {
   if (sport === "softball") {
     return softballStatsAreEqual(a as SoftballPlayerStats, b as SoftballPlayerStats);
@@ -448,9 +472,11 @@ function areBatterStatsEqual(
   assertNever(sport);
 }
 
-// Exhaustiveness guard. If `Sport` ever grows a third member,
+// Exhaustiveness guard. If `StatSport` ever grows a third member,
 // every if/else-if chain that calls this fails to typecheck —
-// catches sport-variant additions at build time.
+// catches sport-variant additions at build time. (A score-only sport
+// like basketball widens `Sport` but not `StatSport`; it is handled by
+// the early return in recalcLeague, not here.)
 function assertNever(x: never): never {
   throw new Error(`Unhandled sport variant: ${String(x)}`);
 }
