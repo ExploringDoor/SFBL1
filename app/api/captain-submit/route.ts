@@ -439,26 +439,13 @@ export async function POST(req: Request) {
     // tenants; gets expensive at 5+. Move to the standings Cloud
     // Function / incremental aggregate per PLAN.md §10 before scaling.
     //
-    // Non-fatal: the score is already persisted by this point, so a recalc
-    // failure (bad stat data, or a sport with no box-score math) must not
-    // turn into "Submit failed" for a coach whose score just saved. Mirrors
-    // safeRecalc in admin-score-quick.
-    let result: Awaited<ReturnType<typeof recalcLeague>> | null = null;
-    let statsWarning: string | undefined;
-    try {
-      result = await recalcLeague(db, leagueId);
-    } catch (e) {
-      console.error(
-        "[api/captain-submit] recalc failed (score already saved):",
-        e,
-      );
-      statsWarning = e instanceof Error ? e.message : "stat recalc failed";
-    }
-    return NextResponse.json({
-      ok: true,
-      recalc: result,
-      ...(statsWarning ? { statsWarning } : {}),
-    });
+    // A recalc failure is deliberately NOT swallowed here (see the
+    // captain-submit integration test): a captain whose stats did not
+    // update needs to know so they can ping the commissioner. A basketball
+    // tenant never reaches that path — recalcLeague returns early for a
+    // score-only sport rather than throwing.
+    const result = await recalcLeague(db, leagueId);
+    return NextResponse.json({ ok: true, recalc: result });
   } catch (err) {
     console.error("[api/captain-submit] failed:", err);
     return NextResponse.json(
