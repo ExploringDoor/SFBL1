@@ -10,6 +10,7 @@
 import { useMemo, useState } from "react";
 import type { Shift } from "@/lib/volunteer-shifts";
 import { jobOf, jobOrder, openSlots } from "@/lib/volunteer-shifts";
+import { formatTime12 } from "@/lib/format-time";
 
 export function SnackBarBoard({
   tenantId,
@@ -184,9 +185,12 @@ export function SnackBarBoard({
               return (
                 <div key={s.id} className={`le-sb-card${full ? " le-sb-full" : ""}`}>
                   {showJob && <span className="le-sb-job">{jobOf(s)}</span>}
+                  {/* "9:00 AM", not "09:00" — nobody reads a 24-hour clock
+                      at a glance. formatTime12 passes anything it cannot
+                      parse through unchanged. */}
                   <p className="le-sb-time">
-                    {s.start}
-                    {s.end ? `–${s.end}` : ""}
+                    {formatTime12(s.start)}
+                    {s.end ? `–${formatTime12(s.end)}` : ""}
                   </p>
                   {s.game_label && <p className="le-sb-game">{s.game_label}</p>}
                   {s.location && <p className="le-sb-loc">{s.location}</p>}

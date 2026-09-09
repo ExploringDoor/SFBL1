@@ -56,7 +56,15 @@ function townOf(address: string): string {
   return "";
 }
 
-export function FieldsDirectory({ fields }: { fields: Field[] }) {
+export function FieldsDirectory({
+  fields,
+  noun = { singular: "field", plural: "fields" },
+}: {
+  fields: Field[];
+  /** What a venue is called in this league's sport, lower-case: fields for
+   *  baseball and softball, gyms for basketball (lib/sport-labels). */
+  noun?: { singular: string; plural: string };
+}) {
   const [q, setQ] = useState("");
 
   const rows = useMemo(
@@ -123,8 +131,8 @@ export function FieldsDirectory({ fields }: { fields: Field[] }) {
             type="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search a field, town, or team"
-            aria-label="Search fields by name, town, or team"
+            placeholder={`Search a ${noun.singular}, town, or team`}
+            aria-label={`Search ${noun.plural} by name, town, or team`}
             style={{
               width: "100%",
               padding: "11px 14px 11px 38px",
@@ -139,8 +147,8 @@ export function FieldsDirectory({ fields }: { fields: Field[] }) {
         </div>
         <span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600 }}>
           {needle
-            ? `${shown.length} of ${rows.length} fields`
-            : `${rows.length} fields across ${townCount} towns`}
+            ? `${shown.length} of ${rows.length} ${noun.plural}`
+            : `${rows.length} ${noun.plural} across ${townCount} towns`}
         </span>
       </div>
 

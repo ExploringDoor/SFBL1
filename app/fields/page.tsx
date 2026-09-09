@@ -157,7 +157,13 @@ export default async function FieldsPage() {
         ) : clubGrouped ? (
           <FieldsByClub fields={fields} />
         ) : (
-          <FieldsDirectory fields={fields} />
+          <FieldsDirectory
+            fields={fields}
+            noun={{
+              singular: venue.singular.toLowerCase(),
+              plural: venue.plural.toLowerCase(),
+            }}
+          />
         )
       ) : (
         <p style={{ color: "var(--muted)" }}>

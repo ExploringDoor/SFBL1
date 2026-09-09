@@ -341,7 +341,10 @@ export default function AdminPage() {
         </nav>
         {/* More ▾ lives OUTSIDE the scrolling nav so (a) it's always
             visible and (b) its dropdown anchors to the button and isn't
-            clipped by the nav's overflow on mobile. */}
+            clipped by the nav's overflow on mobile. A scoped role (a town
+            commissioner, the umpire in chief) may have nothing in it, and
+            an empty menu reads as broken, so it only renders with contents. */}
+        {moreTabs.length > 0 && (
         <div className="le-admin-more-wrap">
           <button
             type="button"
@@ -384,6 +387,7 @@ export default function AdminPage() {
             </>
           )}
         </div>
+        )}
       </div>
       <style jsx>{`
         .le-admin-tabbar {
