@@ -9,7 +9,7 @@
 
 import { useMemo, useState } from "react";
 import type { Shift } from "@/lib/volunteer-shifts";
-import { openSlots } from "@/lib/volunteer-shifts";
+import { jobOf, jobOrder, openSlots } from "@/lib/volunteer-shifts";
 
 export function SnackBarBoard({
   tenantId,
@@ -26,14 +26,57 @@ export function SnackBarBoard({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
+  const [jobFilter, setJobFilter] = useState("");
+  const [gymFilter, setGymFilter] = useState("");
+
+  // Jobs and gyms on this board. The badge and the two filters only appear
+  // when there is more than one of something to tell apart, so a board with
+  // nothing but snack-bar shifts at one location looks exactly as it did
+  // before jobs existed.
+  const jobs = useMemo(
+    () =>
+      [...new Set(shifts.map(jobOf))].sort(
+        (a, b) => jobOrder(a) - jobOrder(b) || a.localeCompare(b),
+      ),
+    [shifts],
+  );
+  const gyms = useMemo(
+    () =>
+      [...new Set(shifts.map((s) => (s.location ?? "").trim()).filter(Boolean))].sort(
+        (a, b) => a.localeCompare(b),
+      ),
+    [shifts],
+  );
+  const showJob = jobs.length > 1;
+
+  const filtered = useMemo(
+    () =>
+      shifts.filter(
+        (s) =>
+          (!jobFilter || jobOf(s) === jobFilter) &&
+          (!gymFilter || (s.location ?? "").trim() === gymFilter),
+      ),
+    [shifts, jobFilter, gymFilter],
+  );
 
   const byDate = useMemo(() => {
     const m = new Map<string, Shift[]>();
-    for (const s of shifts) m.set(s.date, [...(m.get(s.date) ?? []), s]);
+    for (const s of filtered) m.set(s.date, [...(m.get(s.date) ?? []), s]);
+    // Within a day: start time, then game, then job — so one game's clock,
+    // scorebook and snack-bar cards sit together in that order.
+    for (const list of m.values()) {
+      list.sort(
+        (a, b) =>
+          a.start.localeCompare(b.start) ||
+          (a.game_label ?? "").localeCompare(b.game_label ?? "") ||
+          jobOrder(jobOf(a)) - jobOrder(jobOf(b)) ||
+          jobOf(a).localeCompare(jobOf(b)),
+      );
+    }
     return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-  }, [shifts]);
+  }, [filtered]);
 
-  const totalOpen = shifts.reduce((n, s) => n + openSlots(s), 0);
+  const totalOpen = filtered.reduce((n, s) => n + openSlots(s), 0);
 
   async function claim(shiftId: string) {
     setBusy(true);
@@ -89,8 +132,47 @@ export function SnackBarBoard({
         a volunteer
       </p>
 
+      {(showJob || gyms.length > 1) && (
+        <div className="le-sb-filters">
+          {showJob && (
+            <select
+              value={jobFilter}
+              onChange={(e) => setJobFilter(e.target.value)}
+              aria-label="Filter by job"
+              className="le-sb-select"
+            >
+              <option value="">All jobs</option>
+              {jobs.map((j) => (
+                <option key={j} value={j}>
+                  {j}
+                </option>
+              ))}
+            </select>
+          )}
+          {gyms.length > 1 && (
+            <select
+              value={gymFilter}
+              onChange={(e) => setGymFilter(e.target.value)}
+              aria-label="Filter by location"
+              className="le-sb-select"
+            >
+              <option value="">All locations</option>
+              {gyms.map((g) => (
+                <option key={g} value={g}>
+                  {g}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+      )}
+
       {error && <p className="le-sb-msg le-sb-err">{error}</p>}
       {done && <p className="le-sb-msg le-sb-ok">{done}</p>}
+
+      {byDate.length === 0 && (
+        <p className="le-sb-empty">Nothing matches those filters.</p>
+      )}
 
       {byDate.map(([date, list]) => (
         <section key={date} className="le-sb-day">
@@ -101,10 +183,12 @@ export function SnackBarBoard({
               const full = open === 0;
               return (
                 <div key={s.id} className={`le-sb-card${full ? " le-sb-full" : ""}`}>
+                  {showJob && <span className="le-sb-job">{jobOf(s)}</span>}
                   <p className="le-sb-time">
                     {s.start}
                     {s.end ? `–${s.end}` : ""}
                   </p>
+                  {s.game_label && <p className="le-sb-game">{s.game_label}</p>}
                   {s.location && <p className="le-sb-loc">{s.location}</p>}
                   {s.note && <p className="le-sb-note">{s.note}</p>}
 

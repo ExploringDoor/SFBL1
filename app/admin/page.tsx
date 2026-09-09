@@ -50,6 +50,7 @@ import { PlayerOfWeekManager } from "@/components/admin/PlayerOfWeekManager";
 import { PaymentsAdmin } from "@/components/admin/PaymentsAdmin";
 import { FieldUsage } from "@/components/admin/FieldUsage";
 import { FieldsManager } from "@/components/admin/FieldsManager";
+import { VolunteersManager } from "@/components/admin/VolunteersManager";
 import { AdminPasswordGate } from "@/components/admin/AdminPasswordGate";
 
 type TabKey =
@@ -66,6 +67,7 @@ type TabKey =
   | "captains"
   | "payments"
   | "fields"
+  | "volunteers"
   | "alerts"
   | "broadcast"
   | "news"
@@ -101,6 +103,7 @@ const TABS: { key: TabKey; label: string; description: string }[] = [
   { key: "captains", label: "Captains", description: "Every team's captain: contact, password status, and last login." },
   { key: "payments", label: "Payments", description: "League-wide fee collection — who's paid, per team, with totals." },
   { key: "fields", label: "Fields", description: "Add / edit the league's fields (name + address), and see how many games each has hosted." },
+  { key: "volunteers", label: "Volunteers", description: "Game-day jobs — clock, scorebook, snack bar. Post shifts, generate them from the schedule, and see who signed up." },
   { key: "alerts", label: "Alerts", description: "Publish a homepage banner — weather, registration, deadlines." },
   { key: "broadcast", label: "Send Message", description: "Email + text your alert sign-up list — rainouts, reminders, deadlines." },
   { key: "news", label: "News", description: "From-the-commissioner news & events shown on the homepage." },
@@ -159,6 +162,10 @@ const MORE_TABS = MORE_KEYS.map((k) => TABS.find((t) => t.key === k)).filter(
 const TENANT_ONLY_TABS: Partial<Record<TabKey, string | string[]>> = {
   how_to: ["island", "windmill"],
   tournament_logos: "island",
+  // The public board exists for every tenant, but only these link to it from
+  // their nav, so only they get the tab. Opt-in list, not a flag: a league
+  // that asks for game-day sign-ups gets added here.
+  volunteers: ["etbl", "lcybl"],
 };
 
 // Tabs hidden for a specific tenant — platform features the league never asked
@@ -607,6 +614,9 @@ export default function AdminPage() {
             <FieldsManager leagueId={tenantId} user={user} />
             <FieldUsage leagueId={tenantId} user={user} />
           </div>
+        )}
+        {activeTab === "volunteers" && (
+          <VolunteersManager leagueId={tenantId} user={user} />
         )}
         {activeTab === "news" && (
           <NewsManager leagueId={tenantId} user={user} />
