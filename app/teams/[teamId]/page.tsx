@@ -266,7 +266,10 @@ export default async function TeamDetailPage({
   // has no division structure, fall back to overall position. Only
   // meaningful when games have actually been played — for fresh
   // launches we hide the rank entirely.
-  const hasGames = !!myRow && myRow.w + myRow.l + myRow.t > 0;
+  // The record pill shows as soon as the team has a row, not only once it has
+  // played. Every team is seeded 0-0, so a pre-season page reads "0-0" like
+  // the homepage and /standings rather than "Season starts soon" beside them.
+  const hasGames = !!myRow;
   let divisionRank: { rank: number; total: number } | null = null;
   if (hasGames && division) {
     const divPeers = standings.filter((r) => {
@@ -513,6 +516,34 @@ export default async function TeamDetailPage({
       divisionGroup = {
         division: ageGroup ? `${ageGroup} — ${division}` : division,
         rows: recordsToStandings(divRecords),
+      };
+    }
+  } else if (division) {
+    // STATS-ON leagues had no branch at all here, so every Island team page
+    // has always read "No division standings." — the block only ever worked
+    // for stats-off tenants reading stored records. Build the same group from
+    // the computed standings, which are seeded so every team has a row from
+    // day one and a pre-season page shows 0-0 rather than nothing.
+    const inDivision = new Set<string>();
+    for (const d of teamsSnap.docs) {
+      const data = d.data();
+      if (String(data.division ?? "") !== division) continue;
+      if (String(data.ageGroup ?? "") !== ageGroup) continue;
+      if (data.active === false) continue;
+      inDivision.add(d.id);
+      divTeamMeta[d.id] = {
+        name: String(data.name ?? d.id),
+        abbrev: data.abbrev ? String(data.abbrev) : undefined,
+        color: data.color ? String(data.color) : undefined,
+        logoUrl: teamLogoSrc(tenantId, d.id, data.logo_url),
+        division,
+      };
+    }
+    const rows = standings.filter((r) => inDivision.has(r.team_id));
+    if (rows.length > 0) {
+      divisionGroup = {
+        division: ageGroup ? `${ageGroup} — ${division}` : division,
+        rows,
       };
     }
   }
