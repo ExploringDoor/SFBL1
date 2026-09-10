@@ -6,7 +6,7 @@ First basketball tenant on the platform. `sport: "basketball"` is score-only: st
 
 ## What's REAL
 - League name, abbrev, the contact above, the 96 / 6 / 7 shape, the town count, Mineola as home base, and the league's stated purpose (to prepare kids for middle-school ball, "not a league for coaches to chase rings").
-- The site structure: scores, schedule, teams, gyms, standings, sponsors, volunteers, admin with per-town commissioner passwords.
+- The site structure: scores, schedule, teams, gyms, standings, sponsors, volunteers, sign-ups by town, admin with per-town commissioner passwords, and an optional live scoreboard (Admin → Scores → **Live** on any unplayed game: Q1–Q4/OT, +1/+2/+3, shows on the home page and game page in real time).
 
 ## What's PLACEHOLDER (all marked `demo: true`)
 - **Towns** — only Mineola is real; "Town B" … "Town G" are stand-ins.
