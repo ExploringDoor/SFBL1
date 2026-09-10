@@ -22,6 +22,10 @@ Only games with a team from your town appear. If a game you expect is missing, t
 
 If both towns enter the same game, the last save wins. Talk to the other commissioner before changing a score they entered.
 
+## Live scoring (optional)
+
+Want families following from home to see the score as it happens? On the **Scores** tab, tap **Live** next to an unplayed game to open the scorer's-table page on your phone. Tap **Go LIVE**, then **+1 / +2 / +3** for each basket, **▶** to move to the next period, and **✓ FINAL** at the end — that final score is entered for you. The home page shows a "Live now" strip and the game page updates within a second. If you'd rather just type the final score afterwards, do that instead; both work.
+
 ## Volunteers (clock, scorebook, snack bar)
 
 The **Volunteers** tab manages the sign-up board parents see at `/volunteers`.
