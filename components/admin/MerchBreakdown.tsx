@@ -14,6 +14,7 @@
 // never disagree, including when a filter is applied.
 
 import { useState } from "react";
+import type { User } from "firebase/auth";
 import {
   inWindow,
   methodLabel,
@@ -71,12 +72,70 @@ function Group({ title, rows, note }: { title: string; rows: Tally[]; note?: str
   );
 }
 
-export function MerchBreakdown({ rows: allRows }: { rows: MerchOrderRow[] }) {
+export function MerchBreakdown({
+  rows: allRows,
+  leagueId,
+  user,
+  onChanged,
+}: {
+  rows: MerchOrderRow[];
+  leagueId: string;
+  user: User;
+  onChanged: () => void | Promise<void>;
+}) {
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  /**
+   * Record a Venmo or Zelle order as paid.
+   *
+   * Mike, 2026-09-10: "is there a way to know if Venmo or Zelle went through
+   * on the site without looking at Venmo or Zelle?" No, and there never will
+   * be: Venmo has no API for a personal account and Zelle has none at all.
+   * Somebody who saw the money has to say so, and until now they had no way
+   * to. This is that way.
+   */
+  async function mark(r: MerchOrderRow, action: "paid" | "clear") {
+    setBusyId(r.id);
+    setErr(null);
+    try {
+      const res = await fetch("/api/admin-merch-payment", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${await user.getIdToken()}`,
+        },
+        body: JSON.stringify({
+          leagueId,
+          id: r.id,
+          action,
+          method: String(r.pay_method ?? "venmo").toLowerCase(),
+        }),
+      });
+      const d = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) throw new Error(d.error ?? `HTTP ${res.status}`);
+      await onChanged();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not save that.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   // Defaults to the whole season, because that is the number the office checks
   // stock against. The weekly view is one click away for the field run.
   const [thisWeek, setThisWeek] = useState(false);
   const rows = thisWeek ? inWindow(allRows, lastSaturday6am()) : allRows;
   const s = summarise(rows);
+  // Unpaid AND not a card order. An unpaid card order is an abandoned checkout,
+  // not money somebody owes in Venmo, and ticking it here would record a
+  // payment that never happened.
+  const toCollect = rows.filter(
+    (r) =>
+      r.payment_status !== "paid" &&
+      r.payment?.status !== "paid" &&
+      String(r.pay_method ?? "").toLowerCase() !== "card",
+  );
   if (summarise(allRows).orders === 0) return null;
 
   const csv = () => {
@@ -159,6 +218,46 @@ export function MerchBreakdown({ rows: allRows }: { rows: MerchOrderRow[] }) {
         <Group title="By age" rows={s.byAge} />
         <Group title="By division" rows={s.byDivision} />
       </div>
+
+      {/* MONEY TO COLLECT. The only orders that need a human decision: a card
+          order is settled by Square, and these are promises until somebody who
+          saw the transfer says so. */}
+      {toCollect.length > 0 && (
+        <div className="mt-3 border-t border-slate-200 pt-3">
+          <p className="mb-2 text-sm font-semibold text-slate-900">
+            Money to collect: {toCollect.length} order
+            {toCollect.length === 1 ? "" : "s"}, $
+            {toCollect.reduce((n, r) => n + (Number(r.amount_due ?? 0) || 0), 0)}
+          </p>
+          <p className="mb-2 text-xs text-slate-600">
+            Check Venmo or Zelle for the payment, then tick it here. The site
+            cannot see those transfers on its own.
+          </p>
+          <ul className="divide-y divide-slate-200 rounded-md border border-slate-200 bg-white">
+            {toCollect.map((r) => (
+              <li key={r.id} className="flex flex-wrap items-center gap-2 px-3 py-2 text-sm">
+                <span className="font-semibold text-slate-900">
+                  {r.player_name || r.name || "No name"}
+                </span>
+                <span className="text-slate-600">{r.team_name || "No team"}</span>
+                <span className="text-slate-600">size {r.size}</span>
+                <span className="font-semibold text-amber-700">
+                  ${Number(r.amount_due ?? 0) || 0} by {methodLabel(r)}
+                </span>
+                <button
+                  type="button"
+                  disabled={busyId === r.id}
+                  onClick={() => void mark(r, "paid")}
+                  className="ml-auto rounded-md border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
+                >
+                  {busyId === r.id ? "Saving…" : "Mark paid"}
+                </button>
+              </li>
+            ))}
+          </ul>
+          {err && <p className="mt-2 text-xs font-semibold text-red-700">{err}</p>}
+        </div>
+      )}
     </div>
   );
 }

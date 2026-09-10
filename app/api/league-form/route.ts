@@ -540,6 +540,15 @@ const MAIL_TIMEOUT_MS = 8000;
 // the season. They stay on the fire and forget path below until that can be
 // measured rather than guessed. COYBL's and Island's team registrations are
 // already awaited and recorded in their own branch above.
+/** What the coach picked on the form, in words the office uses. */
+const PAY_LABEL: Record<string, string> = {
+  card: "Card, on the site",
+  venmo: "Venmo",
+  zelle: "Zelle",
+  check: "Check",
+  cash: "Cash",
+};
+
 const MAIL_RECORDED_KINDS = new Set<Kind>([
   "site_feedback",
   "clinic_registration",
@@ -1215,6 +1224,9 @@ export async function POST(req: Request) {
           ageGroup: String(cleaned.age_group ?? ""),
           division: String(cleaned.division ?? ""),
           gamechangerLink: String(cleaned.gamechanger_link ?? ""),
+          // Blank when the coach picked "Not sure yet", and the template
+          // then omits the line rather than printing an empty label.
+          payMethod: PAY_LABEL[String(cleaned.pay_method ?? "")] ?? "",
           insuranceOption: String(cleaned.insurance_option ?? ""),
           usssaAddon: Boolean(cleaned.usssa_addon),
           homeField: String(cleaned.home_field ?? ""),

@@ -360,6 +360,31 @@ const ISLAND_FIELDS: FormField[] = [
   },
   { name: "city", label: "Town", type: "text", width: "half" },
   {
+    // Mike, 2026-09-10, about the store: "is there a way to know if Venmo or
+    // Zelle went through on the site without looking at Venmo or Zelle?"
+    // Nothing can watch a peer-to-peer transfer land, so the next best thing
+    // is knowing what to watch FOR. Asking here means the office email can say
+    // "expect a Venmo from this coach" instead of somebody checking every
+    // transfer against every unpaid team.
+    //
+    // Card and Venmo only, because those are what the payment screen actually
+    // offers for a team fee. Zelle is set up for the STORE, not for
+    // registrations, and offering it here would send a coach looking for a
+    // number the site never shows them.
+    //
+    // Not required: a coach who has not decided should not be blocked over it.
+    name: "pay_method",
+    label: "How do you plan to pay?",
+    type: "select",
+    width: "half",
+    help: "So the office knows what to look out for. You can still change your mind.",
+    options: [
+      { value: "", label: "Not sure yet" },
+      { value: "card", label: "Card, on the site" },
+      { value: "venmo", label: "Venmo" },
+    ],
+  },
+  {
     name: "gamechanger_link",
     label: "GameChanger Team Link (strongly recommended)",
     type: "text",

@@ -79,6 +79,9 @@ export function officeRegistrationEmail(o: {
   ageGroup: string;
   division?: string;
   gamechangerLink?: string;
+  /** How the coach said they intend to pay. Nothing can watch a Venmo land,
+   *  so telling the office what to WATCH FOR is the next best thing. */
+  payMethod?: string;
   insuranceOption?: string;
   usssaAddon?: boolean;
   homeField?: string;
@@ -101,6 +104,9 @@ export function officeRegistrationEmail(o: {
           `${o.usssaAddon ? " (USSSA add-on)" : ""}</p>`
         : "") +
       (o.division ? `<p><strong>League:</strong> ${esc(o.division)}</p>` : "") +
+      (o.payMethod
+        ? `<p><strong>Paying by:</strong> ${esc(o.payMethod)}</p>`
+        : "") +
       (o.gamechangerLink
         ? `<p><strong>GameChanger:</strong> ${esc(o.gamechangerLink)}</p>`
         : "") +

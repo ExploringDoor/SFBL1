@@ -536,7 +536,14 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
                 team, by size and by age, ready for when the store closes.
                 Built from the SAME rows the list below shows, so what the
                 totals say and what the office can see never disagree. */}
-            {kind === "merch_order" && <MerchBreakdown rows={filtered as unknown as MerchOrderRow[]} />}
+            {kind === "merch_order" && (
+              <MerchBreakdown
+                rows={filtered as unknown as MerchOrderRow[]}
+                leagueId={leagueId}
+                user={user}
+                onChanged={fetchItems}
+              />
+            )}
             <ul className="divide-y divide-slate-200 border border-slate-200 rounded-md overflow-hidden">
               {filtered.map((it) => {
                 const st = statusOf(it);
