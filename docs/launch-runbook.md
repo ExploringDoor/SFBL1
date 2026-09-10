@@ -54,7 +54,8 @@ LEAGUEENGINE_APEX_DOMAINS                = leagueengine.com,sfbl.com
 # at the prod service account JSON (NOT emulator)
 GCLOUD_PROJECT=league-platform-5f3c8 \
   FIREBASE_SERVICE_ACCOUNT_PATH=/path/to/prod-sa.json \
-  npm run provision -- --league sfbl
+  npm run provision -- --config data/sfbl/provision.json --dry-run   # read the preview first
+  npm run provision -- --config data/sfbl/provision.json
 ```
 
 - [ ] Provision script reports: 28 teams, 443 players, 136 games, audit clean
@@ -83,7 +84,7 @@ GCLOUD_PROJECT=league-platform-5f3c8 \
 - [ ] Vercel shows the CNAME record to add at Nelson's DNS host
 - [ ] Nelson (or you with his login) adds the records — both apex `A` record and `www` `CNAME`
 - [ ] Wait for SSL cert (~5 min)
-- [ ] **Add a domain mapping doc in Firestore**: `/domains/sfbl.com` → `{ leagueId: "sfbl" }` (the middleware uses this to resolve custom domains to tenants). The provision script does this automatically when `provision.json` includes `customDomain: "sfbl.com"`.
+- [ ] **Map the hostname to the tenant BEFORE the DNS change**: add `sfbl.com` and `www.sfbl.com` to `HOST_ALIAS_BASELINE` in `lib/tenants.ts` (or set `LEAGUEENGINE_HOST_ALIASES=sfbl.com=sfbl,www.sfbl.com=sfbl` on the Vercel project) and deploy. The lines are inert until DNS points at Vercel; adding them afterwards is how Island served "Tenant not found" during its cutover. (The middleware can also resolve a `/domains/{hostname}` → `{ leagueId }` Firestore doc, but nothing writes those automatically — the provision script has no `customDomain` option.)
 
 **Verify:** `curl -I https://sfbl.com` returns 200, NOT a redirect to leagueengine.com.
 
