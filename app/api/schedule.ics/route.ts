@@ -8,7 +8,7 @@
 
 import { getAdminDb } from "@/lib/firebase-admin";
 import { parseHost, resolveTenant } from "@/lib/tenants";
-import { gameStartInstant } from "@/lib/format-time";
+import { formatICalDate, gameStartInstant } from "@/lib/format-time";
 import { leagueTimeZone } from "@/lib/league-time";
 
 export const runtime = "nodejs";
@@ -130,15 +130,6 @@ export async function GET(req: Request) {
       "Cache-Control": "public, max-age=300", // 5 min cache
     },
   });
-}
-
-function formatICalDate(d: Date): string {
-  // YYYYMMDDTHHMMSSZ
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return (
-    `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}` +
-    `T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`
-  );
 }
 
 function escapeText(s: string): string {

@@ -263,3 +263,17 @@ export function floatingToUtc(
   if (Number.isNaN(seen)) return null;
   return new Date(naiveUtc - (seen - naiveUtc));
 }
+
+/** Serialise an instant as an iCalendar UTC stamp: YYYYMMDDTHHMMSSZ.
+ *
+ *  Lives here rather than in the feed route so it can be tested against
+ *  gameStartInstant, which is the pairing that has now been wrong twice: a
+ *  "Z" stamp is an absolute instant, so a wall clock written straight into it
+ *  moves every subscriber's copy of the game by the league's UTC offset. */
+export function formatICalDate(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return (
+    `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}` +
+    `T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`
+  );
+}
