@@ -59,21 +59,27 @@ export function WaiverGate({
       const res = await fetch("/api/league-form", {
         method: "POST",
         headers: { "content-type": "application/json" },
+        // The route wants { kind, data, form_ms }. Sending the fields at the
+        // top level made body.data undefined and every submission came back
+        // "missing data", which is what the Patriots manager hit on
+        // 2026-09-10 within an hour of this shipping. The shape has to match
+        // components/forms/LeagueForm.tsx exactly.
         body: JSON.stringify({
           kind: "team_waiver",
-          leagueId,
-          team_name: teamName,
-          manager_first_name: first.trim(),
-          manager_last_name: last.trim(),
-          email: email.trim(),
-          phone: phone.trim(),
-          season,
-          signature: signature.trim(),
-          signature_date: today,
-          agreed_to_waiver: "yes",
+          data: {
+            team_name: teamName,
+            manager_first_name: first.trim(),
+            manager_last_name: last.trim(),
+            email: email.trim(),
+            phone: phone.trim(),
+            season,
+            signature: signature.trim(),
+            signature_date: today,
+            agreed_to_waiver: "yes",
+          },
           // The timing check flags anything under four seconds as a bot. A
-          // coach reading a waiver takes longer than that, but the value is
-          // sent so the route is not left guessing at a direct POST.
+          // coach reading a waiver takes longer, but the value is sent so the
+          // route is not left guessing at a direct POST.
           form_ms: 10_000,
         }),
       });
