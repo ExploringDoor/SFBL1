@@ -35,6 +35,8 @@ export interface MerchOrderRow {
   email?: string;
   phone?: string;
   created_at?: string;
+  /** Some rows carry this instead; the store has written both over time. */
+  submitted_at?: string;
 }
 
 export interface Tally {
@@ -124,6 +126,47 @@ export interface MerchSummary {
    *  set of fields, and the shirts for it travel together regardless of
    *  whether a team plays Open or C. */
   byAge: Tally[];
+  /** Card, Venmo, Zelle. Mike, 2026-09-10: "It breaks down cc and Venmo or
+   *  Zelle ... so I can give it to my team at the field."
+   *
+   *  Card and the rest are not the same kind of thing and the report must not
+   *  pretend they are. A card order is settled by Square and needs nothing at
+   *  the field. A Venmo or Zelle order is a PROMISE until somebody in the
+   *  office marks it paid, so its shirts are the ones whose money has to be
+   *  chased or collected on the day. */
+  byMethod: Tally[];
+}
+
+const METHOD_ORDER = ["Card", "Venmo", "Zelle", "Cash", "Not given"];
+
+/** How they said they would pay, in words the office uses. */
+export function methodLabel(r: MerchOrderRow): string {
+  const m = String(r.pay_method ?? "").trim().toLowerCase();
+  if (m === "card") return "Card";
+  if (m === "venmo") return "Venmo";
+  if (m === "zelle") return "Zelle";
+  if (m === "cash") return "Cash";
+  return m ? m[0]!.toUpperCase() + m.slice(1) : "Not given";
+}
+
+/**
+ * Orders placed in a window, by the time they were submitted.
+ *
+ * The store runs on a weekly cycle, shut Thursday 4pm and open again Saturday
+ * 6am, so "this week" is the only view that answers "what do I take to the
+ * field on Saturday". Rows with no timestamp are KEPT: an order with a missing
+ * date is far more likely to be an old record than something to hide, and
+ * dropping it silently would lose a real shirt.
+ */
+export function inWindow(
+  rows: MerchOrderRow[],
+  sinceIso: string | null,
+): MerchOrderRow[] {
+  if (!sinceIso) return rows;
+  return rows.filter((r) => {
+    const t = String(r.created_at ?? r.submitted_at ?? "").trim();
+    return !t || t >= sinceIso;
+  });
 }
 
 export function summarise(rows: MerchOrderRow[]): MerchSummary {
@@ -145,6 +188,9 @@ export function summarise(rows: MerchOrderRow[]): MerchSummary {
     byDivision: tallyBy(rows, (r) => String(r.division ?? ""), "No division given"),
     byAge: tallyBy(rows, (r) => ageOf(String(r.division ?? "")), "No age given").sort(
       (a, b) => (ageNum(a.key) - ageNum(b.key)) || a.key.localeCompare(b.key),
+    ),
+    byMethod: tallyBy(rows, (r) => methodLabel(r), "Not given").sort(
+      (a, b) => METHOD_ORDER.indexOf(a.key) - METHOD_ORDER.indexOf(b.key),
     ),
   };
 }

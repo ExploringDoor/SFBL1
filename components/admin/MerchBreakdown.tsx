@@ -13,7 +13,33 @@
 // Built from the rows already on screen, so the totals and the list below can
 // never disagree, including when a filter is applied.
 
-import { summarise, type MerchOrderRow, type Tally } from "@/lib/merch-report";
+import { useState } from "react";
+import {
+  inWindow,
+  methodLabel,
+  summarise,
+  type MerchOrderRow,
+  type Tally,
+} from "@/lib/merch-report";
+
+/**
+ * Start of the current selling week, as an ISO instant.
+ *
+ * The store shuts Thursday 4pm and reopens Saturday 6am, so a "week" runs from
+ * that Saturday. Mike takes the list to the field on Saturday morning and only
+ * wants what has come in since the last one, not the whole season.
+ */
+function lastSaturday6am(): string {
+  const now = new Date();
+  const d = new Date(now);
+  d.setHours(6, 0, 0, 0);
+  // Walk back to Saturday. If it IS Saturday but before 6am, the week that
+  // matters is still the previous one.
+  const back = (d.getDay() - 6 + 7) % 7;
+  d.setDate(d.getDate() - back);
+  if (d > now) d.setDate(d.getDate() - 7);
+  return d.toISOString();
+}
 
 function Group({ title, rows, note }: { title: string; rows: Tally[]; note?: string }) {
   if (rows.length === 0) return null;
@@ -45,9 +71,13 @@ function Group({ title, rows, note }: { title: string; rows: Tally[]; note?: str
   );
 }
 
-export function MerchBreakdown({ rows }: { rows: MerchOrderRow[] }) {
+export function MerchBreakdown({ rows: allRows }: { rows: MerchOrderRow[] }) {
+  // Defaults to the whole season, because that is the number the office checks
+  // stock against. The weekly view is one click away for the field run.
+  const [thisWeek, setThisWeek] = useState(false);
+  const rows = thisWeek ? inWindow(allRows, lastSaturday6am()) : allRows;
   const s = summarise(rows);
-  if (s.orders === 0) return null;
+  if (summarise(allRows).orders === 0) return null;
 
   const csv = () => {
     const head = ["Division", "Team", "Player", "Size", "Qty", "Paid", "Method", "Ordered by", "Email", "Phone"];
@@ -64,8 +94,8 @@ export function MerchBreakdown({ rows }: { rows: MerchOrderRow[] }) {
         r.player_name ?? "",
         r.size ?? "",
         String(r.quantity ?? ""),
-        r.payment_status === "paid" ? "yes" : "no",
-        r.pay_method ?? "",
+        r.payment_status === "paid" || r.payment?.status === "paid" ? "yes" : "no",
+        methodLabel(r),
         r.name ?? "",
         r.email ?? "",
         r.phone ?? "",
@@ -76,7 +106,9 @@ export function MerchBreakdown({ rows }: { rows: MerchOrderRow[] }) {
     const url = URL.createObjectURL(new Blob([text], { type: "text/csv;charset=utf-8;" }));
     const a = document.createElement("a");
     a.href = url;
-    a.download = `shirt-orders-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `shirt-orders${thisWeek ? "-this-week" : ""}-${new Date()
+      .toISOString()
+      .slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -98,14 +130,31 @@ export function MerchBreakdown({ rows }: { rows: MerchOrderRow[] }) {
         <span className="text-sm text-slate-600">${s.collected} collected</span>
         <button
           type="button"
+          onClick={() => setThisWeek((v) => !v)}
+          className={
+            "ml-auto rounded-md border px-3 py-1.5 text-xs font-semibold " +
+            (thisWeek
+              ? "border-slate-800 bg-slate-800 text-white"
+              : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50")
+          }
+        >
+          {thisWeek ? "This week only" : "Whole season"}
+        </button>
+        <button
+          type="button"
           onClick={csv}
-          className="ml-auto rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+          className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
         >
           Download the list
         </button>
       </div>
       <div className="flex flex-wrap gap-6">
         <Group title="By size" rows={s.bySize} note="How many of each to bring." />
+        <Group
+          title="By payment"
+          rows={s.byMethod}
+          note="Card is already settled. Venmo and Zelle owe until the office marks them paid."
+        />
         <Group title="By team" rows={s.byTeam} />
         <Group title="By age" rows={s.byAge} />
         <Group title="By division" rows={s.byDivision} />

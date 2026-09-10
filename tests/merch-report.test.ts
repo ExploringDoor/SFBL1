@@ -12,8 +12,7 @@ import {
   summarise,
   tallyBy,
   tallyBySize,
-  type MerchOrderRow,
-} from "@/lib/merch-report";
+  type MerchOrderRow, inWindow } from "@/lib/merch-report";
 
 const o = (p: Partial<MerchOrderRow>): MerchOrderRow => ({
   id: Math.random().toString(36).slice(2),
@@ -167,5 +166,89 @@ describe("by age, which is not the same as by division", () => {
   it("normalises spacing and case", () => {
     expect(ageOf("12 u Open")).toBe("12U");
     expect(ageOf("12u C")).toBe("12U");
+  });
+});
+
+// ---- payment method + weekly window -----------------------------------
+//
+// Mike, 2026-09-10: "a list of shirts that were paid on the site after 4pm
+// today. It breaks down cc and Venmo or Zelle. Every week. So I can give it to
+// my team at the field."
+//
+// Card and the rest are NOT the same kind of thing, and the report must not
+// pretend they are. A card order is settled by Square. A Venmo or Zelle order
+// is a promise until the office marks it paid, and those are exactly the
+// shirts whose money has to be collected on the day.
+
+describe("byMethod", () => {
+  const rows: MerchOrderRow[] = [
+    { id: "m1", size: "S", quantity: 1, pay_method: "card", payment: { status: "paid" }, amount_due: 30 },
+    { id: "m2", size: "M", quantity: 1, pay_method: "card", payment: { status: "paid" }, amount_due: 30 },
+    { id: "m3", size: "L", quantity: 1, pay_method: "card", amount_due: 30 },
+    { id: "m4", size: "S", quantity: 2, pay_method: "venmo", amount_due: 60 },
+    { id: "m5", size: "S", quantity: 1, pay_method: "zelle", payment_status: "paid", amount_due: 30 },
+  ];
+
+  it("splits card, Venmo and Zelle", () => {
+    expect(summarise(rows).byMethod.map((t) => t.key)).toEqual(["Card", "Venmo", "Zelle"]);
+  });
+
+  it("counts the shirts under each", () => {
+    const m = summarise(rows).byMethod;
+    expect(m.find((t) => t.key === "Card")!.shirts).toBe(3);
+    expect(m.find((t) => t.key === "Venmo")!.shirts).toBe(2);
+  });
+
+  it("shows a started-but-unpaid card order as still owing", () => {
+    const card = summarise(rows).byMethod.find((t) => t.key === "Card")!;
+    expect(card.unpaid).toBe(1);
+    expect(card.owed).toBe(30);
+  });
+
+  it("counts a Venmo order as owing until the office marks it paid", () => {
+    const v = summarise(rows).byMethod.find((t) => t.key === "Venmo")!;
+    expect(v.unpaid).toBe(2);
+    expect(v.owed).toBe(60);
+  });
+
+  it("respects the office marking a Zelle order paid", () => {
+    expect(summarise(rows).byMethod.find((t) => t.key === "Zelle")!.unpaid).toBe(0);
+  });
+
+  it("orders them card, Venmo, Zelle rather than by size", () => {
+    const many: MerchOrderRow[] = [
+      { id: "m6", size: "S", quantity: 9, pay_method: "zelle" },
+      { id: "m7", size: "S", quantity: 1, pay_method: "card" },
+    ];
+    expect(summarise(many).byMethod.map((t) => t.key)).toEqual(["Card", "Zelle"]);
+  });
+
+  it("labels a missing method rather than dropping the shirt", () => {
+    expect(summarise([{ id: "m8", size: "S", quantity: 1 }]).byMethod[0]!.key).toBe("Not given");
+  });
+});
+
+describe("inWindow", () => {
+  const rows: MerchOrderRow[] = [
+    { id: "m9", size: "S", quantity: 1, created_at: "2026-09-05T12:00:00Z" },
+    { id: "m10", size: "M", quantity: 1, created_at: "2026-09-09T12:00:00Z" },
+    { id: "m11", size: "L", quantity: 1, submitted_at: "2026-09-10T12:00:00Z" },
+    { id: "m12", size: "XL", quantity: 1 },
+  ];
+
+  it("keeps only this week when a start is given", () => {
+    expect(inWindow(rows, "2026-09-08T00:00:00Z")).toHaveLength(3);
+  });
+
+  it("falls back to submitted_at when created_at is absent", () => {
+    expect(inWindow(rows, "2026-09-10T00:00:00Z").map((r) => r.size)).toContain("L");
+  });
+
+  it("KEEPS a row with no timestamp rather than hiding a real shirt", () => {
+    expect(inWindow(rows, "2026-09-10T00:00:00Z").map((r) => r.size)).toContain("XL");
+  });
+
+  it("returns everything when no start is given", () => {
+    expect(inWindow(rows, null)).toHaveLength(4);
   });
 });
