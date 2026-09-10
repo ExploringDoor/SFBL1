@@ -375,13 +375,16 @@ const ISLAND_FIELDS: FormField[] = [
     // Not required: a coach who has not decided should not be blocked over it.
     name: "pay_method",
     label: "How do you plan to pay?",
-    type: "select",
-    width: "half",
+    // Radio, not a dropdown: Adam asked for tick boxes, and one visible list
+    // of three is read at a glance where a closed dropdown hides the choice.
+    type: "radio",
+    width: "full",
     help: "So the office knows what to look out for. You can still change your mind.",
     options: [
+      { value: "card", label: "I plan to pay by card on the site" },
+      { value: "venmo", label: "I plan to pay with Venmo" },
+      { value: "zelle", label: "I plan to pay with Zelle" },
       { value: "", label: "Not sure yet" },
-      { value: "card", label: "Card, on the site" },
-      { value: "venmo", label: "Venmo" },
     ],
   },
   {

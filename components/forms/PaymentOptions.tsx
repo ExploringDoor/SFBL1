@@ -79,6 +79,7 @@ export function PaymentOptions({
   const details = paymentDetailsFor(leagueId);
   const hasVenmo = Boolean(details?.venmoUrl && details?.venmoHandle);
   const hasCheck = Boolean(details?.checkPayableTo && details?.checkAddress);
+  const hasZelle = Boolean(details?.zelleHandle);
 
   // Read-only; charges nothing. Failure just means the price line does not
   // render — the card form fetches and shows its own total regardless, so a
@@ -136,7 +137,7 @@ export function PaymentOptions({
     );
   }
 
-  const noFeeMethods = [hasVenmo && "Venmo", hasCheck && "check"]
+  const noFeeMethods = [hasVenmo && "Venmo", hasZelle && "Zelle", hasCheck && "check"]
     .filter(Boolean)
     .join(" or ");
 
@@ -319,7 +320,7 @@ export function PaymentOptions({
         }}
       />
 
-      {(hasVenmo || hasCheck) && (
+      {(hasVenmo || hasZelle || hasCheck) && (
         <>
           <p className="cop-or">Or pay another way</p>
           <div className="cop-grid">
@@ -333,6 +334,19 @@ export function PaymentOptions({
                 Pay with Venmo
                 <span className="cop-note">{details!.venmoHandle}</span>
               </a>
+            )}
+            {hasZelle && (
+              // Static, not a link: Zelle lives inside the payer's own banking
+              // app and there is no URL to send them to. The number is the
+              // whole instruction, so it is shown to be copied.
+              <div className="cop-btn cop-btn-static">
+                Pay with Zelle
+                <span className="cop-note">
+                  {details!.zelleHandle}
+                  <br />
+                  Put your team name in the note.
+                </span>
+              </div>
             )}
             {hasCheck && (
               <div className="cop-btn cop-btn-static">

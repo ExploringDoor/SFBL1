@@ -20,6 +20,9 @@ import {
 export interface LeaguePaymentDetails {
   venmoHandle?: string;
   venmoUrl?: string;
+  /** Zelle is a bank transfer to a phone number or email, with no app link to
+   *  deep-link into, so this is shown as text for the payer to copy. */
+  zelleHandle?: string;
   checkPayableTo?: string;
   checkAddress?: string;
   /** How the card surcharge is described in coach-facing copy. Island cannot
@@ -50,6 +53,10 @@ const DETAILS: Record<string, LeaguePaymentDetails> = {
   island: {
     venmoHandle: "@mikeislandusssa",
     venmoUrl: "https://venmo.com/u/mikeislandusssa",
+    // Same number the store has shown since 2026-09-06. Added here so a coach
+    // who picks Zelle on the registration form is not sent looking for a
+    // number the payment screen never showed them.
+    zelleHandle: "631-831-4793",
   },
 
   // Windmill Fastpitch. Flat $325, no card surcharge (the league absorbs it, so
