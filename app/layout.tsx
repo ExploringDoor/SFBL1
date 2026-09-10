@@ -113,10 +113,15 @@ export async function generateMetadata(): Promise<Metadata> {
     // Stats-off leagues (Island) publish no player stats — saying "stats" in
     // the meta description advertises something the site doesn't have.
     const statsOff = cfg.flags?.stats_enabled === false;
+    // A league with no coach portal (ETBL: flags.hide_sign_in) should not
+    // advertise coach tools it does not offer.
+    const noCoachTools = cfg.flags?.hide_sign_in === true;
     const description = statsOff
       ? `Schedule, scores, and standings for ${name}${
           abbrev && abbrev !== name ? ` (${abbrev})` : ""
-        }. Live ${sport} updates, team pages, and coach tools.`
+        }. Live ${sport} updates${
+          noCoachTools ? " and team pages." : ", team pages, and coach tools."
+        }`
       : `Schedule, scores, standings, and stats for ${name}${
           abbrev && abbrev !== name ? ` (${abbrev})` : ""
         }. Live ${sport} updates, team rosters, and captain tools.`;

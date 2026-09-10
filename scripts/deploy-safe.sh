@@ -38,6 +38,11 @@ REPO="$(pwd)"
 ORG_ID="team_7O6fyvsxUHRXLc7Fz5dHcajT"
 
 # tenant | project name | project id | live url | an asset that must exist
+#
+# ETBL (East Texas Basketball League) has no Vercel project yet. Once it is
+# created, add the row — the probe asset is /etbl/og.png:
+#   etbl|<vercel project name>|<prj_…>|https://<project>.vercel.app|/etbl/og.png
+# and swap in the custom domain for the url when DNS lands. See data/etbl/README.md.
 TENANTS="
 island|island-fastpitch|prj_ecoDgk2YDYb7jnMLHaFFy7D1Ph8y|https://island-fastpitch.vercel.app|/island/headers/home.jpg
 coybl|coybl-preview|prj_rfvXgVTyTqNVYiaGWeWYExWs9H7r|https://coybl.org|/coybl/og.png

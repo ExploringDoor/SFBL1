@@ -34,6 +34,8 @@ TENANTS=(
   "COYBL (coybl.org)|prj_rfvXgVTyTqNVYiaGWeWYExWs9H7r"
   "SFBL (sfbl.com)|prj_vI6KktUD8lqvd705egSekx5pRrld"
   # "LBDC (lbdc1.vercel.app)|prj_eAzA97QQx4LPt3goJ0gMbKHxpFep"
+  # ETBL: uncomment with the real project id once the Vercel project exists.
+  # "ETBL (East Texas Basketball League)|prj_…"
 )
 
 # --- flags ----------------------------------------------------------------
