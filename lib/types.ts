@@ -72,7 +72,11 @@ export interface LeagueFeatureFlags {
 export interface LeagueStandingsConfig {
   scoring?: "pct" | "points";
   points_per?: { win: number; tie: number; loss: number };
-  tiebreaker?: "pct" | "rd";
+  /** How equal records are ordered. "rd" (default) = run / point
+   *  differential; "pct" = win percentage (points mode only); "h2h" = the
+   *  teams' record against each other first, then differential — what a
+   *  basketball league expects. See applyHeadToHead in lib/stats/shared. */
+  tiebreaker?: "pct" | "rd" | "h2h";
   /** Divisions never shown a standings table — e.g. a no-score/blind-draw
    *  division like Windmill's 8U Machine. Matched against the team `division`. */
   exclude_divisions?: string[];

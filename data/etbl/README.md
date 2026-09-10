@@ -77,11 +77,26 @@ Preview: http://etbl.localhost:3000 · Admin: http://etbl.localhost:3000/admin (
 3. Replace `public/etbl/banner.svg` (1600×544) or point `theme.banner_url` elsewhere.
 4. Colors: `theme.primary / accent / secondary` in `provision.json` (or Admin → Branding once live), then re-provision.
 
-## Replace the placeholder season
-1. Put the real `teams.csv` (keep the `organization` = town column; drop `demo`) and `schedule.csv` in this folder.
-2. Admin → Health → **Remove sample season**.
-3. `npm run provision -- --config ./data/etbl/provision.json` (idempotent; re-run whenever the CSVs change).
-4. Set the real commissioner passwords with `npm run set-admin-role` (see step 4 above, against production), and confirm every team's Town is spelled identically to its commissioner's `--town`.
+## Replace the placeholder season (the intake sheets)
+The league fills in three plain spreadsheets in `intake/` — no ids, just names:
+
+| Sheet | Columns | Notes |
+|---|---|---|
+| `intake/teams.csv` | `town, division, team, color` | One row per team. Spell each town the same way every time (it is what the commissioner passwords key on). Division text like "3rd Grade Boys" turns on the age sections automatically. Colour optional (hex). |
+| `intake/schedule.csv` | `date, time, gym, away_team, home_team, division[, away_score, home_score]` | Team names exactly as in teams.csv. `9:00 AM` or `09:00`; `2026-11-07` or `11/7/2026`. Scores only for games already played. |
+| `intake/gyms.csv` | `name, town, address, maps_url` | Address gives one-tap directions; `maps_url` optional. |
+
+The rows shipped in those files are examples — replace them. Then:
+
+1. `node scripts/etbl-intake.mjs --dry-run` — validates and summarises (unknown team names, cross-division games, gyms not in the list). Fix the sheets until it is clean.
+2. `node scripts/etbl-intake.mjs` — writes `teams.csv`, `schedule.csv`, `fields.json`, updates the gym list in `provision.json` and turns the sample-data banner off.
+3. Admin → Health → **Remove sample season** (if it is still up).
+4. `npm run provision -- --config ./data/etbl/provision.json` and `npm run seed:fields -- --league etbl --file data/etbl/fields.json` (both idempotent; re-run whenever the sheets change).
+5. Set the real commissioner passwords with `npm run set-admin-role` (see step 4 of the bring-up, against production); each `--town` must match the teams' town spelling.
+
+Standings tiebreak is head-to-head, then point differential (`standings.tiebreaker: "h2h"` in `provision.json`).
+
+Two more unlinked pages exist for the people running the site: `/content/commissioner-guide` (the seven town commissioners) and `/content/admin-guide` (whoever holds the league password).
 
 ## Launch (prod) — the parts Adam does
 Vercel project for `etbl` + env vars (see `DEPLOY.md`, plus `ETBL_ADMIN_PASSWORD`); Firebase Auth authorized domain; tell Claude the custom domain **before** DNS moves so it lands in `HOST_ALIAS_BASELINE` (`lib/tenants.ts`) first; then `npm run provision` against prod, `scripts/deploy-safe.sh etbl`, and the `SHIPPING_CHECKLIST.md` smoke.

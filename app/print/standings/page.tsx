@@ -125,6 +125,7 @@ export default async function PrintStandingsPage() {
         // no divisionOf is needed. See computeStandingsWithExtraGameRule.
         const computed = computeStandingsWithExtraGameRule(divGames, {
           enabled: config?.standings?.drop_extra_game_loss,
+          tiebreaker: config?.standings?.tiebreaker,
         });
         const seen = new Set(computed.map((r) => r.team_id));
         const zeroes: StandingsRow[] = divTeamIds

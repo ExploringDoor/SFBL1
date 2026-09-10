@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyHeadToHead,
   battingAverage,
   computePoints,
   computeStandings,
+  computeStandingsWithExtraGameRule,
   onBasePct,
   ops,
   sluggingPct,
@@ -10,6 +12,97 @@ import {
   type GameResult,
   type StandingsRow,
 } from "@/lib/stats/shared";
+
+// ── Head-to-head tiebreaker (ETBL, basketball) ──────────────────────────
+
+describe("head-to-head tiebreaker", () => {
+  const game = (
+    away: string,
+    home: string,
+    awayScore: number,
+    homeScore: number,
+    date = "2026-09-12",
+  ): GameResult => ({
+    away_team_id: away,
+    home_team_id: home,
+    away_score: awayScore,
+    home_score: homeScore,
+    status: "final",
+    date,
+  });
+  const order = (rows: StandingsRow[]) => rows.map((r) => r.team_id);
+
+  // A beat B by one, then A lost to D by thirty; B beat C by twenty; D beat C.
+  // A and B are both 1-1. Differential says B (+19) over A (-29); head-to-head
+  // says A, because A beat B.
+  const fourTeams = [
+    game("a", "b", 20, 19),
+    game("d", "a", 40, 10),
+    game("b", "c", 30, 10),
+    game("d", "c", 20, 10),
+  ];
+
+  it("puts the team that won the meeting first, even with a worse differential", () => {
+    expect(order(computeStandings(fourTeams))).toEqual(["d", "b", "a", "c"]);
+    expect(
+      order(computeStandingsWithExtraGameRule(fourTeams, { tiebreaker: "h2h" })),
+    ).toEqual(["d", "a", "b", "c"]);
+  });
+
+  it("is off unless asked for, and 'rd' is unchanged", () => {
+    expect(order(computeStandingsWithExtraGameRule(fourTeams))).toEqual(["d", "b", "a", "c"]);
+    expect(
+      order(computeStandingsWithExtraGameRule(fourTeams, { tiebreaker: "rd" })),
+    ).toEqual(["d", "b", "a", "c"]);
+  });
+
+  it("leaves a pair that has not met in differential order", () => {
+    // a (+20) and b (+1) are both 1-0 and never played each other; d (-1)
+    // and c (-20) are both 0-1 and never played each other. Differential
+    // decides both pairs, exactly as without the tiebreaker.
+    const games = [game("a", "c", 30, 10), game("b", "d", 20, 19)];
+    expect(
+      order(computeStandingsWithExtraGameRule(games, { tiebreaker: "h2h" })),
+    ).toEqual(["a", "b", "d", "c"]);
+    expect(order(computeStandings(games))).toEqual(["a", "b", "d", "c"]);
+  });
+
+  it("falls through to differential on a three-way circle", () => {
+    // a beat b, b beat c, c beat a: every head-to-head is 1-1.
+    const games = [game("a", "b", 20, 19), game("b", "c", 40, 10), game("c", "a", 30, 10)];
+    // Differentials: a +1-20 = -19, b -1+30 = +29, c -30+20 = -10.
+    expect(
+      order(computeStandingsWithExtraGameRule(games, { tiebreaker: "h2h" })),
+    ).toEqual(["b", "c", "a"]);
+  });
+
+  it("only compares games among the tied teams", () => {
+    // a and b tied 1-1; a's win came against b, b's against a stranger.
+    const games = [
+      game("a", "b", 10, 9),
+      game("c", "a", 30, 0),
+      game("b", "c", 50, 0),
+      game("c", "d", 1, 0),
+    ];
+    // c is 2-1 on top; a and b are 1-1; head-to-head a beat b.
+    const rows = computeStandingsWithExtraGameRule(games, { tiebreaker: "h2h" });
+    expect(order(rows).slice(0, 3)).toEqual(["c", "a", "b"]);
+  });
+
+  it("breaks equal points in points mode too, and needs the games to do it", () => {
+    const rows = computeStandings(fourTeams);
+    const scheme = { win: 2, tie: 1, loss: 0 };
+    expect(order(sortByPoints(rows, scheme, "h2h", fourTeams))).toEqual(["d", "a", "b", "c"]);
+    expect(order(sortByPoints(rows, scheme, "h2h"))).toEqual(["d", "b", "a", "c"]);
+    expect(order(sortByPoints(rows, scheme, "rd"))).toEqual(["d", "b", "a", "c"]);
+  });
+
+  it("applyHeadToHead never touches rows that are not tied", () => {
+    const rows = computeStandings(fourTeams);
+    const same = applyHeadToHead(rows, fourTeams, () => false);
+    expect(order(same)).toEqual(order(rows));
+  });
+});
 
 describe("battingAverage", () => {
   it("returns 0 for 0 AB (no division by zero)", () => {

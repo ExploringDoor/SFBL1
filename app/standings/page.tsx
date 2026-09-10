@@ -382,6 +382,7 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
     : computeStandingsWithExtraGameRule(games, {
         enabled: config?.standings?.drop_extra_game_loss,
         divisionOf: (id) => teams[id]?.division ?? "",
+        tiebreaker: config?.standings?.tiebreaker,
       });
   // Every team gets a row before a ball is thrown, exactly as the homepage
   // does. These two must agree: a parent who sees 0-0 on the home page and an
@@ -394,6 +395,7 @@ async function loadStandings(tenantId: string, config: PublicLeagueConfig | null
       standings,
       scheme,
       config?.standings?.tiebreaker ?? "rd",
+      games,
     );
   }
 

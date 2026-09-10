@@ -446,6 +446,7 @@ async function loadSchedule(
   const standings = computeStandingsWithExtraGameRule(standingsGames, {
     enabled: config?.standings?.drop_extra_game_loss,
     divisionOf: (id) => divisionById.get(id) ?? "",
+    tiebreaker: config?.standings?.tiebreaker,
   });
   const recordByTeam = new Map(
     standings.map((r) => [r.team_id, formatRecord(r.w, r.l, r.t)]),

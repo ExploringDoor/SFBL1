@@ -236,6 +236,7 @@ export default async function TeamDetailPage({
   let standings = computeStandingsWithExtraGameRule(games, {
     enabled: config?.standings?.drop_extra_game_loss,
     divisionOf: (id) => divisionById.get(id) ?? "",
+    tiebreaker: config?.standings?.tiebreaker,
   });
   // Same seeding as /standings and the homepage. Without it a team with no
   // results has no row at all, so its own page showed no record while the
@@ -247,7 +248,7 @@ export default async function TeamDetailPage({
   const scheme = config?.standings?.points_per ?? null;
   const usePoints = config?.standings?.scoring === "points" && !!scheme;
   if (usePoints && scheme) {
-    standings = sortByPoints(standings, scheme, config?.standings?.tiebreaker ?? "rd");
+    standings = sortByPoints(standings, scheme, config?.standings?.tiebreaker ?? "rd", games);
   }
   const myRow = standings.find((r) => r.team_id === params.teamId) ?? null;
 

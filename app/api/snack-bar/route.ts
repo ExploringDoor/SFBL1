@@ -49,6 +49,30 @@ const ID_RE = /^[a-zA-Z0-9_-]{1,64}$/;
 const MAX_SHIFTS = 400;
 const MAX_JOBS = 10;
 
+// The public actions are unauthenticated by design (see SnackBarBoard). A
+// per-IP limit is what keeps one prankster from filling every slot with
+// invented names: 30 claims or releases in 10 minutes is more than any family
+// needs. Same in-memory shape as the other public routes; it resets on a
+// cold start, which is fine for a nuisance limit.
+const PUBLIC_LIMIT = 30;
+const PUBLIC_WINDOW_MS = 10 * 60 * 1000;
+const ipBuckets = new Map<string, { count: number; resets_at: number }>();
+
+function publicRateLimited(req: Request): boolean {
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "unknown";
+  const now = Date.now();
+  const cur = ipBuckets.get(ip);
+  if (!cur || cur.resets_at < now) {
+    ipBuckets.set(ip, { count: 1, resets_at: now + PUBLIC_WINDOW_MS });
+    return false;
+  }
+  cur.count += 1;
+  return cur.count > PUBLIC_LIMIT;
+}
+
 type Decoded = Awaited<ReturnType<ReturnType<typeof getAdminAuth>["verifyIdToken"]>>;
 
 async function requireVolunteerAdmin(
@@ -402,6 +426,12 @@ export async function POST(req: Request) {
 
   // ── public: claim a slot ───────────────────────────────────────────
   if (action === "claim") {
+    if (publicRateLimited(req)) {
+      return NextResponse.json(
+        { error: "Too many sign-ups from this connection. Try again in a few minutes." },
+        { status: 429 },
+      );
+    }
     const shiftId = String(body.shiftId ?? "");
     if (!ID_RE.test(shiftId)) {
       return NextResponse.json({ error: "shiftId required" }, { status: 400 });
@@ -454,6 +484,12 @@ export async function POST(req: Request) {
   // authenticated action: there is no login for parents, and the cost of a
   // mistaken release is one empty snack-bar slot the league can see.
   if (action === "release") {
+    if (publicRateLimited(req)) {
+      return NextResponse.json(
+        { error: "Too many changes from this connection. Try again in a few minutes." },
+        { status: 429 },
+      );
+    }
     const shiftId = String(body.shiftId ?? "");
     if (!ID_RE.test(shiftId)) {
       return NextResponse.json({ error: "shiftId required" }, { status: 400 });

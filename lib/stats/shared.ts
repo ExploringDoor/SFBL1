@@ -105,7 +105,74 @@ export function computePoints(row: StandingsRow, scheme: PointsScheme): number {
   return row.w * scheme.win + row.t * scheme.tie + row.l * scheme.loss;
 }
 
-export type Tiebreaker = "pct" | "rd";
+export type Tiebreaker = "pct" | "rd" | "h2h";
+
+/**
+ * Head-to-head tiebreaker.
+ *
+ * Walks `rows` in their current order and, wherever consecutive rows are
+ * `tied` (equal PCT, or equal points in points mode), re-orders that run by
+ * each team's record against the OTHER tied teams only. A team that beat the
+ * other ranks above it; one that lost ranks below; a pair that has not met
+ * is neutral (.500) and keeps the order it arrived in — which the callers
+ * make the differential order, so "head-to-head, then differential" falls out
+ * of a stable sort. A three-way circle (A beat B beat C beat A) is all .500
+ * and likewise falls through to differential, which is the usual rule.
+ *
+ * Only finished games count, and only games between members of the tied
+ * group: beating a fourth team says nothing about the tie.
+ */
+export function applyHeadToHead(
+  rows: StandingsRow[],
+  games: GameResult[],
+  tied: (a: StandingsRow, b: StandingsRow) => boolean,
+): StandingsRow[] {
+  const finished = games.filter(
+    (g) => g.status === "final" || g.status === "approved",
+  );
+  const out: StandingsRow[] = [];
+  let i = 0;
+  while (i < rows.length) {
+    let j = i + 1;
+    while (j < rows.length && tied(rows[i]!, rows[j]!)) j++;
+    const group = rows.slice(i, j);
+    i = j;
+    if (group.length < 2) {
+      out.push(...group);
+      continue;
+    }
+    const ids = new Set(group.map((r) => r.team_id));
+    const rec = new Map<string, { w: number; t: number; gp: number }>();
+    for (const id of ids) rec.set(id, { w: 0, t: 0, gp: 0 });
+    for (const g of finished) {
+      if (!ids.has(g.home_team_id) || !ids.has(g.away_team_id)) continue;
+      const h = rec.get(g.home_team_id)!;
+      const a = rec.get(g.away_team_id)!;
+      h.gp += 1;
+      a.gp += 1;
+      if (g.home_score > g.away_score) h.w += 1;
+      else if (g.away_score > g.home_score) a.w += 1;
+      else {
+        h.t += 1;
+        a.t += 1;
+      }
+    }
+    const pctOf = (id: string) => {
+      const r = rec.get(id)!;
+      return r.gp > 0 ? (r.w + 0.5 * r.t) / r.gp : 0.5;
+    };
+    // Array.prototype.sort is stable, so equal head-to-head keeps the
+    // incoming (differential) order.
+    out.push(...[...group].sort((a, b) => pctOf(b.team_id) - pctOf(a.team_id)));
+  }
+  return out;
+}
+
+/** PCT desc, then differential desc — the order computeStandings produces,
+ *  re-applied after the extra-game rule may have changed a record. */
+function sortByPctThenDiff(rows: StandingsRow[]): StandingsRow[] {
+  return [...rows].sort((a, b) => b.pct - a.pct || b.rd - a.rd);
+}
 
 /**
  * Standings with the extra-game rule already applied.
@@ -131,10 +198,19 @@ export function computeStandingsWithExtraGameRule(
     /** Division for a team. Return "" when a league has none: everyone then
      *  sits in one group, which is the right baseline for a flat league. */
     divisionOf?: (teamId: string) => string;
+    /** League setting standings.tiebreaker. Only "h2h" changes anything
+     *  here: rows come back PCT, then head-to-head among equal PCT, then
+     *  differential. Points-mode leagues pass it to sortByPoints instead. */
+    tiebreaker?: Tiebreaker;
   } = {},
 ): StandingsRow[] {
   const rows = computeStandings(games);
-  if (!opts.enabled) return rows;
+  const h2h = opts.tiebreaker === "h2h";
+  if (!opts.enabled) {
+    return h2h
+      ? applyHeadToHead(sortByPctThenDiff(rows), games, (a, b) => a.pct === b.pct)
+      : rows;
+  }
 
   const scheduled = new Map<string, number>();
   for (const g of games) {
@@ -158,7 +234,10 @@ export function computeStandingsWithExtraGameRule(
       adjusted.set(r.team_id, r);
     }
   }
-  return rows.map((r) => adjusted.get(r.team_id) ?? r);
+  const result = rows.map((r) => adjusted.get(r.team_id) ?? r);
+  return h2h
+    ? applyHeadToHead(sortByPctThenDiff(result), games, (a, b) => a.pct === b.pct)
+    : result;
 }
 
 /**
@@ -257,6 +336,9 @@ export function sortByPoints(
   rows: StandingsRow[],
   scheme: PointsScheme,
   tiebreaker: Tiebreaker = "rd",
+  /** Needed only for "h2h": the games the tied teams played against each
+   *  other. Without it "h2h" behaves as "rd". */
+  games?: GameResult[],
 ): StandingsRow[] {
   const annotated = rows.map((r) => ({ row: r, points: computePoints(r, scheme) }));
   annotated.sort((a, b) => {
@@ -264,7 +346,14 @@ export function sortByPoints(
     if (tiebreaker === "pct") return b.row.pct - a.row.pct;
     return b.row.rd - a.row.rd;
   });
-  return annotated.map((a) => a.row);
+  const sorted = annotated.map((a) => a.row);
+  if (tiebreaker !== "h2h" || !games) return sorted;
+  const pts = new Map(annotated.map((a) => [a.row.team_id, a.points]));
+  return applyHeadToHead(
+    sorted,
+    games,
+    (a, b) => pts.get(a.team_id) === pts.get(b.team_id),
+  );
 }
 
 // Compute standings from a list of game results. Filters to finished games

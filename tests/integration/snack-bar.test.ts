@@ -132,11 +132,16 @@ const UMPIRE = {
 const CAPTAIN = { uid: "cap", leagues: { etbl: "captain:t_a" } };
 const OTHER_LEAGUE_ADMIN = { uid: "public-admin:island", leagues: { island: "admin" } };
 
-function req(body: Record<string, unknown>, auth = true): Request {
+// The public actions are rate-limited per IP (module-level). Every request in
+// this file gets its own address unless a test asks for a fixed one.
+let ipCounter = 0;
+function req(body: Record<string, unknown>, auth = true, ip?: string): Request {
+  ipCounter += 1;
   return new Request("http://test/api/snack-bar", {
     method: "POST",
     headers: {
       "content-type": "application/json",
+      "x-forwarded-for": ip ?? `198.51.100.${(ipCounter % 250) + 1}, 10.0.0.${Math.floor(ipCounter / 250)}`,
       ...(auth ? { authorization: "Bearer fake" } : {}),
     },
     body: JSON.stringify({ leagueId: L, ...body }),
@@ -361,6 +366,30 @@ describe("list_claims", () => {
     expect(snack.contacts.map((c) => c.name)).toEqual(["Sarah Mitchell"]);
     // The range form returns every shift in the range, empty ones included.
     expect(body.shifts).toHaveLength(6);
+  });
+});
+
+// ── public rate limit ────────────────────────────────────────────────────
+
+describe("public sign-up rate limit", () => {
+  it("cuts one address off after 30 claims or releases in the window, admins unaffected", async () => {
+    store.set(`leagues/${L}/snackbar_shifts/s1`, { date: "2026-09-12", start: "09:00", slots: 1, claims: [] });
+    state.decoded = null;
+    const ip = "203.0.113.77";
+    let last = 0;
+    for (let i = 0; i < 30; i++) {
+      const res = await POST(req({ action: "release", shiftId: "s1", name: `Nobody ${i}` }, false, ip));
+      last = res.status;
+    }
+    expect(last).toBe(200);
+    const blocked = await POST(req({ action: "claim", shiftId: "s1", name: "Sarah Mitchell" }, false, ip));
+    expect(blocked.status).toBe(429);
+    // A different address is not affected, and neither is an admin write.
+    const other = await POST(req({ action: "claim", shiftId: "s1", name: "Sarah Mitchell" }, false, "203.0.113.78"));
+    expect(other.status).toBe(200);
+    state.decoded = ADMIN;
+    const admin = await POST(req({ action: "save_shifts", shifts: [{ id: "s1", date: "2026-09-12", start: "09:00", slots: 2 }] }, true, ip));
+    expect(admin.status).toBe(200);
   });
 });
 

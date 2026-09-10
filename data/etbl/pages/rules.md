@@ -36,7 +36,7 @@ Every player on the roster who is present and eligible must play in each half. C
 
 ## Scores and standings
 
-The home town's commissioner enters the final score on this site after each game. Standings are by winning percentage; ties are broken by point differential.
+The home town's commissioner enters the final score on this site after each game. Standings are by winning percentage; teams with the same record are ordered by their head-to-head result, then by point differential.
 
 ## Rescheduling
 

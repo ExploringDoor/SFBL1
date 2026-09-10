@@ -132,11 +132,12 @@ export default async function TeamsPage() {
   let standings: StandingsRow[] = computeStandingsWithExtraGameRule(games, {
     enabled: config?.standings?.drop_extra_game_loss,
     divisionOf: (id) => divisionById.get(id) ?? "",
+    tiebreaker: config?.standings?.tiebreaker,
   });
   const scheme = config?.standings?.points_per ?? null;
   const usePoints = config?.standings?.scoring === "points" && !!scheme;
   if (usePoints && scheme) {
-    standings = sortByPoints(standings, scheme, config?.standings?.tiebreaker ?? "rd");
+    standings = sortByPoints(standings, scheme, config?.standings?.tiebreaker ?? "rd", games);
   }
   const recordByTeam = new Map(standings.map((r) => [r.team_id, r]));
 

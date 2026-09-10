@@ -670,6 +670,7 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
   let standings: StandingsRow[] = computeStandingsWithExtraGameRule(allGameResults, {
     enabled: config?.standings?.drop_extra_game_loss,
     divisionOf: (id) => teams[id]?.division ?? "",
+    tiebreaker: config?.standings?.tiebreaker,
   });
   // Every team gets a row from day one. Without this the table has no rows at
   // all until the first final, so a league whose schedule is up but whose
@@ -683,7 +684,7 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
   const usePoints = config?.standings?.scoring === "points" && !!scheme;
   const tiebreaker = config?.standings?.tiebreaker ?? "rd";
   if (usePoints && scheme) {
-    standings = sortByPoints(standings, scheme, tiebreaker);
+    standings = sortByPoints(standings, scheme, tiebreaker, allGameResults);
   }
   const divisionGroups = groupByDivision(standings, teams);
 

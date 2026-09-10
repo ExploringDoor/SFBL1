@@ -36,7 +36,7 @@
       "last_payment": null,
       "notes": "New build Sept 2026 for BJ Threlkeld (Mineola, TX). Youth developmental basketball, ~3rd-6th grade, 96 teams / 6 divisions / 7 towns, one commissioner per town. Every team, division, town, gym and result is a PLACEHOLDER (demo:true) until the league sends real data. Branding is a placeholder navy / burnt-orange theme with a generated logo — see data/etbl/README.md for the swap."
     },
-    "standings": { "scoring": "pct", "tiebreaker": "rd" },
+    "standings": { "scoring": "pct", "tiebreaker": "h2h" },
     "captain": { "passwordless": false },
     "admin": { "passwordless": true },
     "season_year": 2026,
