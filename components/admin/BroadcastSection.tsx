@@ -164,7 +164,18 @@ export function BroadcastSection({ leagueId, user }: Props) {
         );
       setResult(`${test ? "Test sent. " : "Sent! "}${parts.join(" · ")}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Send failed.");
+      // A fetch that dies at the network throws TypeError, and its message is
+      // whatever the browser feels like: Safari says "Load failed", Chrome
+      // says "Failed to fetch". Neither tells the office anything, and Mike
+      // got exactly that on 2026-09-10 sending a flyer. Say what it means and
+      // what to do about it.
+      const raw = e instanceof Error ? e.message : "";
+      const networkish = /load failed|failed to fetch|networkerror|timed out/i.test(raw);
+      setError(
+        networkish
+          ? "The message did not reach the server. That is usually the connection, and a flyer makes the request bigger. Check your signal and try again, or send it without the flyer."
+          : raw || "Send failed.",
+      );
     } finally {
       setBusy(false);
     }
@@ -199,7 +210,10 @@ export function BroadcastSection({ leagueId, user }: Props) {
     }
     try {
       const bitmap = await createImageBitmap(file);
-      const scale = Math.min(1, 1200 / Math.max(bitmap.width, bitmap.height));
+      // 1000px, not 1200. Email renders a flyer at about 560px wide, so this
+      // is already 2x for a retina screen, and the smaller the POST the more
+      // likely it survives a phone connection.
+      const scale = Math.min(1, 1000 / Math.max(bitmap.width, bitmap.height));
       const w = Math.round(bitmap.width * scale);
       const h = Math.round(bitmap.height * scale);
       const canvas = document.createElement("canvas");
@@ -212,14 +226,21 @@ export function BroadcastSection({ leagueId, user }: Props) {
       ctx.fillStyle = "#fff";
       ctx.fillRect(0, 0, w, h);
       ctx.drawImage(bitmap, 0, 0, w, h);
-      let url = canvas.toDataURL("image/jpeg", 0.82);
-      if (url.length > 700_000) url = canvas.toDataURL("image/jpeg", 0.6);
-      if (url.length > 700_000) {
+      // Step down until it fits. Quality first, then size: a flyer is mostly
+      // flat colour and large type, which survives heavy JPEG compression far
+      // better than a photograph would.
+      let url = canvas.toDataURL("image/jpeg", 0.8);
+      for (const q of [0.65, 0.5, 0.4]) {
+        if (url.length <= 320_000) break;
+        url = canvas.toDataURL("image/jpeg", q);
+      }
+      if (url.length > 320_000) {
         setFlyerNote("That image is too big even after shrinking. Try a smaller one.");
         return;
       }
       setFlyer(url);
       setFlyerName(file.name);
+      setFlyerNote(`Ready to send, ${Math.round(url.length / 1024)}KB.`);
     } catch {
       setFlyerNote("Could not read that image. Try a JPG or PNG.");
     }

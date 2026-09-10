@@ -18,10 +18,14 @@
  *  show as a broken image in the body rather than as the flyer he expects. */
 const ALLOWED = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 
-/** Firestore caps a document at 1MB. Base64 inflates by about a third, and the
- *  rest of the document is small, so this leaves comfortable room. A phone
- *  photo of a flyer is usually well under it once resized client-side. */
-export const MAX_FLYER_BYTES = 700_000;
+/** Deliberately far below the 1MB Firestore cap.
+ *
+ *  The first version allowed 700KB, and Mike got Safari's "load failed" trying
+ *  to send one: the POST died at the network on a phone before it ever reached
+ *  the server, which happily accepts 683KB from a desktop. A mail client
+ *  renders a flyer at about 560px wide, so 700KB was buying nothing and
+ *  costing the send. */
+export const MAX_FLYER_BYTES = 320_000;
 
 export function isAllowedFlyerDataUrl(raw: unknown): raw is string {
   if (typeof raw !== "string") return false;
