@@ -51,6 +51,7 @@ import { PaymentsAdmin } from "@/components/admin/PaymentsAdmin";
 import { FieldUsage } from "@/components/admin/FieldUsage";
 import { FieldsManager } from "@/components/admin/FieldsManager";
 import { VolunteersManager } from "@/components/admin/VolunteersManager";
+import { PlayoffsManager } from "@/components/admin/PlayoffsManager";
 import { AdminPasswordGate } from "@/components/admin/AdminPasswordGate";
 
 type TabKey =
@@ -62,6 +63,7 @@ type TabKey =
   | "arbiter"
   | "umpires"
   | "score-disputes"
+  | "playoffs"
   | "teams"
   | "signups"
   | "captains"
@@ -96,8 +98,10 @@ const TABS: { key: TabKey; label: string; description: string }[] = [
   { key: "arbiter", label: "Arbiter", description: "Bring the schedule in from Arbiter, or send this schedule back out to it." },
   { key: "umpires", label: "Umpires", description: "Roster, availability, and who is working which game." },
   { key: "score-disputes", label: "Score Disputes", description: "Games where the two teams reported different scores. Your call is final." },
-  // Playoffs tab hidden per Adam — no bracket workflow until later.
-  // { key: "playoffs", label: "Playoffs", description: "Build the playoff bracket — divisions, rounds, matchups, results." },
+  // Playoffs tab hidden per Adam for the baseball leagues — no bracket
+  // workflow there until later. Opt-in per tenant via TENANT_ONLY_TABS; ETBL
+  // (youth basketball) ends its season with a tournament and gets it.
+  { key: "playoffs", label: "Playoffs", description: "Build the playoff bracket — divisions, rounds, matchups, results. The public /playoffs page shows it once you mark it active." },
   { key: "teams", label: "Teams", description: "Roster import, edit team metadata, manage divisions." },
   { key: "signups", label: "Roster Approval", description: "Approve or reject players added by captains (walk-ons)." },
   { key: "captains", label: "Captains", description: "Every team's captain: contact, password status, and last login." },
@@ -166,6 +170,7 @@ const TENANT_ONLY_TABS: Partial<Record<TabKey, string | string[]>> = {
   // their nav, so only they get the tab. Opt-in list, not a flag: a league
   // that asks for game-day sign-ups gets added here.
   volunteers: ["etbl", "lcybl"],
+  playoffs: ["etbl"],
 };
 
 // Tabs hidden for a specific tenant — platform features the league never asked
@@ -183,6 +188,22 @@ const TENANT_HIDDEN_TABS: Record<string, TabKey[]> = {
     "branding",
     "sponsors",
     "audit",
+  ],
+  // ETBL: youth basketball with no captains, players, umpires, payments or
+  // forms on the platform. What is left is the day-to-day: scores, schedule,
+  // teams, gyms, volunteers, playoffs, alerts, pages, sponsors.
+  etbl: [
+    "arbiter",
+    "umpires",
+    "score-disputes",
+    "signups",
+    "payments",
+    "notifications",
+    "potw",
+    "playerads",
+    "forms",
+    "photos",
+    "news",
   ],
 };
 
@@ -581,7 +602,9 @@ export default function AdminPage() {
         {activeTab === "score-disputes" && (
           <ScoreDisputes leagueId={tenantId} user={user} />
         )}
-        {/* Playoffs render block removed (see TABS list comment). */}
+        {activeTab === "playoffs" && (
+          <PlayoffsManager leagueId={tenantId} user={user} />
+        )}
         {activeTab === "teams" && (
           <TeamsManager leagueId={tenantId} user={user} />
         )}

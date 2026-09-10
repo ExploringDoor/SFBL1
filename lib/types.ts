@@ -209,6 +209,12 @@ export interface LeagueConfig {
    *  flags.demo_data is on. The banner's default copy names Island's season
    *  dates; any other tenant running on placeholder data sets its own. */
   demo_note?: string;
+  /** IANA zone the league's schedule is written in ("America/Chicago").
+   *  Game times are stored as wall-clock and rendered as-is; this is what
+   *  turns one into a real instant — the calendar feed, the opening-day
+   *  countdown, Google Calendar sync. Unset = America/New_York, where every
+   *  tenant lived before ETBL (East Texas) arrived. See lib/league-time. */
+  timezone?: string;
   /** Elfsight widget ids for the social feed boxes. See SocialFeeds.tsx. */
   social_widgets?: { instagram?: string; facebook?: string; tiktok?: string };
 

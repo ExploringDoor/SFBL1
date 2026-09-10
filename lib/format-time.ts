@@ -168,6 +168,45 @@ export function leagueToday(timeZone: string = DEFAULT_LEAGUE_TZ): string {
   }
 }
 
+/** The real instant a game starts, for a calendar feed or a countdown.
+ *
+ *  The `time` field ("HH:MM") is the authoritative wall clock, exactly as
+ *  combineDateTime and parseGameDate treat it. The stored `date` may be a
+ *  bare day or an ISO instant; an instant was minted on whichever machine
+ *  ran the import, in THAT machine's zone, so it cannot be trusted for a
+ *  league in another zone. Day + `time` + the league's zone can. Only when
+ *  there is no `time` at all does an offset-bearing `date` win, which keeps
+ *  older docs exactly where they were.
+ */
+export function gameStartInstant(
+  date: string | null | undefined,
+  time: string | null | undefined,
+  timeZone: string,
+): Date | null {
+  if (!date) return null;
+  const day = /^(\d{4}-\d{2}-\d{2})/.exec(date)?.[1];
+  if (!day) {
+    const d = new Date(date);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  const clock = /^(\d{1,2}):(\d{2})/.exec(String(time ?? "").trim());
+  if (!clock) {
+    if (/[Zz]|[+-]\d{2}:?\d{2}$/.test(date)) {
+      const d = new Date(date);
+      return Number.isNaN(d.getTime()) ? null : d;
+    }
+    const embedded = /T(\d{2}):(\d{2})/.exec(date);
+    return floatingToUtc(
+      embedded ? `${day}T${embedded[1]}:${embedded[2]}` : day,
+      timeZone,
+    );
+  }
+  return floatingToUtc(
+    `${day}T${clock[1]!.padStart(2, "0")}:${clock[2]}`,
+    timeZone,
+  );
+}
+
 /** Resolve a FLOATING local timestamp ("2026-09-14T18:00:00", no zone) into
  *  the real UTC instant it denotes in `timeZone`.
  *

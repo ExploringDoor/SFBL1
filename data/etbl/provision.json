@@ -41,6 +41,7 @@
     "admin": { "passwordless": true },
     "season_year": 2026,
     "season_label": "2026-27",
+    "timezone": "America/Chicago",
     "about": "Developmental youth basketball for 3rd through 6th graders across seven East Texas towns, based in Mineola. Six divisions, one commissioner per town, and Saturday games in local gyms — a league built to get kids ready for middle-school ball, not to chase rings.",
     "fields": [
       "Mineola Community Gym",
@@ -61,7 +62,6 @@
         "Photos",
         "Team Stats",
         "Player of the Week",
-        "Playoffs",
         "Tournaments",
         "Availability",
         "History",

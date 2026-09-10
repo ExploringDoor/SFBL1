@@ -8,7 +8,8 @@
 
 import { getAdminDb } from "@/lib/firebase-admin";
 import { parseHost, resolveTenant } from "@/lib/tenants";
-import { combineDateTime } from "@/lib/format-time";
+import { gameStartInstant } from "@/lib/format-time";
+import { leagueTimeZone } from "@/lib/league-time";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,6 +42,13 @@ export async function GET(req: Request) {
     teamNames[d.id] = String(d.data().name ?? d.id);
   }
   const leagueName = String(leagueSnap.data()?.name ?? tenantId);
+  // The zone the schedule is written in. ETBL (East Texas) is the first
+  // Central-time tenant; before it every feed was stamped Eastern.
+  const timeZone = leagueTimeZone(leagueSnap.data());
+  // A youth basketball game is over in about an hour; a ballgame blocks the
+  // afternoon. This is the event length subscribers see.
+  const durationMs =
+    (leagueSnap.data()?.sport === "basketball" ? 75 : 180) * 60 * 1000;
 
   let games = gamesSnap.docs.filter((d) => {
     const data = d.data();
@@ -63,7 +71,7 @@ export async function GET(req: Request) {
     "VERSION:2.0",
     "PRODID:-//LeagueEngine//Schedule//EN",
     `X-WR-CALNAME:${escapeText(leagueName)}${teamFilter && teamNames[teamFilter] ? ` — ${escapeText(teamNames[teamFilter]!)}` : ""}`,
-    "X-WR-TIMEZONE:America/New_York",
+    `X-WR-TIMEZONE:${timeZone}`,
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
   ];
@@ -72,18 +80,21 @@ export async function GET(req: Request) {
     const data = doc.data();
     const date = data.date ? String(data.date) : null;
     if (!date) continue;
-    // Audit C3 fix (2026-05-15): the previous code parsed
-    // `game.date` as UTC midnight when it was a plain "YYYY-MM-DD"
-    // string, leaving every iCal subscriber's event shifted by their
-    // browser TZ offset. Now we stitch the separate `time` field in
-    // so iCal sees a real local-time ISO with the right wall clock.
-    const combined = combineDateTime(
+    // Audit C3 fix (2026-05-15): the previous code parsed `game.date` as
+    // UTC midnight when it was a plain "YYYY-MM-DD" string, leaving every
+    // iCal subscriber's event shifted by their browser TZ offset.
+    //
+    // ETBL fix (2026-09-09): and after that it parsed the stitched wall
+    // clock in the SERVER's zone — right on a laptop in New York, an hour
+    // out on Vercel (UTC) and for any league that is not Eastern. The
+    // wall clock is now resolved in the league's own zone.
+    const start = gameStartInstant(
       date,
       data.time ? String(data.time) : null,
+      timeZone,
     );
-    const start = new Date(combined);
-    if (Number.isNaN(start.getTime())) continue;
-    const end = new Date(start.getTime() + 3 * 60 * 60 * 1000); // 3hr default
+    if (!start) continue;
+    const end = new Date(start.getTime() + durationMs);
 
     const home = teamNames[String(data.home_team_id ?? "")] ?? data.home_team_id;
     const away = teamNames[String(data.away_team_id ?? "")] ?? data.away_team_id;

@@ -94,7 +94,7 @@ The rows shipped in those files are examples — replace them. Then:
 4. `npm run provision -- --config ./data/etbl/provision.json` and `npm run seed:fields -- --league etbl --file data/etbl/fields.json` (both idempotent; re-run whenever the sheets change).
 5. Set the real commissioner passwords with `npm run set-admin-role` (see step 4 of the bring-up, against production); each `--town` must match the teams' town spelling.
 
-Standings tiebreak is head-to-head, then point differential (`standings.tiebreaker: "h2h"` in `provision.json`).
+Standings tiebreak is head-to-head, then point differential (`standings.tiebreaker: "h2h"` in `provision.json`). The league is on **Central time** (`timezone: "America/Chicago"`) — that is what the calendar feed and the opening-day countdown use; every other tenant is Eastern by default. Playoffs: Admin → Playoffs builds the bracket; the public page (More → Playoffs) shows it once marked active.
 
 Two more unlinked pages exist for the people running the site: `/content/commissioner-guide` (the seven town commissioners) and `/content/admin-guide` (whoever holds the league password).
 

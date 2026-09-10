@@ -32,8 +32,8 @@ import {
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { teamsHidden } from "@/lib/team-options";
 import { OpeningDayCountdown } from "@/components/ui/OpeningDayCountdown";
-import { LEAGUE_TIME_ZONE } from "@/lib/league-time";
-import { combineDateTime, floatingToUtc } from "@/lib/format-time";
+import { leagueTimeZone } from "@/lib/league-time";
+import { combineDateTime, gameStartInstant } from "@/lib/format-time";
 import { GameCard, type GameCardTeam } from "@/components/ui/GameCard";
 import { PreviewCard, type PreviewCardTeam } from "@/components/ui/PreviewCard";
 import { Hero as DvslHero } from "@/components/ui/Hero";
@@ -118,12 +118,20 @@ export default async function HomePage() {
   const openingDay = (() => {
     if (scheduleHidden) return null;
     const first = upcoming[0];
-    const at = floatingToUtc(first?.date, LEAGUE_TIME_ZONE);
+    // The league's own zone (ETBL is Central), and the game's wall-clock
+    // `time` when it has one — the stored date may be an instant minted on
+    // the importing machine.
+    const tz = leagueTimeZone(config);
+    const at = gameStartInstant(
+      first?.date,
+      (first as { time?: string } | undefined)?.time ?? null,
+      tz,
+    );
     if (!at) return null;
     return {
       iso: at.toISOString(),
       label: new Intl.DateTimeFormat("en-US", {
-        timeZone: LEAGUE_TIME_ZONE,
+        timeZone: tz,
         weekday: "long",
         month: "long",
         day: "numeric",

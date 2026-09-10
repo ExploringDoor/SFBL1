@@ -13,6 +13,8 @@ import {
 import "../print.css";
 import { PrintToolbar } from "../PrintToolbar";
 import { formatTime12 } from "@/lib/format-time";
+import { venueLabels } from "@/lib/sport-labels";
+import type { PublicLeagueConfig } from "@/lib/tenants";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +37,19 @@ export default async function PrintSchedulePage({
   searchParams?: { div?: string };
 }) {
   const tenantId = headers().get("x-tenant-id");
+  // Only the sport is read: "Field" is the wrong column heading for a
+  // basketball league's gyms.
+  const venue = venueLabels(
+    (() => {
+      const raw = headers().get("x-tenant-config-json");
+      if (!raw) return null;
+      try {
+        return (JSON.parse(raw) as PublicLeagueConfig).sport;
+      } catch {
+        return null;
+      }
+    })(),
+  );
   if (!tenantId) {
     return (
       <div className="print-page">
@@ -138,7 +153,7 @@ export default async function PrintSchedulePage({
                   <th style={{ width: 70 }}>Time</th>
                   <th style={{ width: 80 }}>Division</th>
                   <th>Matchup</th>
-                  <th>Field</th>
+                  <th>{venue.singular}</th>
                   <th style={{ width: 110 }}>Status</th>
                 </tr>
               </thead>

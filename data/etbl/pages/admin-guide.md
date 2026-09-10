@@ -15,6 +15,7 @@ For whoever holds the **league admin password** (not the town passwords — thos
 - **Teams** — each team's name, division and **Town**. The Town must be spelled the same on every team from that town; it is what decides which games a commissioner may score. Deactivate a team that drops out rather than deleting it.
 - **Fields** — the gym list with addresses. This feeds the Gyms page and the schedule editor's gym dropdown.
 - **Volunteers** — generate clock / scorebook / snack-bar shifts from the schedule, edit them, and see who signed up (contact details never appear on the website).
+- **Playoffs** — build the end-of-season bracket: divisions, rounds, matchups, then results. The public **Playoffs** page (under More) says "not published yet" until you tick *Active*.
 - **Alerts** — the banner across the top of the home page: weather, closures, deadlines. Clear it when it's over.
 - **Send Message** — email or text everyone who signed up for alerts.
 - **Rules** and **Pages** — edit the rulebook and the About / Contact / Sponsors pages in place.
