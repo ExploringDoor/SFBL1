@@ -11,8 +11,11 @@ GameSlate (`~/Desktop/gameslate`, gameslate-nine.vercel.app) took its engine fro
 
 Rather than merge the two under every league at once, the GameSlate engine is **copied here verbatim** and switched on per league. A league that has not opted in runs byte-for-byte the code it ran yesterday.
 
+## Keeping it current
+Edit the engine **in GameSlate**, commit there. A `post-commit` hook in the GameSlate repo (`~/Desktop/gameslate/.git/hooks/post-commit`, local-only since that repo has no remote) notices a commit that touches the engine, runs `scripts/sync-gameslate-engine.sh` here, and runs `tests/gameslate`. If they pass, this repo has the new engine sitting uncommitted in `lib/gameslate/` + `tests/gameslate/` — commit it. If they fail, don't. The script can always be run by hand too.
+
 ## Files
-- `schedule-generator.ts`, `schedule-conflicts.ts` — **do not edit.** Verbatim copies, header says which GameSlate commit. Fix bugs in GameSlate, then `scripts/sync-gameslate-engine.sh`, which also refreshes `tests/gameslate/` (GameSlate's own engine tests, 20 files).
+- `schedule-generator.ts`, `schedule-conflicts.ts` — **do not edit.** Verbatim copies, header says which GameSlate commit. Fix bugs in GameSlate, then `scripts/sync-gameslate-engine.sh` (or just commit in GameSlate — the hook runs it), which also refreshes `tests/gameslate/` (GameSlate's own engine tests, 20 files).
 - `rules.ts` — the extra rules the screen collects (game length, one game a day, doubleheaders, gaps, rest days, home-venue rule, rematch spacing, home/away streak cap, home-and-home, linked teams) and the **one normaliser** the screen and the API both run, so bounds live in one place.
 - `adapter.ts` — `buildWithGameslate()`: platform-shaped inputs in, platform-shaped `GeneratorResult` out (plus `quality` and `seed`), so the preview, drafts, host-choice picker and Create button are one code path for both engines.
 
