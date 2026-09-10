@@ -14,6 +14,7 @@ import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { hasScope } from "@/lib/admin-roles";
 import { sendGridBroadcast, sendGridConfigured } from "@/lib/email/sendgrid";
+import { flyerUrl, isAllowedFlyerDataUrl } from "@/lib/flyer";
 import {
   sendSmsBroadcast,
   twilioConfigured,
@@ -317,6 +318,8 @@ export async function POST(req: Request) {
     testPhone?: unknown;
     /** Recipient ids the admin unticked on the compose screen. */
     excludeIds?: unknown;
+    /** A flyer image as a data: URL, validated by isAllowedFlyerDataUrl. */
+    flyer?: unknown;
   };
   try {
     body = await req.json();
@@ -330,6 +333,38 @@ export async function POST(req: Request) {
   const subject = typeof body.subject === "string" ? body.subject.trim() : "";
   const message = typeof body.message === "string" ? body.message.trim() : "";
   const wantEmail = body.sendEmail === true;
+
+  // The flyer, saved before anything is sent.
+  //
+  // Written to its OWN document per send and never overwritten: the email
+  // lives in an inbox for years and keeps asking for this image, so a single
+  // "current flyer" would turn every flyer he ever sent into the newest one
+  // and eventually into a broken image.
+  //
+  // A test send stores one too. It has to, or the test would show a blank
+  // where the flyer goes and prove nothing about the send that matters.
+  let flyerHref = "";
+  if (isAllowedFlyerDataUrl(body.flyer)) {
+    try {
+      const ref = await getAdminDb()
+        .collection(`leagues/${leagueId}/broadcast_flyers`)
+        .add({
+          data_url: body.flyer,
+          subject,
+          created_at: new Date().toISOString(),
+          created_by_uid: gate.uid ?? null,
+        });
+      const origin =
+        req.headers.get("origin") ??
+        (req.headers.get("host") ? `https://${req.headers.get("host")}` : "");
+      if (origin) flyerHref = flyerUrl(origin, leagueId, ref.id);
+    } catch (e) {
+      // A flyer that will not save must not swallow the message. The text is
+      // the part that matters; the office would rather it went without the
+      // picture than not at all.
+      console.error("[admin-broadcast] flyer save failed:", e);
+    }
+  }
   const wantSms = body.sendSms === true;
   const ageGroup =
     typeof body.ageGroup === "string" && body.ageGroup ? body.ageGroup : null;
@@ -387,6 +422,16 @@ export async function POST(req: Request) {
     const html =
       `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#1a1a1a">` +
       esc(message).replace(/\n/g, "<br/>") +
+      // Width capped in the STYLE as well as the attribute: Outlook ignores
+      // max-width on its own and would render a 1200px flyer at full size,
+      // pushing the whole message sideways.
+      (flyerHref
+        ? `<p style="margin:18px 0 0"><a href="${esc(flyerHref)}">` +
+          `<img src="${esc(flyerHref)}" alt="Flyer" width="560" ` +
+          `style="display:block;width:100%;max-width:560px;height:auto;border:0"/></a></p>` +
+          `<p style="font-size:12px;color:#777;margin:6px 0 0">` +
+          `Images off? <a href="${esc(flyerHref)}">Open the flyer</a>.</p>`
+        : "") +
       `<hr style="border:none;border-top:1px solid #ddd;margin:20px 0"/>` +
       `<p style="font-size:12px;color:#777">${
         source === "coaches"
@@ -412,7 +457,13 @@ export async function POST(req: Request) {
     if (!twilioConfigured()) {
       result.sms = { skipped: true, note: "Twilio not configured" };
     } else {
-      const smsBody = `${message}\n\nReply STOP to opt out.`;
+      // A text cannot carry an image without MMS, so the flyer goes in as a
+      // link. Better than dropping it silently: the people on the text list
+      // are often the ones who never open email.
+      const smsBody =
+        `${message}` +
+        (flyerHref ? `\n\nFlyer: ${flyerHref}` : "") +
+        `\n\nReply STOP to opt out.`;
       const r = await sendSmsBroadcast(phones, smsBody);
       result.sms = r;
     }

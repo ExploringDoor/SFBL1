@@ -61,6 +61,12 @@ export function BroadcastSection({ leagueId, user }: Props) {
   const [sendSms, setSendSms] = useState(false);
   const [testEmail, setTestEmail] = useState("");
   const [testPhone, setTestPhone] = useState("");
+  // Mike, 2026-09-10: "there's no way I can send a flyer". Held as a data URL
+  // so it survives a re-render, and resized on pick rather than on send: a
+  // phone photo is several megabytes and Firestore caps a document at one.
+  const [flyer, setFlyer] = useState<string>("");
+  const [flyerName, setFlyerName] = useState<string>("");
+  const [flyerNote, setFlyerNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -135,6 +141,7 @@ export function BroadcastSection({ leagueId, user }: Props) {
           testEmail: test ? testEmail : undefined,
           testPhone: test ? testPhone : undefined,
           excludeIds: [...excluded],
+          flyer: flyer || undefined,
         }),
       });
       const data = (await res.json().catch(() => ({}))) as Record<string, any>;
@@ -176,6 +183,47 @@ export function BroadcastSection({ leagueId, user }: Props) {
     border: "1px solid var(--border)",
     fontSize: 14,
   };
+
+  /**
+   * Shrink the picked image so it fits a Firestore document.
+   *
+   * A flyer straight off a phone is 3-6MB and the cap is 1MB before base64
+   * inflates it by a third. 1200px wide is more than any mail client will
+   * show, and JPEG at 0.82 keeps text on a flyer readable.
+   */
+  async function pickFlyer(file: File) {
+    setFlyerNote(null);
+    if (!file.type.startsWith("image/")) {
+      setFlyerNote("That needs to be an image. A PDF will not show inside the email.");
+      return;
+    }
+    try {
+      const bitmap = await createImageBitmap(file);
+      const scale = Math.min(1, 1200 / Math.max(bitmap.width, bitmap.height));
+      const w = Math.round(bitmap.width * scale);
+      const h = Math.round(bitmap.height * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("no canvas");
+      // White behind it: a transparent PNG on a white email background is
+      // fine, but on a dark client it turns into unreadable dark-on-dark.
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(bitmap, 0, 0, w, h);
+      let url = canvas.toDataURL("image/jpeg", 0.82);
+      if (url.length > 700_000) url = canvas.toDataURL("image/jpeg", 0.6);
+      if (url.length > 700_000) {
+        setFlyerNote("That image is too big even after shrinking. Try a smaller one.");
+        return;
+      }
+      setFlyer(url);
+      setFlyerName(file.name);
+    } catch {
+      setFlyerNote("Could not read that image. Try a JPG or PNG.");
+    }
+  }
 
   return (
     <div style={{ display: "grid", gap: 16, maxWidth: 640 }}>
@@ -406,6 +454,68 @@ export function BroadcastSection({ leagueId, user }: Props) {
             <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}>
               Texts append “Reply STOP to opt out.” automatically.
             </div>
+          </div>
+
+          {/* Flyer. Shown in the email under the message, and sent as a link
+              in the text, because a text cannot carry an image without MMS. */}
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>
+              Flyer (optional)
+            </label>
+            {flyer ? (
+              <div style={{ display: "flex", gap: 12, alignItems: "flex-start", flexWrap: "wrap" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={flyer}
+                  alt="Flyer preview"
+                  style={{
+                    width: 150,
+                    height: "auto",
+                    borderRadius: 6,
+                    border: "1px solid rgba(0,0,0,0.15)",
+                  }}
+                />
+                <div>
+                  <div style={{ fontSize: 12, marginBottom: 6 }}>{flyerName}</div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFlyer("");
+                      setFlyerName("");
+                      setFlyerNote(null);
+                    }}
+                    style={{
+                      fontSize: 12,
+                      padding: "5px 10px",
+                      borderRadius: 6,
+                      border: "1px solid rgba(0,0,0,0.2)",
+                      background: "#fff",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = "";
+                  if (f) void pickFlyer(f);
+                }}
+                style={{ fontSize: 12 }}
+              />
+            )}
+            <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}>
+              A picture of the flyer, JPG or PNG. It shows inside the email, and
+              texts get a link to it. Send yourself a test first.
+            </div>
+            {flyerNote && (
+              <div style={{ fontSize: 12, color: "#b91c1c", marginTop: 4 }}>{flyerNote}</div>
+            )}
           </div>
 
           <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
