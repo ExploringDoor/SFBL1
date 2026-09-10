@@ -1060,6 +1060,45 @@ export async function POST(req: Request) {
         ...(spamFlags.length ? { spam_flags: spamFlags } : {}),
         ...(certainBot ? { spam: true } : {}),
       });
+    // A signed waiver is stamped on the TEAM as well as filed here.
+    //
+    // The submission is the record; the stamp is what lets a screen ask "has
+    // this team signed?" without reading form_submissions, which holds contact
+    // details and is admin-only by design. The captain portal's roster gate
+    // reads it, and so can anything else later.
+    //
+    // Best effort, and deliberately after the write: the signature is safe the
+    // moment the document lands, and failing to stamp must never lose it.
+    if (body.kind === "team_waiver" && !certainBot) {
+      try {
+        const signedTeam = String((cleaned as Record<string, unknown>).team_name ?? "")
+          .trim()
+          .toLowerCase();
+        const season = String((cleaned as Record<string, unknown>).season ?? "").trim();
+        if (signedTeam && season) {
+          const teamsSnap = await db.collection(`leagues/${tenantId}/teams`).get();
+          const hit = teamsSnap.docs.find(
+            (d) => String(d.data().name ?? "").trim().toLowerCase() === signedTeam,
+          );
+          // No match is normal and fine: a coach can pick "Other / Not listed",
+          // and the office reads the submission either way.
+          if (hit) {
+            await hit.ref.set(
+              {
+                waiver_season: season,
+                waiver_signed_at: new Date().toISOString(),
+                waiver_signed_by: String(
+                  (cleaned as Record<string, unknown>).signature ?? "",
+                ).trim(),
+              },
+              { merge: true },
+            );
+          }
+        }
+      } catch (e) {
+        console.error("[league-form] waiver team stamp failed:", e);
+      }
+    }
     // Count this SUCCESSFUL save against the per-IP rate budget (the check at
     // the top of the handler only reads it). Rejected attempts never reach
     // here, so they don't count.

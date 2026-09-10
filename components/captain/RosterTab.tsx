@@ -19,6 +19,9 @@
 // scoping (captain of team_a can't touch team_b's players).
 
 import { formatPhone } from "@/lib/format-phone";
+import { WaiverGate } from "./WaiverGate";
+import { doc, getDoc } from "firebase/firestore";
+import { CURRENT_WAIVER_SEASON, waiverSeasonLabel } from "@/lib/waiver-season";
 import { useEffect, useState } from "react";
 import {
   collection,
@@ -64,6 +67,24 @@ export function RosterTab({ leagueId, teamId }: RosterTabProps) {
   const [editId, setEditId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // null = still checking. The roster does not render until we know, so a
+  // coach never sees their roster flash up and then get taken away.
+  const [waiverOk, setWaiverOk] = useState<boolean | null>(null);
+  const [teamName, setTeamName] = useState("");
+
+  async function checkWaiver() {
+    try {
+      const d = await getDoc(doc(getDb(), `leagues/${leagueId}/teams/${teamId}`));
+      const t = d.data() ?? {};
+      setTeamName(String(t.name ?? ""));
+      setWaiverOk(String(t.waiver_season ?? "") === CURRENT_WAIVER_SEASON);
+    } catch {
+      // If the check itself fails, let them through. Blocking a coach out of
+      // their own roster over a failed read would be worse than a missing
+      // signature we can chase.
+      setWaiverOk(true);
+    }
+  }
 
   async function load() {
     setLoading(true);
@@ -161,6 +182,11 @@ export function RosterTab({ leagueId, teamId }: RosterTabProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leagueId, teamId, user]);
 
+  useEffect(() => {
+    void checkWaiver();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leagueId, teamId]);
+
   async function call(
     action:
       | "add"
@@ -226,6 +252,21 @@ export function RosterTab({ leagueId, teamId }: RosterTabProps) {
     if (!r.ok) setError(r.error ?? "Revoke failed");
     await load();
     setBusyId(null);
+  }
+
+  if (waiverOk === false) {
+    return (
+      <WaiverGate
+        leagueId={leagueId}
+        teamName={teamName}
+        season={CURRENT_WAIVER_SEASON}
+        seasonLabel={waiverSeasonLabel(CURRENT_WAIVER_SEASON)}
+        onSigned={async () => {
+          await checkWaiver();
+          await load();
+        }}
+      />
+    );
   }
 
   const pending = players.filter((p) => p.pending_approval);
