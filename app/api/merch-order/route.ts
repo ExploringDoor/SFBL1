@@ -248,7 +248,11 @@ export async function POST(req: Request) {
       `<tr><td>Email</td><td>${esc(email)}</td></tr>` +
       `<tr><td>Phone</td><td>${esc(phone) || "not given"}</td></tr>` +
       `</table>` +
-      `<p>Collected at the field.</p>`;
+      // "Collected at the field" read to the office as COLLECTING MONEY at
+      // the field, which is the opposite of what it means: the shirt is picked
+      // up there, the money is already handled. Mike, 2026-09-10: "My girls in
+      // the office thinks it's collecting money at the field." Say shirt.
+      `<p>This shirt is picked up at the field. Nothing is posted.</p>`;
     for (const to of recipients) {
       await sendEmail({
         to,

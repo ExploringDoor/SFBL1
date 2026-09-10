@@ -310,7 +310,7 @@ export function OrderForm({
             : `Reserve for $${price * quantity}`}
       </button>
       <p className="str-fineprint">
-        {itemName}, collected at the field. Nothing is posted.
+        You collect your {itemName} at the field. Nothing is posted.
       </p>
     </form>
   );
