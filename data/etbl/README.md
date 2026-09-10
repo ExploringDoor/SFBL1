@@ -82,7 +82,7 @@ The league fills in three plain spreadsheets in `intake/` — no ids, just names
 
 | Sheet | Columns | Notes |
 |---|---|---|
-| `intake/teams.csv` | `town, division, team, color` | One row per team. Spell each town the same way every time (it is what the commissioner passwords key on). Division text like "3rd Grade Boys" turns on the age sections automatically. Colour optional (hex). |
+| `intake/teams.csv` | `town, division, team, color, coach, coach_phone, coach_email` | One row per team. Spell each town the same way every time (it is what the commissioner passwords key on). Division text like "3rd Grade Boys" turns on the age sections automatically. Colour and coach columns optional; a coach goes to the admin's private coach list (Admin → Captains), never the public site. |
 | `intake/schedule.csv` | `date, time, gym, away_team, home_team, division[, away_score, home_score]` | Team names exactly as in teams.csv. `9:00 AM` or `09:00`; `2026-11-07` or `11/7/2026`. Scores only for games already played. |
 | `intake/gyms.csv` | `name, town, address, maps_url` | Address gives one-tap directions; `maps_url` optional. |
 

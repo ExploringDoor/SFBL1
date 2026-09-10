@@ -11,6 +11,8 @@
 import { useEffect, useState } from "react";
 import { doc, onSnapshot } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
+import { useTenant } from "@/lib/tenant-context";
+import { periodLabel } from "@/lib/sport-labels";
 import "./LiveScoreBanner.css";
 
 interface Props {
@@ -34,6 +36,8 @@ export function LiveScoreBanner({
   initialHomeScore,
   initialStatus,
 }: Props) {
+  // "Q3" for a basketball league, "TOP 3" for everyone else.
+  const sport = useTenant().config?.sport;
   const [state, setState] = useState({
     away: initialAwayScore,
     home: initialHomeScore,
@@ -81,7 +85,7 @@ export function LiveScoreBanner({
             <span className="lsb-dot" aria-hidden />
             <span>LIVE</span>
             <span className="lsb-inning">
-              {state.half === "top" ? "TOP" : "BOT"} {state.inning}
+              {periodLabel(sport, state.inning, state.half)}
             </span>
           </>
         ) : (
@@ -105,7 +109,9 @@ export function LiveScoreBanner({
       <span className="sr-only">
         {awayName} {state.away}, {homeName} {state.home}
         {isLive
-          ? `, ${state.half === "top" ? "top" : "bottom"} of ${state.inning}`
+          ? sport === "basketball"
+            ? `, ${periodLabel(sport, state.inning)}`
+            : `, ${state.half === "top" ? "top" : "bottom"} of ${state.inning}`
           : ", final"}
       </span>
     </aside>

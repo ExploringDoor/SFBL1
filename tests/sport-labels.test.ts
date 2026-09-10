@@ -1,10 +1,27 @@
 import { describe, expect, it } from "vitest";
 import {
+  periodLabel,
   scoreLabels,
   scoreUnit,
   sportNoun,
   venueLabels,
 } from "@/lib/sport-labels";
+
+describe("periodLabel", () => {
+  it("basketball counts quarters, then overtimes", () => {
+    expect(periodLabel("basketball", 1)).toBe("Q1");
+    expect(periodLabel("basketball", 4, "bottom")).toBe("Q4");
+    expect(periodLabel("basketball", 5)).toBe("OT");
+    expect(periodLabel("basketball", 6)).toBe("2OT");
+    expect(periodLabel("basketball", 0)).toBe("Q1");
+  });
+
+  it("everyone else reads top / bottom of the inning, as before", () => {
+    expect(periodLabel("baseball", 3, "top")).toBe("TOP 3");
+    expect(periodLabel("softball", 7, "bottom")).toBe("BOT 7");
+    expect(periodLabel(undefined, 2)).toBe("TOP 2");
+  });
+});
 
 // The standings table, the scores summary, the fields page and the meta
 // description all read sport-aware words from lib/sport-labels. These pin the

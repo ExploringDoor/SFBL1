@@ -19,7 +19,12 @@
 //   teams.csv:
 //     id,name,abbrev,division,color,logo_url[,age_group][,w,l,t]
 //       [,gamechanger_url][,organization][,demo]
-//     (organization is the town / club a team belongs to — the Scores tab
+//       [,coach_name,coach_email,coach_phone]
+//     (coach_* write the team's head coach to teams/{id}/_private/contact,
+//      which is what the admin Captains tab lists. The public team doc never
+//      carries them. Any one of the three present → the contact is written;
+//      all blank/absent → the existing contact is left alone.
+//      organization is the town / club a team belongs to — the Scores tab
 //      groups on it and the per-town commissioner passwords are gated on it,
 //      so spell it identically on every team from one town. Column absent →
 //      the field is left alone; present but blank → cleared.
@@ -422,6 +427,32 @@ function stageTeams(): StageResult {
         updated_at: new Date().toISOString(),
       },
     });
+
+    // Head coach → the PRIVATE contact doc the Captains tab reads. Never on
+    // the public team doc. Written only when the sheet names someone, so a
+    // re-provision without the columns leaves a registration-entered coach
+    // in place.
+    const rr = r as Record<string, string | undefined>;
+    const coachName = cleanName(rr.coach_name ?? "");
+    const coachEmail = String(rr.coach_email ?? "").trim().toLowerCase();
+    const coachPhone = String(rr.coach_phone ?? "").trim();
+    if (coachName || coachEmail || coachPhone) {
+      writes.push({
+        path: `leagues/${leagueId}/teams/${r.id}/_private/contact`,
+        data: {
+          managers: [
+            {
+              name: coachName || coachEmail,
+              email: coachEmail,
+              phone: coachPhone,
+              role: "head coach",
+              source: "provision",
+            },
+          ],
+          updated_at: new Date().toISOString(),
+        },
+      });
+    }
   }
   return { errors, writes };
 }

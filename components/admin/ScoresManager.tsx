@@ -22,8 +22,10 @@
 // Five total ways to land scores on a game doc.
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import type { User } from "firebase/auth";
 import { formatTime12 } from "@/lib/format-time";
+import { useTenant } from "@/lib/tenant-context";
 import {
   collection,
   doc,
@@ -70,6 +72,11 @@ interface Props {
 type Filter = "needs_score" | "all" | "conflicts";
 
 export function ScoresManager({ leagueId, user, town = null }: Props) {
+  // Basketball leagues get a "Live" link per unplayed game to the
+  // scorer's-table page (/score/[id]: quarters, +1/+2/+3). The page exists
+  // for every sport, but only here is it linked from the admin, so the
+  // baseball leagues' Scores tab is unchanged.
+  const liveScoring = useTenant().config?.sport === "basketball";
   const [games, setGames] = useState<GameRow[]>([]);
   const [teams, setTeams] = useState<TeamOpt[]>([]);
   const [drafts, setDrafts] = useState<
@@ -548,8 +555,11 @@ export function ScoresManager({ leagueId, user, town = null }: Props) {
                       (g.has_conflict ? "bg-red-50/50" : "")
                     }
                   >
-                    <td className="py-2 pr-2 text-xs text-slate-600 font-mono">
-                      {g.date}
+                    <td className="py-2 pr-2 text-xs text-slate-600 font-mono whitespace-nowrap">
+                      {/* Month/day only: the year is the season's, and the
+                          full ISO date wrapped onto three lines on a phone,
+                          which is where a commissioner enters scores from. */}
+                      <span title={g.date}>{g.date.slice(5).replace("-", "/")}</span>
                       {g.time && (
                         <div className="text-[10px] text-slate-400">
                           {formatTime12(g.time)}
@@ -585,9 +595,13 @@ export function ScoresManager({ leagueId, user, town = null }: Props) {
                         </div>
                       )}
                     </td>
-                    <td className="text-center py-2 px-2">
+                    {/* inputMode numeric: a phone opens the number pad, which
+                        is the whole job on a Saturday. w-14 keeps both boxes
+                        and the Save button on a 375px screen. */}
+                    <td className="text-center py-2 px-1">
                       <input
                         type="number"
+                        inputMode="numeric"
                         value={effectiveScore(g, "away")}
                         onChange={(e) => setDraft(g.id, "away", e.target.value)}
                         onKeyDown={(e) => {
@@ -595,12 +609,13 @@ export function ScoresManager({ leagueId, user, town = null }: Props) {
                         }}
                         disabled={busy || savingId === g.id}
                         min={0}
-                        className="w-16 rounded-md border border-slate-300 px-2 py-1 text-center font-mono"
+                        className="w-14 rounded-md border border-slate-300 px-1.5 py-1 text-center font-mono"
                       />
                     </td>
-                    <td className="text-center py-2 px-2">
+                    <td className="text-center py-2 px-1">
                       <input
                         type="number"
+                        inputMode="numeric"
                         value={effectiveScore(g, "home")}
                         onChange={(e) => setDraft(g.id, "home", e.target.value)}
                         onKeyDown={(e) => {
@@ -608,7 +623,7 @@ export function ScoresManager({ leagueId, user, town = null }: Props) {
                         }}
                         disabled={busy || savingId === g.id}
                         min={0}
-                        className="w-16 rounded-md border border-slate-300 px-2 py-1 text-center font-mono"
+                        className="w-14 rounded-md border border-slate-300 px-1.5 py-1 text-center font-mono"
                       />
                     </td>
                     <td className="py-2 pl-2 text-xs">
@@ -643,6 +658,18 @@ export function ScoresManager({ leagueId, user, town = null }: Props) {
                             {savingId === g.id ? "…" : "Save"}
                           </button>
                         )}
+                        {liveScoring &&
+                          g.status !== "final" &&
+                          g.status !== "approved" &&
+                          g.status !== "cancelled" && (
+                            <Link
+                              href={`/score/${g.id}`}
+                              className="rounded-md border border-slate-300 bg-white px-2 py-0.5 font-semibold text-slate-700 hover:bg-slate-50"
+                              title="Run the clock and score this game live from the scorer's table"
+                            >
+                              {g.status === "live" ? "● Live" : "Live"}
+                            </Link>
+                          )}
                       </div>
                     </td>
                   </tr>

@@ -44,6 +44,22 @@ export function sportNoun(
   return "baseball";
 }
 
+/** The game clock's position for the live scoreboard: "TOP 3" / "BOT 3" for
+ *  a bat-and-ball sport, "Q3" / "OT" / "2OT" for basketball. `period` is the
+ *  game doc's current_inning, which basketball reuses as the quarter. */
+export function periodLabel(
+  sport: SportLike,
+  period: number,
+  half?: "top" | "bottom" | string | null,
+): string {
+  const p = Math.max(1, Math.floor(Number(period) || 1));
+  if (sport === "basketball") {
+    if (p <= 4) return `Q${p}`;
+    return p === 5 ? "OT" : `${p - 4}OT`;
+  }
+  return `${half === "bottom" ? "BOT" : "TOP"} ${p}`;
+}
+
 /** Where games are played. The /fields route and the admin tab keep their
  *  key; only what the visitor reads changes. */
 export function venueLabels(sport: SportLike): {

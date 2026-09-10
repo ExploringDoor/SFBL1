@@ -2,12 +2,16 @@
 // scorekeeper. Tap-driven: each tap = +1 run for one team, or
 // "next half-inning", or "final".
 //
-// Auth: caller must be admin of the league OR captain of one of
-// the two teams in the game. (Fans of either team can score-keep,
-// not just the home team's captain.)
+// Auth: caller must be admin of the league (the full admin, or a scoped role
+// holding "scores" — a town commissioner, whose town must have a team in the
+// game) OR captain of one of the two teams in the game. (Fans of either team
+// can score-keep, not just the home team's captain.)
+//
+// Basketball reuses current_inning as the period (Q1–Q4, then OT) and adds
+// +2 / +3 deltas; nothing else about the doc changes.
 //
 // Body shapes:
-//   { leagueId, gameId, action: "run", side: "away" | "home", delta?: 1|-1 }
+//   { leagueId, gameId, action: "run", side: "away" | "home", delta?: 1|2|3|-1 }
 //   { leagueId, gameId, action: "set_score", away_score, home_score }
 //   { leagueId, gameId, action: "advance_inning", half?: "top" | "bottom" }
 //   { leagueId, gameId, action: "set_inning", inning: number, half: "top"|"bottom" }
@@ -20,6 +24,9 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { accessFor } from "@/lib/admin-roles";
+import { checkGamesInTown, townForbidden } from "@/lib/admin-town";
+import { invalidateGeneratedRecap } from "@/lib/stats-off-recap";
 
 export const runtime = "nodejs";
 
@@ -88,11 +95,12 @@ export async function POST(req: Request) {
   }
   const game = snap.data() ?? {};
 
-  // Authority: admin OR captain of either team.
+  // Authority: admin (full, or the "scores" scope) OR captain of either team.
   const claim = (decoded.leagues as Record<string, string> | undefined)?.[
     leagueId
   ];
-  const isAdmin = claim === "admin";
+  const access = accessFor(decoded, leagueId);
+  const isAdmin = access.full || access.scopes.has("scores");
   const captainTeam =
     typeof claim === "string" && claim.startsWith("captain:")
       ? claim.slice("captain:".length)
@@ -106,6 +114,12 @@ export async function POST(req: Request) {
       { error: "Not admin or captain of either team in this game" },
       { status: 403 },
     );
+  }
+  // A town commissioner may only run the clock on their own town's games —
+  // the same boundary admin-score-quick enforces (lib/admin-town.ts).
+  if (isAdmin && access.town) {
+    const r = await checkGamesInTown(db, leagueId, [gameId], access.town);
+    if (r.forbidden.length) return townForbidden(access.town, r.forbidden);
   }
 
   const now = new Date().toISOString();
@@ -130,8 +144,10 @@ export async function POST(req: Request) {
     }
     case "run": {
       const side = body.side;
-      const deltaRaw = body.delta;
-      const delta = deltaRaw === -1 ? -1 : 1;
+      // +1 for a run; +1 / +2 / +3 for a free throw, field goal or three;
+      // -1 to take one back. Anything else is a +1.
+      const d = Number(body.delta);
+      const delta = d === -1 || d === 2 || d === 3 ? d : 1;
       if (side !== "away" && side !== "home") {
         return NextResponse.json(
           { error: "side must be away or home" },
@@ -209,6 +225,33 @@ export async function POST(req: Request) {
   }
 
   await ref.set(update, { merge: true });
+
+  if (action === "finalize") {
+    // The same score-only box_scores doc admin-score-quick and the provision
+    // script write for a final, so the public game page and the tenant audit
+    // see this game the same way whichever lane finished it. Merge: a full
+    // box score entered later is not overwritten. Any machine-written recap
+    // is dropped so it regenerates from the final score.
+    await db.doc(`leagues/${leagueId}/box_scores/${gameId}`).set(
+      {
+        away_team_id: String(game.away_team_id ?? ""),
+        home_team_id: String(game.home_team_id ?? ""),
+        away_score: Number(game.away_score) || 0,
+        home_score: Number(game.home_score) || 0,
+        away_lineup_score_only: true,
+        home_lineup_score_only: true,
+        status: "final",
+        updated_at: now,
+        updated_by_uid: decoded.uid,
+      },
+      { merge: true },
+    );
+    try {
+      await invalidateGeneratedRecap(leagueId, gameId);
+    } catch {
+      /* recap cache is best-effort */
+    }
+  }
 
   return NextResponse.json({
     ok: true,

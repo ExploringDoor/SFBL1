@@ -1,22 +1,30 @@
 "use client";
 
 // Live scorer page — separate URL for the at-the-field scorekeeper.
-// Designed for one-thumb operation on a phone in the dugout.
+// Designed for one-thumb operation on a phone in the dugout, or at the
+// scorer's table.
 //
-// Layout: two giant team panels stacked or side-by-side, each with
-// a current score and a "+1 run" tap target. Inning indicator in
-// the middle. Bottom bar: undo, advance half-inning, set custom
-// score, finalize.
+// Layout: two giant team panels stacked or side-by-side, each with a
+// current score and a "+1 run" tap target. Inning indicator in the middle.
+// Bottom bar: undo, advance half-inning, set custom score, finalize.
 //
-// Auth: admin or captain of either team. Hits /api/live-score.
-// Public can watch the same scoreboard at /games/[id] which polls
-// every few seconds when the game is in "live" status.
+// BASKETBALL (config.sport === "basketball"): the same page, with the
+// inning bar reading Q1–Q4 / OT and each panel offering +1 / +2 / +3
+// (free throw, field goal, three) instead of one tap. The game doc's
+// current_inning is reused as the period; current_half is ignored.
+//
+// Auth: admin (full, or the "scores" scope — a town commissioner, for their
+// own town's games) or captain of either team. Hits /api/live-score, which
+// is where the town boundary is actually enforced. Public can watch the
+// same scoreboard at /games/[id], which polls every few seconds when the
+// game is in "live" status.
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useTenant } from "@/lib/tenant-context";
-import { useUser, useLeagueRole, useCaptainTeam } from "@/lib/auth-client";
+import { useUser, useAdminAccess, useCaptainTeam } from "@/lib/auth-client";
+import { periodLabel } from "@/lib/sport-labels";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import "./score.css";
@@ -40,8 +48,9 @@ export default function LiveScorerPage() {
   const gameId = params.gameId;
   const { tenantId, config } = useTenant();
   const user = useUser();
-  const role = useLeagueRole(tenantId);
+  const access = useAdminAccess(tenantId);
   const { teamId: captainTeamId } = useCaptainTeam(tenantId);
+  const isBasketball = config?.sport === "basketball";
 
   const [game, setGame] = useState<LiveGame | null>(null);
   const [loading, setLoading] = useState(true);
@@ -104,10 +113,13 @@ export default function LiveScorerPage() {
     return () => unsub();
   }, [tenantId, gameId]);
 
-  // Compute auth: admin OR captain of either team.
+  // Compute auth: admin (full or "scores" scope) OR captain of either team.
+  // A commissioner's town is checked by the API, not here: the page has no
+  // cheap way to know which town a team belongs to, and the server refuses
+  // with a message this page shows.
   useEffect(() => {
     if (!game) return;
-    if (role === "admin") {
+    if (access !== "loading" && (access.full || access.scopes.has("scores"))) {
       setAuthorized(true);
       return;
     }
@@ -120,7 +132,7 @@ export default function LiveScorerPage() {
       return;
     }
     setAuthorized(false);
-  }, [role, captainTeamId, game]);
+  }, [access, captainTeamId, game]);
 
   async function call(body: Record<string, unknown>) {
     if (!user || !tenantId || !gameId) return;
@@ -155,7 +167,7 @@ export default function LiveScorerPage() {
         <p>Loading…</p>
       </main>
     );
-  if (error)
+  if (error && !game)
     return (
       <main className="ls-shell">
         <p className="ls-error">⚠ {error}</p>
@@ -167,9 +179,12 @@ export default function LiveScorerPage() {
     return (
       <main className="ls-shell">
         <h1>Sign in to score this game</h1>
-        <p>Only admins and captains of either team can update the score.</p>
+        <p>
+          Only league admins{isBasketball ? ", commissioners" : ""} and captains
+          of either team can update the score.
+        </p>
         <Link
-          href={`/login?next=/score/${gameId}`}
+          href={isBasketball ? "/admin" : `/login?next=/score/${gameId}`}
           className="ls-btn ls-btn-primary"
         >
           Sign in
@@ -184,7 +199,7 @@ export default function LiveScorerPage() {
         <h1>Not authorized</h1>
         <p>
           Only admins and captains of {game.away_team_name} or{" "}
-          {game.home_team_name} can update this game's score.
+          {game.home_team_name} can update this game&apos;s score.
         </p>
         <Link href={`/games/${gameId}`} className="ls-btn ls-btn-secondary">
           View game page instead
@@ -196,6 +211,21 @@ export default function LiveScorerPage() {
   const isLive = game.status === "live";
   const isFinal = game.status === "final" || game.status === "approved";
   const halfLabel = game.current_half === "top" ? "TOP" : "BOT";
+  const period = game.current_inning;
+  // Basketball: 1–4 are quarters, 5+ are overtimes; no halves.
+  const stepBack = () =>
+    isBasketball
+      ? call({ action: "set_inning", inning: Math.max(1, period - 1), half: "top" })
+      : call({
+          action: "set_inning",
+          inning: game.current_half === "top" ? Math.max(1, period - 1) : period,
+          half: game.current_half === "top" ? "bottom" : "top",
+        });
+  const stepForward = () =>
+    isBasketball
+      ? call({ action: "set_inning", inning: Math.min(30, period + 1), half: "top" })
+      : call({ action: "advance_inning" });
+  const steps: number[] = isBasketball ? [1, 2, 3] : [1];
 
   return (
     <main className={`ls-shell ${isLive ? "ls-live" : ""}`}>
@@ -226,33 +256,38 @@ export default function LiveScorerPage() {
         {game.field && <span className="ls-field">{game.field}</span>}
       </header>
 
-      {/* ── Inning bar ─── */}
+      {error && <p className="ls-error">⚠ {error}</p>}
+
+      {/* ── Inning / period bar ─── */}
       <div className="ls-inning">
         <button
           type="button"
           className="ls-inning-btn"
-          onClick={() => {
-            // Quick "back" — go to previous half.
-            const half = game.current_half === "top" ? "bottom" : "top";
-            const inning =
-              game.current_half === "top"
-                ? Math.max(1, game.current_inning - 1)
-                : game.current_inning;
-            call({ action: "set_inning", inning, half });
-          }}
+          onClick={stepBack}
           disabled={busy}
+          aria-label={isBasketball ? "Previous period" : "Previous half-inning"}
         >
           ◀
         </button>
         <div className="ls-inning-display">
-          <span className="ls-inning-half">{halfLabel}</span>
-          <span className="ls-inning-num">{game.current_inning}</span>
+          {isBasketball ? (
+            <>
+              <span className="ls-inning-half">{period <= 4 ? "PERIOD" : "OVERTIME"}</span>
+              <span className="ls-inning-num">{periodLabel("basketball", period)}</span>
+            </>
+          ) : (
+            <>
+              <span className="ls-inning-half">{halfLabel}</span>
+              <span className="ls-inning-num">{period}</span>
+            </>
+          )}
         </div>
         <button
           type="button"
           className="ls-inning-btn"
-          onClick={() => call({ action: "advance_inning" })}
+          onClick={stepForward}
           disabled={busy}
+          aria-label={isBasketball ? "Next period" : "Next half-inning"}
         >
           ▶
         </button>
@@ -264,8 +299,10 @@ export default function LiveScorerPage() {
           label="Away"
           team={game.away_team_name}
           score={game.away_score}
-          isUp={game.current_half === "top"}
-          onPlus={() => call({ action: "run", side: "away", delta: 1 })}
+          isUp={!isBasketball && game.current_half === "top"}
+          steps={steps}
+          unit={isBasketball ? "point" : "run"}
+          onAdd={(delta) => call({ action: "run", side: "away", delta })}
           onMinus={() => call({ action: "run", side: "away", delta: -1 })}
           busy={busy}
         />
@@ -273,8 +310,10 @@ export default function LiveScorerPage() {
           label="Home"
           team={game.home_team_name}
           score={game.home_score}
-          isUp={game.current_half === "bottom"}
-          onPlus={() => call({ action: "run", side: "home", delta: 1 })}
+          isUp={!isBasketball && game.current_half === "bottom"}
+          steps={steps}
+          unit={isBasketball ? "point" : "run"}
+          onAdd={(delta) => call({ action: "run", side: "home", delta })}
           onMinus={() => call({ action: "run", side: "home", delta: -1 })}
           busy={busy}
         />
@@ -336,7 +375,9 @@ function ScorePanel({
   team,
   score,
   isUp,
-  onPlus,
+  steps,
+  unit,
+  onAdd,
   onMinus,
   busy,
 }: {
@@ -344,10 +385,15 @@ function ScorePanel({
   team: string;
   score: number;
   isUp: boolean;
-  onPlus: () => void;
+  /** Point values offered: [1] for a bat-and-ball sport, [1, 2, 3] for
+   *  basketball. With one step the whole score tile is the tap target. */
+  steps: number[];
+  unit: "run" | "point";
+  onAdd: (delta: number) => void;
   onMinus: () => void;
   busy: boolean;
 }) {
+  const single = steps.length === 1;
   return (
     <div className={`ls-panel ${isUp ? "ls-panel-up" : ""}`}>
       <div className="ls-panel-head">
@@ -355,22 +401,44 @@ function ScorePanel({
         {isUp && <span className="ls-panel-batting">at bat</span>}
       </div>
       <div className="ls-panel-team">{team}</div>
-      <button
-        type="button"
-        className="ls-score-btn"
-        onClick={onPlus}
-        disabled={busy}
-        aria-label={`+1 run for ${team}`}
-      >
-        <span className="ls-score-number">{score}</span>
-        <span className="ls-score-cta">TAP TO ADD RUN</span>
-      </button>
+      {single ? (
+        <button
+          type="button"
+          className="ls-score-btn"
+          onClick={() => onAdd(1)}
+          disabled={busy}
+          aria-label={`+1 ${unit} for ${team}`}
+        >
+          <span className="ls-score-number">{score}</span>
+          <span className="ls-score-cta">TAP TO ADD {unit.toUpperCase()}</span>
+        </button>
+      ) : (
+        <>
+          <div className="ls-score-btn ls-score-static" aria-live="polite">
+            <span className="ls-score-number">{score}</span>
+          </div>
+          <div className="ls-steps">
+            {steps.map((n) => (
+              <button
+                key={n}
+                type="button"
+                className="ls-step-btn"
+                onClick={() => onAdd(n)}
+                disabled={busy}
+                aria-label={`+${n} ${n === 1 ? unit : `${unit}s`} for ${team}`}
+              >
+                +{n}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
       <button
         type="button"
         className="ls-undo-btn"
         onClick={onMinus}
         disabled={busy || score === 0}
-        aria-label={`Undo last run for ${team}`}
+        aria-label={`Take back one ${unit} for ${team}`}
       >
         − undo
       </button>

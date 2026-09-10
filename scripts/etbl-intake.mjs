@@ -5,7 +5,7 @@
 // So the league fills in three simple sheets (data/etbl/intake/*.csv) and
 // this script produces what scripts/provision.ts wants:
 //
-//   intake/teams.csv     town,division,team,color
+//   intake/teams.csv     town,division,team,color[,coach,coach_phone,coach_email]
 //   intake/schedule.csv  date,time,gym,away_team,home_team,division[,away_score,home_score]
 //   intake/gyms.csv      name,town,address,maps_url
 //
@@ -188,6 +188,10 @@ for (const r of teamRows) {
   usedIds.add(id);
   const color = r.color && /^#[0-9a-fA-F]{3,8}$/.test(r.color) ? r.color : "";
   if (r.color && !color) warnings.push(`teams.csv row ${r._row}: color "${r.color}" is not a hex colour, ignored`);
+  const coachEmail = (r.coach_email ?? "").trim().toLowerCase();
+  if (coachEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(coachEmail)) {
+    warnings.push(`teams.csv row ${r._row}: coach_email "${r.coach_email}" does not look like an email`);
+  }
   const t = {
     id,
     name: name.replace(/\s+/g, " "),
@@ -196,6 +200,11 @@ for (const r of teamRows) {
     age_group: ageGroupOf(division),
     organization: town.replace(/\s+/g, " "),
     color,
+    // Head coach, if the sheet names one. Goes to the team's PRIVATE contact
+    // doc (the admin's coach list), never the public site.
+    coach_name: (r.coach ?? r.coach_name ?? "").replace(/\s+/g, " ").trim(),
+    coach_email: coachEmail,
+    coach_phone: (r.coach_phone ?? "").trim(),
   };
   teams.push(t);
   byName.set(key(name), t);
@@ -300,8 +309,8 @@ if (DRY) {
 fs.writeFileSync(
   path.join(ROOT, "teams.csv"),
   toCsv([
-    ["id", "name", "abbrev", "division", "age_group", "organization", "color", "logo_url", "gamechanger_url"],
-    ...teams.map((t) => [t.id, t.name, t.abbrev, t.division, t.age_group, t.organization, t.color, "", ""]),
+    ["id", "name", "abbrev", "division", "age_group", "organization", "color", "logo_url", "gamechanger_url", "coach_name", "coach_email", "coach_phone"],
+    ...teams.map((t) => [t.id, t.name, t.abbrev, t.division, t.age_group, t.organization, t.color, "", "", t.coach_name, t.coach_email, t.coach_phone]),
   ]),
 );
 fs.writeFileSync(

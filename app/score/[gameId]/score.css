@@ -258,6 +258,43 @@
   opacity: 0.3;
 }
 
+/* ── Basketball: the score tile is a display, and +1 / +2 / +3 sit under it.
+   Three fat buttons a thumb can tell apart without looking. */
+.ls-score-static {
+  cursor: default;
+  padding: 16px 16px 8px;
+}
+
+.ls-steps {
+  display: flex;
+  gap: 8px;
+  padding: 0 4px 8px;
+}
+
+.ls-step-btn {
+  flex: 1;
+  min-height: 64px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+  font-family: 'SF Mono', Menlo, monospace;
+  font-size: 28px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.05s;
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0.2);
+}
+
+.ls-step-btn:active:not(:disabled) {
+  background: rgba(255, 255, 255, 0.24);
+  transform: scale(0.97);
+}
+
+.ls-step-btn:disabled {
+  opacity: 0.6;
+}
+
 /* ── Footer ─── */
 
 .ls-footer {

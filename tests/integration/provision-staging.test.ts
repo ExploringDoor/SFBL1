@@ -85,6 +85,28 @@ function stageTeams(
         updated_at: new Date().toISOString(),
       },
     });
+    // Head coach → the private contact doc (scripts/provision.ts also runs
+    // cleanName on the name).
+    const coachName = (r.coach_name ?? "").trim();
+    const coachEmail = (r.coach_email ?? "").trim().toLowerCase();
+    const coachPhone = (r.coach_phone ?? "").trim();
+    if (coachName || coachEmail || coachPhone) {
+      writes.push({
+        path: `leagues/${leagueId}/teams/${r.id}/_private/contact`,
+        data: {
+          managers: [
+            {
+              name: coachName || coachEmail,
+              email: coachEmail,
+              phone: coachPhone,
+              role: "head coach",
+              source: "provision",
+            },
+          ],
+          updated_at: new Date().toISOString(),
+        },
+      });
+    }
   }
   return { errors, writes };
 }
@@ -393,6 +415,44 @@ describe("stageTeams", () => {
     expect(cleared.writes[0]!.data.organization).toBeNull();
     const absent = stageTeams([{ id: "t1", name: "T1" }], "etbl");
     expect(absent.writes[0]!.data).not.toHaveProperty("organization");
+  });
+
+  it("coach columns write the team's private contact, never the public doc", () => {
+    const r = stageTeams(
+      [
+        {
+          id: "t-mineola-yellowjackets",
+          name: "Mineola Yellowjackets",
+          coach_name: "Pat Coach",
+          coach_email: "Pat@Example.com ",
+          coach_phone: "903-555-0100",
+        },
+      ],
+      "etbl",
+    );
+    expect(r.errors).toEqual([]);
+    expect(r.writes).toHaveLength(2);
+    const pub = r.writes[0]!;
+    expect(pub.path).toBe("leagues/etbl/teams/t-mineola-yellowjackets");
+    expect(JSON.stringify(pub.data)).not.toMatch(/Pat|example\.com|555/);
+    const priv = r.writes[1]!;
+    expect(priv.path).toBe("leagues/etbl/teams/t-mineola-yellowjackets/_private/contact");
+    expect(priv.data.managers).toEqual([
+      {
+        name: "Pat Coach",
+        email: "pat@example.com",
+        phone: "903-555-0100",
+        role: "head coach",
+        source: "provision",
+      },
+    ]);
+  });
+
+  it("no coach columns → no contact write, so a registration-entered coach survives", () => {
+    const r = stageTeams([{ id: "t1", name: "T1", coach_name: "", coach_email: "" }], "etbl");
+    expect(r.writes).toHaveLength(1);
+    const absent = stageTeams([{ id: "t1", name: "T1" }], "etbl");
+    expect(absent.writes).toHaveLength(1);
   });
 
   it("demo=true marks a placeholder team; anything else does not", () => {

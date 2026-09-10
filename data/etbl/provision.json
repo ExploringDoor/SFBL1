@@ -77,7 +77,10 @@
         {
           "label": "More",
           "href": "#",
-          "children": [{ "label": "Rules", "href": "/rules" }]
+          "children": [
+            { "label": "Rules", "href": "/rules" },
+            { "label": "Sign-Ups", "href": "/content/sign-ups" }
+          ]
         }
       ]
     }

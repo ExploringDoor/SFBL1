@@ -18,6 +18,8 @@ import {
   where,
 } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
+import { useTenant } from "@/lib/tenant-context";
+import { periodLabel } from "@/lib/sport-labels";
 import "./HomepageLiveGames.css";
 
 interface LiveGame {
@@ -39,6 +41,8 @@ interface Props {
 
 export function HomepageLiveGames({ leagueId, teamLabels }: Props) {
   const [games, setGames] = useState<LiveGame[] | null>(null);
+  // "Q3" for a basketball league, "TOP 3" for everyone else.
+  const sport = useTenant().config?.sport;
 
   useEffect(() => {
     const db = getDb();
@@ -106,8 +110,7 @@ export function HomepageLiveGames({ leagueId, teamLabels }: Props) {
                   <span className="hlg-team-num">{g.home_score}</span>
                 </span>
                 <span className="hlg-inning">
-                  {g.current_half === "top" ? "TOP" : "BOT"}{" "}
-                  {g.current_inning}
+                  {periodLabel(sport, g.current_inning, g.current_half)}
                 </span>
               </Link>
             );
