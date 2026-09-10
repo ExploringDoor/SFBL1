@@ -9,6 +9,7 @@ import {
   type StandingsRow,
   computeStandingsWithExtraGameRule,
 } from "@/lib/stats/shared";
+import { scoreLabels } from "@/lib/sport-labels";
 import "../print.css";
 import { PrintToolbar } from "../PrintToolbar";
 
@@ -150,9 +151,9 @@ export default async function PrintStandingsPage() {
                   <th className="print-num" style={{ width: 50 }}>L</th>
                   <th className="print-num" style={{ width: 50 }}>T</th>
                   <th className="print-num" style={{ width: 60 }}>PCT</th>
-                  <th className="print-num" style={{ width: 50 }}>RS</th>
-                  <th className="print-num" style={{ width: 50 }}>RA</th>
-                  <th className="print-num" style={{ width: 50 }}>DIFF</th>
+                  <th className="print-num" style={{ width: 50 }}>{scoreLabels(config?.sport).for}</th>
+                  <th className="print-num" style={{ width: 50 }}>{scoreLabels(config?.sport).against}</th>
+                  <th className="print-num" style={{ width: 50 }}>{scoreLabels(config?.sport).diff}</th>
                 </tr>
               </thead>
               <tbody>

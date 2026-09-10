@@ -79,6 +79,29 @@ export async function POST(req: Request) {
     .catch(() => null);
   const boxScores = (boxSnap?.docs ?? []).filter((d) => demoGameIds.has(d.id));
 
+  // Volunteer shifts generated from a sample game (Admin → Volunteers →
+  // Generate) carry its game_id, and would otherwise stay on the public
+  // board asking parents to run the clock at a game that no longer exists.
+  // Hand-made shifts have no game_id and are left alone. Contact rows for
+  // the removed shifts go too — they are sign-ups for nothing.
+  const shiftSnap = await db
+    .collection(`leagues/${leagueId}/snackbar_shifts`)
+    .get()
+    .catch(() => null);
+  const shifts = (shiftSnap?.docs ?? []).filter((d) =>
+    demoGameIds.has(String((d.data() as { game_id?: unknown }).game_id ?? "")),
+  );
+  const shiftIds = shifts.map((d) => d.id);
+  const claims: FirebaseFirestore.QueryDocumentSnapshot[] = [];
+  for (let i = 0; i < shiftIds.length; i += 30) {
+    const snap = await db
+      .collection(`leagues/${leagueId}/snackbar_claims`)
+      .where("shift_id", "in", shiftIds.slice(i, i + 30))
+      .get()
+      .catch(() => null);
+    if (snap) claims.push(...snap.docs);
+  }
+
   // Standings are derived, and a sample division left behind is as visible as
   // a sample team. Only rows whose every entry belongs to a demo team go.
   const demoTeamIds = new Set(teams.map((d) => d.id));
@@ -106,6 +129,8 @@ export async function POST(req: Request) {
 
   await batchDelete(games);
   await batchDelete(boxScores);
+  await batchDelete(claims);
+  await batchDelete(shifts);
   await batchDelete(standings);
   // Teams last. If anything above fails the sample teams are still there, and
   // a half-removed season that still has its teams reads as "not finished"
@@ -126,6 +151,7 @@ export async function POST(req: Request) {
       teams: teams.length,
       games: games.length,
       box_scores: boxScores.length,
+      shifts: shifts.length,
       standings: standings.length,
       at: new Date().toISOString(),
     });
@@ -138,6 +164,7 @@ export async function POST(req: Request) {
     teams: teams.length,
     games: games.length,
     box_scores: boxScores.length,
+    shifts: shifts.length,
     standings: standings.length,
   });
 }

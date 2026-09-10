@@ -1,97 +1,97 @@
 id,name,abbrev,division,age_group,organization,color,logo_url,gamechanger_url,demo
-t-mineola-3b-red,Mineola 3B Red,MIN3BR,Boys,3rd Grade,Mineola,#b91c1c,,,true
-t-town-b-3b-red,Town B 3B Red,TWB3BR,Boys,3rd Grade,Town B,#b91c1c,,,true
-t-town-c-3b-red,Town C 3B Red,TWC3BR,Boys,3rd Grade,Town C,#b91c1c,,,true
-t-town-d-3b-red,Town D 3B Red,TWD3BR,Boys,3rd Grade,Town D,#b91c1c,,,true
-t-town-e-3b-red,Town E 3B Red,TWE3BR,Boys,3rd Grade,Town E,#b91c1c,,,true
-t-town-f-3b-red,Town F 3B Red,TWF3BR,Boys,3rd Grade,Town F,#b91c1c,,,true
-t-town-g-3b-red,Town G 3B Red,TWG3BR,Boys,3rd Grade,Town G,#b91c1c,,,true
-t-mineola-3b-blue,Mineola 3B Blue,MIN3BB,Boys,3rd Grade,Mineola,#1d4ed8,,,true
-t-town-b-3b-blue,Town B 3B Blue,TWB3BB,Boys,3rd Grade,Town B,#1d4ed8,,,true
-t-town-c-3b-blue,Town C 3B Blue,TWC3BB,Boys,3rd Grade,Town C,#1d4ed8,,,true
-t-town-d-3b-blue,Town D 3B Blue,TWD3BB,Boys,3rd Grade,Town D,#1d4ed8,,,true
-t-town-e-3b-blue,Town E 3B Blue,TWE3BB,Boys,3rd Grade,Town E,#1d4ed8,,,true
-t-town-f-3b-blue,Town F 3B Blue,TWF3BB,Boys,3rd Grade,Town F,#1d4ed8,,,true
-t-town-g-3b-blue,Town G 3B Blue,TWG3BB,Boys,3rd Grade,Town G,#1d4ed8,,,true
-t-mineola-3b-white,Mineola 3B White,MIN3BW,Boys,3rd Grade,Mineola,#6b7280,,,true
-t-town-b-3b-white,Town B 3B White,TWB3BW,Boys,3rd Grade,Town B,#6b7280,,,true
-t-mineola-3g-red,Mineola 3G Red,MIN3GR,Girls,3rd Grade,Mineola,#b91c1c,,,true
-t-town-b-3g-red,Town B 3G Red,TWB3GR,Girls,3rd Grade,Town B,#b91c1c,,,true
-t-town-c-3g-red,Town C 3G Red,TWC3GR,Girls,3rd Grade,Town C,#b91c1c,,,true
-t-town-d-3g-red,Town D 3G Red,TWD3GR,Girls,3rd Grade,Town D,#b91c1c,,,true
-t-town-e-3g-red,Town E 3G Red,TWE3GR,Girls,3rd Grade,Town E,#b91c1c,,,true
-t-town-f-3g-red,Town F 3G Red,TWF3GR,Girls,3rd Grade,Town F,#b91c1c,,,true
-t-town-g-3g-red,Town G 3G Red,TWG3GR,Girls,3rd Grade,Town G,#b91c1c,,,true
-t-mineola-3g-blue,Mineola 3G Blue,MIN3GB,Girls,3rd Grade,Mineola,#1d4ed8,,,true
-t-town-b-3g-blue,Town B 3G Blue,TWB3GB,Girls,3rd Grade,Town B,#1d4ed8,,,true
-t-town-c-3g-blue,Town C 3G Blue,TWC3GB,Girls,3rd Grade,Town C,#1d4ed8,,,true
-t-town-d-3g-blue,Town D 3G Blue,TWD3GB,Girls,3rd Grade,Town D,#1d4ed8,,,true
-t-town-e-3g-blue,Town E 3G Blue,TWE3GB,Girls,3rd Grade,Town E,#1d4ed8,,,true
-t-town-f-3g-blue,Town F 3G Blue,TWF3GB,Girls,3rd Grade,Town F,#1d4ed8,,,true
-t-town-g-3g-blue,Town G 3G Blue,TWG3GB,Girls,3rd Grade,Town G,#1d4ed8,,,true
-t-mineola-3g-white,Mineola 3G White,MIN3GW,Girls,3rd Grade,Mineola,#6b7280,,,true
-t-town-b-3g-white,Town B 3G White,TWB3GW,Girls,3rd Grade,Town B,#6b7280,,,true
-t-mineola-4b-red,Mineola 4B Red,MIN4BR,Boys,4th Grade,Mineola,#b91c1c,,,true
-t-town-b-4b-red,Town B 4B Red,TWB4BR,Boys,4th Grade,Town B,#b91c1c,,,true
-t-town-c-4b-red,Town C 4B Red,TWC4BR,Boys,4th Grade,Town C,#b91c1c,,,true
-t-town-d-4b-red,Town D 4B Red,TWD4BR,Boys,4th Grade,Town D,#b91c1c,,,true
-t-town-e-4b-red,Town E 4B Red,TWE4BR,Boys,4th Grade,Town E,#b91c1c,,,true
-t-town-f-4b-red,Town F 4B Red,TWF4BR,Boys,4th Grade,Town F,#b91c1c,,,true
-t-town-g-4b-red,Town G 4B Red,TWG4BR,Boys,4th Grade,Town G,#b91c1c,,,true
-t-mineola-4b-blue,Mineola 4B Blue,MIN4BB,Boys,4th Grade,Mineola,#1d4ed8,,,true
-t-town-b-4b-blue,Town B 4B Blue,TWB4BB,Boys,4th Grade,Town B,#1d4ed8,,,true
-t-town-c-4b-blue,Town C 4B Blue,TWC4BB,Boys,4th Grade,Town C,#1d4ed8,,,true
-t-town-d-4b-blue,Town D 4B Blue,TWD4BB,Boys,4th Grade,Town D,#1d4ed8,,,true
-t-town-e-4b-blue,Town E 4B Blue,TWE4BB,Boys,4th Grade,Town E,#1d4ed8,,,true
-t-town-f-4b-blue,Town F 4B Blue,TWF4BB,Boys,4th Grade,Town F,#1d4ed8,,,true
-t-town-g-4b-blue,Town G 4B Blue,TWG4BB,Boys,4th Grade,Town G,#1d4ed8,,,true
-t-mineola-4b-white,Mineola 4B White,MIN4BW,Boys,4th Grade,Mineola,#6b7280,,,true
-t-town-b-4b-white,Town B 4B White,TWB4BW,Boys,4th Grade,Town B,#6b7280,,,true
-t-mineola-4g-red,Mineola 4G Red,MIN4GR,Girls,4th Grade,Mineola,#b91c1c,,,true
-t-town-b-4g-red,Town B 4G Red,TWB4GR,Girls,4th Grade,Town B,#b91c1c,,,true
-t-town-c-4g-red,Town C 4G Red,TWC4GR,Girls,4th Grade,Town C,#b91c1c,,,true
-t-town-d-4g-red,Town D 4G Red,TWD4GR,Girls,4th Grade,Town D,#b91c1c,,,true
-t-town-e-4g-red,Town E 4G Red,TWE4GR,Girls,4th Grade,Town E,#b91c1c,,,true
-t-town-f-4g-red,Town F 4G Red,TWF4GR,Girls,4th Grade,Town F,#b91c1c,,,true
-t-town-g-4g-red,Town G 4G Red,TWG4GR,Girls,4th Grade,Town G,#b91c1c,,,true
-t-mineola-4g-blue,Mineola 4G Blue,MIN4GB,Girls,4th Grade,Mineola,#1d4ed8,,,true
-t-town-b-4g-blue,Town B 4G Blue,TWB4GB,Girls,4th Grade,Town B,#1d4ed8,,,true
-t-town-c-4g-blue,Town C 4G Blue,TWC4GB,Girls,4th Grade,Town C,#1d4ed8,,,true
-t-town-d-4g-blue,Town D 4G Blue,TWD4GB,Girls,4th Grade,Town D,#1d4ed8,,,true
-t-town-e-4g-blue,Town E 4G Blue,TWE4GB,Girls,4th Grade,Town E,#1d4ed8,,,true
-t-town-f-4g-blue,Town F 4G Blue,TWF4GB,Girls,4th Grade,Town F,#1d4ed8,,,true
-t-town-g-4g-blue,Town G 4G Blue,TWG4GB,Girls,4th Grade,Town G,#1d4ed8,,,true
-t-mineola-4g-white,Mineola 4G White,MIN4GW,Girls,4th Grade,Mineola,#6b7280,,,true
-t-town-b-4g-white,Town B 4G White,TWB4GW,Girls,4th Grade,Town B,#6b7280,,,true
-t-mineola-56b-red,Mineola 56B Red,MIN56BR,Boys,5th/6th Grade,Mineola,#b91c1c,,,true
-t-town-b-56b-red,Town B 56B Red,TWB56BR,Boys,5th/6th Grade,Town B,#b91c1c,,,true
-t-town-c-56b-red,Town C 56B Red,TWC56BR,Boys,5th/6th Grade,Town C,#b91c1c,,,true
-t-town-d-56b-red,Town D 56B Red,TWD56BR,Boys,5th/6th Grade,Town D,#b91c1c,,,true
-t-town-e-56b-red,Town E 56B Red,TWE56BR,Boys,5th/6th Grade,Town E,#b91c1c,,,true
-t-town-f-56b-red,Town F 56B Red,TWF56BR,Boys,5th/6th Grade,Town F,#b91c1c,,,true
-t-town-g-56b-red,Town G 56B Red,TWG56BR,Boys,5th/6th Grade,Town G,#b91c1c,,,true
-t-mineola-56b-blue,Mineola 56B Blue,MIN56BB,Boys,5th/6th Grade,Mineola,#1d4ed8,,,true
-t-town-b-56b-blue,Town B 56B Blue,TWB56BB,Boys,5th/6th Grade,Town B,#1d4ed8,,,true
-t-town-c-56b-blue,Town C 56B Blue,TWC56BB,Boys,5th/6th Grade,Town C,#1d4ed8,,,true
-t-town-d-56b-blue,Town D 56B Blue,TWD56BB,Boys,5th/6th Grade,Town D,#1d4ed8,,,true
-t-town-e-56b-blue,Town E 56B Blue,TWE56BB,Boys,5th/6th Grade,Town E,#1d4ed8,,,true
-t-town-f-56b-blue,Town F 56B Blue,TWF56BB,Boys,5th/6th Grade,Town F,#1d4ed8,,,true
-t-town-g-56b-blue,Town G 56B Blue,TWG56BB,Boys,5th/6th Grade,Town G,#1d4ed8,,,true
-t-mineola-56b-white,Mineola 56B White,MIN56BW,Boys,5th/6th Grade,Mineola,#6b7280,,,true
-t-town-b-56b-white,Town B 56B White,TWB56BW,Boys,5th/6th Grade,Town B,#6b7280,,,true
-t-mineola-56g-red,Mineola 56G Red,MIN56GR,Girls,5th/6th Grade,Mineola,#b91c1c,,,true
-t-town-b-56g-red,Town B 56G Red,TWB56GR,Girls,5th/6th Grade,Town B,#b91c1c,,,true
-t-town-c-56g-red,Town C 56G Red,TWC56GR,Girls,5th/6th Grade,Town C,#b91c1c,,,true
-t-town-d-56g-red,Town D 56G Red,TWD56GR,Girls,5th/6th Grade,Town D,#b91c1c,,,true
-t-town-e-56g-red,Town E 56G Red,TWE56GR,Girls,5th/6th Grade,Town E,#b91c1c,,,true
-t-town-f-56g-red,Town F 56G Red,TWF56GR,Girls,5th/6th Grade,Town F,#b91c1c,,,true
-t-town-g-56g-red,Town G 56G Red,TWG56GR,Girls,5th/6th Grade,Town G,#b91c1c,,,true
-t-mineola-56g-blue,Mineola 56G Blue,MIN56GB,Girls,5th/6th Grade,Mineola,#1d4ed8,,,true
-t-town-b-56g-blue,Town B 56G Blue,TWB56GB,Girls,5th/6th Grade,Town B,#1d4ed8,,,true
-t-town-c-56g-blue,Town C 56G Blue,TWC56GB,Girls,5th/6th Grade,Town C,#1d4ed8,,,true
-t-town-d-56g-blue,Town D 56G Blue,TWD56GB,Girls,5th/6th Grade,Town D,#1d4ed8,,,true
-t-town-e-56g-blue,Town E 56G Blue,TWE56GB,Girls,5th/6th Grade,Town E,#1d4ed8,,,true
-t-town-f-56g-blue,Town F 56G Blue,TWF56GB,Girls,5th/6th Grade,Town F,#1d4ed8,,,true
-t-town-g-56g-blue,Town G 56G Blue,TWG56GB,Girls,5th/6th Grade,Town G,#1d4ed8,,,true
-t-mineola-56g-white,Mineola 56G White,MIN56GW,Girls,5th/6th Grade,Mineola,#6b7280,,,true
-t-town-b-56g-white,Town B 56G White,TWB56GW,Girls,5th/6th Grade,Town B,#6b7280,,,true
+t-mineola-3b-red,Mineola 3B Red,MIN3BR,3rd Grade Boys,3rd Grade,Mineola,#b91c1c,,,true
+t-town-b-3b-red,Town B 3B Red,TWB3BR,3rd Grade Boys,3rd Grade,Town B,#b91c1c,,,true
+t-town-c-3b-red,Town C 3B Red,TWC3BR,3rd Grade Boys,3rd Grade,Town C,#b91c1c,,,true
+t-town-d-3b-red,Town D 3B Red,TWD3BR,3rd Grade Boys,3rd Grade,Town D,#b91c1c,,,true
+t-town-e-3b-red,Town E 3B Red,TWE3BR,3rd Grade Boys,3rd Grade,Town E,#b91c1c,,,true
+t-town-f-3b-red,Town F 3B Red,TWF3BR,3rd Grade Boys,3rd Grade,Town F,#b91c1c,,,true
+t-town-g-3b-red,Town G 3B Red,TWG3BR,3rd Grade Boys,3rd Grade,Town G,#b91c1c,,,true
+t-mineola-3b-blue,Mineola 3B Blue,MIN3BB,3rd Grade Boys,3rd Grade,Mineola,#1d4ed8,,,true
+t-town-b-3b-blue,Town B 3B Blue,TWB3BB,3rd Grade Boys,3rd Grade,Town B,#1d4ed8,,,true
+t-town-c-3b-blue,Town C 3B Blue,TWC3BB,3rd Grade Boys,3rd Grade,Town C,#1d4ed8,,,true
+t-town-d-3b-blue,Town D 3B Blue,TWD3BB,3rd Grade Boys,3rd Grade,Town D,#1d4ed8,,,true
+t-town-e-3b-blue,Town E 3B Blue,TWE3BB,3rd Grade Boys,3rd Grade,Town E,#1d4ed8,,,true
+t-town-f-3b-blue,Town F 3B Blue,TWF3BB,3rd Grade Boys,3rd Grade,Town F,#1d4ed8,,,true
+t-town-g-3b-blue,Town G 3B Blue,TWG3BB,3rd Grade Boys,3rd Grade,Town G,#1d4ed8,,,true
+t-mineola-3b-white,Mineola 3B White,MIN3BW,3rd Grade Boys,3rd Grade,Mineola,#6b7280,,,true
+t-town-b-3b-white,Town B 3B White,TWB3BW,3rd Grade Boys,3rd Grade,Town B,#6b7280,,,true
+t-mineola-3g-red,Mineola 3G Red,MIN3GR,3rd Grade Girls,3rd Grade,Mineola,#b91c1c,,,true
+t-town-b-3g-red,Town B 3G Red,TWB3GR,3rd Grade Girls,3rd Grade,Town B,#b91c1c,,,true
+t-town-c-3g-red,Town C 3G Red,TWC3GR,3rd Grade Girls,3rd Grade,Town C,#b91c1c,,,true
+t-town-d-3g-red,Town D 3G Red,TWD3GR,3rd Grade Girls,3rd Grade,Town D,#b91c1c,,,true
+t-town-e-3g-red,Town E 3G Red,TWE3GR,3rd Grade Girls,3rd Grade,Town E,#b91c1c,,,true
+t-town-f-3g-red,Town F 3G Red,TWF3GR,3rd Grade Girls,3rd Grade,Town F,#b91c1c,,,true
+t-town-g-3g-red,Town G 3G Red,TWG3GR,3rd Grade Girls,3rd Grade,Town G,#b91c1c,,,true
+t-mineola-3g-blue,Mineola 3G Blue,MIN3GB,3rd Grade Girls,3rd Grade,Mineola,#1d4ed8,,,true
+t-town-b-3g-blue,Town B 3G Blue,TWB3GB,3rd Grade Girls,3rd Grade,Town B,#1d4ed8,,,true
+t-town-c-3g-blue,Town C 3G Blue,TWC3GB,3rd Grade Girls,3rd Grade,Town C,#1d4ed8,,,true
+t-town-d-3g-blue,Town D 3G Blue,TWD3GB,3rd Grade Girls,3rd Grade,Town D,#1d4ed8,,,true
+t-town-e-3g-blue,Town E 3G Blue,TWE3GB,3rd Grade Girls,3rd Grade,Town E,#1d4ed8,,,true
+t-town-f-3g-blue,Town F 3G Blue,TWF3GB,3rd Grade Girls,3rd Grade,Town F,#1d4ed8,,,true
+t-town-g-3g-blue,Town G 3G Blue,TWG3GB,3rd Grade Girls,3rd Grade,Town G,#1d4ed8,,,true
+t-mineola-3g-white,Mineola 3G White,MIN3GW,3rd Grade Girls,3rd Grade,Mineola,#6b7280,,,true
+t-town-b-3g-white,Town B 3G White,TWB3GW,3rd Grade Girls,3rd Grade,Town B,#6b7280,,,true
+t-mineola-4b-red,Mineola 4B Red,MIN4BR,4th Grade Boys,4th Grade,Mineola,#b91c1c,,,true
+t-town-b-4b-red,Town B 4B Red,TWB4BR,4th Grade Boys,4th Grade,Town B,#b91c1c,,,true
+t-town-c-4b-red,Town C 4B Red,TWC4BR,4th Grade Boys,4th Grade,Town C,#b91c1c,,,true
+t-town-d-4b-red,Town D 4B Red,TWD4BR,4th Grade Boys,4th Grade,Town D,#b91c1c,,,true
+t-town-e-4b-red,Town E 4B Red,TWE4BR,4th Grade Boys,4th Grade,Town E,#b91c1c,,,true
+t-town-f-4b-red,Town F 4B Red,TWF4BR,4th Grade Boys,4th Grade,Town F,#b91c1c,,,true
+t-town-g-4b-red,Town G 4B Red,TWG4BR,4th Grade Boys,4th Grade,Town G,#b91c1c,,,true
+t-mineola-4b-blue,Mineola 4B Blue,MIN4BB,4th Grade Boys,4th Grade,Mineola,#1d4ed8,,,true
+t-town-b-4b-blue,Town B 4B Blue,TWB4BB,4th Grade Boys,4th Grade,Town B,#1d4ed8,,,true
+t-town-c-4b-blue,Town C 4B Blue,TWC4BB,4th Grade Boys,4th Grade,Town C,#1d4ed8,,,true
+t-town-d-4b-blue,Town D 4B Blue,TWD4BB,4th Grade Boys,4th Grade,Town D,#1d4ed8,,,true
+t-town-e-4b-blue,Town E 4B Blue,TWE4BB,4th Grade Boys,4th Grade,Town E,#1d4ed8,,,true
+t-town-f-4b-blue,Town F 4B Blue,TWF4BB,4th Grade Boys,4th Grade,Town F,#1d4ed8,,,true
+t-town-g-4b-blue,Town G 4B Blue,TWG4BB,4th Grade Boys,4th Grade,Town G,#1d4ed8,,,true
+t-mineola-4b-white,Mineola 4B White,MIN4BW,4th Grade Boys,4th Grade,Mineola,#6b7280,,,true
+t-town-b-4b-white,Town B 4B White,TWB4BW,4th Grade Boys,4th Grade,Town B,#6b7280,,,true
+t-mineola-4g-red,Mineola 4G Red,MIN4GR,4th Grade Girls,4th Grade,Mineola,#b91c1c,,,true
+t-town-b-4g-red,Town B 4G Red,TWB4GR,4th Grade Girls,4th Grade,Town B,#b91c1c,,,true
+t-town-c-4g-red,Town C 4G Red,TWC4GR,4th Grade Girls,4th Grade,Town C,#b91c1c,,,true
+t-town-d-4g-red,Town D 4G Red,TWD4GR,4th Grade Girls,4th Grade,Town D,#b91c1c,,,true
+t-town-e-4g-red,Town E 4G Red,TWE4GR,4th Grade Girls,4th Grade,Town E,#b91c1c,,,true
+t-town-f-4g-red,Town F 4G Red,TWF4GR,4th Grade Girls,4th Grade,Town F,#b91c1c,,,true
+t-town-g-4g-red,Town G 4G Red,TWG4GR,4th Grade Girls,4th Grade,Town G,#b91c1c,,,true
+t-mineola-4g-blue,Mineola 4G Blue,MIN4GB,4th Grade Girls,4th Grade,Mineola,#1d4ed8,,,true
+t-town-b-4g-blue,Town B 4G Blue,TWB4GB,4th Grade Girls,4th Grade,Town B,#1d4ed8,,,true
+t-town-c-4g-blue,Town C 4G Blue,TWC4GB,4th Grade Girls,4th Grade,Town C,#1d4ed8,,,true
+t-town-d-4g-blue,Town D 4G Blue,TWD4GB,4th Grade Girls,4th Grade,Town D,#1d4ed8,,,true
+t-town-e-4g-blue,Town E 4G Blue,TWE4GB,4th Grade Girls,4th Grade,Town E,#1d4ed8,,,true
+t-town-f-4g-blue,Town F 4G Blue,TWF4GB,4th Grade Girls,4th Grade,Town F,#1d4ed8,,,true
+t-town-g-4g-blue,Town G 4G Blue,TWG4GB,4th Grade Girls,4th Grade,Town G,#1d4ed8,,,true
+t-mineola-4g-white,Mineola 4G White,MIN4GW,4th Grade Girls,4th Grade,Mineola,#6b7280,,,true
+t-town-b-4g-white,Town B 4G White,TWB4GW,4th Grade Girls,4th Grade,Town B,#6b7280,,,true
+t-mineola-56b-red,Mineola 56B Red,MIN56BR,5th/6th Grade Boys,5th/6th Grade,Mineola,#b91c1c,,,true
+t-town-b-56b-red,Town B 56B Red,TWB56BR,5th/6th Grade Boys,5th/6th Grade,Town B,#b91c1c,,,true
+t-town-c-56b-red,Town C 56B Red,TWC56BR,5th/6th Grade Boys,5th/6th Grade,Town C,#b91c1c,,,true
+t-town-d-56b-red,Town D 56B Red,TWD56BR,5th/6th Grade Boys,5th/6th Grade,Town D,#b91c1c,,,true
+t-town-e-56b-red,Town E 56B Red,TWE56BR,5th/6th Grade Boys,5th/6th Grade,Town E,#b91c1c,,,true
+t-town-f-56b-red,Town F 56B Red,TWF56BR,5th/6th Grade Boys,5th/6th Grade,Town F,#b91c1c,,,true
+t-town-g-56b-red,Town G 56B Red,TWG56BR,5th/6th Grade Boys,5th/6th Grade,Town G,#b91c1c,,,true
+t-mineola-56b-blue,Mineola 56B Blue,MIN56BB,5th/6th Grade Boys,5th/6th Grade,Mineola,#1d4ed8,,,true
+t-town-b-56b-blue,Town B 56B Blue,TWB56BB,5th/6th Grade Boys,5th/6th Grade,Town B,#1d4ed8,,,true
+t-town-c-56b-blue,Town C 56B Blue,TWC56BB,5th/6th Grade Boys,5th/6th Grade,Town C,#1d4ed8,,,true
+t-town-d-56b-blue,Town D 56B Blue,TWD56BB,5th/6th Grade Boys,5th/6th Grade,Town D,#1d4ed8,,,true
+t-town-e-56b-blue,Town E 56B Blue,TWE56BB,5th/6th Grade Boys,5th/6th Grade,Town E,#1d4ed8,,,true
+t-town-f-56b-blue,Town F 56B Blue,TWF56BB,5th/6th Grade Boys,5th/6th Grade,Town F,#1d4ed8,,,true
+t-town-g-56b-blue,Town G 56B Blue,TWG56BB,5th/6th Grade Boys,5th/6th Grade,Town G,#1d4ed8,,,true
+t-mineola-56b-white,Mineola 56B White,MIN56BW,5th/6th Grade Boys,5th/6th Grade,Mineola,#6b7280,,,true
+t-town-b-56b-white,Town B 56B White,TWB56BW,5th/6th Grade Boys,5th/6th Grade,Town B,#6b7280,,,true
+t-mineola-56g-red,Mineola 56G Red,MIN56GR,5th/6th Grade Girls,5th/6th Grade,Mineola,#b91c1c,,,true
+t-town-b-56g-red,Town B 56G Red,TWB56GR,5th/6th Grade Girls,5th/6th Grade,Town B,#b91c1c,,,true
+t-town-c-56g-red,Town C 56G Red,TWC56GR,5th/6th Grade Girls,5th/6th Grade,Town C,#b91c1c,,,true
+t-town-d-56g-red,Town D 56G Red,TWD56GR,5th/6th Grade Girls,5th/6th Grade,Town D,#b91c1c,,,true
+t-town-e-56g-red,Town E 56G Red,TWE56GR,5th/6th Grade Girls,5th/6th Grade,Town E,#b91c1c,,,true
+t-town-f-56g-red,Town F 56G Red,TWF56GR,5th/6th Grade Girls,5th/6th Grade,Town F,#b91c1c,,,true
+t-town-g-56g-red,Town G 56G Red,TWG56GR,5th/6th Grade Girls,5th/6th Grade,Town G,#b91c1c,,,true
+t-mineola-56g-blue,Mineola 56G Blue,MIN56GB,5th/6th Grade Girls,5th/6th Grade,Mineola,#1d4ed8,,,true
+t-town-b-56g-blue,Town B 56G Blue,TWB56GB,5th/6th Grade Girls,5th/6th Grade,Town B,#1d4ed8,,,true
+t-town-c-56g-blue,Town C 56G Blue,TWC56GB,5th/6th Grade Girls,5th/6th Grade,Town C,#1d4ed8,,,true
+t-town-d-56g-blue,Town D 56G Blue,TWD56GB,5th/6th Grade Girls,5th/6th Grade,Town D,#1d4ed8,,,true
+t-town-e-56g-blue,Town E 56G Blue,TWE56GB,5th/6th Grade Girls,5th/6th Grade,Town E,#1d4ed8,,,true
+t-town-f-56g-blue,Town F 56G Blue,TWF56GB,5th/6th Grade Girls,5th/6th Grade,Town F,#1d4ed8,,,true
+t-town-g-56g-blue,Town G 56G Blue,TWG56GB,5th/6th Grade Girls,5th/6th Grade,Town G,#1d4ed8,,,true
+t-mineola-56g-white,Mineola 56G White,MIN56GW,5th/6th Grade Girls,5th/6th Grade,Mineola,#6b7280,,,true
+t-town-b-56g-white,Town B 56G White,TWB56GW,5th/6th Grade Girls,5th/6th Grade,Town B,#6b7280,,,true

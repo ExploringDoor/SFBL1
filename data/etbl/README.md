@@ -14,7 +14,7 @@ First basketball tenant on the platform. `sport: "basketball"` is score-only: st
 - **Teams** — `teams.csv`, 96 invented teams (`Mineola 3B Red` …), spread across the towns. Each carries its town in `organization`, which is what the commissioner passwords are gated on.
 - **Schedule** — `schedule.csv`, six Saturdays from 2026-08-29 (two with invented scores, four upcoming) so scores, standings and the volunteer generator all have something to show.
 - **Gyms** — `fields.json`, one per town (two in Mineola), "Address TBD".
-- **Pages** — `pages/*.md` (about, contact, sponsors, rules). Rules are a generic draft.
+- **Pages** — `pages/*.md` (about, contact, sponsors, rules, and `commissioner-guide`, which is not in the nav — share `/content/commissioner-guide` with the seven commissioners directly). Rules are a generic draft.
 - **Branding** — navy / burnt-orange theme, a generated logo and banner. See "Swap the branding" below.
 - **Season dates** — `season_label` "2026-27"; the real window is likely Nov–Feb.
 

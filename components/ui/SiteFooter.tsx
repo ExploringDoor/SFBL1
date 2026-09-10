@@ -152,7 +152,10 @@ export function SiteFooter() {
               <Link href="/content/sponsors">Become a sponsor</Link>
             )
           )}
-          <Link href="/login">Sign in</Link>
+          {/* Same switch as the header chip (ProfileButton): a league whose
+              only sign-in is the admin password gate has nowhere for this
+              link to go. */}
+          {!config.flags?.hide_sign_in && <Link href="/login">Sign in</Link>}
         </nav>
         <div className="le-footer-copy">
           © {new Date().getFullYear()} {config.name}. Powered by{" "}

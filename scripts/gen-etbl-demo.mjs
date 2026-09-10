@@ -41,6 +41,11 @@ const TOWNS = [
 // 3 age groups × Boys/Girls = 6 divisions of 16. The age_group column turns
 // on the platform's age-sectioned standings, team grid and score filters; the
 // score band keeps results looking like the age group that produced them.
+//
+// A team's `division` is the FULL name ("3rd Grade Boys"), the same string
+// its games carry: the print standings sheet buckets by both, and a team
+// division of just "Boys" put every boys team into a second, meaningless
+// "Boys Division" table beside the six real ones.
 const DIVISIONS = [
   { code: "3B", age: "3rd Grade", div: "Boys", lo: 10, hi: 30 },
   { code: "3G", age: "3rd Grade", div: "Girls", lo: 10, hi: 28 },
@@ -119,7 +124,7 @@ for (const dv of DIVISIONS) {
       id: `t-${town.slug}-${dv.code.toLowerCase()}-${suf.name.toLowerCase()}`,
       name: `${town.name} ${dv.code} ${suf.name}`,
       abbrev: `${town.abbr}${dv.code}${suf.name[0]}`,
-      division: dv.div,
+      division: `${dv.age} ${dv.div}`,
       age_group: dv.age,
       organization: town.name,
       color: suf.color,

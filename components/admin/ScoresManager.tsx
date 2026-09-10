@@ -24,7 +24,12 @@
 import { useEffect, useMemo, useState } from "react";
 import type { User } from "firebase/auth";
 import { formatTime12 } from "@/lib/format-time";
-import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocsFromServer,
+} from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { townKey } from "@/lib/admin-roles";
 
@@ -81,10 +86,14 @@ export function ScoresManager({ leagueId, user, town = null }: Props) {
     setLoading(true);
     try {
       const db = getDb();
+      // From the server, never the SDK cache: this screen re-reads right
+      // after every save, and a cached answer is exactly the stale one.
       const [gameSnap, teamSnap, subsSnap] = await Promise.all([
-        getDocs(collection(db, `leagues/${leagueId}/games`)),
-        getDocs(collection(db, `leagues/${leagueId}/teams`)),
-        getDocs(collection(db, `leagues/${leagueId}/box_score_submissions`)),
+        getDocsFromServer(collection(db, `leagues/${leagueId}/games`)),
+        getDocsFromServer(collection(db, `leagues/${leagueId}/teams`)),
+        getDocsFromServer(
+          collection(db, `leagues/${leagueId}/box_score_submissions`),
+        ),
       ]);
       setTeams(
         teamSnap.docs

@@ -40,6 +40,11 @@ export function ProfileButton({ tenantId }: { tenantId: string }) {
   }
 
   if (user === null) {
+    // A league with no coach portal and no player profiles (ETBL: the only
+    // people who sign in are commissioners, through More → Admin) has no
+    // destination for a top-right "Sign in", so it sets flags.hide_sign_in
+    // and the corner stays empty until someone is actually signed in.
+    if (config?.flags?.hide_sign_in) return null;
     // Passwordless tenants: one "Profile" entry → Captain / Player
     // chooser. (Admin is in the More menu now.) SFBL is the exception:
     // no player logins, and Captain is in the More menu too, so nothing
