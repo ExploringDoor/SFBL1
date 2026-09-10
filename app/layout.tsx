@@ -329,7 +329,11 @@ export default async function RootLayout({
       children: [
         { label: "League Info", href: "/content/leagues" },
         { label: "Register a Team", href: "/team-registration" },
-        { label: "Team Waiver", href: "/team-waiver-form" },
+        // "Team Roster/Waiver" (Adam, 2026-09-10). Mike now tells coaches the
+        // roster and the waiver are one thing, since signing is what opens
+        // their roster in the captain portal, and the nav should say what he
+        // says. ISLAND ONLY: every other tenant's waiver is just a waiver.
+        { label: "Team Roster/Waiver", href: "/team-waiver-form" },
       ],
     },
     { label: "Tournaments", href: "/tournaments" },

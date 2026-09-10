@@ -133,7 +133,12 @@ export default async function TeamWaiverPage() {
   return (
     <LeagueForm
       kind="team_waiver"
-      title="Team Waiver Form"
+      // Island calls it Roster/Waiver: signing is what opens a coach's roster
+      // in the captain portal, so Mike tells them the two are one thing and
+      // the page should agree with him. Every other tenant's waiver is just a
+      // waiver, and SFBL's is an adult league signing for over-18s with no
+      // roster gate at all.
+      title={tenantId === "island" ? "Team Roster / Waiver" : "Team Waiver Form"}
       description="Each team must submit this waiver before the first regular-season game."
       eyebrow={abbrev}
       intro={[
