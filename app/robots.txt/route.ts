@@ -45,11 +45,11 @@ export async function GET() {
     "Disallow: /print/",
     "Disallow: /_platform",
     "Disallow: /login",
-    // Under review by the league office and not linked from anywhere. The
-    // pages also carry robots:noindex; this keeps them out of a crawl that
-    // never reads the page. Remove both when Doug signs them off.
+    // Still under review by the league office and not linked from anywhere.
+    // These also carry robots:noindex; this keeps them out of a crawl that
+    // never reads the page. /baseball-order was released on 2026-09-10 at
+    // Doug's request and is deliberately NOT in this list any more.
     "Disallow: /tournament-registration",
-    "Disallow: /baseball-order",
     "",
     `Sitemap: ${sitemapUrl}`,
     "",

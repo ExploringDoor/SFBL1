@@ -9,9 +9,11 @@
 // year and he could not find the control. It is simply not rebuilt here, which
 // is the whole answer.
 //
-// HIDDEN ON PURPOSE, per Doug 2026-08-27: no nav entry and no indexing until
-// he has reviewed it. It CAN take a card, so a stranger with the link could
-// order baseballs — which is an order Doug fulfils or refunds, not a loss.
+// PUBLIC since 2026-09-10. Doug reviewed it and asked to "make the baseballs
+// live so everyone can see the page", so the noindex came off, the robots.txt
+// block came off, and it is linked from the Coaches menu. The two tournament
+// pages stay hidden: he has not sent their 2027 dates or fees yet, and those
+// pages still show last season's.
 //
 // Card IS taken here, through Square, on the confirmation screen. His form
 // says: "we will need to arrange a time (email me to set that up) for a call to
@@ -35,10 +37,7 @@ import type { PublicLeagueConfig } from "@/lib/tenants";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Baseball Order",
-  robots: { index: false, follow: false },
-};
+export const metadata = { title: "Baseball Order" };
 
 // From lib/fees.ts, which is what actually prices the card. Re-declaring them
 // here would be two numbers to change and one of them would get missed.
