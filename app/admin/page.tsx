@@ -230,6 +230,13 @@ export default function AdminPage() {
   const scoped = access !== "loading" ? scopedTabKeys(access) : null;
   const [activeTab, setActiveTab] = useState<TabKey>("health");
   const [moreOpen, setMoreOpen] = useState(false);
+  // A basketball league's fields are gyms; the tab and its blurb say so.
+  const tabLabelOf = (t: { key: TabKey; label: string }) =>
+    t.key === "fields" && config?.sport === "basketball" ? "Gyms" : t.label;
+  const tabDescriptionOf = (t: { key: TabKey; description: string }) =>
+    config?.sport === "basketball"
+      ? t.description.replace(/\bfields\b/g, "gyms")
+      : t.description;
   // Two filters, composed. visibleTabs() hides tabs this TENANT does not use;
   // scoped hides tabs this PERSON may not open. A tab has to survive both.
   const topTabs = useMemo(
@@ -356,7 +363,7 @@ export default function AdminPage() {
                 (activeTab === t.key ? "le-admin-tab-active" : "")
               }
             >
-              {t.label}
+              {tabLabelOf(t)}
             </button>
           ))}
         </nav>
@@ -401,7 +408,7 @@ export default function AdminPage() {
                       (activeTab === t.key ? "active" : "")
                     }
                   >
-                    {t.label}
+                    {tabLabelOf(t)}
                   </button>
                 ))}
               </div>
@@ -528,7 +535,10 @@ export default function AdminPage() {
       `}</style>
 
       <p className="text-sm text-slate-500">
-        {TABS.find((t) => t.key === activeTab)?.description}
+        {(() => {
+          const t = TABS.find((x) => x.key === activeTab);
+          return t ? tabDescriptionOf(t) : null;
+        })()}
       </p>
 
       <div>
@@ -591,7 +601,13 @@ export default function AdminPage() {
           <ScheduleEditor leagueId={tenantId} user={user} />
         )}
         {activeTab === "schedule-gen" && (
-          <ScheduleGenerator leagueId={tenantId} user={user} />
+          <ScheduleGenerator
+            leagueId={tenantId}
+            user={user}
+            sport={config?.sport ?? null}
+            // Per-league engine switch. See lib/gameslate/README.md.
+            engine={config?.flags?.gameslate_scheduler ? "gameslate" : "platform"}
+          />
         )}
         {activeTab === "arbiter" && (
           <ArbiterSync leagueId={tenantId} user={user} />

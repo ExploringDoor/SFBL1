@@ -19,7 +19,8 @@
       "demo_data": true,
       "registration_open": false,
       "ticker_scroll": true,
-      "hide_sign_in": true
+      "hide_sign_in": true,
+      "gameslate_scheduler": true
     },
     "demo_note": "These teams, gyms and results are placeholders so the league can see how the site works before the 2026-27 divisions are final. Real teams and scores replace them before tip-off.",
     "theme": {

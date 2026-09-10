@@ -24,6 +24,7 @@ import {
   type ConflictGame,
   type ConflictTeam,
 } from "@/lib/schedule-conflicts";
+import { normaliseGameslateRules } from "@/lib/gameslate/rules";
 
 export const runtime = "nodejs";
 
@@ -62,6 +63,7 @@ export async function POST(req: Request) {
     action?: unknown;
     blockedPairs?: unknown;
     games?: unknown;
+    gameslate?: unknown;
   };
   try {
     body = (await req.json()) as typeof body;
@@ -162,11 +164,25 @@ export async function POST(req: Request) {
         ? Math.max(0, Math.min(40, Math.floor(rawGpt)))
         : 0;
 
+    // GameSlate-engine rules (lib/gameslate/rules.ts). Only a league on that
+    // engine sends the key, so every other league's document is written
+    // exactly as before. The same normaliser the screen uses bounds every
+    // value. `game_minutes` is the one of them the conflict gate below
+    // already reads, so it is mirrored to where the gate looks.
+    const gsPatch =
+      body.gameslate && typeof body.gameslate === "object"
+        ? (() => {
+            const gameslate = normaliseGameslateRules(body.gameslate);
+            return { gameslate, game_minutes: gameslate.gameMinutes };
+          })()
+        : {};
+
     await db.doc(`leagues/${leagueId}/site_config/schedule_rules`).set(
       {
         blocked_pairs: pairs,
         team_settings: teamSettings,
         games_per_team: gamesPerTeam,
+        ...gsPatch,
         updated_at: now,
         updated_by: decoded.uid,
       },

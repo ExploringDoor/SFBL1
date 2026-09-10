@@ -96,6 +96,8 @@ The rows shipped in those files are examples — replace them. Then:
 
 Standings tiebreak is head-to-head, then point differential (`standings.tiebreaker: "h2h"` in `provision.json`). The league is on **Central time** (`timezone: "America/Chicago"`) — that is what the calendar feed and the opening-day countdown use; every other tenant is Eastern by default. Playoffs: Admin → Playoffs builds the bracket; the public page (More → Playoffs) shows it once marked active.
 
+**Schedule builder.** Admin → Build Schedule runs on the **GameSlate engine** for this league (`flags.gameslate_scheduler: true`) — Adam's scheduler from `~/Desktop/gameslate`, copied verbatim into `lib/gameslate/` and switched on per league, so every other league keeps the platform engine untouched. It adds a *Game rules* card (season shape, game length, one game a day, doubleheaders, gaps, rest days, home-gym rule, rematch spacing, linked teams that share a coach) and grades each layout. `tests/gameslate/etbl-season.test.ts` builds the full 96-team / 6-division / 8-gym Saturday season and proves no gym or team is double-booked. Details and the sync script: `lib/gameslate/README.md`. The admin guide's *Building the season schedule* section is the walkthrough.
+
 Two more unlinked pages exist for the people running the site: `/content/commissioner-guide` (the seven town commissioners) and `/content/admin-guide` (whoever holds the league password).
 
 ## Launch (prod) — the parts Adam does

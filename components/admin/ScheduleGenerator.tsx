@@ -25,6 +25,15 @@ import {
   type GeneratorResult,
 } from "@/lib/schedule-generator";
 import type { Conflict, ConflictGame } from "@/lib/schedule-conflicts";
+import { buildWithGameslate } from "@/lib/gameslate/adapter";
+import {
+  DEFAULT_GAMESLATE_RULES,
+  normaliseGameslateRules,
+  type GameslateRules,
+} from "@/lib/gameslate/rules";
+import type { ScheduleQuality } from "@/lib/gameslate/schedule-generator";
+import { venueLabels } from "@/lib/sport-labels";
+import type { Sport } from "@/lib/types";
 
 interface TeamOpt {
   id: string;
@@ -36,7 +45,18 @@ interface TeamOpt {
 interface Props {
   leagueId: string;
   user: User;
+  /** The league's sport, for the venue words. Missing = ballfield wording. */
+  sport?: Sport | null;
+  /**
+   * Which engine builds the preview. "gameslate" is opt-in per league
+   * (flags.gameslate_scheduler) and adds the Game rules card; every other
+   * league runs the platform engine exactly as before. lib/gameslate/README.md.
+   */
+  engine?: "platform" | "gameslate";
 }
+
+/** A preview from either engine. The GameSlate one also grades itself. */
+type Preview = GeneratorResult & { quality?: ScheduleQuality; seed?: number };
 
 const CARD: React.CSSProperties = {
   background: "var(--card)",
@@ -111,7 +131,24 @@ function chip(on: boolean): React.CSSProperties {
   };
 }
 
-export function ScheduleGenerator({ leagueId, user }: Props) {
+export function ScheduleGenerator({
+  leagueId,
+  user,
+  sport = null,
+  engine = "platform",
+}: Props) {
+  // Venue words. A basketball league's "field" is a gym, and what a ballpark
+  // calls diamonds a gym calls courts. Ballfield leagues read exactly as
+  // before.
+  const venue = venueLabels(sport);
+  const V = venue.singular;
+  const v = V.toLowerCase();
+  const VS = venue.plural;
+  const courts = sport === "basketball" ? "Courts" : "Diamonds";
+  // Card numbers shift by one when the Game rules card is on the page.
+  const n5 = engine === "gameslate" ? 6 : 5;
+  const n6 = engine === "gameslate" ? 7 : 6;
+
   const [teams, setTeams] = useState<TeamOpt[]>([]);
   const [leagueFields, setLeagueFields] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -201,7 +238,15 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
   const [pendingTeam, setPendingTeam] = useState<string | null>(null);
   const [rulesSaved, setRulesSaved] = useState(false);
 
-  const [result, setResult] = useState<GeneratorResult | null>(null);
+  // --- GameSlate engine only ---------------------------------------------
+  // The rules the platform engine does not know (lib/gameslate/rules.ts),
+  // the layout seed behind "Try another layout", and the half-picked pair
+  // for the linked-teams picker.
+  const [gs, setGs] = useState<GameslateRules>(DEFAULT_GAMESLATE_RULES);
+  const [seed, setSeed] = useState(1);
+  const [pendingLink, setPendingLink] = useState<string | null>(null);
+
+  const [result, setResult] = useState<Preview | null>(null);
   const reset = () => setResult(null);
 
   useEffect(() => {
@@ -276,6 +321,10 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
               .map((p: string[]) => [String(p[0]), String(p[1])] as [string, string]),
           );
         }
+        // Read through the normaliser so a document from an older build, or
+        // one edited by hand, still comes back as a complete rule set.
+        const gsr = rulesSnap.exists() ? rulesSnap.data()?.gameslate : null;
+        if (gsr && typeof gsr === "object") setGs(normaliseGameslateRules(gsr));
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to load");
       } finally {
@@ -347,6 +396,23 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
     );
     setPendingTeam(null);
     reset();
+  }
+
+  function patchGs(p: Partial<GameslateRules>) {
+    setGs((cur) => ({ ...cur, ...p }));
+    setRulesSaved(false);
+    reset();
+  }
+
+  // Same two-click pick as the blocked pairs, for teams that share a coach.
+  function pickForLink(id: string) {
+    setDone(null);
+    if (pendingLink === null) return setPendingLink(id);
+    if (pendingLink === id) return setPendingLink(null);
+    const key = [pendingLink, id].sort().join("|");
+    const already = gs.linkedPairs.some(([a, b]) => [a, b].sort().join("|") === key);
+    if (!already) patchGs({ linkedPairs: [...gs.linkedPairs, [pendingLink, id]] });
+    setPendingLink(null);
   }
 
   async function post(body: Record<string, unknown>) {
@@ -605,6 +671,9 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
         blockedPairs: blocked,
         teamSettings: teamCfg,
         gamesPerTeam,
+        // Only a league on the GameSlate engine sends this key, so every
+        // other league's rules document keeps exactly the shape it has.
+        ...(engine === "gameslate" ? { gameslate: gs } : {}),
       });
       setRulesSaved(true);
     } catch (e) {
@@ -614,7 +683,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
     }
   }
 
-  function build() {
+  function build(nextSeed?: number) {
     setError(null);
     setDone(null);
     // One row per diamond. A venue with diamonds: 4 becomes four independent
@@ -637,20 +706,45 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
 
     if (!startDate) return setError("Pick the first game date.");
     if (useEndDate && !endDate) return setError("Pick the last game date.");
-    if (genFields.length === 0) return setError("Add at least one field with a time.");
+    if (genFields.length === 0) return setError(`Add at least one ${v} with a time.`);
     if (picked.size < 2) return setError("Select at least two teams.");
 
     setSaveConflicts(null);
+    const teamList = [...picked].map((id) => ({
+      id,
+      name: nameOf(id),
+      organization: teamCfg[id]?.organization ?? null,
+      homeField: teamCfg[id]?.homeField ?? null,
+      unavailable: teamCfg[id]?.unavailable ?? [],
+      allowedFields: teamCfg[id]?.allowedFields ?? [],
+    }));
+
+    if (engine === "gameslate") {
+      const s = nextSeed ?? seed;
+      setResult(
+        buildWithGameslate({
+          teams: teamList,
+          startDate,
+          ...(useEndDate ? { endDate } : { weeks }),
+          daysOfWeek: days.length ? days : undefined,
+          blackoutDates: offDates,
+          fields: genFields,
+          blockedPairs: blocked,
+          division: ageGroup || division || undefined,
+          gamesPerWeek,
+          gamesPerTeam,
+          weeklyPairing: pairing,
+          existingGames,
+          rules: gs,
+          seed: s,
+        }),
+      );
+      return;
+    }
+
     setResult(
       generateSchedule({
-        teams: [...picked].map((id) => ({
-          id,
-          name: nameOf(id),
-          organization: teamCfg[id]?.organization ?? null,
-          homeField: teamCfg[id]?.homeField ?? null,
-          unavailable: teamCfg[id]?.unavailable ?? [],
-          allowedFields: teamCfg[id]?.allowedFields ?? [],
-        })),
+        teams: teamList,
         startDate,
         ...(useEndDate ? { endDate } : { weeks }),
         daysOfWeek: days.length ? days : undefined,
@@ -674,7 +768,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
       !window.confirm(
         force
           ? `Save these ${result.games.length} games ANYWAY, over the conflicts listed?\n\n` +
-              `Fields will be double-booked. This is recorded in the audit log.`
+              `${VS} will be double-booked. This is recorded in the audit log.`
           : `Create ${result.games.length} games on the live schedule?\n\n` +
               `Existing games are not touched.`,
       )
@@ -721,8 +815,8 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
   return (
     <section>
       <p style={{ fontSize: 13, color: "var(--muted)", marginTop: 0, lineHeight: 1.6 }}>
-        Builds a full season across the days,
-        fields and times you set. Nothing is written until you press Create.
+        Builds a full season across the days,{" "}
+        {VS.toLowerCase()} and times you set. Nothing is written until you press Create.
       </p>
 
       {/* ---- 1. WHO ------------------------------------------------------ */}
@@ -950,7 +1044,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
 
         <label style={LABEL}>Off days (no games)</label>
         <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 8px" }}>
-          Holidays, field closures, tournament weekends. The season stretches by a week
+          Holidays, {v} closures, tournament weekends. The season stretches by a week
           rather than losing those games.
         </p>
         <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
@@ -999,14 +1093,16 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
 
       {/* ---- 3. WHERE ---------------------------------------------------- */}
       <div style={CARD}>
-        <p style={{ fontWeight: 800, margin: "0 0 4px" }}>3. Fields and times</p>
+        <p style={{ fontWeight: 800, margin: "0 0 4px" }}>3. {VS} and times</p>
         <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 10px" }}>
-          Each field has its own start times, so a field that only runs one game a night
+          Each {v} has its own start times, so a {v} that only runs one game a night
           is not given slots it does not have. Separate times with commas.
           <br />
-          <strong>Diamonds</strong> is how many games that venue can run at the
-          same time. A four diamond complex set to 4 is scheduled as Bellport 1
-          through Bellport 4, and the games say which one.
+          <strong>{courts}</strong> is how many games that venue can run at the
+          same time.{" "}
+          {sport === "basketball"
+            ? "A gym with two courts set to 2 is scheduled as Gym 1 and Gym 2, and the games say which court."
+            : "A four diamond complex set to 4 is scheduled as Bellport 1 through Bellport 4, and the games say which one."}
         </p>
         {fields.map((f, i) => (
           <div key={i} style={{ display: "flex", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
@@ -1020,14 +1116,14 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
                   reset();
                 }}
               >
-                <option value="">— Pick a field —</option>
+                <option value="">— Pick a {v} —</option>
                 {leagueFields.map((n) => (
                   <option key={n} value={n}>{n}</option>
                 ))}
               </select>
             ) : (
               <input
-                placeholder="Field name"
+                placeholder={`${V} name`}
                 style={{ ...INPUT, flex: 2, minWidth: 200 }}
                 value={f.name}
                 onChange={(e) => {
@@ -1047,7 +1143,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
                 whiteSpace: "nowrap",
               }}
             >
-              Diamonds
+              {courts}
               <input
                 type="number"
                 min={1}
@@ -1074,7 +1170,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
                 reset();
               }}
             >
-              Remove field
+              Remove {v}
             </button>
 
             {/* Times: tap the common ones, or add any time with the picker.
@@ -1137,7 +1233,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
           style={BTN}
           onClick={() => setFields((cur) => [...cur, { name: "", times: ["17:30"], diamonds: 1 }])}
         >
-          + Add field
+          + Add {v}
         </button>
       </div>
 
@@ -1216,14 +1312,272 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
         </button>
       </div>
 
-      {/* ---- 5. PER-TEAM SETTINGS ---------------------------------------- */}
+      {/* ---- 5. GAME RULES (GameSlate engine only) -----------------------
+          The rules the platform engine does not know. Rendered only for a
+          league on the GameSlate engine, so every other league's screen is
+          unchanged. Saved into the same rules document, under `gameslate`.
+          See lib/gameslate/README.md. */}
+      {engine === "gameslate" && (
+        <div style={CARD}>
+          <p style={{ fontWeight: 800, margin: "0 0 4px" }}>5. Game rules</p>
+          <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 12px" }}>
+            How a game day is allowed to look. Set once a season; saved with the
+            rules above.
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBottom: 12 }}>
+            <div style={{ minWidth: 230 }}>
+              <label style={LABEL}>Season shape</label>
+              <select
+                style={INPUT}
+                value={String(gs.cycles)}
+                disabled={gamesPerTeam > 0}
+                onChange={(e) =>
+                  patchGs({ cycles: Number(e.target.value) as GameslateRules["cycles"] })
+                }
+              >
+                <option value="0">Fill the calendar</option>
+                <option value="1">Everyone plays everyone once</option>
+                <option value="2">Everyone plays everyone twice</option>
+                <option value="3">Everyone plays everyone three times</option>
+              </select>
+              {gamesPerTeam > 0 && (
+                <p style={{ fontSize: 11, color: "var(--muted)", margin: "4px 0 0" }}>
+                  &ldquo;Games for each team&rdquo; is set above, so that decides
+                  the season length instead.
+                </p>
+              )}
+            </div>
+            <div style={{ minWidth: 170 }}>
+              <label style={LABEL}>Game length</label>
+              <select
+                style={INPUT}
+                value={String(gs.gameMinutes)}
+                onChange={(e) => patchGs({ gameMinutes: Number(e.target.value) })}
+              >
+                <option value="0">Exact start times only</option>
+                {[45, 60, 75, 90, 105, 120].map((n) => (
+                  <option key={n} value={n}>{n} minutes</option>
+                ))}
+              </select>
+            </div>
+            <div style={{ minWidth: 170 }}>
+              <label style={LABEL}>Games per team per day</label>
+              <select
+                style={INPUT}
+                value={String(gs.maxPerTeamPerDay)}
+                onChange={(e) => patchGs({ maxPerTeamPerDay: Number(e.target.value) })}
+              >
+                <option value="0">No cap</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+              </select>
+            </div>
+            <div style={{ minWidth: 190 }}>
+              <label style={LABEL}>Two games in one day</label>
+              <select
+                style={INPUT}
+                value={gs.doubleheaders}
+                onChange={(e) =>
+                  patchGs({ doubleheaders: e.target.value as GameslateRules["doubleheaders"] })
+                }
+              >
+                <option value="avoid">Avoid when possible</option>
+                <option value="allow">Allowed</option>
+                <option value="prefer">Prefer, back to back</option>
+              </select>
+            </div>
+            <div style={{ minWidth: 170 }}>
+              <label style={LABEL}>Least time between them</label>
+              <select
+                style={INPUT}
+                value={String(gs.minGapMinutes)}
+                onChange={(e) => patchGs({ minGapMinutes: Number(e.target.value) })}
+              >
+                <option value="0">None</option>
+                {[15, 30, 45, 60, 90].map((n) => (
+                  <option key={n} value={n}>{n} min</option>
+                ))}
+              </select>
+            </div>
+            <div style={{ minWidth: 170 }}>
+              <label style={LABEL}>Most time between them</label>
+              <select
+                style={INPUT}
+                value={String(gs.maxGapMinutes)}
+                onChange={(e) => patchGs({ maxGapMinutes: Number(e.target.value) })}
+              >
+                <option value="0">No limit</option>
+                {[30, 60, 90, 120, 180].map((n) => (
+                  <option key={n} value={n}>{n} min</option>
+                ))}
+              </select>
+            </div>
+            <div style={{ minWidth: 200 }}>
+              <label style={LABEL}>Start times</label>
+              <select
+                style={INPUT}
+                value={gs.slotPreference}
+                onChange={(e) =>
+                  patchGs({ slotPreference: e.target.value as GameslateRules["slotPreference"] })
+                }
+              >
+                <option value="balanced">Share early and late fairly</option>
+                <option value="early">Fill early slots first</option>
+                <option value="late">Fill late slots first</option>
+              </select>
+            </div>
+            <div style={{ minWidth: 210 }}>
+              <label style={LABEL}>Home {v} rule</label>
+              <select
+                style={INPUT}
+                value={gs.homeFieldRule}
+                onChange={(e) =>
+                  patchGs({ homeFieldRule: e.target.value as GameslateRules["homeFieldRule"] })
+                }
+              >
+                <option value="prefer">Prefer the host&rsquo;s home {v}</option>
+                <option value="require">Always at the host&rsquo;s home {v}</option>
+              </select>
+            </div>
+            <div style={{ minWidth: 170 }}>
+              <label style={LABEL}>Days off between game days</label>
+              <select
+                style={INPUT}
+                value={String(gs.minDaysRest)}
+                onChange={(e) => patchGs({ minDaysRest: Number(e.target.value) })}
+              >
+                <option value="0">No rule</option>
+                {[1, 2, 3, 4].map((n) => (
+                  <option key={n} value={n}>At least {n}</option>
+                ))}
+              </select>
+            </div>
+            <div style={{ minWidth: 150 }}>
+              <label style={LABEL}>No rematch within</label>
+              <select
+                style={INPUT}
+                value={String(gs.noRematchWeeks)}
+                onChange={(e) => patchGs({ noRematchWeeks: Number(e.target.value) })}
+              >
+                <option value="0">No rule</option>
+                {[1, 2, 3, 4].map((n) => (
+                  <option key={n} value={n}>{n} week{n === 1 ? "" : "s"}</option>
+                ))}
+              </select>
+            </div>
+            <div style={{ minWidth: 200 }}>
+              <label style={LABEL}>Home or away in a row, at most</label>
+              <select
+                style={INPUT}
+                value={String(gs.maxConsecutive)}
+                onChange={(e) => patchGs({ maxConsecutive: Number(e.target.value) })}
+              >
+                <option value="0">No rule</option>
+                {[2, 3, 4].map((n) => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+            </div>
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                fontSize: 13,
+                alignSelf: "flex-end",
+                paddingBottom: 9,
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={gs.pairAlternate}
+                onChange={(e) => patchGs({ pairAlternate: e.target.checked })}
+              />
+              Home and home: the visitor hosts the rematch
+            </label>
+          </div>
+
+          {/* LINKED TEAMS. One coach with a 3rd-grade team and a 5th-grade
+              team cannot be in two gyms at once. Picked across every
+              division, because that is exactly where the clash is. */}
+          <label style={LABEL}>Teams that share a coach or a family</label>
+          <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 8px" }}>
+            Never scheduled at the same time, even across divisions. Click one
+            team, then the other.
+          </p>
+          {pendingLink && (
+            <p style={{ fontSize: 13, fontWeight: 700, color: "var(--brand-primary, #002d6e)", margin: "0 0 8px" }}>
+              {nameOf(pendingLink)} selected. Now click the team it shares a coach with.{" "}
+              <button
+                type="button"
+                onClick={() => setPendingLink(null)}
+                style={{ marginLeft: 6, border: "none", background: "none", textDecoration: "underline", cursor: "pointer", color: "var(--muted)" }}
+              >
+                cancel
+              </button>
+            </p>
+          )}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+            {teams.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => pickForLink(t.id)}
+                style={{
+                  ...chip(false),
+                  border:
+                    pendingLink === t.id
+                      ? "2px solid var(--brand-primary, #002d6e)"
+                      : "1px solid rgba(0,0,0,0.18)",
+                  background: pendingLink === t.id ? "rgba(0,45,110,0.08)" : "#fff",
+                }}
+              >
+                {t.name}
+              </button>
+            ))}
+          </div>
+          {gs.linkedPairs.length === 0 ? (
+            <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 10px" }}>
+              No linked teams yet.
+            </p>
+          ) : (
+            <ul style={{ listStyle: "none", padding: 0, margin: "0 0 10px" }}>
+              {gs.linkedPairs.map(([a, b], i) => (
+                <li
+                  key={`${a}|${b}`}
+                  style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 0", borderBottom: "1px solid rgba(0,0,0,0.06)", fontSize: 14 }}
+                >
+                  <span style={{ fontWeight: 700 }}>{nameOf(a)}</span>
+                  <span style={{ color: "var(--muted)" }}>never at the same time as</span>
+                  <span style={{ fontWeight: 700 }}>{nameOf(b)}</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      patchGs({ linkedPairs: gs.linkedPairs.filter((_, ix) => ix !== i) })
+                    }
+                    style={{ marginLeft: "auto", border: "none", background: "none", color: "var(--red, #c8102e)", cursor: "pointer", fontWeight: 700 }}
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <button type="button" onClick={saveRules} disabled={busy} style={BTN}>
+            {rulesSaved ? "Saved" : "Save these rules"}
+          </button>
+        </div>
+      )}
+
+      {/* ---- PER-TEAM SETTINGS ------------------------------------------- */}
       <div style={CARD}>
-        <p style={{ fontWeight: 800, margin: "0 0 4px" }}>5. Per-team settings</p>
+        <p style={{ fontWeight: 800, margin: "0 0 4px" }}>{n5}. Per-team settings</p>
         <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 12px" }}>
           Optional. Give two teams the same club name and the generator keeps
           them apart, without listing every pair by hand. It will only draw them
           against each other if the alternative is leaving a team short of its
-          games, and it says so when that happens. A home field pulls a
+          games, and it says so when that happens. A home {v} pulls a
           team&rsquo;s games there and makes them the home side. Dates a team cannot play
           are skipped for them only, and the rest of the division still plays.
           Saved with the rules above.
@@ -1385,7 +1739,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
                       />
                     </div>
                     <div style={{ minWidth: 220 }}>
-                      <label style={LABEL}>Home field</label>
+                      <label style={LABEL}>Home {v}</label>
                       <select
                         style={INPUT}
                         value={cfg.homeField ?? ""}
@@ -1420,7 +1774,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
                       >
                         {leagueFields.length === 0 && (
                           <span style={{ fontSize: 12, color: "var(--muted)" }}>
-                            Add fields in the Fields tab first.
+                            Add {VS.toLowerCase()} in the {VS} tab first.
                           </span>
                         )}
                         {leagueFields.map((n) => {
@@ -1522,7 +1876,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
           version without posting it, take the posted one down while you move
           it, and drop a team that quit without rebuilding the season. */}
       <div style={CARD}>
-        <p style={{ fontWeight: 800, margin: "0 0 4px" }}>6. The live schedule</p>
+        <p style={{ fontWeight: 800, margin: "0 0 4px" }}>{n6}. The live schedule</p>
         <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 12px" }}>
           Saved drafts are not on the site. The switch below takes the posted
           schedule down while you move games about. Dropping a team removes only
@@ -1773,7 +2127,8 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
       <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 14, flexWrap: "wrap" }}>
         <button
           type="button"
-          onClick={build}
+          // Wrapped: the click event must not arrive as the seed.
+          onClick={() => build()}
           disabled={busy}
           style={{ padding: "11px 20px", borderRadius: 10, border: "none", background: "var(--brand-primary, #002d6e)", color: "#fff", fontWeight: 800, fontSize: 15, cursor: "pointer" }}
         >
@@ -1859,14 +2214,39 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
                   return ` · ${lo === hi ? `${lo}` : `${lo}-${hi}`} games each`;
                 })()}
             </p>
+            {/* The GameSlate engine grades its own work, so two layouts can
+                be compared on more than a hunch. */}
+            {result.quality && (
+              <span style={{ fontSize: 12, color: "var(--muted)" }}>
+                Grade <strong>{result.quality.grade}</strong> · {result.quality.score}/100 ·
+                biggest home/away gap {result.quality.homeAwaySpread} · start-time
+                fairness {Math.round(result.quality.slotFairness * 100)}% ·{" "}
+                {v} spread {Math.round(result.quality.fieldFairness * 100)}%
+              </span>
+            )}
+            {engine === "gameslate" && (
+              <button
+                type="button"
+                style={{ ...BTN, marginLeft: "auto" }}
+                disabled={busy}
+                title="Same teams, dates and rules, a different draw. Keep the one with the best grade."
+                onClick={() => {
+                  const s = seed + 1;
+                  setSeed(s);
+                  build(s);
+                }}
+              >
+                Try another layout
+              </button>
+            )}
             <button
               type="button"
-              style={{ ...BTN, marginLeft: "auto" }}
+              style={{ ...BTN, ...(engine === "gameslate" ? {} : { marginLeft: "auto" }) }}
               onClick={() => {
                 // Straight CSV so it opens in Excel or Google Sheets, and can
                 // be printed or emailed to coaches before it goes live.
                 const rows = [
-                  ["Week", "Date", "Day", "Time", "Field", "Away", "Home"],
+                  ["Week", "Date", "Day", "Time", V, "Away", "Home"],
                   ...result.games.map((g) => [
                     String(g.week),
                     g.date,
@@ -2005,7 +2385,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
               <summary style={{ cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
                 {result.homeFieldChoices.length} game
                 {result.homeFieldChoices.length === 1 ? "" : "s"} where both teams
-                have a home field. Pick who hosts.
+                have a home {v}. Pick who hosts.
               </summary>
               <div style={{ marginTop: 8, display: "grid", gap: 6 }}>
                 {result.homeFieldChoices.map((c) => {
@@ -2116,7 +2496,7 @@ export function ScheduleGenerator({ leagueId, user }: Props) {
                 color: "#7f1d1d",
               }}
             >
-              <strong>No shared field:</strong>{" "}
+              <strong>No shared {v}:</strong>{" "}
               {result.noLegalField.map((s) => `${s.a} v ${s.b}`).join(", ")}.
               <br />
               Widen one of those teams&rsquo; &ldquo;can only play at&rdquo; lists.
