@@ -7,6 +7,7 @@
 // Host header, mirroring middleware's logic.
 
 import { getAdminDb } from "@/lib/firebase-admin";
+import { loadGamesAndTeamsSnaps } from "@/lib/league-cache";
 import { parseHost, resolveTenant } from "@/lib/tenants";
 import { combineDateTime } from "@/lib/format-time";
 
@@ -30,9 +31,8 @@ export async function GET(req: Request) {
   }
 
   const db = getAdminDb();
-  const [gamesSnap, teamsSnap, leagueSnap] = await Promise.all([
-    db.collection(`leagues/${tenantId}/games`).get(),
-    db.collection(`leagues/${tenantId}/teams`).get(),
+  const [{ gamesSnap, teamsSnap }, leagueSnap] = await Promise.all([
+    loadGamesAndTeamsSnaps(db, tenantId),
     db.doc(`leagues/${tenantId}`).get(),
   ]);
 

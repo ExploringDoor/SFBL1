@@ -37,6 +37,13 @@ interface BundleEntry {
 // crawler hit against a cold lambda; player/team/leaders data isn't time-
 // sensitive, and per-game docs are still read fresh where freshness matters.
 const BUNDLE_TTL_MS = 10 * 60_000;
+// The heavy bundle is dominated by the full box_scores collection, which
+// was the single biggest Firestore egress + read-ops cost (2026-09). Box
+// scores only change when a game's box score is entered (post-game, rare),
+// and player/team/leader STATS aren't live-critical, so this bundle gets a
+// longer TTL than the games/teams snapshot (which feeds live scores and
+// stays at BUNDLE_TTL_MS). Fewer full box_scores re-reads per warm process.
+const HEAVY_TTL_MS = 30 * 60_000;
 const bundleCache = new Map<string, BundleEntry>();
 
 export async function loadLeagueBundle(
@@ -63,7 +70,7 @@ export async function loadLeagueBundle(
   };
   bundleCache.set(tenantId, {
     bundle,
-    expires_at: Date.now() + BUNDLE_TTL_MS,
+    expires_at: Date.now() + HEAVY_TTL_MS,
   });
   return bundle;
 }
@@ -102,4 +109,30 @@ export async function loadGamesAndTeamsSnaps(
     expires_at: Date.now() + BUNDLE_TTL_MS,
   });
   return snaps;
+}
+
+// Cached full players collection — same tenant-keyed, in-process, TTL
+// discipline. For pages that need the roster for name resolution (game
+// box scores, availability) WITHOUT the large box_scores collection that
+// loadLeagueBundle pulls — reading all box_scores was the biggest single
+// egress cost (2026-09 read-cost work), so pages that don't need it must
+// not trigger it.
+const playersCache = new Map<
+  string,
+  { snap: QuerySnapshot; expires_at: number }
+>();
+
+export async function loadPlayersSnap(
+  db: Firestore,
+  tenantId: string,
+): Promise<QuerySnapshot> {
+  const hit = playersCache.get(tenantId);
+  if (hit && Date.now() < hit.expires_at) return hit.snap;
+
+  const snap = await db.collection(`leagues/${tenantId}/players`).get();
+  playersCache.set(tenantId, {
+    snap,
+    expires_at: Date.now() + HEAVY_TTL_MS,
+  });
+  return snap;
 }

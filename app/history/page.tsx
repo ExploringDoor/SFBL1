@@ -23,6 +23,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { loadGamesAndTeamsSnaps } from "@/lib/league-cache";
 import { HistoryView } from "./HistoryView";
 import type {
   ChampionRow,
@@ -99,7 +100,7 @@ async function loadTeamMeta(tenantId: string): Promise<TeamMeta[]> {
   // don't exist anymore just don't get a logo — that's fine.
   try {
     const db = getAdminDb();
-    const snap = await db.collection(`leagues/${tenantId}/teams`).get();
+    const { teamsSnap: snap } = await loadGamesAndTeamsSnaps(db, tenantId);
     return snap.docs.map((d) => {
       const data = d.data();
       return {

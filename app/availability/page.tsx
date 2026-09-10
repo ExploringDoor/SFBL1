@@ -12,6 +12,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { loadGamesAndTeamsSnaps, loadPlayersSnap } from "@/lib/league-cache";
 import { AvailabilityPicker } from "@/components/AvailabilityPicker";
 
 export const dynamic = "force-dynamic";
@@ -57,10 +58,12 @@ async function loadData(tenantId: string): Promise<{
   rsvps: RsvpRow[];
 }> {
   const db = getAdminDb();
-  const [teamsSnap, playersSnap, gamesSnap, rsvpSnap] = await Promise.all([
-    db.collection(`leagues/${tenantId}/teams`).get(),
-    db.collection(`leagues/${tenantId}/players`).get(),
-    db.collection(`leagues/${tenantId}/games`).get(),
+  // Share the tenant-keyed cache for the full games/teams/players reads
+  // (dedups across pages + requests); only the small availability
+  // collection is read fresh per request.
+  const [{ gamesSnap, teamsSnap }, playersSnap, rsvpSnap] = await Promise.all([
+    loadGamesAndTeamsSnaps(db, tenantId),
+    loadPlayersSnap(db, tenantId),
     db.collection(`leagues/${tenantId}/availability`).get(),
   ]);
 

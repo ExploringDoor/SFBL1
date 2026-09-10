@@ -8,6 +8,7 @@
 // Host header ourselves — same as schedule.ics.
 
 import { getAdminDb } from "@/lib/firebase-admin";
+import { loadGamesAndTeamsSnaps } from "@/lib/league-cache";
 import { parseHost, resolveTenant } from "@/lib/tenants";
 import { formatTime12 } from "@/lib/format-time";
 
@@ -71,10 +72,7 @@ export async function GET(req: Request) {
   }
 
   const db = getAdminDb();
-  const [gamesSnap, teamsSnap] = await Promise.all([
-    db.collection(`leagues/${tenantId}/games`).get(),
-    db.collection(`leagues/${tenantId}/teams`).get(),
-  ]);
+  const { gamesSnap, teamsSnap } = await loadGamesAndTeamsSnaps(db, tenantId);
 
   const teamNames: Record<string, string> = {};
   for (const d of teamsSnap.docs) {
