@@ -15,7 +15,7 @@ import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { hasScope } from "@/lib/admin-roles";
 import { sendGridBroadcast, sendGridConfigured } from "@/lib/email/sendgrid";
 import { flyerUrl, isAllowedFlyerDataUrl } from "@/lib/flyer";
-import { notifyOffice } from "@/lib/email/send";
+import { notifyAddresses, notifyOffice } from "@/lib/email/send";
 import {
   sendSmsBroadcast,
   twilioConfigured,
@@ -276,6 +276,12 @@ export async function GET(req: Request) {
   return NextResponse.json({
     emailConfigured: sendGridConfigured(),
     smsConfigured: twilioConfigured(),
+    // Who gets the copy of every send. Surfaced because "a copy goes to the
+    // office" is not an answer: the list lives in an env var nobody can read
+    // from the admin, so the one person who needs to know cannot check it.
+    // These are the league's own office addresses, shown to an admin who
+    // already sees every coach's contact details.
+    officeCopyTo: notifyAddresses(),
     counts: { total: selected.length, email: emails.length, sms: phones.length },
     // Per-source totals so the composer can label each audience option.
     sources: {

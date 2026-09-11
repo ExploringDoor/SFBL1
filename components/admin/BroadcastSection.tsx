@@ -36,6 +36,8 @@ interface Recipient {
 interface Status {
   emailConfigured: boolean;
   smsConfigured: boolean;
+  /** Who gets a copy of every real send. */
+  officeCopyTo?: string[];
   counts: Counts;
   sources?: { coaches: Counts; subscribers: Counts };
   recipients?: Recipient[];
@@ -475,6 +477,15 @@ export function BroadcastSection({ leagueId, user }: Props) {
             <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}>
               Texts append “Reply STOP to opt out.” automatically.
             </div>
+            {/* Named, not described. "A copy goes to the office" is not an
+                answer to "who gets it", and the list lives in an env var no
+                admin can read. */}
+            {status?.officeCopyTo && status.officeCopyTo.length > 0 && (
+              <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}>
+                A copy of every send goes to {status.officeCopyTo.join(", ")}.
+                Tests are not copied.
+              </div>
+            )}
           </div>
 
           {/* Flyer. Shown in the email under the message, and sent as a link
