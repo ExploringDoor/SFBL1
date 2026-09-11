@@ -15,6 +15,7 @@ import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { hasScope } from "@/lib/admin-roles";
 import { sendGridBroadcast, sendGridConfigured } from "@/lib/email/sendgrid";
 import { flyerUrl, isAllowedFlyerDataUrl } from "@/lib/flyer";
+import { notifyOffice } from "@/lib/email/send";
 import {
   sendSmsBroadcast,
   twilioConfigured,
@@ -225,7 +226,7 @@ function audience(
 async function requireAdmin(
   req: Request,
   leagueId: unknown,
-): Promise<{ uid: string } | NextResponse> {
+): Promise<{ uid: string; email: string | null } | NextResponse> {
   const authHdr = req.headers.get("authorization");
   if (!authHdr?.startsWith("Bearer ")) {
     return NextResponse.json({ error: "Missing bearer token" }, { status: 401 });
@@ -253,7 +254,7 @@ async function requireAdmin(
       { status: 403 },
     );
   }
-  return { uid: decoded.uid };
+  return { uid: decoded.uid, email: decoded.email ?? null };
 }
 
 export async function GET(req: Request) {
@@ -471,8 +472,53 @@ export async function POST(req: Request) {
     result.sms = { sent: 0, note: "no text recipients" };
   }
 
-  // Audit (skip for tests).
+  // Office copy + audit. Both skipped for a test send: a test goes to one
+  // address on purpose, and filing a rehearsal teaches everyone to ignore it.
   if (!isTest) {
+    // Copy to the league office.
+    //
+    // Mike, 2026-09-10: "anyway Kristin or I sends out a message I get an
+    // email or text of it." Two people send from this screen now, and the only
+    // record of what went out was an audit row nobody reads. The office list
+    // is the right destination rather than the sender: Mike wants Kristin's
+    // sends as much as his own, and the list already holds both.
+    //
+    // Test sends are skipped. A test goes to one address on purpose, and
+    // copying the office on a rehearsal teaches everyone to ignore these.
+    //
+    // Best effort and last: the blast has already gone, and failing to file
+    // the copy must never make a successful send look broken.
+    try {
+      const em = result.email as { sent?: number; skipped?: boolean } | undefined;
+      const sm = result.sms as { sent?: number; skipped?: boolean } | undefined;
+      const went = [
+        em && !em.skipped ? `${em.sent ?? 0} by email` : "",
+        sm && !sm.skipped ? `${sm.sent ?? 0} by text` : "",
+      ]
+        .filter(Boolean)
+        .join(" and ");
+      await notifyOffice({
+        subject: `[copy] ${leagueName}: ${subject || "message sent"}`,
+        html:
+          `<p style="color:#475569;font-size:13px">Copy for the league record. ` +
+          `Sent ${esc(went || "to nobody")} by ` +
+          `${esc((gate as { email: string | null }).email ?? "an admin")}.</p>` +
+          // The message as written, NOT the recipient-facing body: that one
+          // ends "you're receiving this because you signed up for alerts",
+          // which is nonsense on the office's own copy.
+          `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;` +
+          `line-height:1.6;color:#1a1a1a;border-left:3px solid #ddd;padding-left:12px">` +
+          esc(message).replace(/\n/g, "<br/>") +
+          `</div>` +
+          (flyerHref
+            ? `<p style="font-size:12px;color:#777">Flyer: <a href="${esc(flyerHref)}">${esc(flyerHref)}</a></p>`
+            : ""),
+        replyTo: (gate as { email: string | null }).email ?? undefined,
+      });
+    } catch (err) {
+      console.error("[admin-broadcast] office copy failed", err);
+    }
+
     await db
       .collection(`leagues/${leagueId}/audit`)
       .add({
