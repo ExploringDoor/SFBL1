@@ -143,13 +143,30 @@ interface Submission {
 interface Props {
   leagueId: string;
   user: User;
+  /** True for a caller holding the "payments" scope rather than the full
+   *  admin password (Kaitlin, 2026-09-11). The store order report lives in
+   *  this tab, so the tab has to open for her, but the registrations, signed
+   *  waivers and clinic families behind it must not. Store orders only.
+   *
+   *  This is the COURTESY half. /api/admin-form-submissions refuses every
+   *  other kind to that token regardless of what the UI asks for; without
+   *  this flag she would simply see empty tabs and error messages. */
+  merchOnly?: boolean;
 }
 
-export function FormSubmissionsViewer({ leagueId, user }: Props) {
-  const [kind, setKind] = useState<Kind>("player_registration");
+export function FormSubmissionsViewer({ leagueId, user, merchOnly }: Props) {
+  const [kind, setKind] = useState<Kind>(
+    merchOnly ? "merch_order" : "player_registration",
+  );
   // Filtered per league, so a tenant never sees (or fetches counts for) a
   // submission kind it cannot hold.
-  const kindTabs = useMemo(() => kindTabsFor(leagueId), [leagueId]);
+  const kindTabs = useMemo(
+    () =>
+      merchOnly
+        ? kindTabsFor(leagueId).filter((t) => t.key === "merch_order")
+        : kindTabsFor(leagueId),
+    [leagueId, merchOnly],
+  );
   const [items, setItems] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

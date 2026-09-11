@@ -22,6 +22,7 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { hasScope } from "@/lib/admin-roles";
 
 export const runtime = "nodejs";
 
@@ -78,7 +79,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "leagueId required" }, { status: 400 });
   }
   const leagues = decoded.leagues as Record<string, string> | undefined;
-  if (leagues?.[leagueId] !== "admin") {
+  // Full admin, or the "payments" scope (Kaitlin, 2026-09-11). Same reasoning
+  // as /api/admin-merch-payment: she answers the "did my fee land" questions,
+  // and the ledger is audited.
+  if (leagues?.[leagueId] !== "admin" && !hasScope(decoded, leagueId, "payments")) {
     return NextResponse.json(
       { error: `Not admin of league "${leagueId}"` },
       { status: 403 },

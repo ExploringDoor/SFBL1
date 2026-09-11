@@ -47,9 +47,27 @@ describe("the assistant (scheduler)", () => {
 
   it("opens no tab that is not a declared scope", () => {
     const tabs = scopedTabKeys(accessFromClaim("admin:scheduler"))!;
-    for (const forbidden of ["payments", "captains", "forms", "branding", "audit"]) {
+    for (const forbidden of ["captains", "branding", "audit", "umpires"]) {
       expect(tabs.has(forbidden)).toBe(false);
     }
+  });
+
+  // 2026-09-11. "payments" was the sentinel for "a scope nobody has" in this
+  // file until Mike approved giving it to Kaitlin, which is why three tests
+  // below now use "money" instead. The grant is deliberate; these pin it.
+  it("gained payments, and with it the Form submissions TAB", () => {
+    expect(hasScope(tok, "island", "payments")).toBe(true);
+    const tabs = scopedTabKeys(accessFromClaim("admin:scheduler"))!;
+    expect(tabs.has("payments")).toBe(true);
+    // The store order report lives inside the forms tab, so the tab opens.
+    // What is BEHIND it is locked server-side, not here: see
+    // tests/payments-scope-merch-only.test.ts.
+    expect(tabs.has("forms")).toBe(true);
+  });
+
+  it("does not gain payments for any OTHER league", () => {
+    expect(hasScope(tok, "coybl", "payments")).toBe(false);
+    expect(hasScope(tok, "sfbl", "payments")).toBe(false);
   });
 });
 
@@ -161,9 +179,9 @@ describe("a town commissioner (config-defined role)", () => {
   });
 
   it("drops unknown scope strings, and grants nothing for an all-unknown list", () => {
-    const typo = { ...mineola, admin_scopes: ["scores", "payments", "everything"] };
+    const typo = { ...mineola, admin_scopes: ["scores", "money", "everything"] };
     expect([...accessFor(typo, "etbl").scopes]).toEqual(["scores"]);
-    const junk = { ...mineola, admin_scopes: ["payments"] };
+    const junk = { ...mineola, admin_scopes: ["money"] };
     expect(accessFor(junk, "etbl").scopes.size).toBe(0);
   });
 
@@ -226,7 +244,7 @@ describe("resolveConfiguredRole", () => {
   it("an unknown id with no usable scopes is unmintable", () => {
     expect(resolveConfiguredRole("mineola", { password: "x" })).toBeNull();
     expect(resolveConfiguredRole("mineola", { scopes: [] })).toBeNull();
-    expect(resolveConfiguredRole("mineola", { scopes: ["payments"] })).toBeNull();
+    expect(resolveConfiguredRole("mineola", { scopes: ["money"] })).toBeNull();
     expect(resolveConfiguredRole("mineola", { scopes: "scores" })).toBeNull();
   });
 

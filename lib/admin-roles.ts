@@ -57,6 +57,9 @@ export type AdminScope =
   | "teams"
   | "fields"
   | "rules"
+  // League fees and store orders: who has paid, what is still owed, and
+  // recording a Venmo / Zelle / cash payment as received.
+  | "payments"
   // The game-day job board (clock, scorebook, snack bar). Opened for full
   // admins and for the town commissioner role; the routes that write shifts
   // check this scope.
@@ -73,6 +76,7 @@ export const ALL_SCOPES: readonly AdminScope[] = [
   "fields",
   "rules",
   "volunteers",
+  "payments",
 ] as const;
 
 /** The scopes whose routes enforce `admin_town`. A town-bound role is
@@ -144,6 +148,27 @@ export const ADMIN_ROLES: Record<
       // rulebook where there is none, which is what protects the leagues whose
       // rules live in a different document.
       "rules",
+      // "payments" added 2026-09-11, Kaitlin via Adam, Mike already approved.
+      //
+      // This is the one thing the role deliberately did NOT have. The note at
+      // the top of this file names the Payments tab as the reason a scoped
+      // role existed at all, so widening it here is worth justifying rather
+      // than just recording: she is the one fielding "did you get my Venmo",
+      // and every answer had to go through Mike.
+      //
+      // It opens the Payments tab and, through scopedTabKeys below, the store
+      // orders ONLY of the Form submissions tab. It does NOT open the rest of
+      // that tab: player and team registrations, signed waivers and the
+      // clinic families stay full-admin, because those are children's contact
+      // details and she asked about money.
+      //
+      // Unlike every other scope here it can WRITE money: recording a Venmo,
+      // Zelle, cash or cheque payment as received. That reverses the rule in
+      // /api/admin-merch-payment that recording money needs a full admin.
+      // Deliberate, and narrow: she may record a payment and clear one, both
+      // audited with her uid and email, and she still cannot refund a card,
+      // which stays in Square where the money actually is.
+      "payments",
     ],
   },
 };
@@ -330,5 +355,16 @@ export function hasScope(
  *  replace each other. */
 export function scopedTabKeys(a: AdminAccess): Set<string> | null {
   if (a.full) return null;
-  return new Set(a.scopes);
+  const keys = new Set<string>(a.scopes);
+  // Scope names match tab keys one for one, with one exception: the store
+  // order report lives INSIDE the Form submissions tab rather than in a tab
+  // of its own. So "payments" has to open "forms" as well to be reachable.
+  //
+  // That tab also holds registrations, waivers and the clinic families, which
+  // this role must not see. Opening the tab is therefore only half the grant:
+  // FormSubmissionsViewer renders store orders alone for a scoped caller, and
+  // /api/admin-form-submissions refuses every other kind to a payments-scoped
+  // token. The tab strip is the shop window; the endpoint is the lock.
+  if (keys.has("payments")) keys.add("forms");
+  return keys;
 }

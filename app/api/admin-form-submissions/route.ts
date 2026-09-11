@@ -9,6 +9,7 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { hasScope } from "@/lib/admin-roles";
 import { FORM_KIND_SET } from "@/lib/form-kinds";
 
 export const runtime = "nodejs";
@@ -47,8 +48,23 @@ export async function GET(req: Request) {
   const claim = (decoded.leagues as Record<string, string> | undefined)?.[
     leagueId
   ];
+  // A full admin reads every kind, as before. The "payments" scope reads ONE:
+  // the store orders. This endpoint is the real boundary, not the tab strip —
+  // the tab is opened for that scope (scopedTabKeys in lib/admin-roles.ts) so
+  // the shirt report is reachable at all, and everything else behind it,
+  // player and team registrations, signed waivers and the clinic families,
+  // has to be refused HERE or the grant is meaningless. Those are children's
+  // contact details; the scope was asked for to answer "did my Venmo land".
   if (claim !== "admin") {
-    return NextResponse.json({ error: "not admin" }, { status: 403 });
+    if (!hasScope(decoded, leagueId, "payments")) {
+      return NextResponse.json({ error: "not admin" }, { status: 403 });
+    }
+    if (kind !== "merch_order") {
+      return NextResponse.json(
+        { error: "This login can only see store orders." },
+        { status: 403 },
+      );
+    }
   }
 
   const db = getAdminDb();

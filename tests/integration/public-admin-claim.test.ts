@@ -170,7 +170,10 @@ describe("town commissioner (config-defined role)", () => {
       password: "full-secret",
       roles: {
         noscopes: { password: "a-pw" },
-        junk: { password: "b-pw", scopes: ["payments"] },
+        // "money" is not a scope. ("payments" was this file's example of an
+        // unknown one until 2026-09-11, when it became real: Mike gave it to
+        // Kaitlin for the league fee and store order reports.)
+        junk: { password: "b-pw", scopes: ["money"] },
         badtown: { password: "c-pw", scopes: ["scores"], town: "x".repeat(61) },
       },
     });

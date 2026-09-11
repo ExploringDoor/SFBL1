@@ -25,6 +25,7 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { hasScope } from "@/lib/admin-roles";
 import { esc, notifyAddress, sendEmail } from "@/lib/email/send";
 import { paymentDetailsFor } from "@/lib/league-payment";
 import { chargeCents, feeFor, surchargeFor } from "@/lib/square";
@@ -195,7 +196,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "leagueId required" }, { status: 400 });
   }
   const leagues = decoded.leagues as Record<string, string> | undefined;
-  if (leagues?.[leagueId] !== "admin") {
+  // Full admin, or the "payments" scope. Included so the Payments tab is not
+  // half a tab for her: the reminder button sits on the same screen as the
+  // ledger, and a button that 403s is worse than no button. She already holds
+  // "broadcast", so emailing the league is not new ground.
+  if (leagues?.[leagueId] !== "admin" && !hasScope(decoded, leagueId, "payments")) {
     return NextResponse.json(
       { error: `Not admin of league "${leagueId}"` },
       { status: 403 },

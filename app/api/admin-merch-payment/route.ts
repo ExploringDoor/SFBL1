@@ -20,6 +20,7 @@
 
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { hasScope } from "@/lib/admin-roles";
 
 export const runtime = "nodejs";
 
@@ -45,11 +46,17 @@ export async function POST(req: Request) {
   if (!ID_RE.test(leagueId) || !ID_RE.test(id)) {
     return NextResponse.json({ error: "leagueId and id are required." }, { status: 400 });
   }
-  // FULL ADMIN, not a scope, matching /api/admin-clinic-payment. Recording
-  // money is the one thing a scoped helper should not be able to do on their
-  // own, and there is no "forms" scope to hide behind.
+  // FULL ADMIN, or the "payments" scope.
+  //
+  // This used to be full admin only, on the rule that recording money is not a
+  // scoped helper's call. That changed 2026-09-11: Kaitlin is the one fielding
+  // "did you get my Venmo" and every answer had to go through Mike, who
+  // approved the widening. The narrowing that survives is worth keeping in
+  // view: METHODS below still excludes card, so neither of them can mark a
+  // card order paid or clear one by hand. That stays in Square, where the
+  // money is. Every action here is audited with the uid and email below.
   const claim = (decoded.leagues as Record<string, string> | undefined)?.[leagueId];
-  if (claim !== "admin") {
+  if (claim !== "admin" && !hasScope(decoded, leagueId, "payments")) {
     return NextResponse.json({ error: "Not allowed." }, { status: 403 });
   }
 

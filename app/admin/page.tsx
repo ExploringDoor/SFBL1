@@ -705,7 +705,14 @@ export default function AdminPage() {
           <ActivityFeed leagueId={tenantId} onNavigate={(t) => setActiveTab(t as TabKey)} />
         )}
         {activeTab === "forms" && (
-          <FormSubmissionsViewer leagueId={tenantId} user={user} />
+          <FormSubmissionsViewer
+            leagueId={tenantId}
+            user={user}
+            // A payments-scoped assistant reaches this tab only to read the
+            // store orders. Everything else in it is registrations, signed
+            // waivers and the clinic families, which stay full-admin.
+            merchOnly={!access.full}
+          />
         )}
         {activeTab === "playerads" && (
           <PlayerAdsManager leagueId={tenantId} user={user} />
