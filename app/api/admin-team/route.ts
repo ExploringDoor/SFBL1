@@ -228,11 +228,23 @@ export async function POST(req: Request) {
   const ref = db.doc(`leagues/${leagueId}/teams/${teamId}`);
 
   if (action === "delete") {
-    // FULL ADMIN ONLY, even though the rest of this route is scoped.
-    // Deactivating a team pulls it out of the standings and off the schedule,
-    // and with 41 teams registered and fixtures being built it is the one
-    // action here that is expensive to undo by hand.
-    if (!accessFor(decoded, leagueId).full) {
+    // The "teams" scope, not full admin.
+    //
+    // This was full-admin-only from 2026-09-03 to 2026-09-11, and it is worth
+    // being straight about why it changed: Mike never asked for the
+    // restriction. He asked for Kaitlin to have "roster access and she need to
+    // see the teams in each division", and the carve-out was this codebase's
+    // own reading of "roster access" as view-only. She hit it, said she had
+    // "lost the team deactivate access", and Adam reversed it on 2026-09-11.
+    //
+    // The fields grant three days earlier is the precedent that fits: Mike
+    // asked for her to "add and delete fields" because she is the one who
+    // hears a park is closed, and making him the bottleneck on her own job was
+    // the actual problem. A team folding is the same shape of news.
+    //
+    // The umpire in chief still cannot: that role holds only "umpires".
+    const access = accessFor(decoded, leagueId);
+    if (!access.full && !access.scopes.has("teams")) {
       return NextResponse.json(
         {
           error:
@@ -243,14 +255,35 @@ export async function POST(req: Request) {
     }
     // Soft delete — preserves historical box scores + standings.
     // True hard delete would orphan past games' team_id references.
+    const before = await ref.get();
+    const teamName = String(before.data()?.name ?? teamId);
     await ref.set(
       {
         active: false,
         deactivated_at: new Date().toISOString(),
         deactivated_by_uid: decoded.uid,
+        deactivated_by_email: decoded.email ?? null,
       },
       { merge: true },
     );
+    // AUDITED, which it was not before. Until now the only trace was a uid on
+    // the team document, so "who pulled this team off the schedule" could not
+    // be answered from the audit log at all. That was survivable while one
+    // person held the power. It is not now that two do, four days before
+    // opening day, with no Reactivate button in the UI to undo a mistake.
+    try {
+      await db.collection(`leagues/${leagueId}/audit`).add({
+        kind: "deactivate_team",
+        team_id: teamId,
+        team_name: teamName,
+        by_uid: decoded.uid,
+        by_email: decoded.email ?? null,
+        by_role: access.roleId ?? "admin",
+        at: new Date().toISOString(),
+      });
+    } catch {
+      /* never fail the deactivation over the audit row */
+    }
     return NextResponse.json({ ok: true, soft_deleted: true });
   }
 
