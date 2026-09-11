@@ -681,6 +681,12 @@ function GameForm({
   }, [homeId, teams, mode, division]);
 
   const showScores = status === "final" || status === "approved";
+  // A final with the score boxes left blank used to save happily, and the game
+  // then counted as a 0-0 TIE for both teams on the standings, the team pages
+  // and the homepage at once. Nobody reports that, because a tie looks like a
+  // result. The standings now skip a scoreless final (countsInStandings in
+  // lib/stats/shared.ts); this stops one being created in the first place.
+  const missingScore = showScores && (awayScore === "" || homeScore === "");
 
   async function submit() {
     const patch: Partial<GameRow> = {
@@ -915,6 +921,13 @@ function GameForm({
                 className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm font-mono"
               />
             </label>
+            {missingScore && (
+              <p className="sm:col-span-3 -mt-1 text-xs font-semibold text-amber-700">
+                Enter both scores to mark this game {status}. A final with no
+                score counts as a 0-0 tie for both teams in the standings.
+                To take a game off without a result, use Postponed or Cancelled.
+              </p>
+            )}
           </>
         )}
       </div>
@@ -923,7 +936,11 @@ function GameForm({
         <button
           type="button"
           onClick={submit}
-          disabled={busy || (mode === "create" && (!date || !awayId || !homeId))}
+          disabled={
+            busy ||
+            missingScore ||
+            (mode === "create" && (!date || !awayId || !homeId))
+          }
           className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
         >
           {busy ? "Saving…" : mode === "create" ? "Create game" : "Save changes"}

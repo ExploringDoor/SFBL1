@@ -314,6 +314,38 @@ async function run() {
   console.log(`[seed-island] target: ${target}`);
   if (ONLY.length) console.log(`[seed-island] PARTIAL: ${ONLY.join(", ")}`);
 
+  // LIVE-SEASON GUARD.
+  //
+  // `wants("data")` is TRUE when SEED_ONLY is unset, so a bare
+  //   npx tsx scripts/seed-island.ts
+  // deletes every team, game, player and box score on PRODUCTION and replaces
+  // them with the 23 demo teams in scripts/data/island-seed.json. That is the
+  // right behaviour for a rebuild and a season-ending accident on a league
+  // that is already playing, and nothing stood between the two.
+  //
+  // So: if the live data is bigger than the seed file, stop. SEED_I_MEAN_IT=1
+  // says you really are rebuilding.
+  if (wants("data") && !process.env.FIRESTORE_EMULATOR_HOST) {
+    const liveTeams = await db.collection(`leagues/${LEAGUE_ID}/teams`).count().get();
+    const liveGames = await db.collection(`leagues/${LEAGUE_ID}/games`).count().get();
+    const nt = liveTeams.data().count;
+    const ng = liveGames.data().count;
+    if (
+      (nt > data.teams.length || ng > data.games.length) &&
+      process.env.SEED_I_MEAN_IT !== "1"
+    ) {
+      console.error(
+        `\n[seed-island] REFUSING TO RUN.\n` +
+          `  Live: ${nt} teams, ${ng} games.  Seed file: ${data.teams.length} teams, ${data.games.length} games.\n` +
+          `  A full run DELETES teams/games/players/box_scores first, so this would\n` +
+          `  destroy a season that is already under way.\n\n` +
+          `  To change one part only:   SEED_ONLY=config npx tsx scripts/seed-island.ts\n` +
+          `  To really rebuild:         SEED_I_MEAN_IT=1 npx tsx scripts/seed-island.ts\n`,
+      );
+      process.exit(1);
+    }
+  }
+
   // Wipe stale docs so renamed teams don't linger between reseeds.
   for (const sub of wants("data") ? ["teams", "games", "players", "box_scores"] : []) {
     const stale = await db.collection(`leagues/${LEAGUE_ID}/${sub}`).get();
@@ -366,9 +398,16 @@ async function run() {
       divOrder: t.divOrder,
       color: t.color ?? null,
       logo_url: t.logo_url ?? null,
-      w: t.w, l: t.l, t: t.t,
-      record: t.record,
-      overall: t.overall,
+      // NO w / l / t / record / overall.
+      //
+      // Island computes its standings from the games, and lib/age-standings.ts
+      // flips the WHOLE LEAGUE to stored-record mode the moment a SINGLE team
+      // doc carries numeric w and l (useStoredRecords: stats_enabled is false
+      // here, so the only test left is "does any team have a record"). The
+      // seed file still holds last season's 4-2, 2-8, 0-5 ... so writing them
+      // would freeze the table on those numbers and every score entered this
+      // fall would change nothing. That is the exact failure this script must
+      // not cause.
     });
     if (++n >= 400) await flush();
   }

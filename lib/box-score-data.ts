@@ -10,7 +10,7 @@ import type {
   BoxBatter,
   BoxPitcher,
 } from "@/components/BoxScoreContent";
-import { computeStandings, type GameResult } from "./stats/shared";
+import { computeStandings, type GameResult, scoreOrNull } from "./stats/shared";
 
 // Closes H9. The expensive part of loadBoxScoreData isn't the per-
 // game doc — it's the three tenant-wide reads (teams, players, all
@@ -160,8 +160,8 @@ async function loadTenantBoxAggregates(
     return {
       home_team_id: String(data.home_team_id ?? ""),
       away_team_id: String(data.away_team_id ?? ""),
-      home_score: Number(data.home_score ?? 0),
-      away_score: Number(data.away_score ?? 0),
+      home_score: scoreOrNull(data.home_score),
+      away_score: scoreOrNull(data.away_score),
       status: (data.status ?? "draft") as GameResult["status"],
       date: data.date ? String(data.date) : undefined,
     };

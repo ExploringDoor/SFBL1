@@ -27,6 +27,7 @@ import {
   type GameResult,
   computeStandingsWithExtraGameRule,
   seedStandingsWithAllTeams,
+  scoreOrNull,
 } from "@/lib/stats/shared";
 import { formatIP } from "@/lib/stats/ip";
 import { formatGameDate } from "@/lib/format-time";
@@ -221,8 +222,8 @@ export default async function TeamDetailPage({
     return {
       home_team_id: String(data.home_team_id ?? ""),
       away_team_id: String(data.away_team_id ?? ""),
-      home_score: Number(data.home_score ?? 0),
-      away_score: Number(data.away_score ?? 0),
+      home_score: scoreOrNull(data.home_score),
+      away_score: scoreOrNull(data.away_score),
       status: (data.status ?? "draft") as GameResult["status"],
       date: data.date ? String(data.date) : undefined,
     };

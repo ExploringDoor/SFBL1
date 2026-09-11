@@ -69,10 +69,53 @@ export type GameStatus =
 export interface GameResult {
   home_team_id: string;
   away_team_id: string;
-  home_score: number;
-  away_score: number;
+  /** NULL when no score has been entered yet. See scoreOrNull below: this is
+   *  deliberately nullable so a game can say "finished, but nobody has told us
+   *  the score" instead of quietly claiming 0. */
+  home_score: number | null;
+  away_score: number | null;
   status: GameStatus;
   date?: string; // ISO; required for streak calculation
+}
+
+/** A finished game whose score was actually entered. The only kind that may
+ *  move a standings row. */
+export type ScoredGame = GameResult & { home_score: number; away_score: number };
+
+/**
+ * Read a score off a game document WITHOUT inventing one.
+ *
+ * Every page used to do `Number(data.home_score ?? 0)`, which turns a missing
+ * score into a real zero. That is fine right up until a game is marked final
+ * with the score boxes left blank — the admin Schedule tab offers exactly that
+ * — and then two teams silently collect a 0-0 TIE and a game played, on the
+ * standings, the team pages, the homepage and the printed table at once.
+ * Nobody reports it as a bug because a tie looks like a result.
+ *
+ * Returning null keeps the distinction, and countsInStandings acts on it.
+ */
+export function scoreOrNull(raw: unknown): number | null {
+  if (raw === null || raw === undefined || raw === "") return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Does this game belong in the standings?
+ *
+ * Both halves matter. The status filter has always been here: scheduled, live,
+ * postponed, cancelled and bye games do not count. The score check is the new
+ * half, and it is written as a type guard so the callers below can do plain
+ * arithmetic on the two numbers afterwards.
+ */
+export function countsInStandings(g: GameResult): g is ScoredGame {
+  if (g.status !== "final" && g.status !== "approved") return false;
+  return (
+    typeof g.home_score === "number" &&
+    Number.isFinite(g.home_score) &&
+    typeof g.away_score === "number" &&
+    Number.isFinite(g.away_score)
+  );
 }
 
 export interface StandingsRow {
@@ -127,9 +170,7 @@ export function applyHeadToHead(
   games: GameResult[],
   tied: (a: StandingsRow, b: StandingsRow) => boolean,
 ): StandingsRow[] {
-  const finished = games.filter(
-    (g) => g.status === "final" || g.status === "approved",
-  );
+  const finished = games.filter(countsInStandings);
   const out: StandingsRow[] = [];
   let i = 0;
   while (i < rows.length) {
@@ -361,9 +402,7 @@ export function sortByPoints(
 // each team's current streak ("W3"/"L1"/"T1") if dates are available on
 // the games — otherwise leaves streak undefined.
 export function computeStandings(games: GameResult[]): StandingsRow[] {
-  const finished = games.filter(
-    (g) => g.status === "final" || g.status === "approved",
-  );
+  const finished = games.filter(countsInStandings);
 
   // Sort by date for streak calc; preserves stable order otherwise.
   const sortedFinished = [...finished].sort((a, b) =>

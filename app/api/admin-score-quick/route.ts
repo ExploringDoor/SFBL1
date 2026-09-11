@@ -44,7 +44,59 @@ async function safeRecalc(
 }
 import { collectLineupErrors } from "@/lib/stats/validate";
 
+/**
+ * Close any open dispute this score just settled.
+ *
+ * A disputed score is pulled OFF the site and a row lands in the Score
+ * Disputes tab (captain-report-score, rule 4). The tab has a Resolve button,
+ * but the natural place to fix a score is the Scores tab — you are already
+ * looking at the game — and doing it there left `score_disputed: true` on the
+ * game and the dispute sitting open forever. Mike types the right number and
+ * the admin keeps telling him there is an argument to settle.
+ *
+ * Best effort: the score itself is already written, and a stale dispute row is
+ * a nuisance, not a wrong result.
+ */
+async function settleDisputeFor(
+  db: ReturnType<typeof getAdminDb>,
+  leagueId: string,
+  gameId: string,
+  home: number,
+  away: number,
+  uid: string,
+): Promise<void> {
+  try {
+    await db.doc(`leagues/${leagueId}/games/${gameId}`).set(
+      { score_disputed: false },
+      { merge: true },
+    );
+    const open = await db
+      .collection(`leagues/${leagueId}/score_disputes`)
+      .where("game_id", "==", gameId)
+      .where("status", "==", "open")
+      .get();
+    const now = new Date().toISOString();
+    await Promise.all(
+      open.docs.map((d) =>
+        d.ref.set(
+          {
+            status: "resolved",
+            official: { home_score: home, away_score: away },
+            resolved_at: now,
+            resolved_by: uid,
+            resolved_via: "score_quick",
+          },
+          { merge: true },
+        ),
+      ),
+    );
+  } catch {
+    /* the score is saved; a lingering dispute row is not worth a 500 */
+  }
+}
+
 export const runtime = "nodejs";
+
 
 const ALLOWED_STATUS = new Set([
   "scheduled",
@@ -254,6 +306,7 @@ export async function POST(req: Request) {
     // Score changed — drop any machine-written recap so it regenerates
     // from the new score (manual overrides are kept).
     await invalidateGeneratedRecap(leagueId, gameId);
+    await settleDisputeFor(db, leagueId, gameId, homeScore, awayScore, decoded.uid);
 
     const statsWarning = await safeRecalc(db, leagueId);
     return NextResponse.json({
@@ -343,6 +396,9 @@ export async function POST(req: Request) {
       written.push(u.gameId);
       // Score changed — bust the cached machine-written recap.
       await invalidateGeneratedRecap(leagueId, u.gameId);
+      if (newStatus === "final" || newStatus === "approved") {
+        await settleDisputeFor(db, leagueId, u.gameId, hScore, aScore, decoded.uid);
+      }
     } catch (e) {
       errors.push({
         gameId: u.gameId,

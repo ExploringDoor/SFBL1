@@ -28,6 +28,7 @@ import {
   type StandingsRow,
   computeStandingsWithExtraGameRule,
   seedStandingsWithAllTeams,
+  scoreOrNull,
 } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { teamsHidden } from "@/lib/team-options";
@@ -62,8 +63,8 @@ interface ScheduleItem {
   status: string;
   away_team_id: string;
   home_team_id: string;
-  away_score: number;
-  home_score: number;
+  away_score: number | null;
+  home_score: number | null;
 }
 
 export default async function HomePage() {
@@ -383,8 +384,8 @@ export default async function HomePage() {
                       key={g.id}
                       gameId={g.id}
                       date={g.date}
-                      away={teamCardData(g.away_team_id, teams, g.away_score)}
-                      home={teamCardData(g.home_team_id, teams, g.home_score)}
+                      away={teamCardData(g.away_team_id, teams, (g.away_score ?? 0))}
+                      home={teamCardData(g.home_team_id, teams, (g.home_score ?? 0))}
                       ageGroup={teamAge[g.home_team_id] ?? teamAge[g.away_team_id]}
                       compact={config?.flags?.stats_enabled === false}
                     />
@@ -661,8 +662,8 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
       status: String(data.status ?? "draft"),
       home_team_id: String(data.home_team_id ?? ""),
       away_team_id: String(data.away_team_id ?? ""),
-      home_score: Number(data.home_score ?? 0),
-      away_score: Number(data.away_score ?? 0),
+      home_score: scoreOrNull(data.home_score),
+      away_score: scoreOrNull(data.away_score),
     };
   });
 

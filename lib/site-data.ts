@@ -7,8 +7,7 @@ import { teamLogoSrc } from "./team-logo";
 import type { TickerGame } from "@/components/ui/Ticker";
 import {
   computeStandingsWithExtraGameRule,
-  type GameResult,
-} from "./stats/shared";
+  type GameResult, scoreOrNull } from "./stats/shared";
 import { combineDateTime } from "./format-time";
 
 interface TeamMeta {
@@ -136,8 +135,8 @@ export async function loadTickerGames(
     standingsGames.push({
       home_team_id: String(data.home_team_id ?? ""),
       away_team_id: String(data.away_team_id ?? ""),
-      home_score: Number(data.home_score ?? 0),
-      away_score: Number(data.away_score ?? 0),
+      home_score: scoreOrNull(data.home_score),
+      away_score: scoreOrNull(data.away_score),
       status: (data.status ?? "draft") as GameResult["status"],
     });
   }

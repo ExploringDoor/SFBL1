@@ -12,6 +12,7 @@ import { GameCard, type GameCardTeam } from "@/components/ui/GameCard";
 import { computeWeeks, pickActiveWeek } from "@/lib/season-weeks";
 import { computeStandings, type GameResult,
   computeStandingsWithExtraGameRule,
+  scoreOrNull,
 } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { scoreUnit } from "@/lib/sport-labels";
@@ -34,8 +35,8 @@ interface ScoreGame {
   field: string | null;
   away_team_id: string;
   home_team_id: string;
-  away_score: number;
-  home_score: number;
+  away_score: number | null;
+  home_score: number | null;
   division: string | null;
 }
 
@@ -134,8 +135,8 @@ export default async function ScoresPage({
     let highestCombined = -1;
     let highestGameId: string | null = null;
     for (const g of activeGames) {
-      const margin = Math.abs(g.away_score - g.home_score);
-      const total = g.away_score + g.home_score;
+      const margin = Math.abs((g.away_score ?? 0) - (g.home_score ?? 0));
+      const total = (g.away_score ?? 0) + (g.home_score ?? 0);
       totalRuns += total;
       if (margin > biggestMargin) {
         biggestMargin = margin;
@@ -327,8 +328,8 @@ export default async function ScoresPage({
                     key={g.id}
                     gameId={g.id}
                     date={g.date}
-                    away={teamCardData(g.away_team_id, teams, g.away_score)}
-                    home={teamCardData(g.home_team_id, teams, g.home_score)}
+                    away={teamCardData(g.away_team_id, teams, (g.away_score ?? 0))}
+                    home={teamCardData(g.home_team_id, teams, (g.home_score ?? 0))}
                     badge={badgeFor(highlights.get(g.id))}
                     ageGroup={ageOfGame(g) ?? undefined}
                     compact={config?.flags?.stats_enabled === false}
@@ -383,8 +384,8 @@ async function loadScores(
       field: data.field ? String(data.field) : null,
       away_team_id: String(data.away_team_id ?? ""),
       home_team_id: String(data.home_team_id ?? ""),
-      away_score: Number(data.away_score ?? 0),
-      home_score: Number(data.home_score ?? 0),
+      away_score: scoreOrNull(data.away_score),
+      home_score: scoreOrNull(data.home_score),
       division: data.division ? String(data.division) : null,
     };
   });

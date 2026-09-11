@@ -17,6 +17,7 @@ import { GameCard, type GameCardTeam } from "@/components/ui/GameCard";
 import { computeWeeks, pickActiveWeek } from "@/lib/season-weeks";
 import { computeStandings, type GameResult,
   computeStandingsWithExtraGameRule,
+  scoreOrNull,
 } from "@/lib/stats/shared";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import { ScoresScheduleTabs, WeekRow } from "../scores/tabs-and-weeks";
@@ -45,8 +46,8 @@ interface ScheduleGame {
   away_team_id: string;
   home_team_id: string;
   division: string | null;
-  away_score: number;
-  home_score: number;  /** A rearranged game. Marked in the admin, shown in the league's makeup
+  away_score: number | null;
+  home_score: number | null;  /** A rearranged game. Marked in the admin, shown in the league's makeup
    *  colour so a coach spots the row whose date changed. */
   makeup?: boolean;
 }
@@ -416,8 +417,8 @@ async function loadSchedule(
       away_team_id: String(data.away_team_id ?? ""),
       home_team_id: String(data.home_team_id ?? ""),
       division: data.division ? String(data.division) : null,
-      away_score: Number(data.away_score ?? 0),
-      home_score: Number(data.home_score ?? 0),
+      away_score: scoreOrNull(data.away_score),
+      home_score: scoreOrNull(data.home_score),
       // Only an explicit true. An absent field is an ordinary game, which is
       // almost all of them.
       makeup: data.makeup === true,
@@ -430,8 +431,8 @@ async function loadSchedule(
     return {
       home_team_id: String(data.home_team_id ?? ""),
       away_team_id: String(data.away_team_id ?? ""),
-      home_score: Number(data.home_score ?? 0),
-      away_score: Number(data.away_score ?? 0),
+      home_score: scoreOrNull(data.home_score),
+      away_score: scoreOrNull(data.away_score),
       status: (data.status ?? "draft") as GameResult["status"],
       date: data.date ? String(data.date) : undefined,
     };
@@ -576,8 +577,8 @@ function DaySection({
                 key={g.id}
                 gameId={g.id}
                 date={g.date}
-                away={teamGameCardData(g.away_team_id, teams, g.away_score)}
-                home={teamGameCardData(g.home_team_id, teams, g.home_score)}
+                away={teamGameCardData(g.away_team_id, teams, (g.away_score ?? 0))}
+                home={teamGameCardData(g.home_team_id, teams, (g.home_score ?? 0))}
                 ageGroup={
                   teams[g.home_team_id]?.ageGroup ??
                   teams[g.away_team_id]?.ageGroup
