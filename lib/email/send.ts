@@ -17,6 +17,36 @@ import { sendGridConfigured, sendGridOne } from "./sendgrid";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** Drop a reply-to that is not a valid address, instead of sending it.
+ *
+ *  `to` was validated here from the start; `replyTo` never was, and it is the
+ *  field that carries whatever a stranger typed into a public form. SendGrid
+ *  rejects the WHOLE message when reply_to is malformed, so one typo took down
+ *  a message that was otherwise perfectly addressed.
+ *
+ *  Found in the pre-season audit, 2026-09-10. COYBL umpire #11 registered with
+ *  "Lawrencefelixhrnry@yahoo. com" — a space before the TLD. His confirmation
+ *  could not be delivered, which is expected. But the OFFICE copy, addressed to
+ *  Doug at a perfectly good address, failed too, because it carried the same
+ *  broken string as its reply-to. Doug still does not know that umpire exists.
+ *
+ *  This is not limited to umpires: tournament entries and baseball orders both
+ *  set reply-to from the submitter, so a coach with a fat-fingered address
+ *  would silently hide their own entry or order from the league office.
+ *
+ *  Losing the reply-to convenience is the right trade. A delivered message the
+ *  office has to copy an address out of beats a message nobody receives.
+ */
+function safeReplyTo(replyTo: string | undefined): string | undefined {
+  if (!replyTo) return undefined;
+  const v = replyTo.trim();
+  if (!EMAIL_RE.test(v)) {
+    console.warn(`[email] dropping invalid reply-to: ${JSON.stringify(replyTo)}`);
+    return undefined;
+  }
+  return v;
+}
+
 export async function sendEmail(opts: {
   to: string;
   subject: string;
@@ -26,6 +56,7 @@ export async function sendEmail(opts: {
   if (!opts.to || !EMAIL_RE.test(opts.to)) {
     return { ok: false, error: "invalid recipient" };
   }
+  opts = { ...opts, replyTo: safeReplyTo(opts.replyTo) };
   // Prefer SendGrid when configured (COYBL); other tenants fall back to Resend.
   if (sendGridConfigured()) {
     return sendGridOne(opts);

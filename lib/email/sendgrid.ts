@@ -43,6 +43,19 @@ export async function sendGridBroadcast(opts: {
   ].filter((e) => EMAIL_RE.test(e));
   if (to.length === 0) return { ok: true, sent: 0 };
 
+  // Same guard as lib/email/send.ts, repeated at the layer that actually talks
+  // to SendGrid because sendGridBroadcast reaches here WITHOUT going through
+  // sendEmail. SendGrid rejects the whole message on a malformed reply_to, so
+  // an unchecked one turns a good address into an undelivered message. See the
+  // note on safeReplyTo in send.ts for the live case that found this.
+  const replyTo =
+    opts.replyTo && EMAIL_RE.test(opts.replyTo.trim())
+      ? opts.replyTo.trim()
+      : undefined;
+  if (opts.replyTo && !replyTo) {
+    console.warn(`[sendgrid] dropping invalid reply-to: ${JSON.stringify(opts.replyTo)}`);
+  }
+
   const sender = parseFrom(from);
   const CHUNK = 900;
   let sent = 0;
@@ -58,7 +71,7 @@ export async function sendGridBroadcast(opts: {
         body: JSON.stringify({
           personalizations: batch.map((email) => ({ to: [{ email }] })),
           from: sender,
-          ...(opts.replyTo ? { reply_to: { email: opts.replyTo } } : {}),
+          ...(replyTo ? { reply_to: { email: replyTo } } : {}),
           subject: opts.subject,
           content: [{ type: "text/html", value: opts.html }],
         }),
