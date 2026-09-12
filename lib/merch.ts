@@ -37,6 +37,48 @@ export interface MerchItem {
   sizes: string[];
   /** Opening counts, used to seed the live stock the first time only. */
   initial_stock: Record<string, number>;
+  /** YYYY-MM-DD, New York. The LAST day this shirt can be ordered, inclusive:
+   *  an end date of 2026-09-20 sells right through the 20th and stops at
+   *  midnight. Omit for a shirt that stays on sale until somebody removes it.
+   *
+   *  Melinda, 2026-09-11: "It can reopen once I send you the new shirts and
+   *  I'll try to keep them flowing so it never has to close. There will just
+   *  be an end date for each shirt."
+   *
+   *  That is a different shape from the weekly open/close window this shop
+   *  started with, and it replaces it: the SHOP no longer keeps hours, the
+   *  SHIRTS do. One ending the day another starts means a store that never
+   *  shuts, which is what she is describing. */
+  ends_on?: string;
+  /** YYYY-MM-DD, New York. The first day it can be ordered. Omit for "already
+   *  on sale". Lets her hand over several shirts at once and have them appear
+   *  on their own days rather than all at once. */
+  starts_on?: string;
+}
+
+/** Is this shirt on sale on the given day? `today` is a YYYY-MM-DD in LEAGUE
+ *  time, not the server's: a shirt ending "today" must not stop selling at
+ *  8pm New York because the server in UTC has already ticked over. */
+export function isOnSale(item: MerchItem, today: string): boolean {
+  if (item.starts_on && today < item.starts_on) return false;
+  if (item.ends_on && today > item.ends_on) return false;
+  return true;
+}
+
+/** The shirts on sale today, in catalogue order. */
+export function onSaleItems(items: MerchItem[], today: string): MerchItem[] {
+  return items.filter((i) => isOnSale(i, today));
+}
+
+/** YYYY-MM-DD for "now" in New York, which is the only clock this shop uses. */
+export function leagueToday(now: Date = new Date()): string {
+  const p = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+  return p; // en-CA renders as YYYY-MM-DD
 }
 
 /** How someone said they would pay. Only "card" moves money on the site.

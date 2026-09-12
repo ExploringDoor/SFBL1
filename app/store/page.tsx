@@ -17,6 +17,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import type { PublicLeagueConfig } from "@/lib/tenants";
 import merch from "./island-merch.json";
+import { leagueToday, onSaleItems } from "@/lib/merch";
 import "./store.css";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { OrderForm } from "./OrderForm";
@@ -52,7 +53,18 @@ export default async function StorePage() {
   // neutral empty state rather than Island's copy.
   const data: StoreData | null =
     tenantId === "island" ? (merch as unknown as StoreData) : null;
-  const items = data?.items ?? [];
+  // ONE SHIRT ENDS, THE NEXT BEGINS. Melinda, 2026-09-11: "I'll try to keep
+  // them flowing so it never has to close. There will just be an end date for
+  // each shirt." So the SHOP keeps no hours; each shirt carries its own
+  // starts_on / ends_on and the page shows whatever is on sale today.
+  //
+  // A shirt past its end date disappears from the store rather than sitting
+  // there greyed out: the orders already placed on it are still collected at
+  // the field, and a card form for a shirt nobody is printing any more is a
+  // way to take money for nothing.
+  const today = leagueToday();
+  const allItems = data?.items ?? [];
+  const items = onSaleItems(allItems, today);
 
   // Live stock and the opening hours. site_config/merch_pay is no longer read:
   // it holds the Venmo handle and the Zelle number, and the shop stopped
@@ -66,8 +78,10 @@ export default async function StorePage() {
       ]).catch(() => [null, null] as const)
     : ([null, null] as const);
   const live = (stockDoc?.data() ?? null) as Record<string, unknown> | null;
-  // Ordering closes Thursday 4pm. The stock and the prices still show: a
-  // shopper should see what the league sells even when it is shut.
+  // The store-wide window is still honoured, because another tenant may want
+  // one and because it is the emergency stop: setting merch_hours can shut the
+  // whole shop without editing the catalogue. Island now leaves it disabled
+  // and lets the per-shirt dates do the work.
   const hours = readStoreHours(hoursDoc?.data());
   const open = isStoreOpen(new Date(), hours);
   const leagueName = config?.name ?? "the league";

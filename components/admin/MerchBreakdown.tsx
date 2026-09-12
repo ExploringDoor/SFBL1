@@ -17,6 +17,7 @@ import { useState } from "react";
 import type { User } from "firebase/auth";
 import {
   inWindow,
+  splitByItem,
   methodLabel,
   summarise,
   type MerchOrderRow,
@@ -127,6 +128,9 @@ export function MerchBreakdown({
   const [thisWeek, setThisWeek] = useState(false);
   const rows = thisWeek ? inWindow(allRows, lastSaturday6am()) : allRows;
   const s = summarise(rows);
+  // Grouped by design. One entry while a single shirt is selling, which is
+  // what keeps the single-shirt view identical to what it was.
+  const perItem = splitByItem(rows);
   // Unpaid AND not a card order. An unpaid card order is an abandoned checkout,
   // not money somebody owes in Venmo, and ticking it here would record a
   // payment that never happened.
@@ -139,15 +143,19 @@ export function MerchBreakdown({
   if (summarise(allRows).orders === 0) return null;
 
   const csv = () => {
-    const head = ["Division", "Team", "Player", "Size", "Qty", "Paid", "Method", "Ordered by", "Email", "Phone"];
+    // "Shirt" first, and sorted on it, so a spreadsheet with two designs in it
+    // does not have to be re-sorted before anybody can pack from it.
+    const head = ["Shirt", "Division", "Team", "Player", "Size", "Qty", "Paid", "Method", "Ordered by", "Email", "Phone"];
     const body = [...rows]
       .sort(
         (a, b) =>
+          String(a.item_name ?? "").localeCompare(String(b.item_name ?? "")) ||
           String(a.division ?? "").localeCompare(String(b.division ?? "")) ||
           String(a.team_name ?? "").localeCompare(String(b.team_name ?? "")) ||
           String(a.player_name ?? "").localeCompare(String(b.player_name ?? "")),
       )
       .map((r) => [
+        r.item_name ?? "Shirt",
         r.division ?? "",
         r.team_name ?? "",
         r.player_name ?? "",
@@ -207,17 +215,47 @@ export function MerchBreakdown({
           Download the list
         </button>
       </div>
-      <div className="flex flex-wrap gap-6">
-        <Group title="By size" rows={s.bySize} note="How many of each to bring." />
-        <Group
-          title="By payment"
-          rows={s.byMethod}
-          note="Card is already settled. Venmo and Zelle owe until the office marks them paid."
-        />
-        <Group title="By team" rows={s.byTeam} />
-        <Group title="By age" rows={s.byAge} />
-        <Group title="By division" rows={s.byDivision} />
-      </div>
+      {/* ONE BLOCK PER SHIRT once there is more than one design.
+          Melinda, 2026-09-11, asked whether each shirt would get its own
+          category. It has to: "By size, 19 smalls" is what somebody packs the
+          boxes from, and across two designs that is nineteen smalls of nothing
+          in particular. With a single design on sale this renders exactly what
+          it always did, with no extra heading to read past. */}
+      {perItem.length > 1 ? (
+        <div className="space-y-4">
+          {perItem.map((g) => (
+            <div key={g.item} className="rounded-md border border-slate-200 bg-white p-3">
+              <p className="mb-2 text-sm font-bold text-slate-900">
+                {g.item}
+                <span className="ml-2 font-normal text-slate-500">
+                  {g.summary.shirts} shirt{g.summary.shirts === 1 ? "" : "s"},{" "}
+                  {g.summary.orders} order{g.summary.orders === 1 ? "" : "s"}
+                  {g.summary.owed > 0 ? `, $${g.summary.owed} owed` : ""}
+                </span>
+              </p>
+              <div className="flex flex-wrap gap-6">
+                <Group title="By size" rows={g.summary.bySize} note="How many of each to bring." />
+                <Group title="By payment" rows={g.summary.byMethod} />
+                <Group title="By team" rows={g.summary.byTeam} />
+                <Group title="By age" rows={g.summary.byAge} />
+                <Group title="By division" rows={g.summary.byDivision} />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-6">
+          <Group title="By size" rows={s.bySize} note="How many of each to bring." />
+          <Group
+            title="By payment"
+            rows={s.byMethod}
+            note="Card is already settled. Venmo and Zelle owe until the office marks them paid."
+          />
+          <Group title="By team" rows={s.byTeam} />
+          <Group title="By age" rows={s.byAge} />
+          <Group title="By division" rows={s.byDivision} />
+        </div>
+      )}
 
       {/* MONEY TO COLLECT. The only orders that need a human decision: a card
           order is settled by Square, and these are promises until somebody who

@@ -135,6 +135,10 @@ export interface MerchSummary {
    *  office marks it paid, so its shirts are the ones whose money has to be
    *  chased or collected on the day. */
   byMethod: Tally[];
+  /** One line per shirt design. With a single design on sale this says the
+   *  same thing as the header totals; with two it is the only place the
+   *  difference shows. */
+  byItem: Tally[];
 }
 
 const METHOD_ORDER = ["Card", "Venmo", "Zelle", "Cash", "Not given"];
@@ -169,6 +173,37 @@ export function inWindow(
   });
 }
 
+/**
+ * Split the pile into one group per shirt, newest-selling first.
+ *
+ * WHY THIS EXISTS. Until 2026-09-11 the shop sold one design, so the summary
+ * added every order together and was right by accident. Melinda then described
+ * the real model: "I'll try to keep them flowing so it never has to close.
+ * There will just be an end date for each shirt." Two designs on sale at once
+ * is now the normal case.
+ *
+ * Adding them together would break in the worst possible place. "By size: 19
+ * smalls" is the number somebody uses to pack the boxes for a Saturday, and
+ * across two designs it is nineteen smalls of NOTHING in particular. The right
+ * total, the wrong shirts, and no way to tell from the summary that it is
+ * wrong.
+ *
+ * Orders taken before item_name was recorded fall under "Shirt", which is
+ * honest: it is the one design that existed then.
+ */
+export function splitByItem(
+  rows: MerchOrderRow[],
+): { item: string; rows: MerchOrderRow[]; summary: MerchSummary }[] {
+  const groups = new Map<string, MerchOrderRow[]>();
+  for (const r of rows) {
+    const key = String(r.item_name ?? "").trim() || "Shirt";
+    groups.set(key, [...(groups.get(key) ?? []), r]);
+  }
+  return [...groups.entries()]
+    .map(([item, rs]) => ({ item, rows: rs, summary: summarise(rs) }))
+    .sort((a, b) => b.summary.shirts - a.summary.shirts || a.item.localeCompare(b.item));
+}
+
 export function summarise(rows: MerchOrderRow[]): MerchSummary {
   const shirts = rows.reduce((n, r) => n + qty(r), 0);
   const paidShirts = rows.filter(isPaid).reduce((n, r) => n + qty(r), 0);
@@ -192,6 +227,7 @@ export function summarise(rows: MerchOrderRow[]): MerchSummary {
     byMethod: tallyBy(rows, (r) => methodLabel(r), "Not given").sort(
       (a, b) => METHOD_ORDER.indexOf(a.key) - METHOD_ORDER.indexOf(b.key),
     ),
+    byItem: tallyBy(rows, (r) => String(r.item_name ?? ""), "Shirt"),
   };
 }
 

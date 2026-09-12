@@ -34,6 +34,8 @@ import {
   isPayMethod,
   merchTotal,
   type MerchItem,
+  isOnSale,
+  leagueToday,
 } from "@/lib/merch";
 
 export const runtime = "nodejs";
@@ -63,6 +65,22 @@ export async function POST(req: Request) {
   const item = items.find((i) => i.id === str(body.itemId, 60));
   if (!item) {
     return NextResponse.json({ error: "That item is not for sale" }, { status: 400 });
+  }
+  // THE SALE WINDOW IS ENFORCED HERE, not only in the page that hides the
+  // shirt. Every shirt now carries its own end date (Melinda, 2026-09-11), and
+  // the gap between the two is a real one: somebody leaves the store open on
+  // their phone on the last night of a sale, orders in the morning, and the
+  // office gets a card payment for a shirt that is no longer being printed.
+  // Refusing it here means the worst case is an apologetic message rather than
+  // money taken for something nobody can hand over.
+  if (!isOnSale(item, leagueToday())) {
+    return NextResponse.json(
+      {
+        error:
+          "That shirt is no longer on sale. Nothing has been charged. Check the store for what is available now.",
+      },
+      { status: 409 },
+    );
   }
 
   const size = str(body.size, 12);
