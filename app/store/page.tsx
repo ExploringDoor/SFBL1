@@ -151,12 +151,32 @@ export default async function StorePage() {
           )}
         </>
       ) : (
+        /* TWO DIFFERENT EMPTY STATES.
+           A league with no catalogue at all is waiting for its first shirt.
+           A league whose shirts have simply run their dates is BETWEEN
+           shirts, which is an ordinary Tuesday here now that every design
+           carries its own end date. Telling a league that has already sold
+           seventy two shirts that "merch is coming" reads like the site has
+           forgotten, and the people most likely to see it are the ones
+           chasing a shirt they already ordered. */
         <section className="str-soon">
           <h2 className="str-soon-head">
-            {data?.headline ?? `${leagueName} merch is coming`}
+            {allItems.length > 0
+              ? "No shirts on sale right now"
+              : (data?.headline ?? `${leagueName} merch is coming`)}
           </h2>
-          {data?.blurb && <p className="str-soon-body">{data.blurb}</p>}
-          {data?.note && <p className="str-soon-body">{data.note}</p>}
+          {allItems.length > 0 ? (
+            <p className="str-soon-body">
+              The last design has finished its run. Anything already ordered is
+              still being collected at the field. Sign up for alerts and we will
+              tell you when the next shirt goes on sale.
+            </p>
+          ) : (
+            <>
+              {data?.blurb && <p className="str-soon-body">{data.blurb}</p>}
+              {data?.note && <p className="str-soon-body">{data.note}</p>}
+            </>
+          )}
           <Link className="str-soon-cta" href="/alerts">
             Get league alerts
           </Link>
