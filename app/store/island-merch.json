@@ -2,7 +2,7 @@
   "_stock": "Opening counts are Mike's own, 2026-09-06: 60 S, 30 M, 5 L, 5 XL. These SEED the live stock the first time only; after that the real numbers live in Firestore at site_config/merch_stock and move as shirts sell. Editing them here will not change what the site says.",
   "headline": "Island Fastpitch merch",
   "blurb": "Never Forget Tournament tee. Navy, soft cotton, front print. $30 each.",
-  "note": "Pick your shirt up at the field. Pay by card here, or by Venmo or Zelle.",
+  "note": "Pick your shirt up at the field. Payment is by credit card on this page.",
   "buy_url": null,
   "items": [
     {
@@ -11,8 +11,18 @@
       "price": 30,
       "image": "/island/store/never-forget-tee.webp",
       "detail": "Navy tee with the Never Forget tournament print, presented by Scrappy Sports.",
-      "sizes": ["S", "M", "L", "XL"],
-      "initial_stock": { "S": 60, "M": 30, "L": 5, "XL": 5 }
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "initial_stock": {
+        "S": 60,
+        "M": 30,
+        "L": 5,
+        "XL": 5
+      }
     }
   ]
 }

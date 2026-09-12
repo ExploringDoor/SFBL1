@@ -54,21 +54,20 @@ export default async function StorePage() {
     tenantId === "island" ? (merch as unknown as StoreData) : null;
   const items = data?.items ?? [];
 
-  // Live stock, plus where to send Venmo and Zelle. Mike asked for the handles
-  // on the FORM (2026-09-07), not only on the confirmation, so they come down
-  // with the page again. His call: it is his number and his business.
-  const [stockDoc, payDoc, hoursDoc] = items.length
+  // Live stock and the opening hours. site_config/merch_pay is no longer read:
+  // it holds the Venmo handle and the Zelle number, and the shop stopped
+  // taking either on 2026-09-11 (Melinda: "We will only receive payment by
+  // credit card on the website"). The document is left in place because the
+  // admin still reconciles the orders taken on them before that.
+  const [stockDoc, hoursDoc] = items.length
     ? await Promise.all([
         getAdminDb().doc(`leagues/${tenantId}/site_config/merch_stock`).get(),
-        getAdminDb().doc(`leagues/${tenantId}/site_config/merch_pay`).get(),
         getAdminDb().doc(`leagues/${tenantId}/site_config/merch_hours`).get(),
-      ]).catch(() => [null, null, null] as const)
-    : ([null, null, null] as const);
+      ]).catch(() => [null, null] as const)
+    : ([null, null] as const);
   const live = (stockDoc?.data() ?? null) as Record<string, unknown> | null;
-  const pay = (payDoc?.data() ?? {}) as { venmo?: string; zelle?: string };
-  // Ordering pauses between Thursday 4pm and Saturday morning while the
-  // week's shirts are sorted. The stock and the prices still show: a shopper
-  // should see what they will be able to buy, and when.
+  // Ordering closes Thursday 4pm. The stock and the prices still show: a
+  // shopper should see what the league sells even when it is shut.
   const hours = readStoreHours(hoursDoc?.data());
   const open = isStoreOpen(new Date(), hours);
   const leagueName = config?.name ?? "the league";

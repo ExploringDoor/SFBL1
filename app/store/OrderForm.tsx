@@ -28,8 +28,6 @@ interface Props {
   itemName: string;
   price: number;
   stock: MerchSize[];
-  /** Where to send Venmo and Zelle. Mike asked for these ON the form, not
-   *  only on the confirmation. See the note by the payment picker. */
 }
 
 export function OrderForm({
@@ -42,7 +40,10 @@ export function OrderForm({
   const firstAvailable = stock.find((s) => s.count > 0)?.size ?? "";
   const [size, setSize] = useState(firstAvailable);
   const [quantity, setQuantity] = useState(1);
-  const [payMethod, setPayMethod] = useState<PayMethod>("card");
+  // Card, always. The picker is gone (see the note below) and the server
+  // decides the method regardless, but the value is still sent so the request
+  // body keeps its shape.
+  const payMethod: PayMethod = "card";
   const [division, setDivision] = useState("");
   const [teamName, setTeamName] = useState("");
   const [playerName, setPlayerName] = useState("");
