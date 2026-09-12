@@ -1,0 +1,621 @@
+/* =============================================================================
+ * EAST TEXAS BASKETBALL LEAGUE — dark "night game" theme (Adam, 2026-09-11)
+ *
+ * Adam picked the look from his own Mendham Minutemen site
+ * (~/Desktop/mendham-boys-basketball, mendham-boys-basketball.vercel.app):
+ * near-black navy ground, condensed uppercase Oswald headings, a hot accent
+ * that glows, thin blue hairlines, and translucent panes that lift on hover.
+ * Mendham's accent is red; ETBL keeps its own burnt orange, lifted to #f97316
+ * so it carries on navy the way the red does. One line below swaps it.
+ *
+ * STRATEGY — differs from island-theme.css on purpose.
+ *   Island darkened the PAGE and kept every card white, so its file is mostly
+ *   a long "restore dark text inside white surfaces" list. ETBL goes dark all
+ *   the way down, because the pane-on-navy card IS the Mendham look. So each
+ *   white surface is re-painted as a pane rather than restored, and the
+ *   catch-all at the bottom sweeps up anything not named explicitly — a missed
+ *   surface lands on a dark pane with light text (readable) instead of white
+ *   with white text (invisible).
+ *
+ * SCOPE — html.tenant-etbl:not([data-page="admin"]).
+ *   No other league is affected and the platform's own stylesheets are
+ *   untouched. The ADMIN stays light on purpose: it is a data-entry desk for
+ *   BJ and the seven commissioners rather than a shop window, it is built out
+ *   of Tailwind utility classes (bg-white / bg-slate-50 / bg-amber-50) that
+ *   this file would have to chase one by one, and a long score table is
+ *   easier to work down on white. Drop the :not() to darken it too.
+ *
+ * Fonts: Oswald is already loaded by layout.tsx (--font-oswald) and is
+ * Mendham's heading face, so the type carries across with no new download.
+ * ========================================================================== */
+
+html.tenant-etbl:not([data-page="admin"]) {
+  /* ---- the palette ------------------------------------------------------ */
+  --etbl-ink: #0a1626;        /* page ground */
+  --etbl-ink-2: #0d1c34;      /* raised bands, table headers */
+  --etbl-ink-3: #081020;      /* nav, footer, mobile sheet */
+  --etbl-rule: rgba(70, 120, 200, 0.28);
+  --etbl-rule-2: rgba(70, 120, 200, 0.42);
+  --etbl-hot: #f97316;        /* the accent. #e11d3a for Mendham's red. */
+  --etbl-hot-deep: #c2410c;
+  --etbl-hot-glow: rgba(249, 115, 22, 0.45);
+  --etbl-pane: linear-gradient(135deg, rgba(40, 90, 165, 0.20), rgba(0, 0, 0, 0.40));
+
+  /* ---- flip the platform tokens ----------------------------------------- */
+  color-scheme: dark;
+  --bg: var(--etbl-ink);
+  --bg2: var(--etbl-ink-2);
+  --card: var(--etbl-ink-2);
+  --text-strong: #ffffff;
+  --text-body: rgba(255, 255, 255, 0.90);
+  --muted: rgba(255, 255, 255, 0.64);
+  --muted2: rgba(255, 255, 255, 0.44);
+  --border: var(--etbl-rule);
+  --border2: var(--etbl-rule-2);
+  --brand-on-primary: #ffffff;
+
+  background: var(--etbl-ink);
+}
+
+html.tenant-etbl:not([data-page="admin"]) body {
+  background: var(--etbl-ink);
+  color: var(--text-body);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .site-shell,
+html.tenant-etbl:not([data-page="admin"]) .site-content {
+  background: var(--etbl-ink);
+}
+
+/* =============================================================================
+ * 1. TYPE — Mendham's voice
+ * ========================================================================== */
+
+/* Eyebrows: tiny, hot, widely tracked. Mendham sets 4px; anything less reads
+ * as ordinary small caps rather than a label. */
+html.tenant-etbl:not([data-page="admin"]) .sec-eyebrow,
+html.tenant-etbl:not([data-page="admin"]) .le-cal-eyebrow,
+html.tenant-etbl:not([data-page="admin"]) .le-history-eyebrow,
+html.tenant-etbl:not([data-page="admin"]) .le-home-launch-eyebrow,
+html.tenant-etbl:not([data-page="admin"]) .le-home-reg-cta-eyebrow,
+html.tenant-etbl:not([data-page="admin"]) .le-div-card-label,
+html.tenant-etbl:not([data-page="admin"]) .le-gc-age {
+  font-family: var(--font-oswald), Oswald, "Arial Narrow", sans-serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--etbl-hot);
+}
+
+/* Section headings: condensed, uppercase, tight. */
+html.tenant-etbl:not([data-page="admin"]) .le-hero-title,
+html.tenant-etbl:not([data-page="admin"]) .le-history-title,
+html.tenant-etbl:not([data-page="admin"]) .le-home-launch-title,
+html.tenant-etbl:not([data-page="admin"]) .sec h2,
+html.tenant-etbl:not([data-page="admin"]) .container > h1,
+html.tenant-etbl:not([data-page="admin"]) .container > h2 {
+  font-family: var(--font-oswald), Oswald, "Arial Narrow", sans-serif;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  line-height: 1.04;
+  color: #fff;
+  text-wrap: balance;
+}
+
+/* The 64px gradient rule under a heading — Mendham's signature divider. */
+html.tenant-etbl:not([data-page="admin"]) .le-history-hd::after,
+html.tenant-etbl:not([data-page="admin"]) .le-hero-title::after {
+  content: "";
+  display: block;
+  width: 64px;
+  height: 3px;
+  margin-top: 20px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--etbl-hot), transparent);
+}
+
+/* =============================================================================
+ * 2. CHROME — nav, mobile sheet, footer
+ * ========================================================================== */
+
+html.tenant-etbl:not([data-page="admin"]) .le-nav {
+  background: rgba(8, 16, 32, 0.97);
+  border-bottom: 1px solid var(--etbl-rule);
+  backdrop-filter: saturate(140%) blur(8px);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-nav-brand,
+html.tenant-etbl:not([data-page="admin"]) .le-nav-links a,
+html.tenant-etbl:not([data-page="admin"]) .le-nav-dropdown-trigger {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-nav-links a:hover,
+html.tenant-etbl:not([data-page="admin"]) .le-nav-links a:focus-visible,
+html.tenant-etbl:not([data-page="admin"]) .le-nav-links a[aria-current],
+html.tenant-etbl:not([data-page="admin"]) .le-nav-dropdown-trigger:hover {
+  color: #fff;
+  border-bottom-color: var(--etbl-hot);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-nav-brand {
+  font-family: var(--font-oswald), Oswald, sans-serif;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-nav-dropdown-menu,
+html.tenant-etbl:not([data-page="admin"]) .le-mob-menu,
+html.tenant-etbl:not([data-page="admin"]) .le-tabbar-sheet {
+  background: var(--etbl-ink-3);
+  border: 1px solid var(--etbl-rule);
+  color: var(--text-body);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-nav-dropdown-menu a:hover,
+html.tenant-etbl:not([data-page="admin"]) .le-mob-section-block a:hover {
+  background: rgba(70, 120, 200, 0.14);
+  color: #fff;
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-mob-backdrop {
+  background: rgba(4, 9, 18, 0.72);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-mob-tile,
+html.tenant-etbl:not([data-page="admin"]) .le-hamburger {
+  background: var(--etbl-pane);
+  border: 1px solid var(--etbl-rule);
+  color: var(--text-body);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-mob-tile-icon { color: var(--etbl-hot); }
+
+html.tenant-etbl:not([data-page="admin"]) .le-footer,
+html.tenant-etbl:not([data-page="admin"]) .le-footer-bar {
+  background: var(--etbl-ink-3);
+  border-top: 1px solid var(--etbl-rule);
+  color: var(--muted);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-footer-name,
+html.tenant-etbl:not([data-page="admin"]) .le-footer-abbrev {
+  font-family: var(--font-oswald), Oswald, sans-serif;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-footer-links a { color: var(--muted); }
+html.tenant-etbl:not([data-page="admin"]) .le-footer-links a:hover { color: var(--etbl-hot); }
+
+/* =============================================================================
+ * 3. HERO — the thesis
+ * ========================================================================== */
+
+html.tenant-etbl:not([data-page="admin"]) .le-hero {
+  background:
+    radial-gradient(900px 420px at 78% 6%, rgba(249, 115, 22, 0.16), transparent 68%),
+    radial-gradient(760px 420px at 8% 100%, rgba(40, 90, 165, 0.26), transparent 70%),
+    var(--etbl-ink);
+  border-bottom: 1px solid var(--etbl-rule);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-hero-logo,
+html.tenant-etbl:not([data-page="admin"]) .le-hero-title-logo {
+  filter: drop-shadow(0 0 18px var(--etbl-hot-glow));
+  background: transparent;
+}
+
+/* =============================================================================
+ * 4. PANES — every card is the Mendham pane
+ * ========================================================================== */
+
+html.tenant-etbl:not([data-page="admin"]) .le-gc-card,
+html.tenant-etbl:not([data-page="admin"]) .le-div-card,
+html.tenant-etbl:not([data-page="admin"]) .le-preview-card,
+html.tenant-etbl:not([data-page="admin"]) .le-home-news-card,
+html.tenant-etbl:not([data-page="admin"]) .le-sb-card,
+html.tenant-etbl:not([data-page="admin"]) .le-ldr-card,
+html.tenant-etbl:not([data-page="admin"]) .le-hist-card,
+html.tenant-etbl:not([data-page="admin"]) .lp-card,
+html.tenant-etbl:not([data-page="admin"]) .ld-card,
+html.tenant-etbl:not([data-page="admin"]) .card {
+  position: relative;
+  overflow: hidden;
+  background: var(--etbl-pane);
+  border: 1px solid var(--etbl-rule);
+  border-radius: 14px;
+  color: var(--text-body);
+  transition: transform 0.22s, border-color 0.22s;
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-gc-card:hover,
+html.tenant-etbl:not([data-page="admin"]) .le-div-card:hover,
+html.tenant-etbl:not([data-page="admin"]) .le-preview-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(249, 115, 22, 0.55);
+}
+
+/* The radial ember in the corner of a card — Mendham puts one on every
+ * pillar. Kept to the larger panes so score cards stay quiet. */
+html.tenant-etbl:not([data-page="admin"]) .le-div-card::after,
+html.tenant-etbl:not([data-page="admin"]) .le-preview-card::after {
+  content: "";
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(249, 115, 22, 0.13), transparent 70%);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-gc-card-hdr,
+html.tenant-etbl:not([data-page="admin"]) .le-gc-hdr-compact,
+html.tenant-etbl:not([data-page="admin"]) .le-div-card-head {
+  background: transparent;
+  border-bottom: 1px solid var(--etbl-rule);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-gc-card-footer,
+html.tenant-etbl:not([data-page="admin"]) .le-gc-footer-compact {
+  background: transparent;
+  border-top: 1px solid var(--etbl-rule);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-gc-team-name,
+html.tenant-etbl:not([data-page="admin"]) .le-preview-name,
+html.tenant-etbl:not([data-page="admin"]) .le-tname {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-gc-loser .le-gc-team-name,
+html.tenant-etbl:not([data-page="admin"]) .le-gc-score-lose {
+  color: var(--muted2);
+}
+
+/* Winning score glows; the platform's green would fight the palette. */
+html.tenant-etbl:not([data-page="admin"]) .le-gc-score-win {
+  color: var(--etbl-hot);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-gc-score,
+html.tenant-etbl:not([data-page="admin"]) .le-gc-score-win,
+html.tenant-etbl:not([data-page="admin"]) .le-gc-score-lose {
+  font-family: var(--font-oswald), Oswald, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-gc-record,
+html.tenant-etbl:not([data-page="admin"]) .le-preview-rec,
+html.tenant-etbl:not([data-page="admin"]) .le-gc-status-compact {
+  color: var(--muted2);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-gc-logo-dot,
+html.tenant-etbl:not([data-page="admin"]) .le-gc-logo-wrap,
+html.tenant-etbl:not([data-page="admin"]) .le-preview-logo {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--etbl-rule);
+}
+
+/* =============================================================================
+ * 5. TABLES — standings
+ * ========================================================================== */
+
+html.tenant-etbl:not([data-page="admin"]) .le-s-tbl,
+html.tenant-etbl:not([data-page="admin"]) .le-standings-wrap,
+html.tenant-etbl:not([data-page="admin"]) .le-s-scroll,
+html.tenant-etbl:not([data-page="admin"]) .stats-table,
+html.tenant-etbl:not([data-page="admin"]) .le-stats-tbl-wrap,
+html.tenant-etbl:not([data-page="admin"]) .th-table {
+  background: transparent;
+  color: var(--text-body);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-s-tbl thead th,
+html.tenant-etbl:not([data-page="admin"]) .stats-table thead th {
+  font-family: var(--font-oswald), Oswald, sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--muted2);
+  background: transparent;
+  border-bottom: 1px solid var(--etbl-rule);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-s-tbl tbody td,
+html.tenant-etbl:not([data-page="admin"]) .stats-table tbody td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--text-body);
+  font-variant-numeric: tabular-nums;
+  background: transparent;
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-s-tbl tbody tr:hover td,
+html.tenant-etbl:not([data-page="admin"]) .stats-table tbody tr:hover td {
+  background: rgba(70, 120, 200, 0.09);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-team-cell,
+html.tenant-etbl:not([data-page="admin"]) .le-s-tbl tbody td:first-child {
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Tables inside rendered content (the rulebook's grade-band table) get their
+ * header fill from the content stylesheet, on bare <th> with no class. */
+html.tenant-etbl:not([data-page="admin"]) th {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-body);
+  border-color: var(--etbl-rule);
+}
+
+html.tenant-etbl:not([data-page="admin"]) td {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* The compact standings list in the homepage sidebar. */
+html.tenant-etbl:not([data-page="admin"]) .le-compact-row {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+html.tenant-etbl:not([data-page="admin"]) .le-compact-row:hover { background: rgba(70, 120, 200, 0.09); }
+html.tenant-etbl:not([data-page="admin"]) .le-compact-name { color: rgba(255, 255, 255, 0.92); }
+html.tenant-etbl:not([data-page="admin"]) .le-compact-rank {
+  font-family: var(--font-oswald), Oswald, sans-serif;
+  color: var(--muted2);
+}
+html.tenant-etbl:not([data-page="admin"]) .le-compact-list > :nth-child(-n+2) .le-compact-rank { color: var(--etbl-hot); }
+html.tenant-etbl:not([data-page="admin"]) .le-compact-rec { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* =============================================================================
+ * 6. CONTROLS — selects, buttons, pills
+ * ========================================================================== */
+
+html.tenant-etbl:not([data-page="admin"]) .le-age-select,
+html.tenant-etbl:not([data-page="admin"]) .le-age-select-shell,
+html.tenant-etbl:not([data-page="admin"]) .le-sb-select,
+html.tenant-etbl:not([data-page="admin"]) .le-hist-search,
+html.tenant-etbl:not([data-page="admin"]) .le-form-cell,
+html.tenant-etbl:not([data-page="admin"]) .le-form input,
+html.tenant-etbl:not([data-page="admin"]) .le-form select,
+html.tenant-etbl:not([data-page="admin"]) .le-form textarea {
+  background: rgba(0, 0, 0, 0.32);
+  border: 1px solid var(--etbl-rule);
+  color: var(--text-body);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-age-label,
+html.tenant-etbl:not([data-page="admin"]) .le-age-caret,
+html.tenant-etbl:not([data-page="admin"]) .le-agejump-label {
+  color: var(--muted);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-agejump-btn,
+html.tenant-etbl:not([data-page="admin"]) .le-gc-btn,
+html.tenant-etbl:not([data-page="admin"]) .le-cal-btn,
+html.tenant-etbl:not([data-page="admin"]) .le-cal-copy,
+html.tenant-etbl:not([data-page="admin"]) .le-sb-btn,
+html.tenant-etbl:not([data-page="admin"]) .le-yr-btn,
+html.tenant-etbl:not([data-page="admin"]) .le-hist-tab,
+html.tenant-etbl:not([data-page="admin"]) .tab-btn {
+  background: rgba(0, 0, 0, 0.30);
+  border: 1px solid var(--etbl-rule);
+  color: var(--text-body);
+  font-family: var(--font-oswald), Oswald, sans-serif;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  transition: border-color 0.2s, color 0.2s, transform 0.2s;
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-agejump-btn:hover,
+html.tenant-etbl:not([data-page="admin"]) .le-gc-btn:hover,
+html.tenant-etbl:not([data-page="admin"]) .le-cal-btn:hover,
+html.tenant-etbl:not([data-page="admin"]) .le-sb-btn:hover,
+html.tenant-etbl:not([data-page="admin"]) .tab-btn:hover {
+  border-color: rgba(249, 115, 22, 0.55);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-agejump-btn.active,
+html.tenant-etbl:not([data-page="admin"]) .le-hist-tab.active,
+html.tenant-etbl:not([data-page="admin"]) .tab-btn.active {
+  background: linear-gradient(135deg, var(--etbl-hot), var(--etbl-hot-deep));
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.30);
+}
+
+/* The calendar-subscribe icons are square white tiles by default. */
+html.tenant-etbl:not([data-page="admin"]) .le-cal-icon,
+html.tenant-etbl:not([data-page="admin"]) .le-cal-btn-google .le-cal-icon {
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 4px;
+}
+
+/* =============================================================================
+ * 7. BANNERS
+ * ========================================================================== */
+
+/* The amber "Sample data" strip already suits the palette; it only needs a
+ * dark ground so its own text keeps its contrast. */
+html.tenant-etbl:not([data-page="admin"]) .le-demo-banner {
+  background: rgba(245, 158, 11, 0.10);
+  border-top: 1px solid rgba(245, 158, 11, 0.35);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.35);
+  color: rgba(255, 255, 255, 0.82);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-sb-empty,
+html.tenant-etbl:not([data-page="admin"]) .le-history-sub {
+  color: var(--muted);
+}
+
+/* =============================================================================
+ * 8. CATCH-ALL — anything that still paints white
+ *
+ * Generated from every class in app/ and components/ whose rule body sets a
+ * white background (128 of them), minus the ones handled above. A surface
+ * that slips through lands on a dark pane with light text, which is readable;
+ * left alone it would be white text on white. Deliberately broad.
+ * ========================================================================== */
+
+html.tenant-etbl:not([data-page="admin"]) .avail-edit-row,
+html.tenant-etbl:not([data-page="admin"]) .bk-jump-btn,
+html.tenant-etbl:not([data-page="admin"]) .bk-match,
+html.tenant-etbl:not([data-page="admin"]) .bk-tool-btn,
+html.tenant-etbl:not([data-page="admin"]) .bk-toolbar,
+html.tenant-etbl:not([data-page="admin"]) .bk-zoomctl,
+html.tenant-etbl:not([data-page="admin"]) .cap-game-link,
+html.tenant-etbl:not([data-page="admin"]) .cap-pending-row,
+html.tenant-etbl:not([data-page="admin"]) .cap-tab-nav,
+html.tenant-etbl:not([data-page="admin"]) .faqAcc,
+html.tenant-etbl:not([data-page="admin"]) .fbc-search,
+html.tenant-etbl:not([data-page="admin"]) .inbox-filter-btn,
+html.tenant-etbl:not([data-page="admin"]) .inbox-item,
+html.tenant-etbl:not([data-page="admin"]) .le-bk-div,
+html.tenant-etbl:not([data-page="admin"]) .le-champ-badge,
+html.tenant-etbl:not([data-page="admin"]) .le-countdown-btn,
+html.tenant-etbl:not([data-page="admin"]) .le-cs,
+html.tenant-etbl:not([data-page="admin"]) .le-hist-picker,
+html.tenant-etbl:not([data-page="admin"]) .le-hist-tbl-wrap,
+html.tenant-etbl:not([data-page="admin"]) .le-lineup-row,
+html.tenant-etbl:not([data-page="admin"]) .le-preview-grid > *,
+html.tenant-etbl:not([data-page="admin"]) .le-skeleton-table,
+html.tenant-etbl:not([data-page="admin"]) .notif-bell-btn,
+html.tenant-etbl:not([data-page="admin"]) .notif-bell-panel,
+html.tenant-etbl:not([data-page="admin"]) .po-match,
+html.tenant-etbl:not([data-page="admin"]) .rt-content,
+html.tenant-etbl:not([data-page="admin"]) .rt-select,
+html.tenant-etbl:not([data-page="admin"]) .rt-wrap,
+html.tenant-etbl:not([data-page="admin"]) .sharecard-btn,
+html.tenant-etbl:not([data-page="admin"]) .st-age-select,
+html.tenant-etbl:not([data-page="admin"]) .tab-nav,
+html.tenant-etbl:not([data-page="admin"]) .th-yr {
+  background: var(--etbl-pane);
+  border-color: var(--etbl-rule);
+  color: var(--text-body);
+}
+
+/* Content pages (/content/about, /rules) build their own cards. */
+html.tenant-etbl:not([data-page="admin"]) .le-content-card,
+html.tenant-etbl:not([data-page="admin"]) .le-content-jump {
+  background: var(--etbl-pane);
+  border: 1px solid var(--etbl-rule);
+  color: var(--text-body);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-content-jump:hover {
+  border-color: rgba(249, 115, 22, 0.55);
+  color: #fff;
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-content-card h2,
+html.tenant-etbl:not([data-page="admin"]) .le-content-card h3 {
+  color: #fff;
+}
+
+/* ---- inline-styled white surfaces ---------------------------------------
+ * Some components paint white from a style attribute rather than a class —
+ * the gym cards on /fields are eight of them. A class hook cannot reach
+ * those, so match the attribute. `.le-cal-icon` is excluded: those tiles are
+ * meant to stay white, because they carry the Google/Apple marks. */
+html.tenant-etbl:not([data-page="admin"]) [style*="background: white"]:not(.le-cal-icon),
+html.tenant-etbl:not([data-page="admin"]) [style*="background:white"]:not(.le-cal-icon),
+html.tenant-etbl:not([data-page="admin"]) [style*="background: #fff"]:not(.le-cal-icon),
+html.tenant-etbl:not([data-page="admin"]) [style*="background:#fff"]:not(.le-cal-icon),
+html.tenant-etbl:not([data-page="admin"]) [style*="background: var(--card)"],
+html.tenant-etbl:not([data-page="admin"]) [style*="background:var(--card)"],
+/* The near-white tints components reach for: slate-50, gray-50 and friends,
+ * plus the pale status washes (red/amber/green) used for callouts. Each is
+ * unreadable once the text around it turns white. */
+html.tenant-etbl:not([data-page="admin"]) [style*="#f8fafc"],
+html.tenant-etbl:not([data-page="admin"]) [style*="#f1f5f9"],
+html.tenant-etbl:not([data-page="admin"]) [style*="#f7f7f8"],
+html.tenant-etbl:not([data-page="admin"]) [style*="#f5f5f5"],
+html.tenant-etbl:not([data-page="admin"]) [style*="#fef2f2"],
+html.tenant-etbl:not([data-page="admin"]) [style*="#fffbeb"],
+html.tenant-etbl:not([data-page="admin"]) [style*="#fff4e0"],
+html.tenant-etbl:not([data-page="admin"]) [style*="#fdecea"],
+html.tenant-etbl:not([data-page="admin"]) [style*="#f0fdf4"] {
+  background: var(--etbl-pane) !important;
+  border-color: var(--etbl-rule) !important;
+  color: var(--text-body);
+}
+
+/* A brand-navy label printed on what used to be a white card disappears on
+ * navy. Lift those to the accent instead. */
+html.tenant-etbl:not([data-page="admin"]) [style*="color: var(--brand-primary)"],
+html.tenant-etbl:not([data-page="admin"]) [style*="color:var(--brand-primary)"] {
+  color: var(--etbl-hot) !important;
+}
+
+/* =============================================================================
+ * 9. DARK-ON-DARK — the mirror failure
+ *
+ * ETBL's brand primary IS a dark navy (#0b2545), so anything the platform
+ * paints in it — and anything on a plain black alpha — all but vanishes once
+ * the ground goes dark. Found by walking every leaf node on each page and
+ * comparing its text luminance against its nearest painted ancestor. These
+ * are the ones that came back.
+ * ========================================================================== */
+
+html.tenant-etbl:not([data-page="admin"]) .scores-week-summary-num {
+  color: var(--etbl-hot);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-preview-time-text {
+  color: var(--muted);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-preview-link {
+  color: var(--etbl-hot);
+}
+
+/* Beats the platform's own .le-s-tbl .le-tname rule rather than relying on
+ * source order, which the import position could change. */
+html.tenant-etbl:not([data-page="admin"]) .le-s-tbl .le-tname,
+html.tenant-etbl:not([data-page="admin"]) .le-team-cell .le-tname,
+html.tenant-etbl:not([data-page="admin"]) .le-tname {
+  color: rgba(255, 255, 255, 0.94);
+}
+
+/* Native select popups. `color-scheme: dark` on the root gets most of the
+ * way there, but the author colour on <option> still wins in Chromium, and
+ * an unreadable division picker is the one control every parent uses. */
+html.tenant-etbl:not([data-page="admin"]) select option {
+  background: var(--etbl-ink-2);
+  color: #ffffff;
+}
+
+/* Modal scrims stay black, not panes. */
+html.tenant-etbl:not([data-page="admin"]) .modal-bg {
+  background: rgba(4, 9, 18, 0.74);
+}
+
+/* Print is always ink on paper — the dark theme must never reach it. */
+@media print {
+  html.tenant-etbl:not([data-page="admin"]),
+  html.tenant-etbl:not([data-page="admin"]) body,
+  html.tenant-etbl:not([data-page="admin"]) .print-page,
+  html.tenant-etbl:not([data-page="admin"]) .print-toolbar {
+    background: #fff !important;
+    color: #000 !important;
+  }
+}
+
+/* Mendham leans on hover lifts throughout; honour the OS setting. */
+@media (prefers-reduced-motion: reduce) {
+  html.tenant-etbl:not([data-page="admin"]) * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

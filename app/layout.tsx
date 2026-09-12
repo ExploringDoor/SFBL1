@@ -28,6 +28,7 @@ import { loadScheduleVisibility } from "@/lib/schedule-visibility";
 import "./globals.css";
 import "./fx.css";
 import "./island-theme.css";
+import "./etbl-theme.css";
 import { ClinicPopup } from "@/components/ui/ClinicPopup";
 import { clinicIsOver } from "@/lib/clinic";
 import { sportNoun } from "@/lib/sport-labels";

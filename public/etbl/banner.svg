@@ -1,35 +1,66 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="544" viewBox="0 0 1600 544" role="img" aria-label="East Texas Basketball League">
+  <!--
+    ETBL homepage banner, night-game palette (2026-09-11).
+
+    Sits inside .le-hero, which paints #0a1626 with an orange glow top-right
+    and a blue one bottom-left. The ground here MATCHES that ink and the
+    corner glows echo it, so the banner reads as part of the page rather
+    than a lit rectangle dropped on it. The earlier version used the lighter
+    #0b2545 and stood out as a box.
+
+    Type is condensed and uppercase to sit with Oswald in the page; SVG has
+    no webfont, so the stack falls to the narrowest grotesques present on
+    macOS, iOS, Windows and Android in that order.
+  -->
   <defs>
-    <linearGradient id="etblBg" x1="0" y1="0" x2="1600" y2="0" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#071a33"/>
-      <stop offset="1" stop-color="#0b2545"/>
+    <linearGradient id="etblGround" x1="0" y1="0" x2="1600" y2="544" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0a1626"/>
+      <stop offset="0.55" stop-color="#0d1c34"/>
+      <stop offset="1" stop-color="#0a1626"/>
     </linearGradient>
-    <radialGradient id="etblGlow" cx="288" cy="272" r="260" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#f59e0b" stop-opacity="0.22"/>
-      <stop offset="1" stop-color="#f59e0b" stop-opacity="0"/>
+    <radialGradient id="etblEmber" cx="300" cy="272" r="300" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f97316" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#f97316" stop-opacity="0"/>
     </radialGradient>
+    <radialGradient id="etblCool" cx="1480" cy="60" r="520" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2857a5" stop-opacity="0.38"/>
+      <stop offset="1" stop-color="#2857a5" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="etblBall" x1="150" y1="122" x2="430" y2="422" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fb923c"/>
+      <stop offset="1" stop-color="#c2410c"/>
+    </linearGradient>
+    <linearGradient id="etblRule" x1="560" y1="0" x2="1180" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f97316"/>
+      <stop offset="1" stop-color="#f97316" stop-opacity="0"/>
+    </linearGradient>
   </defs>
 
-  <rect x="0" y="0" width="1600" height="544" fill="url(#etblBg)"/>
-  <!-- hairline accents in the accent orange -->
-  <rect x="0" y="0" width="1600" height="5" fill="#c2410c"/>
-  <rect x="0" y="539" width="1600" height="5" fill="#c2410c"/>
+  <rect x="0" y="0" width="1600" height="544" fill="url(#etblGround)"/>
+  <rect x="0" y="0" width="1600" height="544" fill="url(#etblCool)"/>
+  <ellipse cx="300" cy="272" rx="300" ry="300" fill="url(#etblEmber)"/>
 
-  <!-- glow behind the ball -->
-  <ellipse cx="288" cy="272" rx="260" ry="260" fill="url(#etblGlow)"/>
+  <!-- one hot hairline along the top edge, the way the nav carries one -->
+  <rect x="0" y="0" width="1600" height="3" fill="#f97316"/>
 
   <!-- basketball -->
-  <g transform="translate(288 272)">
-    <circle r="150" fill="#c2410c"/>
-    <path d="M-150 0 H150 M0 -150 V150" stroke="#071a33" stroke-width="10" fill="none" stroke-linecap="round"/>
-    <path d="M-106 -106 Q-10 0 -106 106 M106 -106 Q10 0 106 106" stroke="#071a33" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <g transform="translate(290 272)">
+    <circle r="152" fill="#000000" opacity="0.35"/>
+    <circle r="148" fill="url(#etblBall)"/>
+    <g stroke="#0a1626" stroke-width="9" fill="none" stroke-linecap="round">
+      <path d="M-148 0 H148"/>
+      <path d="M0 -148 V148"/>
+      <path d="M-105 -105 Q-10 0 -105 105"/>
+      <path d="M105 -105 Q10 0 105 105"/>
+    </g>
   </g>
 
   <!-- wordmark -->
-  <g font-family="Helvetica Neue, Helvetica, Arial, sans-serif" fill="#ffffff">
-    <text x="560" y="215" font-size="46" font-weight="700" letter-spacing="10" fill="#f59e0b">EAST TEXAS</text>
-    <text x="560" y="330" font-size="118" font-weight="900" letter-spacing="2">BASKETBALL</text>
-    <text x="560" y="420" font-size="60" font-weight="800" letter-spacing="8" fill="#ffffff" opacity="0.92">LEAGUE</text>
-    <text x="1040" y="420" font-size="34" font-weight="700" letter-spacing="6" fill="#f59e0b">2026-27 SEASON</text>
+  <g font-family="'Oswald','Haettenschweiler','Arial Narrow',sans-serif-condensed,'Roboto Condensed',Impact,sans-serif" fill="#ffffff">
+    <text x="560" y="196" font-size="40" font-weight="600" letter-spacing="15" fill="#f97316">EAST TEXAS</text>
+    <text x="560" y="330" font-size="122" font-weight="700" letter-spacing="3">BASKETBALL</text>
+    <rect x="560" y="362" width="620" height="3" fill="url(#etblRule)"/>
+    <text x="560" y="438" font-size="56" font-weight="600" letter-spacing="12" opacity="0.94">LEAGUE</text>
+    <text x="1046" y="438" font-size="30" font-weight="600" letter-spacing="6" fill="rgba(255,255,255,0.55)">2026&#8211;27 SEASON</text>
   </g>
 </svg>
