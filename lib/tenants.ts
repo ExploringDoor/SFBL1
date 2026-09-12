@@ -216,6 +216,14 @@ const HOST_ALIAS_BASELINE: Record<string, string> = {
   // When Ken's .com lands, add it (apex + www) right here, inert until DNS
   // points at Vercel, then attach it to the windmill-site project.
   "windmill-site.vercel.app": "windmill",
+  // ETBL's own Vercel project (created 2026-09-11), serving from the
+  // project URL until BJ picks a domain. Without this the site builds and
+  // deploys fine and then answers every request with
+  // "Tenant not found for host: etbl.vercel.app" — which is exactly what
+  // it did before this line, and the same trap the COYBL and Island notes
+  // above describe. When the real domain lands, add apex + www HERE first:
+  // the lines are inert until DNS actually points at Vercel.
+  "etbl.vercel.app": "etbl",
 };
 const HOST_ALIASES: Record<string, string> = (() => {
   const out: Record<string, string> = { ...HOST_ALIAS_BASELINE };
