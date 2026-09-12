@@ -78,10 +78,18 @@ export async function POST(req: Request) {
     );
   }
 
-  const method = isPayMethod(body.payMethod) ? body.payMethod : null;
-  if (!method) {
-    return NextResponse.json({ error: "Choose how you will pay" }, { status: 400 });
-  }
+  // CARD ONLY, decided here rather than trusted from the form.
+  //
+  // Melinda, 2026-09-11: "Remove the Venmo and Zelle options. We will only
+  // receive payment by credit card on the website." The picker is gone from
+  // the shop, but a tab left open since yesterday still posts payMethod
+  // "venmo", and that order would land as an unpaid promise nobody is
+  // watching a phone for. So the server decides, and the client cannot.
+  //
+  // The other methods are NOT deleted from isPayMethod: the admin still shows
+  // and reconciles the orders taken on them before today, and the store report
+  // still splits by method for the ones already in the pile.
+  const method = "card" as const;
 
   // WHO IT IS FOR, so the pile can be sorted before Saturday. Mike, 2026-09-07:
   // "He also needs to add what division they're playing", with the team and the
@@ -285,21 +293,11 @@ export async function POST(req: Request) {
   // public site for anything that scrapes it. He gave them so buyers can pay,
   // not so they can be harvested, and handing them back with the order costs
   // one read and discloses them to exactly the people who need them.
-  let payTo: string | null = null;
-  if (method === "venmo" || method === "zelle") {
-    try {
-      const pay = (
-        await db.doc(`leagues/${leagueId}/site_config/merch_pay`).get()
-      ).data() as { venmo?: string; zelle?: string } | undefined;
-      const v = method === "venmo" ? pay?.venmo : pay?.zelle;
-      payTo = typeof v === "string" && v.trim() ? v.trim() : null;
-    } catch {
-      // The order stands either way. A missing handle means the confirmation
-      // tells them the office will be in touch, which is recoverable; losing
-      // the order would not be.
-      payTo = null;
-    }
-  }
+  // payTo was the Venmo handle or Zelle number to send the money to. The shop
+  // is card only now, so there is nothing to hand back and the lookup that
+  // read site_config/merch_pay is gone with it. The field stays in the
+  // response as null so an older cached page still parses the reply.
+  const payTo: string | null = null;
 
   return NextResponse.json({
     ok: true,

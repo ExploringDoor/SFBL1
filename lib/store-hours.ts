@@ -26,8 +26,18 @@ export interface StoreHours {
    *  is what the original "Wednesday night 12 midnight" wording meant and
    *  what a document written before closeTime existed still means. */
   closeTime: string | null;
-  /** 0 = Sunday. Orders start again at openTime on this day. */
-  openDay: number;
+  /** 0 = Sunday. Orders start again at openTime on this day.
+   *
+   *  NULL means CLOSED UNTIL FURTHER NOTICE: the shop is shut from the moment
+   *  this is saved and stays shut until somebody changes this document.
+   *  closeDay and closeTime are ignored, because there is nothing to reopen
+   *  for them to bound. Melinda, 2026-09-11:
+   *  "Do not reopen the store on Saturdays." The window below can only
+   *  express a weekly cycle, so without this the only ways to honour that
+   *  were to guess a different reopen day or to write a window that shuts for
+   *  six days and twenty three hours, which is a puzzle for whoever reads it
+   *  next rather than a setting. */
+  openDay: number | null;
   /** "HH:MM", 24 hour, New York time. */
   openTime: string;
   /** Shown to a shopper while it is shut. */
@@ -87,6 +97,17 @@ export function isStoreOpen(now: Date, hours: StoreHours): boolean {
   const { day, minutes } = nyParts(now);
   if (day < 0) return true; // could not read the clock: stay open
 
+  // CLOSED UNTIL FURTHER NOTICE.
+  //
+  // The first version of this compared against the close point in week
+  // minutes, which looked right and was wrong: week minutes reset at midnight
+  // on Sunday, so the shop shut on Thursday and quietly opened itself again a
+  // few days later. Melinda asked for no Saturday reopening and would have got
+  // a Sunday one instead. A weekly clock cannot express "and stay shut", so
+  // this does not try: with no openDay there is no reopening, full stop, and
+  // closeDay/closeTime no longer apply.
+  if (hours.openDay === null) return false;
+
   const t = weekMinutes(day, minutes);
   // No closeTime means the END of closeDay, i.e. midnight rolling into the
   // next day. That is the pre-closeTime meaning and stored docs still use it.
@@ -119,7 +140,9 @@ export function readStoreHours(data: unknown): StoreHours {
       typeof d.closeTime === "string" && /^\d{1,2}:\d{2}$/.test(d.closeTime)
         ? d.closeTime
         : null,
-    openDay: num(d.openDay, DEFAULT_STORE_HOURS.openDay),
+    // Explicit null is meaningful (no scheduled reopen) and must survive the
+    // read, so it is checked before the numeric fallback.
+    openDay: d.openDay === null ? null : num(d.openDay, 6),
     openTime:
       typeof d.openTime === "string" && /^\d{1,2}:\d{2}$/.test(d.openTime)
         ? d.openTime

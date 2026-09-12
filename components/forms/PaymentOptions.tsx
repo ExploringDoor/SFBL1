@@ -77,9 +77,16 @@ export function PaymentOptions({
   const isClinic = kind === "clinic_registration";
   const isMerch = kind === "merch_order";
   const details = paymentDetailsFor(leagueId);
-  const hasVenmo = Boolean(details?.venmoUrl && details?.venmoHandle);
-  const hasCheck = Boolean(details?.checkPayableTo && details?.checkAddress);
-  const hasZelle = Boolean(details?.zelleHandle);
+  // THE SHOP IS CARD ONLY. Melinda, 2026-09-11: "Remove the Venmo and Zelle
+  // options. We will only receive payment by credit card on the website."
+  //
+  // Scoped to shirts on purpose. This component also takes team registration
+  // fees and College Clinic payments, and those still accept Venmo, Zelle and
+  // cheques. Dropping the handles for everyone would have quietly changed how
+  // Mike collects a $700 team fee, which is not what was asked for.
+  const hasVenmo = !isMerch && Boolean(details?.venmoUrl && details?.venmoHandle);
+  const hasCheck = !isMerch && Boolean(details?.checkPayableTo && details?.checkAddress);
+  const hasZelle = !isMerch && Boolean(details?.zelleHandle);
 
   // Read-only; charges nothing. Failure just means the price line does not
   // render — the card form fetches and shows its own total regardless, so a

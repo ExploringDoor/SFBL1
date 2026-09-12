@@ -117,8 +117,6 @@ export default async function StorePage() {
                     itemName={item.name}
                     price={item.price}
                     stock={sizes}
-                    {...(pay.venmo ? { venmo: pay.venmo } : {})}
-                    {...(pay.zelle ? { zelle: pay.zelle } : {})}
                   />
                   )}
                 </article>

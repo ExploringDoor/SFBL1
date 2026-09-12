@@ -18,7 +18,6 @@ import { useState } from "react";
 import {
   MAX_PER_ORDER,
   MERCH_DIVISIONS,
-  PAY_METHODS,
   type MerchSize,
   type PayMethod,
 } from "@/lib/merch";
@@ -31,8 +30,6 @@ interface Props {
   stock: MerchSize[];
   /** Where to send Venmo and Zelle. Mike asked for these ON the form, not
    *  only on the confirmation. See the note by the payment picker. */
-  venmo?: string;
-  zelle?: string;
 }
 
 export function OrderForm({
@@ -41,8 +38,6 @@ export function OrderForm({
   itemName,
   price,
   stock,
-  venmo,
-  zelle,
 }: Props) {
   const firstAvailable = stock.find((s) => s.count > 0)?.size ?? "";
   const [size, setSize] = useState(firstAvailable);
@@ -121,18 +116,21 @@ export function OrderForm({
     }
   }
 
+  // A card order never reaches here: the server returns payUrl and the browser
+  // leaves for the card form. This is the fallback for the one case where it
+  // does not, and it used to read "Send $30 on Venmo" — which, now that Venmo
+  // and Zelle are gone (Melinda, 2026-09-11), would send somebody to pay a
+  // way the office no longer accepts. It says what is actually true instead.
   if (placed) {
-    const where = placed.method === "venmo" ? "Venmo" : "Zelle";
-    const how = placed.payTo
-      ? `Send $${placed.total} on ${where} to ${placed.payTo}.`
-      : `Send $${placed.total} on ${where}. The league office will confirm the details.`;
     return (
       <div className="str-placed" role="status">
         <p className="str-placed-head">Your {size} is reserved.</p>
-        <p>{how}</p>
+        <p>
+          We could not open the card form. Your order is saved, so nothing is
+          lost. The league office will email you a link to pay for it.
+        </p>
         <p className="str-placed-sub">
-          Pick it up at the field. Put your name on the payment so the office can
-          match it to your order.
+          You collect it at the field.
         </p>
       </div>
     );
@@ -189,20 +187,12 @@ export function OrderForm({
             ))}
           </select>
         </label>
-        <label className="str-field">
-          <span className="str-label">How you will pay</span>
-          <select
-            value={payMethod}
-            onChange={(e) => setPayMethod(e.target.value as PayMethod)}
-            className="str-input"
-          >
-            {PAY_METHODS.map((m) => (
-              <option key={m.value} value={m.value}>
-                {m.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        {/* NO PAYMENT PICKER. Melinda, 2026-09-11: "Remove the Venmo and Zelle
+            options. We will only receive payment by credit card on the
+            website." The office was reconciling peer-to-peer transfers by
+            hand against a list, which is work the card path does for them.
+            payMethod stays "card" and /api/merch-order forces it server side,
+            so a stale tab cannot post venmo either. */}
       </div>
 
       {/* WHO THE SHIRT IS FOR. Collected because these are handed over at a
@@ -287,19 +277,6 @@ export function OrderForm({
           on the form (2026-09-07) and it is his number and his business, so it
           is here. It still only renders for the method actually chosen, so the
           page carries one of them rather than both. */}
-      {payMethod === "venmo" && venmo && (
-        <p className="str-payto">
-          Send <strong>${price * quantity}</strong> on Venmo to{" "}
-          <strong>{venmo}</strong>, then place the order below.
-        </p>
-      )}
-      {payMethod === "zelle" && zelle && (
-        <p className="str-payto">
-          Send <strong>${price * quantity}</strong> on Zelle to{" "}
-          <strong>{zelle}</strong>, then place the order below.
-        </p>
-      )}
-
       {error && <p className="str-error">{error}</p>}
 
       <button type="submit" className="str-order" disabled={busy || !size}>
