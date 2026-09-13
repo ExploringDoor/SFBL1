@@ -248,6 +248,23 @@ html.tenant-etbl:not([data-page="admin"]) .le-hero-logo {
   }
 }
 
+/* The ticker's league tile is deliberately oversized platform-wide (110px in
+ * a ~71px bar) so a wordmark bleeds past the bar like a corner stamp. ETBL's
+ * mark is a tall circular crest rather than a wordmark, and the ticker sits
+ * at the very top of the page — so the overflow had nothing above it to
+ * bleed into and the top of the badge was simply clipped off. Sized to sit
+ * inside the bar instead. (Adam, 2026-09-13: "the logo is cut off at the
+ * top, so make it a little smaller".) */
+html.tenant-etbl:not([data-page="admin"]) .st-label-img {
+  height: 62px;
+}
+
+@media (max-width: 720px) {
+  html.tenant-etbl:not([data-page="admin"]) .st-label-img {
+    height: 56px;
+  }
+}
+
 /* =============================================================================
  * 4. PANES — every card is the Mendham pane
  * ========================================================================== */
