@@ -205,10 +205,47 @@ html.tenant-etbl:not([data-page="admin"]) .le-hero {
   border-bottom: 1px solid var(--etbl-rule);
 }
 
-html.tenant-etbl:not([data-page="admin"]) .le-hero-logo,
+/* FULL-BLEED HEADER (Adam, 2026-09-13: "I want it to go fully across the
+ * page").
+ *
+ * The platform centres a hero banner in a 1000px box and letterboxes it
+ * inside a fixed-height section — right for a small league wordmark on a
+ * plain ground, wrong for BJ's arena artwork, which is a photograph meant
+ * to run edge to edge. The section is already full width with no padding,
+ * so the only thing holding the image in was `max-width` on the image
+ * itself. Height goes to auto so the section wraps the artwork exactly and
+ * no dark band appears above or below it.
+ *
+ * The glow that used to sit here was for a logo floating on the ground; on
+ * a full-bleed photograph it just fogs the edges, so it is gone. */
+html.tenant-etbl:not([data-page="admin"]) .le-hero {
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  padding: 0;
+}
+
 html.tenant-etbl:not([data-page="admin"]) .le-hero-title-logo {
-  filter: drop-shadow(0 0 18px var(--etbl-hot-glow));
+  width: 100%;
+  margin: 0;
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-hero-logo {
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  max-height: none;
   background: transparent;
+  filter: none;
+}
+
+@media (max-width: 700px) {
+  /* The section's mobile rule adds side padding, which would leave two dark
+   * slivers beside a full-bleed image. */
+  html.tenant-etbl:not([data-page="admin"]) .le-hero {
+    padding: 0;
+  }
 }
 
 /* =============================================================================
