@@ -260,6 +260,15 @@ html.tenant-etbl:not([data-page="admin"]) .le-hero-logo {
     object-fit: cover;
     object-position: 50% 50%;
   }
+
+  /* The "Welcome" blurb is a paragraph of orientation for someone landing on
+   * the site cold. On a phone it pushes the scores — the thing a parent
+   * actually opened the site for — most of a screen further down, and the
+   * same text is a tap away under About. Desktop keeps it, where it costs
+   * nothing. (Adam, 2026-09-13.) */
+  html.tenant-etbl:not([data-page="admin"]) .le-home-about {
+    display: none;
+  }
 }
 
 /* The hamburger's three bars are spans carrying the platform's near-black

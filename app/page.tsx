@@ -283,7 +283,11 @@ export default async function HomePage() {
       {/* "About" intro for first-time visitors — renders only when the
           tenant config sets `about`. */}
       {config?.about && (
-        <section className="sec" style={{ paddingBottom: 0 }}>
+        // `le-home-about` is a naming hook only — it carries no styles of its
+        // own. The section was reachable solely as a bare `.sec`, which every
+        // other block on the page is too, so a tenant that wants to treat this
+        // one differently (ETBL hides it on phones) had nothing to aim at.
+        <section className="sec le-home-about" style={{ paddingBottom: 0 }}>
           <div style={{ maxWidth: 880, margin: "0 auto", padding: "0 20px" }}>
             <p className="sec-eyebrow" style={{ color: "var(--brand-primary)" }}>
               Welcome
