@@ -246,6 +246,37 @@ html.tenant-etbl:not([data-page="admin"]) .le-hero-logo {
   html.tenant-etbl:not([data-page="admin"]) .le-hero {
     padding: 0;
   }
+
+  /* A 6.37:1 banner across a 375px phone is 59px tall — the wordmark is
+   * unreadable at that size. So on phones the header stops scaling to fit
+   * and crops instead: a set height with `cover`, centred, which enlarges
+   * the artwork and keeps the middle in frame. The wordmark sits between
+   * 33% and 68% of the width, and at this height the visible window is
+   * roughly 31%–70%, so "EAST TEXAS / BASKETBALL LEAGUE / PLAY DEVELOP
+   * BELONG" stays whole. What goes is the far left and right — the wall
+   * slogan and the stanchion — which are texture, not information. */
+  html.tenant-etbl:not([data-page="admin"]) .le-hero-logo {
+    height: clamp(132px, 40vw, 190px);
+    object-fit: cover;
+    object-position: 50% 50%;
+  }
+}
+
+/* The hamburger's three bars are spans carrying the platform's near-black
+ * (#1a1a1a), which is invisible against this tenant's navy bar. (Adam,
+ * 2026-09-13: "hard to see the 3 lines with those colors".) */
+html.tenant-etbl:not([data-page="admin"]) .le-hamburger span {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-hamburger {
+  background: rgba(0, 0, 0, 0.30);
+  border: 1px solid var(--etbl-rule);
+}
+
+html.tenant-etbl:not([data-page="admin"]) .le-hamburger:hover span,
+html.tenant-etbl:not([data-page="admin"]) .le-hamburger:focus-visible span {
+  background: var(--etbl-hot);
 }
 
 /* The ticker's league tile is deliberately oversized platform-wide (110px in
