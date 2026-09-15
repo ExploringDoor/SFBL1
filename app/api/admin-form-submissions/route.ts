@@ -23,9 +23,13 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const leagueId = url.searchParams.get("leagueId");
   const kind = url.searchParams.get("kind") ?? "";
+  // Default raised 100 -> 500: the list is orderBy(submitted_at desc), so a
+  // 100 cap silently hid the OLDEST submissions once a kind passed 100.
+  // SFBL had 138 player registrations, so the earliest ~38 (all of July and
+  // before) never showed. Admin-only route — the extra reads are negligible.
   const limit = Math.min(
-    Math.max(parseInt(url.searchParams.get("limit") ?? "100", 10) || 100, 1),
-    500,
+    Math.max(parseInt(url.searchParams.get("limit") ?? "500", 10) || 500, 1),
+    1000,
   );
   if (!leagueId) {
     return NextResponse.json({ error: "leagueId required" }, { status: 400 });
