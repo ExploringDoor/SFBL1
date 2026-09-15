@@ -223,7 +223,11 @@ export function FormSubmissionsViewer({ leagueId, user }: Props) {
     setError(null);
     try {
       const idToken = await user.getIdToken();
-      const params = new URLSearchParams({ leagueId, kind, limit: "100" });
+      // 500, not 100: the list is newest-first and spam + deleted rows count
+      // toward the limit, so 100 silently hid the oldest real registrations
+      // once a kind (SFBL player_registration = 138) passed that. Server
+      // caps at 1000. (2026-09)
+      const params = new URLSearchParams({ leagueId, kind, limit: "500" });
       const res = await fetch(
         `/api/admin-form-submissions?${params.toString()}`,
         { headers: { authorization: `Bearer ${idToken}` } },
