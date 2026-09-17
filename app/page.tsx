@@ -10,6 +10,7 @@ import {
 import { captainNoun, type PublicLeagueConfig } from "@/lib/tenants";
 import { combineDateTime } from "@/lib/format-time";
 import { loadGamesAndTeamsSnaps } from "@/lib/league-cache";
+import { loadSeasonConfig, resolveActiveSeason, inSeason } from "@/lib/season";
 import { GameCard, type GameCardTeam } from "@/components/ui/GameCard";
 import { PreviewCard, type PreviewCardTeam } from "@/components/ui/PreviewCard";
 import { Hero as DvslHero } from "@/components/ui/Hero";
@@ -332,6 +333,17 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
   // every homepage render — the most-visited route; audit HIGH-05).
   const { gamesSnap, teamsSnap } = await loadGamesAndTeamsSnaps(db, tenantId);
 
+  // Season scope: the homepage standings + schedule cards reflect the
+  // league's CURRENT season only, so a new season starts clean (0-0
+  // standings, this season's games) instead of carrying last season
+  // forward. Fail-safe: untagged games / no current_season set → shows
+  // all (inSeason), so single-season leagues are unaffected.
+  const seasonCfg = await loadSeasonConfig(db, tenantId);
+  const activeSeason = resolveActiveSeason(undefined, seasonCfg);
+  const seasonDocs = gamesSnap.docs.filter((d) =>
+    inSeason(d.data().season, activeSeason),
+  );
+
   const teams: Record<string, TeamMeta> = {};
   for (const d of teamsSnap.docs) {
     const data = d.data();
@@ -344,7 +356,7 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
     };
   }
 
-  const allGameItems: ScheduleItem[] = gamesSnap.docs.map((d) => {
+  const allGameItems: ScheduleItem[] = seasonDocs.map((d) => {
     const data = d.data();
     // Combine separate date + time fields so the Preview/Game cards
     // render the real start time. Without this the homepage preview
