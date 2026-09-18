@@ -238,7 +238,9 @@ function GameRow({
         });
       })()
     : "TBD";
-  const timeLabel = g.time ? formatTime12(g.time) : "";
+  // Show TBD when no start time is set (Nelson, 2026-09) rather than
+  // silently omitting it, matching the public preview cards.
+  const timeLabel = g.time ? formatTime12(g.time) : "TBD";
 
   return (
     <li className="cap-schedule-row">

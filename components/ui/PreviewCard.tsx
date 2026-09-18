@@ -147,9 +147,15 @@ function formatTimeLabel(
     month: "numeric",
     day: "numeric",
   });
-  const time = d.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-  });
-  return [`${day} ${md}`, time, field].filter(Boolean).join(" · ");
+  // Only show a start time when one was actually set. A bare "YYYY-MM-DD"
+  // (no "T" time component) means the time is TBD — don't invent one from
+  // the UTC-midnight parse, which otherwise renders as a phantom "8:00 PM"
+  // in Eastern (Nelson, 2026-09).
+  const time = date.includes("T")
+    ? d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+    : "TBD";
+  // Collapse an adjacent duplicate so a TBD time next to a TBD field reads
+  // as one "TBD", not "TBD · TBD".
+  const parts = [`${day} ${md}`, time, field].filter(Boolean);
+  return parts.filter((p, i) => p !== parts[i - 1]).join(" · ");
 }
