@@ -166,6 +166,19 @@ export default async function SchedulePage({
           <span style={{ color: "var(--brand-primary)" }}>Schedule</span>
         </h1>
         {config?.name && <p className="sec-eyebrow mt-1">{config.name}</p>}
+        {/* Excel export — SFBL only (Nelson's umpire head + league
+            officials, 2026-09). Just the download link; the calendar /
+            print controls stay removed. Opens the full schedule straight
+            in Excel/Sheets. */}
+        {tenantId === "sfbl" && (
+          <a
+            href="/api/schedule.csv"
+            className="font-barlow inline-block mt-3 text-xs font-bold uppercase tracking-wider hover:underline"
+            style={{ color: "var(--brand-primary)" }}
+          >
+            ⬇ Download for Excel
+          </a>
+        )}
       </header>
 
       <ScoresScheduleTabs active="schedule" />
