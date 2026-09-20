@@ -41,6 +41,7 @@ import { PlayerOfWeekManager } from "@/components/admin/PlayerOfWeekManager";
 import { PaymentsAdmin } from "@/components/admin/PaymentsAdmin";
 import { FieldUsage } from "@/components/admin/FieldUsage";
 import { FieldsManager } from "@/components/admin/FieldsManager";
+import { FieldStatusManager } from "@/components/admin/FieldStatusManager";
 import { AdminPasswordGate } from "@/components/admin/AdminPasswordGate";
 
 type TabKey =
@@ -54,6 +55,7 @@ type TabKey =
   | "captains"
   | "payments"
   | "fields"
+  | "field_status"
   | "alerts"
   | "news"
   | "potw"
@@ -78,6 +80,7 @@ const TABS: { key: TabKey; label: string; description: string }[] = [
   { key: "captains", label: "Captains", description: "Every team's captain: contact, password status, and last login." },
   { key: "payments", label: "Payments", description: "League-wide fee collection — who's paid, per team, with totals." },
   { key: "fields", label: "Fields", description: "Add / edit the league's fields (name + address), and see how many games each has hosted." },
+  { key: "field_status", label: "Field Status", description: "Rain days: mark fields Wet / Closed so players see them flagged at the top of the schedule page." },
   { key: "alerts", label: "Alerts", description: "Publish a homepage banner — weather, registration, deadlines." },
   { key: "news", label: "News", description: "From-the-commissioner news & events shown on the homepage." },
   { key: "potw", label: "Player of Week", description: "Curate the Player of the Week spotlight + archive shown at /player-of-the-week." },
@@ -482,6 +485,9 @@ export default function AdminPage() {
             <FieldsManager leagueId={tenantId} user={user} />
             <FieldUsage leagueId={tenantId} user={user} />
           </div>
+        )}
+        {activeTab === "field_status" && (
+          <FieldStatusManager leagueId={tenantId} user={user} />
         )}
         {activeTab === "news" && (
           <NewsManager leagueId={tenantId} user={user} />

@@ -17,6 +17,11 @@ import type { PublicLeagueConfig } from "@/lib/tenants";
 import { ScoresScheduleTabs, WeekRow } from "../scores/tabs-and-weeks";
 import { DivisionFilter } from "@/components/ui/DivisionFilter";
 import { combineDateTime } from "@/lib/format-time";
+import {
+  FieldStatusBoard,
+  type FieldStatusItem,
+  type FieldState,
+} from "@/components/ui/FieldStatusBoard";
 
 export const dynamic = "force-dynamic";
 
@@ -75,6 +80,34 @@ export default async function SchedulePage({
   const seasonCfg = await loadSeasonConfig(getAdminDb(), tenantId);
   const activeSeason = resolveActiveSeason(searchParams?.season, seasonCfg);
   const { games, teams } = await loadSchedule(tenantId, activeSeason);
+
+  // Field status board — flagged (wet/closed) fields the admin set for a
+  // rain day. Renders nothing when every field is open. Small single-doc
+  // read; admin sets it in Admin → Field Status.
+  const fieldStatusItems: FieldStatusItem[] = await (async () => {
+    try {
+      const snap = await getAdminDb()
+        .doc(`leagues/${tenantId}/site_config/field_status`)
+        .get();
+      const statuses = (snap.data()?.statuses ?? {}) as Record<
+        string,
+        { state?: unknown; note?: unknown; at?: unknown }
+      >;
+      return Object.entries(statuses)
+        .map(([name, s]) => ({
+          name,
+          state: (s?.state === "closed" || s?.state === "caution"
+            ? s.state
+            : "open") as FieldState,
+          note: typeof s?.note === "string" && s.note ? s.note : undefined,
+          at: typeof s?.at === "string" ? s.at : undefined,
+        }))
+        .filter((i) => i.state !== "open")
+        .sort((a, b) => a.name.localeCompare(b.name));
+    } catch {
+      return [];
+    }
+  })();
   // Show every game in the season — scheduled, final, postponed,
   // cancelled — so the schedule page is a real season-long calendar
   // instead of just "the 1 game still on the books." Cards render
@@ -180,6 +213,8 @@ export default async function SchedulePage({
           </a>
         )}
       </header>
+
+      <FieldStatusBoard items={fieldStatusItems} />
 
       <ScoresScheduleTabs active="schedule" />
 
