@@ -11,6 +11,11 @@ import { captainNoun, type PublicLeagueConfig } from "@/lib/tenants";
 import { combineDateTime } from "@/lib/format-time";
 import { loadGamesAndTeamsSnaps } from "@/lib/league-cache";
 import { loadSeasonConfig, resolveActiveSeason, inSeason } from "@/lib/season";
+import {
+  FieldStatusBoard,
+  type FieldStatusItem,
+  type FieldState,
+} from "@/components/ui/FieldStatusBoard";
 import { GameCard, type GameCardTeam } from "@/components/ui/GameCard";
 import { PreviewCard, type PreviewCardTeam } from "@/components/ui/PreviewCard";
 import { Hero as DvslHero } from "@/components/ui/Hero";
@@ -62,6 +67,7 @@ export default async function HomePage() {
     scheme,
     leagueName,
     seasonStats,
+    fieldStatusItems,
   } = await loadHomeData(tenantId, config);
 
   const season = String(new Date().getFullYear());
@@ -93,6 +99,15 @@ export default async function HomePage() {
           (Adam 2026-05-14). Renders nothing when the tenant
           hasn't published a banner doc. */}
       <HomepageBanner leagueId={tenantId} />
+      {/* Field status board (rain days) — flagged fields only; renders
+          nothing when all fields are open. Same data as /schedule. */}
+      {fieldStatusItems.length > 0 && (
+        <section className="sec" style={{ paddingTop: 16, paddingBottom: 0 }}>
+          <div className="container">
+            <FieldStatusBoard items={fieldStatusItems} />
+          </div>
+        </section>
+      )}
       {/* Live games strip — appears below the hero whenever any
           game in the league is in progress. Subscribes via
           onSnapshot so scores update in real time as the field-side
@@ -450,6 +465,33 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
     topTeam,
   };
 
+  // Field status (rain days) — same small doc the schedule page reads;
+  // only the flagged (non-open) fields, for the homepage board.
+  const fieldStatusItems: FieldStatusItem[] = await (async () => {
+    try {
+      const snap = await db
+        .doc(`leagues/${tenantId}/site_config/field_status`)
+        .get();
+      const statuses = (snap.data()?.statuses ?? {}) as Record<
+        string,
+        { state?: unknown; note?: unknown; at?: unknown }
+      >;
+      return Object.entries(statuses)
+        .map(([name, s]) => ({
+          name,
+          state: (s?.state === "closed" || s?.state === "caution"
+            ? s.state
+            : "open") as FieldState,
+          note: typeof s?.note === "string" && s.note ? s.note : undefined,
+          at: typeof s?.at === "string" ? s.at : undefined,
+        }))
+        .filter((i) => i.state !== "open")
+        .sort((a, b) => a.name.localeCompare(b.name));
+    } catch {
+      return [];
+    }
+  })();
+
   return {
     upcoming,
     recent,
@@ -458,6 +500,7 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
     scheme: usePoints ? scheme : null,
     leagueName: config?.name ?? "League",
     seasonStats,
+    fieldStatusItems,
   };
 }
 
