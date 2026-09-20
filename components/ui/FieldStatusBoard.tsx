@@ -40,7 +40,11 @@ function asOf(items: FieldStatusItem[]): string {
   if (!latest) return "";
   const d = new Date(latest);
   if (Number.isNaN(d.getTime())) return "";
+  // This board is server-rendered (UTC on Vercel); pin the display to
+  // league time so the "as of" stamp isn't hours ahead. America/New_York
+  // is the platform default (matches playoffs / print schedule / CSV).
   return d.toLocaleString("en-US", {
+    timeZone: "America/New_York",
     weekday: "short",
     month: "short",
     day: "numeric",
