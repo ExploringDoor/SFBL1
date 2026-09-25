@@ -1,4 +1,7 @@
 {
+  "crons": [
+    { "path": "/api/arbiter-ical-sync", "schedule": "0 */6 * * *" }
+  ],
   "headers": [
     {
       "source": "/:tenant/headers/:file",
