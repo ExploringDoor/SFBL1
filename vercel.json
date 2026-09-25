@@ -1,7 +1,8 @@
 {
   "crons": [
     { "path": "/api/nightly-reminder", "schedule": "0 22 * * *" },
-    { "path": "/api/weekly-digest", "schedule": "0 22 * * 0" }
+    { "path": "/api/weekly-digest", "schedule": "0 22 * * 0" },
+    { "path": "/api/arbiter-ical-sync", "schedule": "0 */6 * * *" }
   ],
   "headers": [
     {

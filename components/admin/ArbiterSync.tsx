@@ -20,7 +20,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { User } from "firebase/auth";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 
 interface TeamOpt {
@@ -86,6 +86,26 @@ export function ArbiterSync({ leagueId, user }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
 
+  // Automatic iCal-feed sync (the "give me the Arbiter link" path).
+  const [icsUrl, setIcsUrl] = useState("");
+  const [icsSaved, setIcsSaved] = useState("");
+  const [icsLast, setIcsLast] = useState<string | null>(null);
+  const [icsBusy, setIcsBusy] = useState<"save" | "preview" | "apply" | null>(null);
+  const [icsMsg, setIcsMsg] = useState<string | null>(null);
+  const [icsErr, setIcsErr] = useState<string | null>(null);
+  const [icsSummary, setIcsSummary] = useState<Record<string, number> | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const cfg = await getDoc(doc(getDb(), `leagues/${leagueId}/site_config/arbiter`));
+        const d = cfg.data() as Record<string, unknown> | undefined;
+        if (d?.ics_url) { setIcsUrl(String(d.ics_url)); setIcsSaved(String(d.ics_url)); }
+        if (d?.ics_last_sync) setIcsLast(String(d.ics_last_sync));
+      } catch { /* section still works, just no prefill */ }
+    })();
+  }, [leagueId]);
+
   useEffect(() => {
     (async () => {
       try {
@@ -129,6 +149,44 @@ export function ArbiterSync({ leagueId, user }: Props) {
     const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
     if (!res.ok) throw new Error(String(data.error ?? `HTTP ${res.status}`));
     return data;
+  }
+
+  async function postIcs(body: Record<string, unknown>) {
+    const token = await user.getIdToken();
+    const res = await fetch("/api/arbiter-ical-sync", {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+      body: JSON.stringify({ leagueId, ...body }),
+    });
+    const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    if (!res.ok) throw new Error(String(data.error ?? `HTTP ${res.status}`));
+    return data;
+  }
+
+  async function saveIcsUrl() {
+    setIcsBusy("save"); setIcsErr(null); setIcsMsg(null);
+    try {
+      await postIcs({ action: "save_url", url: icsUrl.trim() });
+      setIcsSaved(icsUrl.trim());
+      setIcsMsg(icsUrl.trim() ? "Feed link saved. The schedule will sync automatically from now on." : "Feed link cleared.");
+    } catch (e) { setIcsErr(e instanceof Error ? e.message : "Failed"); }
+    finally { setIcsBusy(null); }
+  }
+
+  async function runIcs(action: "preview" | "apply") {
+    setIcsBusy(action); setIcsErr(null); setIcsMsg(null); setIcsSummary(null);
+    try {
+      const data = await postIcs({ action, url: icsUrl.trim() });
+      const s = (data.summary ?? {}) as Record<string, number>;
+      setIcsSummary(s);
+      if (action === "apply") {
+        setIcsMsg(`Synced ${s.written ?? 0} games from Arbiter (${s.newGames ?? 0} new, ${s.updatedGames ?? 0} updated).`);
+        setIcsLast(new Date().toISOString());
+      } else {
+        setIcsMsg(`Preview only, nothing written yet: ${s.matched ?? 0} games would sync${s.skippedUnresolved ? `, ${s.skippedUnresolved} skipped for unmatched teams` : ""}.`);
+      }
+    } catch (e) { setIcsErr(e instanceof Error ? e.message : "Failed"); }
+    finally { setIcsBusy(null); }
   }
 
   function loadFile(file: File) {
@@ -211,6 +269,59 @@ export function ArbiterSync({ leagueId, user }: Props) {
         format. Games are matched on Arbiter&rsquo;s game number, so importing an
         updated export updates the same games instead of creating duplicates.
       </p>
+
+      {/* ── automatic iCal feed sync ─────────────────────────── */}
+      <div style={{ ...BOX, borderColor: "var(--brand-accent,#c19a2e)" }}>
+        <p style={{ fontWeight: 800, margin: "0 0 4px" }}>Automatic sync from Arbiter (feed link)</p>
+        <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 10px", lineHeight: 1.6 }}>
+          Paste your Arbiter schedule feed link (the iCal / calendar URL from Arbiter&rsquo;s
+          Settings). Once it&rsquo;s saved, the site pulls the schedule and keeps it current on
+          its own every few hours, with no export or upload. The feed carries games only, not
+          umpire assignments.
+        </p>
+        <input
+          type="url"
+          value={icsUrl}
+          onChange={(e) => setIcsUrl(e.target.value)}
+          placeholder="https://…/feed.ics"
+          style={{ width: "100%", padding: "8px 10px", border: "1px solid rgba(0,0,0,0.2)", borderRadius: 8, fontSize: 13 }}
+        />
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
+          <button type="button" onClick={saveIcsUrl} disabled={icsBusy !== null || icsUrl.trim() === icsSaved} style={BTN}>
+            {icsBusy === "save" ? "Saving…" : "Save link"}
+          </button>
+          <button type="button" onClick={() => runIcs("preview")} disabled={icsBusy !== null || !icsUrl.trim()} style={BTN}>
+            {icsBusy === "preview" ? "Checking…" : "Check for changes"}
+          </button>
+          <button
+            type="button"
+            onClick={() => runIcs("apply")}
+            disabled={icsBusy !== null || !icsUrl.trim()}
+            style={{ ...BTN, background: "var(--green,#22c55e)", color: "#fff", border: "none" }}
+          >
+            {icsBusy === "apply" ? "Syncing…" : "Sync now"}
+          </button>
+        </div>
+        {icsSummary && (
+          <p style={{ fontSize: 12, color: "var(--muted)", margin: "10px 0 0" }}>
+            {icsSummary.events} events · {icsSummary.matched} matched · {icsSummary.newGames} new · {icsSummary.updatedGames} updated
+            {icsSummary.skippedUnresolved ? ` · ${icsSummary.skippedUnresolved} skipped (unmatched teams)` : ""}
+          </p>
+        )}
+        {icsLast && (
+          <p style={{ fontSize: 12, color: "var(--muted)", margin: "6px 0 0" }}>
+            Last synced: {new Date(icsLast).toLocaleString()}
+          </p>
+        )}
+        {icsMsg && <p style={{ fontSize: 13, color: "#15803d", margin: "8px 0 0" }}>{icsMsg}</p>}
+        {icsErr && <p style={{ fontSize: 13, color: "#b91c1c", margin: "8px 0 0" }}>{icsErr}</p>}
+        {icsSummary && icsSummary.skippedUnresolved ? (
+          <p style={{ fontSize: 12, color: "var(--muted)", margin: "8px 0 0" }}>
+            Teams that didn&rsquo;t match are skipped so a game is never half-created. Use the
+            CSV panel below once to confirm those names, and they&rsquo;ll be remembered for the feed too.
+          </p>
+        ) : null}
+      </div>
 
       {/* ── export ───────────────────────────────────────────── */}
       <div style={BOX}>
