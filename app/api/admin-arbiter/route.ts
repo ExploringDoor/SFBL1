@@ -209,6 +209,63 @@ export async function POST(req: Request) {
       candidates: mt.candidates,
     }));
 
+  // Whether THIS file is the "Games with Official info" report. Only then do we
+  // touch the umpire field. A plain schedule import leaves any existing crew
+  // alone; the officials report is authoritative for the crew, so a row with an
+  // empty crew clears a stale assignment rather than being ignored.
+  const importingOfficials = parsed.officialColumns.length > 0;
+
+  // Existing games, loaded once. Used both to reconcile doc ids and for the
+  // conflict audit below. This matters because the iCal auto-sync keys a game on
+  // its Arbiter UID while this CSV keys on the game number — different ids for
+  // the same game. Without reconciliation, importing the officials report would
+  // create a duplicate of every iCal-synced game and the umpires would never
+  // show on the live schedule. The identity both sources share is the natural
+  // key: date + the two team ids (start time breaks a doubleheader tie).
+  const existingSnap = await db.collection(`leagues/${leagueId}/games`).get();
+  const existingByGameNumber = new Map<string, string>();
+  const existingByNatural = new Map<string, { id: string; time: string }[]>();
+  existingSnap.forEach((d) => {
+    const gd = d.data() as Record<string, unknown>;
+    const gn = gd.arbiter_game_number != null ? String(gd.arbiter_game_number).trim() : "";
+    if (gn && !existingByGameNumber.has(gn)) existingByGameNumber.set(gn, d.id);
+    const date = String(gd.date ?? "").slice(0, 10);
+    const awayId = String(gd.away_team_id ?? "");
+    const homeId = String(gd.home_team_id ?? "");
+    if (date && awayId && homeId) {
+      const key = `${date}|${awayId}|${homeId}`;
+      const list = existingByNatural.get(key) ?? [];
+      list.push({ id: d.id, time: String(gd.time ?? "") });
+      existingByNatural.set(key, list);
+    }
+  });
+
+  // The doc id an incoming row should write to: the existing game it matches (by
+  // Arbiter game number, then by date+teams, a doubleheader disambiguated by
+  // start time), otherwise a fresh stable id.
+  function resolveTargetId(row: {
+    gameNumber?: string;
+    date: string;
+    time: string;
+    awayId: string;
+    homeId: string;
+  }): string {
+    const gn = (row.gameNumber ?? "").trim();
+    if (gn && existingByGameNumber.has(gn)) return existingByGameNumber.get(gn)!;
+    const cands = existingByNatural.get(`${row.date}|${row.awayId}|${row.homeId}`) ?? [];
+    if (cands.length === 1) return cands[0]!.id;
+    if (cands.length > 1) {
+      const timeHit = cands.find((c) => c.time && c.time === row.time);
+      if (timeHit) return timeHit.id;
+    }
+    return arbiterGameId({
+      gameNumber: gn || null,
+      date: row.date,
+      awayTeamId: row.awayId,
+      homeTeamId: row.homeId,
+    });
+  }
+
   // Rows whose teams both resolve are importable; the rest are held back and
   // named, so a partial import is explicit rather than silent.
   const importable: {
@@ -232,13 +289,21 @@ export async function POST(req: Request) {
       skipped.push({ line: r.line, reason: "Home and away resolve to the same team" });
       continue;
     }
-    const id = arbiterGameId({
-      gameNumber: r.gameNumber ?? null,
+    const id = resolveTargetId({
+      gameNumber: r.gameNumber,
       date: r.date,
-      awayTeamId: awayId,
-      homeTeamId: homeId,
+      time: r.time,
+      awayId,
+      homeId,
     });
     const played = r.awayScore != null && r.homeScore != null;
+    // Display shape for the crew — matches how the site renders umpires, drops
+    // the raw acceptance status but keeps position when the report had it.
+    const umpires = (r.officials ?? []).map((o) => ({
+      name: o.name,
+      ...(o.email ? { email: o.email } : {}),
+      ...(o.position ? { position: o.position } : {}),
+    }));
     importable.push({
       id,
       doc: {
@@ -252,6 +317,11 @@ export async function POST(req: Request) {
         ...(played
           ? { away_score: r.awayScore, home_score: r.homeScore, status: "final" }
           : { status: "scheduled" }),
+        // Only written for the officials report (see importingOfficials). An
+        // empty array clears a crew that Arbiter has un-assigned.
+        ...(importingOfficials
+          ? { umpires, umpires_source: "arbiter", umpires_synced_at: now }
+          : {}),
         source: "arbiter",
         arbiter_imported_at: now,
       },
@@ -269,9 +339,9 @@ export async function POST(req: Request) {
 
   // Conflict audit. Games being re-imported are excluded from the "existing"
   // set by id, or every row would appear to collide with its own previous
-  // version and the report would be pure noise.
+  // version and the report would be pure noise. Reuses the existingSnap loaded
+  // above for id reconciliation — no second read.
   const incomingIds = new Set(importable.map((g) => g.id));
-  const existingSnap = await db.collection(`leagues/${leagueId}/games`).get();
   const existingGames: ConflictGame[] = [];
   existingSnap.forEach((d) => {
     if (incomingIds.has(d.id)) return;
@@ -320,6 +390,13 @@ export async function POST(req: Request) {
     newGames: importable.filter((g) => !existingSnap.docs.some((d) => d.id === g.id)).length,
     delimiter: parsed.delimiter,
     ignoredColumns: parsed.ignoredColumns,
+    // Officials, when this is the "Games with Official info" report.
+    officialColumns: parsed.officialColumns,
+    withOfficials: importingOfficials
+      ? importable.filter(
+          (g) => Array.isArray(g.doc.umpires) && (g.doc.umpires as unknown[]).length > 0,
+        ).length
+      : 0,
   };
 
   if (action === "preview_import") {
@@ -363,6 +440,8 @@ export async function POST(req: Request) {
     count: importable.length,
     skipped: skipped.length,
     conflicts: summary.conflicts,
+    officials_report: importingOfficials,
+    with_officials: summary.withOfficials,
   });
 
   return NextResponse.json({

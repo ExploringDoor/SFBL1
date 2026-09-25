@@ -10,6 +10,7 @@ import type {
   BoxPitcher,
 } from "@/components/BoxScoreContent";
 import { computeStandings, type GameResult } from "./stats/shared";
+import { publicUmpires } from "./umpire-display";
 
 // Closes H9. The expensive part of loadBoxScoreData isn't the per-
 // game doc — it's the three tenant-wide reads (teams, players, all
@@ -233,6 +234,7 @@ export async function loadBoxScoreData(
     date: game.date ? String(game.date) : null,
     time: game.time ? String(game.time) : null,
     field: game.field ? String(game.field) : null,
+    umpires: publicUmpires(game.umpires),
     status: String(game.status ?? "draft"),
     // Age group + division for the modal's header band ("10U · Division 1").
     ageGroup: game.ageGroup ? String(game.ageGroup) : null,

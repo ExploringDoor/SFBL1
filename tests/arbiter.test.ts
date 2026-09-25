@@ -184,7 +184,10 @@ describe("parseArbiterSchedule", () => {
       "1,13-Apr-26,F1,A,B,Smith,something",
     ].join("\n");
     const res = parseArbiterSchedule(extra);
-    expect(res.ignoredColumns).toContain("umpire 1");
+    // "Umpire 1" is now claimed as an officials column, not ignored.
+    expect(res.officialColumns).toContain("Umpire 1");
+    expect(res.rows[0]!.officials).toEqual([{ name: "Smith" }]);
+    expect(res.ignoredColumns).not.toContain("umpire 1");
     expect(res.ignoredColumns).toContain("notes");
   });
 });

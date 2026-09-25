@@ -27,6 +27,7 @@ import type { PublicLeagueConfig } from "@/lib/tenants";
 import { combineDateTime } from "@/lib/format-time";
 import { GameCard, type GameCardTeam } from "@/components/ui/GameCard";
 import { PreviewCard, type PreviewCardTeam } from "@/components/ui/PreviewCard";
+import { publicUmpires, type PublicUmpire } from "@/lib/umpire-display";
 import { Hero as DvslHero } from "@/components/ui/Hero";
 import { HomepageBanner } from "@/components/ui/HomepageBanner";
 import { HomepageLiveGames } from "@/components/ui/HomepageLiveGames";
@@ -54,6 +55,7 @@ interface ScheduleItem {
   home_team_id: string;
   away_score: number;
   home_score: number;
+  umpires?: PublicUmpire[];
 }
 
 export default async function HomePage() {
@@ -345,6 +347,7 @@ export default async function HomePage() {
                       away={previewTeamData(g.away_team_id, teams)}
                       home={previewTeamData(g.home_team_id, teams)}
                       isNext={i === 0}
+                      umpires={g.umpires}
                       ageGroup={teamAge[g.home_team_id] ?? teamAge[g.away_team_id]}
                     />
                   ))}
@@ -572,6 +575,7 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
       away_team_id: String(data.away_team_id ?? ""),
       home_score: Number(data.home_score ?? 0),
       away_score: Number(data.away_score ?? 0),
+      umpires: publicUmpires(data.umpires),
     };
   });
 

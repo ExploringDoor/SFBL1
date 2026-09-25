@@ -17,6 +17,7 @@ import { SubscribeCalendar } from "@/components/SubscribeCalendar";
 import { DivisionFilter } from "@/components/ui/DivisionFilter";
 import { AgeFilter } from "@/components/ui/AgeFilter";
 import { combineDateTime } from "@/lib/format-time";
+import { publicUmpires, type PublicUmpire } from "@/lib/umpire-display";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +41,9 @@ interface ScheduleGame {
   division: string | null;
   away_score: number;
   home_score: number;
+  /** Assigned umpire crew, synced from Arbiter's officials report. Name +
+   *  position only — the email in Firestore is never sent to the public page. */
+  umpires?: PublicUmpire[];
 }
 
 export default async function SchedulePage({
@@ -351,6 +355,7 @@ async function loadSchedule(tenantId: string): Promise<{
       division: data.division ? String(data.division) : null,
       away_score: Number(data.away_score ?? 0),
       home_score: Number(data.home_score ?? 0),
+      umpires: publicUmpires(data.umpires),
     };
   });
 
@@ -515,6 +520,7 @@ function DaySection({
               home={teamCardData(g.home_team_id, teams)}
               isNext={isFirstUpcomingDay && idx === 0 && g.status === "scheduled"}
               status={g.status}
+              umpires={g.umpires}
               ageGroup={
                 teams[g.home_team_id]?.ageGroup ??
                 teams[g.away_team_id]?.ageGroup

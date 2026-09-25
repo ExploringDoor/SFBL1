@@ -56,6 +56,8 @@ interface Preview {
     newGames: number;
     delimiter: string;
     ignoredColumns: string[];
+    officialColumns?: string[];
+    withOfficials?: number;
   };
   unresolved: Unresolved[];
   skipped: { line: number; reason: string }[];
@@ -338,6 +340,11 @@ export function ArbiterSync({ leagueId, user }: Props) {
       {/* ── import ───────────────────────────────────────────── */}
       <div style={BOX}>
         <p style={{ fontWeight: 800, margin: "0 0 8px" }}>Bring in from Arbiter</p>
+        <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 10px" }}>
+          Any Arbiter export works. Use the{" "}
+          <strong>Games with Official info</strong> report and the assigned
+          umpires come in with the schedule and show on each game.
+        </p>
         <input
           type="file"
           accept=".csv,.tsv,.txt,text/csv"
@@ -411,6 +418,14 @@ export function ArbiterSync({ leagueId, user }: Props) {
               {preview.summary.skipped > 0 && (
                 <li>
                   <strong>{preview.summary.skipped}</strong> rows skipped
+                </li>
+              )}
+              {(preview.summary.officialColumns?.length ?? 0) > 0 && (
+                <li>
+                  Umpires detected (
+                  {preview.summary.officialColumns!.join(", ")}) ·{" "}
+                  <strong>{preview.summary.withOfficials ?? 0}</strong> games
+                  will get a crew
                 </li>
               )}
               {preview.summary.ignoredColumns.length > 0 && (

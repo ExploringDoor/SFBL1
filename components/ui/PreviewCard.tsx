@@ -20,6 +20,12 @@ export interface PreviewCardTeam {
   record?: string;
 }
 
+/** One assigned official, as synced from Arbiter's officials report. */
+export interface PreviewCardUmpire {
+  name: string;
+  position?: string;
+}
+
 export interface PreviewCardProps {
   gameId: string;
   date: string | null;
@@ -35,6 +41,9 @@ export interface PreviewCardProps {
   /** Age group ("9U") for age-grouped tenants — small pill so a mixed
    *  feed is readable. Omitted for flat leagues. */
   ageGroup?: string;
+  /** Assigned umpire crew (from Arbiter's officials report). Rendered as a
+   *  small line under the teams; omitted when empty. */
+  umpires?: PreviewCardUmpire[] | null;
 }
 
 export function PreviewCard({
@@ -46,8 +55,10 @@ export function PreviewCard({
   isNext = false,
   status,
   ageGroup,
+  umpires,
 }: PreviewCardProps) {
   const timeLabel = formatTimeLabel(date, field);
+  const umpText = formatUmpires(umpires);
   const router = useRouter();
   const badge = statusBadge(status);
   const muted =
@@ -102,6 +113,14 @@ export function PreviewCard({
         <Side team={away} />
         <Side team={home} />
       </div>
+      {umpText && (
+        <div className="le-preview-umps">
+          <span className="le-umps-label">
+            {umpires && umpires.length > 1 ? "Umpires" : "Umpire"}
+          </span>
+          <span className="le-umps-names">{umpText}</span>
+        </div>
+      )}
       <span className="le-preview-link">Preview »</span>
     </div>
   );
@@ -139,6 +158,16 @@ function Side({ team }: { team: PreviewCardTeam }) {
       </div>
     </div>
   );
+}
+
+/** "Plate Smith, John · Base Doe, Jane" — a middot separator because the names
+ *  themselves are "Last, First" and a comma join would read as more people. */
+function formatUmpires(umps: PreviewCardUmpire[] | null | undefined): string {
+  if (!umps || umps.length === 0) return "";
+  return umps
+    .map((u) => (u.position ? `${u.position} ${u.name}` : u.name))
+    .filter(Boolean)
+    .join(" · ");
 }
 
 function formatTimeLabel(

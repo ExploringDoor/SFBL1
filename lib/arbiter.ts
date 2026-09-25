@@ -22,6 +22,17 @@
 //
 // Deliberately pure — no Firestore, no clock, no network.
 
+/** One official as Arbiter assigned them, before display. */
+export interface ArbiterOfficial {
+  name: string;
+  /** Present only when the report carried an email column for the official. */
+  email?: string;
+  /** "Plate", "Base", "1B"… when the report used positional columns. */
+  position?: string;
+  /** Raw acceptance status ("accepted", "unaccepted"…) when present. */
+  status?: string;
+}
+
 /** One row as Arbiter describes it, before it is mapped onto team ids. */
 export interface ArbiterRow {
   /** Arbiter's game number. The league's own handle for a game. */
@@ -37,6 +48,12 @@ export interface ArbiterRow {
   homeScore: number | null;
   /** Age group / section / level as printed, when the export carries it. */
   division: string;
+  /**
+   * Officials assigned to the game. Populated only by the "Games with Official
+   * info" report; a plain schedule export leaves this empty. Optional so the
+   * iCal path (which never carries officials) is unaffected.
+   */
+  officials?: ArbiterOfficial[];
   /** 1-based line in the source file, for error reporting. */
   line: number;
 }
@@ -47,6 +64,9 @@ export interface ArbiterParseResult {
   warnings: string[];
   /** Header labels present in the source that we did not consume. */
   ignoredColumns: string[];
+  /** Official-name column labels detected (e.g. "Official 1", "Plate"). Empty
+   *  for a plain schedule export; non-empty means this is the officials report. */
+  officialColumns: string[];
   /** Which delimiter was detected, surfaced so a mis-detection is visible. */
   delimiter: "," | "\t" | ";";
 }
@@ -66,6 +86,167 @@ const COLUMN_ALIASES: Record<string, string[]> = {
   homeScore: ["home score", "homescore", "h score", "home runs"],
   division: ["division", "level", "sport", "league", "age", "age group", "section", "conference", "group"],
 };
+
+// ─── officials columns ───────────────────────────────────────────────────────
+//
+// Arbiter's "Games with Official info" report is the same schedule with extra
+// columns for the assigned crew. Unlike the fixed schedule columns there can be
+// any number of them, named a dozen ways ("Official 1", "Umpire 2", "Plate",
+// "Official 1 Email", "Official 1 Status"), so they get their own detection pass
+// instead of a slot in COLUMN_ALIASES. A name column, its optional email, and
+// its optional status are paired by a shared "slot" key so "Official 1" and
+// "Official 1 Email" line up.
+
+/** Positional crew labels → a short display position. */
+const OFFICIAL_POSITIONS: Record<string, string> = {
+  "plate": "Plate", "plate umpire": "Plate", "home plate": "Plate", "pu": "Plate", "hp": "Plate",
+  "base": "Base", "base umpire": "Base", "field umpire": "Base", "bu": "Base",
+  "1st base": "1B", "first base": "1B", "1b": "1B",
+  "2nd base": "2B", "second base": "2B", "2b": "2B",
+  "3rd base": "3B", "third base": "3B", "3b": "3B",
+};
+
+/** Collapse the family of role words so a name and its email/status pair up
+ *  even when spelled differently ("ump 1" ↔ "umpire 1 email"). */
+function canonRole(word: string): string {
+  const w = word.toLowerCase();
+  if (w.startsWith("umpire") || w === "ump" || w === "umps") return "umpire";
+  if (w.startsWith("referee") || w === "ref" || w === "refs") return "referee";
+  if (w.startsWith("judge")) return "judge";
+  return "official";
+}
+
+type OfficialRole = "name" | "email" | "status";
+
+/** Classify one header cell as an officials name/email/status column, or null. */
+function classifyOfficialHeader(
+  h: string,
+): { role: OfficialRole; slot: string; position?: string } | null {
+  const s = h.trim().toLowerCase().replace(/\s+/g, " ");
+  if (!s) return null;
+
+  let m = /^(official|officials|umpire|umpires|ump|umps|referee|referees|ref|refs)\.?\s*#?\s*(\d+)?\s*(?:e-?mail|email address)$/.exec(s);
+  if (m) return { role: "email", slot: `${canonRole(m[1]!)}:${m[2] ?? ""}` };
+
+  m = /^(official|officials|umpire|umpires|ump|umps|referee|referees|ref|refs)\.?\s*#?\s*(\d+)?\s*(?:status|state|accepted|acceptance)$/.exec(s);
+  if (m) return { role: "status", slot: `${canonRole(m[1]!)}:${m[2] ?? ""}` };
+
+  m = /^(official|officials|umpire|umpires|ump|umps|referee|referees|ref|refs|judge|judges)\.?\s*#?\s*(\d+)?$/.exec(s);
+  if (m) return { role: "name", slot: `${canonRole(m[1]!)}:${m[2] ?? ""}` };
+
+  const pos = OFFICIAL_POSITIONS[s];
+  if (pos) return { role: "name", slot: `pos:${pos}`, position: pos };
+
+  return null;
+}
+
+interface OfficialColumn {
+  nameIndex: number;
+  emailIndex?: number;
+  statusIndex?: number;
+  position?: string;
+  label: string;
+}
+
+/**
+ * Find the officials columns among the header cells not already consumed by the
+ * schedule columns. Marks every column it claims as consumed (so it never shows
+ * up as an ignored column) and returns one OfficialColumn per name column, in
+ * source order, each carrying its paired email/status column when present.
+ */
+function detectOfficialColumns(
+  header: string[],
+  consumed: Set<number>,
+  rawHeader: string[] = header,
+): OfficialColumn[] {
+  const names: (OfficialColumn & { slot: string })[] = [];
+  const emailBySlot = new Map<string, number>();
+  const statusBySlot = new Map<string, number>();
+
+  for (let i = 0; i < header.length; i++) {
+    if (consumed.has(i)) continue;
+    const c = classifyOfficialHeader(header[i]!);
+    if (!c) continue;
+    consumed.add(i);
+    if (c.role === "email") emailBySlot.set(c.slot, i);
+    else if (c.role === "status") statusBySlot.set(c.slot, i);
+    else {
+      names.push({
+        nameIndex: i,
+        slot: c.slot,
+        position: c.position,
+        label: (rawHeader[i] ?? header[i]!).trim(),
+      });
+    }
+  }
+
+  return names
+    .map((n) => ({
+      nameIndex: n.nameIndex,
+      emailIndex: emailBySlot.get(n.slot),
+      statusIndex: statusBySlot.get(n.slot),
+      position: n.position,
+      label: n.label,
+    }))
+    .sort((a, b) => a.nameIndex - b.nameIndex);
+}
+
+/** A status that means the official is no longer on the game (so the report
+ *  still lists the name, but they should not be shown as the crew). */
+function officialStatusMeansGone(status: string): boolean {
+  const s = status.toLowerCase();
+  if (!s) return false;
+  return /(declin|turn ?back|turned ?back|release|removed|remove|cancel|withdraw|\bopen\b|unfilled|vacant|no ?show|not filled)/.test(s);
+}
+
+/** Split a single officials cell that lists several people. Never on comma —
+ *  Arbiter writes crew as "Last, First", so a comma is inside one name. */
+function splitOfficialNames(cell: string): string[] {
+  return cell
+    .split(/\s*(?:;|\/|\n|\r|\band\b|&|\|)\s*/i)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+/** Tidy an official's name without reordering it: drop wrapping quotes, a
+ *  trailing "(accepted)"-style note, and a leading position tag. */
+function cleanOfficialName(raw: string): string {
+  let s = raw.trim().replace(/^["']|["']$/g, "").trim();
+  s = s.replace(/\s*\((?:accepted|unaccepted|declined|pending|published)\)\s*$/i, "").trim();
+  s = s.replace(/\s+/g, " ");
+  // A bare placeholder Arbiter leaves in an unfilled slot.
+  if (/^(tbd|tba|open|unassigned|none|n\/a|-)$/i.test(s)) return "";
+  return s;
+}
+
+/** Extract the crew for one game row from its detected officials columns. */
+function extractOfficials(fields: string[], cols: OfficialColumn[]): ArbiterOfficial[] {
+  const out: ArbiterOfficial[] = [];
+  const seen = new Set<string>();
+  for (const c of cols) {
+    const rawName = (fields[c.nameIndex] ?? "").trim();
+    if (!rawName) continue;
+    const status = c.statusIndex != null ? (fields[c.statusIndex] ?? "").trim() : "";
+    if (officialStatusMeansGone(status)) continue;
+    const email = c.emailIndex != null ? (fields[c.emailIndex] ?? "").trim() : "";
+    // Positional columns hold exactly one person; a generic column may list several.
+    const parts = c.position ? [rawName] : splitOfficialNames(rawName);
+    for (const p of parts) {
+      const name = cleanOfficialName(p);
+      if (!name) continue;
+      const key = name.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({
+        name,
+        ...(email && /.+@.+\..+/.test(email) ? { email } : {}),
+        ...(c.position ? { position: c.position } : {}),
+        ...(status ? { status } : {}),
+      });
+    }
+  }
+  return out;
+}
 
 const MONTHS: Record<string, number> = {
   jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
@@ -223,12 +404,14 @@ export function parseArbiterSchedule(text: string): ArbiterParseResult {
       errors: [{ line: 0, message: "Needs a header row and at least one game row." }],
       warnings,
       ignoredColumns: [],
+      officialColumns: [],
       delimiter: ",",
     };
   }
 
   const delimiter = detectDelimiter(lines[0]!);
-  const header = splitLine(lines[0]!, delimiter).map((h) => h.trim().toLowerCase());
+  const rawHeader = splitLine(lines[0]!, delimiter).map((h) => h.trim());
+  const header = rawHeader.map((h) => h.toLowerCase());
 
   // Map each source column onto a field, first alias wins.
   const colOf: Partial<Record<keyof typeof COLUMN_ALIASES, number>> = {};
@@ -244,6 +427,11 @@ export function parseArbiterSchedule(text: string): ArbiterParseResult {
     }
   }
 
+  // Officials get their own detection pass (variable count, many spellings).
+  // This also marks their columns consumed, so they don't show as "ignored".
+  const officialCols = detectOfficialColumns(header, consumed, rawHeader);
+  const officialColumns = officialCols.map((c) => c.label);
+
   const ignoredColumns = header.filter((h, i) => !consumed.has(i) && h.length > 0);
 
   const missing: string[] = [];
@@ -257,7 +445,7 @@ export function parseArbiterSchedule(text: string): ArbiterParseResult {
         `Could not find column(s): ${missing.join(", ")}. ` +
         `Found: ${header.filter(Boolean).join(", ") || "(none)"}.`,
     });
-    return { rows, errors, warnings, ignoredColumns, delimiter };
+    return { rows, errors, warnings, ignoredColumns, officialColumns, delimiter };
   }
   if (colOf.gameNumber === undefined) {
     warnings.push(
@@ -312,6 +500,7 @@ export function parseArbiterSchedule(text: string): ArbiterParseResult {
       awayScore: parseScore(get(fields, "awayScore")),
       homeScore: parseScore(get(fields, "homeScore")),
       division: get(fields, "division"),
+      officials: officialCols.length ? extractOfficials(fields, officialCols) : [],
       line: lineNum,
     });
   }
@@ -319,7 +508,7 @@ export function parseArbiterSchedule(text: string): ArbiterParseResult {
   if (rows.length === 0 && errors.length === 0) {
     warnings.push("No game rows found.");
   }
-  return { rows, errors, warnings, ignoredColumns, delimiter };
+  return { rows, errors, warnings, ignoredColumns, officialColumns, delimiter };
 }
 
 // ─── team-name matching ────────────────────────────────────────────────────
