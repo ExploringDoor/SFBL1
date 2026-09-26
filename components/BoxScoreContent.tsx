@@ -75,6 +75,9 @@ export interface BoxScoreContentProps {
    *  UTC-shift a day for Pacific viewers. */
   time: string | null;
   field: string | null;
+  /** Umpire crew from Arbiter's officials report — name + position only.
+   *  Emails are dropped upstream and never reach the public page. */
+  umpires?: { name: string; position?: string }[] | null;
   status: string;
   /** Age group + division for the modal header band. Not rendered by
    *  BoxScoreContent itself; the modal route reads them for the band. */
@@ -110,7 +113,14 @@ export function BoxScoreContent(props: BoxScoreContentProps) {
   if (!isFinal) {
     return (
       <div className="bs-root">
-        <PreviewHero away={away} home={home} date={date} time={time} field={field} />
+        <PreviewHero
+          away={away}
+          home={home}
+          date={date}
+          time={time}
+          field={field}
+          umpires={props.umpires}
+        />
         <PreviewBlurb away={away} home={home} date={date} time={time} field={field} />
       </div>
     );
@@ -164,7 +174,14 @@ export function BoxScoreContent(props: BoxScoreContentProps) {
 
   return (
     <div className="bs-root">
-      <FinalHeader away={away} home={home} date={date} time={time} field={field} />
+      <FinalHeader
+        away={away}
+        home={home}
+        date={date}
+        time={time}
+        field={field}
+        umpires={props.umpires}
+      />
 
       {/* Tabs flip between two pre-rendered bodies via client state.
           Initial tab honours ?tab=recap on the URL so deep links still
@@ -307,15 +324,18 @@ function FinalHeader({
   date,
   time,
   field,
+  umpires,
 }: {
   away: BoxTeam;
   home: BoxTeam;
   date: string | null;
   time: string | null;
   field: string | null;
+  umpires?: { name: string; position?: string }[] | null;
 }) {
   const aWin = away.score > home.score;
   const hWin = home.score > away.score;
+  const crew = formatCrew(umpires);
   return (
     <>
       <div className="bs-hero">
@@ -351,6 +371,14 @@ function FinalHeader({
         {field && (
           <span>
             <span aria-hidden>📍</span> {field}
+          </span>
+        )}
+        {crew && (
+          <span>
+            <span className="bs-crew-label">
+              {umpires && umpires.length > 1 ? "Umpires" : "Umpire"}:
+            </span>{" "}
+            {crew}
           </span>
         )}
       </div>
@@ -511,19 +539,34 @@ function closingHype(
   return `Pitching depth and timely hitting will likely decide it — first pitch is set; check back after the final out for the box score and recap.`;
 }
 
+/** "Plate Smith, John · Base Doe, Jane" — middot join because the names are
+ *  "Last, First" and a comma would read as more people. */
+function formatCrew(
+  umps: { name: string; position?: string }[] | null | undefined,
+): string {
+  if (!umps || umps.length === 0) return "";
+  return umps
+    .map((u) => (u.position ? `${u.position} ${u.name}` : u.name))
+    .filter(Boolean)
+    .join(" · ");
+}
+
 function PreviewHero({
   away,
   home,
   date,
   time,
   field,
+  umpires,
 }: {
   away: BoxTeam;
   home: BoxTeam;
   date: string | null;
   time: string | null;
   field: string | null;
+  umpires?: { name: string; position?: string }[] | null;
 }) {
+  const crew = formatCrew(umpires);
   // Audit H1: stable local calendar day; prefer the separate time
   // field (no Date()/TZ math) so LBDC's Pacific preview doesn't skew.
   const dayLabel = formatGameDate(date, time, {
@@ -548,6 +591,15 @@ function PreviewHero({
         {field && (
           <span className="bs-final" style={{ marginTop: 2 }}>
             {field}
+          </span>
+        )}
+        {crew && (
+          <span
+            className="bs-crew"
+            style={{ marginTop: 4 }}
+          >
+            {umpires && umpires.length > 1 ? "Umpires: " : "Umpire: "}
+            {crew}
           </span>
         )}
       </div>

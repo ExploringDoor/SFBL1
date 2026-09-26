@@ -128,6 +128,36 @@
   margin-top: 1px;
 }
 
+/* Umpire crew line — sits under the teams, above the Preview link. Shown only
+ * when the schedule has been synced from Arbiter's officials report. */
+.le-preview-umps {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin-bottom: 6px;
+  font-family: var(--font-inter), 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.62);
+  line-height: 1.3;
+  min-width: 0;
+}
+.le-preview-umps .le-umps-label {
+  flex-shrink: 0;
+  font-family: var(--font-barlow), 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(0, 0, 0, 0.55);
+}
+.le-preview-umps .le-umps-names {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .le-preview-link {
   display: inline-block;
   font-size: 12px;

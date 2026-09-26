@@ -184,7 +184,10 @@ describe("parseArbiterSchedule", () => {
       "1,13-Apr-26,F1,A,B,Smith,something",
     ].join("\n");
     const res = parseArbiterSchedule(extra);
-    expect(res.ignoredColumns).toContain("umpire 1");
+    // "Umpire 1" is now claimed as an officials column, not ignored.
+    expect(res.officialColumns).toContain("Umpire 1");
+    expect(res.rows[0]!.officials).toEqual([{ name: "Smith" }]);
+    expect(res.ignoredColumns).not.toContain("umpire 1");
     expect(res.ignoredColumns).toContain("notes");
   });
 });
@@ -328,9 +331,11 @@ describe("arbiterGameId", () => {
     expect(id1).toBe(id2);
   });
 
-  it("falls back to a natural key when there is no game number", () => {
-    const id = arbiterGameId({ date: "2026-04-13", awayTeamId: "a", homeTeamId: "b" });
-    expect(id).toBe("arb-20260413-a-b");
+  it("falls back to a natural key (date + time + teams) when there is no game number", () => {
+    // Time is part of the key so a doubleheader does not collapse two rows; an
+    // absent time leaves an empty segment.
+    expect(arbiterGameId({ date: "2026-04-13", awayTeamId: "a", homeTeamId: "b" })).toBe("arb-20260413--a-b");
+    expect(arbiterGameId({ date: "2026-04-13", time: "18:00", awayTeamId: "a", homeTeamId: "b" })).toBe("arb-20260413-1800-a-b");
   });
 
   it("produces ids safe to use as Firestore doc ids", () => {

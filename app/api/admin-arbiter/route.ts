@@ -32,6 +32,8 @@ import {
   matchTeamNames,
   toArbiterCsv,
   arbiterGameId,
+  buildReconcileMaps,
+  resolveExistingGameId,
   type MatchableTeam,
 } from "@/lib/arbiter";
 import {
@@ -209,6 +211,30 @@ export async function POST(req: Request) {
       candidates: mt.candidates,
     }));
 
+  // Whether THIS file is the "Games with Official info" report (has crew columns).
+  const importingOfficials = parsed.officialColumns.length > 0;
+
+  // Existing games, loaded once. Used to reconcile doc ids (so an import lands on
+  // the game the iCal auto-sync created instead of a duplicate — see
+  // resolveExistingGameId in lib/arbiter), to guard already-played games, and for
+  // the conflict audit below.
+  const existingSnap = await db.collection(`leagues/${leagueId}/games`).get();
+  const existingById = new Map<string, Record<string, unknown>>();
+  existingSnap.forEach((d) => existingById.set(d.id, d.data() as Record<string, unknown>));
+  const reconcileMaps = buildReconcileMaps(
+    existingSnap.docs.map((d) => {
+      const gd = d.data() as Record<string, unknown>;
+      return {
+        id: d.id,
+        gameNumber: gd.arbiter_game_number != null ? String(gd.arbiter_game_number) : null,
+        date: String(gd.date ?? ""),
+        time: gd.time != null ? String(gd.time) : "",
+        awayTeamId: String(gd.away_team_id ?? ""),
+        homeTeamId: String(gd.home_team_id ?? ""),
+      };
+    }),
+  );
+
   // Rows whose teams both resolve are importable; the rest are held back and
   // named, so a partial import is explicit rather than silent.
   const importable: {
@@ -232,13 +258,37 @@ export async function POST(req: Request) {
       skipped.push({ line: r.line, reason: "Home and away resolve to the same team" });
       continue;
     }
-    const id = arbiterGameId({
-      gameNumber: r.gameNumber ?? null,
-      date: r.date,
-      awayTeamId: awayId,
-      homeTeamId: homeId,
-    });
+    const rowKey = { gameNumber: r.gameNumber ?? null, date: r.date, time: r.time, awayTeamId: awayId, homeTeamId: homeId };
+    // Reconcile onto an existing game if one matches. When none does, mint a NEW
+    // id from the natural key (date+time+teams), NOT the game number: Arbiter
+    // reuses numbers across ages/seasons, so arb-<num> could collide with an
+    // unrelated (often archived) doc and merge:true would overwrite its teams.
+    // The game number is still stored on the doc, so a later re-import matches it
+    // via resolveExistingGameId (which value-checks the teams).
+    const id = resolveExistingGameId(rowKey, reconcileMaps) ?? arbiterGameId({ ...rowKey, gameNumber: null });
+
+    const prev = existingById.get(id);
+    // Never demote a game that already carries a result. The officials report and
+    // a plain schedule export carry no scores, so writing status:"scheduled" onto
+    // an existing final game would drop it from standings/records. Only set a
+    // status when the row itself has scores, or when the target has no result yet.
     const played = r.awayScore != null && r.homeScore != null;
+    const prevPlayed =
+      !!prev &&
+      (prev.status === "final" ||
+        prev.status === "approved" ||
+        prev.away_score != null ||
+        prev.home_score != null);
+
+    // Display shape for the crew: name + position only. The umpire EMAIL is NOT
+    // written here — the games doc is world-readable, so email would be public.
+    // This is a SEPARATE field from game.umpires (which is the manual umpire
+    // assignment system, an array of opaque ids consumed by lib/umpires).
+    const crew = (r.officials ?? []).map((o) => ({
+      name: o.name,
+      ...(o.position ? { position: o.position } : {}),
+    }));
+
     importable.push({
       id,
       doc: {
@@ -251,7 +301,15 @@ export async function POST(req: Request) {
         ...(r.gameNumber ? { arbiter_game_number: r.gameNumber } : {}),
         ...(played
           ? { away_score: r.awayScore, home_score: r.homeScore, status: "final" }
-          : { status: "scheduled" }),
+          : prevPlayed
+            ? {} // keep the existing result/status untouched
+            : { status: "scheduled" }),
+        // Only write the crew when this row actually carries officials. We never
+        // write an empty array: a blank/absent crew must not wipe a good one, and
+        // a schedule export with empty officials columns must not clear the league.
+        ...(importingOfficials && crew.length > 0
+          ? { arbiter_crew: crew, arbiter_crew_source: "arbiter", arbiter_crew_synced_at: now }
+          : {}),
         source: "arbiter",
         arbiter_imported_at: now,
       },
@@ -269,9 +327,9 @@ export async function POST(req: Request) {
 
   // Conflict audit. Games being re-imported are excluded from the "existing"
   // set by id, or every row would appear to collide with its own previous
-  // version and the report would be pure noise.
+  // version and the report would be pure noise. Reuses the existingSnap loaded
+  // above for id reconciliation — no second read.
   const incomingIds = new Set(importable.map((g) => g.id));
-  const existingSnap = await db.collection(`leagues/${leagueId}/games`).get();
   const existingGames: ConflictGame[] = [];
   existingSnap.forEach((d) => {
     if (incomingIds.has(d.id)) return;
@@ -320,6 +378,13 @@ export async function POST(req: Request) {
     newGames: importable.filter((g) => !existingSnap.docs.some((d) => d.id === g.id)).length,
     delimiter: parsed.delimiter,
     ignoredColumns: parsed.ignoredColumns,
+    // Officials, when this is the "Games with Official info" report.
+    officialColumns: parsed.officialColumns,
+    withOfficials: importingOfficials
+      ? importable.filter(
+          (g) => Array.isArray(g.doc.arbiter_crew) && (g.doc.arbiter_crew as unknown[]).length > 0,
+        ).length
+      : 0,
   };
 
   if (action === "preview_import") {
@@ -363,6 +428,8 @@ export async function POST(req: Request) {
     count: importable.length,
     skipped: skipped.length,
     conflicts: summary.conflicts,
+    officials_report: importingOfficials,
+    with_officials: summary.withOfficials,
   });
 
   return NextResponse.json({
