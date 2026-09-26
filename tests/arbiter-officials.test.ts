@@ -97,3 +97,66 @@ describe("officials — duplicate name and placeholder slots", () => {
     expect(res.rows[0]!.officials).toEqual([{ name: "Ken Adams" }]);
   });
 });
+
+describe("officials — inline acceptance status in a single cell", () => {
+  const res = parseArbiterSchedule(
+    [
+      "Game,Date,Time,Site,Away,Home,Officials",
+      '6001,24-Apr-26,10:00 AM,Field E,Reds,Blues,"Smith, John (declined); Jones, Bob (accepted)"',
+    ].join("\n"),
+  );
+
+  it("drops an inline (declined) official and keeps the accepted one", () => {
+    // The bug the audit caught: without the inline-status check, the declined
+    // umpire would be stripped of its note and published as live crew.
+    expect(res.rows[0]!.officials).toEqual([
+      { name: "Jones, Bob", status: "accepted" },
+    ]);
+  });
+});
+
+describe("officials — a distinct second official with the same name is kept", () => {
+  const res = parseArbiterSchedule(
+    [
+      "Game,Date,Time,Site,Away,Home,Plate,Base",
+      "7001,25-Apr-26,10:00 AM,Field F,Reds,Blues,John Smith,John Smith",
+    ].join("\n"),
+  );
+
+  it("keeps both positions rather than collapsing to a one-man crew", () => {
+    expect(res.rows[0]!.officials).toEqual([
+      { name: "John Smith", position: "Plate" },
+      { name: "John Smith", position: "Base" },
+    ]);
+  });
+});
+
+describe("officials — non-name values are not turned into umpires", () => {
+  const res = parseArbiterSchedule(
+    [
+      "Game,Date,Time,Site,Away,Home,Officials",
+      "8001,26-Apr-26,10:00 AM,Field G,Reds,Blues,2",
+    ].join("\n"),
+  );
+
+  it("rejects a numeric/count cell as a phantom umpire", () => {
+    expect(res.rows[0]!.officials).toEqual([]);
+  });
+});
+
+describe("officials — splits on / and & as well as ;", () => {
+  const res = parseArbiterSchedule(
+    [
+      "Game,Date,Time,Site,Away,Home,Officials",
+      '9001,27-Apr-26,10:00 AM,Field H,Reds,Blues,"Ken Adams / Lee Ray & Sam Poe"',
+    ].join("\n"),
+  );
+
+  it("produces three officials", () => {
+    expect(res.rows[0]!.officials).toEqual([
+      { name: "Ken Adams" },
+      { name: "Lee Ray" },
+      { name: "Sam Poe" },
+    ]);
+  });
+});

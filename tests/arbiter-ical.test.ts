@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseArbiterIcs, splitMatchup } from "@/lib/arbiter-ical";
+import { parseArbiterIcs, splitMatchup, normalizeFeedUrl } from "@/lib/arbiter-ical";
 
 const SAMPLE = [
   "BEGIN:VCALENDAR",
@@ -64,6 +64,20 @@ describe("parseArbiterIcs", () => {
     const bad = parseArbiterIcs("just some text");
     expect(bad.errors.length).toBeGreaterThan(0);
     expect(bad.rows).toHaveLength(0);
+  });
+});
+
+describe("normalizeFeedUrl", () => {
+  it("rewrites webcal:// to https:// (the URL setter can't)", () => {
+    expect(normalizeFeedUrl("webcal://feeds.arbitersports.com/x.ics")).toBe(
+      "https://feeds.arbitersports.com/x.ics",
+    );
+    expect(normalizeFeedUrl("WEBCAL://feeds.arbitersports.com/x.ics")).toBe(
+      "https://feeds.arbitersports.com/x.ics",
+    );
+  });
+  it("leaves https untouched and trims", () => {
+    expect(normalizeFeedUrl("  https://x.test/a.ics  ")).toBe("https://x.test/a.ics");
   });
 });
 

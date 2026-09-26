@@ -575,7 +575,7 @@ async function loadHomeData(tenantId: string, config: PublicLeagueConfig | null)
       away_team_id: String(data.away_team_id ?? ""),
       home_score: Number(data.home_score ?? 0),
       away_score: Number(data.away_score ?? 0),
-      umpires: publicUmpires(data.umpires),
+      umpires: publicUmpires(data.arbiter_crew),
     };
   });
 

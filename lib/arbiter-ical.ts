@@ -21,6 +21,16 @@
 import type { ArbiterRow } from "@/lib/arbiter";
 import { parseArbiterTime } from "@/lib/arbiter";
 
+/**
+ * Normalize a feed URL string. Arbiter commonly hands out webcal:// links, and
+ * the WHATWG URL protocol setter REFUSES to convert webcal (a non-special
+ * scheme) to https — `u.protocol = "https:"` is a silent no-op — so the scheme
+ * must be rewritten on the raw string before new URL().
+ */
+export function normalizeFeedUrl(raw: string): string {
+  return String(raw ?? "").trim().replace(/^webcal:\/\//i, "https://");
+}
+
 export interface IcsRow extends ArbiterRow {
   /** The VEVENT UID — the stable key across reschedules. */
   uid: string;

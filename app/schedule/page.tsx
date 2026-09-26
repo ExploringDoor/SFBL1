@@ -355,7 +355,7 @@ async function loadSchedule(tenantId: string): Promise<{
       division: data.division ? String(data.division) : null,
       away_score: Number(data.away_score ?? 0),
       home_score: Number(data.home_score ?? 0),
-      umpires: publicUmpires(data.umpires),
+      umpires: publicUmpires(data.arbiter_crew),
     };
   });
 

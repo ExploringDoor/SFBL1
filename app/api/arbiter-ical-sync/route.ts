@@ -22,9 +22,17 @@
 // carries no scores, so a played game keeps its result.
 
 import { NextResponse } from "next/server";
+import { lookup } from "node:dns/promises";
+import { timingSafeEqual } from "node:crypto";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
-import { matchTeamNames, type MatchableTeam } from "@/lib/arbiter";
-import { parseArbiterIcs } from "@/lib/arbiter-ical";
+import {
+  matchTeamNames,
+  buildReconcileMaps,
+  resolveExistingGameId,
+  type MatchableTeam,
+} from "@/lib/arbiter";
+import { parseArbiterIcs, normalizeFeedUrl } from "@/lib/arbiter-ical";
+import { isIpLiteral, isPrivateIp, isAllowedFeedHost } from "@/lib/ssrf-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,6 +41,7 @@ const BATCH_LIMIT = 450;
 const MAX_ICS_BYTES = 5_000_000;
 const MAX_EVENTS = 6000;
 const FETCH_TIMEOUT_MS = 15_000;
+const MAX_REDIRECTS = 5;
 
 type FS = FirebaseFirestore.Firestore;
 
@@ -40,27 +49,110 @@ function cleanId(s: string): string {
   return s.replace(/[^a-z0-9]+/gi, "").toLowerCase().slice(0, 120);
 }
 
-/** Fetch the feed. https only, with a hard timeout (fetch never times out on its
- *  own) and a size cap so a bad URL can't hang or blow up memory. */
+// ─── SSRF guard ──────────────────────────────────────────────────────────────
+// The feed URL is admin-supplied and re-fetched unattended by the cron. Primary
+// defense is the ArbiterSports host allowlist (which also closes DNS rebinding,
+// since an attacker can't control arbitersports.com DNS); the resolved-IP block
+// is defense in depth. Applied to the initial URL and every redirect hop.
+// Predicates live in lib/ssrf-guard so they are unit-tested.
+
+async function assertPublicUrl(u: URL): Promise<{ ok: true } | { ok: false; error: string }> {
+  const host = u.hostname.replace(/^\[|\]$/g, "");
+  if (!isAllowedFeedHost(host)) {
+    return { ok: false, error: "The feed must be an ArbiterSports feed URL (arbitersports.com)." };
+  }
+  let addrs: string[];
+  if (isIpLiteral(host)) {
+    addrs = [host];
+  } else {
+    try {
+      addrs = (await lookup(host, { all: true })).map((a) => a.address);
+    } catch {
+      return { ok: false, error: "Could not resolve the feed host." };
+    }
+  }
+  if (addrs.length === 0) return { ok: false, error: "Could not resolve the feed host." };
+  for (const a of addrs) {
+    if (isPrivateIp(a)) {
+      return { ok: false, error: "The feed URL points to a private address and was blocked." };
+    }
+  }
+  return { ok: true };
+}
+
+/** Read a response body with a hard byte cap, streaming so an oversized feed is
+ *  aborted before it is all in memory (the Content-Length check is only a hint). */
+async function readCapped(
+  res: Response,
+  max: number,
+): Promise<{ ok: true; text: string } | { ok: false; error: string }> {
+  const len = Number(res.headers.get("content-length") ?? "");
+  if (Number.isFinite(len) && len > max) return { ok: false, error: "The feed is too large." };
+  const reader = res.body?.getReader?.();
+  if (!reader) {
+    const buf = await res.arrayBuffer();
+    if (buf.byteLength > max) return { ok: false, error: "The feed is too large." };
+    return { ok: true, text: new TextDecoder("utf-8").decode(buf) };
+  }
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) {
+      total += value.byteLength;
+      if (total > max) {
+        try { await reader.cancel(); } catch { /* ignore */ }
+        return { ok: false, error: "The feed is too large." };
+      }
+      chunks.push(value);
+    }
+  }
+  const all = new Uint8Array(total);
+  let off = 0;
+  for (const c of chunks) { all.set(c, off); off += c.byteLength; }
+  return { ok: true, text: new TextDecoder("utf-8").decode(all) };
+}
+
+/** Fetch the feed. https only, hard timeout (fetch never times out on its own),
+ *  SSRF-guarded on every redirect hop, and a streamed size cap. */
 async function fetchIcs(url: string): Promise<{ ok: true; text: string } | { ok: false; error: string }> {
-  let u: URL;
+  let current: URL;
   try {
-    u = new URL(url);
+    current = new URL(normalizeFeedUrl(url));
   } catch {
     return { ok: false, error: "That is not a valid URL." };
   }
-  if (u.protocol !== "https:" && u.protocol !== "webcal:") {
+  if (current.protocol !== "https:") {
     return { ok: false, error: "The feed URL must be https." };
   }
-  if (u.protocol === "webcal:") u.protocol = "https:";
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
   try {
-    const res = await fetch(u.toString(), { signal: ctrl.signal, redirect: "follow" });
+    let res: Response | null = null;
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+      const guard = await assertPublicUrl(current);
+      if (!guard.ok) return guard;
+      res = await fetch(current.toString(), {
+        signal: ctrl.signal,
+        redirect: "manual",
+        headers: { Accept: "text/calendar, text/plain, */*" },
+      });
+      if (res.status >= 300 && res.status < 400) {
+        const loc = res.headers.get("location");
+        if (!loc) break;
+        let next: URL;
+        try { next = new URL(loc, current); } catch { return { ok: false, error: "The feed redirected to an invalid URL." }; }
+        if (next.protocol !== "https:") return { ok: false, error: "The feed redirected to a non-https URL." };
+        current = next;
+        continue;
+      }
+      break;
+    }
+    if (!res) return { ok: false, error: "Could not reach the feed URL." };
+    if (res.status >= 300 && res.status < 400) return { ok: false, error: "The feed redirected too many times." };
     if (!res.ok) return { ok: false, error: `Arbiter returned ${res.status} for that URL.` };
-    const buf = await res.arrayBuffer();
-    if (buf.byteLength > MAX_ICS_BYTES) return { ok: false, error: "The feed is too large." };
-    return { ok: true, text: new TextDecoder("utf-8").decode(buf) };
+    return await readCapped(res, MAX_ICS_BYTES);
   } catch (e) {
     const msg = (e as Error)?.name === "AbortError" ? "The feed took too long to respond." : "Could not reach the feed URL.";
     return { ok: false, error: msg };
@@ -145,7 +237,33 @@ async function syncLeague(
   // Existing games, so a re-sync updates in place and never clobbers a result.
   const existingSnap = await db.collection(`leagues/${leagueId}/games`).get();
   const existing = new Map<string, Record<string, unknown>>();
-  existingSnap.forEach((d) => existing.set(d.id, d.data() as Record<string, unknown>));
+  // Index existing docs by the arbiter_uid they STORE (not just their doc id), so
+  // a game the CSV created first (id arb-<num>, with our uid saved on it) is found
+  // by uid even after a reschedule moves its date — otherwise a fresh arb-<uid>
+  // duplicate would be minted.
+  const existingByArbiterUid = new Map<string, string>();
+  existingSnap.forEach((d) => {
+    const data = d.data() as Record<string, unknown>;
+    existing.set(d.id, data);
+    const savedUid = data.arbiter_uid != null ? String(data.arbiter_uid) : "";
+    if (savedUid && !existingByArbiterUid.has(savedUid)) existingByArbiterUid.set(savedUid, d.id);
+  });
+  // Reconciliation maps so the feed lands on a game the CSV import already created
+  // (the CSV keys on game number, this path on the iCal UID). The natural key
+  // (date + teams) is the shared identity. See resolveExistingGameId in lib/arbiter.
+  const reconcileMaps = buildReconcileMaps(
+    existingSnap.docs.map((d) => {
+      const gd = d.data() as Record<string, unknown>;
+      return {
+        id: d.id,
+        gameNumber: gd.arbiter_game_number != null ? String(gd.arbiter_game_number) : null,
+        date: String(gd.date ?? ""),
+        time: gd.time != null ? String(gd.time) : "",
+        awayTeamId: String(gd.away_team_id ?? ""),
+        homeTeamId: String(gd.home_team_id ?? ""),
+      };
+    }),
+  );
 
   const now = new Date().toISOString();
   const writes: { id: string; doc: Record<string, unknown> }[] = [];
@@ -158,28 +276,44 @@ async function syncLeague(
     const homeId = resolved.get(r.homeName);
     if (!awayId || !homeId || awayId === homeId) { skippedUnresolved++; continue; }
 
-    const id = `arb-${cleanId(r.uid)}`;
+    // The UID is this path's stable key and survives a reschedule. Prefer, in
+    // order: a doc whose id is arb-<uid>; a doc that STORES this uid (a CSV doc we
+    // converged onto earlier, even after its date moved); then a natural-key match
+    // onto a CSV doc we have not tagged yet; finally a fresh arb-<uid>.
+    const uidId = `arb-${cleanId(r.uid)}`;
+    const id = existing.has(uidId)
+      ? uidId
+      : existingByArbiterUid.get(r.uid)
+        ?? resolveExistingGameId(
+          { gameNumber: null, date: r.date, time: r.time, awayTeamId: awayId, homeTeamId: homeId },
+          reconcileMaps,
+        )
+        ?? uidId;
+
     const prev = existing.get(id);
-    // The feed has no scores. If the game is already final or has a score, keep
-    // its result and status; only refresh the schedule fields.
+    // The feed has no scores. If the game is already final or has a score, freeze
+    // it: refresh only the sync markers and never overwrite its result, status,
+    // teams, or date (a re-parsed matchup could otherwise mis-attribute a result).
     const prevPlayed =
-      prev &&
+      !!prev &&
       (prev.status === "final" ||
         prev.status === "approved" ||
         prev.away_score != null ||
         prev.home_score != null);
 
-    const doc: Record<string, unknown> = {
-      date: r.date,
-      time: r.time,
-      field: r.field,
-      away_team_id: awayId,
-      home_team_id: homeId,
-      arbiter_uid: r.uid,
-      source: "arbiter",
-      arbiter_ics_synced_at: now,
-    };
-    if (!prevPlayed) doc.status = "scheduled";
+    const doc: Record<string, unknown> = prevPlayed
+      ? { arbiter_uid: r.uid, source: "arbiter", arbiter_ics_synced_at: now }
+      : {
+          date: r.date,
+          time: r.time,
+          field: r.field,
+          away_team_id: awayId,
+          home_team_id: homeId,
+          arbiter_uid: r.uid,
+          source: "arbiter",
+          arbiter_ics_synced_at: now,
+          status: "scheduled",
+        };
 
     writes.push({ id, doc });
     if (prev) updatedGames++; else newGames++;
@@ -246,12 +380,21 @@ async function runCron(db: FS): Promise<Record<string, unknown>[]> {
   return results;
 }
 
+/** Constant-time equality so the secret can't be recovered by timing. */
+function safeEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a);
+  const bb = Buffer.from(b);
+  if (ab.length !== bb.length) return false;
+  return timingSafeEqual(ab, bb);
+}
+
 function cronAuthorized(req: Request): boolean {
   const secret = process.env.CRON_SECRET;
   if (!secret) return false;
   const auth = req.headers.get("authorization") ?? "";
   const xcron = req.headers.get("x-cron-secret") ?? "";
-  return auth === `Bearer ${secret}` || xcron === secret;
+  const bearer = /^Bearer\s+(.+)$/.exec(auth)?.[1] ?? "";
+  return safeEqual(bearer, secret) || safeEqual(xcron, secret);
 }
 
 // Vercel cron invokes the path with GET (and the CRON_SECRET bearer header).
@@ -303,12 +446,14 @@ export async function POST(req: Request) {
   const cfgRef = db.doc(`leagues/${leagueId}/site_config/arbiter`);
 
   if (action === "save_url") {
-    const url = String(body.url ?? "").trim();
+    // Normalize webcal:// -> https:// on the raw string (the URL setter can't do
+    // it) and store the normalized form so the feed actually fetches later.
+    const url = body.url ? normalizeFeedUrl(String(body.url)) : "";
     if (url) {
       try {
         const u = new URL(url);
-        if (u.protocol !== "https:" && u.protocol !== "webcal:") {
-          return NextResponse.json({ error: "The feed URL must be https." }, { status: 400 });
+        if (u.protocol !== "https:") {
+          return NextResponse.json({ error: "The feed URL must be https (or webcal)." }, { status: 400 });
         }
       } catch {
         return NextResponse.json({ error: "That is not a valid URL." }, { status: 400 });

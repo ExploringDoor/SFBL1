@@ -208,14 +208,27 @@ function splitOfficialNames(cell: string): string[] {
     .filter(Boolean);
 }
 
-/** Tidy an official's name without reordering it: drop wrapping quotes, a
- *  trailing "(accepted)"-style note, and a leading position tag. */
+/** Pull a trailing "(...)" note off a name cell and return {name, note}. Arbiter
+ *  often writes the acceptance state inline in a single "Officials" cell, e.g.
+ *  "Smith, John (declined)". The note is checked against officialStatusMeansGone
+ *  by the caller, exactly like a separate Status column. */
+function splitInlineStatus(raw: string): { name: string; note: string } {
+  const m = /^(.*?)\s*\(([^()]*)\)\s*$/.exec(raw.trim());
+  if (m && m[1]!.trim()) return { name: m[1]!.trim(), note: m[2]!.trim() };
+  return { name: raw.trim(), note: "" };
+}
+
+/** Tidy an official's name without reordering it: drop wrapping quotes and
+ *  collapse whitespace. Any trailing "(...)" note has already been split off by
+ *  splitInlineStatus, so this does not strip parentheticals. */
 function cleanOfficialName(raw: string): string {
   let s = raw.trim().replace(/^["']|["']$/g, "").trim();
-  s = s.replace(/\s*\((?:accepted|unaccepted|declined|pending|published)\)\s*$/i, "").trim();
   s = s.replace(/\s+/g, " ");
   // A bare placeholder Arbiter leaves in an unfilled slot.
   if (/^(tbd|tba|open|unassigned|none|n\/a|-)$/i.test(s)) return "";
+  // A cell with no letters is not a name (a count "2", a fee "$120", a ref
+  // number). These slip in when a "Ref"/"Officials" header is really a number.
+  if (!/[a-z]/i.test(s)) return "";
   return s;
 }
 
@@ -226,15 +239,24 @@ function extractOfficials(fields: string[], cols: OfficialColumn[]): ArbiterOffi
   for (const c of cols) {
     const rawName = (fields[c.nameIndex] ?? "").trim();
     if (!rawName) continue;
-    const status = c.statusIndex != null ? (fields[c.statusIndex] ?? "").trim() : "";
-    if (officialStatusMeansGone(status)) continue;
+    const colStatus = c.statusIndex != null ? (fields[c.statusIndex] ?? "").trim() : "";
+    // A whole-column status that means "gone" drops every name in the column.
+    if (officialStatusMeansGone(colStatus)) continue;
     const email = c.emailIndex != null ? (fields[c.emailIndex] ?? "").trim() : "";
     // Positional columns hold exactly one person; a generic column may list several.
     const parts = c.position ? [rawName] : splitOfficialNames(rawName);
     for (const p of parts) {
-      const name = cleanOfficialName(p);
+      const { name: bareName, note } = splitInlineStatus(p);
+      // An inline "(declined)"-style note is treated exactly like the status
+      // column: if it means the official is off the game, drop the name.
+      if (note && officialStatusMeansGone(note)) continue;
+      const name = cleanOfficialName(bareName);
       if (!name) continue;
-      const key = name.toLowerCase();
+      const status = colStatus || note;
+      // Dedup on name + position so a genuinely distinct second official (two
+      // people who normalize the same, or the same name in Plate and Base) is
+      // kept; only a true repeat of the same slot collapses.
+      const key = `${name.toLowerCase()}|${c.position ?? ""}`;
       if (seen.has(key)) continue;
       seen.add(key);
       out.push({
@@ -691,12 +713,15 @@ export function toArbiterCsv(
  * Keyed on the Arbiter game number when there is one, so re-importing an
  * updated export updates the same rows instead of duplicating a 185-team
  * season. Without a game number it falls back to the natural key
- * (date + teams), which is stable for everything except a reschedule — and a
- * rescheduled game genuinely is a different row to Arbiter too.
+ * (date + time + teams), which is stable for everything except a reschedule —
+ * and a rescheduled game genuinely is a different row to Arbiter too. Time is in
+ * the key so a doubleheader (same date + teams, two start times) does not
+ * collapse two rows onto one id.
  */
 export function arbiterGameId(row: {
   gameNumber?: string | null;
   date: string;
+  time?: string | null;
   awayTeamId: string;
   homeTeamId: string;
 }): string {
@@ -704,5 +729,111 @@ export function arbiterGameId(row: {
   if (row.gameNumber && clean(row.gameNumber)) {
     return `arb-${clean(row.gameNumber)}`;
   }
-  return `arb-${row.date.replace(/-/g, "")}-${clean(row.awayTeamId)}-${clean(row.homeTeamId)}`;
+  const t = clean(String(row.time ?? ""));
+  return `arb-${row.date.replace(/-/g, "")}-${t}-${clean(row.awayTeamId)}-${clean(row.homeTeamId)}`;
+}
+
+// ─── cross-source reconciliation ─────────────────────────────────────────────
+//
+// The platform has two Arbiter ingestion paths that mint DIFFERENT doc ids for
+// the same game: the iCal auto-sync keys on the feed UID (arb-<uid>), the CSV
+// import keys on the game number (arb-<num>). Left alone, running both duplicates
+// every game and the CSV's officials never land on the iCal-created game. Both
+// resolve team NAMES to the same team IDS, so the natural key (date + teams) is
+// the identity they share. These pure helpers let either route reconcile an
+// incoming row onto the game the other path already created.
+
+export interface ExistingGameRef {
+  id: string;
+  awayTeamId: string;
+  homeTeamId: string;
+  time?: string;
+}
+
+export interface ReconcileMaps {
+  byGameNumber: Map<string, ExistingGameRef>;
+  byNatural: Map<string, ExistingGameRef[]>;
+}
+
+const cleanKey = (s: string | null | undefined) =>
+  String(s ?? "").replace(/[^a-z0-9]+/gi, "").toLowerCase();
+
+// Orientation-INSENSITIVE: the two paths can disagree on home/away (the CSV has
+// explicit columns; the iCal path infers it from the SUMMARY wording), so the key
+// sorts the team pair. Two games between the same teams on the same day (a
+// home-and-home) still land as two candidates and are told apart by start time.
+const naturalKey = (date: string, awayTeamId: string, homeTeamId: string) =>
+  `${String(date).slice(0, 10)}|${[awayTeamId, homeTeamId].sort().join("|")}`;
+
+/** Index the league's existing games for reconciliation. First writer wins the
+ *  game-number slot; the natural map holds every game (a doubleheader has two). */
+export function buildReconcileMaps(
+  existing: {
+    id: string;
+    gameNumber?: string | null;
+    date: string;
+    time?: string | null;
+    awayTeamId: string;
+    homeTeamId: string;
+  }[],
+): ReconcileMaps {
+  const byGameNumber = new Map<string, ExistingGameRef>();
+  const byNatural = new Map<string, ExistingGameRef[]>();
+  for (const g of existing) {
+    const ref: ExistingGameRef = {
+      id: g.id,
+      awayTeamId: g.awayTeamId,
+      homeTeamId: g.homeTeamId,
+      time: g.time ?? "",
+    };
+    const gn = cleanKey(g.gameNumber);
+    if (gn && !byGameNumber.has(gn)) byGameNumber.set(gn, ref);
+    const date = String(g.date ?? "").slice(0, 10);
+    if (date && g.awayTeamId && g.homeTeamId) {
+      const key = naturalKey(date, g.awayTeamId, g.homeTeamId);
+      const list = byNatural.get(key) ?? [];
+      list.push(ref);
+      byNatural.set(key, list);
+    }
+  }
+  return { byGameNumber, byNatural };
+}
+
+/**
+ * Resolve an incoming row onto an EXISTING game doc, or null if none matches.
+ *
+ * Game number first, but only when the matched game's teams also match — Arbiter
+ * reuses game numbers across ages and seasons, and the archive years live in the
+ * same collection, so a bare number match would rewrite an unrelated (often
+ * archived) game. Then the natural key (date + teams); a doubleheader with more
+ * than one candidate is disambiguated by start time, falling back to the first
+ * so a no-time-match never mints a third duplicate.
+ */
+export function resolveExistingGameId(
+  row: {
+    gameNumber?: string | null;
+    date: string;
+    time?: string | null;
+    awayTeamId: string;
+    homeTeamId: string;
+  },
+  maps: ReconcileMaps,
+): string | null {
+  const gn = cleanKey(row.gameNumber);
+  if (gn) {
+    const c = maps.byGameNumber.get(gn);
+    // Trust a game-number match only when the teams agree; a mismatch is a number
+    // reused in another age/season, so ignore it and fall through.
+    if (c && c.awayTeamId === row.awayTeamId && c.homeTeamId === row.homeTeamId) {
+      return c.id;
+    }
+  }
+  const cands = maps.byNatural.get(naturalKey(row.date, row.awayTeamId, row.homeTeamId)) ?? [];
+  if (cands.length === 1) return cands[0]!.id;
+  if (cands.length > 1) {
+    const t = String(row.time ?? "");
+    const hit = t ? cands.find((c) => c.time && c.time === t) : undefined;
+    return (hit ?? cands[0]!).id;
+  }
+  return null;
 }
